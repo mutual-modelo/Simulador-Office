@@ -201,15 +201,17 @@
     .btn-table-action:hover{background:#eff6ff;border-color:#93c5fd}
     .btn-action-primary{background:var(--color-brand-blue);color:#fff;border-color:var(--color-brand-blue)}.btn-action-primary:hover{background:var(--color-brand-blue-dark)}
 
-    /* TABLERO KANBAN INTERACTIVO */
-    .kanban-board-wrapper{margin-top:.75rem;overflow-x:auto;padding-bottom:.5rem}
-    .kanban-board{display:flex;gap:.75rem;min-width:1100px;align-items:flex-start}
-    .kanban-col{flex:1;min-width:220px;max-width:270px;background:#f8fafc;border:1px solid var(--border-color);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-    .kanban-col-header{padding:.55rem .75rem;font-size:.72rem;font-weight:800;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-color)}
-    .kanban-cards-box{padding:.5rem;display:flex;flex-direction:column;gap:.5rem;max-height:68vh;overflow-y:auto}
+    /* TABLERO KANBAN INTERACTIVO: 4 MACRO-ETAPAS, CERO SCROLL LATERAL */
+    .kanban-board-wrapper{margin-top:.75rem;width:100%;overflow-x:hidden}
+    .kanban-board{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;width:100%;align-items:flex-start}
+    @media(max-width:900px){.kanban-board{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:540px){.kanban-board{grid-template-columns:1fr}}
+    .kanban-col{background:#f8fafc;border:1px solid var(--border-color);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+    .kanban-col-header{padding:.6rem .75rem;font-size:.74rem;font-weight:800;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-color)}
+    .kanban-cards-box{padding:.5rem;display:flex;flex-direction:column;gap:.5rem;max-height:72vh;overflow-y:auto}
     .kanban-card{background:#fff;border:1px solid var(--border-color);border-radius:8px;padding:.65rem .75rem;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.04);transition:all .15s ease}
     .kanban-card:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,0,0,.08);border-color:#93c5fd}
-    .kanban-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+    .kanban-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:4px}
     .kanban-card-title{font-size:.78rem;font-weight:800;color:var(--color-primary);line-height:1.2}
     .kanban-card-meta{font-size:.68rem;color:var(--text-muted);margin-top:3px}
     .kanban-card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:.45rem;padding-top:.35rem;border-top:1px dashed #e2e8f0;font-size:.68rem}
@@ -250,23 +252,25 @@
     .offer-card-mutual{background:#eff6ff;border-color:#93c5fd}
     .offer-card-title{font-size:.8rem;font-weight:800;display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
 
-    /* CHAT MODERNO BI-DIRECCIONAL */
+    /* CHAT MODERNO BI-DIRECCIONAL Y ACCESIBLE */
     .chat-container{display:flex;flex-direction:column;gap:.6rem;max-height:300px;overflow-y:auto;padding:.75rem;background:#f1f5f9;border-radius:8px;border:1px solid var(--border-color)}
-    .chat-bubble{max-width:82%;padding:.55rem .75rem;border-radius:10px;font-size:.76rem;line-height:1.4;box-shadow:0 1px 2px rgba(0,0,0,.06)}
-    .chat-bubble-comercializador{align-self:flex-start;background:#ffffff;border:1px solid #cbd5e1;border-bottom-left-radius:2px}
-    .chat-bubble-mutual{align-self:flex-end;background:#0c3966;color:#ffffff;border-bottom-right-radius:2px}
-    .chat-meta{font-size:.62rem;margin-bottom:2px;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+    .chat-bubble{max-width:82%;padding:.6rem .85rem;border-radius:10px;font-size:.76rem;line-height:1.45;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+    .chat-bubble-comercializador{align-self:flex-start;background:#ffffff;border:1px solid #cbd5e1;border-bottom-left-radius:2px;color:#0f172a}
+    .chat-bubble-mutual{align-self:flex-end;background:#2563eb;color:#ffffff;border-bottom-right-radius:2px;box-shadow:0 2px 6px rgba(37,99,235,0.25)}
+    .chat-meta{font-size:.64rem;margin-bottom:3px;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:.75rem}
     .chat-bubble-comercializador .chat-meta{color:var(--color-brand-blue)}
-    .chat-bubble-mutual .chat-meta{color:#93c5fd}
+    .chat-bubble-mutual .chat-meta{color:#e0f2fe}
     .chat-tag{padding:1px 5px;border-radius:4px;font-size:.58rem;text-transform:uppercase;font-weight:800}
     .chat-tag-comercializador{background:#e0f2fe;color:#0369a1}
-    .chat-tag-mutual{background:#1e3a8a;color:#dbeafe}
+    .chat-tag-mutual{background:#1d4ed8;color:#eff6ff;border:1px solid rgba(255,255,255,0.25)}
 
-    /* VISOR DOCUMENTAL ONLINE */
-    .doc-viewer-modal-window{max-width:960px;width:95%;height:90vh}
-    .doc-viewer-frame-wrap{flex:1;background:#334155;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+    /* VISOR DOCUMENTAL ONLINE IN-APP */
+    .doc-viewer-modal-window{max-width:980px;width:95%;height:92vh}
+    .doc-viewer-toolbar{display:flex;align-items:center;gap:.35rem;background:#f1f5f9;padding:.35rem .75rem;border-bottom:1px solid var(--border-color);justify-content:center}
+    .doc-viewer-frame-wrap{flex:1;background:#1e293b;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
     .doc-viewer-frame{width:100%;height:100%;border:none;background:#fff}
-    .doc-viewer-img{max-width:100%;max-height:100%;object-fit:contain}
+    .doc-viewer-img-container{width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:auto;padding:1rem}
+    .doc-viewer-img{max-width:100%;max-height:100%;object-fit:contain;transition:transform .15s ease}
 
     /* SPINNER & OVERLAY DE SINCRONIZACIÓN API */
     .api-loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.45);backdrop-filter:blur(3px);z-index:9999;display:none;align-items:center;justify-content:center}
@@ -276,8 +280,6 @@
     .api-loading-text{display:flex;flex-direction:column}
     .api-loading-text strong{font-size:.875rem;color:var(--color-primary);font-weight:700}
     .api-loading-text span{font-size:.72rem;color:var(--text-muted);margin-top:2px}
-    .online-indicator-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:.68rem;font-weight:700;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
-    .online-indicator-dot{width:6px;height:6px;border-radius:50%;background:#10b981}
     .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#0f172a;color:#fff;padding:.65rem 1rem;border-radius:8px;font-size:.775rem;font-weight:600;display:flex;align-items:center;gap:.5rem;box-shadow:0 6px 20px rgba(0,0,0,.2);transform:translateY(100px);opacity:0;transition:all .25s cubic-bezier(0.16,1,0.3,1);z-index:100}
     .toast.show{transform:translateY(0);opacity:1}
   </style>
@@ -308,9 +310,6 @@
         <nav class="nav-tabs-wrap" id="navTabsMenu"></nav>
       </div>
       <div style="display:flex;align-items:center;gap:0.6rem;">
-        <span class="online-indicator-pill" title="Conectado a Google Apps Script">
-          <span class="online-indicator-dot"></span> Apps Script Conectado
-        </span>
         <div class="user-header-chip" id="userHeaderChip"></div>
         <button class="btn-logout" onclick="handleLogout()">Cerrar Sesión 🚪</button>
       </div>
@@ -800,18 +799,25 @@
     </div>
   </div>
 
-  <!-- MODAL 4: VISOR DOCUMENTAL ONLINE INTEGRADO -->
+  <!-- MODAL 4: VISOR DOCUMENTAL ONLINE INTEGRADO IN-APP -->
   <div id="modalVisorDocumento" class="modal-backdrop">
     <div class="modal-window doc-viewer-modal-window">
       <div class="modal-header-bar">
         <div class="modal-header-title">
-          <span>📄 Visor Documental Online: </span>
-          <strong id="visorDocNombre" style="color:var(--color-brand-blue);margin-left:5px;">archivo.pdf</strong>
+          <span>📄 Visor Documental: </span>
+          <strong id="visorDocNombre" style="color:var(--color-brand-blue);margin-left:5px;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">archivo.pdf</strong>
         </div>
         <div style="display:flex;align-items:center;gap:0.5rem;">
-          <a id="btnVisorDescargar" href="#" download class="btn-restore" style="text-decoration:none;font-size:0.75rem;" target="_blank">📥 Descargar</a>
-          <button class="btn-close-modal" onclick="cerrarModal('modalVisorDocumento')">&times;</button>
+          <a id="btnVisorDescargar" href="#" download class="btn-restore" style="text-decoration:none;font-size:0.75rem;">📥 Descargar</a>
+          <button class="btn-close-modal" onclick="cerrarVisorDocumento()">&times;</button>
         </div>
+      </div>
+      <div id="visorImageToolbar" class="doc-viewer-toolbar" style="display:none;">
+        <button type="button" class="btn-restore" style="padding:2px 8px;font-size:0.75rem;" onclick="ajustarZoomVisor(0.2)">🔍+ Zoom</button>
+        <button type="button" class="btn-restore" style="padding:2px 8px;font-size:0.75rem;" onclick="ajustarZoomVisor(-0.2)">🔍- Reducir</button>
+        <button type="button" class="btn-restore" style="padding:2px 8px;font-size:0.75rem;" onclick="rotarImagenVisor()">🔄 Rotar 90°</button>
+        <button type="button" class="btn-restore" style="padding:2px 8px;font-size:0.75rem;" onclick="resetearTransformVisor()">↺ 100%</button>
+        <span id="visorZoomLevel" style="font-size:0.7rem;color:var(--text-muted);margin-left:5px;">100%</span>
       </div>
       <div class="doc-viewer-frame-wrap" id="docViewerContent">
         <!-- Renderizado dinámico de PDF en iframe o Imagen directa -->
@@ -1912,14 +1918,31 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const body = document.getElementById('fichaModalBody'); if (!body) return;
       const isObservado = (s.estado === 'Observado');
 
-      // 1. BARRA SUPERIOR CON IDENTIFICADORES Y ESTADO
-      let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;background:#f8fafc;padding:.75rem;border-radius:8px;border:1px solid var(--border-color);">' +
-        '<div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">' +
+      // 1. BARRA SUPERIOR CON IDENTIFICADORES Y CONTROL DIRECTO DE ESTADO (MUTUAL / ADMIN)
+      let estadoSelectorHtml = '';
+      if (isAnalistaOAdmin) {
+        const listaEstados = ['Pendiente', 'En Análisis', 'Observado', 'Propuesta Enviada', 'Aprobado', 'Transferencia Pendiente', 'Liquidado', 'Rechazado'];
+        estadoSelectorHtml = '<div style="display:flex;align-items:center;gap:0.4rem;background:#eff6ff;padding:4px 8px;border-radius:8px;border:1px solid #bfdbfe;">' +
+          '<label style="font-size:0.72rem;font-weight:700;color:var(--color-brand-blue);white-space:nowrap;">Estado del Expediente:</label>' +
+          '<select id="cboFichaEstadoDirecto" class="input-text" style="padding:2px 8px;font-size:0.72rem;font-weight:700;width:auto;">' +
+            listaEstados.map(st => '<option value="' + st + '" ' + (s.estado === st ? 'selected' : '') + '>' + st + '</option>').join('') +
+          '</select>' +
+          '<button type="button" class="btn-primary-action" style="width:auto;padding:3px 10px;font-size:0.7rem;white-space:nowrap;" onclick="actualizarEstadoDirectoFicha(\'' + s.id + '\')">Actualizar Estado ⚡</button>' +
+        '</div>';
+      } else {
+        estadoSelectorHtml = '<div style="display:flex;align-items:center;gap:0.4rem;">' +
+          '<span style="font-size:0.72rem;color:var(--text-muted);font-weight:600;">Estado:</span>' +
           '<span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '" style="font-size:.8rem;padding:.25rem .65rem;">' + s.estado + '</span>' +
-          (isObservado ? '<span style="font-size:0.7rem;color:#b45309;font-weight:700;">⚠️ Requiere corrección o documentación complementaria</span>' : '') +
+        '</div>';
+      }
+
+      let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.6rem;background:#f8fafc;padding:.75rem;border-radius:8px;border:1px solid var(--border-color);">' +
+        '<div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">' +
+          estadoSelectorHtml +
+          (isObservado ? '<span style="font-size:0.7rem;color:#b45309;font-weight:700;background:#fffbeb;padding:2px 6px;border-radius:4px;border:1px solid #fef3c7;">⚠️ Observado por Auditoría</span>' : '') +
         '</div>' +
         '<div style="font-size:.72rem;color:var(--text-muted);">' +
-          'Fecha: <strong>' + (s.fecha || '') + '</strong> | Asesor: <strong>' + s.comercializador + '</strong> | Org: <strong>' + (s.nombre_organizacion || 'Paraná Centro') + '</strong>' +
+          'Fecha: <strong>' + (s.fecha ? formatearFechaHoraChat(s.fecha) : '') + '</strong> | Asesor: <strong>' + s.comercializador + '</strong> | Org: <strong>' + (s.nombre_organizacion || 'Paraná Centro') + '</strong>' +
         '</div>' +
       '</div>';
 
@@ -2057,7 +2080,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         html += '<div style="display:flex;justify-content:space-between;align-items:center;background:#fff;padding:.45rem .65rem;border:1px solid var(--border-color);border-radius:6px;font-size:.72rem;flex-wrap:wrap;gap:.35rem;">' +
           '<div>' +
             '📄 <strong>' + a.tipo + ':</strong> <code style="color:var(--color-brand-blue);">' + a.nombre + '</code> ' +
-            '<span style="font-size:.65rem;color:var(--text-muted);margin-left:4px;">(' + (a.fecha || s.fecha) + ' por ' + (a.autor || s.comercializador) + ')</span>' +
+            '<span style="font-size:.65rem;color:var(--text-muted);margin-left:4px;">(' + formatearFechaHoraChat(a.fecha || s.fecha) + ' por ' + (a.autor || s.comercializador) + ')</span>' +
           '</div>' +
           '<div style="display:flex;gap:4px;align-items:center;">' +
             '<button type="button" class="btn-restore" style="padding:.2rem .5rem;font-size:.68rem;" onclick="abrirVisorOnline(\'' + s.id + '\', ' + idx + ')">👁️ Ver Online</button>' +
@@ -2089,8 +2112,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         '<p style="font-size:.65rem;color:#0369a1;margin-top:.35rem;">Se renombrará automáticamente según el formato Drive: <code>[' + s.id + '] [Tipo_Documento]_[Fecha/Hora].[ext]</code></p>' +
       '</div>';
 
-      // 6. SECCIÓN 4: LÍNEA DE TIEMPO ESTILO CHAT INTERACTIVO (COMERCIALIZADOR VS MUTUAL)
-      html += '<div class="section-title-divider">4. Chat de Auditoría y Línea de Tiempo (Asociado/Comercial vs Mutual)</div>' +
+      // 6. SECCIÓN 4: CHAT DE AUDITORÍA Y LÍNEA DE TIEMPO (TÍTULO EXACTO)
+      html += '<div class="section-title-divider">Chat de Auditoría y Línea de Tiempo</div>' +
         '<div class="chat-container" id="fichaChatContainer">';
 
       (s.observaciones || []).forEach(o => {
@@ -2110,14 +2133,13 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       html += '</div>';
 
-      // Caja de envío rápida del chat
+      // Caja de envío rápida del chat (SIN checkbox de subsanación)
       html += '<div style="margin-top:.6rem;background:#f8fafc;padding:.65rem;border-radius:8px;border:1px solid var(--border-color);">' +
         '<label class="form-label">Escribir una aclaración, nota o resolución:</label>' +
         '<div style="display:flex;gap:0.4rem;align-items:center;">' +
           '<input type="text" id="txtFichaComentario" class="input-text" placeholder="Escriba su mensaje aquí..." style="font-size:.75rem;" onkeydown="if(event.key===\'Enter\'){enviarComentarioComercializador(\'' + s.id + '\');}"/>' +
           '<button type="button" class="btn-primary-action" style="width:auto;padding:.45rem 1rem;font-size:.75rem;white-space:nowrap;" onclick="enviarComentarioComercializador(\'' + s.id + '\')">Enviar 💬</button>' +
         '</div>' +
-        (isObservado ? '<div style="margin-top:.4rem;"><label style="font-size:0.72rem;color:#b45309;font-weight:700;display:flex;align-items:center;gap:0.35rem;cursor:pointer;"><input type="checkbox" id="chkSubsanarObservado" checked/> Pasar automáticamente a "En Análisis" (Observación subsanada) 🔄</label></div>' : '') +
       '</div>';
 
       body.innerHTML = html;
@@ -2132,11 +2154,21 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
     function formatearFechaHoraChat(fechaStr) {
       if (!fechaStr) return '';
-      const partes = String(fechaStr).split(' ');
-      if (partes.length >= 2) {
-        return partes[0] + ' ' + partes[1] + ' hs';
+      try {
+        const s = String(fechaStr).trim().replace('T', ' ');
+        const [fParte, hParte] = s.split(' ');
+        let fechaFmt = fParte;
+        if (fParte && fParte.includes('-')) {
+          const bits = fParte.split('-');
+          if (bits.length === 3 && bits[0].length === 4) {
+            fechaFmt = bits[2] + '/' + bits[1] + '/' + bits[0];
+          }
+        }
+        const horaFmt = hParte ? hParte.slice(0, 5) : '00:00';
+        return fechaFmt + ' ' + horaFmt + ' hs';
+      } catch (e) {
+        return String(fechaStr);
       }
-      return fechaStr;
     }
 
     /* EDICIÓN DE SOLICITANTE */
@@ -2275,7 +2307,55 @@ ${p.detalle ? `• Observaciones: ${p.detalle}\n` : ''}
       });
     }
 
-    /* VISOR DOCUMENTAL ONLINE */
+    /* VISOR DOCUMENTAL ONLINE IN-APP (SIN SALIR A GOOGLE DRIVE) */
+    let visorZoom = 1.0;
+    let visorRotation = 0;
+
+    function aplicarTransformVisor() {
+      const img = document.getElementById('visorImageEl');
+      const lbl = document.getElementById('visorZoomLevel');
+      if (img) {
+        img.style.transform = 'scale(' + visorZoom + ') rotate(' + visorRotation + 'deg)';
+      }
+      if (lbl) {
+        lbl.textContent = Math.round(visorZoom * 100) + '%';
+      }
+    }
+
+    function ajustarZoomVisor(delta) {
+      visorZoom = Math.max(0.4, Math.min(3.5, visorZoom + delta));
+      aplicarTransformVisor();
+    }
+
+    function rotarImagenVisor() {
+      visorRotation = (visorRotation + 90) % 360;
+      aplicarTransformVisor();
+    }
+
+    function resetearTransformVisor() {
+      visorZoom = 1.0;
+      visorRotation = 0;
+      aplicarTransformVisor();
+    }
+
+    function cerrarVisorDocumento() {
+      resetearTransformVisor();
+      cerrarModal('modalVisorDocumento');
+    }
+
+    function extraerDrivePreviewUrl(raw) {
+      if (!raw) return '';
+      if (raw.startsWith('data:') || raw.startsWith('blob:')) return raw;
+      const match = raw.match(/\/d\/([a-zA-Z0-9_-]+)/) || raw.match(/id=([a-zA-Z0-9_-]+)/);
+      if (match && match[1]) {
+        return 'https://drive.google.com/file/d/' + match[1] + '/preview';
+      }
+      if (/^[a-zA-Z0-9_-]{20,}$/.test(raw.trim())) {
+        return 'https://drive.google.com/file/d/' + raw.trim() + '/preview';
+      }
+      return raw;
+    }
+
     function abrirVisorOnline(solicitudId, adjuntoIndex) {
       const s = getStoredSolicitudes().find(x => String(x.id) === String(solicitudId)); if (!s) return;
       const adj = s.adjuntos && s.adjuntos[adjuntoIndex]; if (!adj) return;
@@ -2283,30 +2363,48 @@ ${p.detalle ? `• Observaciones: ${p.detalle}\n` : ''}
       document.getElementById('visorDocNombre').textContent = adj.nombre;
       const btnDescargar = document.getElementById('btnVisorDescargar');
       const wrap = document.getElementById('docViewerContent');
+      const toolbar = document.getElementById('visorImageToolbar');
       if (!wrap) return;
 
-      const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(adj.nombre) || (adj.tipoMime && adj.tipoMime.startsWith('image/'));
+      resetearTransformVisor();
 
-      if (adj.dataUrl) {
-        btnDescargar.href = adj.dataUrl;
-        btnDescargar.download = adj.nombre;
-        if (isImage) {
-          wrap.innerHTML = '<img src="' + adj.dataUrl + '" class="doc-viewer-img" alt="' + adj.nombre + '"/>';
-        } else {
-          wrap.innerHTML = '<iframe src="' + adj.dataUrl + '" class="doc-viewer-frame"></iframe>';
-        }
+      const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(adj.nombre) || (adj.tipoMime && adj.tipoMime.startsWith('image/')) || (adj.dataUrl && adj.dataUrl.startsWith('data:image/'));
+
+      if (btnDescargar) {
+        btnDescargar.onclick = (e) => {
+          e.preventDefault();
+          descargarDocumentoOnline(solicitudId, adjuntoIndex);
+        };
+      }
+
+      if (adj.dataUrl && isImage) {
+        if (toolbar) toolbar.style.display = 'flex';
+        wrap.innerHTML = '<div class="doc-viewer-img-container"><img id="visorImageEl" src="' + adj.dataUrl + '" class="doc-viewer-img" alt="' + adj.nombre + '"/></div>';
+      } else if (adj.dataUrl && !isImage) {
+        if (toolbar) toolbar.style.display = 'none';
+        wrap.innerHTML = '<iframe src="' + adj.dataUrl + '" class="doc-viewer-frame" title="' + adj.nombre + '"></iframe>';
       } else if (adj.urlDrive) {
-        btnDescargar.href = adj.urlDrive;
-        wrap.innerHTML = '<iframe src="' + adj.urlDrive + '" class="doc-viewer-frame"></iframe>';
+        if (toolbar) toolbar.style.display = 'none';
+        const previewUrl = extraerDrivePreviewUrl(adj.urlDrive);
+        wrap.innerHTML = '<iframe src="' + previewUrl + '" class="doc-viewer-frame" allow="autoplay" title="' + adj.nombre + '"></iframe>';
       } else {
-        // Mock visual interactivo de previsualización
-        btnDescargar.href = '#';
-        wrap.innerHTML = '<div style="color:#fff;text-align:center;padding:2rem;">' +
-          '<div style="font-size:3rem;margin-bottom:1rem;">📄</div>' +
-          '<div style="font-size:1.1rem;font-weight:700;">' + adj.nombre + '</div>' +
-          '<div style="font-size:0.8rem;color:#94a3b8;margin-top:6px;">Documento verificado en Google Drive Mutual Modelo</div>' +
-          '<div style="margin-top:1.5rem;"><button class="btn-primary-action" style="width:auto;padding:.5rem 1rem;" onclick="showToast(\'Abriendo enlace en Google Drive...\')">Abrir en Google Drive ↗</button></div>' +
-          '</div>';
+        // Previsualización in-app institucional completa sin enlaces externos
+        if (toolbar) toolbar.style.display = 'none';
+        const badgeColor = isImage ? '#10b981' : '#3b82f6';
+        const iconoDoc = isImage ? '🖼️' : '📑';
+        wrap.innerHTML = '<div style="background:#ffffff;border-radius:12px;padding:2.5rem 2rem;max-width:540px;margin:2rem auto;box-shadow:0 15px 35px rgba(0,0,0,0.25);text-align:center;border:1px solid #cbd5e1;">' +
+          '<div style="font-size:3.5rem;margin-bottom:0.75rem;">' + iconoDoc + '</div>' +
+          '<h3 style="font-size:1.15rem;color:var(--color-primary);font-weight:800;margin-bottom:0.35rem;">' + adj.nombre + '</h3>' +
+          '<div style="display:inline-block;background:#eff6ff;color:' + badgeColor + ';font-size:0.75rem;font-weight:700;padding:4px 12px;border-radius:999px;margin-bottom:1rem;border:1px solid #bfdbfe;">' +
+            adj.tipo + ' • Legajo Digital Encriptado' +
+          '</div>' +
+          '<p style="font-size:0.78rem;color:var(--text-muted);line-height:1.55;margin-bottom:1.5rem;">' +
+            'Documento procesado y auditado dentro del expediente <strong>' + (s.id_definitivo || s.id_provisorio) + '</strong>. La previsualización está contenida de forma segura dentro del sistema.' +
+          '</p>' +
+          '<div style="display:flex;justify-content:center;gap:0.5rem;">' +
+            '<button type="button" class="btn-primary-action" style="width:auto;padding:.5rem 1.25rem;font-size:0.78rem;" onclick="descargarDocumentoOnline(\'' + solicitudId + '\', ' + adjuntoIndex + ')">📥 Descargar Copia Oficial</button>' +
+          '</div>' +
+        '</div>';
       }
 
       abrirModal('modalVisorDocumento');
@@ -2392,8 +2490,6 @@ ${p.detalle ? `• Observaciones: ${p.detalle}\n` : ''}
       let b64Data = null;
       try { b64Data = await fileToBase64(file); } catch (err) { console.warn(err); }
 
-      const cambiarAEnAnalisis = (s.estado === 'Observado');
-
       const res = await callApi({
         action: 'subirAdjuntoAdicional',
         id: s.id,
@@ -2402,8 +2498,7 @@ ${p.detalle ? `• Observaciones: ${p.detalle}\n` : ''}
         base64: b64Data ? b64Data.base64 : '',
         tipoMime: b64Data ? b64Data.tipoMime : 'application/pdf',
         autor: session.nombre,
-        rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor'),
-        cambiarAEnAnalisis: cambiarAEnAnalisis
+        rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor')
       }, {
         title: 'Almacenando en Google Drive...',
         sub: 'Guardando en la carpeta del expediente #' + s.id
@@ -2424,21 +2519,11 @@ ${p.detalle ? `• Observaciones: ${p.detalle}\n` : ''}
         fecha: now.toISOString().slice(0, 16).replace('T', ' '), texto: 'Documentación adicional adjuntada: ' + tipo + ' (' + generatedName + ')'
       });
 
-      let aviso = 'Documento subido exitosamente a Google Drive 📄';
-      if (cambiarAEnAnalisis) {
-        s.estado = 'En Análisis';
-        s.observaciones.push({
-          autor: 'Sistema Mutual', rol: 'Automático', fecha: now.toISOString().slice(0, 16).replace('T', ' '),
-          texto: 'Estado cambiado a En Análisis tras la carga de documentación correctiva.'
-        });
-        aviso = 'Documento en Drive y expediente devuelto a "En Análisis" 🔄';
-      }
-
       saveStoredSolicitudes(all);
       renderModuloComercializador();
       renderModuloMutual();
       verFichaCompleta(id);
-      showToast(aviso);
+      showToast('Documento subido exitosamente a Google Drive 📄');
     }
 
     async function enviarComentarioComercializador(id) {
@@ -2448,16 +2533,12 @@ ${p.detalle ? `• Observaciones: ${p.detalle}\n` : ''}
       const all = getStoredSolicitudes(); const s = all.find(x => String(x.id) === String(id)); if (!s) return;
       const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
 
-      const chk = document.getElementById('chkSubsanarObservado');
-      const subsanar = !!(chk && chk.checked && s.estado === 'Observado');
-
       const res = await callApi({
         action: 'agregarComentario',
         id: s.id,
         texto: txt,
         autor: session.nombre,
-        rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor'),
-        subsanar: subsanar
+        rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor')
       }, {
         title: 'Registrando observación...',
         sub: 'Actualizando historial en Google Sheets'
@@ -2469,16 +2550,53 @@ ${p.detalle ? `• Observaciones: ${p.detalle}\n` : ''}
         fecha: now, texto: txt
       });
 
-      if (subsanar) {
-        s.estado = 'En Análisis';
-        s.observaciones.push({ autor: 'Sistema Mutual', rol: 'Automático', fecha: now, texto: 'Estado cambiado a En Análisis tras aclaración del comercializador.' });
-      }
-
       saveStoredSolicitudes(all);
       renderModuloComercializador();
       renderModuloMutual();
       verFichaCompleta(id);
       showToast('Aclaración enviada y registrada en el expediente 💬');
+    }
+
+    /* CAMBIO DIRECTO DE ESTADO (EXCLUSIVO ANALISTA / ADMIN) */
+    async function actualizarEstadoDirectoFicha(id) {
+      const all = getStoredSolicitudes(); const s = all.find(x => String(x.id) === String(id)); if (!s) return;
+      const session = getSession();
+      if (!session || (session.rol !== 'Analista' && session.rol !== 'Admin')) {
+        showToast('Acceso restringido: Solo Analistas de Mutual o Administradores pueden cambiar estados.');
+        return;
+      }
+      const nuevo = document.getElementById('cboFichaEstadoDirecto')?.value;
+      if (!nuevo) return;
+
+      const anterior = s.estado;
+      s.estado = nuevo;
+      s.analistaAsignado = session.nombre;
+      const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+
+      if (!s.observaciones) s.observaciones = [];
+      s.observaciones.push({
+        autor: session.nombre,
+        rol: session.rol === 'Admin' ? 'Administrador' : 'Analista Mutual',
+        fecha: now,
+        texto: 'Estado de gestión actualizado de "' + anterior + '" a "' + nuevo + '".'
+      });
+
+      saveStoredSolicitudes(all);
+      callApi({
+        action: 'actualizarEstado',
+        id: s.id,
+        estado: nuevo,
+        analista: session.nombre,
+        comentario: 'Estado actualizado a ' + nuevo
+      }, {
+        title: 'Actualizando estado en servidor...',
+        sub: 'Guardando estado "' + nuevo + '" en Google Sheets'
+      }).catch(console.warn);
+
+      showToast('Estado actualizado a "' + nuevo + '" exitosamente ⚡');
+      renderModuloMutual();
+      renderModuloComercializador();
+      verFichaCompleta(id);
     }
 
     /* ========================================================================
@@ -2568,42 +2686,7 @@ ${p.detalle ? `• Observaciones: ${p.detalle}\n` : ''}
     function filtrarGestionesMutual() { renderModuloMutual(); }
 
     function gestionarSolicitudMutual(id) {
-      const all = getStoredSolicitudes();
-      const s = all.find(x => String(x.id) === String(id)); if (!s) return;
-      normalizarSolicitud(s);
-      const session = getSession();
-      const tit = document.getElementById('gestionModalTitle');
-      if (tit) {
-        tit.innerHTML = 'Resolución de Expediente <strong>' + (s.id_definitivo || s.id_provisorio) + '</strong> — ' + (s.solicitante?.nombre || '');
-      }
-      const body = document.getElementById('gestionModalBody'); if (!body) return;
-
-      let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">' +
-        '<div style="background:#f8fafc;padding:.75rem;border-radius:8px;border:1px solid var(--border-color);font-size:.75rem;">' +
-          '<div style="font-weight:700;margin-bottom:.35rem;color:var(--color-primary);">📋 Datos del Solicitante y Crédito</div>' +
-          '<div><strong>Asociado:</strong> ' + (s.solicitante?.nombre || '—') + ' (DNI ' + (s.solicitante?.dni || '—') + ')</div>' +
-          '<div><strong>Organización:</strong> ' + (s.nombre_organizacion || 'Paraná Centro') + '</div>' +
-          '<div><strong>Comercializador:</strong> ' + s.comercializador + '</div>' +
-          '<div><strong>Organismo:</strong> ' + (s.solicitante?.organismo || '—') + ' — ' + (s.solicitante?.dependencia || '—') + ' (' + (s.solicitante?.condicion || '—') + ')</div>' +
-          '<div><strong>Línea:</strong> ' + (s.prestamo?.lineaNombre || '—') + ' | Monto: ' + formatMoney(s.prestamo?.monto || 0) + ' en ' + (s.prestamo?.cuotas || '—') + ' cuotas</div>' +
-        '</div>' +
-        '<div style="background:#eff6ff;padding:.75rem;border-radius:8px;border:1px solid #bfdbfe;font-size:.75rem;">' +
-          '<div style="font-weight:700;margin-bottom:.35rem;color:var(--color-brand-blue);">⚡ Conmutador de Estado Mutual</div>' +
-          '<div style="display:flex;gap:.5rem;align-items:center;margin-top:.4rem;">' +
-            '<select id="cboNuevoEstado" class="input-text" style="font-weight:700;">' +
-              ['Pendiente', 'En Análisis', 'Observado', 'Aprobado', 'Transferencia', 'Liquidado', 'Rechazado'].map(st => '<option value="' + st + '" ' + (s.estado === st ? 'selected' : '') + '>' + st + '</option>').join('') +
-            '</select>' +
-            '<button class="btn-primary-action" style="width:auto;padding:.45rem .85rem;font-size:.75rem;white-space:nowrap;" onclick="actualizarEstadoSolicitud(\'' + s.id + '\')">Actualizar en Servidor</button>' +
-          '</div>' +
-          '<p style="font-size:0.68rem;color:var(--text-muted);margin-top:0.4rem;">Analista a cargo: <strong>' + (s.analistaAsignado || session.nombre) + '</strong></p>' +
-        '</div></div>';
-
-      html += '<div style="margin-bottom:1rem;display:flex;gap:0.5rem;">' +
-        '<button class="btn-restore" style="border-color:#3b82f6;color:#1d4ed8;font-weight:700;" onclick="cerrarModal(\'modalGestionMutual\');verFichaCompleta(\'' + s.id + '\');">✏️ Abrir Ficha Completa, Contraoferta y Legajo Digital ↗</button>' +
-      '</div>';
-
-      body.innerHTML = html;
-      abrirModal('modalGestionMutual');
+      verFichaCompleta(id);
     }
 
     async function actualizarEstadoSolicitud(id) {
@@ -2638,44 +2721,95 @@ ${p.detalle ? `• Observaciones: ${p.detalle}\n` : ''}
     }
 
     /* ========================================================================
-       8. TABLERO KANBAN CONMUTABLE
+       8. TABLERO KANBAN OPTIMIZADO (4 MACRO-ETAPAS, CERO SCROLL LATERAL)
        ======================================================================== */
-    const ESTADOS_KANBAN = [
-      { id: 'Pendiente', label: 'Pendiente 🟡', color: '#fef08a' },
-      { id: 'En Análisis', label: 'En Análisis 🔵', color: '#bfdbfe' },
-      { id: 'Observado', label: 'Observado 🟠', color: '#fed7aa' },
-      { id: 'Aprobado', label: 'Aprobado 🟢', color: '#bbf7d0' },
-      { id: 'Transferencia', label: 'Transferencia 🟣', color: '#e9d5ff' },
-      { id: 'Liquidado', label: 'Liquidado 🟢', color: '#a7f3d0' },
-      { id: 'Rechazado', label: 'Rechazado 🔴', color: '#fecaca' }
+    const MACRO_ETAPAS_KANBAN = [
+      {
+        id: 'solicitados',
+        label: 'SOLICITADOS',
+        emoji: '🟡',
+        headerBg: '#fef9c3',
+        headerColor: '#854d0e',
+        border: '#fde047',
+        match: (st) => st === 'Pendiente'
+      },
+      {
+        id: 'en_gestion',
+        label: 'EN GESTIÓN',
+        emoji: '🔵',
+        headerBg: '#dbeafe',
+        headerColor: '#1e40af',
+        border: '#93c5fd',
+        match: (st) => st === 'En Análisis' || st === 'Observado' || st === 'Propuesta Enviada'
+      },
+      {
+        id: 'rechazados',
+        label: 'RECHAZADOS',
+        emoji: '🔴',
+        headerBg: '#fee2e2',
+        headerColor: '#991b1b',
+        border: '#fca5a5',
+        match: (st) => st === 'Rechazado'
+      },
+      {
+        id: 'aprobados',
+        label: 'APROBADOS',
+        emoji: '🟢',
+        headerBg: '#dcfce7',
+        headerColor: '#166534',
+        border: '#86efac',
+        match: (st) => st === 'Aprobado' || st === 'Transferencia Pendiente' || st === 'Transferencia' || st === 'Liquidado'
+      }
     ];
+
+    function obtenerSubEstadoBadge(estado) {
+      const e = String(estado || 'Pendiente').trim();
+      let cssClass = 'badge-Pendiente';
+      if (e === 'En Análisis') cssClass = 'badge-EnAnalisis';
+      else if (e === 'Observado') cssClass = 'badge-Observado';
+      else if (e === 'Propuesta Enviada') cssClass = 'badge-EnAnalisis';
+      else if (e === 'Aprobado') cssClass = 'badge-Aprobado';
+      else if (e === 'Transferencia Pendiente' || e === 'Transferencia') cssClass = 'badge-Transferencia';
+      else if (e === 'Liquidado') cssClass = 'badge-Liquidado';
+      else if (e === 'Rechazado') cssClass = 'badge-Rechazado';
+      return '<span class="badge-status ' + cssClass + '" style="font-size:0.62rem;padding:2px 6px;">' + e + '</span>';
+    }
 
     function renderKanbanModulo(moduloKey, list) {
       const containerId = (moduloKey === 'comercializador') ? 'kanbanComercialBoard' : 'kanbanMutualBoard';
       const board = document.getElementById(containerId); if (!board) return;
 
-      board.innerHTML = ESTADOS_KANBAN.map(est => {
-        const cards = list.filter(s => s.estado === est.id);
+      board.innerHTML = MACRO_ETAPAS_KANBAN.map(etapa => {
+        const cards = list.filter(s => etapa.match(s.estado));
         const cardsHtml = cards.length ? cards.map(s => {
-          const idLabel = s.id_definitivo || s.id_provisorio || ('#' + s.id);
+          const idBadge = s.id_definitivo ?
+            '<span class="badge-definitivo">' + s.id_definitivo + '</span>' :
+            '<span class="badge-provisorio">' + (s.id_provisorio || ('#' + s.id)) + '</span>';
+          const subBadge = obtenerSubEstadoBadge(s.estado);
+          const lineaNombre = s.prestamo?.lineaNombre || 'Ayuda Económica';
+          const asesorOrg = (s.comercializador || 'Asesor') + ' • ' + (s.nombre_organizacion || 'Paraná Centro');
+
           return '<div class="kanban-card" onclick="verFichaCompleta(\'' + s.id + '\')">' +
             '<div class="kanban-card-top">' +
-              '<span class="badge-provisorio">' + idLabel + '</span>' +
-              '<span style="font-size:0.62rem;color:var(--text-muted);">' + (s.fecha ? s.fecha.split(' ')[0] : '') + '</span>' +
+              idBadge +
+              subBadge +
             '</div>' +
             '<div class="kanban-card-title">' + (s.solicitante?.nombre || 'Socio') + '</div>' +
-            '<div class="kanban-card-meta">DNI: ' + (s.solicitante?.dni || '—') + ' | ' + (s.solicitante?.organismo || '') + '</div>' +
+            '<div class="kanban-card-meta">' + lineaNombre + '</div>' +
+            '<div style="font-size:0.65rem;color:var(--text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + asesorOrg + '">' +
+              '👤 ' + asesorOrg +
+            '</div>' +
             '<div class="kanban-card-foot">' +
-              '<span style="font-weight:700;color:var(--color-brand-blue);">' + formatMoney(s.prestamo?.monto || 0) + '</span>' +
-              '<span>' + (s.prestamo?.cuotas || '') + ' c</span>' +
+              '<span style="font-weight:700;color:var(--color-brand-blue);font-size:0.75rem;">' + formatMoney(s.prestamo?.monto || 0) + '</span>' +
+              '<span style="color:var(--text-muted);font-weight:600;">' + (s.prestamo?.cuotas || '') + ' cuotas</span>' +
             '</div>' +
           '</div>';
-        }).join('') : '<div style="font-size:0.7rem;color:var(--text-muted);text-align:center;padding:1rem;">Sin expedientes</div>';
+        }).join('') : '<div style="font-size:0.7rem;color:var(--text-muted);text-align:center;padding:1.5rem 0.5rem;font-style:italic;">Sin solicitudes en esta etapa</div>';
 
         return '<div class="kanban-col">' +
-          '<div class="kanban-col-header" style="background:' + est.color + '40;">' +
-            '<span>' + est.label + '</span>' +
-            '<span style="background:#fff;padding:1px 6px;border-radius:10px;font-size:0.68rem;border:1px solid rgba(0,0,0,0.1);">' + cards.length + '</span>' +
+          '<div class="kanban-col-header" style="background:' + etapa.headerBg + ';color:' + etapa.headerColor + ';border-color:' + etapa.border + ';">' +
+            '<span style="display:flex;align-items:center;gap:4px;">' + etapa.emoji + ' ' + etapa.label + '</span>' +
+            '<span style="background:#fff;padding:1px 6px;border-radius:10px;font-size:0.68rem;border:1px solid ' + etapa.border + ';font-weight:800;color:var(--text-main);">' + cards.length + '</span>' +
           '</div>' +
           '<div class="kanban-cards-box">' + cardsHtml + '</div>' +
         '</div>';
@@ -2809,6 +2943,11 @@ ${p.detalle ? `• Observaciones: ${p.detalle}\n` : ''}
     window.filtrarGestionesMutual = filtrarGestionesMutual;
     window.gestionarSolicitudMutual = gestionarSolicitudMutual;
     window.actualizarEstadoSolicitud = actualizarEstadoSolicitud;
+    window.actualizarEstadoDirectoFicha = actualizarEstadoDirectoFicha;
+    window.cerrarVisorDocumento = cerrarVisorDocumento;
+    window.ajustarZoomVisor = ajustarZoomVisor;
+    window.rotarImagenVisor = rotarImagenVisor;
+    window.resetearTransformVisor = resetearTransformVisor;
     window.sincronizarConBackend = sincronizarConBackend;
     window.abrirModal = abrirModal;
     window.cerrarModal = cerrarModal;

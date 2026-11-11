@@ -26,7 +26,7 @@
       --wa-header-bg:#075e54;--wa-accent:#25d366;--wa-bubble:#dcf8c6;
     }
     body{font-family:var(--font-sans);background-color:var(--bg-body);color:var(--text-main);line-height:1.45;padding-bottom:2rem}
-    .container{max-width:1360px;margin:0 auto;padding:0 1rem}
+    .container{max-width:1380px;margin:0 auto;padding:0 1rem}
     .tabular-nums{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
     .app-view{display:none}.app-view.active{display:block}
 
@@ -173,8 +173,16 @@
     .filters-left-group{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;flex:1}
     .search-input-box{min-width:190px}
     .search-input-box input{width:100%;padding:.35rem .55rem;font-size:.75rem;border:1px solid var(--border-color);border-radius:6px;outline:none}
+    
+    /* VISTA CONMUTABLE: BOTONES */
+    .view-switcher-control{display:inline-flex;background:#e2e8f0;padding:3px;border-radius:8px;gap:3px;border:1px solid var(--border-color)}
+    .view-switcher-btn{border:none;background:transparent;padding:.35rem .65rem;font-family:inherit;font-size:.72rem;font-weight:700;color:var(--text-muted);border-radius:6px;cursor:pointer;transition:all .15s ease;display:inline-flex;align-items:center;gap:4px}
+    .view-switcher-btn:hover:not(.active){color:var(--text-main);background:rgba(255,255,255,.5)}
+    .view-switcher-btn.active{background:#fff;color:var(--color-brand-blue);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+    /* TABLA DE DATOS */
     .data-table-container{background:#fff;border:1px solid var(--border-color);border-radius:12px;margin-top:.75rem;overflow-x:auto}
-    .data-table{width:100%;border-collapse:collapse;font-size:.75rem;min-width:820px}
+    .data-table{width:100%;border-collapse:collapse;font-size:.75rem;min-width:860px}
     .data-table th{padding:.6rem .75rem;background:#f8fafc;font-size:.68rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;border-bottom:1px solid var(--border-color);text-align:left}
     .data-table td{padding:.55rem .75rem;border-bottom:1px solid #f1f5f9;vertical-align:middle}
     .data-table tr:hover{background:#f8fafc}
@@ -187,17 +195,44 @@
     .badge-Liquidado{background:#ecfdf5;color:#047857;border:1px solid #6ee7b7}
     .badge-Rechazado{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
     .badge-org-tag{background:#e0f2fe;color:#0369a1;padding:2px 6px;border-radius:4px;font-size:.65rem;font-weight:700;border:1px solid #bae6fd}
+    .badge-provisorio{background:#fef3c7;color:#92400e;padding:2px 5px;border-radius:4px;font-size:.65rem;font-weight:700;font-family:var(--font-mono)}
+    .badge-definitivo{background:#dcfce7;color:#166534;padding:2px 6px;border-radius:4px;font-size:.65rem;font-weight:800;font-family:var(--font-mono);border:1px solid #86efac}
     .btn-table-action{padding:.3rem .55rem;font-size:.7rem;font-weight:600;border-radius:5px;background:#fff;border:1px solid var(--border-color);color:var(--color-brand-blue);cursor:pointer;transition:all .15s ease}
     .btn-table-action:hover{background:#eff6ff;border-color:#93c5fd}
     .btn-action-primary{background:var(--color-brand-blue);color:#fff;border-color:var(--color-brand-blue)}.btn-action-primary:hover{background:var(--color-brand-blue-dark)}
-    .ai-teaser-card{background:linear-gradient(135deg,#f0fdf4 0%,#e0f2fe 100%);border:1px dashed #0284c7;border-radius:12px;padding:1rem;margin-top:1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
-    .ai-teaser-info h3{font-size:.85rem;font-weight:800;color:#0369a1}.ai-teaser-info p{font-size:.72rem;color:#334155;margin-top:2px}
+
+    /* TABLERO KANBAN INTERACTIVO */
+    .kanban-board-wrapper{margin-top:.75rem;overflow-x:auto;padding-bottom:.5rem}
+    .kanban-board{display:flex;gap:.75rem;min-width:1100px;align-items:flex-start}
+    .kanban-col{flex:1;min-width:220px;max-width:270px;background:#f8fafc;border:1px solid var(--border-color);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+    .kanban-col-header{padding:.55rem .75rem;font-size:.72rem;font-weight:800;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-color)}
+    .kanban-cards-box{padding:.5rem;display:flex;flex-direction:column;gap:.5rem;max-height:68vh;overflow-y:auto}
+    .kanban-card{background:#fff;border:1px solid var(--border-color);border-radius:8px;padding:.65rem .75rem;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.04);transition:all .15s ease}
+    .kanban-card:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,0,0,.08);border-color:#93c5fd}
+    .kanban-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+    .kanban-card-title{font-size:.78rem;font-weight:800;color:var(--color-primary);line-height:1.2}
+    .kanban-card-meta{font-size:.68rem;color:var(--text-muted);margin-top:3px}
+    .kanban-card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:.45rem;padding-top:.35rem;border-top:1px dashed #e2e8f0;font-size:.68rem}
+
+    /* VISTA CALENDARIO MENSUAL */
+    .calendar-wrapper{margin-top:.75rem;background:#fff;border:1px solid var(--border-color);border-radius:12px;padding:1rem}
+    .calendar-nav-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
+    .calendar-month-title{font-size:.95rem;font-weight:800;color:var(--color-primary)}
+    .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+    .calendar-head-cell{text-align:center;padding:.4rem;background:#f8fafc;font-size:.68rem;font-weight:700;color:var(--text-muted);border-radius:4px;text-transform:uppercase}
+    .calendar-day-cell{min-height:96px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:4px;display:flex;flex-direction:column;transition:background-color .12s}
+    .calendar-day-cell:hover{background:#fafafa}
+    .calendar-day-cell.other-month{background:#f8fafc;opacity:.45}
+    .calendar-day-cell.is-today{background:#eff6ff;border-color:#bfdbfe}
+    .calendar-day-num{font-size:.7rem;font-weight:700;margin-bottom:3px;display:flex;justify-content:space-between}
+    .calendar-event-chip{padding:2px 5px;border-radius:4px;font-size:.62rem;font-weight:700;margin-bottom:3px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .15s}
+    .calendar-event-chip:hover{opacity:.85}
 
     /* MODALES */
-    .modal-backdrop{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.5);backdrop-filter:blur(3px);z-index:100;display:none;align-items:center;justify-content:center;padding:1rem}
+    .modal-backdrop{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.55);backdrop-filter:blur(3px);z-index:100;display:none;align-items:center;justify-content:center;padding:1rem}
     .modal-backdrop.open{display:flex}
-    .modal-window{background:#fff;border-radius:14px;width:100%;max-width:840px;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 15px 35px rgba(0,0,0,.2);border:1px solid var(--border-color);overflow:hidden}
-    .modal-window.modal-large{max-width:920px}
+    .modal-window{background:#fff;border-radius:14px;width:100%;max-width:880px;max-height:94vh;display:flex;flex-direction:column;box-shadow:0 15px 35px rgba(0,0,0,.2);border:1px solid var(--border-color);overflow:hidden}
+    .modal-window.modal-large{max-width:960px}
     .modal-header-bar{padding:.85rem 1.25rem;border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between;background:#f8fafc}
     .modal-header-title{font-size:.95rem;font-weight:800;color:var(--color-primary);display:flex;align-items:center;gap:.4rem}
     .btn-close-modal{background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text-muted);line-height:1}
@@ -206,12 +241,32 @@
     .section-title-divider{font-size:.75rem;font-weight:700;color:var(--color-primary);text-transform:uppercase;letter-spacing:.03em;border-bottom:1px solid var(--border-color);padding-bottom:.3rem;margin:.85rem 0 .5rem}
     .grid-3-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.5rem}
     .file-input-box{border:1px dashed var(--border-color);padding:.6rem;border-radius:8px;background:#f8fafc;font-size:.72rem}
-    .timeline-list{display:flex;flex-direction:column;gap:.45rem;margin-top:.4rem;max-height:280px;overflow-y:auto;padding-right:4px}
-    .timeline-item{padding:.5rem .75rem;background:#f8fafc;border-left:3px solid var(--color-brand-blue);border-radius:0 6px 6px 0;font-size:.72rem}
-    .timeline-meta{font-size:.65rem;color:var(--text-muted);font-weight:700;margin-bottom:2px;display:flex;align-items:center;justify-content:space-between}
-    .timeline-role-badge{padding:1px 5px;border-radius:4px;font-size:.6rem;background:#e2e8f0;color:#334155;font-weight:600}
-    .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#0f172a;color:#fff;padding:.65rem 1rem;border-radius:8px;font-size:.775rem;font-weight:600;display:flex;align-items:center;gap:.5rem;box-shadow:0 6px 20px rgba(0,0,0,.2);transform:translateY(100px);opacity:0;transition:all .25s cubic-bezier(0.16,1,0.3,1);z-index:100}
-    .toast.show{transform:translateY(0);opacity:1}
+
+    /* COMPARATIVO: DESEADO VS PROPUESTA MUTUAL */
+    .compare-offers-grid{display:grid;grid-template-columns:1fr;gap:.75rem;margin-bottom:1rem}
+    @media(min-width:768px){.compare-offers-grid{grid-template-columns:1fr 1fr}}
+    .offer-card{border-radius:10px;padding:.85rem;border:1px solid var(--border-color);font-size:.75rem}
+    .offer-card-desired{background:#f8fafc;border-color:#cbd5e1}
+    .offer-card-mutual{background:#eff6ff;border-color:#93c5fd}
+    .offer-card-title{font-size:.8rem;font-weight:800;display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
+
+    /* CHAT MODERNO BI-DIRECCIONAL */
+    .chat-container{display:flex;flex-direction:column;gap:.6rem;max-height:300px;overflow-y:auto;padding:.75rem;background:#f1f5f9;border-radius:8px;border:1px solid var(--border-color)}
+    .chat-bubble{max-width:82%;padding:.55rem .75rem;border-radius:10px;font-size:.76rem;line-height:1.4;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+    .chat-bubble-comercializador{align-self:flex-start;background:#ffffff;border:1px solid #cbd5e1;border-bottom-left-radius:2px}
+    .chat-bubble-mutual{align-self:flex-end;background:#0c3966;color:#ffffff;border-bottom-right-radius:2px}
+    .chat-meta{font-size:.62rem;margin-bottom:2px;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+    .chat-bubble-comercializador .chat-meta{color:var(--color-brand-blue)}
+    .chat-bubble-mutual .chat-meta{color:#93c5fd}
+    .chat-tag{padding:1px 5px;border-radius:4px;font-size:.58rem;text-transform:uppercase;font-weight:800}
+    .chat-tag-comercializador{background:#e0f2fe;color:#0369a1}
+    .chat-tag-mutual{background:#1e3a8a;color:#dbeafe}
+
+    /* VISOR DOCUMENTAL ONLINE */
+    .doc-viewer-modal-window{max-width:960px;width:95%;height:90vh}
+    .doc-viewer-frame-wrap{flex:1;background:#334155;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+    .doc-viewer-frame{width:100%;height:100%;border:none;background:#fff}
+    .doc-viewer-img{max-width:100%;max-height:100%;object-fit:contain}
 
     /* SPINNER & OVERLAY DE SINCRONIZACIÓN API */
     .api-loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.45);backdrop-filter:blur(3px);z-index:9999;display:none;align-items:center;justify-content:center}
@@ -223,6 +278,8 @@
     .api-loading-text span{font-size:.72rem;color:var(--text-muted);margin-top:2px}
     .online-indicator-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:.68rem;font-weight:700;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
     .online-indicator-dot{width:6px;height:6px;border-radius:50%;background:#10b981}
+    .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#0f172a;color:#fff;padding:.65rem 1rem;border-radius:8px;font-size:.775rem;font-weight:600;display:flex;align-items:center;gap:.5rem;box-shadow:0 6px 20px rgba(0,0,0,.2);transform:translateY(100px);opacity:0;transition:all .25s cubic-bezier(0.16,1,0.3,1);z-index:100}
+    .toast.show{transform:translateY(0);opacity:1}
   </style>
 </head>
 <body>
@@ -494,15 +551,20 @@
           <h2 id="lblTituloModuloComercial">📁 Mis Gestiones de Ayudas Económicas</h2>
           <p id="lblSubtituloModuloComercial">Registro, carga de documentación y seguimiento de solicitudes originadas.</p>
         </div>
-        <div style="display:flex;gap:0.5rem;align-items:center;">
+        <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+          <div class="view-switcher-control">
+            <button type="button" class="view-switcher-btn active" id="btnViewCom-tabla" onclick="setVistaModulo('comercializador', 'tabla')">📋 Tabla</button>
+            <button type="button" class="view-switcher-btn" id="btnViewCom-kanban" onclick="setVistaModulo('comercializador', 'kanban')">📊 Kanban</button>
+            <button type="button" class="view-switcher-btn" id="btnViewCom-calendario" onclick="setVistaModulo('comercializador', 'calendario')">📅 Calendario</button>
+          </div>
           <button class="btn-restore" onclick="sincronizarConBackend()" title="Sincronizar expedientes con Google Sheets">🔄 Actualizar</button>
-          <button class="btn-hero-action" onclick="abrirModalAltaSolicitud()">+ Nueva Solicitud de Ayuda Económica</button>
+          <button class="btn-hero-action" onclick="abrirModalAltaSolicitud()">+ Nueva Solicitud</button>
         </div>
       </div>
 
       <div class="toolbar-filters">
         <div class="filters-left-group">
-          <div class="search-input-box"><input type="text" id="filtroComercialTexto" placeholder="🔍 Buscar por DNI, Asociado o Asesor..." oninput="filtrarGestionesComercializador()"/></div>
+          <div class="search-input-box"><input type="text" id="filtroComercialTexto" placeholder="🔍 Buscar por DNI, Asociado, N° o Asesor..." oninput="filtrarGestionesComercializador()"/></div>
           <select id="filtroComercialEstado" class="input-text" style="width:auto;" onchange="filtrarGestionesComercializador()">
             <option value="">Todos los Estados</option>
             <option value="Pendiente">Pendiente 🟡</option>
@@ -520,11 +582,12 @@
         <span style="font-size:0.75rem;color:var(--text-muted);" id="lblTotalComercializador">0 solicitudes registradas</span>
       </div>
 
-      <div class="data-table-container">
+      <!-- VISTA 1: TABLA -->
+      <div id="wrapperComercialTabla" class="data-table-container">
         <table class="data-table">
           <thead>
             <tr>
-              <th>ID Solicitud</th>
+              <th>N° Solicitud</th>
               <th>Fecha</th>
               <th id="colHeadAsesor" style="display:none;">Asesor Origen</th>
               <th>Asociado</th>
@@ -532,12 +595,31 @@
               <th>Línea</th>
               <th>Monto Neto</th>
               <th>Cuotas</th>
+              <th>Propuesta Mutual</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody id="tablaComercializadorBody"></tbody>
         </table>
+      </div>
+
+      <!-- VISTA 2: KANBAN -->
+      <div id="wrapperComercialKanban" class="kanban-board-wrapper" style="display:none;">
+        <div class="kanban-board" id="kanbanComercialBoard"></div>
+      </div>
+
+      <!-- VISTA 3: CALENDARIO -->
+      <div id="wrapperComercialCalendario" class="calendar-wrapper" style="display:none;">
+        <div class="calendar-nav-bar">
+          <div class="calendar-month-title" id="calComMonthTitle">Noviembre 2026</div>
+          <div style="display:flex;gap:0.35rem;">
+            <button class="btn-restore" onclick="navegarCalendario('comercializador', -1)">&lt; Mes Anterior</button>
+            <button class="btn-restore" onclick="navegarCalendario('comercializador', 0)">Hoy</button>
+            <button class="btn-restore" onclick="navegarCalendario('comercializador', 1)">Mes Siguiente &gt;</button>
+          </div>
+        </div>
+        <div class="calendar-grid" id="gridComercialCalendario"></div>
       </div>
     </section>
 
@@ -548,12 +630,19 @@
           <h2>🏢 Panel de Auditoría y Resolución Mutual</h2>
           <p>Bandeja general de solicitudes, control crediticio por organización, legajos y liquidación.</p>
         </div>
-        <button class="btn-restore" onclick="sincronizarConBackend()" title="Sincronizar solicitudes con Google Sheets">🔄 Actualizar Bandeja</button>
+        <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+          <div class="view-switcher-control">
+            <button type="button" class="view-switcher-btn active" id="btnViewMut-tabla" onclick="setVistaModulo('mutual', 'tabla')">📋 Tabla</button>
+            <button type="button" class="view-switcher-btn" id="btnViewMut-kanban" onclick="setVistaModulo('mutual', 'kanban')">📊 Kanban</button>
+            <button type="button" class="view-switcher-btn" id="btnViewMut-calendario" onclick="setVistaModulo('mutual', 'calendario')">📅 Calendario</button>
+          </div>
+          <button class="btn-restore" onclick="sincronizarConBackend()" title="Sincronizar solicitudes con Google Sheets">🔄 Actualizar Bandeja</button>
+        </div>
       </div>
 
       <div class="toolbar-filters">
         <div class="filters-left-group">
-          <div class="search-input-box"><input type="text" id="filtroMutualTexto" placeholder="🔍 Buscar asociado, DNI o ID..." oninput="filtrarGestionesMutual()"/></div>
+          <div class="search-input-box"><input type="text" id="filtroMutualTexto" placeholder="🔍 Buscar por DNI, N°, Asociado o Asesor..." oninput="filtrarGestionesMutual()"/></div>
           <select id="filtroMutualEstado" class="input-text" style="width:auto;" onchange="filtrarGestionesMutual()">
             <option value="">Todos los Estados</option>
             <option value="Pendiente">Pendiente 🟡</option>
@@ -579,17 +668,19 @@
         <span style="font-size:0.75rem;color:var(--text-muted);" id="lblTotalMutual">0 solicitudes</span>
       </div>
 
-      <div class="data-table-container">
+      <!-- VISTA 1: TABLA -->
+      <div id="wrapperMutualTabla" class="data-table-container">
         <table class="data-table">
           <thead>
             <tr>
-              <th>ID</th>
+              <th>N° Expediente</th>
               <th>Fecha</th>
               <th>Organización</th>
               <th>Comercializador / Asesor</th>
               <th>Asociado (DNI)</th>
               <th>Organismo</th>
               <th>Línea / Monto</th>
+              <th>Propuesta Oferta</th>
               <th>Analista</th>
               <th>Estado</th>
               <th>Acción</th>
@@ -597,6 +688,24 @@
           </thead>
           <tbody id="tablaMutualBody"></tbody>
         </table>
+      </div>
+
+      <!-- VISTA 2: KANBAN -->
+      <div id="wrapperMutualKanban" class="kanban-board-wrapper" style="display:none;">
+        <div class="kanban-board" id="kanbanMutualBoard"></div>
+      </div>
+
+      <!-- VISTA 3: CALENDARIO -->
+      <div id="wrapperMutualCalendario" class="calendar-wrapper" style="display:none;">
+        <div class="calendar-nav-bar">
+          <div class="calendar-month-title" id="calMutMonthTitle">Noviembre 2026</div>
+          <div style="display:flex;gap:0.35rem;">
+            <button class="btn-restore" onclick="navegarCalendario('mutual', -1)">&lt; Mes Anterior</button>
+            <button class="btn-restore" onclick="navegarCalendario('mutual', 0)">Hoy</button>
+            <button class="btn-restore" onclick="navegarCalendario('mutual', 1)">Mes Siguiente &gt;</button>
+          </div>
+        </div>
+        <div class="calendar-grid" id="gridMutualCalendario"></div>
       </div>
 
       <div class="ai-teaser-card">
@@ -637,7 +746,7 @@
             <div class="form-group"><label class="form-label">Cargo *</label><select id="solCargo" class="input-text" required><option value="Titular">Titular</option><option value="Suplente">Suplente</option></select></div>
           </div>
 
-          <div class="section-title-divider">3. Datos del Préstamo</div>
+          <div class="section-title-divider">3. Datos del Préstamo Deseado por el Solicitante</div>
           <div class="grid-3-cols">
             <div class="form-group"><label class="form-label">Línea de Ayuda *</label><select id="solLinea" class="input-text" required onchange="ajustarPlazosModalAlta(this.value)"><option value="fedem">FEDEM Provincial</option><option value="muni">Convenio Municipal VIKINGO / QUAD</option><option value="sidecreer">Tarjeta Sidecreer</option></select></div>
             <div class="form-group"><label class="form-label">Monto Solicitado (Neto) *</label><input type="number" id="solMonto" class="input-text" required min="10000" step="1000" value="100000"/></div>
@@ -663,16 +772,16 @@
     </div>
   </div>
 
-  <!-- MODAL 2: VER FICHA COMPLETA (ADJUNTOS Y COMENTARIOS) -->
+  <!-- MODAL 2: VER FICHA COMPLETA (EDICIÓN INTEGRAL, OFERTAS, DOCUMENTAL Y CHAT) -->
   <div id="modalFichaCompleta" class="modal-backdrop">
     <div class="modal-window modal-large">
       <div class="modal-header-bar">
-        <div class="modal-header-title"><span id="fichaModalTitle">Ficha de Solicitud</span></div>
+        <div class="modal-header-title"><span id="fichaModalTitle">Ficha de Expediente</span></div>
         <button class="btn-close-modal" onclick="cerrarModal('modalFichaCompleta')">&times;</button>
       </div>
       <div class="modal-body-scroll" id="fichaModalBody"></div>
       <div class="modal-footer-bar">
-        <button class="btn-restore" onclick="cerrarModal('modalFichaCompleta')">Cerrar</button>
+        <button class="btn-restore" onclick="cerrarModal('modalFichaCompleta')">Cerrar Expediente</button>
       </div>
     </div>
   </div>
@@ -687,6 +796,25 @@
       <div class="modal-body-scroll" id="gestionModalBody"></div>
       <div class="modal-footer-bar">
         <button class="btn-restore" onclick="cerrarModal('modalGestionMutual')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: VISOR DOCUMENTAL ONLINE INTEGRADO -->
+  <div id="modalVisorDocumento" class="modal-backdrop">
+    <div class="modal-window doc-viewer-modal-window">
+      <div class="modal-header-bar">
+        <div class="modal-header-title">
+          <span>📄 Visor Documental Online: </span>
+          <strong id="visorDocNombre" style="color:var(--color-brand-blue);margin-left:5px;">archivo.pdf</strong>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <a id="btnVisorDescargar" href="#" download class="btn-restore" style="text-decoration:none;font-size:0.75rem;" target="_blank">📥 Descargar</a>
+          <button class="btn-close-modal" onclick="cerrarModal('modalVisorDocumento')">&times;</button>
+        </div>
+      </div>
+      <div class="doc-viewer-frame-wrap" id="docViewerContent">
+        <!-- Renderizado dinámico de PDF en iframe o Imagen directa -->
       </div>
     </div>
   </div>
@@ -754,6 +882,7 @@
             nombre: file.name,
             tipoMime: file.type || 'application/octet-stream',
             tamanio: file.size,
+            dataUrl: String(res),
             base64: base64Data
           });
         };
@@ -1157,7 +1286,6 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const err = document.getElementById('loginErrorMsg');
       if (err) err.style.display = 'none';
 
-      // Llamada oficial action: 'login' al backend en Google Apps Script
       const res = await callApi({
         action: 'login',
         usuario: user,
@@ -1179,7 +1307,6 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         }
       }
 
-      // Si el backend no tiene ese usuario o está en modo de prueba/desconectado, verificar fallback local seguro
       if (!loggedUser) {
         const fallback = USUARIOS_DEMO_FALLBACK[user];
         if (fallback && fallback.clave === pass) {
@@ -1188,7 +1315,6 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
 
       if (loggedUser) {
-        // Normalizar estructura
         if (loggedUser.es_titular_organizacion === undefined && loggedUser.esTitular !== undefined) {
           loggedUser.es_titular_organizacion = !!loggedUser.esTitular;
         }
@@ -1210,7 +1336,6 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
                 (rolKey === 'analista') ? USUARIOS_DEMO_FALLBACK['analista1'] :
                 USUARIOS_DEMO_FALLBACK['admin'];
 
-      // Intentar login por API para registrar la sesión en Apps Script
       callApi({ action: 'login', usuario: u.usuario, clave: u.clave }).catch(console.warn);
 
       setSession(u);
@@ -1230,10 +1355,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       if (target) target.classList.add('active');
       document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.view === viewId));
       if (viewId === 'view-comercializador') {
-        renderTablaComercializador();
+        renderModuloComercializador();
       }
       if (viewId === 'view-mutual') {
-        renderTablaMutual();
+        renderModuloMutual();
       }
       if (viewId === 'view-simulador') {
         renderApp();
@@ -1277,76 +1402,164 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     /* ========================================================================
        3. PERSISTENCIA DE SOLICITUDES Y GESTIONES
        ======================================================================== */
-    const STORAGE_SOLICITUDES_KEY = 'AMMER_SOLICITUDES_DATA_V3';
+    const STORAGE_SOLICITUDES_KEY = 'AMMER_SOLICITUDES_DATA_V4';
     const INITIAL_SOLICITUDES = [
       {
-        id: '43120', fecha: '2026-11-08 09:30', usuario_id: 'usr_asesor1', comercializador: 'Carlos Gómez',
-        organizacion_id: 'org_parana_centro', nombre_organizacion: 'Organización Paraná Centro',
+        id: '43120',
+        id_provisorio: 'PROV-43120',
+        id_definitivo: '',
+        fecha: '2026-11-08 09:30',
+        usuario_id: 'usr_asesor1',
+        comercializador: 'Carlos Gómez',
+        organizacion_id: 'org_parana_centro',
+        nombre_organizacion: 'Organización Paraná Centro',
         solicitante: {
           dni: '32456789', legajo: '12450', nombre: 'Juan Carlos Pérez', fechaNac: '1985-04-12',
           email: 'jcperez@gmail.com', celular: '3434556677', domicilio: 'Urquiza 840, Paraná',
           condicion: 'Activo', organismo: 'Municipal', dependencia: 'Obras Sanitarias', cargo: 'Titular'
         },
-        prestamo: { linea: 'muni', lineaNombre: 'Convenio Municipal VIKINGO / QUAD', monto: 100000, cuotas: 12, cuotaEstimada: 15970 },
+        prestamo: {
+          linea: 'muni', lineaNombre: 'Convenio Municipal VIKINGO / QUAD',
+          monto: 100000, cuotas: 12, cuotaEstimada: 15970
+        },
+        propuestaMutual: {
+          activa: false,
+          linea: 'muni',
+          lineaNombre: 'Convenio Municipal VIKINGO / QUAD',
+          monto: 100000,
+          cuotas: 12,
+          cuotaEstimada: 15970,
+          estadoPropuesta: 'En Evaluación',
+          detalle: 'Plan bajo revisión de margen crediticio'
+        },
         adjuntos: [
-          { tipo: 'DNI Frente y Dorso', nombre: '43120 DNI Frente.jpg', fecha: '2026-11-08 09:30', autor: 'Carlos Gómez' },
-          { tipo: 'Recibo de Sueldo', nombre: '43120 Recibo de Sueldo.pdf', fecha: '2026-11-08 09:30', autor: 'Carlos Gómez' },
-          { tipo: 'Factura Servicio', nombre: '43120 Constancia Domicilio.pdf', fecha: '2026-11-08 09:30', autor: 'Carlos Gómez' }
+          { tipo: 'DNI Frente y Dorso', nombre: '43120 DNI Frente.jpg', fecha: '2026-11-08 09:30', autor: 'Carlos Gómez', urlDrive: '' },
+          { tipo: 'Recibo de Sueldo', nombre: '43120 Recibo de Sueldo.pdf', fecha: '2026-11-08 09:30', autor: 'Carlos Gómez', urlDrive: '' },
+          { tipo: 'Factura Servicio', nombre: '43120 Constancia Domicilio.pdf', fecha: '2026-11-08 09:30', autor: 'Carlos Gómez', urlDrive: '' }
         ],
-        estado: 'Observado', analistaAsignado: 'Mariana López',
+        estado: 'Observado',
+        analistaAsignado: 'Mariana López',
         observaciones: [
           { autor: 'Carlos Gómez', rol: 'Comercializador - Asesor', fecha: '2026-11-08 09:30', texto: 'Solicitud ingresada con documentación inicial adjunta.' },
           { autor: 'Mariana López', rol: 'Analista Mutual', fecha: '2026-11-08 14:15', texto: 'Recibo de sueldo borroso en el apartado de haberes netos. Por favor adjuntar recibo legible o recibo digital reciente.' }
         ]
       },
       {
-        id: '43121', fecha: '2026-11-09 11:15', usuario_id: 'usr_titular1', comercializador: 'Mariano Benítez',
-        organizacion_id: 'org_parana_centro', nombre_organizacion: 'Organización Paraná Centro',
+        id: '43121',
+        id_provisorio: 'PROV-43121',
+        id_definitivo: 'AYU-2026-985',
+        fecha: '2026-11-09 11:15',
+        usuario_id: 'usr_titular1',
+        comercializador: 'Mariano Benítez',
+        organizacion_id: 'org_parana_centro',
+        nombre_organizacion: 'Organización Paraná Centro',
         solicitante: {
           dni: '28990112', legajo: '', nombre: 'Ana María Romero', fechaNac: '1981-08-25',
           email: 'anaromero@hotmail.com', celular: '3434998877', domicilio: 'Gualeguaychú 320, Paraná',
           condicion: 'Activo', organismo: 'Provincial', dependencia: 'Consejo Gral Educación', cargo: 'Titular'
         },
-        prestamo: { linea: 'fedem', lineaNombre: 'FEDEM Provincial', monto: 200000, cuotas: 24, cuotaEstimada: 14850 },
+        prestamo: {
+          linea: 'fedem', lineaNombre: 'FEDEM Provincial',
+          monto: 200000, cuotas: 24, cuotaEstimada: 14850
+        },
+        propuestaMutual: {
+          activa: true,
+          linea: 'fedem',
+          lineaNombre: 'FEDEM Provincial',
+          monto: 180000,
+          cuotas: 18,
+          cuotaEstimada: 16900,
+          estadoPropuesta: 'Propuesta Enviada al Comercializador',
+          detalle: 'Por margen de afectación del 30% se contraoferta $180.000 en 18 cuotas'
+        },
         adjuntos: [
-          { tipo: 'DNI Frente y Dorso', nombre: '43121 DNI Frente.jpg', fecha: '2026-11-09 11:15', autor: 'Mariano Benítez' },
-          { tipo: 'Recibo de Sueldo', nombre: '43121 Recibo de Sueldo.pdf', fecha: '2026-11-09 11:15', autor: 'Mariano Benítez' }
+          { tipo: 'DNI Frente y Dorso', nombre: '43121 DNI Frente.jpg', fecha: '2026-11-09 11:15', autor: 'Mariano Benítez', urlDrive: '' },
+          { tipo: 'Recibo de Sueldo', nombre: '43121 Recibo de Sueldo.pdf', fecha: '2026-11-09 11:15', autor: 'Mariano Benítez', urlDrive: '' }
         ],
-        estado: 'En Análisis', analistaAsignado: 'Mariana López',
+        estado: 'En Análisis',
+        analistaAsignado: 'Mariana López',
         observaciones: [
           { autor: 'Mariano Benítez', rol: 'Comercializador - Titular', fecha: '2026-11-09 11:15', texto: 'Solicitud originada por titular de organización. Legajo completo.' },
-          { autor: 'Mariana López', rol: 'Analista Mutual', fecha: '2026-11-09 15:30', texto: 'Legajo ingresado a control de scoring crediticio.' }
+          { autor: 'Mariana López', rol: 'Analista Mutual', fecha: '2026-11-09 15:30', texto: 'Legajo ingresado a control de scoring crediticio. Se calcula contraoferta viable.' }
         ]
       },
       {
-        id: '43122', fecha: '2026-11-10 10:00', usuario_id: 'usr_concordia', comercializador: 'Roberto Benítez',
-        organizacion_id: 'org_concordia', nombre_organizacion: 'Organización Concordia',
+        id: '43122',
+        id_provisorio: 'PROV-43122',
+        id_definitivo: 'AYU-2026-986',
+        fecha: '2026-11-10 10:00',
+        usuario_id: 'usr_concordia',
+        comercializador: 'Roberto Benítez',
+        organizacion_id: 'org_concordia',
+        nombre_organizacion: 'Organización Concordia',
         solicitante: {
           dni: '35112233', legajo: '8841', nombre: 'Esteban Martínez', fechaNac: '1989-11-03',
           email: 'emartinez@gmail.com', celular: '3434112233', domicilio: 'San Martín 120, Concordia',
           condicion: 'Activo', organismo: 'Municipal', dependencia: 'Tránsito Municipal', cargo: 'Titular'
         },
-        prestamo: { linea: 'muni', lineaNombre: 'Convenio Municipal VIKINGO / QUAD', monto: 150000, cuotas: 12, cuotaEstimada: 23955 },
+        prestamo: {
+          linea: 'muni', lineaNombre: 'Convenio Municipal VIKINGO / QUAD',
+          monto: 150000, cuotas: 12, cuotaEstimada: 23955
+        },
+        propuestaMutual: {
+          activa: true,
+          linea: 'muni',
+          lineaNombre: 'Convenio Municipal VIKINGO / QUAD',
+          monto: 150000,
+          cuotas: 12,
+          cuotaEstimada: 23955,
+          estadoPropuesta: 'Aceptada por el Socio',
+          detalle: 'Aprobación plena según condiciones solicitadas'
+        },
         adjuntos: [
-          { tipo: 'DNI Frente y Dorso', nombre: '43122 DNI Frente.jpg', fecha: '2026-11-10 10:00', autor: 'Roberto Benítez' },
-          { tipo: 'Recibo de Sueldo', nombre: '43122 Recibo de Sueldo.pdf', fecha: '2026-11-10 10:00', autor: 'Roberto Benítez' }
+          { tipo: 'DNI Frente y Dorso', nombre: '43122 DNI Frente.jpg', fecha: '2026-11-10 10:00', autor: 'Roberto Benítez', urlDrive: '' },
+          { tipo: 'Recibo de Sueldo', nombre: '43122 Recibo de Sueldo.pdf', fecha: '2026-11-10 10:00', autor: 'Roberto Benítez', urlDrive: '' }
         ],
-        estado: 'Aprobado', analistaAsignado: 'Mariana López',
+        estado: 'Aprobado',
+        analistaAsignado: 'Mariana López',
         observaciones: [
           { autor: 'Roberto Benítez', rol: 'Comercializador - Asesor', fecha: '2026-11-10 10:00', texto: 'Solicitud ingresada para aprobación.' },
-          { autor: 'Mariana López', rol: 'Analista Mutual', fecha: '2026-11-10 12:30', texto: 'Aprobado por el comité de créditos.' }
+          { autor: 'Mariana López', rol: 'Analista Mutual', fecha: '2026-11-10 12:30', texto: 'Aprobado por el comité de créditos sin objeciones.' }
         ]
       }
     ];
 
     function getStoredSolicitudes() {
       const data = localStorage.getItem(STORAGE_SOLICITUDES_KEY);
-      if (!data) { localStorage.setItem(STORAGE_SOLICITUDES_KEY, JSON.stringify(INITIAL_SOLICITUDES)); return INITIAL_SOLICITUDES; }
-      try { return JSON.parse(data); } catch(e) { return INITIAL_SOLICITUDES; }
+      if (!data) {
+        localStorage.setItem(STORAGE_SOLICITUDES_KEY, JSON.stringify(INITIAL_SOLICITUDES));
+        return INITIAL_SOLICITUDES;
+      }
+      try {
+        const arr = JSON.parse(data);
+        return arr.map(normalizarSolicitud);
+      } catch(e) {
+        return INITIAL_SOLICITUDES;
+      }
     }
-    function saveStoredSolicitudes(list) { localStorage.setItem(STORAGE_SOLICITUDES_KEY, JSON.stringify(list)); }
 
-    /* CARGA REACTIVA DESDE GOOGLE APPS SCRIPT: action: 'obtenerSolicitudes' */
+    function normalizarSolicitud(s) {
+      if (!s.id_provisorio) s.id_provisorio = 'PROV-' + s.id;
+      if (s.id_definitivo === undefined) s.id_definitivo = '';
+      if (!s.propuestaMutual) {
+        s.propuestaMutual = {
+          activa: false,
+          linea: s.prestamo?.linea || 'fedem',
+          lineaNombre: s.prestamo?.lineaNombre || 'FEDEM Provincial',
+          monto: s.prestamo?.monto || 100000,
+          cuotas: s.prestamo?.cuotas || 12,
+          cuotaEstimada: s.prestamo?.cuotaEstimada || 0,
+          estadoPropuesta: 'En Evaluación',
+          detalle: ''
+        };
+      }
+      return s;
+    }
+
+    function saveStoredSolicitudes(list) {
+      localStorage.setItem(STORAGE_SOLICITUDES_KEY, JSON.stringify(list));
+    }
+
     async function sincronizarConBackend(silencioso = false) {
       const session = getSession();
       if (!session) return;
@@ -1365,22 +1578,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       if (res.ok && res.data) {
         let lista = null;
-        if (Array.isArray(res.data)) {
-          lista = res.data;
-        } else if (res.data.solicitudes && Array.isArray(res.data.solicitudes)) {
-          lista = res.data.solicitudes;
-        } else if (res.data.data && Array.isArray(res.data.data)) {
-          lista = res.data.data;
-        }
+        if (Array.isArray(res.data)) lista = res.data;
+        else if (res.data.solicitudes && Array.isArray(res.data.solicitudes)) lista = res.data.solicitudes;
+        else if (res.data.data && Array.isArray(res.data.data)) lista = res.data.data;
 
         if (lista && lista.length >= 0) {
-          saveStoredSolicitudes(lista);
-          if (document.getElementById('view-comercializador')?.classList.contains('active')) {
-            renderTablaComercializador();
-          }
-          if (document.getElementById('view-mutual')?.classList.contains('active')) {
-            renderTablaMutual();
-          }
+          saveStoredSolicitudes(lista.map(normalizarSolicitud));
+          renderModuloComercializador();
+          renderModuloMutual();
           if (!silencioso) showToast('Bandeja sincronizada con Google Sheets ✓');
           return;
         }
@@ -1392,10 +1597,52 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     /* ========================================================================
-       4. GESTIONES DEL COMERCIALIZADOR (TAB 2)
+       4. ESTADO DE VISTAS CONMUTABLES (TABLA, KANBAN, CALENDARIO)
        ======================================================================== */
-    function renderTablaComercializador() {
-      const session = getSession(); if (!session) return;
+    const vistaModulosState = {
+      comercializador: 'tabla', // 'tabla' | 'kanban' | 'calendario'
+      mutual: 'tabla',
+      calDateComercializador: new Date(),
+      calDateMutual: new Date()
+    };
+
+    function setVistaModulo(moduloKey, modo) {
+      vistaModulosState[moduloKey] = modo;
+      if (moduloKey === 'comercializador') {
+        document.querySelectorAll('#view-comercializador .view-switcher-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('btnViewCom-' + modo)?.classList.add('active');
+        document.getElementById('wrapperComercialTabla').style.display = (modo === 'tabla') ? 'block' : 'none';
+        document.getElementById('wrapperComercialKanban').style.display = (modo === 'kanban') ? 'block' : 'none';
+        document.getElementById('wrapperComercialCalendario').style.display = (modo === 'calendario') ? 'block' : 'none';
+        renderModuloComercializador();
+      } else {
+        document.querySelectorAll('#view-mutual .view-switcher-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('btnViewMut-' + modo)?.classList.add('active');
+        document.getElementById('wrapperMutualTabla').style.display = (modo === 'tabla') ? 'block' : 'none';
+        document.getElementById('wrapperMutualKanban').style.display = (modo === 'kanban') ? 'block' : 'none';
+        document.getElementById('wrapperMutualCalendario').style.display = (modo === 'calendario') ? 'block' : 'none';
+        renderModuloMutual();
+      }
+    }
+
+    function navegarCalendario(moduloKey, delta) {
+      const prop = (moduloKey === 'comercializador') ? 'calDateComercializador' : 'calDateMutual';
+      if (delta === 0) {
+        vistaModulosState[prop] = new Date();
+      } else {
+        const d = new Date(vistaModulosState[prop]);
+        d.setMonth(d.getMonth() + delta);
+        vistaModulosState[prop] = d;
+      }
+      if (moduloKey === 'comercializador') renderCalendarioModulo('comercializador');
+      else renderCalendarioModulo('mutual');
+    }
+
+    /* ========================================================================
+       5. GESTIONES DEL COMERCIALIZADOR (TAB 2)
+       ======================================================================== */
+    function getListaFiltradaComercializador() {
+      const session = getSession(); if (!session) return [];
       const all = getStoredSolicitudes();
       const isTitular = !!session.es_titular_organizacion;
       const isAdmin = (session.rol === 'Admin');
@@ -1404,6 +1651,29 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       if (isAdmin) list = all;
       else if (isTitular) list = all.filter(s => s.organizacion_id === session.organizacion_id);
       else list = all.filter(s => s.usuario_id === session.id || s.comercializador === session.nombre);
+
+      const q = (document.getElementById('filtroComercialTexto')?.value || '').toLowerCase().trim();
+      const est = document.getElementById('filtroComercialEstado')?.value || '';
+      const cboAsesor = document.getElementById('filtroComercialAsesor');
+      const filAsesor = (cboAsesor && (isTitular || isAdmin)) ? cboAsesor.value : '';
+
+      return list.filter(s => {
+        const idDef = (s.id_definitivo || '').toLowerCase();
+        const idProv = (s.id_provisorio || '').toLowerCase();
+        const matchQ = !q || String(s.id).includes(q) || idDef.includes(q) || idProv.includes(q) ||
+          (s.solicitante?.dni && String(s.solicitante.dni).includes(q)) ||
+          (s.solicitante?.nombre && s.solicitante.nombre.toLowerCase().includes(q)) ||
+          (s.comercializador && s.comercializador.toLowerCase().includes(q));
+        const matchEst = !est || s.estado === est;
+        const matchAsesor = !filAsesor || s.comercializador === filAsesor;
+        return matchQ && matchEst && matchAsesor;
+      });
+    }
+
+    function renderModuloComercializador() {
+      const session = getSession(); if (!session) return;
+      const isTitular = !!session.es_titular_organizacion;
+      const isAdmin = (session.rol === 'Admin');
 
       const thAsesor = document.getElementById('colHeadAsesor');
       const cboAsesor = document.getElementById('filtroComercialAsesor');
@@ -1422,35 +1692,33 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         }
       }
 
-      if (cboAsesor) {
-        if (showAsesorCol) {
-          cboAsesor.style.display = '';
-          const currentVal = cboAsesor.value;
-          const asesores = [...new Set(list.map(s => s.comercializador))];
-          cboAsesor.innerHTML = '<option value="">Todos los Asesores (' + asesores.length + ')</option>' +
-            asesores.map(a => '<option value="' + a + '" ' + (a === currentVal ? 'selected' : '') + '>' + a + '</option>').join('');
-        } else {
-          cboAsesor.style.display = 'none';
-        }
+      if (cboAsesor && showAsesorCol) {
+        cboAsesor.style.display = '';
+        const all = getStoredSolicitudes();
+        const list = isAdmin ? all : all.filter(s => s.organizacion_id === session.organizacion_id);
+        const currentVal = cboAsesor.value;
+        const asesores = [...new Set(list.map(s => s.comercializador))];
+        cboAsesor.innerHTML = '<option value="">Todos los Asesores (' + asesores.length + ')</option>' +
+          asesores.map(a => '<option value="' + a + '" ' + (a === currentVal ? 'selected' : '') + '>' + a + '</option>').join('');
+      } else if (cboAsesor) {
+        cboAsesor.style.display = 'none';
       }
 
-      const q = (document.getElementById('filtroComercialTexto')?.value || '').toLowerCase().trim();
-      const est = document.getElementById('filtroComercialEstado')?.value || '';
-      const filAsesor = cboAsesor && showAsesorCol ? cboAsesor.value : '';
-
-      const filtered = list.filter(s => {
-        const matchQ = !q || String(s.id).includes(q) || (s.solicitante?.dni && String(s.solicitante.dni).includes(q)) || (s.solicitante?.nombre && s.solicitante.nombre.toLowerCase().includes(q)) || (s.comercializador && s.comercializador.toLowerCase().includes(q));
-        const matchEst = !est || s.estado === est;
-        const matchAsesor = !filAsesor || s.comercializador === filAsesor;
-        return matchQ && matchEst && matchAsesor;
-      });
-
+      const filtered = getListaFiltradaComercializador();
       const lbl = document.getElementById('lblTotalComercializador');
       if (lbl) lbl.textContent = filtered.length + ' solicitudes registradas';
 
+      const modo = vistaModulosState.comercializador;
+      if (modo === 'tabla') renderTablaComercializador(filtered, showAsesorCol);
+      else if (modo === 'kanban') renderKanbanModulo('comercializador', filtered);
+      else if (modo === 'calendario') renderCalendarioModulo('comercializador');
+    }
+
+    function renderTablaComercializador(filtered, showAsesorCol) {
+      const session = getSession();
       const tbody = document.getElementById('tablaComercializadorBody'); if (!tbody) return;
       if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="' + (showAsesorCol ? 10 : 9) + '" style="text-align:center;padding:1.5rem;color:var(--text-muted);">No se encontraron solicitudes registradas con estos filtros.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="' + (showAsesorCol ? 11 : 10) + '" style="text-align:center;padding:1.5rem;color:var(--text-muted);">No se encontraron solicitudes registradas con estos filtros.</td></tr>';
         return;
       }
 
@@ -1459,8 +1727,18 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const colAsesorHtml = showAsesorCol ?
           '<td><strong>' + s.comercializador + '</strong>' + (esMio ? ' <span style="font-size:0.65rem;color:var(--color-brand-blue);font-weight:700;">(Tú)</span>' : '') + '<br><span class="badge-org-tag">' + (s.nombre_organizacion || 'Paraná Centro') + '</span></td>' : '';
         const fechaStr = s.fecha ? String(s.fecha).split(' ')[0] : 'Hoy';
+
+        const idBadge = s.id_definitivo ?
+          '<span class="badge-definitivo">' + s.id_definitivo + '</span><br><span style="font-size:0.65rem;color:var(--text-muted);">' + (s.id_provisorio || ('#' + s.id)) + '</span>' :
+          '<span class="badge-provisorio">' + (s.id_provisorio || ('#' + s.id)) + '</span>';
+
+        const prop = s.propuestaMutual;
+        const propHtml = prop && prop.activa ?
+          '<div style="font-size:0.7rem;"><span style="color:#166534;font-weight:700;">' + formatMoney(prop.monto) + '</span> (' + prop.cuotas + 'c)<br><span style="font-size:0.65rem;color:#0369a1;">' + (prop.estadoPropuesta || 'Oferta lista') + '</span></div>' :
+          '<span style="font-size:0.68rem;color:var(--text-muted);">Sin oferta</span>';
+
         return '<tr>' +
-          '<td><strong>#' + s.id + '</strong></td>' +
+          '<td>' + idBadge + '</td>' +
           '<td style="white-space:nowrap;">' + fechaStr + '</td>' +
           colAsesorHtml +
           '<td><strong>' + (s.solicitante?.nombre || '—') + '</strong></td>' +
@@ -1468,13 +1746,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           '<td>' + (s.prestamo?.lineaNombre || 'Ayuda Económica') + '</td>' +
           '<td class="tabular-nums" style="color:var(--color-brand-blue);font-weight:700;">' + formatMoney(s.prestamo?.monto || 0) + '</td>' +
           '<td>' + (s.prestamo?.cuotas || '—') + ' c</td>' +
+          '<td>' + propHtml + '</td>' +
           '<td><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + (s.estado || 'Pendiente') + '</span></td>' +
-          '<td><button class="btn-table-action" onclick="verFichaCompleta(\'' + s.id + '\')">👁️ Ver Ficha</button></td>' +
+          '<td><button class="btn-table-action" onclick="verFichaCompleta(\'' + s.id + '\')">👁️ Ficha / Trámite</button></td>' +
           '</tr>';
       }).join('');
     }
 
-    function filtrarGestionesComercializador() { renderTablaComercializador(); }
+    function filtrarGestionesComercializador() { renderModuloComercializador(); }
     function abrirModalAltaSolicitud() { document.getElementById('formAltaSolicitud')?.reset(); ajustarPlazosModalAlta('fedem'); abrirModal('modalAltaSolicitud'); }
 
     function ajustarPlazosModalAlta(linea) {
@@ -1486,14 +1765,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     async function guardarNuevaSolicitud(e) {
       e.preventDefault();
       const session = getSession(); if (!session) return;
-      const newId = String(Math.floor(10000 + Math.random() * 90000));
+      const rawRand = String(Math.floor(10000 + Math.random() * 90000));
+      const provId = 'PROV-' + rawRand;
       const lineaKey = document.getElementById('solLinea').value;
       const monto = parseFloat(document.getElementById('solMonto').value) || 100000;
       const cuotas = parseInt(document.getElementById('solPlazo').value, 10) || 12;
       const sim = calculateSimulation(lineaKey, cuotas, 'neto', monto);
       const nowStr = new Date().toISOString().slice(0, 16).replace('T', ' ');
 
-      // 1. Recolección y conversión a Base64 de todos los adjuntos para Google Drive
       const fileInputs = [
         { el: document.getElementById('fileDni'), tipo: 'DNI Frente y Dorso' },
         { el: document.getElementById('fileRecibo'), tipo: 'Recibo de Sueldo' },
@@ -1514,20 +1793,23 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             try {
               const b64 = await fileToBase64(f);
               if (b64) {
-                const nombreFormateado = newId + ' ' + item.tipo.replace(/\s+/g, '_') + '_' + (i + 1) + '.' + (f.name.split('.').pop() || 'pdf');
+                const nombreFormateado = rawRand + ' ' + item.tipo.replace(/\s+/g, '_') + '_' + (i + 1) + '.' + (f.name.split('.').pop() || 'pdf');
                 adjuntosBase64.push({
                   tipo: item.tipo,
                   nombre: nombreFormateado,
                   nombreOriginal: f.name,
                   tipoMime: b64.tipoMime,
                   tamanio: b64.tamanio,
+                  dataUrl: b64.dataUrl,
                   base64: b64.base64
                 });
                 listaAdjuntosObj.push({
                   tipo: item.tipo,
                   nombre: nombreFormateado,
                   fecha: nowStr,
-                  autor: session.nombre
+                  autor: session.nombre,
+                  dataUrl: b64.dataUrl,
+                  urlDrive: ''
                 });
               }
             } catch (err) {
@@ -1537,17 +1819,21 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         }
       }
 
-      // Si no seleccionó archivos (o falló lectura), proveer registros simbólicos de legajo
       if (listaAdjuntosObj.length === 0) {
         listaAdjuntosObj.push(
-          { tipo: 'DNI Frente y Dorso', nombre: newId + ' DNI Frente y Dorso.pdf', fecha: nowStr, autor: session.nombre },
-          { tipo: 'Recibo de Sueldo', nombre: newId + ' Recibo de Sueldo.pdf', fecha: nowStr, autor: session.nombre },
-          { tipo: 'Factura Servicio', nombre: newId + ' Constancia Domicilio.pdf', fecha: nowStr, autor: session.nombre }
+          { tipo: 'DNI Frente y Dorso', nombre: rawRand + ' DNI Frente y Dorso.pdf', fecha: nowStr, autor: session.nombre },
+          { tipo: 'Recibo de Sueldo', nombre: rawRand + ' Recibo de Sueldo.pdf', fecha: nowStr, autor: session.nombre },
+          { tipo: 'Factura Servicio', nombre: rawRand + ' Constancia Domicilio.pdf', fecha: nowStr, autor: session.nombre }
         );
       }
 
       const nueva = {
-        id: newId, fecha: nowStr, usuario_id: session.id, comercializador: session.nombre,
+        id: rawRand,
+        id_provisorio: provId,
+        id_definitivo: '',
+        fecha: nowStr,
+        usuario_id: session.id,
+        comercializador: session.nombre,
         organizacion_id: session.organizacion_id || 'org_parana_centro',
         nombre_organizacion: session.nombre_organizacion || 'Organización Paraná Centro',
         solicitante: {
@@ -1563,7 +1849,18 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           dependencia: document.getElementById('solDependencia').value.trim(),
           cargo: document.getElementById('solCargo').value
         },
-        prestamo: { linea: lineaKey, lineaNombre: FINANCIAL_DATA[lineaKey].name, monto, cuotas, cuotaEstimada: sim ? sim.cuota : 0 },
+        prestamo: {
+          linea: lineaKey, lineaNombre: FINANCIAL_DATA[lineaKey].name,
+          monto, cuotas, cuotaEstimada: sim ? sim.cuota : 0
+        },
+        propuestaMutual: {
+          activa: false,
+          linea: lineaKey,
+          lineaNombre: FINANCIAL_DATA[lineaKey].name,
+          monto, cuotas, cuotaEstimada: sim ? sim.cuota : 0,
+          estadoPropuesta: 'En Evaluación',
+          detalle: 'Plan preliminar cargado por el asesor'
+        },
         adjuntos: listaAdjuntosObj,
         estado: 'Pendiente', analistaAsignado: 'Sin Asignar',
         observaciones: [
@@ -1571,14 +1868,13 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         ]
       };
 
-      // 2. Envío en vivo action: 'crearSolicitud' a Google Apps Script
       const res = await callApi({
         action: 'crearSolicitud',
         solicitud: nueva,
         adjuntosBase64: adjuntosBase64
       }, {
         title: 'Guardando en Google Sheets & Drive...',
-        sub: 'Creando expediente #' + newId + ' y subiendo ' + adjuntosBase64.length + ' archivos a Drive'
+        sub: 'Creando expediente ' + provId + ' y subiendo ' + adjuntosBase64.length + ' archivos a Drive'
       });
 
       const all = getStoredSolicitudes();
@@ -1586,53 +1882,196 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       saveStoredSolicitudes(all);
 
       cerrarModal('modalAltaSolicitud');
-      renderTablaComercializador();
+      renderModuloComercializador();
 
       if (res.ok) {
-        showToast('Solicitud #' + newId + ' guardada con éxito en Google Sheets & Drive 🚀');
+        showToast('Solicitud ' + provId + ' guardada con éxito en Google Sheets & Drive 🚀');
       } else {
-        showToast('Solicitud #' + newId + ' registrada localmente (Servidor pendiente de sincronización)');
+        showToast('Solicitud ' + provId + ' registrada localmente (Servidor pendiente de sincronización)');
       }
     }
 
+    /* ========================================================================
+       6. FICHA INTEGRAL DE EXPEDIENTE (EDICIÓN, OFERTAS, DOCUMENTOS, CHAT)
+       ======================================================================== */
     function verFichaCompleta(id) {
-      const s = getStoredSolicitudes().find(x => String(x.id) === String(id)); if (!s) return;
+      const all = getStoredSolicitudes();
+      const s = all.find(x => String(x.id) === String(id)); if (!s) return;
+      normalizarSolicitud(s);
+      const session = getSession();
+      const isAnalistaOAdmin = (session && (session.rol === 'Analista' || session.rol === 'Admin'));
+
       const tit = document.getElementById('fichaModalTitle');
-      if (tit) tit.innerHTML = 'Ficha Solicitud <strong>#' + s.id + '</strong> — ' + (s.solicitante?.nombre || '');
+      if (tit) {
+        const numLabel = s.id_definitivo ?
+          '<span class="badge-definitivo">' + s.id_definitivo + '</span> <span style="font-size:0.75rem;color:var(--text-muted);">(Prov: ' + s.id_provisorio + ')</span>' :
+          '<span class="badge-provisorio">' + s.id_provisorio + '</span>';
+        tit.innerHTML = 'Expediente ' + numLabel + ' — ' + (s.solicitante?.nombre || '');
+      }
+
       const body = document.getElementById('fichaModalBody'); if (!body) return;
       const isObservado = (s.estado === 'Observado');
 
+      // 1. BARRA SUPERIOR CON IDENTIFICADORES Y ESTADO
       let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;background:#f8fafc;padding:.75rem;border-radius:8px;border:1px solid var(--border-color);">' +
-        '<div><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '" style="font-size:.8rem;padding:.25rem .65rem;">' + s.estado + '</span>' +
-        (isObservado ? ' <span style="font-size:0.7rem;color:#b45309;font-weight:700;margin-left:0.5rem;">⚠️ Requiere corrección o documentación complementaria</span>' : '') +
-        '</div><div style="font-size:.72rem;color:var(--text-muted);">' +
+        '<div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">' +
+          '<span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '" style="font-size:.8rem;padding:.25rem .65rem;">' + s.estado + '</span>' +
+          (isObservado ? '<span style="font-size:0.7rem;color:#b45309;font-weight:700;">⚠️ Requiere corrección o documentación complementaria</span>' : '') +
+        '</div>' +
+        '<div style="font-size:.72rem;color:var(--text-muted);">' +
           'Fecha: <strong>' + (s.fecha || '') + '</strong> | Asesor: <strong>' + s.comercializador + '</strong> | Org: <strong>' + (s.nombre_organizacion || 'Paraná Centro') + '</strong>' +
-        '</div></div>';
+        '</div>' +
+      '</div>';
 
-      html += '<div class="section-title-divider">1. Datos Personales</div>' +
-        '<div class="grid-3-cols" style="font-size:.75rem;">' +
-          '<div><strong>DNI:</strong> ' + (s.solicitante?.dni || '—') + '</div><div><strong>Legajo:</strong> ' + (s.solicitante?.legajo || '—') + '</div><div><strong>Fecha Nac:</strong> ' + (s.solicitante?.fechaNac || '—') + '</div>' +
-          '<div><strong>Celular:</strong> ' + (s.solicitante?.celular || '—') + '</div><div><strong>Email:</strong> ' + (s.solicitante?.email || '—') + '</div><div><strong>Domicilio:</strong> ' + (s.solicitante?.domicilio || '—') + '</div>' +
+      // 2. NÚMERO DEFINITIVO (EDITABLE POR ANALISTA / SOLO LECTURA COMERCIAL)
+      html += '<div style="background:#fffbeb;border:1px solid #fef3c7;padding:.65rem .85rem;border-radius:8px;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;">' +
+        '<div>' +
+          '<span style="font-size:0.7rem;color:#92400e;font-weight:700;text-transform:uppercase;">Identificación Oficial del Expediente</span>' +
+          '<div style="font-size:0.75rem;margin-top:2px;">' +
+            'N° Provisorio: <strong>' + s.id_provisorio + '</strong> &nbsp;|&nbsp; ' +
+            'N° Definitivo: ' + (s.id_definitivo ? '<strong style="color:#166534;">' + s.id_definitivo + '</strong>' : '<em style="color:var(--text-muted);">Sin Asignar aún</em>') +
+          '</div>' +
         '</div>';
 
-      html += '<div class="section-title-divider">2. Datos Laborales</div>' +
-        '<div class="grid-3-cols" style="font-size:.75rem;">' +
-          '<div><strong>Organismo:</strong> ' + (s.solicitante?.organismo || '—') + '</div><div><strong>Condición:</strong> ' + (s.solicitante?.condicion || '—') + '</div><div><strong>Cargo:</strong> ' + (s.solicitante?.cargo || '—') + '</div><div><strong>Dependencia:</strong> ' + (s.solicitante?.dependencia || '—') + '</div>' +
+      if (isAnalistaOAdmin) {
+        html += '<div style="display:flex;gap:0.35rem;align-items:center;">' +
+          '<input type="text" id="inpNumDefinitivoModal" class="input-text" style="width:160px;font-size:0.75rem;font-weight:700;" placeholder="Ej: AYU-2026-985" value="' + (s.id_definitivo || '') + '"/>' +
+          '<button type="button" class="btn-primary-action" style="width:auto;padding:.4rem .75rem;font-size:0.72rem;white-space:nowrap;" onclick="guardarNumeroDefinitivo(\'' + s.id + '\')">Asignar N° Definitivo 🏷️</button>' +
         '</div>';
+      }
+      html += '</div>';
 
-      html += '<div class="section-title-divider">3. Datos del Crédito</div>' +
-        '<div class="grid-3-cols" style="font-size:.75rem;">' +
-          '<div><strong>Línea:</strong> ' + (s.prestamo?.lineaNombre || '—') + '</div><div><strong>Monto Solicitado:</strong> ' + formatMoney(s.prestamo?.monto || 0) + '</div><div><strong>Plazo:</strong> ' + (s.prestamo?.cuotas || '—') + ' cuotas estimadas de ' + formatMoney(s.prestamo?.cuotaEstimada || 0) + '</div>' +
+      // 3. SECCIÓN 1: FORMULARIO DE EDICIÓN INTEGRAL DE DATOS DEL ASOCIADO
+      html += '<div class="section-title-divider">1. Datos Personales y Laborales del Asociado (Modificables)</div>' +
+        '<form onsubmit="guardarEdicionSolicitante(event, \'' + s.id + '\')" id="formEditSolicitante">' +
+          '<div class="grid-3-cols">' +
+            '<div class="form-group"><label class="form-label">DNI *</label><input type="text" id="editDni" class="input-text" value="' + (s.solicitante?.dni || '') + '" required/></div>' +
+            '<div class="form-group"><label class="form-label">Nombre y Apellido *</label><input type="text" id="editNombre" class="input-text" value="' + (s.solicitante?.nombre || '') + '" required/></div>' +
+            '<div class="form-group"><label class="form-label">Fecha Nacimiento *</label><input type="date" id="editFechaNac" class="input-text" value="' + (s.solicitante?.fechaNac || '') + '" required/></div>' +
+            '<div class="form-group"><label class="form-label">Celular / Teléfono *</label><input type="tel" id="editCelular" class="input-text" value="' + (s.solicitante?.celular || '') + '" required/></div>' +
+            '<div class="form-group"><label class="form-label">Email</label><input type="email" id="editEmail" class="input-text" value="' + (s.solicitante?.email || '') + '"/></div>' +
+            '<div class="form-group"><label class="form-label">Legajo Municipal</label><input type="text" id="editLegajo" class="input-text" value="' + (s.solicitante?.legajo || '') + '"/></div>' +
+          '</div>' +
+          '<div class="form-group"><label class="form-label">Domicilio Completo *</label><input type="text" id="editDomicilio" class="input-text" value="' + (s.solicitante?.domicilio || '') + '" required/></div>' +
+          '<div class="grid-3-cols">' +
+            '<div class="form-group"><label class="form-label">Condición *</label>' +
+              '<select id="editCondicion" class="input-text">' +
+                ['Activo', 'Jubilado', 'Pensionado'].map(c => '<option value="' + c + '" ' + (s.solicitante?.condicion === c ? 'selected' : '') + '>' + c + '</option>').join('') +
+              '</select>' +
+            '</div>' +
+            '<div class="form-group"><label class="form-label">Organismo *</label>' +
+              '<select id="editOrganismo" class="input-text">' +
+                ['Provincial', 'Municipal'].map(o => '<option value="' + o + '" ' + (s.solicitante?.organismo === o ? 'selected' : '') + '>' + o + '</option>').join('') +
+              '</select>' +
+            '</div>' +
+            '<div class="form-group"><label class="form-label">Dependencia / Lugar *</label><input type="text" id="editDependencia" class="input-text" value="' + (s.solicitante?.dependencia || '') + '" required/></div>' +
+            '<div class="form-group"><label class="form-label">Cargo *</label>' +
+              '<select id="editCargo" class="input-text">' +
+                ['Titular', 'Suplente'].map(cg => '<option value="' + cg + '" ' + (s.solicitante?.cargo === cg ? 'selected' : '') + '>' + cg + '</option>').join('') +
+              '</select>' +
+            '</div>' +
+          '</div>' +
+          '<div style="text-align:right;margin-top:.4rem;margin-bottom:1rem;">' +
+            '<button type="submit" class="btn-restore" style="border-color:#3b82f6;color:#1d4ed8;font-weight:700;">💾 Guardar Cambios del Solicitante</button>' +
+          '</div>' +
+        '</form>';
+
+      // 4. SECCIÓN 2: CONDICIONES DESEADAS VS. PROPUESTA OFICIAL DE LA MUTUAL
+      const prop = s.propuestaMutual || {};
+      html += '<div class="section-title-divider">2. Condiciones Deseadas vs. Oferta Oficial Mutual</div>' +
+        '<div class="compare-offers-grid">' +
+          '<!-- Tarjeta 1: Plan Deseado Solicitante -->' +
+          '<div class="offer-card offer-card-desired">' +
+            '<div class="offer-card-title"><span style="color:#475569;">👤 Plan Deseado por el Socio</span><span class="badge-status" style="background:#e2e8f0;color:#334155;">Original</span></div>' +
+            '<div><strong>Línea:</strong> ' + (s.prestamo?.lineaNombre || '—') + '</div>' +
+            '<div style="font-size:1.1rem;font-weight:800;color:var(--color-primary);margin:4px 0;">' + formatMoney(s.prestamo?.monto || 0) + '</div>' +
+            '<div><strong>Plazo:</strong> ' + (s.prestamo?.cuotas || '—') + ' cuotas estimadas de <strong>' + formatMoney(s.prestamo?.cuotaEstimada || 0) + '</strong></div>' +
+            '<p style="font-size:0.68rem;color:var(--text-muted);margin-top:6px;">Referencia inicial cargada en la originación del crédito.</p>' +
+          '</div>' +
+
+          '<!-- Tarjeta 2: Oferta Oficial de la Mutual -->' +
+          '<div class="offer-card offer-card-mutual">' +
+            '<div class="offer-card-title"><span style="color:var(--color-brand-blue);">🏢 Propuesta y Oferta Oficial Mutual</span>' +
+              '<span class="badge-status badge-EnAnalisis">' + (prop.estadoPropuesta || 'En Evaluación') + '</span>' +
+            '</div>';
+
+      if (isAnalistaOAdmin) {
+        html += '<form onsubmit="guardarPropuestaMutual(event, \'' + s.id + '\')">' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px;">' +
+            '<div><label class="form-label" style="font-size:.65rem;">Línea Aprobada</label>' +
+              '<select id="propLinea" class="input-text" style="font-size:.7rem;" onchange="recalcularOfertaCuotaModal()">' +
+                '<option value="fedem" ' + (prop.linea === 'fedem' ? 'selected' : '') + '>FEDEM Provincial</option>' +
+                '<option value="muni" ' + (prop.linea === 'muni' ? 'selected' : '') + '>Municipales QUAD</option>' +
+                '<option value="sidecreer" ' + (prop.linea === 'sidecreer' ? 'selected' : '') + '>Tarjeta Sidecreer</option>' +
+              '</select>' +
+            '</div>' +
+            '<div><label class="form-label" style="font-size:.65rem;">Monto Aprobado ($)</label>' +
+              '<input type="number" id="propMonto" class="input-text" style="font-size:.7rem;" value="' + (prop.monto || s.prestamo.monto) + '" step="1000" oninput="recalcularOfertaCuotaModal()"/>' +
+            '</div>' +
+          '</div>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px;">' +
+            '<div><label class="form-label" style="font-size:.65rem;">Plazo en Cuotas</label>' +
+              '<select id="propPlazo" class="input-text" style="font-size:.7rem;" onchange="recalcularOfertaCuotaModal()">' +
+                [6, 12, 18, 24, 36, 48].map(p => '<option value="' + p + '" ' + (prop.cuotas === p ? 'selected' : '') + '>' + p + ' cuotas</option>').join('') +
+              '</select>' +
+            '</div>' +
+            '<div><label class="form-label" style="font-size:.65rem;">Cuota Resultante</label>' +
+              '<input type="text" id="propCuotaEst" class="input-text" style="font-size:.7rem;font-weight:700;color:var(--cuota-color);" readonly value="' + formatMoney(prop.cuotaEstimada || s.prestamo.cuotaEstimada) + '"/>' +
+            '</div>' +
+          '</div>' +
+          '<div style="margin-bottom:4px;"><label class="form-label" style="font-size:.65rem;">Estado de la Propuesta</label>' +
+            '<select id="propEstado" class="input-text" style="font-size:.7rem;font-weight:700;">' +
+              ['En Evaluación', 'Propuesta Enviada al Comercializador', 'Aceptada por el Socio', 'Rechazada'].map(st => '<option value="' + st + '" ' + (prop.estadoPropuesta === st ? 'selected' : '') + '>' + st + '</option>').join('') +
+            '</select>' +
+          '</div>' +
+          '<div style="margin-bottom:4px;"><label class="form-label" style="font-size:.65rem;">Aclaraciones / Fundamento</label>' +
+            '<input type="text" id="propDetalle" class="input-text" style="font-size:.7rem;" placeholder="Ej: Se reduce a 18 cuotas por afectación de haberes..." value="' + (prop.detalle || '') + '"/>' +
+          '</div>' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:4px;flex-wrap:wrap;">' +
+            '<button type="button" class="btn-copy" style="font-size:0.68rem;padding:3px 6px;" onclick="copiarPropuestaWhatsApp(\'' + s.id + '\')">📋 Copiar para WhatsApp</button>' +
+            '<button type="submit" class="btn-primary-action" style="width:auto;font-size:0.68rem;padding:4px 8px;">Guardar Oferta Oficial</button>' +
+          '</div>' +
+        '</form>';
+      } else {
+        // Vista para comercializador (lectura de contrapropuesta + copiar WhatsApp)
+        if (prop.activa) {
+          html += '<div><strong>Línea Ofrecida:</strong> ' + (prop.lineaNombre || prop.linea) + '</div>' +
+            '<div style="font-size:1.1rem;font-weight:800;color:#166534;margin:4px 0;">' + formatMoney(prop.monto) + '</div>' +
+            '<div><strong>Plazo Ofrecido:</strong> ' + prop.cuotas + ' cuotas de <strong>' + formatMoney(prop.cuotaEstimada) + '</strong></div>' +
+            '<div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">Nota Mutual: <em>"' + (prop.detalle || 'Propuesta crediticia lista') + '"</em></div>' +
+            '<div style="margin-top:8px;">' +
+              '<button type="button" class="btn-copy" style="font-size:0.7rem;padding:4px 8px;" onclick="copiarPropuestaWhatsApp(\'' + s.id + '\')">📲 Copiar Propuesta para WhatsApp</button>' +
+            '</div>';
+        } else {
+          html += '<p style="color:var(--text-muted);font-size:0.72rem;padding:0.75rem 0;">La mutual está auditando el legajo. Aún no se ha emitido una contraoferta formal.</p>';
+        }
+      }
+
+      html += '</div></div>';
+
+      // 5. SECCIÓN 3: GESTOR Y VISOR DOCUMENTAL ONLINE (VER, DESCARGAR, REEMPLAZAR)
+      html += '<div class="section-title-divider">3. Legajo Documental Online (Ver, Descargar, Reemplazar)</div>' +
+        '<div style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:.75rem;">';
+
+      (s.adjuntos || []).forEach((a, idx) => {
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;background:#fff;padding:.45rem .65rem;border:1px solid var(--border-color);border-radius:6px;font-size:.72rem;flex-wrap:wrap;gap:.35rem;">' +
+          '<div>' +
+            '📄 <strong>' + a.tipo + ':</strong> <code style="color:var(--color-brand-blue);">' + a.nombre + '</code> ' +
+            '<span style="font-size:.65rem;color:var(--text-muted);margin-left:4px;">(' + (a.fecha || s.fecha) + ' por ' + (a.autor || s.comercializador) + ')</span>' +
+          '</div>' +
+          '<div style="display:flex;gap:4px;align-items:center;">' +
+            '<button type="button" class="btn-restore" style="padding:.2rem .5rem;font-size:.68rem;" onclick="abrirVisorOnline(\'' + s.id + '\', ' + idx + ')">👁️ Ver Online</button>' +
+            '<button type="button" class="btn-restore" style="padding:.2rem .5rem;font-size:.68rem;" onclick="descargarDocumentoOnline(\'' + s.id + '\', ' + idx + ')">📥 Descargar</button>' +
+            '<label class="btn-restore" style="padding:.2rem .5rem;font-size:.68rem;cursor:pointer;margin:0;" title="Reemplazar archivo observado">' +
+              '🔄 Reemplazar <input type="file" style="display:none;" onchange="reemplazarDocumentoExistente(\'' + s.id + '\', ' + idx + ', this)"/>' +
+            '</label>' +
+          '</div>' +
         '</div>';
+      });
 
-      html += '<div class="section-title-divider">4. Documentación del Legajo (Carpeta Drive: [' + s.id + '] ' + (s.solicitante?.nombre || '') + ')</div>' +
-        '<div style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:.75rem;">' +
-          (s.adjuntos || []).map(a => '<div style="display:flex;justify-content:space-between;align-items:center;background:#fff;padding:.45rem .65rem;border:1px solid var(--border-color);border-radius:6px;font-size:.72rem;">' +
-            '<div>📄 <strong>' + a.tipo + ':</strong> <code>' + a.nombre + '</code> <span style="font-size:.65rem;color:var(--text-muted);margin-left:4px;">(' + (a.fecha || s.fecha) + ' por ' + (a.autor || s.comercializador) + ')</span></div>' +
-            (a.urlDrive ? '<a href="' + a.urlDrive + '" target="_blank" rel="noopener noreferrer" class="btn-restore" style="padding:.2rem .5rem;font-size:.68rem;text-decoration:none;">📥 Abrir en Drive</a>' : '<button class="btn-restore" style="padding:.2rem .5rem;font-size:.68rem;" onclick="showToast(\'Documento registrado en Google Drive: ' + a.nombre + '\')">👁️ Ver</button>') +
-          '</div>').join('') +
-        '</div>';
+      html += '</div>';
 
+      // Subir nuevo documento
       html += '<div style="background:#f0f9ff;border:1px dashed #0284c7;border-radius:8px;padding:.75rem;margin-bottom:1rem;">' +
         '<div style="font-size:.75rem;font-weight:700;color:#0369a1;margin-bottom:.4rem;">➕ Subir Documentación Complementaria al Expediente (Drive)</div>' +
         '<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:.5rem;align-items:center;">' +
@@ -1650,23 +2089,286 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         '<p style="font-size:.65rem;color:#0369a1;margin-top:.35rem;">Se renombrará automáticamente según el formato Drive: <code>[' + s.id + '] [Tipo_Documento]_[Fecha/Hora].[ext]</code></p>' +
       '</div>';
 
-      html += '<div class="section-title-divider">5. Línea de Tiempo y Comentarios Bidireccionales</div>' +
-        '<div class="timeline-list" id="fichaTimelineList">' +
-          (s.observaciones || []).map(o => '<div class="timeline-item"><div class="timeline-meta">' +
-            '<span><strong>' + o.autor + '</strong> <span class="timeline-role-badge">' + (o.rol || 'Sistema') + '</span></span><span>' + o.fecha + '</span>' +
-            '</div><div style="margin-top:2px;color:var(--text-main);">' + o.texto + '</div></div>').join('') +
-        '</div>';
+      // 6. SECCIÓN 4: LÍNEA DE TIEMPO ESTILO CHAT INTERACTIVO (COMERCIALIZADOR VS MUTUAL)
+      html += '<div class="section-title-divider">4. Chat de Auditoría y Línea de Tiempo (Asociado/Comercial vs Mutual)</div>' +
+        '<div class="chat-container" id="fichaChatContainer">';
 
-      html += '<div style="margin-top:.75rem;background:#f8fafc;padding:.75rem;border-radius:8px;border:1px solid var(--border-color);">' +
-        '<label class="form-label">Escribir una aclaración o respuesta a la mutual</label>' +
-        '<textarea id="txtFichaComentario" class="input-text" rows="2" placeholder="Ej: Se adjunta recibo digital descargado del portal provincial..." style="resize:vertical;font-size:.75rem;"></textarea>' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:.5rem;flex-wrap:wrap;gap:.5rem;">' +
-          (isObservado ? '<label style="font-size:0.72rem;color:#b45309;font-weight:700;display:flex;align-items:center;gap:0.35rem;cursor:pointer;"><input type="checkbox" id="chkSubsanarObservado" checked/> Pasar automáticamente a "En Análisis" (Subsanado) 🔄</label>' : '<span></span>') +
-          '<button type="button" class="btn-primary-action" style="width:auto;padding:.45rem 1rem;font-size:.75rem;" onclick="enviarComentarioComercializador(\'' + s.id + '\')">Enviar Aclaración 💬</button>' +
-        '</div></div>';
+      (s.observaciones || []).forEach(o => {
+        const esMutual = (o.rol && (o.rol.includes('Analista') || o.rol.includes('Mutual') || o.rol.includes('Admin') || o.rol.includes('Automático')));
+        const bubbleClass = esMutual ? 'chat-bubble-mutual' : 'chat-bubble-comercializador';
+        const tagClass = esMutual ? 'chat-tag-mutual' : 'chat-tag-comercializador';
+        const tagText = esMutual ? 'Mutual Créditos' : 'Comercializador';
+
+        html += '<div class="chat-bubble ' + bubbleClass + '">' +
+          '<div class="chat-meta">' +
+            '<span><strong>' + o.autor + '</strong> <span class="chat-tag ' + tagClass + '">' + tagText + '</span></span>' +
+            '<span class="chat-timestamp">' + formatearFechaHoraChat(o.fecha) + '</span>' +
+          '</div>' +
+          '<div style="margin-top:2px;">' + o.texto + '</div>' +
+        '</div>';
+      });
+
+      html += '</div>';
+
+      // Caja de envío rápida del chat
+      html += '<div style="margin-top:.6rem;background:#f8fafc;padding:.65rem;border-radius:8px;border:1px solid var(--border-color);">' +
+        '<label class="form-label">Escribir una aclaración, nota o resolución:</label>' +
+        '<div style="display:flex;gap:0.4rem;align-items:center;">' +
+          '<input type="text" id="txtFichaComentario" class="input-text" placeholder="Escriba su mensaje aquí..." style="font-size:.75rem;" onkeydown="if(event.key===\'Enter\'){enviarComentarioComercializador(\'' + s.id + '\');}"/>' +
+          '<button type="button" class="btn-primary-action" style="width:auto;padding:.45rem 1rem;font-size:.75rem;white-space:nowrap;" onclick="enviarComentarioComercializador(\'' + s.id + '\')">Enviar 💬</button>' +
+        '</div>' +
+        (isObservado ? '<div style="margin-top:.4rem;"><label style="font-size:0.72rem;color:#b45309;font-weight:700;display:flex;align-items:center;gap:0.35rem;cursor:pointer;"><input type="checkbox" id="chkSubsanarObservado" checked/> Pasar automáticamente a "En Análisis" (Observación subsanada) 🔄</label></div>' : '') +
+      '</div>';
 
       body.innerHTML = html;
       abrirModal('modalFichaCompleta');
+
+      // Scroll abajo chat
+      setTimeout(() => {
+        const ch = document.getElementById('fichaChatContainer');
+        if (ch) ch.scrollTop = ch.scrollHeight;
+      }, 50);
+    }
+
+    function formatearFechaHoraChat(fechaStr) {
+      if (!fechaStr) return '';
+      const partes = String(fechaStr).split(' ');
+      if (partes.length >= 2) {
+        return partes[0] + ' ' + partes[1] + ' hs';
+      }
+      return fechaStr;
+    }
+
+    /* EDICIÓN DE SOLICITANTE */
+    async function guardarEdicionSolicitante(e, id) {
+      e.preventDefault();
+      const all = getStoredSolicitudes();
+      const s = all.find(x => String(x.id) === String(id)); if (!s) return;
+      const session = getSession();
+
+      s.solicitante.dni = document.getElementById('editDni').value.trim();
+      s.solicitante.nombre = document.getElementById('editNombre').value.trim();
+      s.solicitante.fechaNac = document.getElementById('editFechaNac').value;
+      s.solicitante.celular = document.getElementById('editCelular').value.trim();
+      s.solicitante.email = document.getElementById('editEmail').value.trim();
+      s.solicitante.legajo = document.getElementById('editLegajo').value.trim();
+      s.solicitante.domicilio = document.getElementById('editDomicilio').value.trim();
+      s.solicitante.condicion = document.getElementById('editCondicion').value;
+      s.solicitante.organismo = document.getElementById('editOrganismo').value;
+      s.solicitante.dependencia = document.getElementById('editDependencia').value.trim();
+      s.solicitante.cargo = document.getElementById('editCargo').value;
+
+      const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+      if (!s.observaciones) s.observaciones = [];
+      s.observaciones.push({
+        autor: session?.nombre || 'Usuario',
+        rol: session?.rol || 'Comercializador',
+        fecha: now,
+        texto: 'Datos del solicitante actualizados en el expediente digital.'
+      });
+
+      saveStoredSolicitudes(all);
+      callApi({ action: 'actualizarDatosSolicitante', id: s.id, solicitante: s.solicitante }).catch(console.warn);
+
+      showToast('Datos del solicitante guardados correctamente 💾');
+      renderModuloComercializador();
+      renderModuloMutual();
+      verFichaCompleta(id);
+    }
+
+    /* ASIGNAR NÚMERO DEFINITIVO (MUTUAL) */
+    async function guardarNumeroDefinitivo(id) {
+      const all = getStoredSolicitudes();
+      const s = all.find(x => String(x.id) === String(id)); if (!s) return;
+      const val = document.getElementById('inpNumDefinitivoModal')?.value.trim();
+      if (!val) {
+        showToast('Ingrese un número de expediente formal');
+        return;
+      }
+      s.id_definitivo = val;
+      const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+      if (!s.observaciones) s.observaciones = [];
+      s.observaciones.push({
+        autor: getSession()?.nombre || 'Analista Mutual',
+        rol: 'Analista Mutual',
+        fecha: now,
+        texto: 'N° formal definitivo asignado: ' + val
+      });
+
+      saveStoredSolicitudes(all);
+      callApi({ action: 'asignarNumeroDefinitivo', id: s.id, id_definitivo: val }).catch(console.warn);
+
+      showToast('N° Definitivo asignado: ' + val);
+      renderModuloComercializador();
+      renderModuloMutual();
+      verFichaCompleta(id);
+    }
+
+    /* RECALCULAR Y GUARDAR OFERTA MUTUAL */
+    function recalcularOfertaCuotaModal() {
+      const linea = document.getElementById('propLinea')?.value || 'fedem';
+      const monto = parseFloat(document.getElementById('propMonto')?.value) || 100000;
+      const plazo = parseInt(document.getElementById('propPlazo')?.value, 10) || 12;
+      const sim = calculateSimulation(linea, plazo, 'neto', monto);
+      const inp = document.getElementById('propCuotaEst');
+      if (inp) inp.value = formatMoney(sim ? sim.cuota : 0);
+    }
+
+    async function guardarPropuestaMutual(e, id) {
+      e.preventDefault();
+      const all = getStoredSolicitudes();
+      const s = all.find(x => String(x.id) === String(id)); if (!s) return;
+      const linea = document.getElementById('propLinea').value;
+      const monto = parseFloat(document.getElementById('propMonto').value) || 100000;
+      const plazo = parseInt(document.getElementById('propPlazo').value, 10) || 12;
+      const sim = calculateSimulation(linea, plazo, 'neto', monto);
+      const est = document.getElementById('propEstado').value;
+      const detalle = document.getElementById('propDetalle').value.trim();
+
+      s.propuestaMutual = {
+        activa: true,
+        linea: linea,
+        lineaNombre: FINANCIAL_DATA[linea].name,
+        monto: monto,
+        cuotas: plazo,
+        cuotaEstimada: sim ? sim.cuota : 0,
+        estadoPropuesta: est,
+        detalle: detalle
+      };
+
+      const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+      if (!s.observaciones) s.observaciones = [];
+      s.observaciones.push({
+        autor: getSession()?.nombre || 'Analista Mutual',
+        rol: 'Analista Mutual',
+        fecha: now,
+        texto: 'Contraoferta oficial generada: ' + formatMoney(monto) + ' en ' + plazo + ' cuotas de ' + formatMoney(sim ? sim.cuota : 0) + ' (' + est + '). ' + (detalle ? 'Nota: ' + detalle : '')
+      });
+
+      saveStoredSolicitudes(all);
+      callApi({ action: 'guardarPropuestaMutual', id: s.id, propuesta: s.propuestaMutual }).catch(console.warn);
+
+      showToast('Propuesta oficial guardada en el expediente 💼');
+      renderModuloComercializador();
+      renderModuloMutual();
+      verFichaCompleta(id);
+    }
+
+    function copiarPropuestaWhatsApp(id) {
+      const s = getStoredSolicitudes().find(x => String(x.id) === String(id)); if (!s) return;
+      const p = s.propuestaMutual;
+      if (!p || !p.activa) return;
+
+      const texto = `¡Hola ${s.solicitante.nombre}! 👋 Desde Mutual Modelo te informamos que hemos analizado tu legajo crediticio:
+
+📋 *Propuesta Oficial de Ayuda Económica:*
+• Monto Otorgado: *${formatMoney(p.monto)}*
+• Línea: ${p.lineaNombre}
+• Plan de Pago: *${p.cuotas} cuotas fijas de ${formatMoney(p.cuotaEstimada)}*
+${p.detalle ? `• Observaciones: ${p.detalle}\n` : ''}
+📲 Respondé a este mensaje para coordinar la firma y acreditación bancaria inmediata.`;
+
+      navigator.clipboard.writeText(texto).then(() => {
+        showToast('Propuesta copiada al portapapeles para WhatsApp 📋');
+      }).catch(() => {
+        showToast('Propuesta copiada 📋');
+      });
+    }
+
+    /* VISOR DOCUMENTAL ONLINE */
+    function abrirVisorOnline(solicitudId, adjuntoIndex) {
+      const s = getStoredSolicitudes().find(x => String(x.id) === String(solicitudId)); if (!s) return;
+      const adj = s.adjuntos && s.adjuntos[adjuntoIndex]; if (!adj) return;
+
+      document.getElementById('visorDocNombre').textContent = adj.nombre;
+      const btnDescargar = document.getElementById('btnVisorDescargar');
+      const wrap = document.getElementById('docViewerContent');
+      if (!wrap) return;
+
+      const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(adj.nombre) || (adj.tipoMime && adj.tipoMime.startsWith('image/'));
+
+      if (adj.dataUrl) {
+        btnDescargar.href = adj.dataUrl;
+        btnDescargar.download = adj.nombre;
+        if (isImage) {
+          wrap.innerHTML = '<img src="' + adj.dataUrl + '" class="doc-viewer-img" alt="' + adj.nombre + '"/>';
+        } else {
+          wrap.innerHTML = '<iframe src="' + adj.dataUrl + '" class="doc-viewer-frame"></iframe>';
+        }
+      } else if (adj.urlDrive) {
+        btnDescargar.href = adj.urlDrive;
+        wrap.innerHTML = '<iframe src="' + adj.urlDrive + '" class="doc-viewer-frame"></iframe>';
+      } else {
+        // Mock visual interactivo de previsualización
+        btnDescargar.href = '#';
+        wrap.innerHTML = '<div style="color:#fff;text-align:center;padding:2rem;">' +
+          '<div style="font-size:3rem;margin-bottom:1rem;">📄</div>' +
+          '<div style="font-size:1.1rem;font-weight:700;">' + adj.nombre + '</div>' +
+          '<div style="font-size:0.8rem;color:#94a3b8;margin-top:6px;">Documento verificado en Google Drive Mutual Modelo</div>' +
+          '<div style="margin-top:1.5rem;"><button class="btn-primary-action" style="width:auto;padding:.5rem 1rem;" onclick="showToast(\'Abriendo enlace en Google Drive...\')">Abrir en Google Drive ↗</button></div>' +
+          '</div>';
+      }
+
+      abrirModal('modalVisorDocumento');
+    }
+
+    function descargarDocumentoOnline(solicitudId, adjuntoIndex) {
+      const s = getStoredSolicitudes().find(x => String(x.id) === String(solicitudId)); if (!s) return;
+      const adj = s.adjuntos && s.adjuntos[adjuntoIndex]; if (!adj) return;
+      if (adj.dataUrl) {
+        const a = document.createElement('a');
+        a.href = adj.dataUrl;
+        a.download = adj.nombre;
+        a.click();
+      } else {
+        showToast('Descargando archivo: ' + adj.nombre);
+      }
+    }
+
+    async function reemplazarDocumentoExistente(solicitudId, adjuntoIndex, inputElement) {
+      const file = inputElement.files && inputElement.files[0]; if (!file) return;
+      const all = getStoredSolicitudes();
+      const s = all.find(x => String(x.id) === String(solicitudId)); if (!s) return;
+      const session = getSession();
+      const now = new Date();
+      const timeStamp = now.toISOString().slice(0, 10).replace(/-/g, '') + '_' + String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
+      const ext = file.name.split('.').pop() || 'pdf';
+
+      const prevTipo = s.adjuntos[adjuntoIndex].tipo;
+      const nuevoNombre = s.id + ' ' + prevTipo.replace(/\s+/g, '_') + '_REEMPLAZO_' + timeStamp + '.' + ext;
+
+      mostrarCargando('Reemplazando archivo en Drive...', 'Actualizando legajo digital');
+      let b64 = null;
+      try { b64 = await fileToBase64(file); } catch(err) { console.warn(err); }
+
+      s.adjuntos[adjuntoIndex] = {
+        tipo: prevTipo,
+        nombre: nuevoNombre,
+        fecha: now.toISOString().slice(0, 16).replace('T', ' '),
+        autor: session?.nombre || 'Usuario',
+        dataUrl: b64 ? b64.dataUrl : '',
+        urlDrive: ''
+      };
+
+      if (!s.observaciones) s.observaciones = [];
+      s.observaciones.push({
+        autor: session?.nombre || 'Usuario',
+        rol: session?.rol || 'Comercializador',
+        fecha: now.toISOString().slice(0, 16).replace('T', ' '),
+        texto: 'Documento reemplazado: ' + prevTipo + ' sustituido por ' + nuevoNombre
+      });
+
+      saveStoredSolicitudes(all);
+      callApi({
+        action: 'subirAdjuntoAdicional',
+        id: s.id,
+        tipo: prevTipo,
+        nombre: nuevoNombre,
+        base64: b64 ? b64.base64 : ''
+      }).catch(console.warn);
+
+      showToast('Documento sustituido exitosamente 🔄');
+      verFichaCompleta(solicitudId);
     }
 
     async function adjuntarDocumentoAdicionalFicha(id) {
@@ -1686,18 +2388,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const extension = file.name.split('.').pop() || 'pdf';
       const generatedName = s.id + ' ' + tipo.replace(/\s+/g, '_') + '_' + timeStamp + '.' + extension;
 
-      // Conversión a Base64
       mostrarCargando('Subiendo archivo a Drive...', 'Transfiriendo ' + generatedName);
       let b64Data = null;
-      try {
-        b64Data = await fileToBase64(file);
-      } catch (err) {
-        console.warn('Error leyendo archivo adicional:', err);
-      }
+      try { b64Data = await fileToBase64(file); } catch (err) { console.warn(err); }
 
       const cambiarAEnAnalisis = (s.estado === 'Observado');
 
-      // Llamada action: 'subirAdjuntoAdicional' a Google Apps Script
       const res = await callApi({
         action: 'subirAdjuntoAdicional',
         id: s.id,
@@ -1714,7 +2410,13 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       });
 
       if (!s.adjuntos) s.adjuntos = [];
-      s.adjuntos.push({ tipo, nombre: generatedName, fecha: now.toISOString().slice(0, 16).replace('T', ' '), autor: session.nombre });
+      s.adjuntos.push({
+        tipo,
+        nombre: generatedName,
+        fecha: now.toISOString().slice(0, 16).replace('T', ' '),
+        autor: session.nombre,
+        dataUrl: b64Data ? b64Data.dataUrl : ''
+      });
 
       if (!s.observaciones) s.observaciones = [];
       s.observaciones.push({
@@ -1733,7 +2435,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
 
       saveStoredSolicitudes(all);
-      renderTablaComercializador();
+      renderModuloComercializador();
+      renderModuloMutual();
       verFichaCompleta(id);
       showToast(aviso);
     }
@@ -1748,7 +2451,6 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const chk = document.getElementById('chkSubsanarObservado');
       const subsanar = !!(chk && chk.checked && s.estado === 'Observado');
 
-      // Llamada action: 'agregarComentario' a Google Apps Script
       const res = await callApi({
         action: 'agregarComentario',
         id: s.id,
@@ -1773,15 +2475,39 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
 
       saveStoredSolicitudes(all);
-      renderTablaComercializador();
+      renderModuloComercializador();
+      renderModuloMutual();
       verFichaCompleta(id);
       showToast('Aclaración enviada y registrada en el expediente 💬');
     }
 
     /* ========================================================================
-       5. GESTIONES DE MUTUAL (TAB 3 - ANALISTAS & ADMIN)
+       7. GESTIONES DE MUTUAL (TAB 3 - ANALISTAS & ADMIN)
        ======================================================================== */
-    function renderTablaMutual() {
+    function getListaFiltradaMutual() {
+      const all = getStoredSolicitudes();
+      const q = (document.getElementById('filtroMutualTexto')?.value || '').toLowerCase().trim();
+      const est = document.getElementById('filtroMutualEstado')?.value || '';
+      const org = document.getElementById('filtroMutualOrganizacion')?.value || '';
+      const com = document.getElementById('filtroMutualComercial')?.value || '';
+      const orgaTipo = document.getElementById('filtroMutualOrganismo')?.value || '';
+
+      return all.filter(s => {
+        const idDef = (s.id_definitivo || '').toLowerCase();
+        const idProv = (s.id_provisorio || '').toLowerCase();
+        const matchQ = !q || String(s.id).includes(q) || idDef.includes(q) || idProv.includes(q) ||
+          (s.solicitante?.dni && String(s.solicitante.dni).includes(q)) ||
+          (s.solicitante?.nombre && s.solicitante.nombre.toLowerCase().includes(q)) ||
+          (s.comercializador && s.comercializador.toLowerCase().includes(q));
+        const matchEst = !est || s.estado === est;
+        const matchOrg = !org || (s.nombre_organizacion || 'Organización Paraná Centro') === org;
+        const matchCom = !com || s.comercializador === com;
+        const matchOrgaTipo = !orgaTipo || (s.solicitante?.organismo === orgaTipo);
+        return matchQ && matchEst && matchOrg && matchCom && matchOrgaTipo;
+      });
+    }
+
+    function renderModuloMutual() {
       const all = getStoredSolicitudes();
       const cboOrg = document.getElementById('filtroMutualOrganizacion');
       if (cboOrg && cboOrg.options.length <= 1) {
@@ -1796,38 +2522,42 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         });
       }
 
-      const q = (document.getElementById('filtroMutualTexto')?.value || '').toLowerCase().trim();
-      const est = document.getElementById('filtroMutualEstado')?.value || '';
-      const org = document.getElementById('filtroMutualOrganizacion')?.value || '';
-      const com = document.getElementById('filtroMutualComercial')?.value || '';
-      const orgaTipo = document.getElementById('filtroMutualOrganismo')?.value || '';
-
-      const filtered = all.filter(s => {
-        const matchQ = !q || String(s.id).includes(q) || (s.solicitante?.dni && String(s.solicitante.dni).includes(q)) || (s.solicitante?.nombre && s.solicitante.nombre.toLowerCase().includes(q)) || (s.comercializador && s.comercializador.toLowerCase().includes(q));
-        const matchEst = !est || s.estado === est;
-        const matchOrg = !org || (s.nombre_organizacion || 'Organización Paraná Centro') === org;
-        const matchCom = !com || s.comercializador === com;
-        const matchOrgaTipo = !orgaTipo || (s.solicitante?.organismo === orgaTipo);
-        return matchQ && matchEst && matchOrg && matchCom && matchOrgaTipo;
-      });
-
+      const filtered = getListaFiltradaMutual();
       const lbl = document.getElementById('lblTotalMutual'); if (lbl) lbl.textContent = filtered.length + ' solicitudes en cartera';
+
+      const modo = vistaModulosState.mutual;
+      if (modo === 'tabla') renderTablaMutual(filtered);
+      else if (modo === 'kanban') renderKanbanModulo('mutual', filtered);
+      else if (modo === 'calendario') renderCalendarioModulo('mutual');
+    }
+
+    function renderTablaMutual(filtered) {
       const tbody = document.getElementById('tablaMutualBody'); if (!tbody) return;
       if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:1.5rem;color:var(--text-muted);">No hay solicitudes coincidentes con los filtros seleccionados.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:1.5rem;color:var(--text-muted);">No hay solicitudes coincidentes con los filtros seleccionados.</td></tr>';
         return;
       }
 
       tbody.innerHTML = filtered.map(s => {
         const fechaStr = s.fecha ? String(s.fecha).split(' ')[0] : 'Hoy';
+        const idBadge = s.id_definitivo ?
+          '<span class="badge-definitivo">' + s.id_definitivo + '</span><br><span style="font-size:0.65rem;color:var(--text-muted);">' + (s.id_provisorio || ('#' + s.id)) + '</span>' :
+          '<span class="badge-provisorio">' + (s.id_provisorio || ('#' + s.id)) + '</span>';
+
+        const prop = s.propuestaMutual;
+        const propHtml = prop && prop.activa ?
+          '<div style="font-size:0.7rem;"><span style="color:#166534;font-weight:700;">' + formatMoney(prop.monto) + '</span> (' + prop.cuotas + 'c)<br><span style="font-size:0.65rem;color:#0369a1;">' + (prop.estadoPropuesta || 'Oferta lista') + '</span></div>' :
+          '<span style="font-size:0.68rem;color:var(--text-muted);">En evaluación</span>';
+
         return '<tr>' +
-          '<td><strong>#' + s.id + '</strong></td>' +
+          '<td>' + idBadge + '</td>' +
           '<td style="white-space:nowrap;">' + fechaStr + '</td>' +
           '<td><span class="badge-org-tag">' + (s.nombre_organizacion || 'Paraná Centro') + '</span></td>' +
           '<td><strong>' + (s.comercializador || '—') + '</strong></td>' +
           '<td><strong>' + (s.solicitante?.nombre || '—') + '</strong><br><span style="font-size:.68rem;color:var(--text-muted);">DNI ' + (s.solicitante?.dni || '—') + '</span></td>' +
           '<td>' + (s.solicitante?.organismo || '—') + '</td>' +
           '<td>' + (s.prestamo?.lineaNombre || 'Ayuda') + '<br><span style="color:var(--color-brand-blue);font-weight:700;">' + formatMoney(s.prestamo?.monto || 0) + ' (' + (s.prestamo?.cuotas || '—') + 'c)</span></td>' +
+          '<td>' + propHtml + '</td>' +
           '<td>' + (s.analistaAsignado || 'Sin Asignar') + '</td>' +
           '<td><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + (s.estado || 'Pendiente') + '</span></td>' +
           '<td><button class="btn-table-action btn-action-primary" onclick="gestionarSolicitudMutual(\'' + s.id + '\')">⚙️ Gestionar</button></td>' +
@@ -1835,13 +2565,17 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }).join('');
     }
 
-    function filtrarGestionesMutual() { renderTablaMutual(); }
+    function filtrarGestionesMutual() { renderModuloMutual(); }
 
     function gestionarSolicitudMutual(id) {
-      const s = getStoredSolicitudes().find(x => String(x.id) === String(id)); if (!s) return;
+      const all = getStoredSolicitudes();
+      const s = all.find(x => String(x.id) === String(id)); if (!s) return;
+      normalizarSolicitud(s);
       const session = getSession();
       const tit = document.getElementById('gestionModalTitle');
-      if (tit) tit.innerHTML = 'Resolución de Solicitud <strong>#' + s.id + '</strong> — ' + (s.solicitante?.nombre || '');
+      if (tit) {
+        tit.innerHTML = 'Resolución de Expediente <strong>' + (s.id_definitivo || s.id_provisorio) + '</strong> — ' + (s.solicitante?.nombre || '');
+      }
       const body = document.getElementById('gestionModalBody'); if (!body) return;
 
       let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">' +
@@ -1864,38 +2598,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           '<p style="font-size:0.68rem;color:var(--text-muted);margin-top:0.4rem;">Analista a cargo: <strong>' + (s.analistaAsignado || session.nombre) + '</strong></p>' +
         '</div></div>';
 
-      html += '<div class="section-title-divider">Documentación del Legajo (Original y Complementaria en Google Drive)</div>' +
-        '<div style="display:flex;flex-direction:column;gap:.35rem;margin-bottom:.85rem;">' +
-          (s.adjuntos || []).map(a => '<div style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;padding:.4rem .6rem;border:1px solid var(--border-color);border-radius:6px;font-size:.72rem;">' +
-            '<span>📄 <strong>' + a.tipo + ':</strong> <code>' + a.nombre + '</code> <span style="font-size:.65rem;color:var(--text-muted);">(' + (a.autor || s.comercializador) + ')</span></span>' +
-            (a.urlDrive ? '<a href="' + a.urlDrive + '" target="_blank" rel="noopener noreferrer" class="btn-restore" style="padding:.2rem .5rem;font-size:.68rem;text-decoration:none;">📥 Abrir en Drive</a>' : '<button class="btn-restore" style="padding:.2rem .5rem;font-size:.68rem;" onclick="showToast(\'Expediente en Google Drive: ' + a.nombre + '\')">👁️ Ver</button>') +
-          '</div>').join('') +
-        '</div>';
-
-      html += '<div class="file-input-box" style="margin-bottom:.85rem;">' +
-        '<label class="form-label">Adjuntar Documentación Propia del Analista (Contrato, Pagaré, Transferencia a Drive)</label>' +
-        '<div style="display:flex;gap:.5rem;margin-top:.3rem;flex-wrap:wrap;">' +
-          '<select id="cboDocAnalistaTipo" class="input-text" style="flex:1;min-width:180px;">' +
-            '<option value="Contrato Mutuo Firmado">Contrato Mutuo Firmado</option>' +
-            '<option value="Pagaré a la Vista">Pagaré a la Vista</option>' +
-            '<option value="Comprobante Transferencia">Comprobante Transferencia Bancaria</option>' +
-            '<option value="Dictamen Jurídico">Dictamen Jurídico / Auditoría</option>' +
-            '<option value="Otros Documentos Mutual">Otros Documentos Mutual</option>' +
-          '</select>' +
-          '<input type="file" id="fileDocAnalista" class="input-text" style="flex:1;min-width:180px;"/>' +
-          '<button class="btn-restore" type="button" onclick="agregarDocumentoAnalista(\'' + s.id + '\')">+ Adjuntar a Drive</button>' +
-        '</div></div>';
-
-      html += '<div class="section-title-divider">Línea de Tiempo y Observaciones de Seguimiento</div>' +
-        '<div class="timeline-list" style="margin-bottom:.75rem;">' +
-          (s.observaciones || []).map(o => '<div class="timeline-item"><div class="timeline-meta">' +
-            '<span><strong>' + o.autor + '</strong> <span class="timeline-role-badge">' + (o.rol || 'Sistema') + '</span></span><span>' + o.fecha + '</span>' +
-            '</div><div style="margin-top:2px;color:var(--text-main);">' + o.texto + '</div></div>').join('') +
-        '</div>';
-
-      html += '<div style="display:flex;gap:.5rem;margin-top:.4rem;">' +
-        '<input type="text" id="txtNuevoComentario" class="input-text" placeholder="Escribir una observación o pedido de corrección para el comercializador..."/>' +
-        '<button class="btn-hero-action" style="width:auto;padding:.45rem .85rem;font-size:.75rem;white-space:nowrap;" onclick="agregarComentarioAnalista(\'' + s.id + '\')">Publicar 💬</button>' +
+      html += '<div style="margin-bottom:1rem;display:flex;gap:0.5rem;">' +
+        '<button class="btn-restore" style="border-color:#3b82f6;color:#1d4ed8;font-weight:700;" onclick="cerrarModal(\'modalGestionMutual\');verFichaCompleta(\'' + s.id + '\');">✏️ Abrir Ficha Completa, Contraoferta y Legajo Digital ↗</button>' +
       '</div>';
 
       body.innerHTML = html;
@@ -1915,7 +2619,6 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         fecha: now, texto: 'Estado de la solicitud actualizado a: ' + nuevo
       });
 
-      // Llamada action: 'actualizarEstado' a Google Apps Script
       const res = await callApi({
         action: 'actualizarEstado',
         id: s.id,
@@ -1928,89 +2631,127 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       });
 
       saveStoredSolicitudes(all);
-      renderTablaMutual();
+      renderModuloMutual();
+      renderModuloComercializador();
       showToast('Estado actualizado a ' + nuevo + ' en Google Sheets');
       gestionarSolicitudMutual(id);
     }
 
-    async function agregarComentarioAnalista(id) {
-      const txt = document.getElementById('txtNuevoComentario')?.value?.trim(); if (!txt) return;
-      const all = getStoredSolicitudes(); const s = all.find(x => String(x.id) === String(id)); if (!s) return;
-      const session = getSession();
-      const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    /* ========================================================================
+       8. TABLERO KANBAN CONMUTABLE
+       ======================================================================== */
+    const ESTADOS_KANBAN = [
+      { id: 'Pendiente', label: 'Pendiente 🟡', color: '#fef08a' },
+      { id: 'En Análisis', label: 'En Análisis 🔵', color: '#bfdbfe' },
+      { id: 'Observado', label: 'Observado 🟠', color: '#fed7aa' },
+      { id: 'Aprobado', label: 'Aprobado 🟢', color: '#bbf7d0' },
+      { id: 'Transferencia', label: 'Transferencia 🟣', color: '#e9d5ff' },
+      { id: 'Liquidado', label: 'Liquidado 🟢', color: '#a7f3d0' },
+      { id: 'Rechazado', label: 'Rechazado 🔴', color: '#fecaca' }
+    ];
 
-      if (!s.observaciones) s.observaciones = [];
-      s.observaciones.push({
-        autor: session?.nombre || 'Analista Mutual', rol: 'Analista Mutual',
-        fecha: now, texto: txt
-      });
+    function renderKanbanModulo(moduloKey, list) {
+      const containerId = (moduloKey === 'comercializador') ? 'kanbanComercialBoard' : 'kanbanMutualBoard';
+      const board = document.getElementById(containerId); if (!board) return;
 
-      // Llamada action: 'agregarComentario' a Google Apps Script
-      await callApi({
-        action: 'agregarComentario',
-        id: s.id,
-        texto: txt,
-        autor: session?.nombre || 'Analista Mutual',
-        rol: 'Analista Mutual'
-      }, {
-        title: 'Registrando observación...',
-        sub: 'Guardando nota de auditoría en Google Sheets'
-      });
+      board.innerHTML = ESTADOS_KANBAN.map(est => {
+        const cards = list.filter(s => s.estado === est.id);
+        const cardsHtml = cards.length ? cards.map(s => {
+          const idLabel = s.id_definitivo || s.id_provisorio || ('#' + s.id);
+          return '<div class="kanban-card" onclick="verFichaCompleta(\'' + s.id + '\')">' +
+            '<div class="kanban-card-top">' +
+              '<span class="badge-provisorio">' + idLabel + '</span>' +
+              '<span style="font-size:0.62rem;color:var(--text-muted);">' + (s.fecha ? s.fecha.split(' ')[0] : '') + '</span>' +
+            '</div>' +
+            '<div class="kanban-card-title">' + (s.solicitante?.nombre || 'Socio') + '</div>' +
+            '<div class="kanban-card-meta">DNI: ' + (s.solicitante?.dni || '—') + ' | ' + (s.solicitante?.organismo || '') + '</div>' +
+            '<div class="kanban-card-foot">' +
+              '<span style="font-weight:700;color:var(--color-brand-blue);">' + formatMoney(s.prestamo?.monto || 0) + '</span>' +
+              '<span>' + (s.prestamo?.cuotas || '') + ' c</span>' +
+            '</div>' +
+          '</div>';
+        }).join('') : '<div style="font-size:0.7rem;color:var(--text-muted);text-align:center;padding:1rem;">Sin expedientes</div>';
 
-      saveStoredSolicitudes(all);
-      gestionarSolicitudMutual(id);
-      showToast('Observación registrada en el legajo');
-    }
-
-    async function agregarDocumentoAnalista(id) {
-      const tipo = document.getElementById('cboDocAnalistaTipo')?.value || 'Documento Mutual';
-      const fileInput = document.getElementById('fileDocAnalista');
-      const file = fileInput?.files && fileInput.files[0];
-      const filename = file ? file.name : (id + ' ' + tipo.replace(/\s+/g, '_') + '.pdf');
-      const all = getStoredSolicitudes(); const s = all.find(x => String(x.id) === String(id)); if (!s) return;
-      const session = getSession();
-      const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
-
-      let b64Data = null;
-      if (file) {
-        try {
-          b64Data = await fileToBase64(file);
-        } catch (e) {
-          console.warn('Error leyendo archivo analista:', e);
-        }
-      }
-
-      // Llamada action: 'subirAdjuntoAdicional' a Google Apps Script
-      await callApi({
-        action: 'subirAdjuntoAdicional',
-        id: s.id,
-        tipo: tipo,
-        nombre: filename,
-        base64: b64Data ? b64Data.base64 : '',
-        tipoMime: b64Data ? b64Data.tipoMime : 'application/pdf',
-        autor: session?.nombre || 'Analista Mutual',
-        rol: 'Analista Mutual'
-      }, {
-        title: 'Subiendo documento mutual...',
-        sub: 'Almacenando en Google Drive'
-      });
-
-      if (!s.adjuntos) s.adjuntos = [];
-      s.adjuntos.push({ tipo, nombre: filename, fecha: now, autor: session?.nombre || 'Analista Mutual' });
-
-      if (!s.observaciones) s.observaciones = [];
-      s.observaciones.push({
-        autor: session?.nombre || 'Analista Mutual', rol: 'Analista Mutual',
-        fecha: now, texto: 'Documento mutual adjuntado: ' + tipo + ' (' + filename + ')'
-      });
-
-      saveStoredSolicitudes(all);
-      gestionarSolicitudMutual(id);
-      showToast('Documento mutual incorporado al legajo en Drive 📄');
+        return '<div class="kanban-col">' +
+          '<div class="kanban-col-header" style="background:' + est.color + '40;">' +
+            '<span>' + est.label + '</span>' +
+            '<span style="background:#fff;padding:1px 6px;border-radius:10px;font-size:0.68rem;border:1px solid rgba(0,0,0,0.1);">' + cards.length + '</span>' +
+          '</div>' +
+          '<div class="kanban-cards-box">' + cardsHtml + '</div>' +
+        '</div>';
+      }).join('');
     }
 
     /* ========================================================================
-       6. MODALES Y NOTIFICACIONES TOAST
+       9. CALENDARIO MENSUAL CONMUTABLE
+       ======================================================================== */
+    const NOMBRES_MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+    function renderCalendarioModulo(moduloKey) {
+      const prop = (moduloKey === 'comercializador') ? 'calDateComercializador' : 'calDateMutual';
+      const curDate = vistaModulosState[prop];
+      const year = curDate.getFullYear();
+      const month = curDate.getMonth();
+
+      const titleId = (moduloKey === 'comercializador') ? 'calComMonthTitle' : 'calMutMonthTitle';
+      const gridId = (moduloKey === 'comercializador') ? 'gridComercialCalendario' : 'gridMutualCalendario';
+
+      const titEl = document.getElementById(titleId);
+      if (titEl) titEl.textContent = NOMBRES_MESES[month] + ' ' + year;
+
+      const gridEl = document.getElementById(gridId); if (!gridEl) return;
+      const solicitudes = (moduloKey === 'comercializador') ? getListaFiltradaComercializador() : getListaFiltradaMutual();
+
+      const daysOfWeek = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+      let html = daysOfWeek.map(d => '<div class="calendar-head-cell">' + d + '</div>').join('');
+
+      const firstDayOfMonth = new Date(year, month, 1);
+      const startingDay = (firstDayOfMonth.getDay() + 6) % 7; // Lunes = 0
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+      const today = new Date();
+      const isCurrentMonth = (today.getFullYear() === year && today.getMonth() === month);
+
+      // Días mes previo
+      for (let i = 0; i < startingDay; i++) {
+        const num = daysInPrevMonth - startingDay + i + 1;
+        html += '<div class="calendar-day-cell other-month"><div class="calendar-day-num">' + num + '</div></div>';
+      }
+
+      // Días del mes
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dayDateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+        const isToday = isCurrentMonth && (today.getDate() === day);
+
+        const events = solicitudes.filter(s => {
+          if (!s.fecha) return false;
+          return s.fecha.startsWith(dayDateStr);
+        });
+
+        const evsHtml = events.map(s => {
+          const bg = (s.estado === 'Aprobado' || s.estado === 'Liquidado') ? '#dcfce7' :
+                     (s.estado === 'Observado') ? '#ffedd5' :
+                     (s.estado === 'En Análisis') ? '#dbeafe' : '#fef9c3';
+          const fg = (s.estado === 'Aprobado' || s.estado === 'Liquidado') ? '#166534' :
+                     (s.estado === 'Observado') ? '#9a3412' :
+                     (s.estado === 'En Análisis') ? '#1e40af' : '#854d0e';
+          return '<div class="calendar-event-chip" style="background:' + bg + ';color:' + fg + ';" onclick="verFichaCompleta(\'' + s.id + '\')" title="' + s.solicitante?.nombre + ' - ' + s.estado + '">' +
+            '<strong>' + (s.id_definitivo || s.id_provisorio) + '</strong> ' + (s.solicitante?.nombre ? s.solicitante.nombre.split(' ')[0] : '') +
+          '</div>';
+        }).join('');
+
+        html += '<div class="calendar-day-cell ' + (isToday ? 'is-today' : '') + '">' +
+          '<div class="calendar-day-num"><span>' + day + '</span>' + (events.length ? '<span style="font-size:0.6rem;color:var(--text-muted);">' + events.length + ' sol.</span>' : '') + '</div>' +
+          evsHtml +
+        '</div>';
+      }
+
+      gridEl.innerHTML = html;
+    }
+
+    /* ========================================================================
+       10. MODALES Y NOTIFICACIONES TOAST
        ======================================================================== */
     function abrirModal(id) { const m = document.getElementById(id); if (m) m.classList.add('open'); }
     function cerrarModal(id) { const m = document.getElementById(id); if (m) m.classList.remove('open'); }
@@ -2028,7 +2769,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     /* ========================================================================
-       7. REGISTRO EN ÁMBITO GLOBAL WINDOW
+       11. REGISTRO EN ÁMBITO GLOBAL WINDOW
        ======================================================================== */
     window.handleLogoFallback = handleLogoFallback;
     window.setLinea = setLinea;
@@ -2048,18 +2789,26 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.handleLogout = handleLogout;
     window.togglePasswordVisibility = togglePasswordVisibility;
     window.cambiarPestana = cambiarPestana;
+    window.setVistaModulo = setVistaModulo;
+    window.navegarCalendario = navegarCalendario;
     window.filtrarGestionesComercializador = filtrarGestionesComercializador;
     window.abrirModalAltaSolicitud = abrirModalAltaSolicitud;
     window.ajustarPlazosModalAlta = ajustarPlazosModalAlta;
     window.guardarNuevaSolicitud = guardarNuevaSolicitud;
     window.verFichaCompleta = verFichaCompleta;
+    window.guardarEdicionSolicitante = guardarEdicionSolicitante;
+    window.guardarNumeroDefinitivo = guardarNumeroDefinitivo;
+    window.recalcularOfertaCuotaModal = recalcularOfertaCuotaModal;
+    window.guardarPropuestaMutual = guardarPropuestaMutual;
+    window.copiarPropuestaWhatsApp = copiarPropuestaWhatsApp;
+    window.abrirVisorOnline = abrirVisorOnline;
+    window.descargarDocumentoOnline = descargarDocumentoOnline;
+    window.reemplazarDocumentoExistente = reemplazarDocumentoExistente;
     window.adjuntarDocumentoAdicionalFicha = adjuntarDocumentoAdicionalFicha;
     window.enviarComentarioComercializador = enviarComentarioComercializador;
     window.filtrarGestionesMutual = filtrarGestionesMutual;
     window.gestionarSolicitudMutual = gestionarSolicitudMutual;
     window.actualizarEstadoSolicitud = actualizarEstadoSolicitud;
-    window.agregarComentarioAnalista = agregarComentarioAnalista;
-    window.agregarDocumentoAnalista = agregarDocumentoAnalista;
     window.sincronizarConBackend = sincronizarConBackend;
     window.abrirModal = abrirModal;
     window.cerrarModal = cerrarModal;

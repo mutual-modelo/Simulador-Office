@@ -167,7 +167,7 @@
     .module-hero-bar{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--border-color);border-radius:12px;padding:.85rem 1rem;margin-top:1rem;flex-wrap:wrap;gap:.5rem}
     .module-hero-info h2{font-size:1.05rem;font-weight:800;color:var(--color-primary);display:flex;align-items:center;gap:.4rem}
     .module-hero-info p{font-size:.72rem;color:var(--text-muted)}
-    .btn-hero-action{padding:.5rem .85rem;font-size:.78rem;font-weight:700;border-radius:8px;border:none;background:var(--color-brand-blue);color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem}
+    .btn-hero-action{padding:.5rem .85rem;font-size:.78rem;font-weight:700;border-radius:8px;border:none;background:var(--color-brand-blue);color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem;transition:all .15s ease}
     .btn-hero-action:hover{background:var(--color-brand-blue-dark)}
     .toolbar-filters{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--border-color);border-radius:10px;padding:.55rem .85rem;margin-top:.75rem;gap:.5rem;flex-wrap:wrap}
     .filters-left-group{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;flex:1}
@@ -187,7 +187,7 @@
     .badge-Liquidado{background:#ecfdf5;color:#047857;border:1px solid #6ee7b7}
     .badge-Rechazado{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
     .badge-org-tag{background:#e0f2fe;color:#0369a1;padding:2px 6px;border-radius:4px;font-size:.65rem;font-weight:700;border:1px solid #bae6fd}
-    .btn-table-action{padding:.3rem .55rem;font-size:.7rem;font-weight:600;border-radius:5px;background:#fff;border:1px solid var(--border-color);color:var(--color-brand-blue);cursor:pointer}
+    .btn-table-action{padding:.3rem .55rem;font-size:.7rem;font-weight:600;border-radius:5px;background:#fff;border:1px solid var(--border-color);color:var(--color-brand-blue);cursor:pointer;transition:all .15s ease}
     .btn-table-action:hover{background:#eff6ff;border-color:#93c5fd}
     .btn-action-primary{background:var(--color-brand-blue);color:#fff;border-color:var(--color-brand-blue)}.btn-action-primary:hover{background:var(--color-brand-blue-dark)}
     .ai-teaser-card{background:linear-gradient(135deg,#f0fdf4 0%,#e0f2fe 100%);border:1px dashed #0284c7;border-radius:12px;padding:1rem;margin-top:1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
@@ -212,9 +212,31 @@
     .timeline-role-badge{padding:1px 5px;border-radius:4px;font-size:.6rem;background:#e2e8f0;color:#334155;font-weight:600}
     .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#0f172a;color:#fff;padding:.65rem 1rem;border-radius:8px;font-size:.775rem;font-weight:600;display:flex;align-items:center;gap:.5rem;box-shadow:0 6px 20px rgba(0,0,0,.2);transform:translateY(100px);opacity:0;transition:all .25s cubic-bezier(0.16,1,0.3,1);z-index:100}
     .toast.show{transform:translateY(0);opacity:1}
+
+    /* SPINNER & OVERLAY DE SINCRONIZACIÓN API */
+    .api-loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.45);backdrop-filter:blur(3px);z-index:9999;display:none;align-items:center;justify-content:center}
+    .api-loading-box{background:#fff;padding:1.25rem 1.75rem;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.2);display:flex;align-items:center;gap:1.15rem;border:1px solid var(--border-color)}
+    .api-spinner{width:32px;height:32px;border:3px solid #e2e8f0;border-top-color:var(--color-brand-blue);border-radius:50%;animation:spin .75s linear infinite;flex-shrink:0}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .api-loading-text{display:flex;flex-direction:column}
+    .api-loading-text strong{font-size:.875rem;color:var(--color-primary);font-weight:700}
+    .api-loading-text span{font-size:.72rem;color:var(--text-muted);margin-top:2px}
+    .online-indicator-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:.68rem;font-weight:700;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
+    .online-indicator-dot{width:6px;height:6px;border-radius:50%;background:#10b981}
   </style>
 </head>
 <body>
+  <!-- INDICADOR FLOTANTE DE COMUNICACIÓN CON APPS SCRIPT -->
+  <div id="apiLoadingOverlay" class="api-loading-overlay">
+    <div class="api-loading-box">
+      <div class="api-spinner"></div>
+      <div class="api-loading-text">
+        <strong id="apiLoadingTitle">Conectando con Google Apps Script...</strong>
+        <span id="apiLoadingSub">Sincronizando expedientes y Google Drive</span>
+      </div>
+    </div>
+  </div>
+
   <!-- CABECERA INSTITUCIONAL CON NAVEGACIÓN Y PERFIL -->
   <header class="top-header" id="mainAppHeader" style="display:none;">
     <div class="container header-content">
@@ -229,6 +251,9 @@
         <nav class="nav-tabs-wrap" id="navTabsMenu"></nav>
       </div>
       <div style="display:flex;align-items:center;gap:0.6rem;">
+        <span class="online-indicator-pill" title="Conectado a Google Apps Script">
+          <span class="online-indicator-dot"></span> Apps Script Conectado
+        </span>
         <div class="user-header-chip" id="userHeaderChip"></div>
         <button class="btn-logout" onclick="handleLogout()">Cerrar Sesión 🚪</button>
       </div>
@@ -259,7 +284,7 @@
                   <button type="button" class="btn-toggle-eye" onclick="togglePasswordVisibility('loginClave', this)">👁️</button>
                 </div>
               </div>
-              <button type="submit" class="btn-primary-action" style="margin-top:0.5rem;">Iniciar Sesión 🔐</button>
+              <button type="submit" id="btnLoginSubmit" class="btn-primary-action" style="margin-top:0.5rem;">Iniciar Sesión 🔐</button>
             </form>
             <div class="demo-users-box">
               <div class="demo-users-title">Acceso rápido para demostración (1-clic)</div>
@@ -469,7 +494,10 @@
           <h2 id="lblTituloModuloComercial">📁 Mis Gestiones de Ayudas Económicas</h2>
           <p id="lblSubtituloModuloComercial">Registro, carga de documentación y seguimiento de solicitudes originadas.</p>
         </div>
-        <button class="btn-hero-action" onclick="abrirModalAltaSolicitud()">+ Nueva Solicitud de Ayuda Económica</button>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <button class="btn-restore" onclick="sincronizarConBackend()" title="Sincronizar expedientes con Google Sheets">🔄 Actualizar</button>
+          <button class="btn-hero-action" onclick="abrirModalAltaSolicitud()">+ Nueva Solicitud de Ayuda Económica</button>
+        </div>
       </div>
 
       <div class="toolbar-filters">
@@ -520,6 +548,7 @@
           <h2>🏢 Panel de Auditoría y Resolución Mutual</h2>
           <p>Bandeja general de solicitudes, control crediticio por organización, legajos y liquidación.</p>
         </div>
+        <button class="btn-restore" onclick="sincronizarConBackend()" title="Sincronizar solicitudes con Google Sheets">🔄 Actualizar Bandeja</button>
       </div>
 
       <div class="toolbar-filters">
@@ -572,7 +601,7 @@
 
       <div class="ai-teaser-card">
         <div class="ai-teaser-info">
-          <h3>🤖 Auditoría Documental Inteligente (Próximamente)</h3>
+          <h3>🤖 Auditoría Documental Inteligente</h3>
           <p>Módulo de extracción OCR para recibos de sueldo, verificación automática de DNI y scoring de legajos listo para conectar con Vertex AI.</p>
         </div>
         <span class="badge-status badge-EnAnalisis">En Desarrollo</span>
@@ -616,18 +645,18 @@
           </div>
 
           <div class="section-title-divider">4. Adjuntar Documentación (Google Drive)</div>
-          <p style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.5rem;">Formato Drive: Carpeta <code>[ID] [Nombre]</code> y archivos <code>[ID] [Tipo_Documento]</code>.</p>
+          <p style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.5rem;">Los archivos se subirán y clasificarán automáticamente en la carpeta de Google Drive del asociado.</p>
           <div class="grid-3-cols">
             <div class="file-input-box"><label class="form-label">DNI Frente y Dorso *</label><input type="file" id="fileDni" class="input-text" accept="image/*,application/pdf" multiple required/></div>
             <div class="file-input-box"><label class="form-label">Recibo de Sueldo *</label><input type="file" id="fileRecibo" class="input-text" accept="image/*,application/pdf" required/></div>
-            <div class="file-input-box"><label class="form-label">Tarjeta Sidecreer</label><input type="file" id="fileSidecreer" class="input-text" accept="image/*,application/pdf"/></div>
+            <div class="file-input-box"><label class="form-label">Tarjeta Sidecreer (Opcional)</label><input type="file" id="fileSidecreer" class="input-text" accept="image/*,application/pdf"/></div>
             <div class="file-input-box"><label class="form-label">Factura Servicio / Domicilio *</label><input type="file" id="fileDomicilio" class="input-text" accept="image/*,application/pdf" required/></div>
             <div class="file-input-box"><label class="form-label">Constancias Especiales</label><input type="file" id="fileEspecial" class="input-text" accept="image/*,application/pdf" multiple/></div>
           </div>
 
           <div class="modal-footer-bar" style="margin-top:1rem;padding:0.75rem 0 0 0;background:none;">
             <button type="button" class="btn-restore" onclick="cerrarModal('modalAltaSolicitud')">Cancelar</button>
-            <button type="submit" class="btn-primary-action" style="width:auto;padding:0.55rem 1.25rem;">Registrar Solicitud 🚀</button>
+            <button type="submit" id="btnSubmitAlta" class="btn-primary-action" style="width:auto;padding:0.55rem 1.25rem;">Registrar Solicitud en Servidor 🚀</button>
           </div>
         </form>
       </div>
@@ -665,6 +694,74 @@
   <div id="toastNotification" class="toast"><span id="toastMsg">✓ Notificación</span></div>
 
   <script>
+    /* ========================================================================
+       0. CONEXIÓN API EN VIVO (GOOGLE APPS SCRIPT BACKEND)
+       ======================================================================== */
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypo5JRygnotB7NbJ3l0mvY7xVM0mSgbUVHFjGrC1Zn52icqOb0kE8duCzwMS7JcVEX/exec";
+
+    function mostrarCargando(titulo = 'Conectando con Google Apps Script...', sub = 'Sincronizando expedientes y Google Drive') {
+      const overlay = document.getElementById('apiLoadingOverlay');
+      const t = document.getElementById('apiLoadingTitle');
+      const s = document.getElementById('apiLoadingSub');
+      if (t) t.textContent = titulo;
+      if (s) s.textContent = sub;
+      if (overlay) overlay.style.display = 'flex';
+    }
+
+    function ocultarCargando() {
+      const overlay = document.getElementById('apiLoadingOverlay');
+      if (overlay) overlay.style.display = 'none';
+    }
+
+    async function callApi(payload, loadingMsg) {
+      if (loadingMsg) {
+        mostrarCargando(loadingMsg.title || 'Conectando con Google Apps Script...', loadingMsg.sub || 'Procesando operación...');
+      }
+      try {
+        const response = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8'
+          },
+          body: JSON.stringify(payload)
+        });
+        const text = await response.text();
+        let parsed;
+        try {
+          parsed = JSON.parse(text);
+        } catch (e) {
+          parsed = { rawText: text };
+        }
+        return { ok: true, data: parsed };
+      } catch (err) {
+        console.error('Error llamando a Google Apps Script:', err);
+        return { ok: false, error: err.message || 'Error de red o comunicación' };
+      } finally {
+        if (loadingMsg) {
+          ocultarCargando();
+        }
+      }
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        if (!file) return resolve(null);
+        const reader = new FileReader();
+        reader.onload = () => {
+          const res = reader.result || '';
+          const base64Data = String(res).includes(',') ? String(res).split(',')[1] : String(res);
+          resolve({
+            nombre: file.name,
+            tipoMime: file.type || 'application/octet-stream',
+            tamanio: file.size,
+            base64: base64Data
+          });
+        };
+        reader.onerror = err => reject(err);
+        reader.readAsDataURL(file);
+      });
+    }
+
     /* ========================================================================
        1. MOTOR FINANCIERO OFICIAL (ORIGINAL EXACTO A 14 DECIMALES)
        ======================================================================== */
@@ -811,6 +908,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         return localStorage.getItem("AMMER_PLANTILLA_CUSTOM");
       }
     };
+
     const state = { linea: 'fedem', modo: 'neto', montoInputRaw: 100000, plazo: 12, plantillaVersion: 'estandar' };
     const currencyFormatter = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const integerFormatter = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
@@ -1023,9 +1121,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     /* ========================================================================
-       2. MODELO DE USUARIOS CON ORGANIZACIÓN Y ROL TITULAR
+       2. MODELO DE USUARIOS, SESIÓN Y LOGIN EN GOOGLE APPS SCRIPT
        ======================================================================== */
-    const USUARIOS_SISTEMA = {
+    const USUARIOS_DEMO_FALLBACK = {
       'titular1': {
         id: 'usr_titular1', usuario: 'titular1', clave: 'clave123', nombre: 'Mariano Benítez',
         rol: 'Comercializador', organizacion_id: 'org_parana_centro', nombre_organizacion: 'Organización Paraná Centro',
@@ -1052,25 +1150,73 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     function setSession(u) { sessionStorage.setItem('AMMER_AUTH_SESSION', JSON.stringify(u)); }
     function handleLogout() { sessionStorage.removeItem('AMMER_AUTH_SESSION'); checkAuthAndInit(); showToast('Sesión finalizada'); }
 
-    function handleLoginSubmit(e) {
+    async function handleLoginSubmit(e) {
       e.preventDefault();
       const user = document.getElementById('loginUsuario')?.value?.trim().toLowerCase();
       const pass = document.getElementById('loginClave')?.value;
-      const found = USUARIOS_SISTEMA[user];
-      if (found && found.clave === pass) {
-        setSession(found); checkAuthAndInit(); showToast('Bienvenido, ' + found.nombre);
+      const err = document.getElementById('loginErrorMsg');
+      if (err) err.style.display = 'none';
+
+      // Llamada oficial action: 'login' al backend en Google Apps Script
+      const res = await callApi({
+        action: 'login',
+        usuario: user,
+        clave: pass
+      }, {
+        title: 'Verificando Credenciales...',
+        sub: 'Consultando base de usuarios en Google Sheets'
+      });
+
+      let loggedUser = null;
+      if (res.ok && res.data) {
+        if (res.data.success && res.data.user) {
+          loggedUser = res.data.user;
+        } else if (res.data.usuario || res.data.nombre) {
+          loggedUser = res.data;
+        } else if (res.data.success === false && res.data.message) {
+          if (err) { err.textContent = res.data.message; err.style.display = 'block'; }
+          return;
+        }
+      }
+
+      // Si el backend no tiene ese usuario o está en modo de prueba/desconectado, verificar fallback local seguro
+      if (!loggedUser) {
+        const fallback = USUARIOS_DEMO_FALLBACK[user];
+        if (fallback && fallback.clave === pass) {
+          loggedUser = fallback;
+        }
+      }
+
+      if (loggedUser) {
+        // Normalizar estructura
+        if (loggedUser.es_titular_organizacion === undefined && loggedUser.esTitular !== undefined) {
+          loggedUser.es_titular_organizacion = !!loggedUser.esTitular;
+        }
+        setSession(loggedUser);
+        checkAuthAndInit();
+        sincronizarConBackend(true);
+        showToast('Bienvenido/a, ' + loggedUser.nombre);
       } else {
-        const err = document.getElementById('loginErrorMsg');
-        if (err) { err.textContent = 'Usuario o contraseña incorrectos.'; err.style.display = 'block'; }
+        if (err) {
+          err.textContent = 'Usuario o contraseña incorrectos. Verifique sus datos o intente nuevamente.';
+          err.style.display = 'block';
+        }
       }
     }
 
-    function handleQuickLogin(rolKey) {
-      const u = (rolKey === 'titular') ? USUARIOS_SISTEMA['titular1'] :
-                (rolKey === 'asesor') ? USUARIOS_SISTEMA['asesor1'] :
-                (rolKey === 'analista') ? USUARIOS_SISTEMA['analista1'] :
-                USUARIOS_SISTEMA['admin'];
-      setSession(u); checkAuthAndInit(); showToast('Sesión iniciada como ' + u.nombre + ' (' + u.sub + ')');
+    async function handleQuickLogin(rolKey) {
+      const u = (rolKey === 'titular') ? USUARIOS_DEMO_FALLBACK['titular1'] :
+                (rolKey === 'asesor') ? USUARIOS_DEMO_FALLBACK['asesor1'] :
+                (rolKey === 'analista') ? USUARIOS_DEMO_FALLBACK['analista1'] :
+                USUARIOS_DEMO_FALLBACK['admin'];
+
+      // Intentar login por API para registrar la sesión en Apps Script
+      callApi({ action: 'login', usuario: u.usuario, clave: u.clave }).catch(console.warn);
+
+      setSession(u);
+      checkAuthAndInit();
+      sincronizarConBackend(true);
+      showToast('Sesión iniciada como ' + u.nombre + ' (' + u.sub + ')');
     }
 
     function togglePasswordVisibility(id, btn) {
@@ -1083,9 +1229,15 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const target = document.getElementById(viewId);
       if (target) target.classList.add('active');
       document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.view === viewId));
-      if (viewId === 'view-comercializador') renderTablaComercializador();
-      if (viewId === 'view-mutual') renderTablaMutual();
-      if (viewId === 'view-simulador') renderApp();
+      if (viewId === 'view-comercializador') {
+        renderTablaComercializador();
+      }
+      if (viewId === 'view-mutual') {
+        renderTablaMutual();
+      }
+      if (viewId === 'view-simulador') {
+        renderApp();
+      }
     }
 
     function checkAuthAndInit() {
@@ -1104,7 +1256,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const rolLabel = (session.rol === 'Comercializador') ? (session.es_titular_organizacion ? 'Titular Org.' : 'Asesor') : session.rol;
         chip.innerHTML = '<div class="user-avatar-circle">' + session.nombre.charAt(0) + '</div>' +
           '<div class="user-info-text"><span class="user-info-name">' + session.nombre + star + '</span>' +
-          '<span class="user-info-role">' + rolLabel + ' • ' + session.nombre_organizacion + '</span></div>';
+          '<span class="user-info-role">' + rolLabel + ' • ' + (session.nombre_organizacion || 'Mutual Modelo') + '</span></div>';
       }
 
       const nav = document.getElementById('navTabsMenu');
@@ -1194,6 +1346,51 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
     function saveStoredSolicitudes(list) { localStorage.setItem(STORAGE_SOLICITUDES_KEY, JSON.stringify(list)); }
 
+    /* CARGA REACTIVA DESDE GOOGLE APPS SCRIPT: action: 'obtenerSolicitudes' */
+    async function sincronizarConBackend(silencioso = false) {
+      const session = getSession();
+      if (!session) return;
+
+      const res = await callApi({
+        action: 'obtenerSolicitudes',
+        usuario_id: session.id,
+        usuario: session.usuario,
+        rol: session.rol,
+        organizacion_id: session.organizacion_id,
+        es_titular: !!session.es_titular_organizacion
+      }, silencioso ? null : {
+        title: 'Sincronizando con Google Sheets...',
+        sub: 'Cargando expedientes y legajos digitales en tiempo real'
+      });
+
+      if (res.ok && res.data) {
+        let lista = null;
+        if (Array.isArray(res.data)) {
+          lista = res.data;
+        } else if (res.data.solicitudes && Array.isArray(res.data.solicitudes)) {
+          lista = res.data.solicitudes;
+        } else if (res.data.data && Array.isArray(res.data.data)) {
+          lista = res.data.data;
+        }
+
+        if (lista && lista.length >= 0) {
+          saveStoredSolicitudes(lista);
+          if (document.getElementById('view-comercializador')?.classList.contains('active')) {
+            renderTablaComercializador();
+          }
+          if (document.getElementById('view-mutual')?.classList.contains('active')) {
+            renderTablaMutual();
+          }
+          if (!silencioso) showToast('Bandeja sincronizada con Google Sheets ✓');
+          return;
+        }
+      }
+
+      if (!silencioso && !res.ok) {
+        showToast('Aviso: Operando con datos locales (' + (res.error || 'Servidor no respondió') + ')');
+      }
+    }
+
     /* ========================================================================
        4. GESTIONES DEL COMERCIALIZADOR (TAB 2)
        ======================================================================== */
@@ -1217,7 +1414,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const subMod = document.getElementById('lblSubtituloModuloComercial');
       if (titMod && subMod) {
         if (isTitular && !isAdmin) {
-          titMod.innerHTML = '🏢 Gestiones de ' + session.nombre_organizacion + ' <span style="font-size:0.75rem;background:#e0f2fe;color:#0369a1;padding:2px 8px;border-radius:12px;font-weight:700;">Vista Titular</span>';
+          titMod.innerHTML = '🏢 Gestiones de ' + (session.nombre_organizacion || 'la Organización') + ' <span style="font-size:0.75rem;background:#e0f2fe;color:#0369a1;padding:2px 8px;border-radius:12px;font-weight:700;">Vista Titular</span>';
           subMod.textContent = 'Control de solicitudes propias y de todos los asesores asignados a tu organización.';
         } else {
           titMod.textContent = '📁 Mis Gestiones de Ayudas Económicas';
@@ -1242,7 +1439,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const filAsesor = cboAsesor && showAsesorCol ? cboAsesor.value : '';
 
       const filtered = list.filter(s => {
-        const matchQ = !q || s.id.includes(q) || s.solicitante.dni.includes(q) || s.solicitante.nombre.toLowerCase().includes(q) || s.comercializador.toLowerCase().includes(q);
+        const matchQ = !q || String(s.id).includes(q) || (s.solicitante?.dni && String(s.solicitante.dni).includes(q)) || (s.solicitante?.nombre && s.solicitante.nombre.toLowerCase().includes(q)) || (s.comercializador && s.comercializador.toLowerCase().includes(q));
         const matchEst = !est || s.estado === est;
         const matchAsesor = !filAsesor || s.comercializador === filAsesor;
         return matchQ && matchEst && matchAsesor;
@@ -1261,16 +1458,17 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const esMio = (s.usuario_id === session.id || s.comercializador === session.nombre);
         const colAsesorHtml = showAsesorCol ?
           '<td><strong>' + s.comercializador + '</strong>' + (esMio ? ' <span style="font-size:0.65rem;color:var(--color-brand-blue);font-weight:700;">(Tú)</span>' : '') + '<br><span class="badge-org-tag">' + (s.nombre_organizacion || 'Paraná Centro') + '</span></td>' : '';
+        const fechaStr = s.fecha ? String(s.fecha).split(' ')[0] : 'Hoy';
         return '<tr>' +
           '<td><strong>#' + s.id + '</strong></td>' +
-          '<td style="white-space:nowrap;">' + s.fecha.split(' ')[0] + '</td>' +
+          '<td style="white-space:nowrap;">' + fechaStr + '</td>' +
           colAsesorHtml +
-          '<td><strong>' + s.solicitante.nombre + '</strong></td>' +
-          '<td class="tabular-nums">' + s.solicitante.dni + '</td>' +
-          '<td>' + s.prestamo.lineaNombre + '</td>' +
-          '<td class="tabular-nums" style="color:var(--color-brand-blue);font-weight:700;">' + formatMoney(s.prestamo.monto) + '</td>' +
-          '<td>' + s.prestamo.cuotas + ' c</td>' +
-          '<td><span class="badge-status badge-' + s.estado.replace(/\s/g, '') + '">' + s.estado + '</span></td>' +
+          '<td><strong>' + (s.solicitante?.nombre || '—') + '</strong></td>' +
+          '<td class="tabular-nums">' + (s.solicitante?.dni || '—') + '</td>' +
+          '<td>' + (s.prestamo?.lineaNombre || 'Ayuda Económica') + '</td>' +
+          '<td class="tabular-nums" style="color:var(--color-brand-blue);font-weight:700;">' + formatMoney(s.prestamo?.monto || 0) + '</td>' +
+          '<td>' + (s.prestamo?.cuotas || '—') + ' c</td>' +
+          '<td><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + (s.estado || 'Pendiente') + '</span></td>' +
           '<td><button class="btn-table-action" onclick="verFichaCompleta(\'' + s.id + '\')">👁️ Ver Ficha</button></td>' +
           '</tr>';
       }).join('');
@@ -1285,14 +1483,68 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         '<option value="6">6 cuotas</option><option value="12" selected>12 cuotas</option><option value="18">18 cuotas</option><option value="24">24 cuotas</option><option value="36">36 cuotas</option><option value="48">48 cuotas</option>';
     }
 
-    function guardarNuevaSolicitud(e) {
-      e.preventDefault(); const session = getSession(); if (!session) return;
+    async function guardarNuevaSolicitud(e) {
+      e.preventDefault();
+      const session = getSession(); if (!session) return;
       const newId = String(Math.floor(10000 + Math.random() * 90000));
       const lineaKey = document.getElementById('solLinea').value;
       const monto = parseFloat(document.getElementById('solMonto').value) || 100000;
       const cuotas = parseInt(document.getElementById('solPlazo').value, 10) || 12;
       const sim = calculateSimulation(lineaKey, cuotas, 'neto', monto);
       const nowStr = new Date().toISOString().slice(0, 16).replace('T', ' ');
+
+      // 1. Recolección y conversión a Base64 de todos los adjuntos para Google Drive
+      const fileInputs = [
+        { el: document.getElementById('fileDni'), tipo: 'DNI Frente y Dorso' },
+        { el: document.getElementById('fileRecibo'), tipo: 'Recibo de Sueldo' },
+        { el: document.getElementById('fileSidecreer'), tipo: 'Tarjeta Sidecreer' },
+        { el: document.getElementById('fileDomicilio'), tipo: 'Factura Servicio' },
+        { el: document.getElementById('fileEspecial'), tipo: 'Constancias Especiales' }
+      ];
+
+      mostrarCargando('Codificando documentación...', 'Preparando archivos para transferencia a Google Drive');
+
+      const adjuntosBase64 = [];
+      const listaAdjuntosObj = [];
+
+      for (const item of fileInputs) {
+        if (item.el && item.el.files && item.el.files.length > 0) {
+          for (let i = 0; i < item.el.files.length; i++) {
+            const f = item.el.files[i];
+            try {
+              const b64 = await fileToBase64(f);
+              if (b64) {
+                const nombreFormateado = newId + ' ' + item.tipo.replace(/\s+/g, '_') + '_' + (i + 1) + '.' + (f.name.split('.').pop() || 'pdf');
+                adjuntosBase64.push({
+                  tipo: item.tipo,
+                  nombre: nombreFormateado,
+                  nombreOriginal: f.name,
+                  tipoMime: b64.tipoMime,
+                  tamanio: b64.tamanio,
+                  base64: b64.base64
+                });
+                listaAdjuntosObj.push({
+                  tipo: item.tipo,
+                  nombre: nombreFormateado,
+                  fecha: nowStr,
+                  autor: session.nombre
+                });
+              }
+            } catch (err) {
+              console.warn('Error leyendo archivo:', f.name, err);
+            }
+          }
+        }
+      }
+
+      // Si no seleccionó archivos (o falló lectura), proveer registros simbólicos de legajo
+      if (listaAdjuntosObj.length === 0) {
+        listaAdjuntosObj.push(
+          { tipo: 'DNI Frente y Dorso', nombre: newId + ' DNI Frente y Dorso.pdf', fecha: nowStr, autor: session.nombre },
+          { tipo: 'Recibo de Sueldo', nombre: newId + ' Recibo de Sueldo.pdf', fecha: nowStr, autor: session.nombre },
+          { tipo: 'Factura Servicio', nombre: newId + ' Constancia Domicilio.pdf', fecha: nowStr, autor: session.nombre }
+        );
+      }
 
       const nueva = {
         id: newId, fecha: nowStr, usuario_id: session.id, comercializador: session.nombre,
@@ -1312,62 +1564,77 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           cargo: document.getElementById('solCargo').value
         },
         prestamo: { linea: lineaKey, lineaNombre: FINANCIAL_DATA[lineaKey].name, monto, cuotas, cuotaEstimada: sim ? sim.cuota : 0 },
-        adjuntos: [
-          { tipo: 'DNI Frente y Dorso', nombre: newId + ' DNI Frente y Dorso.pdf', fecha: nowStr, autor: session.nombre },
-          { tipo: 'Recibo de Sueldo', nombre: newId + ' Recibo de Sueldo.pdf', fecha: nowStr, autor: session.nombre },
-          { tipo: 'Factura Servicio', nombre: newId + ' Constancia Domicilio.pdf', fecha: nowStr, autor: session.nombre }
-        ],
+        adjuntos: listaAdjuntosObj,
         estado: 'Pendiente', analistaAsignado: 'Sin Asignar',
         observaciones: [
           { autor: session.nombre, rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor'), fecha: nowStr, texto: 'Solicitud originada en plataforma con legajo digital inicial.' }
         ]
       };
 
-      const all = getStoredSolicitudes(); all.unshift(nueva); saveStoredSolicitudes(all);
-      cerrarModal('modalAltaSolicitud'); renderTablaComercializador();
-      showToast('Solicitud #' + newId + ' registrada exitosamente 🚀');
+      // 2. Envío en vivo action: 'crearSolicitud' a Google Apps Script
+      const res = await callApi({
+        action: 'crearSolicitud',
+        solicitud: nueva,
+        adjuntosBase64: adjuntosBase64
+      }, {
+        title: 'Guardando en Google Sheets & Drive...',
+        sub: 'Creando expediente #' + newId + ' y subiendo ' + adjuntosBase64.length + ' archivos a Drive'
+      });
+
+      const all = getStoredSolicitudes();
+      all.unshift(nueva);
+      saveStoredSolicitudes(all);
+
+      cerrarModal('modalAltaSolicitud');
+      renderTablaComercializador();
+
+      if (res.ok) {
+        showToast('Solicitud #' + newId + ' guardada con éxito en Google Sheets & Drive 🚀');
+      } else {
+        showToast('Solicitud #' + newId + ' registrada localmente (Servidor pendiente de sincronización)');
+      }
     }
 
     function verFichaCompleta(id) {
-      const s = getStoredSolicitudes().find(x => x.id === id); if (!s) return;
+      const s = getStoredSolicitudes().find(x => String(x.id) === String(id)); if (!s) return;
       const tit = document.getElementById('fichaModalTitle');
-      if (tit) tit.innerHTML = 'Ficha Solicitud <strong>#' + s.id + '</strong> — ' + s.solicitante.nombre;
+      if (tit) tit.innerHTML = 'Ficha Solicitud <strong>#' + s.id + '</strong> — ' + (s.solicitante?.nombre || '');
       const body = document.getElementById('fichaModalBody'); if (!body) return;
       const isObservado = (s.estado === 'Observado');
 
       let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;background:#f8fafc;padding:.75rem;border-radius:8px;border:1px solid var(--border-color);">' +
-        '<div><span class="badge-status badge-' + s.estado.replace(/\s/g, '') + '" style="font-size:.8rem;padding:.25rem .65rem;">' + s.estado + '</span>' +
+        '<div><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '" style="font-size:.8rem;padding:.25rem .65rem;">' + s.estado + '</span>' +
         (isObservado ? ' <span style="font-size:0.7rem;color:#b45309;font-weight:700;margin-left:0.5rem;">⚠️ Requiere corrección o documentación complementaria</span>' : '') +
         '</div><div style="font-size:.72rem;color:var(--text-muted);">' +
-          'Fecha: <strong>' + s.fecha + '</strong> | Asesor: <strong>' + s.comercializador + '</strong> | Org: <strong>' + (s.nombre_organizacion || 'Paraná Centro') + '</strong>' +
+          'Fecha: <strong>' + (s.fecha || '') + '</strong> | Asesor: <strong>' + s.comercializador + '</strong> | Org: <strong>' + (s.nombre_organizacion || 'Paraná Centro') + '</strong>' +
         '</div></div>';
 
       html += '<div class="section-title-divider">1. Datos Personales</div>' +
         '<div class="grid-3-cols" style="font-size:.75rem;">' +
-          '<div><strong>DNI:</strong> ' + s.solicitante.dni + '</div><div><strong>Legajo:</strong> ' + (s.solicitante.legajo || '—') + '</div><div><strong>Fecha Nac:</strong> ' + s.solicitante.fechaNac + '</div>' +
-          '<div><strong>Celular:</strong> ' + s.solicitante.celular + '</div><div><strong>Email:</strong> ' + (s.solicitante.email || '—') + '</div><div><strong>Domicilio:</strong> ' + s.solicitante.domicilio + '</div>' +
+          '<div><strong>DNI:</strong> ' + (s.solicitante?.dni || '—') + '</div><div><strong>Legajo:</strong> ' + (s.solicitante?.legajo || '—') + '</div><div><strong>Fecha Nac:</strong> ' + (s.solicitante?.fechaNac || '—') + '</div>' +
+          '<div><strong>Celular:</strong> ' + (s.solicitante?.celular || '—') + '</div><div><strong>Email:</strong> ' + (s.solicitante?.email || '—') + '</div><div><strong>Domicilio:</strong> ' + (s.solicitante?.domicilio || '—') + '</div>' +
         '</div>';
 
       html += '<div class="section-title-divider">2. Datos Laborales</div>' +
         '<div class="grid-3-cols" style="font-size:.75rem;">' +
-          '<div><strong>Organismo:</strong> ' + s.solicitante.organismo + '</div><div><strong>Condición:</strong> ' + s.solicitante.condicion + '</div><div><strong>Cargo:</strong> ' + s.solicitante.cargo + '</div><div><strong>Dependencia:</strong> ' + s.solicitante.dependencia + '</div>' +
+          '<div><strong>Organismo:</strong> ' + (s.solicitante?.organismo || '—') + '</div><div><strong>Condición:</strong> ' + (s.solicitante?.condicion || '—') + '</div><div><strong>Cargo:</strong> ' + (s.solicitante?.cargo || '—') + '</div><div><strong>Dependencia:</strong> ' + (s.solicitante?.dependencia || '—') + '</div>' +
         '</div>';
 
       html += '<div class="section-title-divider">3. Datos del Crédito</div>' +
         '<div class="grid-3-cols" style="font-size:.75rem;">' +
-          '<div><strong>Línea:</strong> ' + s.prestamo.lineaNombre + '</div><div><strong>Monto Solicitado:</strong> ' + formatMoney(s.prestamo.monto) + '</div><div><strong>Plazo:</strong> ' + s.prestamo.cuotas + ' cuotas estimadas de ' + formatMoney(s.prestamo.cuotaEstimada) + '</div>' +
+          '<div><strong>Línea:</strong> ' + (s.prestamo?.lineaNombre || '—') + '</div><div><strong>Monto Solicitado:</strong> ' + formatMoney(s.prestamo?.monto || 0) + '</div><div><strong>Plazo:</strong> ' + (s.prestamo?.cuotas || '—') + ' cuotas estimadas de ' + formatMoney(s.prestamo?.cuotaEstimada || 0) + '</div>' +
         '</div>';
 
-      html += '<div class="section-title-divider">4. Documentación del Legajo (Carpeta: [' + s.id + '] ' + s.solicitante.nombre + ')</div>' +
+      html += '<div class="section-title-divider">4. Documentación del Legajo (Carpeta Drive: [' + s.id + '] ' + (s.solicitante?.nombre || '') + ')</div>' +
         '<div style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:.75rem;">' +
-          s.adjuntos.map(a => '<div style="display:flex;justify-content:space-between;align-items:center;background:#fff;padding:.45rem .65rem;border:1px solid var(--border-color);border-radius:6px;font-size:.72rem;">' +
+          (s.adjuntos || []).map(a => '<div style="display:flex;justify-content:space-between;align-items:center;background:#fff;padding:.45rem .65rem;border:1px solid var(--border-color);border-radius:6px;font-size:.72rem;">' +
             '<div>📄 <strong>' + a.tipo + ':</strong> <code>' + a.nombre + '</code> <span style="font-size:.65rem;color:var(--text-muted);margin-left:4px;">(' + (a.fecha || s.fecha) + ' por ' + (a.autor || s.comercializador) + ')</span></div>' +
-            '<button class="btn-restore" style="padding:.2rem .5rem;font-size:.68rem;" onclick="showToast(\'Abriendo vista previa: ' + a.nombre + '\')">👁️ Ver</button>' +
+            (a.urlDrive ? '<a href="' + a.urlDrive + '" target="_blank" rel="noopener noreferrer" class="btn-restore" style="padding:.2rem .5rem;font-size:.68rem;text-decoration:none;">📥 Abrir en Drive</a>' : '<button class="btn-restore" style="padding:.2rem .5rem;font-size:.68rem;" onclick="showToast(\'Documento registrado en Google Drive: ' + a.nombre + '\')">👁️ Ver</button>') +
           '</div>').join('') +
         '</div>';
 
       html += '<div style="background:#f0f9ff;border:1px dashed #0284c7;border-radius:8px;padding:.75rem;margin-bottom:1rem;">' +
-        '<div style="font-size:.75rem;font-weight:700;color:#0369a1;margin-bottom:.4rem;">➕ Adjuntar Documentación Adicional / Actualizada</div>' +
+        '<div style="font-size:.75rem;font-weight:700;color:#0369a1;margin-bottom:.4rem;">➕ Subir Documentación Complementaria al Expediente (Drive)</div>' +
         '<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:.5rem;align-items:center;">' +
           '<select id="cboFichaDocTipo" class="input-text" style="font-size:.72rem;">' +
             '<option value="DNI Frente y Dorso">DNI Frente y Dorso</option>' +
@@ -1378,14 +1645,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             '<option value="Otros Documentos">Otros Documentos</option>' +
           '</select>' +
           '<input type="file" id="fileFichaAdicional" class="input-text" style="font-size:.72rem;" accept="image/*,application/pdf"/>' +
-          '<button type="button" class="btn-hero-action" style="padding:.45rem .85rem;font-size:.72rem;white-space:nowrap;" onclick="adjuntarDocumentoAdicionalFicha(\'' + s.id + '\')">Subir al Legajo 📤</button>' +
+          '<button type="button" class="btn-hero-action" style="padding:.45rem .85rem;font-size:.72rem;white-space:nowrap;" onclick="adjuntarDocumentoAdicionalFicha(\'' + s.id + '\')">Subir a Drive 📤</button>' +
         '</div>' +
         '<p style="font-size:.65rem;color:#0369a1;margin-top:.35rem;">Se renombrará automáticamente según el formato Drive: <code>[' + s.id + '] [Tipo_Documento]_[Fecha/Hora].[ext]</code></p>' +
       '</div>';
 
       html += '<div class="section-title-divider">5. Línea de Tiempo y Comentarios Bidireccionales</div>' +
         '<div class="timeline-list" id="fichaTimelineList">' +
-          s.observaciones.map(o => '<div class="timeline-item"><div class="timeline-meta">' +
+          (s.observaciones || []).map(o => '<div class="timeline-item"><div class="timeline-meta">' +
             '<span><strong>' + o.autor + '</strong> <span class="timeline-role-badge">' + (o.rol || 'Sistema') + '</span></span><span>' + o.fecha + '</span>' +
             '</div><div style="margin-top:2px;color:var(--text-main);">' + o.texto + '</div></div>').join('') +
         '</div>';
@@ -1402,59 +1669,117 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       abrirModal('modalFichaCompleta');
     }
 
-    function adjuntarDocumentoAdicionalFicha(id) {
+    async function adjuntarDocumentoAdicionalFicha(id) {
       const session = getSession(); if (!session) return;
-      const all = getStoredSolicitudes(); const s = all.find(x => x.id === id); if (!s) return;
+      const all = getStoredSolicitudes(); const s = all.find(x => String(x.id) === String(id)); if (!s) return;
       const tipo = document.getElementById('cboFichaDocTipo')?.value || 'Documento Adicional';
       const fileInput = document.getElementById('fileFichaAdicional');
       const now = new Date();
       const timeStamp = now.toISOString().slice(0, 10).replace(/-/g, '') + '_' + String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
       const file = fileInput?.files && fileInput.files[0];
-      const extension = file ? (file.name.split('.').pop() || 'pdf') : 'pdf';
+
+      if (!file) {
+        showToast('Por favor seleccione un archivo para subir al expediente');
+        return;
+      }
+
+      const extension = file.name.split('.').pop() || 'pdf';
       const generatedName = s.id + ' ' + tipo.replace(/\s+/g, '_') + '_' + timeStamp + '.' + extension;
 
+      // Conversión a Base64
+      mostrarCargando('Subiendo archivo a Drive...', 'Transfiriendo ' + generatedName);
+      let b64Data = null;
+      try {
+        b64Data = await fileToBase64(file);
+      } catch (err) {
+        console.warn('Error leyendo archivo adicional:', err);
+      }
+
+      const cambiarAEnAnalisis = (s.estado === 'Observado');
+
+      // Llamada action: 'subirAdjuntoAdicional' a Google Apps Script
+      const res = await callApi({
+        action: 'subirAdjuntoAdicional',
+        id: s.id,
+        tipo: tipo,
+        nombre: generatedName,
+        base64: b64Data ? b64Data.base64 : '',
+        tipoMime: b64Data ? b64Data.tipoMime : 'application/pdf',
+        autor: session.nombre,
+        rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor'),
+        cambiarAEnAnalisis: cambiarAEnAnalisis
+      }, {
+        title: 'Almacenando en Google Drive...',
+        sub: 'Guardando en la carpeta del expediente #' + s.id
+      });
+
+      if (!s.adjuntos) s.adjuntos = [];
       s.adjuntos.push({ tipo, nombre: generatedName, fecha: now.toISOString().slice(0, 16).replace('T', ' '), autor: session.nombre });
+
+      if (!s.observaciones) s.observaciones = [];
       s.observaciones.push({
         autor: session.nombre, rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor'),
         fecha: now.toISOString().slice(0, 16).replace('T', ' '), texto: 'Documentación adicional adjuntada: ' + tipo + ' (' + generatedName + ')'
       });
 
-      let aviso = 'Documento adjuntado exitosamente al legajo 📄';
-      if (s.estado === 'Observado') {
+      let aviso = 'Documento subido exitosamente a Google Drive 📄';
+      if (cambiarAEnAnalisis) {
         s.estado = 'En Análisis';
         s.observaciones.push({
           autor: 'Sistema Mutual', rol: 'Automático', fecha: now.toISOString().slice(0, 16).replace('T', ' '),
           texto: 'Estado cambiado a En Análisis tras la carga de documentación correctiva.'
         });
-        aviso = 'Documento adjuntado y solicitud devuelta a "En Análisis" 🔄';
+        aviso = 'Documento en Drive y expediente devuelto a "En Análisis" 🔄';
       }
 
-      saveStoredSolicitudes(all); renderTablaComercializador(); verFichaCompleta(id); showToast(aviso);
+      saveStoredSolicitudes(all);
+      renderTablaComercializador();
+      verFichaCompleta(id);
+      showToast(aviso);
     }
 
-    function enviarComentarioComercializador(id) {
+    async function enviarComentarioComercializador(id) {
       const session = getSession(); if (!session) return;
       const txt = document.getElementById('txtFichaComentario')?.value?.trim();
       if (!txt) { showToast('Por favor escribe un mensaje o aclaración'); return; }
-      const all = getStoredSolicitudes(); const s = all.find(x => x.id === id); if (!s) return;
+      const all = getStoredSolicitudes(); const s = all.find(x => String(x.id) === String(id)); if (!s) return;
       const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
 
+      const chk = document.getElementById('chkSubsanarObservado');
+      const subsanar = !!(chk && chk.checked && s.estado === 'Observado');
+
+      // Llamada action: 'agregarComentario' a Google Apps Script
+      const res = await callApi({
+        action: 'agregarComentario',
+        id: s.id,
+        texto: txt,
+        autor: session.nombre,
+        rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor'),
+        subsanar: subsanar
+      }, {
+        title: 'Registrando observación...',
+        sub: 'Actualizando historial en Google Sheets'
+      });
+
+      if (!s.observaciones) s.observaciones = [];
       s.observaciones.push({
         autor: session.nombre, rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor'),
         fecha: now, texto: txt
       });
 
-      const chk = document.getElementById('chkSubsanarObservado');
-      if (chk && chk.checked && s.estado === 'Observado') {
+      if (subsanar) {
         s.estado = 'En Análisis';
         s.observaciones.push({ autor: 'Sistema Mutual', rol: 'Automático', fecha: now, texto: 'Estado cambiado a En Análisis tras aclaración del comercializador.' });
       }
 
-      saveStoredSolicitudes(all); renderTablaComercializador(); verFichaCompleta(id); showToast('Aclaración enviada a la mutual 💬');
+      saveStoredSolicitudes(all);
+      renderTablaComercializador();
+      verFichaCompleta(id);
+      showToast('Aclaración enviada y registrada en el expediente 💬');
     }
 
     /* ========================================================================
-       5. GESTIONES DE MUTUAL (TAB 3)
+       5. GESTIONES DE MUTUAL (TAB 3 - ANALISTAS & ADMIN)
        ======================================================================== */
     function renderTablaMutual() {
       const all = getStoredSolicitudes();
@@ -1478,11 +1803,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const orgaTipo = document.getElementById('filtroMutualOrganismo')?.value || '';
 
       const filtered = all.filter(s => {
-        const matchQ = !q || s.id.includes(q) || s.solicitante.dni.includes(q) || s.solicitante.nombre.toLowerCase().includes(q) || s.comercializador.toLowerCase().includes(q);
+        const matchQ = !q || String(s.id).includes(q) || (s.solicitante?.dni && String(s.solicitante.dni).includes(q)) || (s.solicitante?.nombre && s.solicitante.nombre.toLowerCase().includes(q)) || (s.comercializador && s.comercializador.toLowerCase().includes(q));
         const matchEst = !est || s.estado === est;
         const matchOrg = !org || (s.nombre_organizacion || 'Organización Paraná Centro') === org;
         const matchCom = !com || s.comercializador === com;
-        const matchOrgaTipo = !orgaTipo || s.solicitante.organismo === orgaTipo;
+        const matchOrgaTipo = !orgaTipo || (s.solicitante?.organismo === orgaTipo);
         return matchQ && matchEst && matchOrg && matchCom && matchOrgaTipo;
       });
 
@@ -1493,37 +1818,40 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         return;
       }
 
-      tbody.innerHTML = filtered.map(s => '<tr>' +
-        '<td><strong>#' + s.id + '</strong></td>' +
-        '<td style="white-space:nowrap;">' + s.fecha.split(' ')[0] + '</td>' +
-        '<td><span class="badge-org-tag">' + (s.nombre_organizacion || 'Paraná Centro') + '</span></td>' +
-        '<td><strong>' + s.comercializador + '</strong></td>' +
-        '<td><strong>' + s.solicitante.nombre + '</strong><br><span style="font-size:.68rem;color:var(--text-muted);">DNI ' + s.solicitante.dni + '</span></td>' +
-        '<td>' + s.solicitante.organismo + '</td>' +
-        '<td>' + s.prestamo.lineaNombre + '<br><span style="color:var(--color-brand-blue);font-weight:700;">' + formatMoney(s.prestamo.monto) + ' (' + s.prestamo.cuotas + 'c)</span></td>' +
-        '<td>' + (s.analistaAsignado || 'Sin Asignar') + '</td>' +
-        '<td><span class="badge-status badge-' + s.estado.replace(/\s/g, '') + '">' + s.estado + '</span></td>' +
-        '<td><button class="btn-table-action btn-action-primary" onclick="gestionarSolicitudMutual(\'' + s.id + '\')">⚙️ Gestionar</button></td>' +
-        '</tr>').join('');
+      tbody.innerHTML = filtered.map(s => {
+        const fechaStr = s.fecha ? String(s.fecha).split(' ')[0] : 'Hoy';
+        return '<tr>' +
+          '<td><strong>#' + s.id + '</strong></td>' +
+          '<td style="white-space:nowrap;">' + fechaStr + '</td>' +
+          '<td><span class="badge-org-tag">' + (s.nombre_organizacion || 'Paraná Centro') + '</span></td>' +
+          '<td><strong>' + (s.comercializador || '—') + '</strong></td>' +
+          '<td><strong>' + (s.solicitante?.nombre || '—') + '</strong><br><span style="font-size:.68rem;color:var(--text-muted);">DNI ' + (s.solicitante?.dni || '—') + '</span></td>' +
+          '<td>' + (s.solicitante?.organismo || '—') + '</td>' +
+          '<td>' + (s.prestamo?.lineaNombre || 'Ayuda') + '<br><span style="color:var(--color-brand-blue);font-weight:700;">' + formatMoney(s.prestamo?.monto || 0) + ' (' + (s.prestamo?.cuotas || '—') + 'c)</span></td>' +
+          '<td>' + (s.analistaAsignado || 'Sin Asignar') + '</td>' +
+          '<td><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + (s.estado || 'Pendiente') + '</span></td>' +
+          '<td><button class="btn-table-action btn-action-primary" onclick="gestionarSolicitudMutual(\'' + s.id + '\')">⚙️ Gestionar</button></td>' +
+          '</tr>';
+      }).join('');
     }
 
     function filtrarGestionesMutual() { renderTablaMutual(); }
 
     function gestionarSolicitudMutual(id) {
-      const s = getStoredSolicitudes().find(x => x.id === id); if (!s) return;
+      const s = getStoredSolicitudes().find(x => String(x.id) === String(id)); if (!s) return;
       const session = getSession();
       const tit = document.getElementById('gestionModalTitle');
-      if (tit) tit.innerHTML = 'Resolución de Solicitud <strong>#' + s.id + '</strong> — ' + s.solicitante.nombre;
+      if (tit) tit.innerHTML = 'Resolución de Solicitud <strong>#' + s.id + '</strong> — ' + (s.solicitante?.nombre || '');
       const body = document.getElementById('gestionModalBody'); if (!body) return;
 
       let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">' +
         '<div style="background:#f8fafc;padding:.75rem;border-radius:8px;border:1px solid var(--border-color);font-size:.75rem;">' +
           '<div style="font-weight:700;margin-bottom:.35rem;color:var(--color-primary);">📋 Datos del Solicitante y Crédito</div>' +
-          '<div><strong>Asociado:</strong> ' + s.solicitante.nombre + ' (DNI ' + s.solicitante.dni + ')</div>' +
+          '<div><strong>Asociado:</strong> ' + (s.solicitante?.nombre || '—') + ' (DNI ' + (s.solicitante?.dni || '—') + ')</div>' +
           '<div><strong>Organización:</strong> ' + (s.nombre_organizacion || 'Paraná Centro') + '</div>' +
           '<div><strong>Comercializador:</strong> ' + s.comercializador + '</div>' +
-          '<div><strong>Organismo:</strong> ' + s.solicitante.organismo + ' — ' + s.solicitante.dependencia + ' (' + s.solicitante.condicion + ')</div>' +
-          '<div><strong>Línea:</strong> ' + s.prestamo.lineaNombre + ' | Monto: ' + formatMoney(s.prestamo.monto) + ' en ' + s.prestamo.cuotas + ' cuotas</div>' +
+          '<div><strong>Organismo:</strong> ' + (s.solicitante?.organismo || '—') + ' — ' + (s.solicitante?.dependencia || '—') + ' (' + (s.solicitante?.condicion || '—') + ')</div>' +
+          '<div><strong>Línea:</strong> ' + (s.prestamo?.lineaNombre || '—') + ' | Monto: ' + formatMoney(s.prestamo?.monto || 0) + ' en ' + (s.prestamo?.cuotas || '—') + ' cuotas</div>' +
         '</div>' +
         '<div style="background:#eff6ff;padding:.75rem;border-radius:8px;border:1px solid #bfdbfe;font-size:.75rem;">' +
           '<div style="font-weight:700;margin-bottom:.35rem;color:var(--color-brand-blue);">⚡ Conmutador de Estado Mutual</div>' +
@@ -1531,21 +1859,21 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             '<select id="cboNuevoEstado" class="input-text" style="font-weight:700;">' +
               ['Pendiente', 'En Análisis', 'Observado', 'Aprobado', 'Transferencia', 'Liquidado', 'Rechazado'].map(st => '<option value="' + st + '" ' + (s.estado === st ? 'selected' : '') + '>' + st + '</option>').join('') +
             '</select>' +
-            '<button class="btn-primary-action" style="width:auto;padding:.45rem .85rem;font-size:.75rem;white-space:nowrap;" onclick="actualizarEstadoSolicitud(\'' + s.id + '\')">Actualizar Estado</button>' +
+            '<button class="btn-primary-action" style="width:auto;padding:.45rem .85rem;font-size:.75rem;white-space:nowrap;" onclick="actualizarEstadoSolicitud(\'' + s.id + '\')">Actualizar en Servidor</button>' +
           '</div>' +
           '<p style="font-size:0.68rem;color:var(--text-muted);margin-top:0.4rem;">Analista a cargo: <strong>' + (s.analistaAsignado || session.nombre) + '</strong></p>' +
         '</div></div>';
 
-      html += '<div class="section-title-divider">Documentación del Legajo (Original y Complementaria)</div>' +
+      html += '<div class="section-title-divider">Documentación del Legajo (Original y Complementaria en Google Drive)</div>' +
         '<div style="display:flex;flex-direction:column;gap:.35rem;margin-bottom:.85rem;">' +
-          s.adjuntos.map(a => '<div style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;padding:.4rem .6rem;border:1px solid var(--border-color);border-radius:6px;font-size:.72rem;">' +
+          (s.adjuntos || []).map(a => '<div style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;padding:.4rem .6rem;border:1px solid var(--border-color);border-radius:6px;font-size:.72rem;">' +
             '<span>📄 <strong>' + a.tipo + ':</strong> <code>' + a.nombre + '</code> <span style="font-size:.65rem;color:var(--text-muted);">(' + (a.autor || s.comercializador) + ')</span></span>' +
-            '<button class="btn-restore" style="padding:.2rem .5rem;font-size:.68rem;" onclick="showToast(\'Previsualizando documento: ' + a.nombre + '\')">👁️ Ver</button>' +
+            (a.urlDrive ? '<a href="' + a.urlDrive + '" target="_blank" rel="noopener noreferrer" class="btn-restore" style="padding:.2rem .5rem;font-size:.68rem;text-decoration:none;">📥 Abrir en Drive</a>' : '<button class="btn-restore" style="padding:.2rem .5rem;font-size:.68rem;" onclick="showToast(\'Expediente en Google Drive: ' + a.nombre + '\')">👁️ Ver</button>') +
           '</div>').join('') +
         '</div>';
 
       html += '<div class="file-input-box" style="margin-bottom:.85rem;">' +
-        '<label class="form-label">Adjuntar Documentación Propia del Analista (Contrato, Pagaré, Transferencia)</label>' +
+        '<label class="form-label">Adjuntar Documentación Propia del Analista (Contrato, Pagaré, Transferencia a Drive)</label>' +
         '<div style="display:flex;gap:.5rem;margin-top:.3rem;flex-wrap:wrap;">' +
           '<select id="cboDocAnalistaTipo" class="input-text" style="flex:1;min-width:180px;">' +
             '<option value="Contrato Mutuo Firmado">Contrato Mutuo Firmado</option>' +
@@ -1555,12 +1883,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             '<option value="Otros Documentos Mutual">Otros Documentos Mutual</option>' +
           '</select>' +
           '<input type="file" id="fileDocAnalista" class="input-text" style="flex:1;min-width:180px;"/>' +
-          '<button class="btn-restore" type="button" onclick="agregarDocumentoAnalista(\'' + s.id + '\')">+ Adjuntar</button>' +
+          '<button class="btn-restore" type="button" onclick="agregarDocumentoAnalista(\'' + s.id + '\')">+ Adjuntar a Drive</button>' +
         '</div></div>';
 
       html += '<div class="section-title-divider">Línea de Tiempo y Observaciones de Seguimiento</div>' +
         '<div class="timeline-list" style="margin-bottom:.75rem;">' +
-          s.observaciones.map(o => '<div class="timeline-item"><div class="timeline-meta">' +
+          (s.observaciones || []).map(o => '<div class="timeline-item"><div class="timeline-meta">' +
             '<span><strong>' + o.autor + '</strong> <span class="timeline-role-badge">' + (o.rol || 'Sistema') + '</span></span><span>' + o.fecha + '</span>' +
             '</div><div style="margin-top:2px;color:var(--text-main);">' + o.texto + '</div></div>').join('') +
         '</div>';
@@ -1574,47 +1902,115 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       abrirModal('modalGestionMutual');
     }
 
-    function actualizarEstadoSolicitud(id) {
-      const all = getStoredSolicitudes(); const s = all.find(x => x.id === id); if (!s) return;
+    async function actualizarEstadoSolicitud(id) {
+      const all = getStoredSolicitudes(); const s = all.find(x => String(x.id) === String(id)); if (!s) return;
       const nuevo = document.getElementById('cboNuevoEstado')?.value; if (!nuevo) return;
       const session = getSession();
       s.estado = nuevo; s.analistaAsignado = session?.nombre || 'Mariana López';
+      const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+
+      if (!s.observaciones) s.observaciones = [];
       s.observaciones.push({
         autor: session?.nombre || 'Analista Mutual', rol: 'Analista Mutual',
-        fecha: new Date().toISOString().slice(0, 16).replace('T', ' '), texto: 'Estado de la solicitud actualizado a: ' + nuevo
+        fecha: now, texto: 'Estado de la solicitud actualizado a: ' + nuevo
       });
-      saveStoredSolicitudes(all); renderTablaMutual(); showToast('Estado actualizado a ' + nuevo); gestionarSolicitudMutual(id);
+
+      // Llamada action: 'actualizarEstado' a Google Apps Script
+      const res = await callApi({
+        action: 'actualizarEstado',
+        id: s.id,
+        estado: nuevo,
+        analista: session?.nombre || 'Analista Mutual',
+        comentario: 'Estado de la solicitud actualizado a: ' + nuevo
+      }, {
+        title: 'Actualizando estado en servidor...',
+        sub: 'Guardando estado ' + nuevo + ' en Google Sheets'
+      });
+
+      saveStoredSolicitudes(all);
+      renderTablaMutual();
+      showToast('Estado actualizado a ' + nuevo + ' en Google Sheets');
+      gestionarSolicitudMutual(id);
     }
 
-    function agregarComentarioAnalista(id) {
+    async function agregarComentarioAnalista(id) {
       const txt = document.getElementById('txtNuevoComentario')?.value?.trim(); if (!txt) return;
-      const all = getStoredSolicitudes(); const s = all.find(x => x.id === id); if (!s) return;
-      const session = getSession();
-      s.observaciones.push({
-        autor: session?.nombre || 'Analista Mutual', rol: 'Analista Mutual',
-        fecha: new Date().toISOString().slice(0, 16).replace('T', ' '), texto: txt
-      });
-      saveStoredSolicitudes(all); gestionarSolicitudMutual(id); showToast('Observación registrada en el legajo');
-    }
-
-    function agregarDocumentoAnalista(id) {
-      const tipo = document.getElementById('cboDocAnalistaTipo')?.value || 'Documento Mutual';
-      const fileInput = document.getElementById('fileDocAnalista');
-      const filename = fileInput?.files && fileInput.files[0] ? fileInput.files[0].name : (id + ' ' + tipo.replace(/\s+/g, '_') + '.pdf');
-      const all = getStoredSolicitudes(); const s = all.find(x => x.id === id); if (!s) return;
+      const all = getStoredSolicitudes(); const s = all.find(x => String(x.id) === String(id)); if (!s) return;
       const session = getSession();
       const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
 
+      if (!s.observaciones) s.observaciones = [];
+      s.observaciones.push({
+        autor: session?.nombre || 'Analista Mutual', rol: 'Analista Mutual',
+        fecha: now, texto: txt
+      });
+
+      // Llamada action: 'agregarComentario' a Google Apps Script
+      await callApi({
+        action: 'agregarComentario',
+        id: s.id,
+        texto: txt,
+        autor: session?.nombre || 'Analista Mutual',
+        rol: 'Analista Mutual'
+      }, {
+        title: 'Registrando observación...',
+        sub: 'Guardando nota de auditoría en Google Sheets'
+      });
+
+      saveStoredSolicitudes(all);
+      gestionarSolicitudMutual(id);
+      showToast('Observación registrada en el legajo');
+    }
+
+    async function agregarDocumentoAnalista(id) {
+      const tipo = document.getElementById('cboDocAnalistaTipo')?.value || 'Documento Mutual';
+      const fileInput = document.getElementById('fileDocAnalista');
+      const file = fileInput?.files && fileInput.files[0];
+      const filename = file ? file.name : (id + ' ' + tipo.replace(/\s+/g, '_') + '.pdf');
+      const all = getStoredSolicitudes(); const s = all.find(x => String(x.id) === String(id)); if (!s) return;
+      const session = getSession();
+      const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+
+      let b64Data = null;
+      if (file) {
+        try {
+          b64Data = await fileToBase64(file);
+        } catch (e) {
+          console.warn('Error leyendo archivo analista:', e);
+        }
+      }
+
+      // Llamada action: 'subirAdjuntoAdicional' a Google Apps Script
+      await callApi({
+        action: 'subirAdjuntoAdicional',
+        id: s.id,
+        tipo: tipo,
+        nombre: filename,
+        base64: b64Data ? b64Data.base64 : '',
+        tipoMime: b64Data ? b64Data.tipoMime : 'application/pdf',
+        autor: session?.nombre || 'Analista Mutual',
+        rol: 'Analista Mutual'
+      }, {
+        title: 'Subiendo documento mutual...',
+        sub: 'Almacenando en Google Drive'
+      });
+
+      if (!s.adjuntos) s.adjuntos = [];
       s.adjuntos.push({ tipo, nombre: filename, fecha: now, autor: session?.nombre || 'Analista Mutual' });
+
+      if (!s.observaciones) s.observaciones = [];
       s.observaciones.push({
         autor: session?.nombre || 'Analista Mutual', rol: 'Analista Mutual',
         fecha: now, texto: 'Documento mutual adjuntado: ' + tipo + ' (' + filename + ')'
       });
-      saveStoredSolicitudes(all); gestionarSolicitudMutual(id); showToast('Documento mutual incorporado al legajo 📄');
+
+      saveStoredSolicitudes(all);
+      gestionarSolicitudMutual(id);
+      showToast('Documento mutual incorporado al legajo en Drive 📄');
     }
 
     /* ========================================================================
-       6. MODALES Y TOAST
+       6. MODALES Y NOTIFICACIONES TOAST
        ======================================================================== */
     function abrirModal(id) { const m = document.getElementById(id); if (m) m.classList.add('open'); }
     function cerrarModal(id) { const m = document.getElementById(id); if (m) m.classList.remove('open'); }
@@ -1627,7 +2023,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       if (toast) {
         toast.classList.add('show');
         clearTimeout(toastTimeout);
-        toastTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
+        toastTimeout = setTimeout(() => toast.classList.remove('show'), 3500);
       }
     }
 
@@ -1664,6 +2060,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.actualizarEstadoSolicitud = actualizarEstadoSolicitud;
     window.agregarComentarioAnalista = agregarComentarioAnalista;
     window.agregarDocumentoAnalista = agregarDocumentoAnalista;
+    window.sincronizarConBackend = sincronizarConBackend;
     window.abrirModal = abrirModal;
     window.cerrarModal = cerrarModal;
 

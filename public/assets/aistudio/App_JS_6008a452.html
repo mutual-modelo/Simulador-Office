@@ -1,0 +1,891 @@
+<script>
+/**
+ * ============================================================================
+ * SISTEMA DE AUDITORÍA Y CRM DE CARTERA - MUTUAL MODELO DE ENTRE RÍOS (AMMER)
+ * MÓDULO 4: App_JS.html V4.0 (UI Mejorada, Badges Corregidos y PDF Analítico)
+ * ============================================================================
+ */
+
+// Estado global de la aplicación cliente
+let datosDashboard = {
+  totalCartera: 0,
+  totalAuditados: 0,
+  totalPendientes: 0,
+  validaciones: [],
+  pendientes: [],
+  diccionarioCartera: {},
+  metricasTokens: { consumidos: 0, limite: 1000000, porcentaje: 0, alertaExceso: false, alertaPreventiva: false }
+};
+
+// Cola de expedientes
+let colaProcesamiento = {};
+let procesandoColaActiva = false;
+let tablaCrmDT = null;
+let tablaPendientesDT = null;
+let itemActualModal = null;
+
+// Inicialización de componentes al cargar el DOM
+document.addEventListener('DOMContentLoaded', () => {
+  inicializarEventosUI();
+  inicializarDropZone();
+  cargarDatosServidor();
+});
+
+/**
+ * Registra listeners de botones, pestañas, modales y filtros
+ */
+function inicializarEventosUI() {
+  // Cambio de pestañas
+  document.getElementById('tabBtnCrm').addEventListener('click', () => cambiarPestana('crm'));
+  document.getElementById('tabBtnCarga').addEventListener('click', () => cambiarPestana('carga'));
+  document.getElementById('tabBtnPendientes').addEventListener('click', () => cambiarPestana('pendientes'));
+
+  // Acciones Navbar
+  document.getElementById('btnRecargarDashboard').addEventListener('click', () => {
+    mostrarToast('Sincronizando con Google Sheets...', 'info');
+    cargarDatosServidor();
+  });
+
+  document.getElementById('btnConfigModal').addEventListener('click', () => {
+    const m = datosDashboard.metricasTokens || {};
+    document.getElementById('modalTokensUsados').textContent = (m.consumidos || 0).toLocaleString('es-AR');
+    document.getElementById('modalTokensLimite').textContent = (m.limite || 1000000).toLocaleString('es-AR');
+    document.getElementById('modalConfig').classList.remove('hidden');
+  });
+
+  document.getElementById('btnGuardarApiKey').addEventListener('click', guardarApiKeyConfig);
+
+  // Filtros CRM
+  document.getElementById('filtroEstadoCRM').addEventListener('change', (e) => {
+    if (tablaCrmDT) {
+      tablaCrmDT.column(3).search(e.target.value).draw();
+    }
+  });
+
+  document.getElementById('filtroAlertasCRM').addEventListener('change', (e) => {
+    if (tablaCrmDT) {
+      tablaCrmDT.search(e.target.value).draw();
+    }
+  });
+
+  // Exportaciones
+  document.getElementById('btnExportarExcel').addEventListener('click', exportarCRMExcel);
+  document.getElementById('btnExportarPdf').addEventListener('click', exportarCRMPdf);
+
+  // Botones de procesamiento de lote
+  document.getElementById('btnLimpiarCola').addEventListener('click', limpiarColaArchivos);
+  document.getElementById('btnIniciarAuditoriaIA').addEventListener('click', iniciarProcesamientoCola);
+
+  // Botón guardar ABM en Modal
+  document.getElementById('btnGuardarABM').addEventListener('click', guardarResolucionManualABM);
+}
+
+/**
+ * Controla el cambio visual entre paneles principales
+ */
+function cambiarPestana(pestana) {
+  const tabs = {
+    crm: { btn: 'tabBtnCrm', panel: 'panelCrm' },
+    carga: { btn: 'tabBtnCarga', panel: 'panelCarga' },
+    pendientes: { btn: 'tabBtnPendientes', panel: 'panelPendientes' }
+  };
+
+  Object.keys(tabs).forEach(k => {
+    const isTarget = (k === pestana);
+    const b = document.getElementById(tabs[k].btn);
+    const p = document.getElementById(tabs[k].panel);
+
+    if (isTarget) {
+      b.className = 'py-2.5 px-4 font-semibold text-sm border-b-2 border-blue-600 text-blue-700 flex items-center gap-2';
+      p.classList.remove('hidden');
+    } else {
+      b.className = 'py-2.5 px-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2';
+      p.classList.add('hidden');
+    }
+  });
+
+  if (pestana === 'crm' && tablaCrmDT) tablaCrmDT.columns.adjust().draw();
+  if (pestana === 'pendientes' && tablaPendientesDT) tablaPendientesDT.columns.adjust().draw();
+}
+
+/**
+ * Consulta la base de datos y validaciones en Google Apps Script
+ */
+function cargarDatosServidor() {
+  google.script.run
+    .withSuccessHandler((res) => {
+      datosDashboard = res;
+      actualizarKpisUI();
+      actualizarBarraTokensUI(res.metricasTokens);
+      renderizarTablaCRM(res.validaciones);
+      renderizarTablaPendientes(res.pendientes);
+      mostrarToast('Datos sincronizados correctamente.', 'success');
+    })
+    .withFailureHandler((err) => {
+      mostrarToast('Error al conectar con Google Sheets: ' + err.message, 'error');
+    })
+    .obtenerDatosDashboardCRM();
+}
+
+/**
+ * Actualiza los contadores del Dashboard de KPIs
+ */
+function actualizarKpisUI() {
+  const vals = datosDashboard.validaciones || [];
+  const aprobados = vals.filter(v => v.Estado_Global === 'APROBADO').length;
+  const observados = vals.filter(v => v.Estado_Global === 'OBSERVADO').length;
+  const rechazados = vals.filter(v => v.Estado_Global === 'RECHAZADO').length;
+
+  document.getElementById('kpiTotalCartera').textContent = datosDashboard.totalCartera || 0;
+  document.getElementById('kpiTotalAuditados').textContent = datosDashboard.totalAuditados || 0;
+  document.getElementById('kpiAprobados').textContent = aprobados;
+  document.getElementById('kpiObservados').textContent = observados;
+  document.getElementById('kpiRechazados').textContent = rechazados;
+  document.getElementById('kpiPendientes').textContent = datosDashboard.totalPendientes || 0;
+}
+
+/**
+ * Controla el widget y la barra de consumo de tokens del plan
+ */
+function actualizarBarraTokensUI(metricas) {
+  if (!metricas) return;
+  const consumidos = metricas.consumidos || 0;
+  const limite = metricas.limite || 1000000;
+  const pct = metricas.porcentaje || 0;
+
+  const txtConsumo = document.getElementById('textoConsumoTokens');
+  const barra = document.getElementById('barraTokensConsumo');
+  const banner = document.getElementById('bannerAlertaTokens');
+  const msgBanner = document.getElementById('mensajeAlertaTokens');
+
+  const formatoK = (n) => (n >= 1000000) ? (n / 1000000).toFixed(1) + 'M' : (n / 1000).toFixed(0) + 'k';
+  txtConsumo.textContent = `${formatoK(consumidos)} / ${formatoK(limite)} (${pct}%)`;
+  barra.style.width = `${Math.min(100, pct)}%`;
+
+  if (pct >= 90) {
+    barra.className = 'bg-rose-500 h-2 rounded-full transition-all duration-500';
+    banner.classList.remove('hidden');
+    banner.className = 'bg-rose-600 text-white px-4 py-1.5 text-xs font-bold flex items-center justify-between';
+    msgBanner.textContent = `CRÍTICO: Has consumido el ${pct}% de los tokens del plan mensual (${consumidos.toLocaleString('es-AR')} de ${limite.toLocaleString('es-AR')}).`;
+  } else if (pct >= 75) {
+    barra.className = 'bg-amber-400 h-2 rounded-full transition-all duration-500';
+    banner.classList.remove('hidden');
+    banner.className = 'bg-amber-500 text-slate-900 px-4 py-1.5 text-xs font-bold flex items-center justify-between';
+    msgBanner.textContent = `ADVERTENCIA: Consumo al ${pct}% del límite mensual contratado (${consumidos.toLocaleString('es-AR')} tokens).`;
+  } else {
+    barra.className = 'bg-emerald-400 h-2 rounded-full transition-all duration-500';
+    banner.classList.add('hidden');
+  }
+}
+
+/**
+ * Renderiza la tabla de CRM con badges de validación corregidos
+ */
+function renderizarTablaCRM(validaciones) {
+  if ($.fn.DataTable.isDataTable('#tablaCRM')) {
+    $('#tablaCRM').DataTable().destroy();
+  }
+
+  const filas = validaciones.map((v) => {
+    const colorBadge = v.Estado_Global === 'APROBADO' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
+                       v.Estado_Global === 'OBSERVADO' ? 'bg-amber-100 text-amber-800 border-amber-300' :
+                       'bg-rose-100 text-rose-800 border-rose-300';
+
+    const colorScore = v.Score_Validacion >= 85 ? 'text-emerald-600' :
+                       v.Score_Validacion >= 50 ? 'text-amber-600' : 'text-rose-600';
+
+    // Badge para campos booleanos regulares
+    const badgeCheck = (val, textoOk = 'OK', textoError = 'Difiere') => {
+      const s = String(val || '');
+      if (s === 'OK' || s.startsWith('OK')) {
+        return `<span class="text-emerald-700 font-semibold flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> <span>${textoOk}</span></span>`;
+      }
+      if (s === 'NO_PRESENTADO' || s === 'PENDIENTE') {
+        return '<span class="text-amber-700 font-bold bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded text-[10px] flex items-center gap-1"><i class="fa-solid fa-circle-exclamation"></i> <span>Falta Doc</span></span>';
+      }
+      return `<span class="text-rose-600 font-bold flex items-center gap-1" title="${s}"><i class="fa-solid fa-triangle-exclamation"></i> <span>${textoError}</span></span>`;
+    };
+
+    // Badge específico para Nitidez de Firma que no confunde OPTIMA con Ilegible
+    let badgeFirma = '';
+    if (v.Calidad_Nitidez_Firma === 'OPTIMA') {
+      badgeFirma = `<span class="text-emerald-700 font-semibold flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> <span>Óptima</span></span>`;
+    } else if (v.Calidad_Nitidez_Firma === 'REGULAR_LEGIBLE') {
+      badgeFirma = `<span class="text-amber-600 font-semibold flex items-center gap-1"><i class="fa-solid fa-circle-exclamation"></i> <span>Regular</span></span>`;
+    } else {
+      badgeFirma = `<span class="text-rose-600 font-bold flex items-center gap-1" title="${v.Calidad_Nitidez_Firma || 'Ilegible'}"><i class="fa-solid fa-triangle-exclamation"></i> <span>Ilegible</span></span>`;
+    }
+
+    const domServicioCorto = (v.Domicilio_Servicio && v.Domicilio_Servicio !== 'NO_DETECTADO') ?
+      `<span title="${v.Domicilio_Servicio}">${v.Domicilio_Servicio.substring(0, 22)}...</span>` :
+      '<span class="text-slate-400">No detectado</span>';
+
+    return [
+      `<strong class="font-mono text-blue-900">${v.ID_OPERACION}</strong>`,
+      v.Fecha_Auditoria || '-',
+      `<div class="font-semibold text-slate-800">${v.Apellido_Nombre}</div>`,
+      `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${colorBadge}">${v.Estado_Global}</span>`,
+      `<span class="font-bold ${colorScore}">${v.Score_Validacion}%</span>`,
+      badgeFirma,
+      badgeCheck(v.Check_Fecha_Nac, 'Coincide', 'Difiere'),
+      badgeCheck(v.Check_Identidad_DNI, 'Coincide', 'Difiere'),
+      badgeCheck(v.Check_Recibo_Titular, 'Coincide', 'No Titular'),
+      badgeCheck(v.Check_Recibo_Margen50, '<= 50%', '> 50%'),
+      domServicioCorto,
+      badgeCheck(v.Check_Domicilio_Servicio, 'Coincide', 'Difiere'),
+      badgeCheck(v.Check_Antiguedad_Servicio, '<= 2 meses', 'Vencida'),
+      badgeCheck(v.Check_Transferencia_Monto, 'Coincide', 'Difiere'),
+      badgeCheck(v.Check_Capital_Solicitud, 'Coincide', 'Difiere'),
+      badgeCheck(v.Check_Percibir_Transf, 'Coincide', 'Difiere'),
+      `<button onclick="abrirModalDetallePorId('${v.ID_OPERACION}')" class="px-2.5 py-1 text-[11px] font-semibold bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white rounded border border-blue-200 transition">
+        Validar Asesor
+      </button>`
+    ];
+  });
+
+  tablaCrmDT = $('#tablaCRM').DataTable({
+    data: filas,
+    pageLength: 10,
+    language: {
+      search: "Buscar expediente:",
+      lengthMenu: "Mostrar _MENU_",
+      info: "Mostrando _START_ a _END_ de _TOTAL_ legajos",
+      paginate: { next: "Sig.", previous: "Ant." },
+      emptyTable: "No se registran auditorías cargadas aún."
+    },
+    order: [[1, 'desc']],
+    responsive: true
+  });
+}
+
+/**
+ * Renderiza la tabla de Préstamos sin documentación cargada
+ */
+function renderizarTablaPendientes(pendientes) {
+  if ($.fn.DataTable.isDataTable('#tablaPendientes')) {
+    $('#tablaPendientes').DataTable().destroy();
+  }
+
+  const filas = pendientes.map(p => [
+    `<strong class="font-mono text-slate-800">${p.ID_OPERACION}</strong>`,
+    p.Apellido_Nombre,
+    p.cuit,
+    p.tipo,
+    `$ ${p.capital_original.toLocaleString('es-AR', {minimumFractionDigits: 2})}`,
+    `$ ${p.cuota.toLocaleString('es-AR', {minimumFractionDigits: 2})}`,
+    `${p.Plazo} cuotas`,
+    `$ ${p.Transferencia.toLocaleString('es-AR', {minimumFractionDigits: 2})}`
+  ]);
+
+  tablaPendientesDT = $('#tablaPendientes').DataTable({
+    data: filas,
+    pageLength: 10,
+    language: {
+      search: "Buscar en cartera pendiente:",
+      lengthMenu: "Mostrar _MENU_",
+      info: "Mostrando _START_ a _END_ de _TOTAL_ préstamos pendientes",
+      paginate: { next: "Sig.", previous: "Ant." }
+    }
+  });
+}
+
+/**
+ * Dropzone Drag & Drop
+ */
+function inicializarDropZone() {
+  const dropZone = document.getElementById('dropZone');
+  const inputArchivos = document.getElementById('inputArchivos');
+
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropZone.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dropzone-active');
+    }, false);
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dropzone-active');
+    }, false);
+  });
+
+  dropZone.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    gestionarArchivosSeleccionados(dt.files);
+  });
+
+  inputArchivos.addEventListener('change', (e) => {
+    gestionarArchivosSeleccionados(e.target.files);
+  });
+}
+
+/**
+ * Procesa la selección de archivos: descomprime ZIPs o agrupa sueltos
+ */
+async function gestionarArchivosSeleccionados(archivosFileList) {
+  if (!archivosFileList || archivosFileList.length === 0) return;
+
+  mostrarToast('Analizando archivos e indexando operaciones...', 'info');
+
+  for (let i = 0; i < archivosFileList.length; i++) {
+    const archivo = archivosFileList[i];
+    if (archivo.name.toLowerCase().endsWith('.zip')) {
+      await descomprimirZipEnNavegador(archivo);
+    } else {
+      await agregarArchivoACola(archivo.name, archivo.type, archivo);
+    }
+  }
+
+  actualizarVistaColaUI();
+  mostrarToast('Lote indexado. Listo para auditar.', 'success');
+}
+
+/**
+ * Descompresión de archivos ZIP Client-Side usando JSZip
+ */
+async function descomprimirZipEnNavegador(archivoZip) {
+  try {
+    const zip = await JSZip.loadAsync(archivoZip);
+    const promesas = [];
+
+    zip.forEach((rutaRelativa, zipEntry) => {
+      if (zipEntry.dir || rutaRelativa.includes('__MACOSX') || zipEntry.name.startsWith('.')) {
+        return;
+      }
+
+      const p = zipEntry.async('base64').then(base64Data => {
+        let mime = 'application/pdf';
+        const ext = zipEntry.name.split('.').pop().toLowerCase();
+        if (['jpg', 'jpeg'].includes(ext)) mime = 'image/jpeg';
+        else if (ext === 'png') mime = 'image/png';
+        else if (ext === 'webp') mime = 'image/webp';
+
+        registrarDocumentoEnCola(rutaRelativa, mime, base64Data);
+      });
+
+      promesas.push(p);
+    });
+
+    await Promise.all(promesas);
+  } catch (err) {
+    mostrarToast('Error al descomprimir archivo ZIP: ' + err.message, 'error');
+  }
+}
+
+/**
+ * Lee un archivo suelto y lo coloca en cola
+ */
+async function agregarArchivoACola(nombre, tipo, archivoBlob) {
+  const base64 = await convertirBlobABase64(archivoBlob);
+  registrarDocumentoEnCola(nombre, tipo, base64);
+}
+
+/**
+ * Convierte Blob a Base64 puro
+ */
+function convertirBlobABase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const res = reader.result;
+      const idx = res.indexOf('base64,');
+      resolve(idx !== -1 ? res.substring(idx + 7) : res);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/**
+ * Agrupa los archivos por ID_OPERACION respetando el separador de espacio
+ */
+function registrarDocumentoEnCola(rutaNombre, mimeType, base64) {
+  const idOp = extraerIdOperacionDesdeTexto(rutaNombre);
+  if (!idOp) return;
+
+  if (!colaProcesamiento[idOp]) {
+    const datosBase = datosDashboard.diccionarioCartera[idOp] || null;
+    colaProcesamiento[idOp] = {
+      idOperacion: idOp,
+      archivos: [],
+      datosBase: datosBase,
+      estado: 'PENDIENTE',
+      errorDetalle: ''
+    };
+  }
+
+  const nombreLimpio = rutaNombre.split(/[\/\\]/).pop();
+  colaProcesamiento[idOp].archivos.push({
+    nombre: nombreLimpio,
+    mimeType: mimeType,
+    base64: base64
+  });
+}
+
+/**
+ * Expresión regular para ID_OPERACION al inicio con separador de espacio
+ */
+function extraerIdOperacionDesdeTexto(texto) {
+  if (!texto) return null;
+  const partes = texto.split(/[\/\\]/);
+  const nombre = partes[partes.length - 1].trim();
+
+  const matchEspacio = nombre.match(/^(\d{3,8})(?:\s+|[-_.])/);
+  if (matchEspacio) return matchEspacio[1];
+
+  const matchSoloNum = nombre.match(/^(\d{3,8})\.[a-zA-Z0-9]+$/);
+  if (matchSoloNum) return matchSoloNum[1];
+
+  for (let i = partes.length - 2; i >= 0; i--) {
+    const matchCarpeta = partes[i].trim().match(/^(\d{3,8})(?:\s+|[-_.]|$)/);
+    if (matchCarpeta) return matchCarpeta[1];
+  }
+  return null;
+}
+
+/**
+ * Actualiza la tabla de expedientes listos para auditar
+ */
+function actualizarVistaColaUI() {
+  const keys = Object.keys(colaProcesamiento);
+  const badge = document.getElementById('badgeTotalLote');
+  const tbody = document.getElementById('cuerpoTablaCola');
+  const btnIniciar = document.getElementById('btnIniciarAuditoriaIA');
+
+  badge.textContent = `${keys.length} Préstamos`;
+  btnIniciar.disabled = (keys.length === 0 || procesandoColaActiva);
+
+  if (keys.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">No hay archivos cargados en cola.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = keys.map(id => {
+    const op = colaProcesamiento[id];
+    const matchBase = op.datosBase ?
+      `<span class="text-emerald-700 font-medium"><i class="fa-solid fa-check"></i> ${op.datosBase.Apellido_Nombre} ($ ${op.datosBase.Transferencia.toLocaleString('es-AR')})</span>` :
+      `<span class="text-amber-600 font-medium"><i class="fa-solid fa-triangle-exclamation"></i> Sin registro en Cartera_Base</span>`;
+
+    const estadoBadge = op.estado === 'PENDIENTE' ? '<span class="text-slate-500 font-semibold">En Espera</span>' :
+                        op.estado === 'PROCESANDO' ? '<span class="text-blue-600 font-bold animate-pulse"><i class="fa-solid fa-spinner fa-spin"></i> Auditando...</span>' :
+                        op.estado === 'COMPLETADO' ? '<span class="text-emerald-600 font-bold"><i class="fa-solid fa-circle-check"></i> Finalizado</span>' :
+                        `<span class="text-rose-600 font-bold"><i class="fa-solid fa-circle-xmark"></i> Falló</span>`;
+
+    const errorHtml = op.errorDetalle ?
+      `<span class="text-rose-600 font-medium text-[11px]"><i class="fa-solid fa-bug"></i> ${op.errorDetalle}</span>` :
+      `<span class="text-slate-400 text-[11px]">-</span>`;
+
+    return `
+      <tr class="hover:bg-slate-50">
+        <td class="p-2.5 font-bold font-mono text-slate-800">${id}</td>
+        <td class="p-2.5 text-slate-600">${op.archivos.length} doc(s) (${op.archivos.map(a => a.nombre).slice(0, 2).join(', ')}${op.archivos.length > 2 ? '...' : ''})</td>
+        <td class="p-2.5 text-xs">${matchBase}</td>
+        <td class="p-2.5 text-xs" id="estado_cola_${id}">${estadoBadge}</td>
+        <td class="p-2.5 text-xs" id="error_cola_${id}">${errorHtml}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+/**
+ * Limpia la cola de archivos en memoria
+ */
+function limpiarColaArchivos() {
+  if (procesandoColaActiva) {
+    mostrarToast('No se puede limpiar la cola mientras hay un proceso en ejecución.', 'error');
+    return;
+  }
+  colaProcesamiento = {};
+  document.getElementById('inputArchivos').value = '';
+  actualizarVistaColaUI();
+  document.getElementById('progresoProcesamiento').classList.add('hidden');
+}
+
+/**
+ * Ejecutor de la Cola Asíncrona con pausa preventiva para no saturar APIs
+ */
+async function iniciarProcesamientoCola() {
+  const listaIds = Object.keys(colaProcesamiento).filter(id => colaProcesamiento[id].estado === 'PENDIENTE' || colaProcesamiento[id].estado === 'ERROR');
+  if (listaIds.length === 0) return;
+
+  procesandoColaActiva = true;
+  document.getElementById('btnIniciarAuditoriaIA').disabled = true;
+  document.getElementById('btnLimpiarCola').disabled = true;
+
+  const contProgreso = document.getElementById('progresoProcesamiento');
+  contProgreso.classList.remove('hidden');
+
+  let procesados = 0;
+  const total = listaIds.length;
+
+  for (const idOp of listaIds) {
+    const item = colaProcesamiento[idOp];
+    item.estado = 'PROCESANDO';
+    item.errorDetalle = '';
+
+    document.getElementById(`estado_cola_${idOp}`).innerHTML = '<span class="text-blue-600 font-bold animate-pulse"><i class="fa-solid fa-spinner fa-spin"></i> Auditando...</span>';
+    document.getElementById(`error_cola_${idOp}`).innerHTML = '<span class="text-slate-400 text-[11px]">-</span>';
+    document.getElementById('detalleOperacionActual').textContent = `Auditoría IA: Expediente #${idOp} (${item.archivos.length} archivos)...`;
+    document.getElementById('contadorLote').textContent = `${procesados + 1} de ${total} préstamos`;
+    
+    const pct = Math.round((procesados / total) * 100);
+    document.getElementById('barraProgreso').style.width = `${pct}%`;
+    document.getElementById('porcentajeProgreso').textContent = `${pct}%`;
+
+    try {
+      await invocarAuditoriaGASAsync(idOp, item.archivos);
+      item.estado = 'COMPLETADO';
+      document.getElementById(`estado_cola_${idOp}`).innerHTML = '<span class="text-emerald-600 font-bold"><i class="fa-solid fa-circle-check"></i> Finalizado</span>';
+    } catch (e) {
+      item.estado = 'ERROR';
+      item.errorDetalle = e.message || 'Error desconocido';
+      document.getElementById(`estado_cola_${idOp}`).innerHTML = `<span class="text-rose-600 font-bold"><i class="fa-solid fa-circle-xmark"></i> Falló</span>`;
+      document.getElementById(`error_cola_${idOp}`).innerHTML = `<span class="text-rose-600 font-medium text-[11px]"><i class="fa-solid fa-bug"></i> ${item.errorDetalle}</span>`;
+    }
+
+    procesados++;
+
+    if (procesados < total) {
+      document.getElementById('detalleOperacionActual').textContent = `Pausa preventiva de red (descongestionando API)...`;
+      await new Promise(resolve => setTimeout(resolve, 2500));
+    }
+  }
+
+  document.getElementById('barraProgreso').style.width = '100%';
+  document.getElementById('porcentajeProgreso').textContent = '100%';
+  document.getElementById('textoEstadoCola').textContent = '¡Lote de auditorías completado!';
+  document.getElementById('btnLimpiarCola').disabled = false;
+  document.getElementById('btnIniciarAuditoriaIA').disabled = false;
+  procesandoColaActiva = false;
+
+  mostrarToast('Lote finalizado. Actualizando CRM...', 'success');
+  cargarDatosServidor();
+}
+
+/**
+ * Promesa para llamada a Apps Script
+ */
+function invocarAuditoriaGASAsync(idOperacion, archivos) {
+  return new Promise((resolve, reject) => {
+    google.script.run
+      .withSuccessHandler(res => resolve(res))
+      .withFailureHandler(err => reject(err))
+      .auditarLegajoCompletoIA(idOperacion, archivos, null);
+  });
+}
+
+/**
+ * Abre el Modal Detalle para control minucioso del Asesor
+ */
+function abrirModalDetallePorId(idOp) {
+  const item = (datosDashboard.validaciones || []).find(v => String(v.ID_OPERACION).trim() === String(idOp).trim());
+  if (!item) return;
+  itemActualModal = item;
+
+  document.getElementById('modalIdOp').textContent = item.ID_OPERACION;
+  document.getElementById('modalSubtitulo').textContent = `Asociado: ${item.Apellido_Nombre} • Fecha: ${item.Fecha_Auditoria}`;
+
+  const bEstado = document.getElementById('modalBadgeEstado');
+  bEstado.textContent = item.Estado_Global;
+  bEstado.className = item.Estado_Global === 'APROBADO' ? 'text-xs px-2.5 py-0.5 rounded-full bg-emerald-700 text-white font-medium ml-2' :
+                      item.Estado_Global === 'OBSERVADO' ? 'text-xs px-2.5 py-0.5 rounded-full bg-amber-600 text-white font-medium ml-2' :
+                      'text-xs px-2.5 py-0.5 rounded-full bg-rose-700 text-white font-medium ml-2';
+
+  const base = item.datosBase;
+  document.getElementById('compBaseNombre').textContent = base ? base.Apellido_Nombre : item.Apellido_Nombre || '-';
+  document.getElementById('compBaseCuit').textContent = base ? `${base.cuit} (DNI ${base.dni_deducido})` : item.CUIT_Base || '-';
+  document.getElementById('compBaseFechaNac').textContent = base ? base.Fecha_Nacimiento : '-';
+  document.getElementById('compBaseFechaArreglo').textContent = base ? base.Fecha_arreglo : '-';
+  document.getElementById('compBaseDom').textContent = base ? `${base.domicilio}, ${base.localidad}` : '-';
+  document.getElementById('compBaseCapital').textContent = base ? `$ ${base.capital_original.toLocaleString('es-AR', {minimumFractionDigits: 2})}` : '-';
+  document.getElementById('compBaseTransf').textContent = base ? `$ ${base.Transferencia.toLocaleString('es-AR', {minimumFractionDigits: 2})}` : '-';
+  document.getElementById('compBaseCuota').textContent = base ? `${base.Plazo} cuotas de $ ${base.cuota.toLocaleString('es-AR')}` : '-';
+  document.getElementById('compBasePagare').textContent = base ? `$ ${base.monto_pagare.toLocaleString('es-AR')}` : '-';
+
+  let jsonExtraido = {};
+  try {
+    jsonExtraido = typeof item.JSON_Datos_Extraidos === 'string' ? JSON.parse(item.JSON_Datos_Extraidos) : (item.JSON_Datos_Extraidos || {});
+  } catch (e) { jsonExtraido = {}; }
+
+  const cal = jsonExtraido.calidad_nitidez || {};
+  const idDoc = jsonExtraido.identidad || {};
+  const recDoc = jsonExtraido.recibo_sueldo || {};
+  const facDoc = jsonExtraido.factura_servicio || {};
+  const solDoc = jsonExtraido.solicitud_prestamo || {};
+  const transDoc = jsonExtraido.transferencia_bancaria || {};
+
+  document.getElementById('compDocCalidad').textContent = `${item.Calidad_Nitidez_Firma} (${cal.firma_nitida ? 'Firma Clara' : 'Observación Rúbrica'})`;
+  document.getElementById('compDocDni').textContent = idDoc.dni_extraido ? `${idDoc.dni_extraido} - ${idDoc.apellido_nombre_doc || ''} (Venc: ${idDoc.vencimiento_dni || '-'})` : 'No extraído';
+  document.getElementById('compDocFechaNac').textContent = idDoc.fecha_nacimiento_doc ? `${idDoc.fecha_nacimiento_doc} (${item.Check_Fecha_Nac})` : 'No extraída';
+  document.getElementById('compDocReciboTitular').textContent = recDoc.detectado || recDoc.titular_recibo ? `${recDoc.titular_recibo || 'Sin nombre'} (Período: ${recDoc.periodo_liquidacion || '-'})` : 'No presentado';
+  document.getElementById('compDocReciboMargen').textContent = recDoc.haber_neto_bolsillo ? `$ ${recDoc.haber_neto_bolsillo.toLocaleString('es-AR')} (${item.Check_Recibo_Margen50})` : '-';
+  document.getElementById('compDocDomServicio').textContent = facDoc.domicilio_servicio_extraido || 'No detectado';
+  document.getElementById('compDocAntiguedad').textContent = item.Check_Antiguedad_Servicio || 'No presentado';
+  document.getElementById('compDocCapSolicitud').textContent = solDoc.importe_solicitado ? `$ ${solDoc.importe_solicitado.toLocaleString('es-AR')} (${item.Check_Capital_Solicitud})` : '-';
+  document.getElementById('compDocPercibirSolicitud').textContent = solDoc.monto_a_percibir ? `$ ${solDoc.monto_a_percibir.toLocaleString('es-AR')} (${item.Check_Percibir_Transf})` : '-';
+  document.getElementById('compDocTransfMonto').textContent = transDoc.monto_transferido ? `$ ${transDoc.monto_transferido.toLocaleString('es-AR')} (${transDoc.banco_origen_destino || 'Bco'})` : '-';
+
+  // Discrepancias y Faltantes
+  const contDisc = document.getElementById('contenedorDiscrepancias');
+  const ulDisc = document.getElementById('listaDiscrepancias');
+  const arrDisc = item.Discrepancias_Detalladas ? (Array.isArray(item.Discrepancias_Detalladas) ? item.Discrepancias_Detalladas : item.Discrepancias_Detalladas.split(' | ')) : [];
+
+  if (arrDisc.length > 0 && arrDisc[0] !== '') {
+    contDisc.classList.remove('hidden');
+    ulDisc.innerHTML = arrDisc.map(d => `<li>${d}</li>`).join('');
+  } else {
+    contDisc.classList.add('hidden');
+    ulDisc.innerHTML = '';
+  }
+
+  document.getElementById('modalResumenIA').textContent = item.Resumen_Ejecutivo_IA || 'Sin dictamen registrado.';
+  document.getElementById('modalDocsDetectados').textContent = (Array.isArray(item.Docs_Detectados) ? item.Docs_Detectados.join(', ') : item.Docs_Detectados) || 'Ninguno';
+
+  const linkDrive = document.getElementById('modalLinkDrive');
+  if (item.Carpeta_Drive_URL) {
+    linkDrive.href = item.Carpeta_Drive_URL;
+    linkDrive.classList.remove('opacity-50', 'pointer-events-none');
+  } else {
+    linkDrive.href = '#';
+    linkDrive.classList.add('opacity-50', 'pointer-events-none');
+  }
+
+  document.getElementById('abmNuevoEstado').value = item.Estado_Global;
+  document.getElementById('abmNombreAuditor').value = (item.Auditor_Revision_Manual && item.Auditor_Revision_Manual !== 'PENDIENTE') ? item.Auditor_Revision_Manual : '';
+  document.getElementById('abmNotasSeguimiento').value = item.Notas_Seguimiento || '';
+
+  document.getElementById('modalDetalle').classList.remove('hidden');
+}
+
+/**
+ * Cierra modal detalle
+ */
+function cerrarModalDetalle() {
+  document.getElementById('modalDetalle').classList.add('hidden');
+  itemActualModal = null;
+}
+
+/**
+ * Guarda la resolución manual
+ */
+function guardarResolucionManualABM() {
+  if (!itemActualModal) return;
+
+  const idOp = itemActualModal.ID_OPERACION;
+  const nuevoEstado = document.getElementById('abmNuevoEstado').value;
+  const auditor = document.getElementById('abmNombreAuditor').value.trim() || 'ASESOR_SISTEMA';
+  const notas = document.getElementById('abmNotasSeguimiento').value.trim();
+
+  mostrarToast(`Guardando dictamen del expediente #${idOp}...`, 'info');
+
+  google.script.run
+    .withSuccessHandler((res) => {
+      mostrarToast(res.mensaje, 'success');
+      cerrarModalDetalle();
+      cargarDatosServidor();
+    })
+    .withFailureHandler((err) => {
+      mostrarToast('Error al actualizar: ' + err.message, 'error');
+    })
+    .actualizarEstadoManualABM(idOp, nuevoEstado, auditor, notas);
+}
+
+/**
+ * Cierra modal configuración API
+ */
+function cerrarModalConfig() {
+  document.getElementById('modalConfig').classList.add('hidden');
+}
+
+/**
+ * Guarda clave de API
+ */
+function guardarApiKeyConfig() {
+  const clave = document.getElementById('inputApiKeyModal').value.trim();
+  if (!clave) {
+    mostrarToast('Ingresa una API Key válida.', 'error');
+    return;
+  }
+
+  mostrarToast('Guardando configuración de API...', 'info');
+  google.script.run
+    .withSuccessHandler((msg) => {
+      mostrarToast(msg, 'success');
+      cerrarModalConfig();
+      cargarDatosServidor();
+    })
+    .withFailureHandler((err) => {
+      mostrarToast('Error al almacenar clave: ' + err.message, 'error');
+    })
+    .guardarGeminiApiKey(clave);
+}
+
+/**
+ * Exportación instantánea del CRM a Excel (.xlsx) con SheetJS
+ */
+function exportarCRMExcel() {
+  const data = (datosDashboard.validaciones || []).map(v => ({
+    "ID Operación": v.ID_OPERACION,
+    "Fecha Auditoría": v.Fecha_Auditoria,
+    "Apellido y Nombre": v.Apellido_Nombre,
+    "CUIT Base": v.CUIT_Base,
+    "DNI Extraído": v.DNI_Extraido,
+    "Organismo": v.Tipo_Agente,
+    "Estado Global": v.Estado_Global,
+    "Score (%)": v.Score_Validacion,
+    "Calidad / Nitidez": v.Calidad_Nitidez_Firma,
+    "Check Fecha Nac": v.Check_Fecha_Nac,
+    "Check DNI": v.Check_Identidad_DNI,
+    "Check Recibo Titular": v.Check_Recibo_Titular,
+    "Check Haber 50%": v.Check_Recibo_Margen50,
+    "Domicilio Servicio": v.Domicilio_Servicio,
+    "Check Domicilio": v.Check_Domicilio_Servicio,
+    "Antigüedad Servicio": v.Check_Antiguedad_Servicio,
+    "Check Transferencia": v.Check_Transferencia_Monto,
+    "Check Capital Solicitud": v.Check_Capital_Solicitud,
+    "Check Percibir Solicitud": v.Check_Percibir_Transf,
+    "Docs Detectados": Array.isArray(v.Docs_Detectados) ? v.Docs_Detectados.join(', ') : v.Docs_Detectados,
+    "Docs Faltantes": Array.isArray(v.Docs_Faltantes) ? v.Docs_Faltantes.join(', ') : v.Docs_Faltantes,
+    "Discrepancias": Array.isArray(v.Discrepancias_Detalladas) ? v.Discrepancias_Detalladas.join(' | ') : v.Discrepancias_Detalladas,
+    "Dictamen IA": v.Resumen_Ejecutivo_IA,
+    "Asesor Revisor": v.Auditor_Revision_Manual,
+    "Notas": v.Notas_Seguimiento,
+    "Link Drive": v.Carpeta_Drive_URL
+  }));
+
+  if (data.length === 0) {
+    mostrarToast('No hay datos disponibles para exportar a Excel.', 'error');
+    return;
+  }
+
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Auditoria_AMMER_V4");
+
+  const fechaIso = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `AMMER_Auditoria_Cartera_V4_${fechaIso}.xlsx`);
+  mostrarToast('Archivo Excel descargado con éxito.', 'success');
+}
+
+/**
+ * Generación de informe PDF Analítico con Detalles de Discrepancias
+ */
+function exportarCRMPdf() {
+  const validaciones = datosDashboard.validaciones || [];
+  if (validaciones.length === 0) {
+    mostrarToast('No hay datos disponibles para generar el informe PDF.', 'error');
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('landscape'); // A4 apaisado para aprovechar el ancho
+
+  // Cabecera institucional
+  doc.setFillColor(30, 58, 138);
+  doc.rect(0, 0, 297, 24, 'F');
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text('ASOCIACIÓN MUTUAL MODELO DE ENTRE RÍOS (AMMER)', 14, 11);
+  
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(200, 220, 255);
+  doc.text('Mat. INAES N° 230 ER • Informe Analítico de Auditoría de Cartera y Legajos V4.0', 14, 18);
+
+  doc.setFontSize(8);
+  doc.setTextColor(100, 116, 139);
+  const fechaGeneracion = new Date().toLocaleString('es-AR');
+  doc.text(`Fecha de emisión: ${fechaGeneracion} | Total expedientes auditados: ${validaciones.length}`, 14, 30);
+
+  // Definición de columnas orientadas a la explicación de diferencias
+  const columnas = [
+    { header: "ID Op.", dataKey: "id" },
+    { header: "Asociado", dataKey: "nombre" },
+    { header: "Estado", dataKey: "estado" },
+    { header: "Score", dataKey: "score" },
+    { header: "Documentos Faltantes", dataKey: "faltantes" },
+    { header: "Detalle de Discrepancias (Valores Base vs Extraídos)", dataKey: "discrepancias" },
+    { header: "Dictamen IA", dataKey: "dictamen" }
+  ];
+
+  // Estructurado de filas extrayendo los cruces exactos
+  const filas = validaciones.map(v => {
+    const arrFaltantes = Array.isArray(v.Docs_Faltantes) ? v.Docs_Faltantes : (v.Docs_Faltantes ? v.Docs_Faltantes.split(',') : []);
+    const arrDisc = Array.isArray(v.Discrepancias_Detalladas) ? v.Discrepancias_Detalladas : (v.Discrepancias_Detalladas ? v.Discrepancias_Detalladas.split(' | ') : []);
+    
+    return {
+      id: v.ID_OPERACION,
+      nombre: v.Apellido_Nombre,
+      estado: v.Estado_Global,
+      score: `${v.Score_Validacion}%`,
+      faltantes: arrFaltantes.length > 0 ? arrFaltantes.join(', ') : 'Legajo Completo',
+      discrepancias: arrDisc.length > 0 ? arrDisc.map(d => '• ' + d.trim()).join('\n') : 'Sin discrepancias registradas',
+      dictamen: v.Resumen_Ejecutivo_IA || 'Sin dictamen'
+    };
+  });
+
+  // Generación de tabla con ajuste de texto automático
+  doc.autoTable({
+    startY: 34,
+    columns: columnas,
+    body: filas,
+    theme: 'grid',
+    styles: { fontSize: 7, cellPadding: 3, overflow: 'linebreak' },
+    headStyles: { fillColor: [30, 58, 138], textColor: 255, fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [248, 250, 252] },
+    columnStyles: {
+      id: { fontStyle: 'bold', cellWidth: 16 },
+      nombre: { cellWidth: 35 },
+      estado: { cellWidth: 20, fontStyle: 'bold' },
+      score: { cellWidth: 15, halign: 'center', fontStyle: 'bold' },
+      faltantes: { cellWidth: 40 },
+      discrepancias: { cellWidth: 90 }, // Columna ancha para la explicación detallada
+      dictamen: { cellWidth: 53 }
+    },
+    didParseCell: (data) => {
+      if (data.column.dataKey === 'estado') {
+        if (data.cell.raw === 'APROBADO') data.cell.styles.textColor = [16, 185, 129];
+        else if (data.cell.raw === 'OBSERVADO') data.cell.styles.textColor = [217, 119, 6];
+        else if (data.cell.raw === 'RECHAZADO') data.cell.styles.textColor = [225, 29, 72];
+      }
+      if (data.column.dataKey === 'faltantes' && data.cell.raw !== 'Legajo Completo') {
+         data.cell.styles.textColor = [217, 119, 6];
+      }
+      if (data.column.dataKey === 'discrepancias' && data.cell.raw !== 'Sin discrepancias registradas') {
+         data.cell.styles.textColor = [225, 29, 72];
+      }
+    }
+  });
+
+  const fechaIso = new Date().toISOString().slice(0, 10);
+  doc.save(`AMMER_Informe_Auditoria_V4_${fechaIso}.pdf`);
+  mostrarToast('Informe PDF detallado exportado correctamente.', 'success');
+}
+
+/**
+ * Toast flotante
+ */
+function mostrarToast(mensaje, tipo = 'info') {
+  const toast = document.getElementById('toastNotificacion');
+  const txt = document.getElementById('toastMensaje');
+  const ico = document.getElementById('toastIcono');
+
+  txt.textContent = mensaje;
+
+  if (tipo === 'success') {
+    ico.className = 'fa-solid fa-circle-check text-emerald-400';
+  } else if (tipo === 'error') {
+    ico.className = 'fa-solid fa-circle-xmark text-rose-400';
+  } else {
+    ico.className = 'fa-solid fa-circle-info text-blue-400';
+  }
+
+  toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+
+  setTimeout(() => {
+    toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+  }, 3500);
+}
+</script>

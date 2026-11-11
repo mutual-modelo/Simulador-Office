@@ -1,0 +1,8 @@
+{
+  "name": "Simulador de Ayudas Económicas \u0026 Backoffice - Mutual Modelo",
+  "description": "Simulador y calculador financiero integral para Asociación Mutual Modelo con líneas FEDEM Provincial, Municipales (Convenio VIKINGO / QUAD) y Tarjeta Sidecreer.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Simulador de Ayudas Económicas — Mutual Modelo</title>
+  <link rel="icon" type="image/jpeg" href="favicon.jpg"/>
+  <meta name="description" content="Simulador oficial de ayudas económicas de Mutual Modelo. Líneas FEDEM Provincial, Municipales Convenio VIKINGO / QUAD y Tarjeta Sidecreer."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --font-sans:'Plus Jakarta Sans',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+      --font-mono:'JetBrains Mono',monospace;
+      --color-primary:#0f2744;--color-brand-blue:#135596;--color-brand-blue-dark:#0c3966;
+      --bg-body:#f4f6f9;--bg-surface:#ffffff;--bg-subtle:#f8fafc;
+      --border-color:#cbd5e1;--text-main:#0f172a;--text-muted:#475569;
+      --cuota-color:#059669;--cuota-bg:#ecfdf5;--cuota-border:#10b981;
+      --neto-color:#135596;--neto-bg:#eff6ff;--neto-border:#3b82f6;
+      --total-color:#1e293b;--total-bg:#f8fafc;--total-border:#cbd5e1;
+      --total-badge-bg:#64748b;--total-badge-color:#ffffff;
+      --capital-color:#d97706;--capital-bg:#fffbeb;--capital-border:#f59e0b;
+      --active-blue-bg:#135596;--active-blue-border:#135596;--active-blue-shadow:0 4px 10px rgba(19,85,150,0.25);
+      --wa-header-bg:#075e54;--wa-accent:#25d366;--wa-bubble:#dcf8c6;
+    }
+    body{font-family:var(--font-sans);background-color:var(--bg-body);color:var(--text-main);line-height:1.45;padding-bottom:2rem}
+    .container{max-width:1360px;margin:0 auto;padding:0 1rem}
+    .tabular-nums{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+    .app-view{display:none}.app-view.active{display:block}
+
+    /* TOP HEADER */
+    header.top-header{background:#fff;border-bottom:1px solid var(--border-color);position:sticky;top:0;z-index:40;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+    .header-content{display:flex;align-items:center;justify-content:space-between;height:68px}
+    .brand-group{display:flex;align-items:center;gap:.75rem;cursor:pointer;text-decoration:none;color:inherit}
+    .app-logo-img{height:46px;width:auto;max-width:240px;object-fit:contain;display:block}
+    .header-app-title{display:flex;flex-direction:column;border-left:1px solid var(--border-color);padding-left:.85rem}
+    .header-app-title .title-main{font-size:.85rem;font-weight:700;color:var(--color-primary)}
+    .header-app-title .title-sub{font-size:.7rem;font-weight:500;color:var(--text-muted)}
+    .nav-tabs-wrap{display:flex;align-items:center;gap:.35rem}
+    .nav-tab-btn{display:inline-flex;align-items:center;gap:.35rem;padding:.45rem .85rem;font-size:.78rem;font-weight:600;color:var(--text-muted);background:transparent;border:1px solid transparent;border-radius:8px;cursor:pointer;transition:all .15s}
+    .nav-tab-btn:hover{background:#f1f5f9;color:var(--color-brand-blue)}
+    .nav-tab-btn.active{background:#eff6ff;color:var(--color-brand-blue);border-color:#bfdbfe;font-weight:700}
+    .user-header-chip{display:flex;align-items:center;gap:.5rem;padding:.25rem .65rem;background:#f8fafc;border:1px solid var(--border-color);border-radius:8px}
+    .user-avatar-circle{width:28px;height:28px;border-radius:50%;background:var(--color-brand-blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700}
+    .user-info-text{display:flex;flex-direction:column;line-height:1.15}
+    .user-info-name{font-size:.74rem;font-weight:700;color:var(--color-primary);display:flex;align-items:center;gap:3px}
+    .user-info-role{font-size:.64rem;font-weight:600;color:var(--text-muted)}
+    .btn-logout{padding:.38rem .7rem;font-size:.74rem;font-weight:600;border-radius:6px;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;cursor:pointer}
+    .btn-logout:hover{background:#fee2e2}
+
+    /* LOGIN */
+    .login-container-wrap{min-height:calc(100vh - 70px);display:flex;align-items:center;justify-content:center;padding:1.5rem}
+    .login-card{width:100%;max-width:460px;background:#fff;border:1px solid var(--border-color);border-radius:16px;box-shadow:0 10px 25px rgba(15,39,68,.08);overflow:hidden}
+    .login-card-header{padding:1.75rem 1.5rem 1.25rem;text-align:center;background:linear-gradient(180deg,#fff,#f8fafc);border-bottom:1px solid #f1f5f9}
+    .login-logo-img{height:54px;margin:0 auto .75rem;object-fit:contain;display:block}
+    .login-card-header h1{font-size:1.15rem;font-weight:800;color:var(--color-primary)}
+    .login-card-header p{font-size:.75rem;color:var(--text-muted);margin-top:.2rem}
+    .login-card-body{padding:1.5rem}
+    .login-error-alert{display:none;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-size:.72rem;padding:.5rem;border-radius:6px;margin-bottom:1rem;font-weight:600}
+    .pass-input-wrap{position:relative;display:flex;align-items:center}
+    .btn-toggle-eye{position:absolute;right:.6rem;background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:.9rem}
+    .btn-primary-action{width:100%;padding:.65rem 1rem;background:var(--color-brand-blue);color:#fff;font-size:.82rem;font-weight:700;border:none;border-radius:8px;cursor:pointer;box-shadow:0 4px 10px rgba(19,85,150,.25);transition:all .15s}
+    .btn-primary-action:hover{background:var(--color-brand-blue-dark)}
+    .demo-users-box{margin-top:1.25rem;padding-top:1rem;border-top:1px dashed var(--border-color)}
+    .demo-users-title{font-size:.68rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:.5rem;text-align:center}
+    .demo-users-grid{display:grid;gap:.4rem}
+    .btn-demo-user{padding:.45rem .65rem;background:#f8fafc;border:1px solid var(--border-color);border-radius:6px;font-size:.7rem;color:var(--text-main);cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:inherit}
+    .btn-demo-user:hover{background:#eff6ff;border-color:#93c5fd;color:var(--color-brand-blue)}
+
+    /* DASHBOARD GRID & PANELS (ORIGINAL SIMULADOR) */
+    .dashboard-grid{margin-top:1rem;display:grid;grid-template-columns:1fr;gap:1.25rem}
+    @media(min-width:1024px){.dashboard-grid{grid-template-columns:430px 1fr;align-items:start}}
+    .panel{background:var(--bg-surface);border:1px solid var(--border-color);border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.04);overflow:hidden}
+    .panel-header{padding:.75rem 1rem;border-bottom:1px solid var(--border-color);background:#fff;display:flex;align-items:center;justify-content:space-between}
+    .panel-header h2{font-size:.875rem;font-weight:700;color:var(--color-primary);display:flex;align-items:center;gap:.5rem}
+    .panel-body{padding:1rem}
+    .form-group{margin-bottom:.875rem}.form-group:last-child{margin-bottom:0}
+    .form-label{display:flex;justify-content:space-between;align-items:baseline;font-size:.775rem;font-weight:600;color:var(--text-main);margin-bottom:.35rem}
+    .form-label-hint{font-size:.7rem;font-weight:400;color:var(--text-muted)}
+    .line-selector-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.375rem}
+    .line-option-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:.65rem .375rem;background:#fff;border:2px solid var(--border-color);border-radius:8px;cursor:pointer;transition:all .15s ease;text-align:center;min-height:54px;color:var(--text-main);font-family:inherit;font-size:.775rem;font-weight:600}
+    .line-option-btn:hover:not(.active){background:#f1f5f9;border-color:#94a3b8}
+    .line-option-btn.active{background-color:var(--active-blue-bg)!important;border-color:var(--active-blue-border)!important;color:#fff!important;box-shadow:var(--active-blue-shadow)!important;font-weight:600!important}
+    .line-option-btn .line-name{font-size:.775rem;font-weight:600;line-height:1.2}
+    .segmented-control{display:flex;background:#e2e8f0;padding:4px;border-radius:9px;gap:4px;border:1px solid var(--border-color)}
+    .segmented-btn{flex:1;border:none;background:transparent;padding:.5rem .375rem;font-family:inherit;font-size:.775rem;font-weight:600;color:var(--text-muted);border-radius:6px;cursor:pointer;transition:all .15s ease;text-align:center;white-space:nowrap}
+    .segmented-btn:hover:not(.active){color:var(--text-main);background:rgba(255,255,255,.4)}
+    .segmented-btn.active{background-color:var(--active-blue-bg)!important;color:#fff!important;box-shadow:0 2px 8px rgba(19,85,150,.3)!important;font-weight:600!important}
+    .plazo-selector-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:.275rem}
+    .plazo-btn{padding:.5rem .2rem;background:#fff;border:2px solid var(--border-color);border-radius:8px;font-family:var(--font-mono);font-size:.85rem;font-weight:600;color:var(--text-main);cursor:pointer;transition:all .15s ease;display:flex;flex-direction:column;align-items:center;gap:1px}
+    .plazo-btn span.label-sub{font-size:.575rem;font-weight:500;color:var(--text-muted);font-family:var(--font-sans)}
+    .plazo-btn:hover:not(:disabled):not(.active){border-color:#94a3b8;background:#f1f5f9}
+    .plazo-btn.active{background-color:var(--active-blue-bg)!important;border-color:var(--active-blue-border)!important;color:#fff!important;box-shadow:var(--active-blue-shadow)!important;font-weight:600!important}
+    .plazo-btn.active span.label-sub{color:#e0f2fe!important;font-weight:500!important}
+    .plazo-btn:disabled{opacity:.35;background:#f1f5f9;border-color:#e2e8f0;cursor:not-allowed;text-decoration:line-through}
+    .plazo-notice{margin-top:.375rem;font-size:.7rem;color:#b45309;background:#fffbeb;border:1px solid #fef3c7;padding:.35rem .5rem;border-radius:6px;display:flex;align-items:center;gap:.35rem;font-weight:500}
+    .currency-input-wrap{position:relative;display:flex;align-items:center}
+    .currency-prefix{position:absolute;left:.875rem;font-family:var(--font-mono);font-size:1.15rem;font-weight:700;color:var(--text-muted);pointer-events:none}
+    .input-currency{width:100%;padding:.625rem .875rem .625rem 2.15rem;font-family:var(--font-mono);font-size:1.25rem;font-weight:700;color:var(--color-brand-blue);background:#fff;border:2px solid var(--border-color);border-radius:8px;outline:none;transition:border-color .15s ease,box-shadow .15s ease}
+    .input-currency:focus{border-color:var(--color-brand-blue);box-shadow:0 0 0 3px rgba(19,85,150,.18)}
+    .quick-chips{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.375rem}
+    .chip-btn{background:#fff;border:1px solid var(--border-color);border-radius:6px;padding:.225rem .5rem;font-family:var(--font-mono);font-size:.7rem;font-weight:600;color:var(--text-main);cursor:pointer;transition:all .12s ease}
+    .chip-btn:hover:not(.active){background:#f1f5f9;border-color:#94a3b8}
+    .chip-btn.active{background-color:var(--active-blue-bg)!important;border-color:var(--active-blue-border)!important;color:#fff!important;font-weight:600!important;box-shadow:0 2px 6px rgba(19,85,150,.25)}
+    .input-text{width:100%;padding:.45rem .65rem;font-size:.775rem;color:var(--text-main);background:#fff;border:1px solid var(--border-color);border-radius:6px;outline:none;transition:border-color .15s ease}
+    .input-text:focus{border-color:var(--color-brand-blue);box-shadow:0 0 0 2px rgba(19,85,150,.15)}
+
+    /* 4 KPI CARDS ORIGINALES */
+    .results-stack{display:flex;flex-direction:column;gap:1rem}
+    .kpi-cards-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem}
+    @media(max-width:640px){.kpi-cards-grid{grid-template-columns:1fr}}
+    .kpi-card{background:#fff;border-radius:12px;padding:.875rem 1rem;border:2px solid var(--border-color);box-shadow:0 2px 6px rgba(0,0,0,.04);display:flex;flex-direction:column;justify-content:center;transition:transform .15s ease,box-shadow .15s ease}
+    .kpi-card:hover{transform:translateY(-1px);box-shadow:0 5px 12px rgba(0,0,0,.06)}
+    .kpi-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem}
+    .kpi-label{font-size:.725rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.03em}
+    .kpi-badge{font-size:.65rem;font-weight:600;padding:.15rem .45rem;border-radius:5px;letter-spacing:.02em}
+    .kpi-value{font-family:var(--font-mono);font-size:1.75rem;font-weight:700;line-height:1.1;margin:0}
+    .card-cuota-plazo{border-color:var(--cuota-border);background:linear-gradient(180deg,#fff 0%,var(--cuota-bg) 100%)}
+    .card-cuota-plazo .kpi-label{color:#047857}.card-cuota-plazo .kpi-badge{background:#d1fae5;color:#065f46}.card-cuota-plazo .kpi-value{color:var(--cuota-color);font-size:1.95rem}
+    .card-neto{border-color:#3b82f6;background:linear-gradient(180deg,#fff 0%,var(--neto-bg) 100%)}
+    .card-neto .kpi-label{color:#1d4ed8}.card-neto .kpi-badge{background:#dbeafe;color:#1e40af}.card-neto .kpi-value{color:var(--color-brand-blue)}
+    .card-total{border-color:var(--total-border);background:linear-gradient(180deg,#fff 0%,var(--total-bg) 100%)}
+    .card-total .kpi-label{color:var(--text-muted)}.card-total .kpi-badge{background:var(--total-badge-bg);color:var(--total-badge-color)}.card-total .kpi-value{color:var(--total-color)}
+    .card-capital{border-color:var(--capital-border);background:linear-gradient(180deg,#fff 0%,var(--capital-bg) 100%)}
+    .card-capital .kpi-label{color:#b45309}.card-capital .kpi-badge{background:#fef3c7;color:#92400e}.card-capital .kpi-value{color:var(--capital-color)}
+
+    /* TABLA 3 COLUMNAS */
+    .matrix-table{width:100%;border-collapse:collapse;font-size:.775rem}
+    .matrix-table th{padding:.55rem .85rem;background:var(--bg-subtle);font-size:.7rem;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border-color);letter-spacing:.03em;font-weight:700}
+    .matrix-table th:first-child{text-align:left;width:32%}
+    .matrix-table th:nth-child(2){text-align:right;width:34%}
+    .matrix-table th:nth-child(3){text-align:right;width:34%}
+    .matrix-table td{padding:.55rem .85rem;border-bottom:1px solid #f1f5f9;font-family:var(--font-mono);font-weight:600}
+    .matrix-table td:first-child{text-align:left;font-family:var(--font-sans)}
+    .matrix-table td:nth-child(2){text-align:right;color:var(--cuota-color);font-weight:700}
+    .matrix-table td:nth-child(3){text-align:right;color:var(--text-main)}
+    .matrix-table tr.active-matrix-row{background-color:#ecfdf5}
+    .matrix-table tr.active-matrix-row td:first-child{color:var(--cuota-color);font-weight:700}
+    .matrix-table tr.clickable-row{cursor:pointer;transition:background-color .12s ease}
+    .matrix-table tr.clickable-row:hover{background-color:#f1f5f9}
+
+    /* WHATSAPP CARD ORIGINAL */
+    .wa-card{background:#fff;border:1px solid #cbd5e1;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(18,140,126,.08)}
+    .wa-header{background:var(--wa-header-bg);color:#fff;padding:.65rem 1rem;display:flex;align-items:center;justify-content:space-between}
+    .wa-header-brand{display:flex;align-items:center;gap:.5rem;font-weight:700;font-size:.8125rem}
+    .wa-template-selector-bar{display:flex;align-items:center;gap:.5rem;background:#064e43;padding:.5rem 1rem;border-bottom:1px solid rgba(255,255,255,.15);flex-wrap:wrap}
+    .wa-template-selector-bar label{font-size:.725rem;font-weight:600;color:#fff;white-space:nowrap}
+    .wa-select-version{background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:.35rem .65rem;font-size:.75rem;font-weight:600;color:var(--text-main);cursor:pointer;outline:none;flex:1;min-width:220px}
+    .wa-chat-canvas{background-color:#e5ddd5;background-image:radial-gradient(#d4cbbe 1px,transparent 1px);background-size:14px 14px;padding:.875rem 1rem;display:flex;flex-direction:column;align-items:stretch}
+    .wa-bubble-msg{background-color:var(--wa-bubble);border-radius:8px 8px 2px 8px;padding:.65rem .75rem;width:100%;box-shadow:0 1px 2px rgba(0,0,0,.14);position:relative}
+    .whatsapp-editor-textarea{width:100%;min-height:200px;max-height:380px;background:transparent;border:1px solid transparent;border-radius:6px;padding:.35rem .4rem;font-family:inherit;font-size:.8125rem;line-height:1.45;color:#111827;resize:vertical;outline:none;box-sizing:border-box;transition:border-color .15s ease,background-color .15s ease;white-space:pre-wrap;word-break:break-word}
+    .whatsapp-editor-textarea:focus{background-color:rgba(255,255,255,.6);border-color:#25d366}
+    .wa-bubble-time{display:flex;align-items:center;justify-content:flex-end;gap:4px;font-size:.65rem;color:#667781;margin-top:.25rem;padding-right:.25rem}
+    .wa-checks{color:#53bdeb;font-weight:bold}
+    .wa-actions-bar{padding:.65rem 1rem;background:#f8fafc;border-top:1px solid var(--border-color);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem}
+    .wa-phone-inline-box{display:flex;align-items:center;gap:.375rem;background:#fff;border:1px solid var(--border-color);padding:.3rem .6rem;border-radius:6px;font-size:.75rem;color:var(--text-muted)}
+    .wa-phone-inline-input{border:none;outline:none;font-size:.75rem;color:var(--text-main);font-weight:600;width:140px;background:transparent}
+    .wa-btn-group{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+    .btn-save-custom,.btn-restore,.btn-copy{background:#fff;color:var(--text-main);border:1px solid var(--border-color);padding:.45rem .875rem;font-size:.75rem;font-weight:600;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:.375rem;transition:all .15s ease}
+    .btn-save-custom:hover,.btn-restore:hover,.btn-copy:hover{background:#f1f5f9;border-color:#cbd5e1}
+    .btn-whatsapp-send{background:var(--wa-accent);color:#fff;border:none;padding:.45rem 1rem;font-size:.75rem;font-weight:600;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:.375rem;text-decoration:none;box-shadow:0 2px 5px rgba(37,211,102,.3);transition:all .15s ease}
+    .btn-whatsapp-send:hover{background:#20bd5a;transform:translateY(-1px);box-shadow:0 3px 8px rgba(37,211,102,.4)}
+
+    /* MÓDULOS DE GESTIÓN (TAB 2 Y TAB 3) */
+    .module-hero-bar{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--border-color);border-radius:12px;padding:.85rem 1rem;margin-top:1rem;flex-wrap:wrap;gap:.5rem}
+    .module-hero-info h2{font-size:1.05rem;font-weight:800;color:var(--color-primary);display:flex;align-items:center;gap:.4rem}
+    .module-hero-info p{font-size:.72rem;color:var(--text-muted)}
+    .btn-hero-action{padding:.5rem .85rem;font-size:.78rem;font-weight:700;border-radius:8px;border:none;background:var(--color-brand-blue);color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem}
+    .btn-hero-action:hover{background:var(--color-brand-blue-dark)}
+    .toolbar-filters{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--border-color);border-radius:10px;padding:.55rem .85rem;margin-top:.75rem;gap:.5rem;flex-wrap:wrap}
+    .filters-left-group{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;flex:1}
+    .search-input-box{min-width:190px}
+    .search-input-box input{width:100%;padding:.35rem .55rem;font-size:.75rem;border:1px solid var(--border-color);border-radius:6px;outline:none}
+    .data-table-container{background:#fff;border:1px solid var(--border-color);border-radius:12px;margin-top:.75rem;overflow-x:auto}
+    .data-table{width:100%;border-collapse:collapse;font-size:.75rem;min-width:820px}
+    .data-table th{padding:.6rem .75rem;background:#f8fafc;font-size:.68rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;border-bottom:1px solid var(--border-color);text-align:left}
+    .data-table td{padding:.55rem .75rem;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+    .data-table tr:hover{background:#f8fafc}
+    .badge-status{display:inline-flex;align-items:center;gap:.25rem;padding:.15rem .5rem;border-radius:9999px;font-size:.68rem;font-weight:700;white-space:nowrap}
+    .badge-Pendiente{background:#fef9c3;color:#854d0e;border:1px solid #fde047}
+    .badge-EnAnalisis{background:#dbeafe;color:#1e40af;border:1px solid #93c5fd}
+    .badge-Observado{background:#ffedd5;color:#9a3412;border:1px solid #fdba74}
+    .badge-Aprobado{background:#dcfce7;color:#166534;border:1px solid #86efac}
+    .badge-Transferencia{background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe}
+    .badge-Liquidado{background:#ecfdf5;color:#047857;border:1px solid #6ee7b7}
+    .badge-Rechazado{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+    .badge-org-tag{background:#e0f2fe;color:#0369a1;padding:2px 6px;border-radius:4px;font-size:.65rem;font-weight:700;border:1px solid #bae6fd}
+    .btn-table-action{padding:.3rem .55rem;font-size:.7rem;font-weight:600;border-radius:5px;background:#fff;border:1px solid var(--border-color);color:var(--color-brand-blue);cursor:pointer}
+    .btn-table-action:hover{background:#eff6ff;border-color:#93c5fd}
+    .btn-action-primary{background:var(--color-brand-blue);color:#fff;border-color:var(--color-brand-blue)}.btn-action-primary:hover{background:var(--color-brand-blue-dark)}
+    .ai-teaser-card{background:linear-gradient(135deg,#f0fdf4 0%,#e0f2fe 100%);border:1px dashed #0284c7;border-radius:12px;padding:1rem;margin-top:1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+    .ai-teaser-info h3{font-size:.85rem;font-weight:800;color:#0369a1}.ai-teaser-info p{font-size:.72rem;color:#334155;margin-top:2px}
+
+    /* MODALES */
+    .modal-backdrop{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.5);backdrop-filter:blur(3px);z-index:100;display:none;align-items:center;justify-content:center;padding:1rem}
+    .modal-backdrop.open{display:flex}
+    .modal-window{background:#fff;border-radius:14px;width:100%;max-width:840px;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 15px 35px rgba(0,0,0,.2);border:1px solid var(--border-color);overflow:hidden}
+    .modal-window.modal-large{max-width:920px}
+    .modal-header-bar{padding:.85rem 1.25rem;border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between;background:#f8fafc}
+    .modal-header-title{font-size:.95rem;font-weight:800;color:var(--color-primary);display:flex;align-items:center;gap:.4rem}
+    .btn-close-modal{background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text-muted);line-height:1}
+    .modal-body-scroll{padding:1rem 1.25rem;overflow-y:auto;flex:1}
+    .modal-footer-bar{padding:.75rem 1.25rem;border-top:1px solid var(--border-color);background:#f8fafc;display:flex;justify-content:flex-end;gap:.5rem}
+    .section-title-divider{font-size:.75rem;font-weight:700;color:var(--color-primary);text-transform:uppercase;letter-spacing:.03em;border-bottom:1px solid var(--border-color);padding-bottom:.3rem;margin:.85rem 0 .5rem}
+    .grid-3-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.5rem}
+    .file-input-box{border:1px dashed var(--border-color);padding:.6rem;border-radius:8px;background:#f8fafc;font-size:.72rem}
+    .timeline-list{display:flex;flex-direction:column;gap:.45rem;margin-top:.4rem;max-height:280px;overflow-y:auto;padding-right:4px}
+    .timeline-item{padding:.5rem .75rem;background:#f8fafc;border-left:3px solid var(--color-brand-blue);border-radius:0 6px 6px 0;font-size:.72rem}
+    .timeline-meta{font-size:.65rem;color:var(--text-muted);font-weight:700;margin-bottom:2px;display:flex;align-items:center;justify-content:space-between}
+    .timeline-role-badge{padding:1px 5px;border-radius:4px;font-size:.6rem;background:#e2e8f0;color:#334155;font-weight:600}
+    .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#0f172a;color:#fff;padding:.65rem 1rem;border-radius:8px;font-size:.775rem;font-weight:600;display:flex;align-items:center;gap:.5rem;box-shadow:0 6px 20px rgba(0,0,0,.2);transform:translateY(100px);opacity:0;transition:all .25s cubic-bezier(0.16,1,0.3,1);z-index:100}
+    .toast.show{transform:translateY(0);opacity:1}
+  </style>
+</head>
+<body>
+  <!-- CABECERA INSTITUCIONAL CON NAVEGACIÓN Y PERFIL -->
+  <header class="top-header" id="mainAppHeader" style="display:none;">
+    <div class="container header-content">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <div onclick="cambiarPestana('view-simulador')" class="brand-group" title="Mutual Modelo de Entre Ríos">
+          <img src="logo.jpg" alt="Mutual Modelo de Entre Ríos" class="app-logo-img" onerror="handleLogoFallback(this)"/>
+          <div class="header-app-title">
+            <span class="title-main">Calculador de Ayudas Económicas</span>
+            <span class="title-sub">Simulador Oficial 1.0v</span>
+          </div>
+        </div>
+        <nav class="nav-tabs-wrap" id="navTabsMenu"></nav>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.6rem;">
+        <div class="user-header-chip" id="userHeaderChip"></div>
+        <button class="btn-logout" onclick="handleLogout()">Cerrar Sesión 🚪</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- PANTALLA 0: LOGIN DE ACCESO -->
+    <section id="view-login" class="app-view active">
+      <div class="login-container-wrap">
+        <div class="login-card">
+          <div class="login-card-header">
+            <img src="logo.jpg" alt="Mutual Modelo" class="login-logo-img" onerror="handleLogoFallback(this)"/>
+            <h1>Acceso al Sistema</h1>
+            <p>Simulador y Plataforma Operativa de Ayudas Económicas</p>
+          </div>
+          <div class="login-card-body">
+            <div id="loginErrorMsg" class="login-error-alert"></div>
+            <form onsubmit="handleLoginSubmit(event)">
+              <div class="form-group">
+                <label class="form-label" for="loginUsuario">Usuario / Email</label>
+                <input type="text" id="loginUsuario" class="input-text" placeholder="Ej: titular1, asesor1, analista1, admin" required autofocus/>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="loginClave">Contraseña</label>
+                <div class="pass-input-wrap">
+                  <input type="password" id="loginClave" class="input-text" placeholder="••••••••" required/>
+                  <button type="button" class="btn-toggle-eye" onclick="togglePasswordVisibility('loginClave', this)">👁️</button>
+                </div>
+              </div>
+              <button type="submit" class="btn-primary-action" style="margin-top:0.5rem;">Iniciar Sesión 🔐</button>
+            </form>
+            <div class="demo-users-box">
+              <div class="demo-users-title">Acceso rápido para demostración (1-clic)</div>
+              <div class="demo-users-grid">
+                <button type="button" class="btn-demo-user" onclick="handleQuickLogin('titular')">
+                  <span><strong>Titular Org:</strong> Mariano Benítez (Paraná Centro ⭐)</span><span>Ingresar ➔</span>
+                </button>
+                <button type="button" class="btn-demo-user" onclick="handleQuickLogin('asesor')">
+                  <span><strong>Asesor Org:</strong> Carlos Gómez (Paraná Centro)</span><span>Ingresar ➔</span>
+                </button>
+                <button type="button" class="btn-demo-user" onclick="handleQuickLogin('analista')">
+                  <span><strong>Analista Mutual:</strong> Mariana López (Créditos)</span><span>Ingresar ➔</span>
+                </button>
+                <button type="button" class="btn-demo-user" onclick="handleQuickLogin('admin')">
+                  <span><strong>Administrador:</strong> Acceso Total</span><span>Ingresar ➔</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PESTAÑA 1: SIMULADOR ORIGINAL EXACTO RESTABLECIDO -->
+    <section id="view-simulador" class="app-view">
+      <div class="dashboard-grid">
+        <!-- COLUMNA IZQUIERDA: PANEL DE ENTRADAS -->
+        <div class="panel">
+          <div class="panel-header">
+            <h2>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/>
+                <path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/>
+              </svg>
+              Panel de Control y Parámetros
+            </h2>
+            <button type="button" class="btn-header" onclick="resetDefaults()" title="Restablecer valores predeterminados" style="padding:0.25rem 0.5rem;font-size:0.7rem;cursor:pointer;background:#fff;border:1px solid var(--border-color);border-radius:6px;">
+              ↺ Restablecer
+            </button>
+          </div>
+          <div class="panel-body">
+            <!-- 1. Selector de Línea -->
+            <div class="form-group">
+              <label class="form-label"><span>Línea de Ayuda Económica</span></label>
+              <div class="line-selector-grid">
+                <button type="button" class="line-option-btn active" id="lineBtn-fedem" onclick="setLinea('fedem')">
+                  <span class="line-name">FEDEM Provincial</span>
+                </button>
+                <button type="button" class="line-option-btn" id="lineBtn-muni" onclick="setLinea('muni')">
+                  <span class="line-name">Municipales QUAD</span>
+                </button>
+                <button type="button" class="line-option-btn" id="lineBtn-sidecreer" onclick="setLinea('sidecreer')">
+                  <span class="line-name">Tarjeta Sidecreer</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. Selector de Modo -->
+            <div class="form-group">
+              <label class="form-label"><span>Modo de Entrada</span></label>
+              <div class="segmented-control">
+                <button type="button" class="segmented-btn active" id="modeBtn-neto" onclick="setModo('neto')">
+                  💰 Por Neto a Entregar
+                </button>
+                <button type="button" class="segmented-btn" id="modeBtn-cuota" onclick="setModo('cuota')">
+                  🎯 Por Cuota Objetivo
+                </button>
+              </div>
+            </div>
+
+            <!-- 3. Entrada Numérica Principal ($) -->
+            <div class="form-group">
+              <label class="form-label">
+                <span id="amountInputLabel">Monto Neto a Entregar</span>
+                <span class="form-label-hint">Pesos Argentinos</span>
+              </label>
+              <div class="currency-input-wrap">
+                <span class="currency-prefix">$</span>
+                <input type="text" id="amountInput" class="input-currency" value="100.000" autocomplete="off" inputmode="decimal" oninput="handleAmountInput(this.value)"/>
+              </div>
+              <div class="quick-chips">
+                <button type="button" class="chip-btn" onclick="setQuickAmount(50000)">$50.000</button>
+                <button type="button" class="chip-btn active" onclick="setQuickAmount(100000)">$100.000</button>
+                <button type="button" class="chip-btn" onclick="setQuickAmount(150000)">$150.000</button>
+                <button type="button" class="chip-btn" onclick="setQuickAmount(250000)">$250.000</button>
+                <button type="button" class="chip-btn" onclick="setQuickAmount(500000)">$500.000</button>
+                <button type="button" class="chip-btn" onclick="setQuickAmount(1000000)">$1.000.000</button>
+              </div>
+            </div>
+
+            <!-- 4. Selector de Plazos Destacado -->
+            <div class="form-group">
+              <label class="form-label"><span>Plazo en Cuotas Mensuales</span></label>
+              <div class="plazo-selector-grid" id="plazoGrid">
+                <button type="button" class="plazo-btn" id="btnPlazo-6" onclick="setPlazo(6)">6<span class="label-sub">meses</span></button>
+                <button type="button" class="plazo-btn active" id="btnPlazo-12" onclick="setPlazo(12)">12<span class="label-sub">meses</span></button>
+                <button type="button" class="plazo-btn" id="btnPlazo-18" onclick="setPlazo(18)">18<span class="label-sub">meses</span></button>
+                <button type="button" class="plazo-btn" id="btnPlazo-24" onclick="setPlazo(24)">24<span class="label-sub">meses</span></button>
+                <button type="button" class="plazo-btn" id="btnPlazo-36" onclick="setPlazo(36)">36<span class="label-sub">meses</span></button>
+                <button type="button" class="plazo-btn" id="btnPlazo-48" onclick="setPlazo(48)">48<span class="label-sub">meses</span></button>
+              </div>
+              <div id="muniNotice" class="plazo-notice" style="display:none;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span>Convenio Municipal opera exclusivamente en 12 y 24 cuotas.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: KPI CARDS, TABLA 3 COLS Y WHATSAPP -->
+        <div class="results-stack">
+          <!-- 1. 4 KPI CARDS LIMPIAS -->
+          <div class="kpi-cards-grid">
+            <div class="kpi-card card-cuota-plazo">
+              <div class="kpi-card-header"><span class="kpi-label">Monto de la Cuota</span><span class="kpi-badge" id="kpiCuotaBadge">12 cuotas fijas</span></div>
+              <div class="kpi-value tabular-nums" id="kpiCuotaVal">$ 0,00</div>
+            </div>
+            <div class="kpi-card card-neto">
+              <div class="kpi-card-header"><span class="kpi-label">Monto a Entregar</span><span class="kpi-badge">Neto</span></div>
+              <div class="kpi-value tabular-nums" id="kpiNetoVal">$ 0,00</div>
+            </div>
+            <div class="kpi-card card-total">
+              <div class="kpi-card-header"><span class="kpi-label" id="kpiTotalLabel">TOTAL AYUDA ECONÓMICA</span><span class="kpi-badge" id="kpiTotalBadge">Total a Devolver</span></div>
+              <div class="kpi-value tabular-nums" id="kpiTotalVal">$ 0,00</div>
+            </div>
+            <div class="kpi-card card-capital">
+              <div class="kpi-card-header"><span class="kpi-label" id="kpiCapitalLabel">CAPITAL</span><span class="kpi-badge" id="kpiCapitalBadge">Capital Computable</span></div>
+              <div class="kpi-value tabular-nums" id="kpiCapitalVal">$ 0,00</div>
+            </div>
+          </div>
+
+          <!-- 2. TABLA DE PLANES (3 COLUMNAS EXACTAS) -->
+          <div class="panel">
+            <div class="panel-header">
+              <h2>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                </svg>
+                Planes y Alternativas de Cuotas Disponibles
+              </h2>
+              <span style="font-size:0.725rem;font-weight:500;color:var(--text-muted);">Haga clic en una fila para seleccionar el plazo</span>
+            </div>
+            <div class="panel-body" style="padding:0.25rem 0.5rem;">
+              <table class="matrix-table">
+                <thead>
+                  <tr><th>Cantidad de Cuotas</th><th>Monto de Cuota</th><th>Monto a Entregar</th></tr>
+                </thead>
+                <tbody id="matrixTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 3. GESTOR MULTIVERSIÓN DE WHATSAPP -->
+          <div class="wa-card">
+            <div class="wa-header">
+              <div class="wa-header-brand">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12.031 2C6.495 2 2 6.495 2 12.031c0 1.968.563 3.864 1.63 5.498L2.016 22l4.636-1.594A9.976 9.976 0 0 0 12.031 22c5.536 0 10.031-4.495 10.031-10.031S17.567 2 12.031 2zm0 18.25c-1.745 0-3.447-.484-4.922-1.399l-.352-.218-2.756.947.957-2.697-.24-.378A8.204 8.204 0 0 1 3.781 12.03c0-4.549 3.701-8.25 8.25-8.25 4.549 0 8.25 3.701 8.25 8.25 0 4.549-3.701 8.25-8.25 8.25zm4.52-6.177c-.247-.124-1.464-.722-1.691-.805-.227-.082-.392-.124-.557.124-.165.247-.64 1.045-.784 1.21-.144.165-.288.185-.536.062-.247-.124-1.044-.385-1.988-1.227-.735-.655-1.232-1.465-1.376-1.712-.144-.247-.015-.381.108-.504.112-.111.247-.289.371-.433.124-.144.165-.247.247-.412.082-.165.041-.309-.021-.433-.062-.124-.557-1.34-.763-1.835-.201-.482-.405-.417-.557-.425l-.474-.008c-.165 0-.433.062-.66.309-.227.247-.866.846-.866 2.062 0 1.217.886 2.393 1.01 2.557.124.165 1.745 2.664 4.227 3.736.591.255 1.053.407 1.413.522.593.188 1.133.162 1.559.098.476-.071 1.464-.598 1.67-1.175.206-.577.206-1.072.144-1.175-.062-.103-.227-.165-.474-.289z"/>
+                </svg>
+                <span>Gestor de Mensajes de WhatsApp</span>
+              </div>
+              <span style="font-size:0.7rem;opacity:0.9;">Edición en Tiempo Real</span>
+            </div>
+            <div class="wa-template-selector-bar">
+              <label for="sel-version-plantilla">Formato de Plantilla:</label>
+              <select id="sel-version-plantilla" class="wa-select-version" onchange="handleTemplateVersionChange(this.value)">
+                <option value="estandar">📱 Estándar (Planes con Emojis)</option>
+                <option value="plan_unico">🎯 Plan Único (Plazo Seleccionado)</option>
+                <option value="formal">🏛️ Institucional Formal (Con Requisitos)</option>
+                <option value="express">⚡ Promo Express (24hs)</option>
+                <option value="personalizada">⭐ Mi Formato Guardado</option>
+              </select>
+            </div>
+            <div class="wa-chat-canvas">
+              <div class="wa-bubble-msg">
+                <textarea id="txt-plantilla-whatsapp" class="whatsapp-editor-textarea" rows="7" placeholder="Escriba o personalice aquí el mensaje..."></textarea>
+                <div class="wa-bubble-time">
+                  <span id="waCustomNotice" style="display:none;font-size:0.65rem;color:#b45309;margin-right:auto;font-weight:600;">✏️ Editado manualmente</span>
+                  <span id="waTimeDisplay">10:45</span>
+                  <span class="wa-checks">✓✓</span>
+                </div>
+              </div>
+            </div>
+            <div class="wa-actions-bar">
+              <div class="wa-phone-inline-box" title="Teléfono del socio para envío de WhatsApp">
+                <span>Tel:</span>
+                <input type="tel" id="inp-whatsapp-telefono" class="wa-phone-inline-input" placeholder="Ej: 5493434123456"/>
+              </div>
+              <div class="wa-btn-group">
+                <button type="button" class="btn-save-custom" onclick="guardarMiFormato()" title="Guardar formato actual">💾 Guardar como Mi Formato</button>
+                <button type="button" class="btn-restore" onclick="restoreOriginalTemplate()" title="Restablecer plantilla base">🔄 Restaurar Original</button>
+                <button type="button" class="btn-copy" onclick="copyWhatsAppText()" title="Copiar texto del editor">📋 Copiar</button>
+                <button type="button" class="btn-whatsapp-send" onclick="sendWhatsApp()" title="Enviar mensaje">📲 Enviar WhatsApp</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PESTAÑA 2: GESTIONES DE COMERCIALIZADOR (ORGANIZACIONES & TITULARES) -->
+    <section id="view-comercializador" class="app-view">
+      <div class="module-hero-bar">
+        <div class="module-hero-info">
+          <h2 id="lblTituloModuloComercial">📁 Mis Gestiones de Ayudas Económicas</h2>
+          <p id="lblSubtituloModuloComercial">Registro, carga de documentación y seguimiento de solicitudes originadas.</p>
+        </div>
+        <button class="btn-hero-action" onclick="abrirModalAltaSolicitud()">+ Nueva Solicitud de Ayuda Económica</button>
+      </div>
+
+      <div class="toolbar-filters">
+        <div class="filters-left-group">
+          <div class="search-input-box"><input type="text" id="filtroComercialTexto" placeholder="🔍 Buscar por DNI, Asociado o Asesor..." oninput="filtrarGestionesComercializador()"/></div>
+          <select id="filtroComercialEstado" class="input-text" style="width:auto;" onchange="filtrarGestionesComercializador()">
+            <option value="">Todos los Estados</option>
+            <option value="Pendiente">Pendiente 🟡</option>
+            <option value="En Análisis">En Análisis 🔵</option>
+            <option value="Observado">Observado 🟠</option>
+            <option value="Aprobado">Aprobado 🟢</option>
+            <option value="Transferencia">Transferencia Pendiente 🟣</option>
+            <option value="Liquidado">Liquidado 🟢</option>
+            <option value="Rechazado">Rechazado 🔴</option>
+          </select>
+          <select id="filtroComercialAsesor" class="input-text" style="width:auto;display:none;" onchange="filtrarGestionesComercializador()">
+            <option value="">Todos los Asesores de la Organización</option>
+          </select>
+        </div>
+        <span style="font-size:0.75rem;color:var(--text-muted);" id="lblTotalComercializador">0 solicitudes registradas</span>
+      </div>
+
+      <div class="data-table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID Solicitud</th>
+              <th>Fecha</th>
+              <th id="colHeadAsesor" style="display:none;">Asesor Origen</th>
+              <th>Asociado</th>
+              <th>DNI</th>
+              <th>Línea</th>
+              <th>Monto Neto</th>
+              <th>Cuotas</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaComercializadorBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PESTAÑA 3: GESTIONES MUTUAL (ANALISTAS) -->
+    <section id="view-mutual" class="app-view">
+      <div class="module-hero-bar">
+        <div class="module-hero-info">
+          <h2>🏢 Panel de Auditoría y Resolución Mutual</h2>
+          <p>Bandeja general de solicitudes, control crediticio por organización, legajos y liquidación.</p>
+        </div>
+      </div>
+
+      <div class="toolbar-filters">
+        <div class="filters-left-group">
+          <div class="search-input-box"><input type="text" id="filtroMutualTexto" placeholder="🔍 Buscar asociado, DNI o ID..." oninput="filtrarGestionesMutual()"/></div>
+          <select id="filtroMutualEstado" class="input-text" style="width:auto;" onchange="filtrarGestionesMutual()">
+            <option value="">Todos los Estados</option>
+            <option value="Pendiente">Pendiente 🟡</option>
+            <option value="En Análisis">En Análisis 🔵</option>
+            <option value="Observado">Observado 🟠</option>
+            <option value="Aprobado">Aprobado 🟢</option>
+            <option value="Transferencia">Transferencia Pendiente 🟣</option>
+            <option value="Liquidado">Liquidado 🟢</option>
+            <option value="Rechazado">Rechazado 🔴</option>
+          </select>
+          <select id="filtroMutualOrganizacion" class="input-text" style="width:auto;" onchange="filtrarGestionesMutual()">
+            <option value="">Todas las Organizaciones</option>
+          </select>
+          <select id="filtroMutualComercial" class="input-text" style="width:auto;" onchange="filtrarGestionesMutual()">
+            <option value="">Todos los Comercializadores</option>
+          </select>
+          <select id="filtroMutualOrganismo" class="input-text" style="width:auto;" onchange="filtrarGestionesMutual()">
+            <option value="">Todos los Organismos</option>
+            <option value="Provincial">Provincial</option>
+            <option value="Municipal">Municipal</option>
+          </select>
+        </div>
+        <span style="font-size:0.75rem;color:var(--text-muted);" id="lblTotalMutual">0 solicitudes</span>
+      </div>
+
+      <div class="data-table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Fecha</th>
+              <th>Organización</th>
+              <th>Comercializador / Asesor</th>
+              <th>Asociado (DNI)</th>
+              <th>Organismo</th>
+              <th>Línea / Monto</th>
+              <th>Analista</th>
+              <th>Estado</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tablaMutualBody"></tbody>
+        </table>
+      </div>
+
+      <div class="ai-teaser-card">
+        <div class="ai-teaser-info">
+          <h3>🤖 Auditoría Documental Inteligente (Próximamente)</h3>
+          <p>Módulo de extracción OCR para recibos de sueldo, verificación automática de DNI y scoring de legajos listo para conectar con Vertex AI.</p>
+        </div>
+        <span class="badge-status badge-EnAnalisis">En Desarrollo</span>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL 1: ALTA SOLICITUD -->
+  <div id="modalAltaSolicitud" class="modal-backdrop">
+    <div class="modal-window modal-large">
+      <div class="modal-header-bar">
+        <div class="modal-header-title"><span>📝 Nueva Solicitud de Ayuda Económica</span></div>
+        <button class="btn-close-modal" onclick="cerrarModal('modalAltaSolicitud')">&times;</button>
+      </div>
+      <div class="modal-body-scroll">
+        <form id="formAltaSolicitud" onsubmit="guardarNuevaSolicitud(event)">
+          <div class="section-title-divider">1. Datos Personales del Solicitante</div>
+          <div class="grid-3-cols">
+            <div class="form-group"><label class="form-label">DNI *</label><input type="text" id="solDni" class="input-text" required placeholder="Sin puntos"/></div>
+            <div class="form-group"><label class="form-label">Legajo Municipal (Opcional)</label><input type="text" id="solLegajo" class="input-text" placeholder="Ej: 14209"/></div>
+            <div class="form-group"><label class="form-label">Apellido y Nombres *</label><input type="text" id="solNombre" class="input-text" required placeholder="Ej: Juan Carlos Pérez"/></div>
+            <div class="form-group"><label class="form-label">Fecha de Nacimiento *</label><input type="date" id="solFechaNac" class="input-text" required/></div>
+            <div class="form-group"><label class="form-label">Email</label><input type="email" id="solEmail" class="input-text" placeholder="socio@email.com"/></div>
+            <div class="form-group"><label class="form-label">Celular / WhatsApp *</label><input type="tel" id="solCelular" class="input-text" required placeholder="Ej: 3434123456"/></div>
+          </div>
+          <div class="form-group"><label class="form-label">Domicilio Completo *</label><input type="text" id="solDomicilio" class="input-text" required placeholder="Ej: Urquiza 840, Paraná, Entre Ríos"/></div>
+
+          <div class="section-title-divider">2. Datos Laborales</div>
+          <div class="grid-3-cols">
+            <div class="form-group"><label class="form-label">Condición *</label><select id="solCondicion" class="input-text" required><option value="Activo">Activo</option><option value="Jubilado">Jubilado</option><option value="Pensionado">Pensionado</option></select></div>
+            <div class="form-group"><label class="form-label">Organismo *</label><select id="solOrganismo" class="input-text" required><option value="Provincial">Provincial</option><option value="Municipal">Municipal</option></select></div>
+            <div class="form-group"><label class="form-label">Dependencia / Lugar *</label><input type="text" id="solDependencia" class="input-text" required placeholder="Ej: Hospital San Martín"/></div>
+            <div class="form-group"><label class="form-label">Cargo *</label><select id="solCargo" class="input-text" required><option value="Titular">Titular</option><option value="Suplente">Suplente</option></select></div>
+          </div>
+
+          <div class="section-title-divider">3. Datos del Préstamo</div>
+          <div class="grid-3-cols">
+            <div class="form-group"><label class="form-label">Línea de Ayuda *</label><select id="solLinea" class="input-text" required onchange="ajustarPlazosModalAlta(this.value)"><option value="fedem">FEDEM Provincial</option><option value="muni">Convenio Municipal VIKINGO / QUAD</option><option value="sidecreer">Tarjeta Sidecreer</option></select></div>
+            <div class="form-group"><label class="form-label">Monto Solicitado (Neto) *</label><input type="number" id="solMonto" class="input-text" required min="10000" step="1000" value="100000"/></div>
+            <div class="form-group"><label class="form-label">Plazo de Cuotas *</label><select id="solPlazo" class="input-text" required><option value="6">6 cuotas</option><option value="12" selected>12 cuotas</option><option value="18">18 cuotas</option><option value="24">24 cuotas</option><option value="36">36 cuotas</option><option value="48">48 cuotas</option></select></div>
+          </div>
+
+          <div class="section-title-divider">4. Adjuntar Documentación (Google Drive)</div>
+          <p style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.5rem;">Formato Drive: Carpeta <code>[ID] [Nombre]</code> y archivos <code>[ID] [Tipo_Documento]</code>.</p>
+          <div class="grid-3-cols">
+            <div class="file-input-box"><label class="form-label">DNI Frente y Dorso *</label><input type="file" id="fileDni" class="input-text" accept="image/*,application/pdf" multiple required/></div>
+            <div class="file-input-box"><label class="form-label">Recibo de Sueldo *</label><input type="file" id="fileRecibo" class="input-text" accept="image/*,application/pdf" required/></div>
+            <div class="file-input-box"><label class="form-label">Tarjeta Sidecreer</label><input type="file" id="fileSidecreer" class="input-text" accept="image/*,application/pdf"/></div>
+            <div class="file-input-box"><label class="form-label">Factura Servicio / Domicilio *</label><input type="file" id="fileDomicilio" class="input-text" accept="image/*,application/pdf" required/></div>
+            <div class="file-input-box"><label class="form-label">Constancias Especiales</label><input type="file" id="fileEspecial" class="input-text" accept="image/*,application/pdf" multiple/></div>
+          </div>
+
+          <div class="modal-footer-bar" style="margin-top:1rem;padding:0.75rem 0 0 0;background:none;">
+            <button type="button" class="btn-restore" onclick="cerrarModal('modalAltaSolicitud')">Cancelar</button>
+            <button type="submit" class="btn-primary-action" style="width:auto;padding:0.55rem 1.25rem;">Registrar Solicitud 🚀</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: VER FICHA COMPLETA (ADJUNTOS Y COMENTARIOS) -->
+  <div id="modalFichaCompleta" class="modal-backdrop">
+    <div class="modal-window modal-large">
+      <div class="modal-header-bar">
+        <div class="modal-header-title"><span id="fichaModalTitle">Ficha de Solicitud</span></div>
+        <button class="btn-close-modal" onclick="cerrarModal('modalFichaCompleta')">&times;</button>
+      </div>
+      <div class="modal-body-scroll" id="fichaModalBody"></div>
+      <div class="modal-footer-bar">
+        <button class="btn-restore" onclick="cerrarModal('modalFichaCompleta')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: GESTIÓN RESOLUCIÓN MUTUAL -->
+  <div id="modalGestionMutual" class="modal-backdrop">
+    <div class="modal-window modal-large">
+      <div class="modal-header-bar">
+        <div class="modal-header-title"><span id="gestionModalTitle">Resolución Integral de Solicitud</span></div>
+        <button class="btn-close-modal" onclick="cerrarModal('modalGestionMutual')">&times;</button>
+      </div>
+      <div class="modal-body-scroll" id="gestionModalBody"></div>
+      <div class="modal-footer-bar">
+        <button class="btn-restore" onclick="cerrarModal('modalGestionMutual')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastNotification" class="toast"><span id="toastMsg">✓ Notificación</span></div>
+
+  <script>
+    /* ========================================================================
+       1. MOTOR FINANCIERO OFICIAL (ORIGINAL EXACTO A 14 DECIMALES)
+       ======================================================================== */
+    const EMBEDDED_LOGO_PNG = "logo.jpg";
+    function handleLogoFallback(imgElement) {
+      if (imgElement && !imgElement.dataset.fallbackApplied) {
+        imgElement.dataset.fallbackApplied = "true";
+        imgElement.src = "logo.jpg";
+      }
+    }
+
+    const FINANCIAL_DATA = {
+      fedem: { name: "FEDEM Provincial", short: "FEDEM", plazosValidos: [6, 12, 18, 24, 36, 48] },
+      muni: { name: "Municipales QUAD", short: "Municipales", plazosValidos: [12, 24] },
+      sidecreer: { name: "Tarjeta Sidecreer", short: "Sidecreer", plazosValidos: [6, 12, 18, 24, 36, 48] }
+    };
+    FINANCIAL_DATA.municipales = FINANCIAL_DATA.muni;
+
+    function pmt(rate, nper, pv) {
+      return pv * (rate / (1.0 - Math.pow(1.0 + rate, -nper)));
+    }
+    const calcularPMT = pmt;
+
+    const MOTOR_FINANCIERO_EXACTO = {
+      fedem: {
+        6:  { tna: 0.48940000000000, tem: 0.04078333370000, gastos: 0.25000000000000, seguro: 0.00500000000000, coef: 1.56999000000000 },
+        12: { tna: 0.53690000000000, tem: 0.04474173010000, gastos: 0.25000000000000, seguro: 0.00500000000000, coef: 1.83207000000000 },
+        18: { tna: 0.44670000000000, tem: 0.03722500030000, gastos: 0.34000000000000, seguro: 0.00500000000000, coef: 2.24242000000000 },
+        24: { tna: 0.53390000000000, tem: 0.04449166620000, gastos: 0.34000000000000, seguro: 0.00500000000000, coef: 2.67773000000000 },
+        36: { tna: 0.61450000000000, tem: 0.05120833300000, gastos: 0.34000000000000, seguro: 0.00500000000000, coef: 3.62048000000000 },
+        48: { tna: 0.64850000000000, tem: 0.05404166540000, gastos: 0.34000000000000, seguro: 0.00500000000000, coef: 4.63548000000000 }
+      },
+      sidecreer: {
+        6:  { tna: 0.58534514000000, tem: 0.04877876170000, gastos: 0.25000000000000, seguro: 0.00000000000000, coef: 1.56999000000000 },
+        12: { tna: 0.63154362000000, tem: 0.05262863500000, gastos: 0.25000000000000, seguro: 0.00000000000000, coef: 1.83207000000000 },
+        18: { tna: 0.53972734000000, tem: 0.04497727830000, gastos: 0.34000000000000, seguro: 0.00000000000000, coef: 2.24242000000000 },
+        24: { tna: 0.61978356000000, tem: 0.05164863000000, gastos: 0.34000000000000, seguro: 0.00000000000000, coef: 2.67773000000000 },
+        36: { tna: 0.69009744000000, tem: 0.05750812000000, gastos: 0.34000000000000, seguro: 0.00000000000000, coef: 3.62048000000000 },
+        48: { tna: 0.71781259000000, tem: 0.05981771580000, gastos: 0.34000000000000, seguro: 0.00000000000000, coef: 4.63548000000000 }
+      },
+      municipales: {
+        factorVikingo: 0.85000028330000,
+        tnaQuad: 0.39595561510000,
+        temQuad: 0.03299630130000,
+        12: { coefCuota: 0.15970100000000, coefTotal: 1.91640000000000 },
+        24: { coefCuota: 0.11279800000000, coefTotal: 2.70710000000000 }
+      },
+      pmt: function(rate, nper, pv) {
+        return pv * (rate / (1.0 - Math.pow(1.0 + rate, -nper)));
+      },
+      calcularFEDEM: function(neto, plazo) {
+        const p = this.fedem[plazo];
+        const capitalBruto = neto / (1.0 - p.gastos);
+        const cuotaPura = this.pmt(p.tem, plazo, capitalBruto);
+        const seguroMensual = capitalBruto * p.seguro;
+        const cuotaFinal = cuotaPura + seguroMensual;
+        const totalPagar = cuotaFinal * plazo;
+        return { capitalBruto, cuotaPura, seguroMensual, cuotaFinal, totalPagar, gastosAdmin: capitalBruto * p.gastos, interesesFinancieros: totalPagar - capitalBruto - (seguroMensual * plazo) };
+      },
+      calcularFEDEMDesdeCuota: function(cuotaObjetivo, plazo) {
+        const p = this.fedem[plazo];
+        const factorPmt = p.tem / (1.0 - Math.pow(1.0 + p.tem, -plazo));
+        const factorTotal = factorPmt + p.seguro;
+        const capitalBruto = cuotaObjetivo / factorTotal;
+        const neto = capitalBruto * (1.0 - p.gastos);
+        const seguroMensual = capitalBruto * p.seguro;
+        const cuotaPura = cuotaObjetivo - seguroMensual;
+        const totalPagar = cuotaObjetivo * plazo;
+        return { neto, capitalBruto, cuotaPura, seguroMensual, cuotaFinal: cuotaObjetivo, totalPagar, gastosAdmin: capitalBruto * p.gastos, interesesFinancieros: totalPagar - capitalBruto - (seguroMensual * plazo) };
+      },
+      calcularSidecreer: function(neto, plazo) {
+        const p = this.sidecreer[plazo];
+        const capitalBruto = neto / (1.0 - p.gastos);
+        const cuotaFinal = this.pmt(p.tem, plazo, capitalBruto);
+        const totalPagar = cuotaFinal * plazo;
+        return { capitalBruto, cuotaPura: cuotaFinal, seguroMensual: 0.0, cuotaFinal, totalPagar, gastosAdmin: capitalBruto * p.gastos, interesesFinancieros: totalPagar - capitalBruto };
+      },
+      calcularSidecreerDesdeCuota: function(cuotaObjetivo, plazo) {
+        const p = this.sidecreer[plazo];
+        const factorPmt = p.tem / (1.0 - Math.pow(1.0 + p.tem, -plazo));
+        const capitalBruto = cuotaObjetivo / factorPmt;
+        const neto = capitalBruto * (1.0 - p.gastos);
+        const totalPagar = cuotaObjetivo * plazo;
+        return { neto, capitalBruto, cuotaPura: cuotaObjetivo, seguroMensual: 0.0, cuotaFinal: cuotaObjetivo, totalPagar, gastosAdmin: capitalBruto * p.gastos, interesesFinancieros: totalPagar - capitalBruto };
+      },
+      calcularMunicipales: function(neto, plazo) {
+        const p = this.municipales[plazo];
+        const cuotaFinal = neto * p.coefCuota;
+        const totalPagar = cuotaFinal * plazo;
+        const capitalVikingo = neto / this.municipales.factorVikingo;
+        const capitalQuad = cuotaFinal * ((1.0 - Math.pow(1.0 + this.municipales.temQuad, -plazo)) / this.municipales.temQuad);
+        return { capitalBruto: capitalVikingo, capitalVikingo, capitalQuad, cuotaPura: cuotaFinal, seguroMensual: 0.0, cuotaFinal, totalPagar, gastosAdmin: capitalVikingo - neto };
+      },
+      calcularMunicipalesDesdeCuota: function(cuotaObjetivo, plazo) {
+        const p = this.municipales[plazo];
+        const neto = cuotaObjetivo / p.coefCuota;
+        const totalPagar = cuotaObjetivo * plazo;
+        const capitalVikingo = neto / this.municipales.factorVikingo;
+        const capitalQuad = cuotaObjetivo * ((1.0 - Math.pow(1.0 + this.municipales.temQuad, -plazo)) / this.municipales.temQuad);
+        return { neto, capitalBruto: capitalVikingo, capitalVikingo, capitalQuad, cuotaPura: cuotaObjetivo, seguroMensual: 0.0, cuotaFinal: cuotaObjetivo, totalPagar, gastosAdmin: capitalVikingo - neto };
+      }
+    };
+
+    const GestorPlantillas = {
+      plantillas: {
+        estandar: (datos) => `¡Hola! 👋 Te compartimos la simulación oficial de la Mutual Modelo:
+
+💰 *Monto Solicitado:* $ ${datos.neto}
+
+${datos.planesTexto}
+
+📌 *Requisitos:* Recibo de haberes, DNI y CBU.
+📲 ¡Consultanos para iniciar tu solicitud en el acto!`,
+
+        plan_unico: (datos) => `¡Hola! 👋 Respecto a tu consulta en Mutual Modelo:
+
+Por un monto en mano de *$ ${datos.neto}* te queda en:
+👉 *${datos.plazoDestacado} cuotas fijas de $ ${datos.cuotaDestacada}*
+(Total a devolver: $ ${datos.totalDestacado})
+
+¿Avanzamos con la documentación?`,
+
+        formal: (datos) => `Estimado/a socio/a,
+Adjuntamos la propuesta financiera solicitada de la Asociación Mutual Modelo de Entre Ríos:
+
+• Capital / Neto: $ ${datos.neto}
+• Alternativas de Pago:
+${datos.planesTexto}
+
+Operación sujeta a verificación crediticia y margen de afectación disponible.`,
+
+        express: (datos) => `🔥 *¡Tu Ayuda Económica en 24hs con Mutual Modelo!* 🔥
+
+Retirás: *$ ${datos.neto}*
+Planes disponibles:
+${datos.planesTexto}
+
+Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditación!`
+      },
+      guardarPersonalizada: function(texto) {
+        localStorage.setItem("AMMER_PLANTILLA_CUSTOM", texto);
+      },
+      obtenerPersonalizada: function() {
+        return localStorage.getItem("AMMER_PLANTILLA_CUSTOM");
+      }
+    };
+    const state = { linea: 'fedem', modo: 'neto', montoInputRaw: 100000, plazo: 12, plantillaVersion: 'estandar' };
+    const currencyFormatter = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const integerFormatter = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+
+    function formatMoney(num) { return (isNaN(num) || !isFinite(num)) ? '$ 0,00' : currencyFormatter.format(num); }
+    function formatNumberDecimals(num) { return (isNaN(num) || !isFinite(num)) ? '0,00' : currencyFormatter.format(num).replace(/[^0-9,.-]/g, '').trim(); }
+
+    function calculateSimulation(lineaKey, plazo, modo, montoInput) {
+      const plazosValidos = (lineaKey === 'muni' || lineaKey === 'municipales') ? [12, 24] : [6, 12, 18, 24, 36, 48];
+      if (!plazosValidos.includes(plazo)) return null;
+      let res = null, capitalQuad = 0;
+      if (lineaKey === 'fedem') {
+        res = (modo === 'neto') ? MOTOR_FINANCIERO_EXACTO.calcularFEDEM(montoInput, plazo) : MOTOR_FINANCIERO_EXACTO.calcularFEDEMDesdeCuota(montoInput, plazo);
+      } else if (lineaKey === 'muni' || lineaKey === 'municipales') {
+        res = (modo === 'neto') ? MOTOR_FINANCIERO_EXACTO.calcularMunicipales(montoInput, plazo) : MOTOR_FINANCIERO_EXACTO.calcularMunicipalesDesdeCuota(montoInput, plazo);
+        capitalQuad = res.capitalQuad;
+      } else if (lineaKey === 'sidecreer') {
+        res = (modo === 'neto') ? MOTOR_FINANCIERO_EXACTO.calcularSidecreer(montoInput, plazo) : MOTOR_FINANCIERO_EXACTO.calcularSidecreerDesdeCuota(montoInput, plazo);
+      }
+      if (!res) return null;
+      return {
+        lineaKey, plazo, modo,
+        neto: res.neto !== undefined ? res.neto : montoInput,
+        cuota: res.cuotaFinal,
+        totalAyuda: res.totalPagar,
+        capital: res.capitalBruto,
+        capitalQuad
+      };
+    }
+
+    function renderApp() {
+      const lineaObj = FINANCIAL_DATA[state.linea];
+      if (!lineaObj.plazosValidos.includes(state.plazo)) state.plazo = lineaObj.plazosValidos[0];
+
+      document.querySelectorAll('.line-option-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('lineBtn-' + state.linea)?.classList.add('active');
+
+      document.getElementById('modeBtn-neto')?.classList.toggle('active', state.modo === 'neto');
+      document.getElementById('modeBtn-cuota')?.classList.toggle('active', state.modo === 'cuota');
+      const label = document.getElementById('amountInputLabel');
+      if (label) label.textContent = (state.modo === 'neto') ? "Monto Neto a Entregar" : "Cuota Mensual Objetivo";
+
+      const muniNotice = document.getElementById('muniNotice');
+      if (muniNotice) muniNotice.style.display = (state.linea === 'muni') ? 'flex' : 'none';
+
+      [6, 12, 18, 24, 36, 48].forEach(p => {
+        const btn = document.getElementById('btnPlazo-' + p);
+        if (!btn) return;
+        const isSupported = lineaObj.plazosValidos.includes(p);
+        btn.disabled = !isSupported;
+        btn.classList.toggle('active', isSupported && state.plazo === p);
+      });
+
+      const result = calculateSimulation(state.linea, state.plazo, state.modo, state.montoInputRaw);
+      if (!result) return;
+
+      const totalLabel = document.getElementById('kpiTotalLabel'), totalBadge = document.getElementById('kpiTotalBadge');
+      const capitalLabel = document.getElementById('kpiCapitalLabel'), capitalBadge = document.getElementById('kpiCapitalBadge');
+
+      if (state.linea === 'muni' || state.linea === 'sidecreer') {
+        if (totalLabel) totalLabel.textContent = "TOTAL A PAGAR";
+        if (totalBadge) totalBadge.textContent = "Total a Devolver";
+        if (capitalLabel) capitalLabel.textContent = "IMPORTE SOLICITADO";
+        if (capitalBadge) capitalBadge.textContent = "Capital Computable";
+      } else {
+        if (totalLabel) totalLabel.textContent = "TOTAL AYUDA ECONÓMICA";
+        if (totalBadge) totalBadge.textContent = "Total a Devolver";
+        if (capitalLabel) capitalLabel.textContent = "CAPITAL";
+        if (capitalBadge) capitalBadge.textContent = "Capital Computable";
+      }
+
+      document.getElementById('kpiCuotaVal').textContent = formatMoney(result.cuota);
+      document.getElementById('kpiCuotaBadge').textContent = result.plazo + " cuotas fijas";
+      document.getElementById('kpiNetoVal').textContent = formatMoney(result.neto);
+      document.getElementById('kpiTotalVal').textContent = formatMoney(result.totalAyuda);
+      document.getElementById('kpiCapitalVal').textContent = formatMoney(result.capital);
+
+      renderMatrixTable();
+      updateWhatsAppPreview();
+    }
+
+    function renderMatrixTable() {
+      const tbody = document.getElementById('matrixTableBody');
+      if (!tbody) return;
+      const lineaObj = FINANCIAL_DATA[state.linea];
+      let html = '';
+      lineaObj.plazosValidos.forEach(p => {
+        const sim = calculateSimulation(state.linea, p, state.modo, state.montoInputRaw);
+        if (!sim) return;
+        const isActive = (p === state.plazo);
+        html += '<tr class="clickable-row ' + (isActive ? 'active-matrix-row' : '') + '" onclick="setPlazo(' + p + ')">' +
+          '<td><strong>' + p + ' Cuotas</strong>' + (isActive ? '<span style="font-size:0.675rem;color:var(--cuota-color);margin-left:5px;font-weight:700;">● Seleccionado</span>' : '') + '</td>' +
+          '<td>' + formatMoney(sim.cuota) + '</td><td>' + formatMoney(sim.neto) + '</td></tr>';
+      });
+      tbody.innerHTML = html;
+    }
+
+    let isWhatsAppCustomEdited = false;
+    function buildTemplateData() {
+      const sim = calculateSimulation(state.linea, state.plazo, state.modo, state.montoInputRaw);
+      if (!sim) return null;
+      const lineaObj = FINANCIAL_DATA[state.linea];
+      const plazosDisponibles = lineaObj.plazosValidos;
+      let plazosAOfrecer = (plazosDisponibles.length <= 4) ? [...plazosDisponibles] : [state.plazo, ...[12, 18, 24, 36].filter(p => p !== state.plazo)].slice(0, 4).sort((a,b)=>a-b);
+      let planesTexto = "";
+      plazosAOfrecer.forEach(p => {
+        const s = calculateSimulation(state.linea, p, 'neto', sim.neto);
+        if (s) planesTexto += "💰 " + formatMoney(s.neto) + " en " + s.plazo + " cuotas fijas de " + formatMoney(s.cuota) + "\n";
+      });
+      return { neto: formatNumberDecimals(sim.neto), plazoDestacado: sim.plazo, cuotaDestacada: formatNumberDecimals(sim.cuota), totalDestacado: formatNumberDecimals(sim.totalAyuda), planesTexto: planesTexto.trimEnd() };
+    }
+
+    function generateCurrentTemplateMessage() {
+      const datos = buildTemplateData(); if (!datos) return '';
+      const version = state.plantillaVersion || 'estandar';
+      if (version === 'personalizada') {
+        const guardada = GestorPlantillas.obtenerPersonalizada();
+        return guardada ? guardada : GestorPlantillas.plantillas.estandar(datos);
+      }
+      return GestorPlantillas.plantillas[version] ? GestorPlantillas.plantillas[version](datos) : GestorPlantillas.plantillas.estandar(datos);
+    }
+
+    function handleTemplateVersionChange(version) {
+      state.plantillaVersion = version; isWhatsAppCustomEdited = false; updateWhatsAppPreview(true); showToast("Formato de plantilla cambiado.");
+    }
+
+    function updateWhatsAppPreview(force = false) {
+      const textarea = document.getElementById('txt-plantilla-whatsapp'); if (!textarea) return;
+      if (!isWhatsAppCustomEdited || force) {
+        textarea.value = generateCurrentTemplateMessage();
+        const notice = document.getElementById('waCustomNotice'); if (notice) notice.style.display = 'none';
+      }
+      const now = new Date();
+      const tDisp = document.getElementById('waTimeDisplay');
+      if (tDisp) tDisp.textContent = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
+    }
+
+    function guardarMiFormato() {
+      const textarea = document.getElementById('txt-plantilla-whatsapp');
+      const text = textarea ? textarea.value.trim() : '';
+      if (!text) { showToast("El texto de la plantilla está vacío."); return; }
+      GestorPlantillas.guardarPersonalizada(text);
+      state.plantillaVersion = 'personalizada';
+      const sel = document.getElementById('sel-version-plantilla'); if (sel) sel.value = 'personalizada';
+      isWhatsAppCustomEdited = false;
+      showToast("💾 ¡Plantilla guardada como 'Mi Formato' exitosamente!");
+    }
+
+    function restoreOriginalTemplate() {
+      isWhatsAppCustomEdited = false; updateWhatsAppPreview(true); showToast("🔄 Plantilla original restaurada.");
+    }
+
+    function copyWhatsAppText() {
+      const textarea = document.getElementById('txt-plantilla-whatsapp');
+      const text = textarea ? textarea.value : ''; if (!text) return;
+      navigator.clipboard.writeText(text).then(() => showToast("¡Copiado con éxito!")).catch(() => { textarea.select(); document.execCommand('copy'); showToast("¡Copiado con éxito!"); });
+    }
+
+    function sendWhatsApp() {
+      const text = document.getElementById('txt-plantilla-whatsapp')?.value || '';
+      const phoneInput = (document.getElementById('inp-whatsapp-telefono')?.value || '').trim().replace(/[^0-9]/g, '');
+      let url = 'https://api.whatsapp.com/send?' + (phoneInput ? 'phone=' + (phoneInput.startsWith('54') ? phoneInput : '549' + phoneInput) + '&' : '') + 'text=' + encodeURIComponent(text);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+
+    function setLinea(lineaKey) { if (!FINANCIAL_DATA[lineaKey]) return; state.linea = lineaKey; renderApp(); }
+    function setModo(modoKey) {
+      if (modoKey !== 'neto' && modoKey !== 'cuota') return;
+      state.modo = modoKey;
+      if (modoKey === 'cuota' && state.montoInputRaw > 100000) {
+        state.montoInputRaw = 25000; document.getElementById('amountInput').value = integerFormatter.format(25000);
+      } else if (modoKey === 'neto' && state.montoInputRaw < 30000) {
+        state.montoInputRaw = 100000; document.getElementById('amountInput').value = integerFormatter.format(100000);
+      }
+      renderApp();
+    }
+    function setPlazo(plazoNum) { state.plazo = parseInt(plazoNum, 10); renderApp(); }
+    function setQuickAmount(amount) {
+      state.montoInputRaw = amount; document.getElementById('amountInput').value = integerFormatter.format(amount);
+      document.querySelectorAll('.chip-btn').forEach(btn => {
+        const txt = btn.textContent.replace(/[^0-9]/g, '');
+        btn.classList.toggle('active', parseInt(txt, 10) === amount);
+      });
+      renderApp();
+    }
+    function sanitizarNumeroInput(valorRaw) {
+      if (typeof valorRaw === 'number') return isNaN(valorRaw) ? 0 : valorRaw;
+      if (!valorRaw) return 0;
+      let limpio = String(valorRaw).trim().replace(/\$/g, '').replace(/\s/g, '');
+      if (limpio.includes('.') && limpio.includes(',')) limpio = limpio.replace(/\./g, '').replace(',', '.');
+      else if (limpio.includes(',')) limpio = limpio.replace(',', '.');
+      else if ((limpio.match(/\./g) || []).length > 1 || /^\d{1,3}\.\d{3}$/.test(limpio)) limpio = limpio.replace(/\./g, '');
+      const resultado = parseFloat(limpio); return isNaN(resultado) ? 0 : resultado;
+    }
+    function handleAmountInput(val) {
+      const num = sanitizarNumeroInput(val); state.montoInputRaw = num;
+      document.querySelectorAll('.chip-btn').forEach(btn => {
+        const txt = btn.textContent.replace(/[^0-9]/g, '');
+        btn.classList.toggle('active', parseInt(txt, 10) === num);
+      });
+      renderApp();
+    }
+    function resetDefaults() {
+      state.linea = 'fedem'; state.modo = 'neto'; state.montoInputRaw = 100000; state.plazo = 12; state.plantillaVersion = 'estandar';
+      const inp = document.getElementById('amountInput'); if (inp) inp.value = '100.000';
+      const phoneEl = document.getElementById('inp-whatsapp-telefono'); if (phoneEl) phoneEl.value = '';
+      const selVersion = document.getElementById('sel-version-plantilla'); if (selVersion) selVersion.value = 'estandar';
+      isWhatsAppCustomEdited = false;
+      renderApp(); updateWhatsAppPreview(true); showToast("Valores restablecidos a predeterminados.");
+    }
+
+    /* ========================================================================
+       2. MODELO DE USUARIOS CON ORGANIZACIÓN Y ROL TITULAR
+       ======================================================================== */
+    const USUARIOS_SISTEMA = {
+      'titular1': {
+        id: 'usr_titular1', usuario: 'titular1', clave: 'clave123', nombre: 'Mariano Benítez',
+        rol: 'Comercializador', organizacion_id: 'org_parana_centro', nombre_organizacion: 'Organización Paraná Centro',
+        es_titular_organizacion: true, sub: 'Titular Org.'
+      },
+      'asesor1': {
+        id: 'usr_asesor1', usuario: 'asesor1', clave: 'clave123', nombre: 'Carlos Gómez',
+        rol: 'Comercializador', organizacion_id: 'org_parana_centro', nombre_organizacion: 'Organización Paraná Centro',
+        es_titular_organizacion: false, sub: 'Asesor Comercial'
+      },
+      'analista1': {
+        id: 'usr_analista1', usuario: 'analista1', clave: 'clave123', nombre: 'Mariana López',
+        rol: 'Analista', organizacion_id: 'org_mutual_central', nombre_organizacion: 'Casa Central Mutual',
+        es_titular_organizacion: false, sub: 'Créditos Mutual'
+      },
+      'admin': {
+        id: 'usr_admin', usuario: 'admin', clave: 'admin123', nombre: 'Administrador General',
+        rol: 'Admin', organizacion_id: 'org_mutual_central', nombre_organizacion: 'Casa Central Mutual',
+        es_titular_organizacion: true, sub: 'Acceso Total'
+      }
+    };
+
+    function getSession() { try { return JSON.parse(sessionStorage.getItem('AMMER_AUTH_SESSION')); } catch(e) { return null; } }
+    function setSession(u) { sessionStorage.setItem('AMMER_AUTH_SESSION', JSON.stringify(u)); }
+    function handleLogout() { sessionStorage.removeItem('AMMER_AUTH_SESSION'); checkAuthAndInit(); showToast('Sesión finalizada'); }
+
+    function handleLoginSubmit(e) {
+      e.preventDefault();
+      const user = document.getElementById('loginUsuario')?.value?.trim().toLowerCase();
+      const pass = document.getElementById('loginClave')?.value;
+      const found = USUARIOS_SISTEMA[user];
+      if (found && found.clave === pass) {
+        setSession(found); checkAuthAndInit(); showToast('Bienvenido, ' + found.nombre);
+      } else {
+        const err = document.getElementById('loginErrorMsg');
+        if (err) { err.textContent = 'Usuario o contraseña incorrectos.'; err.style.display = 'block'; }
+      }
+    }
+
+    function handleQuickLogin(rolKey) {
+      const u = (rolKey === 'titular') ? USUARIOS_SISTEMA['titular1'] :
+                (rolKey === 'asesor') ? USUARIOS_SISTEMA['asesor1'] :
+                (rolKey === 'analista') ? USUARIOS_SISTEMA['analista1'] :
+                USUARIOS_SISTEMA['admin'];
+      setSession(u); checkAuthAndInit(); showToast('Sesión iniciada como ' + u.nombre + ' (' + u.sub + ')');
+    }
+
+    function togglePasswordVisibility(id, btn) {
+      const inp = document.getElementById(id);
+      if (inp) { const isPass = (inp.type === 'password'); inp.type = isPass ? 'text' : 'password'; btn.textContent = isPass ? '🙈' : '👁️'; }
+    }
+
+    function cambiarPestana(viewId) {
+      document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
+      const target = document.getElementById(viewId);
+      if (target) target.classList.add('active');
+      document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.view === viewId));
+      if (viewId === 'view-comercializador') renderTablaComercializador();
+      if (viewId === 'view-mutual') renderTablaMutual();
+      if (viewId === 'view-simulador') renderApp();
+    }
+
+    function checkAuthAndInit() {
+      const session = getSession();
+      const header = document.getElementById('mainAppHeader');
+      if (!session) {
+        if (header) header.style.display = 'none';
+        cambiarPestana('view-login');
+        return;
+      }
+      if (header) header.style.display = 'block';
+
+      const chip = document.getElementById('userHeaderChip');
+      if (chip) {
+        const star = session.es_titular_organizacion ? ' ⭐' : '';
+        const rolLabel = (session.rol === 'Comercializador') ? (session.es_titular_organizacion ? 'Titular Org.' : 'Asesor') : session.rol;
+        chip.innerHTML = '<div class="user-avatar-circle">' + session.nombre.charAt(0) + '</div>' +
+          '<div class="user-info-text"><span class="user-info-name">' + session.nombre + star + '</span>' +
+          '<span class="user-info-role">' + rolLabel + ' • ' + session.nombre_organizacion + '</span></div>';
+      }
+
+      const nav = document.getElementById('navTabsMenu');
+      if (nav) {
+        let tabs = '<button class="nav-tab-btn active" data-view="view-simulador" onclick="cambiarPestana(\'view-simulador\')">1. Simulador</button>';
+        if (session.rol === 'Comercializador' || session.rol === 'Admin') {
+          const tabName = (session.es_titular_organizacion && session.rol !== 'Admin') ? '2. Gestiones Organización' : '2. Mis Gestiones';
+          tabs += '<button class="nav-tab-btn" data-view="view-comercializador" onclick="cambiarPestana(\'view-comercializador\')">' + tabName + '</button>';
+        }
+        if (session.rol === 'Analista' || session.rol === 'Admin') {
+          tabs += '<button class="nav-tab-btn" data-view="view-mutual" onclick="cambiarPestana(\'view-mutual\')">3. Gestiones Mutual</button>';
+        }
+        nav.innerHTML = tabs;
+      }
+      cambiarPestana('view-simulador');
+    }
+
+    /* ========================================================================
+       3. PERSISTENCIA DE SOLICITUDES Y GESTIONES
+       ======================================================================== */
+    const STORAGE_SOLICITUDES_KEY = 'AMMER_SOLICITUDES_DATA_V3';
+    const INITIAL_SOLICITUDES = [
+      {
+        id: '43120', fecha: '2026-11-08 09:30', usuario_id: 'usr_asesor1', comercializador: 'Carlos Gómez',
+        organizacion_id: 'org_parana_centro', nombre_organizacion: 'Organización Paraná Centro',
+        solicitante: {
+          dni: '32456789', legajo: '12450', nombre: 'Juan Carlos Pérez', fechaNac: '1985-04-12',
+          email: 'jcperez@gmail.com', celular: '3434556677', domicilio: 'Urquiza 840, Paraná',
+          condicion: 'Activo', organismo: 'Municipal', dependencia: 'Obras Sanitarias', cargo: 'Titular'
+        },
+        prestamo: { linea: 'muni', lineaNombre: 'Convenio Municipal VIKINGO / QUAD', monto: 100000, cuotas: 12, cuotaEstimada: 15970 },
+        adjuntos: [
+          { tipo: 'DNI Frente y Dorso', nombre: '43120 DNI Frente.jpg', fecha: '2026-11-08 09:30', autor: 'Carlos Gómez' },
+          { tipo: 'Recibo de Sueldo', nombre: '43120 Recibo de Sueldo.pdf', fecha: '2026-11-08 09:30', autor: 'Carlos Gómez' },
+          { tipo: 'Factura Servicio', nombre: '43120 Constancia Domicilio.pdf', fecha: '2026-11-08 09:30', autor: 'Carlos Gómez' }
+        ],
+        estado: 'Observado', analistaAsignado: 'Mariana López',
+        observaciones: [
+          { autor: 'Carlos Gómez', rol: 'Comercializador - Asesor', fecha: '2026-11-08 09:30', texto: 'Solicitud ingresada con documentación inicial adjunta.' },
+          { autor: 'Mariana López', rol: 'Analista Mutual', fecha: '2026-11-08 14:15', texto: 'Recibo de sueldo borroso en el apartado de haberes netos. Por favor adjuntar recibo legible o recibo digital reciente.' }
+        ]
+      },
+      {
+        id: '43121', fecha: '2026-11-09 11:15', usuario_id: 'usr_titular1', comercializador: 'Mariano Benítez',
+        organizacion_id: 'org_parana_centro', nombre_organizacion: 'Organización Paraná Centro',
+        solicitante: {
+          dni: '28990112', legajo: '', nombre: 'Ana María Romero', fechaNac: '1981-08-25',
+          email: 'anaromero@hotmail.com', celular: '3434998877', domicilio: 'Gualeguaychú 320, Paraná',
+          condicion: 'Activo', organismo: 'Provincial', dependencia: 'Consejo Gral Educación', cargo: 'Titular'
+        },
+        prestamo: { linea: 'fedem', lineaNombre: 'FEDEM Provincial', monto: 200000, cuotas: 24, cuotaEstimada: 14850 },
+        adjuntos: [
+          { tipo: 'DNI Frente y Dorso', nombre: '43121 DNI Frente.jpg', fecha: '2026-11-09 11:15', autor: 'Mariano Benítez' },
+          { tipo: 'Recibo de Sueldo', nombre: '43121 Recibo de Sueldo.pdf', fecha: '2026-11-09 11:15', autor: 'Mariano Benítez' }
+        ],
+        estado: 'En Análisis', analistaAsignado: 'Mariana López',
+        observaciones: [
+          { autor: 'Mariano Benítez', rol: 'Comercializador - Titular', fecha: '2026-11-09 11:15', texto: 'Solicitud originada por titular de organización. Legajo completo.' },
+          { autor: 'Mariana López', rol: 'Analista Mutual', fecha: '2026-11-09 15:30', texto: 'Legajo ingresado a control de scoring crediticio.' }
+        ]
+      },
+      {
+        id: '43122', fecha: '2026-11-10 10:00', usuario_id: 'usr_concordia', comercializador: 'Roberto Benítez',
+        organizacion_id: 'org_concordia', nombre_organizacion: 'Organización Concordia',
+        solicitante: {
+          dni: '35112233', legajo: '8841', nombre: 'Esteban Martínez', fechaNac: '1989-11-03',
+          email: 'emartinez@gmail.com', celular: '3434112233', domicilio: 'San Martín 120, Concordia',
+          condicion: 'Activo', organismo: 'Municipal', dependencia: 'Tránsito Municipal', cargo: 'Titular'
+        },
+        prestamo: { linea: 'muni', lineaNombre: 'Convenio Municipal VIKINGO / QUAD', monto: 150000, cuotas: 12, cuotaEstimada: 23955 },
+        adjuntos: [
+          { tipo: 'DNI Frente y Dorso', nombre: '43122 DNI Frente.jpg', fecha: '2026-11-10 10:00', autor: 'Roberto Benítez' },
+          { tipo: 'Recibo de Sueldo', nombre: '43122 Recibo de Sueldo.pdf', fecha: '2026-11-10 10:00', autor: 'Roberto Benítez' }
+        ],
+        estado: 'Aprobado', analistaAsignado: 'Mariana López',
+        observaciones: [
+          { autor: 'Roberto Benítez', rol: 'Comercializador - Asesor', fecha: '2026-11-10 10:00', texto: 'Solicitud ingresada para aprobación.' },
+          { autor: 'Mariana López', rol: 'Analista Mutual', fecha: '2026-11-10 12:30', texto: 'Aprobado por el comité de créditos.' }
+        ]
+      }
+    ];
+
+    function getStoredSolicitudes() {
+      const data = localStorage.getItem(STORAGE_SOLICITUDES_KEY);
+      if (!data) { localStorage.setItem(STORAGE_SOLICITUDES_KEY, JSON.stringify(INITIAL_SOLICITUDES)); return INITIAL_SOLICITUDES; }
+      try { return JSON.parse(data); } catch(e) { return INITIAL_SOLICITUDES; }
+    }
+    function saveStoredSolicitudes(list) { localStorage.setItem(STORAGE_SOLICITUDES_KEY, JSON.stringify(list)); }
+
+    /* ========================================================================
+       4. GESTIONES DEL COMERCIALIZADOR (TAB 2)
+       ======================================================================== */
+    function renderTablaComercializador() {
+      const session = getSession(); if (!session) return;
+      const all = getStoredSolicitudes();
+      const isTitular = !!session.es_titular_organizacion;
+      const isAdmin = (session.rol === 'Admin');
+
+      let list = [];
+      if (isAdmin) list = all;
+      else if (isTitular) list = all.filter(s => s.organizacion_id === session.organizacion_id);
+      else list = all.filter(s => s.usuario_id === session.id || s.comercializador === session.nombre);
+
+      const thAsesor = document.getElementById('colHeadAsesor');
+      const cboAsesor = document.getElementById('filtroComercialAsesor');
+      const showAsesorCol = (isTitular || isAdmin);
+      if (thAsesor) thAsesor.style.display = showAsesorCol ? '' : 'none';
+
+      const titMod = document.getElementById('lblTituloModuloComercial');
+      const subMod = document.getElementById('lblSubtituloModuloComercial');
+      if (titMod && subMod) {
+        if (isTitular && !isAdmin) {
+          titMod.innerHTML = '🏢 Gestiones de ' + session.nombre_organizacion + ' <span style="font-size:0.75rem;background:#e0f2fe;color:#0369a1;padding:2px 8px;border-radius:12px;font-weight:700;">Vista Titular</span>';
+          subMod.textContent = 'Control de solicitudes propias y de todos los asesores asignados a tu organización.';
+        } else {
+          titMod.textContent = '📁 Mis Gestiones de Ayudas Económicas';
+          subMod.textContent = 'Registro, carga de documentación y seguimiento de solicitudes originadas.';
+        }
+      }
+
+      if (cboAsesor) {
+        if (showAsesorCol) {
+          cboAsesor.style.display = '';
+          const currentVal = cboAsesor.value;
+          const asesores = [...new Set(list.map(s => s.comercializador))];
+          cboAsesor.innerHTML = '<option value="">Todos los Asesores (' + asesores.length + ')</option>' +
+            asesores.map(a => '<option value="' + a + '" ' + (a === currentVal ? 'selected' : '') + '>' + a + '</option>').join('');
+        } else {
+          cboAsesor.style.display = 'none';
+        }
+      }
+
+      const q = (document.getElementById('filtroComercialTexto')?.value || '').toLowerCase().trim();
+      const est = document.getElementById('filtroComercialEstado')?.value || '';
+      const filAsesor = cboAsesor && showAsesorCol ? cboAsesor.value : '';
+
+      const filtered = list.filter(s => {
+        const matchQ = !q || s.id.includes(q) || s.solicitante.dni.includes(q) || s.solicitante.nombre.toLowerCase().includes(q) || s.comercializador.toLowerCase().includes(q);
+        const matchEst = !est || s.estado === est;
+        const matchAsesor = !filAsesor || s.comercializador === filAsesor;
+        return matchQ && matchEst && matchAsesor;
+      });
+
+      const lbl = document.getElementById('lblTotalComercializador');
+      if (lbl) lbl.textContent = filtered.length + ' solicitudes registradas';
+
+      const tbody = document.getElementById('tablaComercializadorBody'); if (!tbody) return;
+      if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="' + (showAsesorCol ? 10 : 9) + '" style="text-align:center;padding:1.5rem;color:var(--text-muted);">No se encontraron solicitudes registradas con estos filtros.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(s => {
+        const esMio = (s.usuario_id === session.id || s.comercializador === session.nombre);
+        const colAsesorHtml = showAsesorCol ?
+          '<td><strong>' + s.comercializador + '</strong>' + (esMio ? ' <span style="font-size:0.65rem;color:var(--color-brand-blue);font-weight:700;">(Tú)</span>' : '') + '<br><span class="badge-org-tag">' + (s.nombre_organizacion || 'Paraná Centro') + '</span></td>' : '';
+        return '<tr>' +
+          '<td><strong>#' + s.id + '</strong></td>' +
+          '<td style="white-space:nowrap;">' + s.fecha.split(' ')[0] + '</td>' +
+          colAsesorHtml +
+          '<td><strong>' + s.solicitante.nombre + '</strong></td>' +
+          '<td class="tabular-nums">' + s.solicitante.dni + '</td>' +
+          '<td>' + s.prestamo.lineaNombre + '</td>' +
+          '<td class="tabular-nums" style="color:var(--color-brand-blue);font-weight:700;">' + formatMoney(s.prestamo.monto) + '</td>' +
+          '<td>' + s.prestamo.cuotas + ' c</td>' +
+          '<td><span class="badge-status badge-' + s.estado.replace(/\s/g, '') + '">' + s.estado + '</span></td>' +
+          '<td><button class="btn-table-action" onclick="verFichaCompleta(\'' + s.id + '\')">👁️ Ver Ficha</button></td>' +
+          '</tr>';
+      }).join('');
+    }
+
+    function filtrarGestionesComercializador() { renderTablaComercializador(); }
+    function abrirModalAltaSolicitud() { document.getElementById('formAltaSolicitud')?.reset(); ajustarPlazosModalAlta('fedem'); abrirModal('modalAltaSolicitud'); }
+
+    function ajustarPlazosModalAlta(linea) {
+      const cbo = document.getElementById('solPlazo'); if (!cbo) return;
+      cbo.innerHTML = (linea === 'muni') ? '<option value="12" selected>12 cuotas</option><option value="24">24 cuotas</option>' :
+        '<option value="6">6 cuotas</option><option value="12" selected>12 cuotas</option><option value="18">18 cuotas</option><option value="24">24 cuotas</option><option value="36">36 cuotas</option><option value="48">48 cuotas</option>';
+    }
+
+    function guardarNuevaSolicitud(e) {
+      e.preventDefault(); const session = getSession(); if (!session) return;
+      const newId = String(Math.floor(10000 + Math.random() * 90000));
+      const lineaKey = document.getElementById('solLinea').value;
+      const monto = parseFloat(document.getElementById('solMonto').value) || 100000;
+      const cuotas = parseInt(document.getElementById('solPlazo').value, 10) || 12;
+      const sim = calculateSimulation(lineaKey, cuotas, 'neto', monto);
+      const nowStr = new Date().toISOString().slice(0, 16).replace('T', ' ');
+
+      const nueva = {
+        id: newId, fecha: nowStr, usuario_id: session.id, comercializador: session.nombre,
+        organizacion_id: session.organizacion_id || 'org_parana_centro',
+        nombre_organizacion: session.nombre_organizacion || 'Organización Paraná Centro',
+        solicitante: {
+          dni: document.getElementById('solDni').value.trim(),
+          legajo: document.getElementById('solLegajo').value.trim(),
+          nombre: document.getElementById('solNombre').value.trim(),
+          fechaNac: document.getElementById('solFechaNac').value,
+          email: document.getElementById('solEmail').value.trim(),
+          celular: document.getElementById('solCelular').value.trim(),
+          domicilio: document.getElementById('solDomicilio').value.trim(),
+          condicion: document.getElementById('solCondicion').value,
+          organismo: document.getElementById('solOrganismo').value,
+          dependencia: document.getElementById('solDependencia').value.trim(),
+          cargo: document.getElementById('solCargo').value
+        },
+        prestamo: { linea: lineaKey, lineaNombre: FINANCIAL_DATA[lineaKey].name, monto, cuotas, cuotaEstimada: sim ? sim.cuota : 0 },
+        adjuntos: [
+          { tipo: 'DNI Frente y Dorso', nombre: newId + ' DNI Frente y Dorso.pdf', fecha: nowStr, autor: session.nombre },
+          { tipo: 'Recibo de Sueldo', nombre: newId + ' Recibo de Sueldo.pdf', fecha: nowStr, autor: session.nombre },
+          { tipo: 'Factura Servicio', nombre: newId + ' Constancia Domicilio.pdf', fecha: nowStr, autor: session.nombre }
+        ],
+        estado: 'Pendiente', analistaAsignado: 'Sin Asignar',
+        observaciones: [
+          { autor: session.nombre, rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor'), fecha: nowStr, texto: 'Solicitud originada en plataforma con legajo digital inicial.' }
+        ]
+      };
+
+      const all = getStoredSolicitudes(); all.unshift(nueva); saveStoredSolicitudes(all);
+      cerrarModal('modalAltaSolicitud'); renderTablaComercializador();
+      showToast('Solicitud #' + newId + ' registrada exitosamente 🚀');
+    }
+
+    function verFichaCompleta(id) {
+      const s = getStoredSolicitudes().find(x => x.id === id); if (!s) return;
+      const tit = document.getElementById('fichaModalTitle');
+      if (tit) tit.innerHTML = 'Ficha Solicitud <strong>#' + s.id + '</strong> — ' + s.solicitante.nombre;
+      const body = document.getElementById('fichaModalBody'); if (!body) return;
+      const isObservado = (s.estado === 'Observado');
+
+      let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;background:#f8fafc;padding:.75rem;border-radius:8px;border:1px solid var(--border-color);">' +
+        '<div><span class="badge-status badge-' + s.estado.replace(/\s/g, '') + '" style="font-size:.8rem;padding:.25rem .65rem;">' + s.estado + '</span>' +
+        (isObservado ? ' <span style="font-size:0.7rem;color:#b45309;font-weight:700;margin-left:0.5rem;">⚠️ Requiere corrección o documentación complementaria</span>' : '') +
+        '</div><div style="font-size:.72rem;color:var(--text-muted);">' +
+          'Fecha: <strong>' + s.fecha + '</strong> | Asesor: <strong>' + s.comercializador + '</strong> | Org: <strong>' + (s.nombre_organizacion || 'Paraná Centro') + '</strong>' +
+        '</div></div>';
+
+      html += '<div class="section-title-divider">1. Datos Personales</div>' +
+        '<div class="grid-3-cols" style="font-size:.75rem;">' +
+          '<div><strong>DNI:</strong> ' + s.solicitante.dni + '</div><div><strong>Legajo:</strong> ' + (s.solicitante.legajo || '—') + '</div><div><strong>Fecha Nac:</strong> ' + s.solicitante.fechaNac + '</div>' +
+          '<div><strong>Celular:</strong> ' + s.solicitante.celular + '</div><div><strong>Email:</strong> ' + (s.solicitante.email || '—') + '</div><div><strong>Domicilio:</strong> ' + s.solicitante.domicilio + '</div>' +
+        '</div>';
+
+      html += '<div class="section-title-divider">2. Datos Laborales</div>' +
+        '<div class="grid-3-cols" style="font-size:.75rem;">' +
+          '<div><strong>Organismo:</strong> ' + s.solicitante.organismo + '</div><div><strong>Condición:</strong> ' + s.solicitante.condicion + '</div><div><strong>Cargo:</strong> ' + s.solicitante.cargo + '</div><div><strong>Dependencia:</strong> ' + s.solicitante.dependencia + '</div>' +
+        '</div>';
+
+      html += '<div class="section-title-divider">3. Datos del Crédito</div>' +
+        '<div class="grid-3-cols" style="font-size:.75rem;">' +
+          '<div><strong>Línea:</strong> ' + s.prestamo.lineaNombre + '</div><div><strong>Monto Solicitado:</strong> ' + formatMoney(s.prestamo.monto) + '</div><div><strong>Plazo:</strong> ' + s.prestamo.cuotas + ' cuotas estimadas de ' + formatMoney(s.prestamo.cuotaEstimada) + '</div>' +
+        '</div>';
+
+      html += '<div class="section-title-divider">4. Documentación del Legajo (Carpeta: [' + s.id + '] ' + s.solicitante.nombre + ')</div>' +
+        '<div style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:.75rem;">' +
+          s.adjuntos.map(a => '<div style="display:flex;justify-content:space-between;align-items:center;background:#fff;padding:.45rem .65rem;border:1px solid var(--border-color);border-radius:6px;font-size:.72rem;">' +
+            '<div>📄 <strong>' + a.tipo + ':</strong> <code>' + a.nombre + '</code> <span style="font-size:.65rem;color:var(--text-muted);margin-left:4px;">(' + (a.fecha || s.fecha) + ' por ' + (a.autor || s.comercializador) + ')</span></div>' +
+            '<button class="btn-restore" style="padding:.2rem .5rem;font-size:.68rem;" onclick="showToast(\'Abriendo vista previa: ' + a.nombre + '\')">👁️ Ver</button>' +
+          '</div>').join('') +
+        '</div>';
+
+      html += '<div style="background:#f0f9ff;border:1px dashed #0284c7;border-radius:8px;padding:.75rem;margin-bottom:1rem;">' +
+        '<div style="font-size:.75rem;font-weight:700;color:#0369a1;margin-bottom:.4rem;">➕ Adjuntar Documentación Adicional / Actualizada</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:.5rem;align-items:center;">' +
+          '<select id="cboFichaDocTipo" class="input-text" style="font-size:.72rem;">' +
+            '<option value="DNI Frente y Dorso">DNI Frente y Dorso</option>' +
+            '<option value="Recibo de Sueldo Nuevo">Recibo de Sueldo Nuevo</option>' +
+            '<option value="Certificación de Servicios">Certificación de Servicios</option>' +
+            '<option value="Nota de Empleador">Nota de Empleador</option>' +
+            '<option value="Comprobante de Domicilio">Comprobante de Domicilio</option>' +
+            '<option value="Otros Documentos">Otros Documentos</option>' +
+          '</select>' +
+          '<input type="file" id="fileFichaAdicional" class="input-text" style="font-size:.72rem;" accept="image/*,application/pdf"/>' +
+          '<button type="button" class="btn-hero-action" style="padding:.45rem .85rem;font-size:.72rem;white-space:nowrap;" onclick="adjuntarDocumentoAdicionalFicha(\'' + s.id + '\')">Subir al Legajo 📤</button>' +
+        '</div>' +
+        '<p style="font-size:.65rem;color:#0369a1;margin-top:.35rem;">Se renombrará automáticamente según el formato Drive: <code>[' + s.id + '] [Tipo_Documento]_[Fecha/Hora].[ext]</code></p>' +
+      '</div>';
+
+      html += '<div class="section-title-divider">5. Línea de Tiempo y Comentarios Bidireccionales</div>' +
+        '<div class="timeline-list" id="fichaTimelineList">' +
+          s.observaciones.map(o => '<div class="timeline-item"><div class="timeline-meta">' +
+            '<span><strong>' + o.autor + '</strong> <span class="timeline-role-badge">' + (o.rol || 'Sistema') + '</span></span><span>' + o.fecha + '</span>' +
+            '</div><div style="margin-top:2px;color:var(--text-main);">' + o.texto + '</div></div>').join('') +
+        '</div>';
+
+      html += '<div style="margin-top:.75rem;background:#f8fafc;padding:.75rem;border-radius:8px;border:1px solid var(--border-color);">' +
+        '<label class="form-label">Escribir una aclaración o respuesta a la mutual</label>' +
+        '<textarea id="txtFichaComentario" class="input-text" rows="2" placeholder="Ej: Se adjunta recibo digital descargado del portal provincial..." style="resize:vertical;font-size:.75rem;"></textarea>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:.5rem;flex-wrap:wrap;gap:.5rem;">' +
+          (isObservado ? '<label style="font-size:0.72rem;color:#b45309;font-weight:700;display:flex;align-items:center;gap:0.35rem;cursor:pointer;"><input type="checkbox" id="chkSubsanarObservado" checked/> Pasar automáticamente a "En Análisis" (Subsanado) 🔄</label>' : '<span></span>') +
+          '<button type="button" class="btn-primary-action" style="width:auto;padding:.45rem 1rem;font-size:.75rem;" onclick="enviarComentarioComercializador(\'' + s.id + '\')">Enviar Aclaración 💬</button>' +
+        '</div></div>';
+
+      body.innerHTML = html;
+      abrirModal('modalFichaCompleta');
+    }
+
+    function adjuntarDocumentoAdicionalFicha(id) {
+      const session = getSession(); if (!session) return;
+      const all = getStoredSolicitudes(); const s = all.find(x => x.id === id); if (!s) return;
+      const tipo = document.getElementById('cboFichaDocTipo')?.value || 'Documento Adicional';
+      const fileInput = document.getElementById('fileFichaAdicional');
+      const now = new Date();
+      const timeStamp = now.toISOString().slice(0, 10).replace(/-/g, '') + '_' + String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
+      const file = fileInput?.files && fileInput.files[0];
+      const extension = file ? (file.name.split('.').pop() || 'pdf') : 'pdf';
+      const generatedName = s.id + ' ' + tipo.replace(/\s+/g, '_') + '_' + timeStamp + '.' + extension;
+
+      s.adjuntos.push({ tipo, nombre: generatedName, fecha: now.toISOString().slice(0, 16).replace('T', ' '), autor: session.nombre });
+      s.observaciones.push({
+        autor: session.nombre, rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor'),
+        fecha: now.toISOString().slice(0, 16).replace('T', ' '), texto: 'Documentación adicional adjuntada: ' + tipo + ' (' + generatedName + ')'
+      });
+
+      let aviso = 'Documento adjuntado exitosamente al legajo 📄';
+      if (s.estado === 'Observado') {
+        s.estado = 'En Análisis';
+        s.observaciones.push({
+          autor: 'Sistema Mutual', rol: 'Automático', fecha: now.toISOString().slice(0, 16).replace('T', ' '),
+          texto: 'Estado cambiado a En Análisis tras la carga de documentación correctiva.'
+        });
+        aviso = 'Documento adjuntado y solicitud devuelta a "En Análisis" 🔄';
+      }
+
+      saveStoredSolicitudes(all); renderTablaComercializador(); verFichaCompleta(id); showToast(aviso);
+    }
+
+    function enviarComentarioComercializador(id) {
+      const session = getSession(); if (!session) return;
+      const txt = document.getElementById('txtFichaComentario')?.value?.trim();
+      if (!txt) { showToast('Por favor escribe un mensaje o aclaración'); return; }
+      const all = getStoredSolicitudes(); const s = all.find(x => x.id === id); if (!s) return;
+      const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+
+      s.observaciones.push({
+        autor: session.nombre, rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor'),
+        fecha: now, texto: txt
+      });
+
+      const chk = document.getElementById('chkSubsanarObservado');
+      if (chk && chk.checked && s.estado === 'Observado') {
+        s.estado = 'En Análisis';
+        s.observaciones.push({ autor: 'Sistema Mutual', rol: 'Automático', fecha: now, texto: 'Estado cambiado a En Análisis tras aclaración del comercializador.' });
+      }
+
+      saveStoredSolicitudes(all); renderTablaComercializador(); verFichaCompleta(id); showToast('Aclaración enviada a la mutual 💬');
+    }
+
+    /* ========================================================================
+       5. GESTIONES DE MUTUAL (TAB 3)
+       ======================================================================== */
+    function renderTablaMutual() {
+      const all = getStoredSolicitudes();
+      const cboOrg = document.getElementById('filtroMutualOrganizacion');
+      if (cboOrg && cboOrg.options.length <= 1) {
+        [...new Set(all.map(s => s.nombre_organizacion || 'Organización Paraná Centro'))].forEach(o => {
+          const opt = document.createElement('option'); opt.value = o; opt.textContent = o; cboOrg.appendChild(opt);
+        });
+      }
+      const cboCom = document.getElementById('filtroMutualComercial');
+      if (cboCom && cboCom.options.length <= 1) {
+        [...new Set(all.map(s => s.comercializador))].forEach(c => {
+          const opt = document.createElement('option'); opt.value = c; opt.textContent = c; cboCom.appendChild(opt);
+        });
+      }
+
+      const q = (document.getElementById('filtroMutualTexto')?.value || '').toLowerCase().trim();
+      const est = document.getElementById('filtroMutualEstado')?.value || '';
+      const org = document.getElementById('filtroMutualOrganizacion')?.value || '';
+      const com = document.getElementById('filtroMutualComercial')?.value || '';
+      const orgaTipo = document.getElementById('filtroMutualOrganismo')?.value || '';
+
+      const filtered = all.filter(s => {
+        const matchQ = !q || s.id.includes(q) || s.solicitante.dni.includes(q) || s.solicitante.nombre.toLowerCase().includes(q) || s.comercializador.toLowerCase().includes(q);
+        const matchEst = !est || s.estado === est;
+        const matchOrg = !org || (s.nombre_organizacion || 'Organización Paraná Centro') === org;
+        const matchCom = !com || s.comercializador === com;
+        const matchOrgaTipo = !orgaTipo || s.solicitante.organismo === orgaTipo;
+        return matchQ && matchEst && matchOrg && matchCom && matchOrgaTipo;
+      });
+
+      const lbl = document.getElementById('lblTotalMutual'); if (lbl) lbl.textContent = filtered.length + ' solicitudes en cartera';
+      const tbody = document.getElementById('tablaMutualBody'); if (!tbody) return;
+      if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:1.5rem;color:var(--text-muted);">No hay solicitudes coincidentes con los filtros seleccionados.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(s => '<tr>' +
+        '<td><strong>#' + s.id + '</strong></td>' +
+        '<td style="white-space:nowrap;">' + s.fecha.split(' ')[0] + '</td>' +
+        '<td><span class="badge-org-tag">' + (s.nombre_organizacion || 'Paraná Centro') + '</span></td>' +
+        '<td><strong>' + s.comercializador + '</strong></td>' +
+        '<td><strong>' + s.solicitante.nombre + '</strong><br><span style="font-size:.68rem;color:var(--text-muted);">DNI ' + s.solicitante.dni + '</span></td>' +
+        '<td>' + s.solicitante.organismo + '</td>' +
+        '<td>' + s.prestamo.lineaNombre + '<br><span style="color:var(--color-brand-blue);font-weight:700;">' + formatMoney(s.prestamo.monto) + ' (' + s.prestamo.cuotas + 'c)</span></td>' +
+        '<td>' + (s.analistaAsignado || 'Sin Asignar') + '</td>' +
+        '<td><span class="badge-status badge-' + s.estado.replace(/\s/g, '') + '">' + s.estado + '</span></td>' +
+        '<td><button class="btn-table-action btn-action-primary" onclick="gestionarSolicitudMutual(\'' + s.id + '\')">⚙️ Gestionar</button></td>' +
+        '</tr>').join('');
+    }
+
+    function filtrarGestionesMutual() { renderTablaMutual(); }
+
+    function gestionarSolicitudMutual(id) {
+      const s = getStoredSolicitudes().find(x => x.id === id); if (!s) return;
+      const session = getSession();
+      const tit = document.getElementById('gestionModalTitle');
+      if (tit) tit.innerHTML = 'Resolución de Solicitud <strong>#' + s.id + '</strong> — ' + s.solicitante.nombre;
+      const body = document.getElementById('gestionModalBody'); if (!body) return;
+
+      let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">' +
+        '<div style="background:#f8fafc;padding:.75rem;border-radius:8px;border:1px solid var(--border-color);font-size:.75rem;">' +
+          '<div style="font-weight:700;margin-bottom:.35rem;color:var(--color-primary);">📋 Datos del Solicitante y Crédito</div>' +
+          '<div><strong>Asociado:</strong> ' + s.solicitante.nombre + ' (DNI ' + s.solicitante.dni + ')</div>' +
+          '<div><strong>Organización:</strong> ' + (s.nombre_organizacion || 'Paraná Centro') + '</div>' +
+          '<div><strong>Comercializador:</strong> ' + s.comercializador + '</div>' +
+          '<div><strong>Organismo:</strong> ' + s.solicitante.organismo + ' — ' + s.solicitante.dependencia + ' (' + s.solicitante.condicion + ')</div>' +
+          '<div><strong>Línea:</strong> ' + s.prestamo.lineaNombre + ' | Monto: ' + formatMoney(s.prestamo.monto) + ' en ' + s.prestamo.cuotas + ' cuotas</div>' +
+        '</div>' +
+        '<div style="background:#eff6ff;padding:.75rem;border-radius:8px;border:1px solid #bfdbfe;font-size:.75rem;">' +
+          '<div style="font-weight:700;margin-bottom:.35rem;color:var(--color-brand-blue);">⚡ Conmutador de Estado Mutual</div>' +
+          '<div style="display:flex;gap:.5rem;align-items:center;margin-top:.4rem;">' +
+            '<select id="cboNuevoEstado" class="input-text" style="font-weight:700;">' +
+              ['Pendiente', 'En Análisis', 'Observado', 'Aprobado', 'Transferencia', 'Liquidado', 'Rechazado'].map(st => '<option value="' + st + '" ' + (s.estado === st ? 'selected' : '') + '>' + st + '</option>').join('') +
+            '</select>' +
+            '<button class="btn-primary-action" style="width:auto;padding:.45rem .85rem;font-size:.75rem;white-space:nowrap;" onclick="actualizarEstadoSolicitud(\'' + s.id + '\')">Actualizar Estado</button>' +
+          '</div>' +
+          '<p style="font-size:0.68rem;color:var(--text-muted);margin-top:0.4rem;">Analista a cargo: <strong>' + (s.analistaAsignado || session.nombre) + '</strong></p>' +
+        '</div></div>';
+
+      html += '<div class="section-title-divider">Documentación del Legajo (Original y Complementaria)</div>' +
+        '<div style="display:flex;flex-direction:column;gap:.35rem;margin-bottom:.85rem;">' +
+          s.adjuntos.map(a => '<div style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;padding:.4rem .6rem;border:1px solid var(--border-color);border-radius:6px;font-size:.72rem;">' +
+            '<span>📄 <strong>' + a.tipo + ':</strong> <code>' + a.nombre + '</code> <span style="font-size:.65rem;color:var(--text-muted);">(' + (a.autor || s.comercializador) + ')</span></span>' +
+            '<button class="btn-restore" style="padding:.2rem .5rem;font-size:.68rem;" onclick="showToast(\'Previsualizando documento: ' + a.nombre + '\')">👁️ Ver</button>' +
+          '</div>').join('') +
+        '</div>';
+
+      html += '<div class="file-input-box" style="margin-bottom:.85rem;">' +
+        '<label class="form-label">Adjuntar Documentación Propia del Analista (Contrato, Pagaré, Transferencia)</label>' +
+        '<div style="display:flex;gap:.5rem;margin-top:.3rem;flex-wrap:wrap;">' +
+          '<select id="cboDocAnalistaTipo" class="input-text" style="flex:1;min-width:180px;">' +
+            '<option value="Contrato Mutuo Firmado">Contrato Mutuo Firmado</option>' +
+            '<option value="Pagaré a la Vista">Pagaré a la Vista</option>' +
+            '<option value="Comprobante Transferencia">Comprobante Transferencia Bancaria</option>' +
+            '<option value="Dictamen Jurídico">Dictamen Jurídico / Auditoría</option>' +
+            '<option value="Otros Documentos Mutual">Otros Documentos Mutual</option>' +
+          '</select>' +
+          '<input type="file" id="fileDocAnalista" class="input-text" style="flex:1;min-width:180px;"/>' +
+          '<button class="btn-restore" type="button" onclick="agregarDocumentoAnalista(\'' + s.id + '\')">+ Adjuntar</button>' +
+        '</div></div>';
+
+      html += '<div class="section-title-divider">Línea de Tiempo y Observaciones de Seguimiento</div>' +
+        '<div class="timeline-list" style="margin-bottom:.75rem;">' +
+          s.observaciones.map(o => '<div class="timeline-item"><div class="timeline-meta">' +
+            '<span><strong>' + o.autor + '</strong> <span class="timeline-role-badge">' + (o.rol || 'Sistema') + '</span></span><span>' + o.fecha + '</span>' +
+            '</div><div style="margin-top:2px;color:var(--text-main);">' + o.texto + '</div></div>').join('') +
+        '</div>';
+
+      html += '<div style="display:flex;gap:.5rem;margin-top:.4rem;">' +
+        '<input type="text" id="txtNuevoComentario" class="input-text" placeholder="Escribir una observación o pedido de corrección para el comercializador..."/>' +
+        '<button class="btn-hero-action" style="width:auto;padding:.45rem .85rem;font-size:.75rem;white-space:nowrap;" onclick="agregarComentarioAnalista(\'' + s.id + '\')">Publicar 💬</button>' +
+      '</div>';
+
+      body.innerHTML = html;
+      abrirModal('modalGestionMutual');
+    }
+
+    function actualizarEstadoSolicitud(id) {
+      const all = getStoredSolicitudes(); const s = all.find(x => x.id === id); if (!s) return;
+      const nuevo = document.getElementById('cboNuevoEstado')?.value; if (!nuevo) return;
+      const session = getSession();
+      s.estado = nuevo; s.analistaAsignado = session?.nombre || 'Mariana López';
+      s.observaciones.push({
+        autor: session?.nombre || 'Analista Mutual', rol: 'Analista Mutual',
+        fecha: new Date().toISOString().slice(0, 16).replace('T', ' '), texto: 'Estado de la solicitud actualizado a: ' + nuevo
+      });
+      saveStoredSolicitudes(all); renderTablaMutual(); showToast('Estado actualizado a ' + nuevo); gestionarSolicitudMutual(id);
+    }
+
+    function agregarComentarioAnalista(id) {
+      const txt = document.getElementById('txtNuevoComentario')?.value?.trim(); if (!txt) return;
+      const all = getStoredSolicitudes(); const s = all.find(x => x.id === id); if (!s) return;
+      const session = getSession();
+      s.observaciones.push({
+        autor: session?.nombre || 'Analista Mutual', rol: 'Analista Mutual',
+        fecha: new Date().toISOString().slice(0, 16).replace('T', ' '), texto: txt
+      });
+      saveStoredSolicitudes(all); gestionarSolicitudMutual(id); showToast('Observación registrada en el legajo');
+    }
+
+    function agregarDocumentoAnalista(id) {
+      const tipo = document.getElementById('cboDocAnalistaTipo')?.value || 'Documento Mutual';
+      const fileInput = document.getElementById('fileDocAnalista');
+      const filename = fileInput?.files && fileInput.files[0] ? fileInput.files[0].name : (id + ' ' + tipo.replace(/\s+/g, '_') + '.pdf');
+      const all = getStoredSolicitudes(); const s = all.find(x => x.id === id); if (!s) return;
+      const session = getSession();
+      const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+
+      s.adjuntos.push({ tipo, nombre: filename, fecha: now, autor: session?.nombre || 'Analista Mutual' });
+      s.observaciones.push({
+        autor: session?.nombre || 'Analista Mutual', rol: 'Analista Mutual',
+        fecha: now, texto: 'Documento mutual adjuntado: ' + tipo + ' (' + filename + ')'
+      });
+      saveStoredSolicitudes(all); gestionarSolicitudMutual(id); showToast('Documento mutual incorporado al legajo 📄');
+    }
+
+    /* ========================================================================
+       6. MODALES Y TOAST
+       ======================================================================== */
+    function abrirModal(id) { const m = document.getElementById(id); if (m) m.classList.add('open'); }
+    function cerrarModal(id) { const m = document.getElementById(id); if (m) m.classList.remove('open'); }
+
+    let toastTimeout;
+    function showToast(msg) {
+      const toast = document.getElementById('toastNotification');
+      const toastMsg = document.getElementById('toastMsg');
+      if (toastMsg) toastMsg.textContent = msg;
+      if (toast) {
+        toast.classList.add('show');
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
+      }
+    }
+
+    /* ========================================================================
+       7. REGISTRO EN ÁMBITO GLOBAL WINDOW
+       ======================================================================== */
+    window.handleLogoFallback = handleLogoFallback;
+    window.setLinea = setLinea;
+    window.setModo = setModo;
+    window.setPlazo = setPlazo;
+    window.setQuickAmount = setQuickAmount;
+    window.handleAmountInput = handleAmountInput;
+    window.resetDefaults = resetDefaults;
+    window.handleTemplateVersionChange = handleTemplateVersionChange;
+    window.guardarMiFormato = guardarMiFormato;
+    window.restoreOriginalTemplate = restoreOriginalTemplate;
+    window.copyWhatsAppText = copyWhatsAppText;
+    window.sendWhatsApp = sendWhatsApp;
+    window.showToast = showToast;
+    window.handleLoginSubmit = handleLoginSubmit;
+    window.handleQuickLogin = handleQuickLogin;
+    window.handleLogout = handleLogout;
+    window.togglePasswordVisibility = togglePasswordVisibility;
+    window.cambiarPestana = cambiarPestana;
+    window.filtrarGestionesComercializador = filtrarGestionesComercializador;
+    window.abrirModalAltaSolicitud = abrirModalAltaSolicitud;
+    window.ajustarPlazosModalAlta = ajustarPlazosModalAlta;
+    window.guardarNuevaSolicitud = guardarNuevaSolicitud;
+    window.verFichaCompleta = verFichaCompleta;
+    window.adjuntarDocumentoAdicionalFicha = adjuntarDocumentoAdicionalFicha;
+    window.enviarComentarioComercializador = enviarComentarioComercializador;
+    window.filtrarGestionesMutual = filtrarGestionesMutual;
+    window.gestionarSolicitudMutual = gestionarSolicitudMutual;
+    window.actualizarEstadoSolicitud = actualizarEstadoSolicitud;
+    window.agregarComentarioAnalista = agregarComentarioAnalista;
+    window.agregarDocumentoAnalista = agregarDocumentoAnalista;
+    window.abrirModal = abrirModal;
+    window.cerrarModal = cerrarModal;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('amountInput');
+      if (input) {
+        input.addEventListener('blur', () => {
+          if (state.montoInputRaw > 0) {
+            input.value = Number.isInteger(state.montoInputRaw) ? integerFormatter.format(state.montoInputRaw) : currencyFormatter.format(state.montoInputRaw).replace(/[^0-9,.-]/g, '').trim();
+          }
+        });
+      }
+      const waTextarea = document.getElementById('txt-plantilla-whatsapp');
+      if (waTextarea) {
+        waTextarea.addEventListener('input', () => {
+          isWhatsAppCustomEdited = true;
+          const notice = document.getElementById('waCustomNotice'); if (notice) notice.style.display = 'inline';
+        });
+      }
+      checkAuthAndInit();
+      renderApp();
+    });
+  </script>
+</body>
+</html>

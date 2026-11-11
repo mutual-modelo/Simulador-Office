@@ -17,17 +17,20 @@ const PORT = 3000;
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Inicialización de cliente Gemini API según estándares recomendados
+// Inicialización diferida de cliente Gemini API según estándares recomendados
 // Telemetría oficial aistudio-build e inyección dinámica desde variables de entorno
-const apiKey = process.env.GEMINI_API_KEY || '';
-const ai = new GoogleGenAI({
-  apiKey,
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
+function getGeminiClient(): GoogleGenAI | null {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) return null;
+  return new GoogleGenAI({
+    apiKey: key,
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build',
+      },
     },
-  },
-});
+  });
+}
 
 /**
  * Normaliza cadenas de texto para comparaciones flexibles (del analizador histórico)
@@ -65,7 +68,7 @@ app.get('/api/health', (req, res) => {
   res.json({
     ok: true,
     service: 'AMMER AI Document Audit Service',
-    geminiConfigured: !!apiKey,
+    geminiConfigured: !!process.env.GEMINI_API_KEY,
     timestamp: new Date().toISOString()
   });
 });
@@ -82,11 +85,11 @@ app.post('/api/auditar-documentos', async (req, res) => {
       });
     }
 
-    const activeKey = process.env.GEMINI_API_KEY || apiKey;
-    if (!activeKey) {
+    const ai = getGeminiClient();
+    if (!ai) {
       return res.status(500).json({
         ok: false,
-        error: 'La variable de entorno GEMINI_API_KEY no se encuentra configurada en el servidor.'
+        error: 'La variable de entorno GEMINI_API_KEY no se encuentra configurada en el servidor. Configure la clave en el panel de secretos.'
       });
     }
 

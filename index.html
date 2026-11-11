@@ -468,23 +468,7 @@
               </div>
               <button type="submit" id="btnLoginSubmit" class="btn-primary-action" style="margin-top:0.5rem;">Iniciar Sesión 🔐</button>
             </form>
-            <div class="demo-users-box">
-              <div class="demo-users-title">Acceso rápido para demostración (1-clic)</div>
-              <div class="demo-users-grid">
-                <button type="button" class="btn-demo-user" onclick="handleQuickLogin('titular')">
-                  <span><strong>Titular Org:</strong> Mariano Benítez (Paraná Centro ⭐)</span><span>Ingresar ➔</span>
-                </button>
-                <button type="button" class="btn-demo-user" onclick="handleQuickLogin('asesor')">
-                  <span><strong>Asesor Org:</strong> Carlos Gómez (Paraná Centro)</span><span>Ingresar ➔</span>
-                </button>
-                <button type="button" class="btn-demo-user" onclick="handleQuickLogin('analista')">
-                  <span><strong>Analista Mutual:</strong> Mariana López (Créditos)</span><span>Ingresar ➔</span>
-                </button>
-                <button type="button" class="btn-demo-user" onclick="handleQuickLogin('admin')">
-                  <span><strong>Administrador:</strong> Acceso Total</span><span>Ingresar ➔</span>
-                </button>
-              </div>
-            </div>
+
           </div>
         </div>
       </div>
@@ -574,6 +558,13 @@
                 </svg>
                 <span>Convenio Municipal opera exclusivamente en 12 y 24 cuotas.</span>
               </div>
+              <!-- RECUADRO DE DISCLAIMER FORMAL OBLIGATORIO -->
+              <div class="simulador-disclaimer-box" style="margin-top:0.85rem;padding:0.75rem 0.85rem;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid var(--color-brand-blue);border-radius:6px;font-size:0.68rem;line-height:1.45;color:#475569;">
+                <div style="font-weight:700;color:#1e293b;margin-bottom:3px;display:flex;align-items:center;gap:4px;">
+                  <span>⚖️ Aviso Legal y Condiciones de Simulación</span>
+                </div>
+                <p style="margin:0;">El presente simulador es una herramienta de carácter meramente informativo y orientativo, basada en los datos ingresados por el asociado. El resultado obtenido no constituye oferta vinculante, aceptación de solicitud ni compromiso de otorgamiento por parte de la Asociación Mutual Modelo de Entre Ríos. El efectivo otorgamiento de la Ayuda Económica Mutual, su monto, tasa de servicio y plazo se encuentran sujetos al previo análisis de capacidad de pago, verificación de identidad, antigüedad societaria y cumplimiento del Reglamento de Ayuda Económica vigente aprobado por el INAES. Los valores calculados son estimativos y pueden variar según la fecha exacta de liquidación, tributos aplicables (como el Impuesto de Sellos de la Provincia de Entre Ríos e IVA, de corresponder), cuota social y seguros contratados, entre otros.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -642,6 +633,11 @@
                 <option value="personalizada">⭐ Mi Formato Guardado</option>
               </select>
             </div>
+            <!-- SELECTOR INTERACTIVO DE 6 PLANES EN WHATSAPP -->
+            <div class="wa-plan-filter-bar" style="background:#f8fafc;padding:0.45rem 0.75rem;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;flex-wrap:wrap;gap:0.45rem;font-size:0.72rem;">
+              <span style="font-weight:700;color:#334155;white-space:nowrap;">Planes en WhatsApp:</span>
+              <div id="waPlazosSelectorContainer" style="display:inline-flex;gap:0.35rem;flex-wrap:wrap;align-items:center;"></div>
+            </div>
             <div class="wa-chat-canvas">
               <div class="wa-bubble-msg">
                 <textarea id="txt-plantilla-whatsapp" class="whatsapp-editor-textarea" rows="7" placeholder="Escriba o personalice aquí el mensaje..."></textarea>
@@ -688,20 +684,31 @@
       </div>
 
       <div class="toolbar-filters">
-        <div class="filters-left-group">
-          <div class="search-input-box"><input type="text" id="filtroComercialTexto" placeholder="🔍 Buscar por DNI, Asociado, N° o Asesor..." oninput="filtrarGestionesComercializador()"/></div>
+        <div class="filters-left-group" style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">
+          <div class="search-input-box"><input type="text" id="filtroComercialTexto" placeholder="🔍 Buscar por DNI, Asociado, N°..." oninput="filtrarGestionesComercializador()"/></div>
+          <select id="filtroComercialLinea" class="input-text" style="width:auto;" onchange="filtrarGestionesComercializador()">
+            <option value="">Todas las Líneas</option>
+            <option value="fedem">FEDEM Provincial</option>
+            <option value="muni">Convenio Municipal VIKINGO / QUAD</option>
+            <option value="sidecreer">Tarjeta Sidecreer</option>
+          </select>
+          <div style="display:flex;align-items:center;gap:3px;font-size:0.72rem;color:var(--text-muted);background:#fff;padding:2px 6px;border:1px solid var(--border-color);border-radius:6px;">
+            <span>Desde:</span>
+            <input type="date" id="filtroComercialFechaDesde" style="border:none;background:none;font-size:0.72rem;outline:none;" onchange="filtrarGestionesComercializador()"/>
+            <span>Hasta:</span>
+            <input type="date" id="filtroComercialFechaHasta" style="border:none;background:none;font-size:0.72rem;outline:none;" onchange="filtrarGestionesComercializador()"/>
+          </div>
           <select id="filtroComercialEstado" class="input-text" style="width:auto;" onchange="filtrarGestionesComercializador()">
             <option value="">Todos los Estados</option>
             <option value="Pendiente">Pendiente 🟡</option>
-            <option value="En Análisis">En Análisis 🔵</option>
+            <option value="En Análisis">En Gestión / Análisis 🔵</option>
             <option value="Observado">Observado 🟠</option>
             <option value="Aprobado">Aprobado 🟢</option>
-            <option value="Transferencia">Transferencia Pendiente 🟣</option>
             <option value="Liquidado">Liquidado 🟢</option>
             <option value="Rechazado">Rechazado 🔴</option>
           </select>
           <select id="filtroComercialAsesor" class="input-text" style="width:auto;display:none;" onchange="filtrarGestionesComercializador()">
-            <option value="">Todos los Asesores de la Organización</option>
+            <option value="">Todos los Asesores</option>
           </select>
         </div>
         <span style="font-size:0.75rem;color:var(--text-muted);" id="lblTotalComercializador">0 solicitudes registradas</span>
@@ -762,6 +769,9 @@
             <button type="button" class="view-switcher-btn" id="btnViewMutProp-calendario" onclick="setVistaModulo('mutualPropias', 'calendario')">📅 Calendario</button>
           </div>
           <button class="btn-restore" onclick="sincronizarConBackend()" title="Sincronizar solicitudes con Google Sheets">🔄 Actualizar Sede</button>
+          <button class="btn-hero-action btn-nuevo-asociado-action" style="background:#2563eb;" id="btnNuevoAsociadoPropias" onclick="abrirModalAltaAsociado()">
+            👤 + Nuevo Asociado
+          </button>
           <button class="btn-hero-action" style="background:#059669;" onclick="abrirModalAltaSolicitud('mutual_sede')">
             ➕ Nueva Solicitud Mutual (Presencial/WhatsApp)
           </button>
@@ -769,23 +779,34 @@
       </div>
 
       <div class="toolbar-filters">
-        <div class="filters-left-group">
-          <div class="search-input-box"><input type="text" id="filtroMutualPropiasTexto" placeholder="🔍 Buscar por DNI, N°, Asociado o Canal..." oninput="filtrarGestionesMutualPropias()"/></div>
+        <div class="filters-left-group" style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">
+          <div class="search-input-box"><input type="text" id="filtroMutualPropiasTexto" placeholder="🔍 Buscar por DNI, N°, Asociado..." oninput="filtrarGestionesMutualPropias()"/></div>
+          <select id="filtroMutualPropiasLinea" class="input-text" style="width:auto;" onchange="filtrarGestionesMutualPropias()">
+            <option value="">Todas las Líneas</option>
+            <option value="fedem">FEDEM Provincial</option>
+            <option value="muni">Convenio Municipal VIKINGO / QUAD</option>
+            <option value="sidecreer">Tarjeta Sidecreer</option>
+          </select>
+          <div style="display:flex;align-items:center;gap:3px;font-size:0.72rem;color:var(--text-muted);background:#fff;padding:2px 6px;border:1px solid var(--border-color);border-radius:6px;">
+            <span>Desde:</span>
+            <input type="date" id="filtroMutualPropiasFechaDesde" style="border:none;background:none;font-size:0.72rem;outline:none;" onchange="filtrarGestionesMutualPropias()"/>
+            <span>Hasta:</span>
+            <input type="date" id="filtroMutualPropiasFechaHasta" style="border:none;background:none;font-size:0.72rem;outline:none;" onchange="filtrarGestionesMutualPropias()"/>
+          </div>
+          <select id="filtroMutualPropiasEstado" class="input-text" style="width:auto;" onchange="filtrarGestionesMutualPropias()">
+            <option value="">Todos los Estados</option>
+            <option value="Pendiente">Pendiente 🟡</option>
+            <option value="En Análisis">En Gestión / Análisis 🔵</option>
+            <option value="Observado">Observado 🟠</option>
+            <option value="Aprobado">Aprobado 🟢</option>
+            <option value="Liquidado">Liquidado 🟢</option>
+            <option value="Rechazado">Rechazado 🔴</option>
+          </select>
           <select id="filtroMutualPropiasCanal" class="input-text" style="width:auto;" onchange="filtrarGestionesMutualPropias()">
             <option value="">Todos los Canales</option>
             <option value="Presencial Sede Central">🏛️ Presencial Sede Central</option>
             <option value="WhatsApp Oficial">💬 WhatsApp Oficial</option>
             <option value="Telefónico">📞 Telefónico</option>
-          </select>
-          <select id="filtroMutualPropiasEstado" class="input-text" style="width:auto;" onchange="filtrarGestionesMutualPropias()">
-            <option value="">Todos los Estados</option>
-            <option value="Pendiente">Pendiente 🟡</option>
-            <option value="En Análisis">En Análisis 🔵</option>
-            <option value="Observado">Observado 🟠</option>
-            <option value="Aprobado">Aprobado 🟢</option>
-            <option value="Transferencia">Transferencia Pendiente 🟣</option>
-            <option value="Liquidado">Liquidado 🟢</option>
-            <option value="Rechazado">Rechazado 🔴</option>
           </select>
           <select id="filtroMutualPropiasOrganismo" class="input-text" style="width:auto;" onchange="filtrarGestionesMutualPropias()">
             <option value="">Todos los Organismos</option>
@@ -855,15 +876,26 @@
       </div>
 
       <div class="toolbar-filters">
-        <div class="filters-left-group">
+        <div class="filters-left-group" style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">
           <div class="search-input-box"><input type="text" id="filtroMutualTexto" placeholder="🔍 Buscar por DNI, N°, Asociado o Asesor..." oninput="filtrarGestionesMutual()"/></div>
+          <select id="filtroMutualLinea" class="input-text" style="width:auto;" onchange="filtrarGestionesMutual()">
+            <option value="">Todas las Líneas</option>
+            <option value="fedem">FEDEM Provincial</option>
+            <option value="muni">Convenio Municipal VIKINGO / QUAD</option>
+            <option value="sidecreer">Tarjeta Sidecreer</option>
+          </select>
+          <div style="display:flex;align-items:center;gap:3px;font-size:0.72rem;color:var(--text-muted);background:#fff;padding:2px 6px;border:1px solid var(--border-color);border-radius:6px;">
+            <span>Desde:</span>
+            <input type="date" id="filtroMutualFechaDesde" style="border:none;background:none;font-size:0.72rem;outline:none;" onchange="filtrarGestionesMutual()"/>
+            <span>Hasta:</span>
+            <input type="date" id="filtroMutualFechaHasta" style="border:none;background:none;font-size:0.72rem;outline:none;" onchange="filtrarGestionesMutual()"/>
+          </div>
           <select id="filtroMutualEstado" class="input-text" style="width:auto;" onchange="filtrarGestionesMutual()">
             <option value="">Todos los Estados</option>
             <option value="Pendiente">Pendiente 🟡</option>
-            <option value="En Análisis">En Análisis 🔵</option>
+            <option value="En Análisis">En Gestión / Análisis 🔵</option>
             <option value="Observado">Observado 🟠</option>
             <option value="Aprobado">Aprobado 🟢</option>
-            <option value="Transferencia">Transferencia Pendiente 🟣</option>
             <option value="Liquidado">Liquidado 🟢</option>
             <option value="Rechazado">Rechazado 🔴</option>
           </select>
@@ -871,7 +903,7 @@
             <option value="">Todas las Organizaciones</option>
           </select>
           <select id="filtroMutualComercial" class="input-text" style="width:auto;" onchange="filtrarGestionesMutual()">
-            <option value="">Todos los Comercializadores</option>
+            <option value="">Todos los Comercializadores / Asesores</option>
           </select>
           <select id="filtroMutualOrganismo" class="input-text" style="width:auto;" onchange="filtrarGestionesMutual()">
             <option value="">Todos los Organismos</option>
@@ -996,6 +1028,54 @@
   </main>
 
   <!-- MODAL 1: ALTA SOLICITUD -->
+    <!-- MODAL: ALTA DE ASOCIADO AL PADRÓN INSTITUCIONAL (EXCLUSIVO ANALISTAS Y ADMIN) -->
+  <div id="modalAltaAsociado" class="modal-backdrop">
+    <div class="modal-window modal-large">
+      <div class="modal-header-bar">
+        <div class="modal-header-title"><span>👤 Alta de Nuevo Asociado al Padrón Institucional</span></div>
+        <button class="btn-close-modal" onclick="cerrarModal('modalAltaAsociado')">&times;</button>
+      </div>
+      <div class="modal-body-scroll">
+        <form id="formAltaAsociado" onsubmit="guardarNuevoAsociado(event)">
+          <div class="section-title-divider">1. Datos Personales del Asociado</div>
+          <div class="grid-3-cols">
+            <div class="form-group"><label class="form-label">DNI *</label><input type="text" id="asocDni" class="input-text" required placeholder="Sin puntos"/></div>
+            <div class="form-group"><label class="form-label">Apellido y Nombres *</label><input type="text" id="asocNombre" class="input-text" required placeholder="Ej: Juan Carlos Pérez"/></div>
+            <div class="form-group"><label class="form-label">Fecha de Nacimiento *</label><input type="date" id="asocFechaNac" class="input-text" required/></div>
+            <div class="form-group"><label class="form-label">Celular / WhatsApp *</label><input type="tel" id="asocCelular" class="input-text" required placeholder="Ej: 3434123456"/></div>
+            <div class="form-group"><label class="form-label">Email</label><input type="email" id="asocEmail" class="input-text" placeholder="socio@email.com"/></div>
+            <div class="form-group"><label class="form-label">Domicilio Completo *</label><input type="text" id="asocDomicilio" class="input-text" required placeholder="Ej: Urquiza 840, Paraná, Entre Ríos"/></div>
+          </div>
+
+          <div class="section-title-divider">2. Datos Laborales</div>
+          <div class="grid-3-cols">
+            <div class="form-group"><label class="form-label">Condición *</label><select id="asocCondicion" class="input-text" required><option value="Activo">Activo</option><option value="Jubilado">Jubilado</option><option value="Pensionado">Pensionado</option></select></div>
+            <div class="form-group"><label class="form-label">Organismo *</label><select id="asocOrganismo" class="input-text" required onchange="handleOrganismoChange(this.value, 'asocLegajo')"><option value="Provincial" selected>Provincial</option><option value="Municipal">Municipal</option></select></div>
+            <div class="form-group"><label class="form-label">Legajo Municipal (Opcional)</label><input type="text" id="asocLegajo" class="input-text" placeholder="Ej: 14209" disabled style="opacity:0.5;background:#f1f5f9;cursor:not-allowed;"/></div>
+            <div class="form-group"><label class="form-label">Dependencia / Lugar *</label><input type="text" id="asocDependencia" class="input-text" required placeholder="Ej: Hospital San Martín"/></div>
+            <div class="form-group"><label class="form-label">Cargo *</label><select id="asocCargo" class="input-text" required><option value="Titular">Titular</option><option value="Suplente">Suplente</option></select></div>
+          </div>
+
+          <div class="section-title-divider">3. Documentación Digital del Asociado (Opcional - Google Drive)</div>
+          <p style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.5rem;">Los archivos se clasificarán y nombrarán en mayúsculas en Google Drive en la carpeta del asociado.</p>
+          <div class="grid-3-cols">
+            <div class="file-input-box"><label class="form-label">DNI (Frente y Dorso)</label><input type="file" id="asocFileDni" class="input-text" accept="image/*,application/pdf"/></div>
+            <div class="file-input-box"><label class="form-label">RECIBO DE SUELDO</label><input type="file" id="asocFileRecibo" class="input-text" accept="image/*,application/pdf"/></div>
+            <div class="file-input-box"><label class="form-label">SERVICIO</label><input type="file" id="asocFileServicio" class="input-text" accept="image/*,application/pdf"/></div>
+            <div class="file-input-box"><label class="form-label">CONSTANCIA DE CBU</label><input type="file" id="asocFileCbu" class="input-text" accept="image/*,application/pdf"/></div>
+            <div class="file-input-box"><label class="form-label">CERTIFICADO SAGE</label><input type="file" id="asocFileSage" class="input-text" accept="image/*,application/pdf"/></div>
+            <div class="file-input-box"><label class="form-label">OTROS DOCUMENTOS</label><input type="file" id="asocFileOtros" class="input-text" accept="image/*,application/pdf" multiple/></div>
+          </div>
+
+          <div class="modal-footer-bar" style="margin-top:1rem;padding:0.75rem 0 0 0;background:none;">
+            <button type="button" class="btn-restore" onclick="cerrarModal('modalAltaAsociado')">Cancelar</button>
+            <button type="submit" id="btnSubmitAltaAsociado" class="btn-primary-action" style="width:auto;padding:0.55rem 1.25rem;">Guardar Asociado en Padrón 👤</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <div id="modalAltaSolicitud" class="modal-backdrop">
     <div class="modal-window modal-large">
       <div class="modal-header-bar">
@@ -1023,8 +1103,17 @@
 
           <div class="section-title-divider">1. Datos Personales del Solicitante</div>
           <div class="grid-3-cols">
-            <div class="form-group"><label class="form-label">DNI *</label><input type="text" id="solDni" class="input-text" required placeholder="Sin puntos"/></div>
-            <div class="form-group"><label class="form-label">Legajo Municipal (Opcional)</label><input type="text" id="solLegajo" class="input-text" placeholder="Ej: 14209"/></div>
+            <div class="form-group">
+              <label class="form-label">
+                <span>DNI *</span>
+                <span id="badgePadronDni" style="display:none;font-size:0.68rem;color:#166534;background:#dcfce7;padding:1px 6px;border-radius:4px;border:1px solid #86efac;font-weight:700;">✓ Asociado encontrado en Padrón</span>
+              </label>
+              <input type="text" id="solDni" class="input-text" required placeholder="Sin puntos" oninput="handleDniInputDebounced(this.value)"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Legajo Municipal (Opcional)</label>
+              <input type="text" id="solLegajo" class="input-text" placeholder="Ej: 14209" disabled style="opacity:0.5;background:#f1f5f9;cursor:not-allowed;"/>
+            </div>
             <div class="form-group"><label class="form-label">Apellido y Nombres *</label><input type="text" id="solNombre" class="input-text" required placeholder="Ej: Juan Carlos Pérez"/></div>
             <div class="form-group"><label class="form-label">Fecha de Nacimiento *</label><input type="date" id="solFechaNac" class="input-text" required/></div>
             <div class="form-group"><label class="form-label">Email</label><input type="email" id="solEmail" class="input-text" placeholder="socio@email.com"/></div>
@@ -1035,7 +1124,7 @@
           <div class="section-title-divider">2. Datos Laborales</div>
           <div class="grid-3-cols">
             <div class="form-group"><label class="form-label">Condición *</label><select id="solCondicion" class="input-text" required><option value="Activo">Activo</option><option value="Jubilado">Jubilado</option><option value="Pensionado">Pensionado</option></select></div>
-            <div class="form-group"><label class="form-label">Organismo *</label><select id="solOrganismo" class="input-text" required><option value="Provincial">Provincial</option><option value="Municipal">Municipal</option></select></div>
+            <div class="form-group"><label class="form-label">Organismo *</label><select id="solOrganismo" class="input-text" required onchange="handleOrganismoChange(this.value, 'solLegajo')"><option value="Provincial" selected>Provincial</option><option value="Municipal">Municipal</option></select></div>
             <div class="form-group"><label class="form-label">Dependencia / Lugar *</label><input type="text" id="solDependencia" class="input-text" required placeholder="Ej: Hospital San Martín"/></div>
             <div class="form-group"><label class="form-label">Cargo *</label><select id="solCargo" class="input-text" required><option value="Titular">Titular</option><option value="Suplente">Suplente</option></select></div>
           </div>
@@ -1048,13 +1137,26 @@
           </div>
 
           <div class="section-title-divider">4. Adjuntar Documentación (Google Drive)</div>
-          <p style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.5rem;">Los archivos se subirán y clasificarán automáticamente en la carpeta de Google Drive del asociado.</p>
+          <p style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.5rem;">Los archivos se subirán y nombrarán automáticamente en Google Drive con nomenclatura formal en mayúsculas.</p>
           <div class="grid-3-cols">
-            <div class="file-input-box"><label class="form-label">DNI Frente y Dorso *</label><input type="file" id="fileDni" class="input-text" accept="image/*,application/pdf" multiple required/></div>
-            <div class="file-input-box"><label class="form-label">Recibo de Sueldo *</label><input type="file" id="fileRecibo" class="input-text" accept="image/*,application/pdf" required/></div>
-            <div class="file-input-box"><label class="form-label">Tarjeta Sidecreer (Opcional)</label><input type="file" id="fileSidecreer" class="input-text" accept="image/*,application/pdf"/></div>
-            <div class="file-input-box"><label class="form-label">Factura Servicio / Domicilio *</label><input type="file" id="fileDomicilio" class="input-text" accept="image/*,application/pdf" required/></div>
-            <div class="file-input-box"><label class="form-label">Constancias Especiales</label><input type="file" id="fileEspecial" class="input-text" accept="image/*,application/pdf" multiple/></div>
+            <div class="file-input-box"><label class="form-label">DNI (Frente y Dorso) *</label><input type="file" id="fileDni" class="input-text" accept="image/*,application/pdf" multiple required/></div>
+            <div class="file-input-box"><label class="form-label">RECIBO DE SUELDO *</label><input type="file" id="fileRecibo" class="input-text" accept="image/*,application/pdf" required/></div>
+            <div class="file-input-box"><label class="form-label">SERVICIO (Opcional)</label><input type="file" id="fileServicio" class="input-text" accept="image/*,application/pdf"/></div>
+            <div class="file-input-box"><label class="form-label">CONSTANCIA DE CBU (Opcional)</label><input type="file" id="fileCbu" class="input-text" accept="image/*,application/pdf"/></div>
+            <div class="file-input-box"><label class="form-label">CERTIFICADO SAGE (Opcional)</label><input type="file" id="fileSage" class="input-text" accept="image/*,application/pdf"/></div>
+            <div class="file-input-box"><label class="form-label">COMPROBANTE DE MOVIMIENTOS BANCARIOS</label><input type="file" id="fileMovimientos" class="input-text" accept="image/*,application/pdf"/></div>
+            <div class="file-input-box"><label class="form-label">TARJETA SIDECREER (Frente y Dorso)</label><input type="file" id="fileSidecreer" class="input-text" accept="image/*,application/pdf"/></div>
+            <div class="file-input-box"><label class="form-label">OTROS DOCUMENTOS</label><input type="file" id="fileOtros" class="input-text" accept="image/*,application/pdf" multiple/></div>
+          </div>
+
+          <!-- DOCUMENTOS INTERNOS MUTUAL (EXCLUSIVOS ANALISTA/ADMIN) -->
+          <div id="groupDocsInternosMutual" style="margin-top:0.75rem;padding:0.75rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;display:none;">
+            <div style="font-size:0.75rem;font-weight:700;color:#166534;margin-bottom:0.4rem;">🏛️ Documentación Interna Mutual (Exclusivo Créditos / Sede Central)</div>
+            <div class="grid-3-cols">
+              <div class="file-input-box"><label class="form-label">TRANSFERENCIA</label><input type="file" id="fileTransferencia" class="input-text" accept="image/*,application/pdf"/></div>
+              <div class="file-input-box"><label class="form-label">SOLICITUD DE AYUDA ECONOMICA</label><input type="file" id="fileSolicitudAyuda" class="input-text" accept="image/*,application/pdf"/></div>
+              <div class="file-input-box"><label class="form-label">AUTORIZACION PARA DESCUENTO DE HABERES</label><input type="file" id="fileAutorizacionDescuento" class="input-text" accept="image/*,application/pdf"/></div>
+            </div>
           </div>
 
           <div class="modal-footer-bar" style="margin-top:1rem;padding:0.75rem 0 0 0;background:none;">
@@ -1406,7 +1508,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
     };
 
-    const state = { linea: 'fedem', modo: 'neto', montoInputRaw: 100000, plazo: 12, plantillaVersion: 'estandar' };
+    const state = { linea: 'fedem', modo: 'neto', montoInputRaw: 100000, plazo: 12, plantillaVersion: 'estandar', waPlazosSeleccionados: [6, 12, 18, 24, 36, 48] };
     const currencyFormatter = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const integerFormatter = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
@@ -1499,6 +1601,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       document.getElementById('kpiCapitalVal').textContent = formatMoney(result.capital);
 
       renderMatrixTable();
+      renderWaPlazosSelector();
       updateWhatsAppPreview();
     }
 
@@ -1519,18 +1622,62 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     let isWhatsAppCustomEdited = false;
+
+    function renderWaPlazosSelector() {
+      const container = document.getElementById('waPlazosSelectorContainer');
+      if (!container) return;
+      const lineaObj = FINANCIAL_DATA[state.linea];
+      const plazosDisponibles = lineaObj.plazosValidos || [6, 12, 18, 24, 36, 48];
+      const todosPlazos = [6, 12, 18, 24, 36, 48];
+
+      container.innerHTML = todosPlazos.map(p => {
+        const isValido = plazosDisponibles.includes(p);
+        const isChecked = isValido && (!state.waPlazosSeleccionados || state.waPlazosSeleccionados.length === 0 || state.waPlazosSeleccionados.includes(p));
+        return '<label style="display:inline-flex;align-items:center;gap:3px;background:#fff;padding:2px 7px;border-radius:4px;border:1px solid ' + (isChecked ? '#10b981' : '#cbd5e1') + ';cursor:' + (isValido ? 'pointer' : 'not-allowed') + ';opacity:' + (isValido ? '1' : '0.45') + ';font-size:0.72rem;font-weight:600;">' +
+          '<input type="checkbox" value="' + p + '" ' + (isChecked ? 'checked' : '') + ' ' + (isValido ? '' : 'disabled') + ' onchange="toggleWaPlazo(' + p + ', this.checked)"/> ' +
+          p + 'c' +
+        '</label>';
+      }).join('');
+    }
+
+    function toggleWaPlazo(plazo, checked) {
+      if (!state.waPlazosSeleccionados) state.waPlazosSeleccionados = [6, 12, 18, 24, 36, 48];
+      if (checked) {
+        if (!state.waPlazosSeleccionados.includes(plazo)) {
+          state.waPlazosSeleccionados.push(plazo);
+          state.waPlazosSeleccionados.sort((a,b)=>a-b);
+        }
+      } else {
+        state.waPlazosSeleccionados = state.waPlazosSeleccionados.filter(p => p !== plazo);
+      }
+      isWhatsAppCustomEdited = false;
+      updateWhatsAppPreview(true);
+      renderWaPlazosSelector();
+    }
+
     function buildTemplateData() {
       const sim = calculateSimulation(state.linea, state.plazo, state.modo, state.montoInputRaw);
       if (!sim) return null;
       const lineaObj = FINANCIAL_DATA[state.linea];
       const plazosDisponibles = lineaObj.plazosValidos;
-      let plazosAOfrecer = (plazosDisponibles.length <= 4) ? [...plazosDisponibles] : [state.plazo, ...[12, 18, 24, 36].filter(p => p !== state.plazo)].slice(0, 4).sort((a,b)=>a-b);
+
+      let plazosAOfrecer = plazosDisponibles.filter(p => {
+        return !state.waPlazosSeleccionados || state.waPlazosSeleccionados.length === 0 || state.waPlazosSeleccionados.includes(p);
+      });
+      if (plazosAOfrecer.length === 0) plazosAOfrecer = [state.plazo];
+
       let planesTexto = "";
       plazosAOfrecer.forEach(p => {
         const s = calculateSimulation(state.linea, p, 'neto', sim.neto);
         if (s) planesTexto += "💰 " + formatMoney(s.neto) + " en " + s.plazo + " cuotas fijas de " + formatMoney(s.cuota) + "\n";
       });
-      return { neto: formatNumberDecimals(sim.neto), plazoDestacado: sim.plazo, cuotaDestacada: formatNumberDecimals(sim.cuota), totalDestacado: formatNumberDecimals(sim.totalAyuda), planesTexto: planesTexto.trimEnd() };
+      return {
+        neto: formatNumberDecimals(sim.neto),
+        plazoDestacado: sim.plazo,
+        cuotaDestacada: formatNumberDecimals(sim.cuota),
+        totalDestacado: formatNumberDecimals(sim.totalAyuda),
+        planesTexto: planesTexto.trimEnd()
+      };
     }
 
     function generateCurrentTemplateMessage() {
@@ -1624,7 +1771,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       renderApp();
     }
     function resetDefaults() {
-      state.linea = 'fedem'; state.modo = 'neto'; state.montoInputRaw = 100000; state.plazo = 12; state.plantillaVersion = 'estandar';
+      state.linea = 'fedem'; state.modo = 'neto'; state.montoInputRaw = 100000; state.plazo = 12; state.plantillaVersion = 'estandar'; state.waPlazosSeleccionados = [6, 12, 18, 24, 36, 48];
       const inp = document.getElementById('amountInput'); if (inp) inp.value = '100.000';
       const phoneEl = document.getElementById('inp-whatsapp-telefono'); if (phoneEl) phoneEl.value = '';
       const selVersion = document.getElementById('sel-version-plantilla'); if (selVersion) selVersion.value = 'estandar';
@@ -1824,19 +1971,28 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       const nav = document.getElementById('navTabsMenu');
       if (nav) {
-        let tabs = '<button class="nav-tab-btn active" data-view="view-simulador" onclick="cambiarPestana(\'view-simulador\')">1. Simulador</button>';
-        if (session.rol === 'Comercializador') {
-          const tabName = session.es_titular_organizacion ? '2. Gestiones Organización' : '2. Mis Gestiones';
-          tabs += '<button class="nav-tab-btn" data-view="view-comercializador" onclick="cambiarPestana(\'view-comercializador\')">' + tabName + '</button>';
+        let tabs = '';
+        if (session.rol === 'Admin') {
+          tabs += '<button class="nav-tab-btn active" data-view="view-simulador" onclick="cambiarPestana(\'view-simulador\')">Simulador Oficial</button>';
+          tabs += '<button class="nav-tab-btn" data-view="view-mutual-propias" onclick="cambiarPestana(\'view-mutual-propias\')">Gestiones Internas Mutual</button>';
+          tabs += '<button class="nav-tab-btn" data-view="view-mutual" onclick="cambiarPestana(\'view-mutual\')">Gestiones de Comercializadores</button>';
         } else if (session.rol === 'Analista') {
-          tabs += '<button class="nav-tab-btn" data-view="view-mutual-propias" onclick="cambiarPestana(\'view-mutual-propias\')">2. Mis Gestiones (Mutual)</button>';
-          tabs += '<button class="nav-tab-btn" data-view="view-mutual" onclick="cambiarPestana(\'view-mutual\')">3. Gestiones de Comercializadores</button>';
-        } else if (session.rol === 'Admin') {
-          tabs += '<button class="nav-tab-btn" data-view="view-mutual-propias" onclick="cambiarPestana(\'view-mutual-propias\')">2. Mis Gestiones (Mutual)</button>';
-          tabs += '<button class="nav-tab-btn" data-view="view-mutual" onclick="cambiarPestana(\'view-mutual\')">3. Gestiones de Comercializadores</button>';
-          tabs += '<button class="nav-tab-btn" data-view="view-comercializador" onclick="cambiarPestana(\'view-comercializador\')">Gestiones Asesor</button>';
+          tabs += '<button class="nav-tab-btn active" data-view="view-simulador" onclick="cambiarPestana(\'view-simulador\')">Simulador</button>';
+          tabs += '<button class="nav-tab-btn" data-view="view-mutual-propias" onclick="cambiarPestana(\'view-mutual-propias\')">Mis Gestiones</button>';
+          tabs += '<button class="nav-tab-btn" data-view="view-mutual" onclick="cambiarPestana(\'view-mutual\')">Gestiones de Comercializadores</button>';
+        } else {
+          // Comercializador
+          const tabName = session.es_titular_organizacion ? 'Gestiones Organización' : 'Mis Gestiones';
+          tabs += '<button class="nav-tab-btn active" data-view="view-simulador" onclick="cambiarPestana(\'view-simulador\')">Simulador</button>';
+          tabs += '<button class="nav-tab-btn" data-view="view-comercializador" onclick="cambiarPestana(\'view-comercializador\')">' + tabName + '</button>';
         }
         nav.innerHTML = tabs;
+      }
+
+      // Visibilidad exclusiva de + Nuevo Asociado para Analista y Admin
+      const btnNuevoAsoc = document.getElementById('btnNuevoAsociadoPropias');
+      if (btnNuevoAsoc) {
+        btnNuevoAsoc.style.display = (session.rol === 'Analista' || session.rol === 'Admin') ? 'inline-flex' : 'none';
       }
       actualizarCentroNotificaciones();
       cambiarPestana('view-simulador');
@@ -1845,321 +2001,209 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     /* ========================================================================
        3. PERSISTENCIA DE SOLICITUDES Y GESTIONES
        ======================================================================== */
-    const STORAGE_SOLICITUDES_KEY = 'AMMER_SOLICITUDES_DATA_V5';
-    const INITIAL_SOLICITUDES = [
-      {
-        id: '43120',
-        id_provisorio: 'PROV-43120',
-        id_definitivo: '',
-        fecha: '2026-11-08 09:30',
-        usuario_id: 'usr_asesor1',
-        comercializador: 'Carlos Gómez',
-        organizacion_id: 'org_parana_centro',
-        nombre_organizacion: 'Organización Paraná Centro',
-        solicitante: {
-          dni: '32456789', legajo: '12450', nombre: 'Juan Carlos Pérez', fechaNac: '1985-04-12',
-          email: 'jcperez@gmail.com', celular: '3434556677', domicilio: 'Urquiza 840, Paraná',
-          condicion: 'Activo', organismo: 'Municipal', dependencia: 'Obras Sanitarias', cargo: 'Titular'
-        },
-        prestamo: {
-          linea: 'muni', lineaNombre: 'Convenio Municipal VIKINGO / QUAD',
-          monto: 100000, cuotas: 12, cuotaEstimada: 15970
-        },
-        propuestaMutual: {
-          activa: false,
-          linea: 'muni',
-          lineaNombre: 'Convenio Municipal VIKINGO / QUAD',
-          monto: 100000,
-          cuotas: 12,
-          cuotaEstimada: 15970,
-          estadoPropuesta: 'En Evaluación',
-          detalle: 'Plan bajo revisión de margen crediticio'
-        },
-        adjuntos: [
-          { tipo: 'DNI Frente y Dorso', nombre: '43120 DNI Frente.jpg', fecha: '2026-11-08 09:30', autor: 'Carlos Gómez', urlDrive: '' },
-          { tipo: 'Recibo de Sueldo', nombre: '43120 Recibo de Sueldo.pdf', fecha: '2026-11-08 09:30', autor: 'Carlos Gómez', urlDrive: '' },
-          { tipo: 'Factura Servicio', nombre: '43120 Constancia Domicilio.pdf', fecha: '2026-11-08 09:30', autor: 'Carlos Gómez', urlDrive: '' }
-        ],
-        estado: 'Observado',
-        analistaAsignado: 'Mariana López',
-        observaciones: [
-          { autor: 'Carlos Gómez', rol: 'Comercializador - Asesor', fecha: '2026-11-08 09:30', texto: 'Solicitud ingresada con documentación inicial adjunta.' },
-          { autor: 'Mariana López', rol: 'Analista Mutual', fecha: '2026-11-08 14:15', texto: 'Recibo de sueldo borroso en el apartado de haberes netos. Por favor adjuntar recibo legible o recibo digital reciente.' }
-        ]
-      },
-      {
-        id: '43121',
-        id_provisorio: 'PROV-43121',
-        id_definitivo: 'AYU-2026-985',
-        fecha: '2026-11-09 11:15',
-        usuario_id: 'usr_titular1',
-        comercializador: 'Mariano Benítez',
-        organizacion_id: 'org_parana_centro',
-        nombre_organizacion: 'Organización Paraná Centro',
-        solicitante: {
-          dni: '28990112', legajo: '', nombre: 'Ana María Romero', fechaNac: '1981-08-25',
-          email: 'anaromero@hotmail.com', celular: '3434998877', domicilio: 'Gualeguaychú 320, Paraná',
-          condicion: 'Activo', organismo: 'Provincial', dependencia: 'Consejo Gral Educación', cargo: 'Titular'
-        },
-        prestamo: {
-          linea: 'fedem', lineaNombre: 'FEDEM Provincial',
-          monto: 200000, cuotas: 24, cuotaEstimada: 14850
-        },
-        propuestaMutual: {
-          version: 2,
-          activa: true,
-          linea: 'fedem',
-          lineaNombre: 'FEDEM Provincial',
-          monto: 220000,
-          cuotas: 18,
-          cuotaEstimada: 20650,
-          tasaCosto: 'TEM: 3.72% | TNA: 44.67%',
-          estadoPropuesta: 'Propuesta Enviada al Comercializador',
-          detalle: 'Se amplía capital a $220.000 para cancelar saldo anterior y liberar cuota mensual en recibo',
-          esRefinanciacion: true,
-          refinanciacion: {
-            ayudasACancelar: 'Cancela saldo Ayuda N° 38920 saldo $95.000',
-            montoDeudaPrevia: 95000,
-            montoBolsillo: 125000,
-            cuotaAnterior: 29500,
-            nuevaCuota: 20650,
-            alivioMensual: 8850,
-            observaciones: 'El socio reduce su afectación mensual en $8.850 netos'
-          },
-          fecha: '2026-11-09 16:00',
-          analista: 'Mariana López',
-          diferenciaTexto: '+$40.000 capital, con refinanciación de ayuda previa (Alivio cuota: $3.750/mes)'
-        },
-        historialPropuestas: [
-          {
-            version: 1,
-            fecha: '2026-11-09 13:30',
-            analista: 'Mariana López',
-            linea: 'fedem',
-            lineaNombre: 'FEDEM Provincial',
-            monto: 180000,
-            cuotas: 18,
-            cuotaEstimada: 16900,
-            tasaCosto: 'TEM: 3.72% | TNA: 44.67%',
-            estadoPropuesta: 'Propuesta Enviada al Comercializador',
-            detalle: 'Por margen del 30% se contraoferta $180.000 sin refinanciación inicial',
-            esRefinanciacion: false,
-            refinanciacion: null,
-            diferenciaTexto: 'Versión inicial registrada'
-          },
-          {
-            version: 2,
-            fecha: '2026-11-09 16:00',
-            analista: 'Mariana López',
-            linea: 'fedem',
-            lineaNombre: 'FEDEM Provincial',
-            monto: 220000,
-            cuotas: 18,
-            cuotaEstimada: 20650,
-            tasaCosto: 'TEM: 3.72% | TNA: 44.67%',
-            estadoPropuesta: 'Propuesta Enviada al Comercializador',
-            detalle: 'Se amplía capital a $220.000 para cancelar saldo anterior y liberar cuota mensual en recibo',
-            esRefinanciacion: true,
-            refinanciacion: {
-              ayudasACancelar: 'Cancela saldo Ayuda N° 38920 saldo $95.000',
-              montoDeudaPrevia: 95000,
-              montoBolsillo: 125000,
-              cuotaAnterior: 29500,
-              nuevaCuota: 20650,
-              alivioMensual: 8850,
-              observaciones: 'El socio reduce su afectación mensual en $8.850 netos'
-            },
-            diferenciaTexto: '+$40.000 capital, con refinanciación de ayuda previa'
-          }
-        ],
-        adjuntos: [
-          { tipo: 'DNI Frente y Dorso', nombre: '43121 DNI Frente.jpg', fecha: '2026-11-09 11:15', autor: 'Mariano Benítez', urlDrive: '' },
-          { tipo: 'Recibo de Sueldo', nombre: '43121 Recibo de Sueldo.pdf', fecha: '2026-11-09 11:15', autor: 'Mariano Benítez', urlDrive: '' }
-        ],
-        estado: 'En Análisis',
-        analistaAsignado: 'Mariana López',
-        observaciones: [
-          { autor: 'Mariano Benítez', rol: 'Comercializador - Titular', fecha: '2026-11-09 11:15', texto: 'Solicitud originada por titular de organización. Legajo completo.' },
-          { autor: 'Mariana López', rol: 'Analista Mutual', fecha: '2026-11-09 15:30', texto: 'Legajo ingresado a control de scoring crediticio. Se calcula contraoferta viable.' }
-        ]
-      },
-      {
-        id: '43122',
-        id_provisorio: 'PROV-43122',
-        id_definitivo: 'AYU-2026-986',
-        fecha: '2026-11-10 10:00',
-        usuario_id: 'usr_concordia',
-        comercializador: 'Roberto Benítez',
-        organizacion_id: 'org_concordia',
-        nombre_organizacion: 'Organización Concordia',
-        solicitante: {
-          dni: '35112233', legajo: '8841', nombre: 'Esteban Martínez', fechaNac: '1989-11-03',
-          email: 'emartinez@gmail.com', celular: '3434112233', domicilio: 'San Martín 120, Concordia',
-          condicion: 'Activo', organismo: 'Municipal', dependencia: 'Tránsito Municipal', cargo: 'Titular'
-        },
-        prestamo: {
-          linea: 'muni', lineaNombre: 'Convenio Municipal VIKINGO / QUAD',
-          monto: 150000, cuotas: 12, cuotaEstimada: 23955
-        },
-        propuestaMutual: {
-          version: 1,
-          activa: true,
-          linea: 'muni',
-          lineaNombre: 'Convenio Municipal VIKINGO / QUAD',
-          monto: 150000,
-          cuotas: 12,
-          cuotaEstimada: 23955,
-          tasaCosto: 'TEM: 3.30% | TNA: 39.60%',
-          estadoPropuesta: 'Aceptada por el Socio',
-          detalle: 'Aprobación plena según condiciones solicitadas',
-          esRefinanciacion: false,
-          refinanciacion: null,
-          fecha: '2026-11-10 12:30',
-          analista: 'Mariana López',
-          diferenciaTexto: 'Versión inicial aprobada'
-        },
-        historialPropuestas: [
-          {
-            version: 1,
-            fecha: '2026-11-10 12:30',
-            analista: 'Mariana López',
-            linea: 'muni',
-            lineaNombre: 'Convenio Municipal VIKINGO / QUAD',
-            monto: 150000,
-            cuotas: 12,
-            cuotaEstimada: 23955,
-            tasaCosto: 'TEM: 3.30% | TNA: 39.60%',
-            estadoPropuesta: 'Aceptada por el Socio',
-            detalle: 'Aprobación plena según condiciones solicitadas',
-            esRefinanciacion: false,
-            refinanciacion: null,
-            diferenciaTexto: 'Versión inicial aprobada'
-          }
-        ],
-        adjuntos: [
-          { tipo: 'DNI Frente y Dorso', nombre: '43122 DNI Frente.jpg', fecha: '2026-11-10 10:00', autor: 'Roberto Benítez', urlDrive: '' },
-          { tipo: 'Recibo de Sueldo', nombre: '43122 Recibo de Sueldo.pdf', fecha: '2026-11-10 10:00', autor: 'Roberto Benítez', urlDrive: '' }
-        ],
-        estado: 'Aprobado',
-        analistaAsignado: 'Mariana López',
-        observaciones: [
-          { autor: 'Roberto Benítez', rol: 'Comercializador - Asesor', fecha: '2026-11-10 10:00', texto: 'Solicitud ingresada para aprobación.' },
-          { autor: 'Mariana López', rol: 'Analista Mutual', fecha: '2026-11-10 12:30', texto: 'Aprobado por el comité de créditos sin objeciones.' }
-        ]
-      },
-      {
-        id: '43125',
-        id_provisorio: 'PROV-43125',
-        id_definitivo: 'AYU-2026-990',
-        fecha: '2026-11-10 09:15',
-        usuario_id: 'usr_analista1',
-        comercializador: 'Mariana López (Sede Central)',
-        organizacion_id: 'org_sede_central',
-        nombre_organizacion: 'Sede Central Mutual',
-        origen_canal: 'Presencial Sede Central',
-        solicitante: {
-          dni: '24332114', legajo: '5540', nombre: 'María Rosa Benítez', fechaNac: '1975-06-18',
-          email: 'mrbenitez@gmail.com', celular: '3434667788', domicilio: '25 de Mayo 430, Paraná',
-          condicion: 'Activo', organismo: 'Provincial', dependencia: 'Ministerio de Salud', cargo: 'Titular'
-        },
-        prestamo: {
-          linea: 'fedem', lineaNombre: 'FEDEM Provincial',
-          monto: 120000, cuotas: 18, cuotaEstimada: 11250
-        },
-        propuestaMutual: {
-          version: 1,
-          activa: true,
-          linea: 'fedem',
-          lineaNombre: 'FEDEM Provincial',
-          monto: 120000,
-          cuotas: 18,
-          cuotaEstimada: 11250,
-          tasaCosto: 'TEM: 3.72% | TNA: 44.67%',
-          estadoPropuesta: 'Aceptada por el Socio',
-          detalle: 'Originación presencial en mostrador sede central con verificación inmediata de legajo',
-          esRefinanciacion: false,
-          refinanciacion: null,
-          fecha: '2026-11-10 11:00',
-          analista: 'Mariana López',
-          diferenciaTexto: 'Aprobada en sede'
-        },
-        historialPropuestas: [
-          {
-            version: 1,
-            fecha: '2026-11-10 11:00',
-            analista: 'Mariana López',
-            linea: 'fedem',
-            lineaNombre: 'FEDEM Provincial',
-            monto: 120000,
-            cuotas: 18,
-            cuotaEstimada: 11250,
-            tasaCosto: 'TEM: 3.72% | TNA: 44.67%',
-            estadoPropuesta: 'Aceptada por el Socio',
-            detalle: 'Originación presencial en mostrador sede central',
-            esRefinanciacion: false,
-            refinanciacion: null,
-            diferenciaTexto: 'Aprobada en sede'
-          }
-        ],
-        adjuntos: [
-          { tipo: 'DNI Frente y Dorso', nombre: '43125 DNI Frente.jpg', fecha: '2026-11-10 09:15', autor: 'Mariana López', urlDrive: '' },
-          { tipo: 'Recibo de Sueldo', nombre: '43125 Recibo de Sueldo.pdf', fecha: '2026-11-10 09:15', autor: 'Mariana López', urlDrive: '' }
-        ],
-        estado: 'Aprobado',
-        analistaAsignado: 'Mariana López',
-        observaciones: [
-          { autor: 'Mariana López', rol: 'Analista Mutual', fecha: '2026-11-10 09:15', texto: 'Socia atendida presencialmente en mostrador Sede Central. Documentación validada en el momento.' },
-          { autor: 'Mariana López', rol: 'Analista Mutual', fecha: '2026-11-10 11:00', texto: 'Aprobado por comité. Listo para liquidación por transferencia.' }
-        ]
-      },
-      {
-        id: '43126',
-        id_provisorio: 'PROV-43126',
-        id_definitivo: '',
-        fecha: '2026-11-11 10:30',
-        usuario_id: 'usr_analista1',
-        comercializador: 'Mariana López (Sede Central)',
-        organizacion_id: 'org_sede_central',
-        nombre_organizacion: 'Sede Central Mutual',
-        origen_canal: 'WhatsApp Oficial',
-        solicitante: {
-          dni: '31554210', legajo: '9820', nombre: 'Jorge David Fontana', fechaNac: '1984-03-22',
-          email: 'jdfontana@yahoo.com.ar', celular: '3434889900', domicilio: 'Laprida 610, Paraná',
-          condicion: 'Activo', organismo: 'Municipal', dependencia: 'Obras Públicas', cargo: 'Titular'
-        },
-        prestamo: {
-          linea: 'muni', lineaNombre: 'Convenio Municipal VIKINGO / QUAD',
-          monto: 150000, cuotas: 12, cuotaEstimada: 23955
-        },
-        propuestaMutual: {
-          version: 1,
-          activa: false,
-          linea: 'muni',
-          lineaNombre: 'Convenio Municipal VIKINGO / QUAD',
-          monto: 150000,
-          cuotas: 12,
-          cuotaEstimada: 23955,
-          tasaCosto: 'TEM: 3.30% | TNA: 39.60%',
-          estadoPropuesta: 'En Evaluación',
-          detalle: 'Solicitud ingresada por canal institucional de WhatsApp',
-          esRefinanciacion: false,
-          refinanciacion: null,
-          fecha: '2026-11-11 10:30',
-          analista: 'Mariana López',
-          diferenciaTexto: 'En evaluación'
-        },
-        historialPropuestas: [],
-        adjuntos: [
-          { tipo: 'DNI Frente y Dorso', nombre: '43126 DNI Frente.jpg', fecha: '2026-11-11 10:30', autor: 'Mariana López', urlDrive: '' },
-          { tipo: 'Recibo de Sueldo', nombre: '43126 Recibo de Sueldo.pdf', fecha: '2026-11-11 10:30', autor: 'Mariana López', urlDrive: '' }
-        ],
-        estado: 'Pendiente',
-        analistaAsignado: 'Mariana López',
-        observaciones: [
-          { autor: 'Mariana López', rol: 'Analista Mutual', fecha: '2026-11-11 10:30', texto: 'Trámite recibido a través del canal oficial de WhatsApp Mutual. En proceso de verificación documental.' }
-        ]
+    const STORAGE_SOLICITUDES_KEY = 'AMMER_SOLICITUDES_PROD_V1';
+    const INITIAL_SOLICITUDES = [];
+
+        /* ========================================================================
+       PADRÓN DE ASOCIADOS, REGLA DE ORGANISMO Y NOMENCLATURA DE ARCHIVOS DRIVE
+       ======================================================================== */
+    function normalizarNombreArchivoDrive(idExpediente, tipoDoc, extension, indice = 0) {
+      const ext = (extension || 'PDF').toUpperCase().replace(/^\./, '');
+      let tipoUpper = String(tipoDoc).toUpperCase().trim();
+      if (tipoUpper.includes('DNI')) tipoUpper = 'DNI';
+      else if (tipoUpper.includes('RECIBO')) tipoUpper = 'RECIBO DE SUELDO';
+      else if (tipoUpper.includes('SERVICIO') || tipoUpper.includes('DOMICILIO')) tipoUpper = 'SERVICIO';
+      else if (tipoUpper.includes('CBU')) tipoUpper = 'CONSTANCIA DE CBU';
+      else if (tipoUpper.includes('SAGE')) tipoUpper = 'CERTIFICADO SAGE';
+      else if (tipoUpper.includes('MOVIMIENTO') || tipoUpper.includes('BANCARIO')) tipoUpper = 'COMPROBANTE DE MOVIMIENTOS BANCARIOS';
+      else if (tipoUpper.includes('SIDECREER')) tipoUpper = 'TARJETA SIDECREER';
+      else if (tipoUpper.includes('TRANSFERENCIA')) tipoUpper = 'TRANSFERENCIA';
+      else if (tipoUpper.includes('SOLICITUD') || tipoUpper.includes('AYUDA')) tipoUpper = 'SOLICITUD DE AYUDA ECONOMICA';
+      else if (tipoUpper.includes('DESCUENTO') || tipoUpper.includes('HABERES')) tipoUpper = 'AUTORIZACION PARA DESCUENTO DE HABERES';
+      else if (tipoUpper.includes('OTRO')) tipoUpper = 'OTROS DOCUMENTOS';
+
+      const sufijo = (indice > 0) ? `_${indice + 1}` : '';
+      return `${idExpediente} ${tipoUpper}${sufijo}.${ext}`;
+    }
+
+    function handleOrganismoChange(organismoVal, legajoInputId) {
+      const inp = document.getElementById(legajoInputId);
+      if (!inp) return;
+      if (organismoVal === 'Provincial') {
+        inp.value = '';
+        inp.disabled = true;
+        inp.style.opacity = '0.5';
+        inp.style.background = '#f1f5f9';
+        inp.style.cursor = 'not-allowed';
+      } else {
+        inp.disabled = false;
+        inp.style.opacity = '1';
+        inp.style.background = '#fff';
+        inp.style.cursor = 'text';
       }
-    ];
+    }
+
+    let timerBuscarDni = null;
+    function handleDniInputDebounced(val) {
+      clearTimeout(timerBuscarDni);
+      const dniLimpio = String(val || '').replace(/[^0-9]/g, '').trim();
+      const badge = document.getElementById('badgePadronDni');
+      if (badge) badge.style.display = 'none';
+
+      if (dniLimpio.length < 7 || dniLimpio.length > 8) return;
+
+      timerBuscarDni = setTimeout(async () => {
+        try {
+          const res = await callApi({ action: 'buscarAsociadoPorDNI', dni: dniLimpio });
+          if (res && res.ok && res.data) {
+            const asoc = res.data.asociado || (res.data.encontrado ? res.data : null);
+            if (asoc && (asoc.nombre || asoc.apellido || asoc.dni)) {
+              if (badge) badge.style.display = 'inline-flex';
+              const inpNombre = document.getElementById('solNombre');
+              if (inpNombre && (asoc.nombre || asoc.apellido)) {
+                inpNombre.value = (asoc.nombre && asoc.apellido) ? (asoc.apellido + ' ' + asoc.nombre) : (asoc.nombre || asoc.apellido);
+              }
+              if (asoc.fechaNac) {
+                const el = document.getElementById('solFechaNac');
+                if (el) el.value = asoc.fechaNac.slice(0, 10);
+              }
+              if (asoc.email) {
+                const el = document.getElementById('solEmail');
+                if (el) el.value = asoc.email;
+              }
+              if (asoc.celular || asoc.telefono) {
+                const el = document.getElementById('solCelular');
+                if (el) el.value = asoc.celular || asoc.telefono;
+              }
+              if (asoc.domicilio) {
+                const el = document.getElementById('solDomicilio');
+                if (el) el.value = asoc.domicilio;
+              }
+              if (asoc.condicion) {
+                const el = document.getElementById('solCondicion');
+                if (el) el.value = asoc.condicion;
+              }
+              if (asoc.organismo) {
+                const el = document.getElementById('solOrganismo');
+                if (el) {
+                  el.value = asoc.organismo;
+                  handleOrganismoChange(asoc.organismo, 'solLegajo');
+                }
+              }
+              if (asoc.legajo && asoc.organismo === 'Municipal') {
+                const el = document.getElementById('solLegajo');
+                if (el) el.value = asoc.legajo;
+              }
+              if (asoc.dependencia) {
+                const el = document.getElementById('solDependencia');
+                if (el) el.value = asoc.dependencia;
+              }
+              if (asoc.cargo) {
+                const el = document.getElementById('solCargo');
+                if (el) el.value = asoc.cargo;
+              }
+              showToast('✓ Asociado encontrado en Padrón: ' + (inpNombre ? inpNombre.value : ''));
+            }
+          }
+        } catch (err) {
+          console.warn('Error buscando asociado en padrón:', err);
+        }
+      }, 350);
+    }
+
+    function abrirModalAltaAsociado() {
+      const f = document.getElementById('formAltaAsociado');
+      if (f) f.reset();
+      handleOrganismoChange('Provincial', 'asocLegajo');
+      abrirModal('modalAltaAsociado');
+    }
+
+    async function guardarNuevoAsociado(e) {
+      e.preventDefault();
+      const session = getSession(); if (!session) return;
+      const dniVal = (document.getElementById('asocDni')?.value || '').trim();
+      if (!validarDni(dniVal)) {
+        showToast('⚠️ Error: El DNI debe ser numérico y contener entre 7 y 8 dígitos.');
+        return;
+      }
+      const nombreVal = (document.getElementById('asocNombre')?.value || '').trim();
+      const fechaNacVal = document.getElementById('asocFechaNac')?.value;
+      const celularVal = (document.getElementById('asocCelular')?.value || '').trim();
+      const emailVal = (document.getElementById('asocEmail')?.value || '').trim();
+      const domicilioVal = (document.getElementById('asocDomicilio')?.value || '').trim();
+      const condicionVal = document.getElementById('asocCondicion')?.value || 'Activo';
+      const organismoVal = document.getElementById('asocOrganismo')?.value || 'Provincial';
+      const legajoVal = (organismoVal === 'Municipal') ? (document.getElementById('asocLegajo')?.value || '').trim() : '';
+      const dependenciaVal = (document.getElementById('asocDependencia')?.value || '').trim();
+      const cargoVal = document.getElementById('asocCargo')?.value || 'Titular';
+
+      const fileInputs = [
+        { el: document.getElementById('asocFileDni'), tipo: 'DNI' },
+        { el: document.getElementById('asocFileRecibo'), tipo: 'RECIBO DE SUELDO' },
+        { el: document.getElementById('asocFileServicio'), tipo: 'SERVICIO' },
+        { el: document.getElementById('asocFileCbu'), tipo: 'CONSTANCIA DE CBU' },
+        { el: document.getElementById('asocFileSage'), tipo: 'CERTIFICADO SAGE' },
+        { el: document.getElementById('asocFileOtros'), tipo: 'OTROS DOCUMENTOS' }
+      ];
+
+      mostrarCargando('Registrando Asociado...', 'Codificando legajo y conectando con Google Sheets');
+      const adjuntosBase64 = [];
+
+      for (const item of fileInputs) {
+        if (item.el && item.el.files && item.el.files.length > 0) {
+          for (let i = 0; i < item.el.files.length; i++) {
+            const f = item.el.files[i];
+            const check = validarArchivoAdjunto(f);
+            if (check.valido) {
+              const b64 = await fileToBase64(f);
+              if (b64) {
+                const ext = (f.name.split('.').pop() || 'PDF').toUpperCase();
+                const nombreFormateado = normalizarNombreArchivoDrive(dniVal, item.tipo, ext, i);
+                adjuntosBase64.push({
+                  tipo: item.tipo,
+                  nombre: nombreFormateado,
+                  nombreOriginal: f.name,
+                  tipoMime: b64.tipoMime,
+                  base64: b64.base64
+                });
+              }
+            }
+          }
+        }
+      }
+
+      const nuevoAsociado = {
+        dni: dniVal,
+        nombre: nombreVal,
+        fechaNac: fechaNacVal,
+        celular: celularVal,
+        email: emailVal,
+        domicilio: domicilioVal,
+        condicion: condicionVal,
+        organismo: organismoVal,
+        legajo: legajoVal,
+        dependencia: dependenciaVal,
+        cargo: cargoVal,
+        fechaAlta: new Date().toISOString().slice(0, 10),
+        creadoPor: session.nombre
+      };
+
+      const res = await callApi({
+        action: 'crearAsociado',
+        asociado: nuevoAsociado,
+        adjuntosBase64: adjuntosBase64
+      }, {
+        title: 'Guardando en Padrón de Asociados...',
+        sub: 'Registrando asociado DNI ' + dniVal + ' en Google Sheets'
+      });
+
+      cerrarModal('modalAltaAsociado');
+      if (res && res.ok) {
+        showToast('👤 Asociado ' + nombreVal + ' (DNI ' + dniVal + ') registrado con éxito en Padrón 🚀');
+      } else {
+        showToast('👤 Asociado registrado localmente en la sesión actual');
+      }
+    }
 
     function getStoredSolicitudes() {
       const data = localStorage.getItem(STORAGE_SOLICITUDES_KEY);
@@ -2388,6 +2432,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       else list = all.filter(s => s.usuario_id === session.id || s.comercializador === session.nombre);
 
       const q = (document.getElementById('filtroComercialTexto')?.value || '').toLowerCase().trim();
+      const linea = document.getElementById('filtroComercialLinea')?.value || '';
+      const fDesde = document.getElementById('filtroComercialFechaDesde')?.value || '';
+      const fHasta = document.getElementById('filtroComercialFechaHasta')?.value || '';
       const est = document.getElementById('filtroComercialEstado')?.value || '';
       const cboAsesor = document.getElementById('filtroComercialAsesor');
       const filAsesor = (cboAsesor && (isTitular || isAdmin)) ? cboAsesor.value : '';
@@ -2399,9 +2446,19 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           (s.solicitante?.dni && String(s.solicitante.dni).includes(q)) ||
           (s.solicitante?.nombre && s.solicitante.nombre.toLowerCase().includes(q)) ||
           (s.comercializador && s.comercializador.toLowerCase().includes(q));
-        const matchEst = !est || s.estado === est;
+
+        const matchLinea = !linea || (s.prestamo?.linea === linea);
+        const matchEst = !est || (s.estado === est || (est === 'En Análisis' && (s.estado === 'En Análisis' || s.estado === 'En Gestión' || s.estado === 'En Evaluación')));
         const matchAsesor = !filAsesor || s.comercializador === filAsesor;
-        return matchQ && matchEst && matchAsesor;
+
+        let matchFecha = true;
+        if (fDesde || fHasta) {
+          const sFecha = (s.fecha || '').slice(0, 10);
+          if (fDesde && sFecha < fDesde) matchFecha = false;
+          if (fHasta && sFecha > fHasta) matchFecha = false;
+        }
+
+        return matchQ && matchLinea && matchEst && matchAsesor && matchFecha;
       });
     }
 
@@ -2495,10 +2552,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       window._origenModalAlta = origen;
       document.getElementById('formAltaSolicitud')?.reset();
       ajustarPlazosModalAlta('fedem');
-
+      handleOrganismoChange('Provincial', 'solLegajo');
+      const b = document.getElementById('badgePadronDni'); if (b) b.style.display = 'none';
+      const session = getSession();
+      const isAnalistaOAdmin = (session && (session.rol === 'Analista' || session.rol === 'Admin'));
       const groupCanal = document.getElementById('groupCanalIngresoModal');
       const titleSpan = document.getElementById('lblAltaModalTitle');
-
+      const grpDocsMut = document.getElementById('groupDocsInternosMutual');
+      if (grpDocsMut) grpDocsMut.style.display = (origen === 'mutual_sede' || isAnalistaOAdmin) ? 'block' : 'none';
       if (origen === 'mutual_sede') {
         if (groupCanal) groupCanal.style.display = 'block';
         if (titleSpan) titleSpan.textContent = '🏛️ Nueva Solicitud Mutual (Sede Central / WhatsApp)';
@@ -2566,11 +2627,17 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const nowStr = new Date().toISOString().slice(0, 16).replace('T', ' ');
 
       const fileInputs = [
-        { el: document.getElementById('fileDni'), tipo: 'DNI Frente y Dorso' },
-        { el: document.getElementById('fileRecibo'), tipo: 'Recibo de Sueldo' },
-        { el: document.getElementById('fileSidecreer'), tipo: 'Tarjeta Sidecreer' },
-        { el: document.getElementById('fileDomicilio'), tipo: 'Factura Servicio' },
-        { el: document.getElementById('fileEspecial'), tipo: 'Constancias Especiales' }
+        { el: document.getElementById('fileDni'), tipo: 'DNI' },
+        { el: document.getElementById('fileRecibo'), tipo: 'RECIBO DE SUELDO' },
+        { el: document.getElementById('fileServicio'), tipo: 'SERVICIO' },
+        { el: document.getElementById('fileCbu'), tipo: 'CONSTANCIA DE CBU' },
+        { el: document.getElementById('fileSage'), tipo: 'CERTIFICADO SAGE' },
+        { el: document.getElementById('fileMovimientos'), tipo: 'COMPROBANTE DE MOVIMIENTOS BANCARIOS' },
+        { el: document.getElementById('fileSidecreer'), tipo: 'TARJETA SIDECREER' },
+        { el: document.getElementById('fileOtros'), tipo: 'OTROS DOCUMENTOS' },
+        { el: document.getElementById('fileTransferencia'), tipo: 'TRANSFERENCIA' },
+        { el: document.getElementById('fileSolicitudAyuda'), tipo: 'SOLICITUD DE AYUDA ECONOMICA' },
+        { el: document.getElementById('fileAutorizacionDescuento'), tipo: 'AUTORIZACION PARA DESCUENTO DE HABERES' }
       ];
 
       // 4. Pre-validación de archivos adjuntos (Tamaño máx 10 MB y extensiones)
@@ -2599,7 +2666,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             try {
               const b64 = await fileToBase64(f);
               if (b64) {
-                const nombreFormateado = rawRand + ' ' + item.tipo.replace(/\s+/g, '_') + '_' + (i + 1) + '.' + (f.name.split('.').pop() || 'pdf');
+                const extUpper = (f.name.split('.').pop() || 'PDF').toUpperCase();
+                const nombreFormateado = normalizarNombreArchivoDrive(rawRand, item.tipo, extUpper, i);
                 adjuntosBase64.push({
                   tipo: item.tipo,
                   nombre: nombreFormateado,
@@ -2646,6 +2714,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const asesorNombre = isSedeCentral ? (session.nombre + ' (Sede Central)') : session.nombre;
       const analistaAsig = isSedeCentral ? session.nombre : 'Sin Asignar';
 
+      const domHistVal = sanitizeHTML(document.getElementById('solDomicilio').value.trim());
       const nueva = {
         id: rawRand,
         id_provisorio: provId,
@@ -2656,6 +2725,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         organizacion_id: orgId,
         nombre_organizacion: orgNombre,
         origen_canal: canalIngreso,
+        domicilio_historico: domHistVal,
         solicitante: {
           dni: sanitizeHTML(document.getElementById('solDni').value.trim()),
           legajo: sanitizeHTML(document.getElementById('solLegajo').value.trim()),
@@ -2663,7 +2733,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           fechaNac: sanitizeHTML(document.getElementById('solFechaNac').value),
           email: sanitizeHTML(document.getElementById('solEmail').value.trim()),
           celular: sanitizeHTML(document.getElementById('solCelular').value.trim()),
-          domicilio: sanitizeHTML(document.getElementById('solDomicilio').value.trim()),
+          domicilio: domHistVal,
+          domicilio_historico: domHistVal,
           condicion: sanitizeHTML(document.getElementById('solCondicion').value),
           organismo: sanitizeHTML(document.getElementById('solOrganismo').value),
           dependencia: sanitizeHTML(document.getElementById('solDependencia').value.trim()),
@@ -2697,6 +2768,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const res = await callApi({
         action: 'crearSolicitud',
         solicitud: nueva,
+        domicilio_historico: domHistVal,
         adjuntosBase64: adjuntosBase64
       }, {
         title: 'Guardando en Google Sheets & Drive...',
@@ -2807,6 +2879,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             '<div class="form-group"><label class="form-label">Legajo Municipal</label><input type="text" id="editLegajo" class="input-text" value="' + (s.solicitante?.legajo || '') + '"/></div>' +
           '</div>' +
           '<div class="form-group"><label class="form-label">Domicilio Completo *</label><input type="text" id="editDomicilio" class="input-text" value="' + (s.solicitante?.domicilio || '') + '" required/></div>' +
+          '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:0.75rem;font-size:0.75rem;color:#166534;font-weight:700;">🏠 Domicilio al momento de la solicitud: <span style="font-weight:500;color:#1e293b;">' + (s.domicilio_historico || s.solicitante?.domicilio_historico || s.solicitante?.domicilio || 'No especificado') + '</span></div>' +
           '<div class="grid-3-cols">' +
             '<div class="form-group"><label class="form-label">Condición *</label>' +
               '<select id="editCondicion" class="input-text">' +
@@ -2814,7 +2887,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
               '</select>' +
             '</div>' +
             '<div class="form-group"><label class="form-label">Organismo *</label>' +
-              '<select id="editOrganismo" class="input-text">' +
+              '<select id="editOrganismo" class="input-text" onchange="handleOrganismoChange(this.value, \'editLegajo\')">' +
                 ['Provincial', 'Municipal'].map(o => '<option value="' + o + '" ' + (s.solicitante?.organismo === o ? 'selected' : '') + '>' + o + '</option>').join('') +
               '</select>' +
             '</div>' +
@@ -3060,12 +3133,19 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         '<div style="font-size:.75rem;font-weight:700;color:#0369a1;margin-bottom:.4rem;">➕ Subir Documentación Complementaria al Expediente (Drive)</div>' +
         '<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:.5rem;align-items:center;">' +
           '<select id="cboFichaDocTipo" class="input-text" style="font-size:.72rem;">' +
-            '<option value="DNI Frente y Dorso">DNI Frente y Dorso</option>' +
-            '<option value="Recibo de Sueldo Nuevo">Recibo de Sueldo Nuevo</option>' +
-            '<option value="Certificación de Servicios">Certificación de Servicios</option>' +
-            '<option value="Nota de Empleador">Nota de Empleador</option>' +
-            '<option value="Comprobante de Domicilio">Comprobante de Domicilio</option>' +
-            '<option value="Otros Documentos">Otros Documentos</option>' +
+            '<option value="DNI (Frente y Dorso)">DNI (Frente y Dorso)</option>' +
+            '<option value="RECIBO DE SUELDO">RECIBO DE SUELDO</option>' +
+            '<option value="SERVICIO">SERVICIO</option>' +
+            '<option value="CONSTANCIA DE CBU">CONSTANCIA DE CBU</option>' +
+            '<option value="CERTIFICADO SAGE">CERTIFICADO SAGE</option>' +
+            '<option value="COMPROBANTE DE MOVIMIENTOS BANCARIOS">COMPROBANTE DE MOVIMIENTOS BANCARIOS</option>' +
+            '<option value="TARJETA SIDECREER (Frente y Dorso)">TARJETA SIDECREER (Frente y Dorso)</option>' +
+            '<option value="OTROS DOCUMENTOS">OTROS DOCUMENTOS</option>' +
+            (isAnalistaOAdmin ? (
+              '<option value="TRANSFERENCIA">TRANSFERENCIA (Mutual)</option>' +
+              '<option value="SOLICITUD DE AYUDA ECONOMICA">SOLICITUD DE AYUDA ECONOMICA (Mutual)</option>' +
+              '<option value="AUTORIZACION PARA DESCUENTO DE HABERES">AUTORIZACION PARA DESCUENTO DE HABERES (Mutual)</option>'
+            ) : '') +
           '</select>' +
           '<input type="file" id="fileFichaAdicional" class="input-text" style="font-size:.72rem;" accept="image/*,application/pdf"/>' +
           '<button type="button" class="btn-hero-action" style="padding:.45rem .85rem;font-size:.72rem;white-space:nowrap;" onclick="adjuntarDocumentoAdicionalFicha(\'' + s.id + '\')">Subir a Drive 📤</button>' +
@@ -3104,6 +3184,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       '</div>';
 
       body.innerHTML = html;
+      handleOrganismoChange(s.solicitante?.organismo || 'Provincial', 'editLegajo');
       abrirModal('modalFichaCompleta');
 
       // Scroll abajo chat
@@ -3565,7 +3646,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const ext = (file.name.split('.').pop() || 'pdf').toLowerCase();
 
       const prevTipo = s.adjuntos[adjuntoIndex].tipo;
-      const nuevoNombre = s.id + ' ' + prevTipo.replace(/\s+/g, '_') + '_REEMPLAZO_' + timeStamp + '.' + ext;
+      const nuevoNombre = normalizarNombreArchivoDrive(s.id, prevTipo, ext);
 
       mostrarCargando('Reemplazando archivo en Drive...', 'Actualizando legajo digital');
       let b64 = null;
@@ -3633,7 +3714,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const now = new Date();
       const timeStamp = now.toISOString().slice(0, 10).replace(/-/g, '') + '_' + String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
       const extension = (file.name.split('.').pop() || 'pdf').toLowerCase();
-      const generatedName = s.id + ' ' + tipo.replace(/\s+/g, '_') + '_' + timeStamp + '.' + extension;
+      const generatedName = normalizarNombreArchivoDrive(s.id, tipo, extension);
 
       mostrarCargando('Subiendo archivo a Drive...', 'Transfiriendo ' + generatedName);
       let b64Data = null;
@@ -3766,8 +3847,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     function getListaFiltradaMutualPropias() {
       const all = getStoredSolicitudes();
       const q = (document.getElementById('filtroMutualPropiasTexto')?.value || '').toLowerCase().trim();
-      const canal = document.getElementById('filtroMutualPropiasCanal')?.value || '';
+      const linea = document.getElementById('filtroMutualPropiasLinea')?.value || '';
+      const fDesde = document.getElementById('filtroMutualPropiasFechaDesde')?.value || '';
+      const fHasta = document.getElementById('filtroMutualPropiasFechaHasta')?.value || '';
       const est = document.getElementById('filtroMutualPropiasEstado')?.value || '';
+      const canal = document.getElementById('filtroMutualPropiasCanal')?.value || '';
       const orgaTipo = document.getElementById('filtroMutualPropiasOrganismo')?.value || '';
 
       return all.filter(s => {
@@ -3786,10 +3870,19 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           (s.solicitante?.nombre && s.solicitante.nombre.toLowerCase().includes(q)) ||
           (s.origen_canal && s.origen_canal.toLowerCase().includes(q));
 
+        const matchLinea = !linea || (s.prestamo?.linea === linea);
+        const matchEst = !est || (s.estado === est || (est === 'En Análisis' && (s.estado === 'En Análisis' || s.estado === 'En Gestión' || s.estado === 'En Evaluación')));
         const matchCanal = !canal || (s.origen_canal === canal);
-        const matchEst = !est || (s.estado === est);
         const matchOrgaTipo = !orgaTipo || (s.solicitante?.organismo === orgaTipo);
-        return matchQ && matchCanal && matchEst && matchOrgaTipo;
+
+        let matchFecha = true;
+        if (fDesde || fHasta) {
+          const sFecha = (s.fecha || '').slice(0, 10);
+          if (fDesde && sFecha < fDesde) matchFecha = false;
+          if (fHasta && sFecha > fHasta) matchFecha = false;
+        }
+
+        return matchQ && matchLinea && matchEst && matchCanal && matchOrgaTipo && matchFecha;
       });
     }
 
@@ -3852,6 +3945,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     function getListaFiltradaMutual() {
       const all = getStoredSolicitudes();
       const q = (document.getElementById('filtroMutualTexto')?.value || '').toLowerCase().trim();
+      const linea = document.getElementById('filtroMutualLinea')?.value || '';
+      const fDesde = document.getElementById('filtroMutualFechaDesde')?.value || '';
+      const fHasta = document.getElementById('filtroMutualFechaHasta')?.value || '';
       const est = document.getElementById('filtroMutualEstado')?.value || '';
       const org = document.getElementById('filtroMutualOrganizacion')?.value || '';
       const com = document.getElementById('filtroMutualComercial')?.value || '';
@@ -3875,11 +3971,21 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           (s.solicitante?.dni && String(s.solicitante.dni).includes(q)) ||
           (s.solicitante?.nombre && s.solicitante.nombre.toLowerCase().includes(q)) ||
           (s.comercializador && s.comercializador.toLowerCase().includes(q));
-        const matchEst = !est || s.estado === est;
+
+        const matchLinea = !linea || (s.prestamo?.linea === linea);
+        const matchEst = !est || (s.estado === est || (est === 'En Análisis' && (s.estado === 'En Análisis' || s.estado === 'En Gestión' || s.estado === 'En Evaluación')));
         const matchOrg = !org || (s.nombre_organizacion || 'Organización Paraná Centro') === org;
         const matchCom = !com || s.comercializador === com;
         const matchOrgaTipo = !orgaTipo || (s.solicitante?.organismo === orgaTipo);
-        return matchQ && matchEst && matchOrg && matchCom && matchOrgaTipo;
+
+        let matchFecha = true;
+        if (fDesde || fHasta) {
+          const sFecha = (s.fecha || '').slice(0, 10);
+          if (fDesde && sFecha < fDesde) matchFecha = false;
+          if (fHasta && sFecha > fHasta) matchFecha = false;
+        }
+
+        return matchQ && matchLinea && matchEst && matchOrg && matchCom && matchOrgaTipo && matchFecha;
       });
     }
 
@@ -5597,6 +5703,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.registrarDictamenEnChatAuditoria = registrarDictamenEnChatAuditoria;
     window.copiarInformeAuditoriaClipboard = copiarInformeAuditoriaClipboard;
     window.ejecutarAuditoriaAutomaticaExpediente = ejecutarAuditoriaAutomaticaExpediente;
+        window.abrirModalAltaAsociado = abrirModalAltaAsociado;
+    window.guardarNuevoAsociado = guardarNuevoAsociado;
+    window.handleOrganismoChange = handleOrganismoChange;
+    window.handleDniInputDebounced = handleDniInputDebounced;
+    window.toggleWaPlazo = toggleWaPlazo;
+    window.renderWaPlazosSelector = renderWaPlazosSelector;
     window.renderApartadoEjecutivoAuditoriaFicha = renderApartadoEjecutivoAuditoriaFicha;
     window.copiarResumenIAAlChatAuditoria = copiarResumenIAAlChatAuditoria;
 

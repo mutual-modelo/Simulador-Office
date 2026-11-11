@@ -253,6 +253,17 @@
     .offer-card-desired{background:#f8fafc;border-color:#cbd5e1}
     .offer-card-mutual{background:#eff6ff;border-color:#93c5fd}
     .offer-card-title{font-size:.8rem;font-weight:800;display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
+    .box-refinanciacion{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:.75rem;margin-top:.6rem}
+    .refinanciacion-active-badge{background:#fef3c7;color:#92400e;font-size:.65rem;font-weight:700;padding:2px 6px;border-radius:4px;display:inline-flex;align-items:center;gap:3px;border:1px solid #fcd34d}
+    .proposal-timeline{display:flex;flex-direction:column;gap:.5rem;margin-top:.5rem}
+    .proposal-history-card{background:#ffffff;border:1px solid var(--border-color);border-radius:8px;padding:.65rem .85rem;font-size:.72rem;position:relative;transition:all .15s}
+    .proposal-history-card.is-current{border-color:#3b82f6;background:#f0f7ff;box-shadow:0 2px 6px rgba(59,130,246,0.12)}
+    .proposal-history-card .version-pill{background:#1e293b;color:#ffffff;font-size:.65rem;font-weight:800;padding:2px 6px;border-radius:4px}
+    .proposal-history-card.is-current .version-pill{background:#1d4ed8}
+    .proposal-diff-tag{display:inline-block;font-size:.67rem;font-weight:600;color:#0369a1;background:#e0f2fe;padding:2px 6px;border-radius:4px;margin-top:4px}
+    .switch-label-wrap{display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.72rem;font-weight:700;color:var(--color-primary);margin-top:.5rem;padding:.4rem .6rem;background:#f8fafc;border-radius:6px;border:1px solid var(--border-color);transition:background .15s}
+    .switch-label-wrap:hover{background:#f1f5f9}
+    .switch-label-wrap input[type="checkbox"]{width:16px;height:16px;accent-color:var(--color-brand-blue);cursor:pointer}
 
     /* CHAT MODERNO BI-DIRECCIONAL Y ACCESIBLE */
     .chat-container{display:flex;flex-direction:column;gap:.6rem;max-height:300px;overflow-y:auto;padding:.75rem;background:#f1f5f9;border-radius:8px;border:1px solid var(--border-color)}
@@ -709,14 +720,6 @@
         </div>
         <div class="calendar-grid" id="gridMutualCalendario"></div>
       </div>
-
-      <div class="ai-teaser-card">
-        <div class="ai-teaser-info">
-          <h3>🤖 Auditoría Documental Inteligente</h3>
-          <p>Módulo de extracción OCR para recibos de sueldo, verificación automática de DNI y scoring de legajos listo para conectar con Vertex AI.</p>
-        </div>
-        <span class="badge-status badge-EnAnalisis">En Desarrollo</span>
-      </div>
     </section>
   </main>
 
@@ -1143,6 +1146,21 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         capital: res.capitalBruto,
         capitalQuad
       };
+    }
+
+    function obtenerTasaCostoTexto(lineaKey, plazo) {
+      if (lineaKey === 'fedem') {
+        const p = MOTOR_FINANCIERO_EXACTO.fedem && MOTOR_FINANCIERO_EXACTO.fedem[plazo];
+        return p ? ('TEM: ' + (p.tem * 100).toFixed(2) + '% | TNA: ' + (p.tna * 100).toFixed(2) + '%') : 'Tasa Oficial FEDEM';
+      }
+      if (lineaKey === 'sidecreer') {
+        const p = MOTOR_FINANCIERO_EXACTO.sidecreer && MOTOR_FINANCIERO_EXACTO.sidecreer[plazo];
+        return p ? ('TEM: ' + (p.tem * 100).toFixed(2) + '% | TNA: ' + (p.tna * 100).toFixed(2) + '%') : 'Tasa Oficial Sidecreer';
+      }
+      if (lineaKey === 'muni' || lineaKey === 'municipales') {
+        return 'TEM: 3.30% | TNA: 39.60% (Convenio VIKINGO / QUAD)';
+      }
+      return 'Tasas y gastos vigentes Mutual';
     }
 
     function renderApp() {
@@ -1592,15 +1610,72 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           monto: 200000, cuotas: 24, cuotaEstimada: 14850
         },
         propuestaMutual: {
+          version: 2,
           activa: true,
           linea: 'fedem',
           lineaNombre: 'FEDEM Provincial',
-          monto: 180000,
+          monto: 220000,
           cuotas: 18,
-          cuotaEstimada: 16900,
+          cuotaEstimada: 20650,
+          tasaCosto: 'TEM: 3.72% | TNA: 44.67%',
           estadoPropuesta: 'Propuesta Enviada al Comercializador',
-          detalle: 'Por margen de afectación del 30% se contraoferta $180.000 en 18 cuotas'
+          detalle: 'Se amplía capital a $220.000 para cancelar saldo anterior y liberar cuota mensual en recibo',
+          esRefinanciacion: true,
+          refinanciacion: {
+            ayudasACancelar: 'Cancela saldo Ayuda N° 38920 saldo $95.000',
+            montoDeudaPrevia: 95000,
+            montoBolsillo: 125000,
+            cuotaAnterior: 29500,
+            nuevaCuota: 20650,
+            alivioMensual: 8850,
+            observaciones: 'El socio reduce su afectación mensual en $8.850 netos'
+          },
+          fecha: '2026-11-09 16:00',
+          analista: 'Mariana López',
+          diferenciaTexto: '+$40.000 capital, con refinanciación de ayuda previa (Alivio cuota: $3.750/mes)'
         },
+        historialPropuestas: [
+          {
+            version: 1,
+            fecha: '2026-11-09 13:30',
+            analista: 'Mariana López',
+            linea: 'fedem',
+            lineaNombre: 'FEDEM Provincial',
+            monto: 180000,
+            cuotas: 18,
+            cuotaEstimada: 16900,
+            tasaCosto: 'TEM: 3.72% | TNA: 44.67%',
+            estadoPropuesta: 'Propuesta Enviada al Comercializador',
+            detalle: 'Por margen del 30% se contraoferta $180.000 sin refinanciación inicial',
+            esRefinanciacion: false,
+            refinanciacion: null,
+            diferenciaTexto: 'Versión inicial registrada'
+          },
+          {
+            version: 2,
+            fecha: '2026-11-09 16:00',
+            analista: 'Mariana López',
+            linea: 'fedem',
+            lineaNombre: 'FEDEM Provincial',
+            monto: 220000,
+            cuotas: 18,
+            cuotaEstimada: 20650,
+            tasaCosto: 'TEM: 3.72% | TNA: 44.67%',
+            estadoPropuesta: 'Propuesta Enviada al Comercializador',
+            detalle: 'Se amplía capital a $220.000 para cancelar saldo anterior y liberar cuota mensual en recibo',
+            esRefinanciacion: true,
+            refinanciacion: {
+              ayudasACancelar: 'Cancela saldo Ayuda N° 38920 saldo $95.000',
+              montoDeudaPrevia: 95000,
+              montoBolsillo: 125000,
+              cuotaAnterior: 29500,
+              nuevaCuota: 20650,
+              alivioMensual: 8850,
+              observaciones: 'El socio reduce su afectación mensual en $8.850 netos'
+            },
+            diferenciaTexto: '+$40.000 capital, con refinanciación de ayuda previa'
+          }
+        ],
         adjuntos: [
           { tipo: 'DNI Frente y Dorso', nombre: '43121 DNI Frente.jpg', fecha: '2026-11-09 11:15', autor: 'Mariano Benítez', urlDrive: '' },
           { tipo: 'Recibo de Sueldo', nombre: '43121 Recibo de Sueldo.pdf', fecha: '2026-11-09 11:15', autor: 'Mariano Benítez', urlDrive: '' }
@@ -1631,15 +1706,40 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           monto: 150000, cuotas: 12, cuotaEstimada: 23955
         },
         propuestaMutual: {
+          version: 1,
           activa: true,
           linea: 'muni',
           lineaNombre: 'Convenio Municipal VIKINGO / QUAD',
           monto: 150000,
           cuotas: 12,
           cuotaEstimada: 23955,
+          tasaCosto: 'TEM: 3.30% | TNA: 39.60%',
           estadoPropuesta: 'Aceptada por el Socio',
-          detalle: 'Aprobación plena según condiciones solicitadas'
+          detalle: 'Aprobación plena según condiciones solicitadas',
+          esRefinanciacion: false,
+          refinanciacion: null,
+          fecha: '2026-11-10 12:30',
+          analista: 'Mariana López',
+          diferenciaTexto: 'Versión inicial aprobada'
         },
+        historialPropuestas: [
+          {
+            version: 1,
+            fecha: '2026-11-10 12:30',
+            analista: 'Mariana López',
+            linea: 'muni',
+            lineaNombre: 'Convenio Municipal VIKINGO / QUAD',
+            monto: 150000,
+            cuotas: 12,
+            cuotaEstimada: 23955,
+            tasaCosto: 'TEM: 3.30% | TNA: 39.60%',
+            estadoPropuesta: 'Aceptada por el Socio',
+            detalle: 'Aprobación plena según condiciones solicitadas',
+            esRefinanciacion: false,
+            refinanciacion: null,
+            diferenciaTexto: 'Versión inicial aprobada'
+          }
+        ],
         adjuntos: [
           { tipo: 'DNI Frente y Dorso', nombre: '43122 DNI Frente.jpg', fecha: '2026-11-10 10:00', autor: 'Roberto Benítez', urlDrive: '' },
           { tipo: 'Recibo de Sueldo', nombre: '43122 Recibo de Sueldo.pdf', fecha: '2026-11-10 10:00', autor: 'Roberto Benítez', urlDrive: '' }
@@ -1670,17 +1770,33 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     function normalizarSolicitud(s) {
       if (!s.id_provisorio) s.id_provisorio = 'PROV-' + s.id;
       if (s.id_definitivo === undefined) s.id_definitivo = '';
+      if (!s.historialPropuestas) s.historialPropuestas = [];
       if (!s.propuestaMutual) {
         s.propuestaMutual = {
+          version: 1,
           activa: false,
           linea: s.prestamo?.linea || 'fedem',
           lineaNombre: s.prestamo?.lineaNombre || 'FEDEM Provincial',
           monto: s.prestamo?.monto || 100000,
           cuotas: s.prestamo?.cuotas || 12,
           cuotaEstimada: s.prestamo?.cuotaEstimada || 0,
+          tasaCosto: obtenerTasaCostoTexto(s.prestamo?.linea || 'fedem', s.prestamo?.cuotas || 12),
           estadoPropuesta: 'En Evaluación',
-          detalle: ''
+          detalle: '',
+          esRefinanciacion: false,
+          refinanciacion: null,
+          fecha: s.fecha || '',
+          analista: s.analistaAsignado || 'Analista Mutual',
+          diferenciaTexto: 'Versión inicial'
         };
+      } else {
+        if (!s.propuestaMutual.version) s.propuestaMutual.version = 1;
+        if (!s.propuestaMutual.tasaCosto) {
+          s.propuestaMutual.tasaCosto = obtenerTasaCostoTexto(s.propuestaMutual.linea || 'fedem', s.propuestaMutual.cuotas || 12);
+        }
+        if (s.propuestaMutual.activa && s.historialPropuestas.length === 0) {
+          s.historialPropuestas.push({ ...s.propuestaMutual });
+        }
       }
       return s;
     }
@@ -2180,6 +2296,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       // 4. SECCIÓN 2: CONDICIONES DESEADAS VS. PROPUESTA OFICIAL DE LA MUTUAL
       const prop = s.propuestaMutual || {};
+      const tieneRefinanciacion = !!(prop.esRefinanciacion && prop.refinanciacion);
+      const historial = s.historialPropuestas || [];
+
       html += '<div class="section-title-divider">2. Condiciones Deseadas vs. Oferta Oficial Mutual</div>' +
         '<div class="compare-offers-grid">' +
           '<!-- Tarjeta 1: Plan Deseado Solicitante -->' +
@@ -2193,54 +2312,126 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
           '<!-- Tarjeta 2: Oferta Oficial de la Mutual -->' +
           '<div class="offer-card offer-card-mutual">' +
-            '<div class="offer-card-title"><span style="color:var(--color-brand-blue);">🏢 Propuesta y Oferta Oficial Mutual</span>' +
+            '<div class="offer-card-title">' +
+              '<span style="color:var(--color-brand-blue);display:flex;align-items:center;gap:4px;">🏢 Propuesta Oficial ' + (prop.version ? ('<span class="badge-status" style="background:#1d4ed8;color:#fff;font-size:0.62rem;">v' + prop.version + '</span>') : '') + '</span>' +
               '<span class="badge-status badge-EnAnalisis">' + (prop.estadoPropuesta || 'En Evaluación') + '</span>' +
             '</div>';
 
       if (isAnalistaOAdmin) {
+        const lineaActual = prop.linea || s.prestamo?.linea || 'fedem';
+        const cuotasActual = prop.cuotas || s.prestamo?.cuotas || 12;
+        const tasaActual = prop.tasaCosto || obtenerTasaCostoTexto(lineaActual, cuotasActual);
+        const montoActual = prop.monto || s.prestamo?.monto || 100000;
+        const cuotaActual = prop.cuotaEstimada || s.prestamo?.cuotaEstimada || 0;
+        const refObj = prop.refinanciacion || {};
+
         html += '<form onsubmit="guardarPropuestaMutual(event, \'' + s.id + '\')">' +
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px;">' +
             '<div><label class="form-label" style="font-size:.65rem;">Línea Aprobada</label>' +
               '<select id="propLinea" class="input-text" style="font-size:.7rem;" onchange="recalcularOfertaCuotaModal()">' +
-                '<option value="fedem" ' + (prop.linea === 'fedem' ? 'selected' : '') + '>FEDEM Provincial</option>' +
-                '<option value="muni" ' + (prop.linea === 'muni' ? 'selected' : '') + '>Municipales QUAD</option>' +
-                '<option value="sidecreer" ' + (prop.linea === 'sidecreer' ? 'selected' : '') + '>Tarjeta Sidecreer</option>' +
+                '<option value="fedem" ' + (lineaActual === 'fedem' ? 'selected' : '') + '>FEDEM Provincial</option>' +
+                '<option value="muni" ' + (lineaActual === 'muni' ? 'selected' : '') + '>Municipales QUAD</option>' +
+                '<option value="sidecreer" ' + (lineaActual === 'sidecreer' ? 'selected' : '') + '>Tarjeta Sidecreer</option>' +
               '</select>' +
             '</div>' +
-            '<div><label class="form-label" style="font-size:.65rem;">Monto Aprobado ($)</label>' +
-              '<input type="number" id="propMonto" class="input-text" style="font-size:.7rem;" value="' + (prop.monto || s.prestamo.monto) + '" step="1000" oninput="recalcularOfertaCuotaModal()"/>' +
+            '<div><label class="form-label" style="font-size:.65rem;">Monto Neto Ofrecido ($)</label>' +
+              '<input type="number" id="propMonto" class="input-text" style="font-size:.7rem;font-weight:700;" value="' + montoActual + '" step="1000" oninput="recalcularOfertaCuotaModal()"/>' +
             '</div>' +
           '</div>' +
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px;">' +
-            '<div><label class="form-label" style="font-size:.65rem;">Plazo en Cuotas</label>' +
+            '<div><label class="form-label" style="font-size:.65rem;">Cantidad de Cuotas</label>' +
               '<select id="propPlazo" class="input-text" style="font-size:.7rem;" onchange="recalcularOfertaCuotaModal()">' +
-                [6, 12, 18, 24, 36, 48].map(p => '<option value="' + p + '" ' + (prop.cuotas === p ? 'selected' : '') + '>' + p + ' cuotas</option>').join('') +
+                [6, 12, 18, 24, 36, 48].map(p => '<option value="' + p + '" ' + (cuotasActual === p ? 'selected' : '') + '>' + p + ' cuotas</option>').join('') +
               '</select>' +
             '</div>' +
-            '<div><label class="form-label" style="font-size:.65rem;">Cuota Resultante</label>' +
-              '<input type="text" id="propCuotaEst" class="input-text" style="font-size:.7rem;font-weight:700;color:var(--cuota-color);" readonly value="' + formatMoney(prop.cuotaEstimada || s.prestamo.cuotaEstimada) + '"/>' +
+            '<div><label class="form-label" style="font-size:.65rem;">Monto de Cuota Resultante</label>' +
+              '<input type="text" id="propCuotaEst" class="input-text" style="font-size:.7rem;font-weight:700;color:var(--cuota-color);" readonly value="' + formatMoney(cuotaActual) + '"/>' +
             '</div>' +
+          '</div>' +
+          '<div style="margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;background:#f8fafc;padding:3px 6px;border-radius:4px;border:1px solid #e2e8f0;">' +
+            '<span style="font-size:.64rem;color:var(--text-muted);font-weight:600;">Tasa / Costo Financiero:</span>' +
+            '<span id="propTasaCostoTexto" style="font-size:.66rem;font-weight:700;color:#0369a1;">' + tasaActual + '</span>' +
           '</div>' +
           '<div style="margin-bottom:4px;"><label class="form-label" style="font-size:.65rem;">Estado de la Propuesta</label>' +
             '<select id="propEstado" class="input-text" style="font-size:.7rem;font-weight:700;">' +
               ['En Evaluación', 'Propuesta Enviada al Comercializador', 'Aceptada por el Socio', 'Rechazada'].map(st => '<option value="' + st + '" ' + (prop.estadoPropuesta === st ? 'selected' : '') + '>' + st + '</option>').join('') +
             '</select>' +
           '</div>' +
-          '<div style="margin-bottom:4px;"><label class="form-label" style="font-size:.65rem;">Aclaraciones / Fundamento</label>' +
-            '<input type="text" id="propDetalle" class="input-text" style="font-size:.7rem;" placeholder="Ej: Se reduce a 18 cuotas por afectación de haberes..." value="' + (prop.detalle || '') + '"/>' +
+          '<div style="margin-bottom:4px;"><label class="form-label" style="font-size:.65rem;">Observaciones / Fundamento de la Oferta</label>' +
+            '<input type="text" id="propDetalle" class="input-text" style="font-size:.7rem;" placeholder="Ej: Se ajusta plazo por margen de afectación o scoring..." value="' + (prop.detalle || '') + '"/>' +
           '</div>' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:4px;flex-wrap:wrap;">' +
-            '<button type="button" class="btn-copy" style="font-size:0.68rem;padding:3px 6px;" onclick="copiarPropuestaWhatsApp(\'' + s.id + '\')">📋 Copiar para WhatsApp</button>' +
-            '<button type="submit" class="btn-primary-action" style="width:auto;font-size:0.68rem;padding:4px 8px;">Guardar Oferta Oficial</button>' +
+
+          '<!-- 2. MÓDULO DE REFINANCIACIÓN Y CANCELACIÓN DE AYUDAS PREVIAS -->' +
+          '<label class="switch-label-wrap">' +
+            '<input type="checkbox" id="propEsRefinanciacion" onchange="toggleBoxRefinanciacion()" ' + (prop.esRefinanciacion ? 'checked' : '') + '/>' +
+            '<span>🔄 ¿Incluye Refinanciación / Cancelación de Ayudas Anteriores?</span>' +
+          '</label>' +
+
+          '<div id="boxRefinanciacion" class="box-refinanciacion" style="display:' + (prop.esRefinanciacion ? 'block' : 'none') + ';">' +
+            '<div style="font-size:.68rem;font-weight:800;color:#92400e;margin-bottom:4px;display:flex;align-items:center;gap:4px;">' +
+              '<span>💼 Liquidación y Cancelación de Deuda Previa</span>' +
+            '</div>' +
+            '<div style="margin-bottom:4px;">' +
+              '<label class="form-label" style="font-size:.64rem;color:#78350f;">Ayudas Económicas a Cancelar</label>' +
+              '<input type="text" id="propAyudasCancelar" class="input-text" style="font-size:.68rem;" placeholder="Ej: Cancela Ayuda N° 38920 saldo $120.000 y Sidecreer N° 41005..." value="' + (refObj.ayudasACancelar || '') + '"/>' +
+            '</div>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px;">' +
+              '<div>' +
+                '<label class="form-label" style="font-size:.64rem;color:#78350f;">Total Deuda Previa a Cancelar ($)</label>' +
+                '<input type="number" id="propDeudaPrevia" class="input-text" style="font-size:.68rem;font-weight:700;" placeholder="0" value="' + (refObj.montoDeudaPrevia || '') + '" oninput="recalcularRefinanciacion()"/>' +
+              '</div>' +
+              '<div>' +
+                '<label class="form-label" style="font-size:.64rem;color:#166534;font-weight:700;">Neto de Bolsillo Efectivo ($)</label>' +
+                '<input type="text" id="propNetoBolsillo" class="input-text" style="font-size:.68rem;font-weight:800;color:#166534;background:#f0fdf4;" readonly value="' + formatMoney(refObj.montoBolsillo || Math.max(0, montoActual - (refObj.montoDeudaPrevia || 0))) + '"/>' +
+              '</div>' +
+            '</div>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px;">' +
+              '<div>' +
+                '<label class="form-label" style="font-size:.64rem;color:#78350f;">Cuota Anterior que pagaba ($)</label>' +
+                '<input type="number" id="propCuotaAnterior" class="input-text" style="font-size:.68rem;" placeholder="0" value="' + (refObj.cuotaAnterior || '') + '" oninput="recalcularRefinanciacion()"/>' +
+              '</div>' +
+              '<div>' +
+                '<label class="form-label" style="font-size:.64rem;color:#78350f;">Nueva Cuota Resultante ($)</label>' +
+                '<input type="text" id="propNuevaCuotaComp" class="input-text" style="font-size:.68rem;font-weight:700;color:var(--cuota-color);" readonly value="' + formatMoney(cuotaActual) + '"/>' +
+              '</div>' +
+            '</div>' +
+            '<div id="propAlivioCuota" style="font-size:0.67rem;margin-top:2px;padding:3px 6px;border-radius:4px;background:#fff;border:1px solid #fde68a;">' +
+              calcularTextoAlivioHtml(refObj.cuotaAnterior, cuotaActual) +
+            '</div>' +
+            '<div style="margin-top:4px;">' +
+              '<label class="form-label" style="font-size:.64rem;color:#78350f;">Observaciones de la Refinanciación</label>' +
+              '<input type="text" id="propRefinanciacionNotas" class="input-text" style="font-size:.68rem;" placeholder="Notas de análisis o retención..." value="' + (refObj.observaciones || '') + '"/>' +
+            '</div>' +
+          '</div>' +
+
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:4px;flex-wrap:wrap;">' +
+            '<button type="button" class="btn-copy" style="font-size:0.68rem;padding:4px 7px;" onclick="copiarPropuestaWhatsApp(\'' + s.id + '\')">📋 Copiar Oferta para WhatsApp</button>' +
+            '<button type="submit" class="btn-primary-action" style="width:auto;font-size:0.7rem;padding:5px 10px;font-weight:700;">Actualizar / Registrar Nueva Propuesta 💼</button>' +
           '</div>' +
         '</form>';
       } else {
         // Vista para comercializador (lectura de contrapropuesta + copiar WhatsApp)
         if (prop.activa) {
           html += '<div><strong>Línea Ofrecida:</strong> ' + (prop.lineaNombre || prop.linea) + '</div>' +
-            '<div style="font-size:1.1rem;font-weight:800;color:#166534;margin:4px 0;">' + formatMoney(prop.monto) + '</div>' +
+            '<div style="font-size:1.15rem;font-weight:800;color:#166534;margin:3px 0;">' + formatMoney(prop.monto) + '</div>' +
             '<div><strong>Plazo Ofrecido:</strong> ' + prop.cuotas + ' cuotas de <strong>' + formatMoney(prop.cuotaEstimada) + '</strong></div>' +
-            '<div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">Nota Mutual: <em>"' + (prop.detalle || 'Propuesta crediticia lista') + '"</em></div>' +
+            '<div style="font-size:0.68rem;color:#0369a1;margin-top:2px;"><strong>Costo:</strong> ' + (prop.tasaCosto || 'Tasas oficiales vigentes') + '</div>';
+
+          if (tieneRefinanciacion) {
+            const r = prop.refinanciacion;
+            html += '<div class="box-refinanciacion" style="margin-top:6px;padding:6px 8px;">' +
+              '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">' +
+                '<span class="refinanciacion-active-badge">🔄 Incluye Refinanciación de Deuda Previa</span>' +
+              '</div>' +
+              '<div style="font-size:0.7rem;color:#78350f;"><strong>Cancela:</strong> ' + sanitizeHTML(r.ayudasACancelar || 'Créditos previos') + '</div>' +
+              '<div style="font-size:0.7rem;color:#78350f;"><strong>Deuda previa absorbida:</strong> ' + formatMoney(r.montoDeudaPrevia || 0) + '</div>' +
+              '<div style="font-size:0.8rem;font-weight:800;color:#166534;margin:2px 0;">Dinero Neto en Mano (Bolsillo): ' + formatMoney(r.montoBolsillo || 0) + '</div>' +
+              '<div style="font-size:0.68rem;color:#475569;">Cuota previa: ' + formatMoney(r.cuotaAnterior || 0) + ' ➔ Nueva cuota: <strong>' + formatMoney(prop.cuotaEstimada) + '</strong></div>' +
+              (r.alivioMensual > 0 ? ('<div style="font-size:0.68rem;font-weight:700;color:#15803d;margin-top:2px;">🎉 Alivio en recibo: Libera ' + formatMoney(r.alivioMensual) + '/mes</div>') : '') +
+            '</div>';
+          }
+
+          html += '<div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">Nota Mutual: <em>"' + (prop.detalle || 'Propuesta crediticia lista') + '"</em></div>' +
             '<div style="margin-top:8px;">' +
               '<button type="button" class="btn-copy" style="font-size:0.7rem;padding:4px 8px;" onclick="copiarPropuestaWhatsApp(\'' + s.id + '\')">📲 Copiar Propuesta para WhatsApp</button>' +
             '</div>';
@@ -2250,6 +2441,56 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
 
       html += '</div></div>';
+
+      // 4.B HISTORIAL COMPLETO DE OFERTAS PRESENTADAS (LINEA DE TIEMPO / VERSIONES)
+      if (historial.length > 0) {
+        html += '<div style="background:#fff;border:1px solid var(--border-color);border-radius:8px;padding:.75rem;margin-bottom:1rem;">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;border-bottom:1px solid var(--border-color);padding-bottom:.35rem;">' +
+            '<strong style="font-size:0.75rem;color:var(--color-primary);text-transform:uppercase;">📜 Historial de Ofertas Emitidas (' + historial.length + ' versiones)</strong>' +
+            '<span style="font-size:0.65rem;color:var(--text-muted);">Auditoría inmutable de contrapropuestas</span>' +
+          '</div>' +
+          '<div class="proposal-timeline">';
+
+        const reversedHistory = [...historial].reverse();
+        reversedHistory.forEach((v) => {
+          const isCurrent = prop.version ? (v.version === prop.version) : (v === historial[historial.length - 1]);
+          html += '<div class="proposal-history-card ' + (isCurrent ? 'is-current' : '') + '">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;flex-wrap:wrap;gap:4px;">' +
+              '<div style="display:flex;align-items:center;gap:6px;">' +
+                '<span class="version-pill">v' + (v.version || 1) + '</span>' +
+                (isCurrent ? '<span class="badge-status badge-Aprobado" style="font-size:0.6rem;padding:1px 5px;">Versión Vigente</span>' : '') +
+                '<span style="font-size:0.68rem;color:var(--text-muted);">' + formatearFechaHoraChat(v.fecha) + ' por <strong>' + sanitizeHTML(v.analista || 'Analista') + '</strong></span>' +
+              '</div>' +
+              '<span class="badge-status badge-' + String(v.estadoPropuesta || 'EnEvaluacion').replace(/\s/g, '') + '" style="font-size:0.62rem;">' + (v.estadoPropuesta || 'Emitida') + '</span>' +
+            '</div>' +
+            '<div style="font-size:0.72rem;margin-top:2px;">' +
+              '<strong>' + formatMoney(v.monto) + '</strong> en <strong>' + v.cuotas + ' cuotas</strong> de <strong>' + formatMoney(v.cuotaEstimada) + '</strong> (' + (v.lineaNombre || v.linea) + ') ' +
+              '<span style="color:#0369a1;font-size:0.66rem;">• ' + (v.tasaCosto || '') + '</span>' +
+            '</div>';
+
+          if (v.esRefinanciacion && v.refinanciacion) {
+            html += '<div style="font-size:0.67rem;color:#92400e;background:#fef3c7;padding:2px 6px;border-radius:4px;margin-top:3px;display:inline-block;">' +
+              '🔄 Refinancia ' + formatMoney(v.refinanciacion.montoDeudaPrevia || 0) + ' | Bolsillo neto: <strong>' + formatMoney(v.refinanciacion.montoBolsillo || 0) + '</strong>' +
+              (v.refinanciacion.alivioMensual > 0 ? (' | Alivio: ' + formatMoney(v.refinanciacion.alivioMensual) + '/mes') : '') +
+            '</div>';
+          }
+
+          if (v.diferenciaTexto) {
+            html += '<div><span class="proposal-diff-tag">Diferencia vs versión anterior: ' + sanitizeHTML(v.diferenciaTexto) + '</span></div>';
+          }
+
+          if (v.detalle) {
+            html += '<div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;font-style:italic;">Nota: "' + sanitizeHTML(v.detalle) + '"</div>';
+          }
+
+          html += '<div style="margin-top:4px;text-align:right;">' +
+            '<button type="button" class="btn-copy" style="font-size:0.64rem;padding:2px 6px;" onclick="copiarPropuestaWhatsApp(\'' + s.id + '\', ' + (v.version || 1) + ')">📋 Copiar v' + (v.version || 1) + ' para WhatsApp</button>' +
+          '</div>' +
+        '</div>';
+        });
+
+        html += '</div></div>';
+      }
 
       // 5. SECCIÓN 3: GESTOR Y VISOR DOCUMENTAL ONLINE (VER, DESCARGAR, REEMPLAZAR)
       html += '<div class="section-title-divider">3. Legajo Documental Online (Ver, Descargar, Reemplazar)</div>' +
@@ -2432,72 +2673,219 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       verFichaCompleta(id);
     }
 
-    /* RECALCULAR Y GUARDAR OFERTA MUTUAL */
+    /* RECALCULAR Y GESTIONAR OFERTA MUTUAL Y REFINANCIACIÓN */
+    function calcularTextoAlivioHtml(cuotaAnterior, nuevaCuota) {
+      const cuotaAnt = parseFloat(cuotaAnterior) || 0;
+      const cuotaNue = parseFloat(nuevaCuota) || 0;
+      if (cuotaAnt <= 0) {
+        return '<span style="color:var(--text-muted);">Ingrese la cuota anterior para proyectar el alivio mensual.</span>';
+      }
+      const dif = cuotaAnt - cuotaNue;
+      if (dif > 0) {
+        return '<span style="color:#15803d;font-weight:700;">🎉 Alivio financiero: El asociado libera ' + formatMoney(dif) + ' de afectación mensual en su recibo.</span>';
+      }
+      if (dif < 0) {
+        return '<span style="color:#b45309;font-weight:700;">🟡 Variación mensual: Incremento de ' + formatMoney(Math.abs(dif)) + '/mes respecto a lo que venía pagando.</span>';
+      }
+      return '<span style="color:#475569;font-weight:600;">La nueva cuota es idéntica a la anterior.</span>';
+    }
+
+    function toggleBoxRefinanciacion() {
+      const chk = document.getElementById('propEsRefinanciacion');
+      const box = document.getElementById('boxRefinanciacion');
+      if (box && chk) {
+        box.style.display = chk.checked ? 'block' : 'none';
+      }
+      recalcularRefinanciacion();
+    }
+
+    function recalcularRefinanciacion() {
+      const monto = parseFloat(document.getElementById('propMonto')?.value) || 0;
+      const deuda = parseFloat(document.getElementById('propDeudaPrevia')?.value) || 0;
+      const bolsillo = Math.max(0, monto - deuda);
+      const inpBolsillo = document.getElementById('propNetoBolsillo');
+      if (inpBolsillo) inpBolsillo.value = formatMoney(bolsillo);
+
+      const cuotaAnt = parseFloat(document.getElementById('propCuotaAnterior')?.value) || 0;
+      const linea = document.getElementById('propLinea')?.value || 'fedem';
+      const plazo = parseInt(document.getElementById('propPlazo')?.value, 10) || 12;
+      const sim = calculateSimulation(linea, plazo, 'neto', monto);
+      const nuevaCuota = sim ? sim.cuota : 0;
+
+      const inpNuevaComp = document.getElementById('propNuevaCuotaComp');
+      if (inpNuevaComp) inpNuevaComp.value = formatMoney(nuevaCuota);
+
+      const alivioEl = document.getElementById('propAlivioCuota');
+      if (alivioEl) {
+        alivioEl.innerHTML = calcularTextoAlivioHtml(cuotaAnt, nuevaCuota);
+      }
+    }
+
     function recalcularOfertaCuotaModal() {
       const linea = document.getElementById('propLinea')?.value || 'fedem';
       const monto = parseFloat(document.getElementById('propMonto')?.value) || 100000;
       const plazo = parseInt(document.getElementById('propPlazo')?.value, 10) || 12;
       const sim = calculateSimulation(linea, plazo, 'neto', monto);
+      const cuota = sim ? sim.cuota : 0;
+
       const inp = document.getElementById('propCuotaEst');
-      if (inp) inp.value = formatMoney(sim ? sim.cuota : 0);
+      if (inp) inp.value = formatMoney(cuota);
+
+      const tasaEl = document.getElementById('propTasaCostoTexto');
+      if (tasaEl) tasaEl.textContent = obtenerTasaCostoTexto(linea, plazo);
+
+      recalcularRefinanciacion();
     }
 
     async function guardarPropuestaMutual(e, id) {
       e.preventDefault();
       const all = getStoredSolicitudes();
       const s = all.find(x => String(x.id) === String(id)); if (!s) return;
+      const session = getSession();
+
       const linea = document.getElementById('propLinea').value;
       const monto = parseFloat(document.getElementById('propMonto').value) || 100000;
       const plazo = parseInt(document.getElementById('propPlazo').value, 10) || 12;
       const sim = calculateSimulation(linea, plazo, 'neto', monto);
+      const cuota = sim ? sim.cuota : 0;
+      const tasaCosto = obtenerTasaCostoTexto(linea, plazo);
       const est = document.getElementById('propEstado').value;
-      const detalle = document.getElementById('propDetalle').value.trim();
+      const detalle = sanitizeHTML(document.getElementById('propDetalle').value.trim());
 
-      s.propuestaMutual = {
+      const esRef = document.getElementById('propEsRefinanciacion')?.checked || false;
+      let refinanciacion = null;
+      if (esRef) {
+        const ayudas = sanitizeHTML(document.getElementById('propAyudasCancelar')?.value.trim() || '');
+        const deuda = parseFloat(document.getElementById('propDeudaPrevia')?.value) || 0;
+        const bolsillo = Math.max(0, monto - deuda);
+        const cuotaAnt = parseFloat(document.getElementById('propCuotaAnterior')?.value) || 0;
+        const alivio = cuotaAnt > 0 ? (cuotaAnt - cuota) : 0;
+        const refNotas = sanitizeHTML(document.getElementById('propRefinanciacionNotas')?.value.trim() || '');
+
+        refinanciacion = {
+          ayudasACancelar: ayudas,
+          montoDeudaPrevia: deuda,
+          montoBolsillo: bolsillo,
+          cuotaAnterior: cuotaAnt,
+          nuevaCuota: cuota,
+          alivioMensual: alivio,
+          observaciones: refNotas
+        };
+      }
+
+      if (!s.historialPropuestas) s.historialPropuestas = [];
+
+      // Calcular diferencia respecto a la versión anterior
+      const prev = s.propuestaMutual && s.propuestaMutual.activa ? s.propuestaMutual : (s.historialPropuestas.length > 0 ? s.historialPropuestas[s.historialPropuestas.length - 1] : null);
+      let diffTexto = 'Versión inicial registrada';
+      if (prev) {
+        const diffM = monto - (prev.monto || 0);
+        const diffP = plazo - (prev.cuotas || 0);
+        const diffC = cuota - (prev.cuotaEstimada || 0);
+        const partes = [];
+
+        if (diffM > 0) partes.push('+' + formatMoney(diffM) + ' capital');
+        else if (diffM < 0) partes.push('-' + formatMoney(Math.abs(diffM)) + ' capital');
+        else partes.push('Mismo capital');
+
+        if (diffP > 0) partes.push('+' + diffP + ' cuotas');
+        else if (diffP < 0) partes.push(diffP + ' cuotas');
+
+        if (diffC < 0) partes.push('Alivio de cuota: ' + formatMoney(Math.abs(diffC)) + '/mes');
+        else if (diffC > 0) partes.push('Variación cuota: +' + formatMoney(diffC) + '/mes');
+
+        if (esRef && !prev.esRefinanciacion) partes.push('Se incorporó refinanciación de deuda previa');
+        diffTexto = partes.join(', ');
+      }
+
+      const nextVersion = (s.historialPropuestas.length > 0 ? Math.max(...s.historialPropuestas.map(v => v.version || 1)) : 0) + 1;
+      const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+
+      const nuevaProp = {
+        version: nextVersion,
         activa: true,
         linea: linea,
         lineaNombre: FINANCIAL_DATA[linea].name,
         monto: monto,
         cuotas: plazo,
-        cuotaEstimada: sim ? sim.cuota : 0,
+        cuotaEstimada: cuota,
+        tasaCosto: tasaCosto,
         estadoPropuesta: est,
-        detalle: detalle
+        detalle: detalle,
+        esRefinanciacion: esRef,
+        refinanciacion: refinanciacion,
+        fecha: now,
+        analista: session?.nombre || 'Analista Mutual',
+        diferenciaTexto: diffTexto
       };
 
-      const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+      s.propuestaMutual = nuevaProp;
+      s.historialPropuestas.push(nuevaProp);
+
+      let textoObs = '💼 Oferta oficial (v' + nextVersion + ') registrada: ' + formatMoney(monto) + ' en ' + plazo + ' cuotas de ' + formatMoney(cuota) + ' (' + est + ').';
+      if (esRef && refinanciacion) {
+        textoObs += ' [Refinanciación: Cancela ' + formatMoney(refinanciacion.montoDeudaPrevia) + ' | Bolsillo: ' + formatMoney(refinanciacion.montoBolsillo) + ']';
+      }
+      if (detalle) textoObs += ' Nota: ' + detalle;
+
       if (!s.observaciones) s.observaciones = [];
       s.observaciones.push({
-        autor: getSession()?.nombre || 'Analista Mutual',
+        autor: session?.nombre || 'Analista Mutual',
         rol: 'Analista Mutual',
         fecha: now,
-        texto: 'Contraoferta oficial generada: ' + formatMoney(monto) + ' en ' + plazo + ' cuotas de ' + formatMoney(sim ? sim.cuota : 0) + ' (' + est + '). ' + (detalle ? 'Nota: ' + detalle : '')
+        texto: textoObs
       });
 
       saveStoredSolicitudes(all);
-      callApi({ action: 'guardarPropuestaMutual', id: s.id, propuesta: s.propuestaMutual }).catch(console.warn);
+      callApi({ action: 'guardarPropuestaMutual', id: s.id, propuesta: s.propuestaMutual, historial: s.historialPropuestas }).catch(console.warn);
 
-      showToast('Propuesta oficial guardada en el expediente 💼');
+      showToast('Propuesta v' + nextVersion + ' registrada con éxito en el expediente 💼');
       renderModuloComercializador();
       renderModuloMutual();
       verFichaCompleta(id);
     }
 
-    function copiarPropuestaWhatsApp(id) {
+    function copiarPropuestaWhatsApp(id, versionNum) {
       const s = getStoredSolicitudes().find(x => String(x.id) === String(id)); if (!s) return;
-      const p = s.propuestaMutual;
-      if (!p || !p.activa) return;
+      let p = s.propuestaMutual;
+      if (versionNum !== undefined && versionNum !== null && s.historialPropuestas) {
+        const vMatch = s.historialPropuestas.find(v => Number(v.version) === Number(versionNum));
+        if (vMatch) p = vMatch;
+      }
+      if (!p || !p.activa) {
+        showToast('No hay una propuesta activa para copiar ⚠️');
+        return;
+      }
 
-      const texto = `¡Hola ${s.solicitante.nombre}! 👋 Desde Mutual Modelo te informamos que hemos analizado tu legajo crediticio:
+      let texto = `¡Hola ${s.solicitante.nombre}! 👋 Desde Mutual Modelo te informamos que hemos analizado tu legajo crediticio:
 
-📋 *Propuesta Oficial de Ayuda Económica:*
+📋 *Propuesta Oficial de Ayuda Económica (Versión v${p.version || 1}):*
 • Monto Otorgado: *${formatMoney(p.monto)}*
-• Línea: ${p.lineaNombre}
+• Línea: ${p.lineaNombre || p.linea}
 • Plan de Pago: *${p.cuotas} cuotas fijas de ${formatMoney(p.cuotaEstimada)}*
-${p.detalle ? `• Observaciones: ${p.detalle}\n` : ''}
-📲 Respondé a este mensaje para coordinar la firma y acreditación bancaria inmediata.`;
+• Costo Financiero: ${p.tasaCosto || 'Tasas oficiales vigentes'}`;
+
+      if (p.esRefinanciacion && p.refinanciacion) {
+        const ref = p.refinanciacion;
+        texto += `\n\n🔄 *Detalle de Refinanciación / Cancelación de Ayudas:*
+• Créditos Previos a Cancelar: ${ref.ayudasACancelar || 'Deudas previas'}
+• Deuda Previa Total Absorbida: *${formatMoney(ref.montoDeudaPrevia || 0)}*
+• Dinero Limpio a Cobrar en Cuenta (Bolsillo): *${formatMoney(ref.montoBolsillo || 0)}*
+• Impacto en Cuota Mensual: Venías abonando *${formatMoney(ref.cuotaAnterior || 0)}* y tu nueva cuota será de *${formatMoney(p.cuotaEstimada)}*.`;
+
+        if (ref.alivioMensual > 0) {
+          texto += `\n🎉 *Alivio financiero:* Liberás *${formatMoney(ref.alivioMensual)}* de afectación mensual en tu recibo de haberes.`;
+        }
+      }
+
+      if (p.detalle) {
+        texto += `\n• Observaciones: ${p.detalle}`;
+      }
+
+      texto += `\n\n📲 Respondé a este mensaje para coordinar la firma y acreditación bancaria inmediata.`;
 
       navigator.clipboard.writeText(texto).then(() => {
-        showToast('Propuesta copiada al portapapeles para WhatsApp 📋');
+        showToast('Propuesta ' + (p.version ? ('v' + p.version + ' ') : '') + 'copiada para WhatsApp 📋');
       }).catch(() => {
         showToast('Propuesta copiada 📋');
       });
@@ -3159,6 +3547,8 @@ ${p.detalle ? `• Observaciones: ${p.detalle}\n` : ''}
     window.guardarEdicionSolicitante = guardarEdicionSolicitante;
     window.guardarNumeroDefinitivo = guardarNumeroDefinitivo;
     window.recalcularOfertaCuotaModal = recalcularOfertaCuotaModal;
+    window.toggleBoxRefinanciacion = toggleBoxRefinanciacion;
+    window.recalcularRefinanciacion = recalcularRefinanciacion;
     window.guardarPropuestaMutual = guardarPropuestaMutual;
     window.copiarPropuestaWhatsApp = copiarPropuestaWhatsApp;
     window.abrirVisorOnline = abrirVisorOnline;

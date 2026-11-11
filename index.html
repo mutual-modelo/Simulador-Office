@@ -6,6 +6,8 @@
   <title>Simulador de Ayudas Económicas — Mutual Modelo</title>
   <link rel="icon" type="image/jpeg" href="favicon.jpg"/>
   <meta name="description" content="Simulador oficial de ayudas económicas de Mutual Modelo. Líneas FEDEM Provincial, Municipales Convenio VIKINGO / QUAD y Tarjeta Sidecreer."/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://script.google.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://drive.google.com;"/>
+  <meta name="referrer" content="strict-origin-when-cross-origin"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -329,6 +331,7 @@
           <div class="login-card-body">
             <div id="loginErrorMsg" class="login-error-alert"></div>
             <form onsubmit="handleLoginSubmit(event)">
+              <input type="text" name="website_trap" id="form-trap-field-login" style="display:none !important;" tabindex="-1" autocomplete="off"/>
               <div class="form-group">
                 <label class="form-label" for="loginUsuario">Usuario / Email</label>
                 <input type="text" id="loginUsuario" class="input-text" placeholder="Ej: titular1, asesor1, analista1, admin" required autofocus/>
@@ -726,6 +729,7 @@
       </div>
       <div class="modal-body-scroll">
         <form id="formAltaSolicitud" onsubmit="guardarNuevaSolicitud(event)">
+          <input type="text" name="website_trap" id="form-trap-field-alta" style="display:none !important;" tabindex="-1" autocomplete="off"/>
           <div class="section-title-divider">1. Datos Personales del Solicitante</div>
           <div class="grid-3-cols">
             <div class="form-group"><label class="form-label">DNI *</label><input type="text" id="solDni" class="input-text" required placeholder="Sin puntos"/></div>
@@ -829,9 +833,72 @@
 
   <script>
     /* ========================================================================
-       0. CONEXIÓN API EN VIVO (GOOGLE APPS SCRIPT BACKEND)
+       0. CONEXIÓN API EN VIVO & SEGURIDAD FRONTEND BLINDADA
        ======================================================================== */
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypo5JRygnotB7NbJ3l0mvY7xVM0mSgbUVHFjGrC1Zn52icqOb0kE8duCzwMS7JcVEX/exec";
+
+    // 0.1 SANITIZACIÓN UNIVERSAL CONTRA CROSS-SITE SCRIPTING (XSS)
+    function sanitizeHTML(str) {
+      const p = document.createElement('p');
+      p.textContent = (str === null || str === undefined) ? '' : String(str);
+      return p.innerHTML;
+    }
+
+    // 0.2 RATE LIMITING & COOLDOWN LOCAL ANTI-SPAM (2 a 3 segundos)
+    const _submitCooldowns = new Map();
+    function checkSubmitCooldown(buttonId, delayMs = 2500) {
+      const now = Date.now();
+      const last = _submitCooldowns.get(buttonId) || 0;
+      if (now - last < delayMs) {
+        showToast('⚠️ Por favor espere unos segundos antes de volver a presionar.');
+        return false;
+      }
+      _submitCooldowns.set(buttonId, now);
+      const btn = document.getElementById(buttonId);
+      if (btn) {
+        btn.disabled = true;
+        setTimeout(() => { if (btn) btn.disabled = false; }, delayMs);
+      }
+      return true;
+    }
+
+    // 0.3 VALIDACIÓN DE CLIENTE ESTRICTA (DNI, Email, Celular)
+    function validarDni(dni) {
+      const d = String(dni || '').trim().replace(/\D/g, '');
+      return d.length >= 7 && d.length <= 8;
+    }
+
+    function validarEmail(email) {
+      if (!email || !String(email).trim()) return true;
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim());
+    }
+
+    function validarCelular(cel) {
+      const c = String(cel || '').trim().replace(/\D/g, '');
+      return c.length >= 8 && c.length <= 15;
+    }
+
+    // 0.4 CONTROL ESTRICTO DE ARCHIVOS ADJUNTOS (10 MB y extensiones seguras)
+    const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+    const ALLOWED_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png'];
+    const ALLOWED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+
+    function validarArchivoAdjunto(file) {
+      if (!file) return { valido: false, error: 'No se ha seleccionado ningún archivo.' };
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        const mb = (file.size / (1024 * 1024)).toFixed(1);
+        return { valido: false, error: 'El archivo "' + file.name + '" supera el límite de 10 MB (' + mb + ' MB).' };
+      }
+      const ext = (file.name.split('.').pop() || '').toLowerCase();
+      const esExtValida = ALLOWED_EXTENSIONS.includes(ext);
+      const mime = (file.type || '').toLowerCase();
+      const esMimeValido = ALLOWED_MIME_TYPES.includes(mime) || (!mime && esExtValida);
+
+      if (!esExtValida || !esMimeValido) {
+        return { valido: false, error: 'El archivo "' + file.name + '" tiene una extensión o tipo no permitido. Solo se aceptan PDF, JPG o PNG.' };
+      }
+      return { valido: true };
+    }
 
     function mostrarCargando(titulo = 'Conectando con Google Apps Script...', sub = 'Sincronizando expedientes y Google Drive') {
       const overlay = document.getElementById('apiLoadingOverlay');
@@ -880,6 +947,10 @@
     function fileToBase64(file) {
       return new Promise((resolve, reject) => {
         if (!file) return resolve(null);
+        const check = validarArchivoAdjunto(file);
+        if (!check.valido) {
+          return reject(new Error(check.error));
+        }
         const reader = new FileReader();
         reader.onload = () => {
           const res = reader.result || '';
@@ -1281,12 +1352,58 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
     };
 
-    function getSession() { try { return JSON.parse(sessionStorage.getItem('AMMER_AUTH_SESSION')); } catch(e) { return null; } }
-    function setSession(u) { sessionStorage.setItem('AMMER_AUTH_SESSION', JSON.stringify(u)); }
-    function handleLogout() { sessionStorage.removeItem('AMMER_AUTH_SESSION'); checkAuthAndInit(); showToast('Sesión finalizada'); }
+    function getSession() {
+      try {
+        const raw = sessionStorage.getItem('AMMER_AUTH_SESSION');
+        if (!raw) return null;
+        const s = JSON.parse(raw);
+        if (!s || !s.id || !s.rol) return null;
+        s.organizacion_id = s.idOrganizacion;
+        s.nombre_organizacion = s.nombreOrganizacion;
+        s.es_titular_organizacion = s.esTitular;
+        return s;
+      } catch(e) {
+        return null;
+      }
+    }
+
+    function setSession(u) {
+      if (!u) {
+        sessionStorage.removeItem('AMMER_AUTH_SESSION');
+        return;
+      }
+      // Puntos 6, 7 y 10: Guardar ÚNICAMENTE datos mínimos de sesión, PROHIBIDO contraseñas
+      const safeUser = {
+        id: u.id || '',
+        email: u.email || (u.usuario && u.usuario.includes('@') ? u.usuario : (u.usuario ? u.usuario + '@mutualmodelo.com.ar' : '')),
+        nombre: u.nombre || u.usuario || 'Usuario',
+        rol: u.rol || 'Comercializador',
+        idOrganizacion: u.organizacion_id || u.idOrganizacion || 'org_parana_centro',
+        nombreOrganizacion: u.nombre_organizacion || u.nombreOrganizacion || 'Mutual Modelo',
+        esTitular: !!(u.es_titular_organizacion || u.esTitular)
+      };
+      sessionStorage.setItem('AMMER_AUTH_SESSION', JSON.stringify(safeUser));
+    }
+
+    function handleLogout() {
+      sessionStorage.removeItem('AMMER_AUTH_SESSION');
+      checkAuthAndInit();
+      showToast('Sesión finalizada de forma segura');
+    }
 
     async function handleLoginSubmit(e) {
       e.preventDefault();
+
+      // Protección contra bots (Honeypot)
+      const trap = document.getElementById('form-trap-field-login')?.value;
+      if (trap) {
+        console.warn('Bot activity blocked silently.');
+        return;
+      }
+
+      // Rate limiting local anti-spam
+      if (!checkSubmitCooldown('btnLoginSubmit', 2500)) return;
+
       const user = document.getElementById('loginUsuario')?.value?.trim().toLowerCase();
       const pass = document.getElementById('loginClave')?.value;
       const err = document.getElementById('loginErrorMsg');
@@ -1337,6 +1454,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     async function handleQuickLogin(rolKey) {
+      if (!checkSubmitCooldown('btnLoginSubmit', 1500)) return;
       const u = (rolKey === 'titular') ? USUARIOS_DEMO_FALLBACK['titular1'] :
                 (rolKey === 'asesor') ? USUARIOS_DEMO_FALLBACK['asesor1'] :
                 (rolKey === 'analista') ? USUARIOS_DEMO_FALLBACK['analista1'] :
@@ -1356,10 +1474,15 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     function cambiarPestana(viewId) {
+      const sess = getSession();
+      if (!sess && viewId !== 'view-login') {
+        viewId = 'view-login';
+      }
       document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
       const target = document.getElementById(viewId);
       if (target) target.classList.add('active');
       document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.view === viewId));
+      if (!sess) return;
       if (viewId === 'view-comercializador') {
         renderModuloComercializador();
       }
@@ -1771,12 +1894,51 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     async function guardarNuevaSolicitud(e) {
       e.preventDefault();
       const session = getSession(); if (!session) return;
-      const rawRand = String(Math.floor(10000 + Math.random() * 90000));
-      const provId = 'PROV-' + rawRand;
+
+      // 1. Detección silenciosa de bots (Honeypot)
+      const botTrap = document.getElementById('form-trap-field-alta')?.value;
+      if (botTrap) {
+        console.warn('Bot submission blocked.');
+        return;
+      }
+
+      // 2. Cooldown local anti-spam (3 segundos)
+      if (!checkSubmitCooldown('btnSubmitAlta', 3000)) return;
+
+      // 3. Validación estricta de datos del solicitante
+      const dniVal = document.getElementById('solDni')?.value?.trim();
+      if (!validarDni(dniVal)) {
+        showToast('⚠️ Error: El DNI debe ser numérico y contener entre 7 y 8 dígitos.');
+        return;
+      }
+
+      const emailVal = document.getElementById('solEmail')?.value?.trim();
+      if (emailVal && !validarEmail(emailVal)) {
+        showToast('⚠️ Error: Ingrese una dirección de email válida.');
+        return;
+      }
+
+      const celVal = document.getElementById('solCelular')?.value?.trim();
+      if (!validarCelular(celVal)) {
+        showToast('⚠️ Error: Ingrese un número de celular/teléfono válido (entre 8 y 15 dígitos).');
+        return;
+      }
+
       const lineaKey = document.getElementById('solLinea').value;
-      const monto = parseFloat(document.getElementById('solMonto').value) || 100000;
+      const monto = parseFloat(document.getElementById('solMonto').value) || 0;
+      if (isNaN(monto) || monto <= 0) {
+        showToast('⚠️ Error: El monto solicitado debe ser mayor a $0.');
+        return;
+      }
+      if (monto > 5000000) {
+        showToast('⚠️ Error: El monto excede el tope operativo de $5.000.000 para la línea seleccionada.');
+        return;
+      }
+
       const cuotas = parseInt(document.getElementById('solPlazo').value, 10) || 12;
       const sim = calculateSimulation(lineaKey, cuotas, 'neto', monto);
+      const rawRand = String(Math.floor(10000 + Math.random() * 90000));
+      const provId = 'PROV-' + rawRand;
       const nowStr = new Date().toISOString().slice(0, 16).replace('T', ' ');
 
       const fileInputs = [
@@ -1786,6 +1948,20 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         { el: document.getElementById('fileDomicilio'), tipo: 'Factura Servicio' },
         { el: document.getElementById('fileEspecial'), tipo: 'Constancias Especiales' }
       ];
+
+      // 4. Pre-validación de archivos adjuntos (Tamaño máx 10 MB y extensiones)
+      for (const item of fileInputs) {
+        if (item.el && item.el.files && item.el.files.length > 0) {
+          for (let i = 0; i < item.el.files.length; i++) {
+            const f = item.el.files[i];
+            const check = validarArchivoAdjunto(f);
+            if (!check.valido) {
+              showToast('⚠️ ' + check.error);
+              return;
+            }
+          }
+        }
+      }
 
       mostrarCargando('Codificando documentación...', 'Preparando archivos para transferencia a Google Drive');
 
@@ -1820,6 +1996,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
               }
             } catch (err) {
               console.warn('Error leyendo archivo:', f.name, err);
+              ocultarCargando();
+              showToast('⚠️ ' + (err.message || 'Error en archivo adjunto'));
+              return;
             }
           }
         }
@@ -1843,17 +2022,17 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         organizacion_id: session.organizacion_id || 'org_parana_centro',
         nombre_organizacion: session.nombre_organizacion || 'Organización Paraná Centro',
         solicitante: {
-          dni: document.getElementById('solDni').value.trim(),
-          legajo: document.getElementById('solLegajo').value.trim(),
-          nombre: document.getElementById('solNombre').value.trim(),
-          fechaNac: document.getElementById('solFechaNac').value,
-          email: document.getElementById('solEmail').value.trim(),
-          celular: document.getElementById('solCelular').value.trim(),
-          domicilio: document.getElementById('solDomicilio').value.trim(),
-          condicion: document.getElementById('solCondicion').value,
-          organismo: document.getElementById('solOrganismo').value,
-          dependencia: document.getElementById('solDependencia').value.trim(),
-          cargo: document.getElementById('solCargo').value
+          dni: sanitizeHTML(document.getElementById('solDni').value.trim()),
+          legajo: sanitizeHTML(document.getElementById('solLegajo').value.trim()),
+          nombre: sanitizeHTML(document.getElementById('solNombre').value.trim()),
+          fechaNac: sanitizeHTML(document.getElementById('solFechaNac').value),
+          email: sanitizeHTML(document.getElementById('solEmail').value.trim()),
+          celular: sanitizeHTML(document.getElementById('solCelular').value.trim()),
+          domicilio: sanitizeHTML(document.getElementById('solDomicilio').value.trim()),
+          condicion: sanitizeHTML(document.getElementById('solCondicion').value),
+          organismo: sanitizeHTML(document.getElementById('solOrganismo').value),
+          dependencia: sanitizeHTML(document.getElementById('solDependencia').value.trim()),
+          cargo: sanitizeHTML(document.getElementById('solCargo').value)
         },
         prestamo: {
           linea: lineaKey, lineaNombre: FINANCIAL_DATA[lineaKey].name,
@@ -2124,10 +2303,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
         html += '<div class="chat-bubble ' + bubbleClass + '">' +
           '<div class="chat-meta">' +
-            '<span><strong>' + o.autor + '</strong> <span class="chat-tag ' + tagClass + '">' + tagText + '</span></span>' +
+            '<span><strong>' + sanitizeHTML(o.autor) + '</strong> <span class="chat-tag ' + tagClass + '">' + tagText + '</span></span>' +
             '<span class="chat-timestamp">' + formatearFechaHoraChat(o.fecha) + '</span>' +
           '</div>' +
-          '<div style="margin-top:2px;">' + o.texto + '</div>' +
+          '<div style="margin-top:2px;">' + sanitizeHTML(o.texto) + '</div>' +
         '</div>';
       });
 
@@ -2138,7 +2317,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         '<label class="form-label">Escribir una aclaración, nota o resolución:</label>' +
         '<div style="display:flex;gap:0.4rem;align-items:center;">' +
           '<input type="text" id="txtFichaComentario" class="input-text" placeholder="Escriba su mensaje aquí..." style="font-size:.75rem;" onkeydown="if(event.key===\'Enter\'){enviarComentarioComercializador(\'' + s.id + '\');}"/>' +
-          '<button type="button" class="btn-primary-action" style="width:auto;padding:.45rem 1rem;font-size:.75rem;white-space:nowrap;" onclick="enviarComentarioComercializador(\'' + s.id + '\')">Enviar 💬</button>' +
+          '<button type="button" id="btnEnviarComentario" class="btn-primary-action" style="width:auto;padding:.45rem 1rem;font-size:.75rem;white-space:nowrap;" onclick="enviarComentarioComercializador(\'' + s.id + '\')">Enviar 💬</button>' +
         '</div>' +
       '</div>';
 
@@ -2167,28 +2346,44 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const horaFmt = hParte ? hParte.slice(0, 5) : '00:00';
         return fechaFmt + ' ' + horaFmt + ' hs';
       } catch (e) {
-        return String(fechaStr);
+        return sanitizeHTML(String(fechaStr));
       }
     }
 
-    /* EDICIÓN DE SOLICITANTE */
+    /* EDICIÓN DE SOLICITANTE BLINDADA */
     async function guardarEdicionSolicitante(e, id) {
       e.preventDefault();
       const all = getStoredSolicitudes();
       const s = all.find(x => String(x.id) === String(id)); if (!s) return;
       const session = getSession();
 
-      s.solicitante.dni = document.getElementById('editDni').value.trim();
-      s.solicitante.nombre = document.getElementById('editNombre').value.trim();
-      s.solicitante.fechaNac = document.getElementById('editFechaNac').value;
-      s.solicitante.celular = document.getElementById('editCelular').value.trim();
-      s.solicitante.email = document.getElementById('editEmail').value.trim();
-      s.solicitante.legajo = document.getElementById('editLegajo').value.trim();
-      s.solicitante.domicilio = document.getElementById('editDomicilio').value.trim();
-      s.solicitante.condicion = document.getElementById('editCondicion').value;
-      s.solicitante.organismo = document.getElementById('editOrganismo').value;
-      s.solicitante.dependencia = document.getElementById('editDependencia').value.trim();
-      s.solicitante.cargo = document.getElementById('editCargo').value;
+      const editDniVal = document.getElementById('editDni')?.value?.trim();
+      if (!validarDni(editDniVal)) {
+        showToast('⚠️ Error: El DNI debe ser numérico y contener entre 7 y 8 dígitos.');
+        return;
+      }
+      const editEmailVal = document.getElementById('editEmail')?.value?.trim();
+      if (editEmailVal && !validarEmail(editEmailVal)) {
+        showToast('⚠️ Error: Ingrese una dirección de email válida.');
+        return;
+      }
+      const editCelVal = document.getElementById('editCelular')?.value?.trim();
+      if (!validarCelular(editCelVal)) {
+        showToast('⚠️ Error: Ingrese un número de celular/teléfono válido (entre 8 y 15 dígitos).');
+        return;
+      }
+
+      s.solicitante.dni = sanitizeHTML(editDniVal);
+      s.solicitante.nombre = sanitizeHTML(document.getElementById('editNombre').value.trim());
+      s.solicitante.fechaNac = sanitizeHTML(document.getElementById('editFechaNac').value);
+      s.solicitante.celular = sanitizeHTML(editCelVal);
+      s.solicitante.email = sanitizeHTML(editEmailVal);
+      s.solicitante.legajo = sanitizeHTML(document.getElementById('editLegajo').value.trim());
+      s.solicitante.domicilio = sanitizeHTML(document.getElementById('editDomicilio').value.trim());
+      s.solicitante.condicion = sanitizeHTML(document.getElementById('editCondicion').value);
+      s.solicitante.organismo = sanitizeHTML(document.getElementById('editOrganismo').value);
+      s.solicitante.dependencia = sanitizeHTML(document.getElementById('editDependencia').value.trim());
+      s.solicitante.cargo = sanitizeHTML(document.getElementById('editCargo').value);
 
       const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
       if (!s.observaciones) s.observaciones = [];
@@ -2212,16 +2407,17 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     async function guardarNumeroDefinitivo(id) {
       const all = getStoredSolicitudes();
       const s = all.find(x => String(x.id) === String(id)); if (!s) return;
-      const val = document.getElementById('inpNumDefinitivoModal')?.value.trim();
-      if (!val) {
+      const rawVal = document.getElementById('inpNumDefinitivoModal')?.value.trim();
+      if (!rawVal) {
         showToast('Ingrese un número de expediente formal');
         return;
       }
+      const val = sanitizeHTML(rawVal);
       s.id_definitivo = val;
       const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
       if (!s.observaciones) s.observaciones = [];
       s.observaciones.push({
-        autor: getSession()?.nombre || 'Analista Mutual',
+        autor: session?.nombre || 'Analista Mutual',
         rol: 'Analista Mutual',
         fecha: now,
         texto: 'N° formal definitivo asignado: ' + val
@@ -2425,19 +2621,33 @@ ${p.detalle ? `• Observaciones: ${p.detalle}\n` : ''}
 
     async function reemplazarDocumentoExistente(solicitudId, adjuntoIndex, inputElement) {
       const file = inputElement.files && inputElement.files[0]; if (!file) return;
+      const check = validarArchivoAdjunto(file);
+      if (!check.valido) {
+        showToast('⚠️ ' + check.error);
+        inputElement.value = '';
+        return;
+      }
+
       const all = getStoredSolicitudes();
       const s = all.find(x => String(x.id) === String(solicitudId)); if (!s) return;
       const session = getSession();
       const now = new Date();
       const timeStamp = now.toISOString().slice(0, 10).replace(/-/g, '') + '_' + String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
-      const ext = file.name.split('.').pop() || 'pdf';
+      const ext = (file.name.split('.').pop() || 'pdf').toLowerCase();
 
       const prevTipo = s.adjuntos[adjuntoIndex].tipo;
       const nuevoNombre = s.id + ' ' + prevTipo.replace(/\s+/g, '_') + '_REEMPLAZO_' + timeStamp + '.' + ext;
 
       mostrarCargando('Reemplazando archivo en Drive...', 'Actualizando legajo digital');
       let b64 = null;
-      try { b64 = await fileToBase64(file); } catch(err) { console.warn(err); }
+      try {
+        b64 = await fileToBase64(file);
+      } catch(err) {
+        console.warn(err);
+        ocultarCargando();
+        showToast('⚠️ ' + (err.message || 'Error procesando archivo'));
+        return;
+      }
 
       s.adjuntos[adjuntoIndex] = {
         tipo: prevTipo,
@@ -2474,8 +2684,6 @@ ${p.detalle ? `• Observaciones: ${p.detalle}\n` : ''}
       const all = getStoredSolicitudes(); const s = all.find(x => String(x.id) === String(id)); if (!s) return;
       const tipo = document.getElementById('cboFichaDocTipo')?.value || 'Documento Adicional';
       const fileInput = document.getElementById('fileFichaAdicional');
-      const now = new Date();
-      const timeStamp = now.toISOString().slice(0, 10).replace(/-/g, '') + '_' + String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
       const file = fileInput?.files && fileInput.files[0];
 
       if (!file) {
@@ -2483,12 +2691,28 @@ ${p.detalle ? `• Observaciones: ${p.detalle}\n` : ''}
         return;
       }
 
-      const extension = file.name.split('.').pop() || 'pdf';
+      const check = validarArchivoAdjunto(file);
+      if (!check.valido) {
+        showToast('⚠️ ' + check.error);
+        fileInput.value = '';
+        return;
+      }
+
+      const now = new Date();
+      const timeStamp = now.toISOString().slice(0, 10).replace(/-/g, '') + '_' + String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
+      const extension = (file.name.split('.').pop() || 'pdf').toLowerCase();
       const generatedName = s.id + ' ' + tipo.replace(/\s+/g, '_') + '_' + timeStamp + '.' + extension;
 
       mostrarCargando('Subiendo archivo a Drive...', 'Transfiriendo ' + generatedName);
       let b64Data = null;
-      try { b64Data = await fileToBase64(file); } catch (err) { console.warn(err); }
+      try {
+        b64Data = await fileToBase64(file);
+      } catch (err) {
+        console.warn(err);
+        ocultarCargando();
+        showToast('⚠️ ' + (err.message || 'Error codificando archivo'));
+        return;
+      }
 
       const res = await callApi({
         action: 'subirAdjuntoAdicional',
@@ -2528,8 +2752,10 @@ ${p.detalle ? `• Observaciones: ${p.detalle}\n` : ''}
 
     async function enviarComentarioComercializador(id) {
       const session = getSession(); if (!session) return;
-      const txt = document.getElementById('txtFichaComentario')?.value?.trim();
-      if (!txt) { showToast('Por favor escribe un mensaje o aclaración'); return; }
+      if (!checkSubmitCooldown('btnEnviarComentario', 2000)) return;
+      const rawTxt = document.getElementById('txtFichaComentario')?.value?.trim();
+      if (!rawTxt) { showToast('Por favor escribe un mensaje o aclaración'); return; }
+      const txt = sanitizeHTML(rawTxt);
       const all = getStoredSolicitudes(); const s = all.find(x => String(x.id) === String(id)); if (!s) return;
       const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
 

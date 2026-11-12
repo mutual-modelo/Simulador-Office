@@ -2730,13 +2730,13 @@
 
         <!-- LADO DERECHO: BOTONERA DE ACCIONES JERÁRQUICAS -->
         <div class="gestiones-actions-group">
-          <button type="button" class="btn-action-refresh" onclick="sincronizarConBackend()" title="Sincronizar solicitudes con Servidor Central">
+          <button type="button" class="btn-action-refresh" onclick="sincronizarGestionesDesdeNube()" title="Sincronizar expedientes desde la base de datos central">
             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="23 4 23 10 17 10"></polyline>
               <polyline points="1 20 1 14 7 14"></polyline>
               <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
             </svg>
-            <span>Actualizar</span>
+            <span>Actualizar Datos</span>
           </button>
           <button type="button" class="btn-action-primary-new" onclick="abrirModalAltaSolicitud()">
             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2893,13 +2893,13 @@
 
         <!-- LADO DERECHO: BOTONERA DE ACCIONES JERÁRQUICAS -->
         <div class="gestiones-actions-group">
-          <button type="button" class="btn-action-refresh" onclick="sincronizarConBackend()" title="Sincronizar solicitudes con Servidor Central">
+          <button type="button" class="btn-action-refresh" onclick="sincronizarGestionesDesdeNube()" title="Sincronizar expedientes desde la base de datos central">
             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="23 4 23 10 17 10"></polyline>
               <polyline points="1 20 1 14 7 14"></polyline>
               <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
             </svg>
-            <span>Sincronizar</span>
+            <span>Actualizar Datos</span>
           </button>
           <!-- BOTÓN SECUNDARIO: + NUEVO ASOCIADO -->
           <button type="button" class="btn-action-secondary-asoc btn-nuevo-asociado-action" id="btnNuevoAsociadoPropias" onclick="abrirModalAltaAsociado()">
@@ -3086,13 +3086,13 @@
 
         <!-- LADO DERECHO: ACCIONES -->
         <div class="gestiones-actions-group">
-          <button type="button" class="btn-action-refresh" onclick="sincronizarConBackend()" title="Sincronizar solicitudes con Servidor Central">
+          <button type="button" class="btn-action-refresh" onclick="sincronizarGestionesDesdeNube()" title="Sincronizar expedientes desde la base de datos central">
             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="23 4 23 10 17 10"></polyline>
               <polyline points="1 20 1 14 7 14"></polyline>
               <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
             </svg>
-            <span>Actualizar Bandeja</span>
+            <span>Actualizar Datos</span>
           </button>
         </div>
       </div>
@@ -5121,13 +5121,21 @@
         mostrarCargando(loadingMsg.title || 'Conectando con Servidor Central...', loadingMsg.sub || 'Procesando operación...');
       }
       try {
+        const bodyPayload = Object.assign({}, payload || {});
+        if (bodyPayload.action !== 'login' && !bodyPayload.usuarioActivo) {
+          const sess = (typeof getSession === 'function') ? getSession() : null;
+          if (sess) bodyPayload.usuarioActivo = sess;
+        }
         const response = await fetch(APPS_SCRIPT_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'text/plain;charset=utf-8'
           },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(bodyPayload)
         });
+        if (!response.ok) {
+          return { ok: false, error: 'HTTP ' + response.status, data: null };
+        }
         const text = await response.text();
         let parsed;
         try {
@@ -5135,10 +5143,17 @@
         } catch (e) {
           parsed = { rawText: text };
         }
+        if (parsed && (parsed.ok === false || parsed.success === false)) {
+          return {
+            ok: false,
+            error: parsed.error || parsed.message || 'El servidor rechazó la operación.',
+            data: parsed
+          };
+        }
         return { ok: true, data: parsed };
       } catch (err) {
         console.error('Error llamando a Google Apps Script:', err);
-        return { ok: false, error: err.message || 'Error de red o comunicación' };
+        return { ok: false, error: err.message || 'Error de red o comunicación', data: null };
       } finally {
         if (loadingMsg) {
           ocultarCargando();
@@ -5702,14 +5717,18 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
 
       if (loggedUser) {
+        localStorage.removeItem(STORAGE_SOLICITUDES_KEY);
+        window.estadoApp = window.estadoApp || { solicitudes: [] };
+        window.estadoApp.solicitudes = [];
+        window._cloudSyncInicialEjecutado = false;
         setSession(loggedUser);
         checkAuthAndInit();
-        sincronizarConBackend(true);
+        await cargarSolicitudesDesdeNube(false);
         const sess = getSession();
         showToast('Bienvenido/a, ' + (sess?.nombre || 'Usuario'));
       } else {
         if (err) {
-          err.textContent = 'Usuario o contraseña incorrectos. Verifique sus datos o intente nuevamente.';
+          err.textContent = (res && (res.error || (res.data && (res.data.message || res.data.error)))) || 'Usuario o contraseña incorrectos. Verifique sus datos o intente nuevamente.';
           err.style.display = 'block';
         }
       }
@@ -5827,12 +5846,15 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       if (viewId === 'view-comercializador') {
         renderModuloComercializador();
+        cargarSolicitudesDesdeNube(true);
       }
       if (viewId === 'view-mutual-propias') {
         renderModuloMutualPropias();
+        cargarSolicitudesDesdeNube(true);
       }
       if (viewId === 'view-mutual') {
         renderModuloMutual();
+        cargarSolicitudesDesdeNube(true);
       }
       if (viewId === 'view-simulador') {
         renderApp();
@@ -5930,6 +5952,17 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         navBody.innerHTML = html;
       }
 
+      // Garantizar limpieza de caché residual si cambió el usuario autenticado
+      try {
+        const prevOwner = localStorage.getItem('AMMER_CACHE_OWNER_ID') || '';
+        const currentOwner = String(session.id || session.email || '');
+        if (prevOwner !== currentOwner) {
+          localStorage.removeItem(STORAGE_SOLICITUDES_KEY);
+          window.estadoApp = { solicitudes: [] };
+          localStorage.setItem('AMMER_CACHE_OWNER_ID', currentOwner);
+        }
+      } catch (_) {}
+
       // Visibilidad exclusiva de + Nuevo Asociado para Analista y Admin
       const btnNuevoAsoc = document.getElementById('btnNuevoAsociadoPropias');
       if (btnNuevoAsoc) {
@@ -5937,6 +5970,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
       actualizarCentroNotificaciones();
       cambiarPestana('view-simulador');
+      if (!window._cloudSyncInicialEjecutado) {
+        window._cloudSyncInicialEjecutado = true;
+        cargarSolicitudesDesdeNube(true);
+      }
     }
 
     function toggleMobileUserMenu() {
@@ -6735,7 +6772,18 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
     }
 
+    window.estadoApp = window.estadoApp || { solicitudes: [] };
+
+    function parseJSONCampoSeguro(val, fallback) {
+      if (val === null || val === undefined || val === '') return fallback;
+      if (typeof val !== 'string') return val;
+      try { return JSON.parse(val); } catch (_) { return fallback; }
+    }
+
     function getStoredSolicitudes() {
+      if (window.estadoApp && Array.isArray(window.estadoApp.solicitudes) && window.estadoApp.solicitudes.length > 0) {
+        return window.estadoApp.solicitudes;
+      }
       const data = localStorage.getItem(STORAGE_SOLICITUDES_KEY);
       if (!data) {
         localStorage.setItem(STORAGE_SOLICITUDES_KEY, JSON.stringify(INITIAL_SOLICITUDES));
@@ -6743,20 +6791,38 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
       try {
         const arr = JSON.parse(data);
-        return arr.map(normalizarSolicitud);
+        const norm = Array.isArray(arr) ? arr.map(normalizarSolicitud) : INITIAL_SOLICITUDES;
+        window.estadoApp.solicitudes = norm;
+        return norm;
       } catch(e) {
         return INITIAL_SOLICITUDES;
       }
     }
 
     function normalizarSolicitud(s) {
+      if (!s || typeof s !== 'object') return s;
+
+      // Mapeo tolerante desde columnas planas de Google Sheets hacia estructura CRM
+      if (!s.id && (s.ID_Solicitud || s.ID_OPERACION)) {
+        s.id = String(s.ID_Solicitud || s.ID_OPERACION);
+      }
+      if (!s.fecha && s.Fecha_Registro) s.fecha = String(s.Fecha_Registro);
+      if (!s.estado && s.Estado_Tramite) s.estado = String(s.Estado_Tramite);
+
       if (!s.id_provisorio) s.id_provisorio = 'PROV-' + s.id;
       if (s.id_definitivo === undefined) s.id_definitivo = '';
+
       if (!s.usuario_id && (s.idAsesor || s.idUsuarioAsesor || s.ID_Usuario_Asesor)) {
         s.usuario_id = s.idAsesor || s.idUsuarioAsesor || s.ID_Usuario_Asesor;
       }
+      if (!s.comercializador && (s.Nombre_Asesor || s.nombreAsesor || s.Comercializador)) {
+        s.comercializador = s.Nombre_Asesor || s.nombreAsesor || s.Comercializador;
+      }
       if (!s.organizacion_id && (s.idOrganizacion || s.ID_Organizacion)) {
         s.organizacion_id = s.idOrganizacion || s.ID_Organizacion;
+      }
+      if (!s.nombre_organizacion && (s.Nombre_Organizacion || s.nombreOrganizacion)) {
+        s.nombre_organizacion = s.Nombre_Organizacion || s.nombreOrganizacion;
       }
       if (!s.origen_canal && (s.origenCanal || s.Origen_Canal)) {
         s.origen_canal = s.origenCanal || s.Origen_Canal;
@@ -6764,6 +6830,68 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       if (!s.origen_canal) {
         s.origen_canal = (s.organizacion_id === 'org_sede_central') ? 'Presencial Sede Central' : 'Comercializador Externo';
       }
+
+      if (!s.solicitante || typeof s.solicitante !== 'object') {
+        const contacto = parseJSONCampoSeguro(s.Datos_Contacto_JSON, {});
+        const laborales = parseJSONCampoSeguro(s.Datos_Laborales_JSON, {});
+        s.solicitante = {
+          dni: String(s.DNI_Asociado || s.dni || ''),
+          legajo: String(s.Legajo_Municipal || laborales.legajo || ''),
+          nombre: String(s.Apellido_Nombre || s.nombre || 'Socio'),
+          fechaNac: contacto.fechaNac || '',
+          email: contacto.email || '',
+          celular: contacto.celular || '',
+          domicilio: String(s.Domicilio_Historico_Solicitud || contacto.domicilio || ''),
+          domicilio_historico: String(s.Domicilio_Historico_Solicitud || contacto.domicilio || ''),
+          condicion: laborales.condicion || 'Activo',
+          organismo: laborales.organismo || 'Provincial',
+          dependencia: laborales.dependencia || '',
+          cargo: laborales.cargo || 'Titular'
+        };
+      }
+      if (!s.domicilio_historico && (s.Domicilio_Historico_Solicitud || s.solicitante?.domicilio)) {
+        s.domicilio_historico = s.Domicilio_Historico_Solicitud || s.solicitante?.domicilio || '';
+      }
+      if (!s.prestamo || typeof s.prestamo !== 'object') {
+        const lineaNom = String(s.Linea_Ayuda || 'FEDEM Provincial');
+        const lineaLow = lineaNom.toLowerCase();
+        const lineaKey = (lineaLow.includes('muni') || lineaLow.includes('quad')) ? 'muni' :
+                         lineaLow.includes('sidecreer') ? 'sidecreer' : 'fedem';
+        s.prestamo = {
+          linea: lineaKey,
+          lineaNombre: lineaNom,
+          monto: Number(s.Monto_Solicitado_Neto || s.monto || 0),
+          cuotas: Number(s.Cantidad_Cuotas || s.cuotas || 12),
+          cuotaEstimada: Number(s.Monto_Cuota || s.cuotaEstimada || 0)
+        };
+      }
+      if (!Array.isArray(s.adjuntos) && s.Archivos_Adjuntos_JSON) {
+        s.adjuntos = parseJSONCampoSeguro(s.Archivos_Adjuntos_JSON, []);
+      }
+      if (!Array.isArray(s.observaciones) && s.Historial_Comentarios_JSON) {
+        s.observaciones = parseJSONCampoSeguro(s.Historial_Comentarios_JSON, []);
+      }
+      if (!s.carpetaDriveUrl && s.Carpeta_Drive_URL) {
+        s.carpetaDriveUrl = s.Carpeta_Drive_URL;
+      }
+      if (s.Metadata_Extra_JSON) {
+        const metaExtra = parseJSONCampoSeguro(s.Metadata_Extra_JSON, {});
+        if (metaExtra.id_provisorio && (!s.id_provisorio || s.id_provisorio === ('PROV-' + s.id))) s.id_provisorio = metaExtra.id_provisorio;
+        if (metaExtra.id_definitivo && !s.id_definitivo) s.id_definitivo = metaExtra.id_definitivo;
+        if (Array.isArray(metaExtra.requerimientosDocumentales) && !s.requerimientosDocumentales) s.requerimientosDocumentales = metaExtra.requerimientosDocumentales;
+        if (metaExtra.ultimaDerivacion && !s.ultimaDerivacion) s.ultimaDerivacion = metaExtra.ultimaDerivacion;
+      }
+      if (!s.propuestaMutual && s.Historial_Ofertas_JSON) {
+        const ofertasRaw = parseJSONCampoSeguro(s.Historial_Ofertas_JSON, {});
+        if (ofertasRaw && !Array.isArray(ofertasRaw)) {
+          if (ofertasRaw.propuestaMutual) s.propuestaMutual = ofertasRaw.propuestaMutual;
+          if (Array.isArray(ofertasRaw.historialPropuestas)) s.historialPropuestas = ofertasRaw.historialPropuestas;
+        }
+      }
+      if (!s.auditoriaIA && s.Dictamen_IA_JSON) {
+        s.auditoriaIA = parseJSONCampoSeguro(s.Dictamen_IA_JSON, null);
+      }
+
       s.analistaAsignado = s.analistaAsignado || s.Analista_Asignado || '';
       s.Analista_Asignado = s.analistaAsignado;
       if (s.ultimaDerivacion === undefined) s.ultimaDerivacion = null;
@@ -6874,45 +7002,86 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     function saveStoredSolicitudes(list) {
-      localStorage.setItem(STORAGE_SOLICITUDES_KEY, JSON.stringify(list));
+      const normalized = Array.isArray(list) ? list.map(normalizarSolicitud) : [];
+      window.estadoApp = window.estadoApp || { solicitudes: [] };
+      window.estadoApp.solicitudes = normalized;
+      localStorage.setItem(STORAGE_SOLICITUDES_KEY, JSON.stringify(normalized));
+    }
+
+    let _cloudSyncPromise = null;
+    async function cargarSolicitudesDesdeNube(silencioso = false) {
+      const session = getSession();
+      if (!session) return [];
+      if (_cloudSyncPromise) return _cloudSyncPromise;
+
+      _cloudSyncPromise = (async () => {
+        if (!silencioso) {
+          mostrarCargando('Actualizando expedientes desde el servidor central...', 'Consultando Google Sheets y Legajos Digitales en tiempo real');
+        }
+        try {
+          const respuesta = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              action: 'obtenerSolicitudes',
+              usuarioActivo: session,
+              usuario_id: session.id,
+              usuario: session.usuario || session.email,
+              nombre: session.nombre,
+              rol: session.rol,
+              organizacion_id: session.organizacion_id,
+              nombre_organizacion: session.nombre_organizacion,
+              es_titular: !!session.es_titular_organizacion
+            })
+          });
+
+          if (!respuesta.ok) {
+            throw new Error('HTTP ' + respuesta.status);
+          }
+
+          const resJSON = await respuesta.json();
+          let lista = null;
+          if (Array.isArray(resJSON)) lista = resJSON;
+          else if (resJSON && resJSON.ok !== false && Array.isArray(resJSON.solicitudes)) lista = resJSON.solicitudes;
+          else if (resJSON && resJSON.ok !== false && Array.isArray(resJSON.data)) lista = resJSON.data;
+
+          if (lista !== null) {
+            const normalizadas = lista.map(normalizarSolicitud);
+            saveStoredSolicitudes(normalizadas);
+            renderModuloComercializador();
+            renderModuloMutualPropias();
+            renderModuloMutual();
+            actualizarCentroNotificaciones();
+            if (!silencioso) {
+              showToast('Base de datos central sincronizada (' + normalizadas.length + ' expedientes) ✓');
+            }
+            return normalizadas;
+          }
+
+          throw new Error((resJSON && (resJSON.error || resJSON.message)) || 'Respuesta inválida de servidor');
+        } catch (err) {
+          console.error('Error al sincronizar desde la nube:', err);
+          if (!silencioso) {
+            showToast('Error al conectar con la base de datos central.');
+          }
+          return null;
+        } finally {
+          _cloudSyncPromise = null;
+          if (!silencioso) {
+            ocultarCargando();
+          }
+        }
+      })();
+
+      return _cloudSyncPromise;
+    }
+
+    async function sincronizarGestionesDesdeNube(silencioso = false) {
+      return cargarSolicitudesDesdeNube(silencioso);
     }
 
     async function sincronizarConBackend(silencioso = false) {
-      const session = getSession();
-      if (!session) return;
-
-      const res = await callApi({
-        action: 'obtenerSolicitudes',
-        usuario_id: session.id,
-        usuario: session.usuario,
-        rol: session.rol,
-        organizacion_id: session.organizacion_id,
-        es_titular: !!session.es_titular_organizacion
-      }, silencioso ? null : {
-        title: 'Sincronizando con Servidor Central...',
-        sub: 'Cargando expedientes y legajos digitales en tiempo real'
-      });
-
-      if (res.ok && res.data) {
-        let lista = null;
-        if (Array.isArray(res.data)) lista = res.data;
-        else if (res.data.solicitudes && Array.isArray(res.data.solicitudes)) lista = res.data.solicitudes;
-        else if (res.data.data && Array.isArray(res.data.data)) lista = res.data.data;
-
-        if (lista && lista.length >= 0) {
-          saveStoredSolicitudes(lista.map(normalizarSolicitud));
-          renderModuloComercializador();
-          renderModuloMutualPropias();
-          renderModuloMutual();
-          actualizarCentroNotificaciones();
-          if (!silencioso) showToast('Bandeja sincronizada con Servidor Central ✓');
-          return;
-        }
-      }
-
-      if (!silencioso && !res.ok) {
-        showToast('Aviso: Operando con datos locales (' + (res.error || 'Servidor no respondió') + ')');
-      }
+      return cargarSolicitudesDesdeNube(silencioso);
     }
 
     /* ========================================================================
@@ -7045,9 +7214,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
         // 2. El Analista ve:
         if (rol === 'analista' || rol.includes('analista') || rol.includes('asesor mutual')) {
+          // Expedientes históricos sin ID de asesor siguen visibles para auditoría
+          if (!solAsesorId || solAsesorId === 'USR-000') return true;
           // (a) Las propias que originó
           const esOriginador = Boolean(
-            (userId && solAsesorId && solAsesorId === userId) ||
+            (userId && solAsesorId === userId) ||
             (miNombre && (comercializadorLower === miNombre || comercializadorLower === (miNombre + ' (sede central)')))
           );
           // (b) Las que le fueron asignadas o derivadas a su nombre
@@ -7063,14 +7234,17 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
         // 3. El Titular de Organización ve todas las de su Organización
         if (usuarioActual.esTitular === true || usuarioActual.es_titular_organizacion === true || rol.includes('titular')) {
-          const rawOrgSol = String(sol.organizacion_id || sol.idOrganizacion || sol.ID_Organizacion || '').trim();
-          return rawOrgSol === userOrgId;
+          const rawOrgSol = String(sol.organizacion_id || sol.idOrganizacion || sol.ID_Organizacion || '').toLowerCase().trim();
+          const rawOrgNomSol = String(sol.nombre_organizacion || sol.nombreOrganizacion || sol.Nombre_Organizacion || '').toLowerCase().trim();
+          const userOrgNom = String(usuarioActual.nombre_organizacion || usuarioActual.nombreOrganizacion || '').toLowerCase().trim();
+          return (userOrgId && rawOrgSol === userOrgId.toLowerCase()) || (userOrgNom && rawOrgNomSol === userOrgNom);
         }
 
         // 4. El Asesor Comercial solo ve sus propias solicitudes creadas
+        const solNombreClean = comercializadorLower.replace(/\s*\(sede central\)\s*/gi, '').trim();
         return Boolean(
           (userId && solAsesorId && solAsesorId === userId) ||
-          (miNombre && comercializadorLower === miNombre)
+          (miNombre && (comercializadorLower === miNombre || solNombreClean === miNombre))
         );
       });
     }
@@ -7431,16 +7605,23 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const asesorNombre = isSedeCentral ? (session.nombre + ' (Sede Central)') : session.nombre;
       const analistaAsig = isSedeCentral ? session.nombre : 'Sin Asignar';
 
+      const totalADevolver = Number((cuotaEstimada * cuotas).toFixed(2)) || 0;
       const nueva = {
         id: rawRand,
         id_provisorio: provId,
         id_definitivo: '',
         fecha: nowStr,
         usuario_id: session.id,
+        idUsuarioAsesor: session.id,
+        idAsesor: session.id,
         comercializador: asesorNombre,
+        nombreAsesor: asesorNombre,
         organizacion_id: orgId,
+        idOrganizacion: orgId,
         nombre_organizacion: orgNombre,
+        nombreOrganizacion: orgNombre,
         origen_canal: canalIngreso,
+        origenCanal: canalIngreso,
         domicilio_historico: domHistVal,
         solicitante: {
           dni: sanitizeHTML(dniVal),
@@ -7461,7 +7642,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           lineaNombre: lineaNombre,
           monto,
           cuotas,
-          cuotaEstimada
+          cuotaEstimada,
+          totalADevolver
         },
         propuestaMutual: {
           activa: false,
@@ -7476,6 +7658,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         adjuntos: listaAdjuntosObj,
         estado: 'Pendiente',
         analistaAsignado: analistaAsig,
+        Analista_Asignado: analistaAsig,
         observaciones: [
           {
             autor: session.nombre,
@@ -7489,15 +7672,38 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       // 5. Payload 100% aplanado y enriquecido con todos los identificadores y atributos requeridos por Google Apps Script / Sheets
       const payloadParaBackend = {
         action: 'crearSolicitud',
+        usuarioActivo: session,
 
-        // Identificadores de Operación
+        // Identificadores de Operación y RBAC Multiplataforma (obligatorios)
+        ID_Solicitud: rawRand,
         ID_OPERACION: rawRand,
         id: rawRand,
         id_provisorio: provId,
         id_definitivo: '',
         fecha: nowStr,
         Fecha: nowStr,
+        Fecha_Registro: nowStr,
         Fecha_Auditoria: nowStr,
+        ID_Usuario_Asesor: session.id,
+        idUsuarioAsesor: session.id,
+        usuario_id: session.id,
+        Nombre_Asesor: asesorNombre,
+        nombreAsesor: asesorNombre,
+        Comercializador: asesorNombre,
+        comercializador: asesorNombre,
+        ID_Organizacion: orgId,
+        idOrganizacion: orgId,
+        Organizacion_Id: orgId,
+        organizacion_id: orgId,
+        Nombre_Organizacion: orgNombre,
+        nombreOrganizacion: orgNombre,
+        nombre_organizacion: orgNombre,
+        Origen_Canal: canalIngreso,
+        origenCanal: canalIngreso,
+        Canal_Ingreso: canalIngreso,
+        origen_canal: canalIngreso,
+        Analista_Asignado: analistaAsig,
+        analistaAsignado: analistaAsig,
 
         // Solicitante / Titular (Nombres exactos leídos en Sheets)
         Apellido_Nombre: finalNombre,
@@ -7543,24 +7749,16 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         Cuota_Estimada: cuotaEstimada,
         cuotaEstimada: cuotaEstimada,
         cuota: cuotaEstimada,
+        Total_A_Devolver: totalADevolver,
         Linea: lineaKey,
         linea: lineaKey,
         Linea_Nombre: lineaNombre,
         lineaNombre: lineaNombre,
 
-        // Canal de Ingreso y Comercialización
-        Canal_Ingreso: canalIngreso,
-        origen_canal: canalIngreso,
-        Comercializador: asesorNombre,
-        comercializador: asesorNombre,
-        Organizacion_Id: orgId,
-        organizacion_id: orgId,
-        Nombre_Organizacion: orgNombre,
-        nombre_organizacion: orgNombre,
-        analistaAsignado: analistaAsig,
-
         // Archivos en Base64 y serialización JSON para Drive y CRM
         Archivos_Adjuntos_JSON: JSON.stringify(adjuntosBase64),
+        Historial_Comentarios_JSON: JSON.stringify(nueva.observaciones),
+        Historial_Ofertas_JSON: JSON.stringify({ propuestaMutual: nueva.propuestaMutual, historialPropuestas: [] }),
         archivos: adjuntosBase64,
         adjuntos: adjuntosBase64,
         adjuntosBase64: adjuntosBase64,
@@ -7570,33 +7768,37 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       };
 
       const res = await callApi(payloadParaBackend, {
-        title: 'Guardando en Servidor Central...',
-        sub: 'Creando expediente ' + provId + ' y archivando ' + adjuntosBase64.length + ' documentos'
+        title: 'Guardando en Base de Datos Central...',
+        sub: 'Registrando expediente ' + provId + ' y archivando ' + adjuntosBase64.length + ' documentos en Google Drive'
       });
 
-      const all = getStoredSolicitudes();
-      all.unshift(nueva);
-      saveStoredSolicitudes(all);
+      // Validación estricta Cloud-First: si falla el guardado en el servidor, NO cerrar el modal ni simular guardado local
+      if (!res || !res.ok || !res.data || res.data.ok === false) {
+        showToast('⚠️ Error al guardar en el servidor. Verifique su conexión.');
+        return;
+      }
 
-      // Disparo automático e inteligente de Auditoría IA en segundo plano
-      ejecutarAuditoriaAutomaticaExpediente(nueva.id, adjuntosBase64);
+      const idConfirmado = res.data.id_provisorio || res.data.idSolicitud || provId;
+      window.stateArchivosAdjuntos = {};
+      if (window.state && window.state.archivosAdjuntos) {
+        window.state.archivosAdjuntos = {};
+      }
 
       cerrarModal('modalAltaSolicitud');
 
+      // Sincronización inmediata en vivo desde Google Sheets para reflejar Carpeta Drive y estado oficial
+      await cargarSolicitudesDesdeNube(true);
+
+      // Disparo automático e inteligente de Auditoría IA en segundo plano
+      ejecutarAuditoriaAutomaticaExpediente(res.data.id || nueva.id, adjuntosBase64);
+
       if (isSedeCentral) {
-        renderModuloMutualPropias();
         cambiarPestana('view-mutual-propias');
       } else {
-        renderModuloComercializador();
         cambiarPestana('view-comercializador');
       }
       actualizarCentroNotificaciones();
-
-      if (res.ok) {
-        showToast('Solicitud ' + provId + ' guardada con éxito en Servidor Central 🚀');
-      } else {
-        showToast('Solicitud ' + provId + ' registrada localmente (Servidor pendiente de sincronización)');
-      }
+      showToast('Expediente ' + idConfirmado + ' registrado en la base de datos central y Google Drive ✓');
     }
 
     /* ========================================================================
@@ -11338,6 +11540,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.abrirModalDerivarCaso = abrirModalDerivarCaso;
     window.confirmarReasignacionCaso = confirmarReasignacionCaso;
     window.obtenerAnalistasMutual = obtenerAnalistasMutual;
+    window.cargarSolicitudesDesdeNube = cargarSolicitudesDesdeNube;
+    window.sincronizarGestionesDesdeNube = sincronizarGestionesDesdeNube;
+    window.estadoApp = window.estadoApp;
 
     window.addEventListener('DOMContentLoaded', () => {
       const input = document.getElementById('amountInput');

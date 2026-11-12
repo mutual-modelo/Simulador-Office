@@ -1865,6 +1865,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const res = await callApi({
         action: 'login',
         usuario: user,
+        password: pass,
         clave: pass
       }, {
         title: 'Verificando Credenciales...',
@@ -1873,12 +1874,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       let loggedUser = null;
       if (res.ok && res.data) {
-        if (res.data.success && res.data.user) {
+        if ((res.data.success || res.data.ok) && res.data.user) {
           loggedUser = res.data.user;
         } else if (res.data.usuario || res.data.nombre) {
           loggedUser = res.data;
-        } else if (res.data.success === false && res.data.message) {
-          if (err) { err.textContent = res.data.message; err.style.display = 'block'; }
+        } else if ((res.data.success === false || res.data.ok === false) && (res.data.message || res.data.error)) {
+          if (err) { err.textContent = res.data.message || res.data.error; err.style.display = 'block'; }
           return;
         }
       }

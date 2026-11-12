@@ -466,8 +466,8 @@ function buscarAsociadoPorDNI(dniRaw) {
           organismo: getCol('Organismo', 'Provincial'),
           legajo: getCol('Legajo', ''),
           dependencia: getCol('Dependencia', ''),
-          cargo: getCol('Cargo', 'Titular'),
-          situacionRevista: getCol('Situacion_Revista', 'Planta Permanente'),
+          cargo: getCol('Cargo', ''),
+          situacionRevista: getCol('Situacion_Revista', ''),
           fechaIngresoLaboral: getCol('Fecha_Ingreso_Laboral', ''),
           Fecha_Ingreso_Laboral: getCol('Fecha_Ingreso_Laboral', ''),
           antiguedad: getCol('Antiguedad', ''),
@@ -525,8 +525,10 @@ function sincronizarAsociadoEnPadron_(datos) {
     pick('Organismo', datos.organismo, 'Provincial');
     pick('Legajo', datos.legajo, '');
     pick('Dependencia', datos.dependencia, '');
-    pick('Cargo', datos.cargo, 'Titular');
-    pick('Situacion_Revista', datos.situacionRevista, 'Planta Permanente');
+    pick('Cargo', datos.cargo, '');
+    if (map['Situacion_Revista'] !== undefined && datos.situacionRevista !== undefined) {
+      row[map['Situacion_Revista']] = String(datos.situacionRevista || '');
+    }
     pick('Fecha_Ingreso_Laboral', datos.fechaIngresoLaboral || datos.fechaIngreso, '');
     pick('Antiguedad', datos.antiguedad, '');
     pick('Fecha_Alta', datos.fechaAlta || Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd'), '');
@@ -589,8 +591,8 @@ function registrarNuevoAsociado(payload) {
     set('Organismo', payload.Organismo || asoc.organismo || 'Provincial');
     set('Legajo', payload.Legajo || asoc.legajo || '');
     set('Dependencia', payload.Dependencia || asoc.dependencia || '');
-    set('Cargo', payload.Cargo || asoc.cargo || 'Titular');
-    set('Situacion_Revista', payload.Situacion_Revista || payload.situacionRevista || asoc.situacionRevista || 'Planta Permanente');
+    set('Cargo', payload.Cargo || asoc.cargo || '');
+    set('Situacion_Revista', payload.Situacion_Revista !== undefined ? payload.Situacion_Revista : (payload.situacionRevista !== undefined ? payload.situacionRevista : (asoc.situacionRevista || '')));
     set('Fecha_Ingreso_Laboral', payload.Fecha_Ingreso_Laboral || payload.fechaIngresoLaboral || payload.fechaIngreso || asoc.fechaIngresoLaboral || asoc.fechaIngreso || '');
     set('Antiguedad', payload.Antiguedad || payload.antiguedad || asoc.antiguedad || '');
     set('Fecha_Alta', asoc.fechaAlta || Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd'));
@@ -691,8 +693,8 @@ function registrarNuevaSolicitud(payload) {
       condicion: solicitante.condicion || solLaborales.condicion || sol.condicion || payload.Condicion || payload.condicion || laboralesExtra.condicion || 'Activo',
       organismo: solicitante.organismo || solLaborales.organismo || sol.organismo || payload.Organismo || payload.organismo || laboralesExtra.organismo || 'Provincial',
       dependencia: solicitante.dependencia || solLaborales.dependencia || sol.dependencia || payload.Dependencia || payload.dependencia || laboralesExtra.dependencia || '',
-      cargo: solicitante.cargo || solLaborales.cargo || sol.cargo || payload.Cargo || payload.cargo || laboralesExtra.cargo || 'Titular',
-      situacionRevista: solicitante.situacionRevista || solLaborales.situacionRevista || sol.situacionRevista || payload.Situacion_Revista || payload.situacionRevista || laboralesExtra.situacionRevista || 'Planta Permanente',
+      cargo: solicitante.cargo || solLaborales.cargo || sol.cargo || payload.Cargo || payload.cargo || laboralesExtra.cargo || '',
+      situacionRevista: (solicitante.situacionRevista !== undefined ? solicitante.situacionRevista : (solLaborales.situacionRevista !== undefined ? solLaborales.situacionRevista : (sol.situacionRevista !== undefined ? sol.situacionRevista : (payload.Situacion_Revista !== undefined ? payload.Situacion_Revista : (payload.situacionRevista !== undefined ? payload.situacionRevista : (laboralesExtra.situacionRevista || '')))))),
       fechaIngresoLaboral: fechaIngresoLab,
       Fecha_Ingreso_Laboral: fechaIngresoLab,
       antiguedad: solicitante.antiguedad || solLaborales.antiguedad || sol.antiguedad || payload.Antiguedad || payload.antiguedad || laboralesExtra.antiguedad || '',
@@ -941,8 +943,8 @@ function listarSolicitudes(usuarioActivoInput) {
         condicion: laborales.condicion || 'Activo',
         organismo: laborales.organismo || 'Provincial',
         dependencia: laborales.dependencia || '',
-        cargo: laborales.cargo || 'Titular',
-        situacionRevista: laborales.situacionRevista || 'Planta Permanente',
+        cargo: laborales.cargo || '',
+        situacionRevista: laborales.situacionRevista !== undefined ? laborales.situacionRevista : '',
         fechaIngresoLaboral: fechaIngresoRow,
         Fecha_Ingreso_Laboral: fechaIngresoRow,
         antiguedad: laborales.antiguedad || ''
@@ -1050,6 +1052,15 @@ function encontrarFilaPorId_(sheet, map, idSolicitud) {
   for (let i = 1; i < values.length; i++) {
     if (String(values[i][colIdx] || '').trim() === idTarget) {
       return i + 1; // 1-based row number
+    }
+  }
+  const cleanTarget = idTarget.replace(/^(PROV|AYU)-/i, '').trim();
+  if (cleanTarget) {
+    for (let i = 1; i < values.length; i++) {
+      const rowId = String(values[i][colIdx] || '').trim();
+      if (rowId.replace(/^(PROV|AYU)-/i, '').trim() === cleanTarget) {
+        return i + 1;
+      }
     }
   }
   return -1;
@@ -1366,8 +1377,8 @@ function actualizarDatosSolicitanteBackend(payload) {
       condicion: sol.condicion || prevLaborales.condicion || 'Activo',
       organismo: sol.organismo || prevLaborales.organismo || 'Provincial',
       dependencia: sol.dependencia !== undefined ? sol.dependencia : (prevLaborales.dependencia || ''),
-      cargo: sol.cargo || prevLaborales.cargo || 'Titular',
-      situacionRevista: sol.situacionRevista || prevLaborales.situacionRevista || 'Planta Permanente',
+      cargo: sol.cargo !== undefined ? sol.cargo : (prevLaborales.cargo || ''),
+      situacionRevista: sol.situacionRevista !== undefined ? sol.situacionRevista : (prevLaborales.situacionRevista || ''),
       fechaIngresoLaboral: fechaIngresoUpd,
       Fecha_Ingreso_Laboral: fechaIngresoUpd,
       antiguedad: sol.antiguedad !== undefined ? sol.antiguedad : (prevLaborales.antiguedad || ''),

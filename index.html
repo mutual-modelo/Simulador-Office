@@ -414,22 +414,296 @@
     .btn-whatsapp-send{background:var(--wa-accent);color:#fff;border:none;padding:.45rem 1rem;font-size:.75rem;font-weight:600;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:.375rem;text-decoration:none;box-shadow:0 2px 5px rgba(37,211,102,.3);transition:all .15s ease}
     .btn-whatsapp-send:hover{background:#20bd5a;transform:translateY(-1px);box-shadow:0 3px 8px rgba(37,211,102,.4)}
 
-    /* MÓDULOS DE GESTIÓN (TAB 2 Y TAB 3) */
-    .module-hero-bar{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--border-color);border-radius:12px;padding:.85rem 1rem;margin-top:1rem;flex-wrap:wrap;gap:.5rem}
-    .module-hero-info h2{font-size:1.05rem;font-weight:800;color:var(--color-primary);display:flex;align-items:center;gap:.4rem}
-    .module-hero-info p{font-size:.72rem;color:var(--text-muted)}
-    .btn-hero-action{padding:.5rem .85rem;font-size:.78rem;font-weight:700;border-radius:8px;border:none;background:var(--color-brand-blue);color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem;transition:all .15s ease}
-    .btn-hero-action:hover{background:var(--color-brand-blue-dark)}
-    .toolbar-filters{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--border-color);border-radius:10px;padding:.55rem .85rem;margin-top:.75rem;gap:.5rem;flex-wrap:wrap}
-    .filters-left-group{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;flex:1}
-    .search-input-box{min-width:190px}
-    .search-input-box input{width:100%;padding:.35rem .55rem;font-size:.75rem;border:1px solid var(--border-color);border-radius:6px;outline:none}
-    
-    /* VISTA CONMUTABLE: BOTONES */
-    .view-switcher-control{display:inline-flex;background:#e2e8f0;padding:3px;border-radius:8px;gap:3px;border:1px solid var(--border-color)}
-    .view-switcher-btn{border:none;background:transparent;padding:.35rem .65rem;font-family:inherit;font-size:.72rem;font-weight:700;color:var(--text-muted);border-radius:6px;cursor:pointer;transition:all .15s ease;display:inline-flex;align-items:center;gap:4px}
-    .view-switcher-btn:hover:not(.active){color:var(--text-main);background:rgba(255,255,255,.5)}
-    .view-switcher-btn.active{background:#fff;color:var(--color-brand-blue);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+    /* ========================================================================
+       BARRA DE HERRAMIENTAS Y FILTROS REDISEÑADA (2 NIVELES JERÁRQUICOS)
+       ======================================================================== */
+    /* ENCABEZADO DE MÓDULO */
+    .module-hero-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.85rem 1.15rem;
+      margin-top: 1rem;
+      box-shadow: 0 1px 3px rgba(15, 39, 68, 0.04);
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .module-hero-info h2 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--color-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      line-height: 1.3;
+    }
+    .module-hero-info p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* NIVEL 1: BARRA DE CONTROL PRINCIPAL (VISTAS Y ACCIONES) */
+    .gestiones-control-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-top: 0.85rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    /* LADO IZQUIERDO: SELECTOR DE VISUALIZACIÓN SEGMENTED CONTROL */
+    .view-switcher-control {
+      display: inline-flex;
+      align-items: center;
+      background: #f1f5f9;
+      padding: 3px;
+      border-radius: 10px;
+      gap: 3px;
+      border: 1px solid #e2e8f0;
+      user-select: none;
+    }
+    .view-switcher-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.42rem 0.85rem;
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #64748b;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .view-switcher-btn:hover:not(.active) {
+      color: #1e293b;
+      background: rgba(255, 255, 255, 0.65);
+    }
+    .view-switcher-btn.active {
+      background: #ffffff;
+      color: #135596;
+      font-weight: 700;
+      border-color: #cbd5e1;
+      box-shadow: 0 1px 3px rgba(15, 39, 68, 0.08);
+    }
+    .view-icon {
+      width: 14px;
+      height: 14px;
+      display: inline-block;
+      stroke-width: 2;
+    }
+
+    /* LADO DERECHO: BOTONERA DE ACCIONES JERÁRQUICAS */
+    .gestiones-actions-group {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+    }
+    .btn-action-refresh {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.45rem 0.8rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #475569;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+    .btn-action-refresh:hover {
+      background: #f8fafc;
+      color: #0f2d4a;
+      border-color: #cbd5e1;
+    }
+    .btn-action-secondary-asoc {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 0.9rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #135596;
+      background: #f0f7ff;
+      border: 1px solid #bae6fd;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: 0 1px 2px rgba(19, 85, 150, 0.05);
+    }
+    .btn-action-secondary-asoc:hover {
+      background: #e0f2fe;
+      border-color: #7dd3fc;
+    }
+    .btn-action-primary-new {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 1rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #ffffff;
+      background: #135596;
+      border: 1px solid #135596;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: 0 1px 3px rgba(19, 85, 150, 0.25);
+    }
+    .btn-action-primary-new:hover {
+      background: #0f4477;
+      border-color: #0f4477;
+      box-shadow: 0 2px 6px rgba(19, 85, 150, 0.35);
+    }
+    .action-icon {
+      width: 15px;
+      height: 15px;
+      display: inline-block;
+      stroke-width: 2;
+    }
+
+    /* NIVEL 2: CARD DE FILTROS Y BÚSQUEDA MULTICRITERIO */
+    .filters-card-panel {
+      background: #ffffff;
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: 12px;
+      padding: 0.75rem 0.95rem;
+      box-shadow: 0 1px 3px rgba(15, 39, 68, 0.04);
+      margin-bottom: 1rem;
+    }
+    .filters-grid-row {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+    .filter-search-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+      flex: 1 1 240px;
+      min-width: 210px;
+      max-width: 360px;
+    }
+    .search-lens-icon {
+      position: absolute;
+      left: 0.7rem;
+      width: 15px;
+      height: 15px;
+      color: #94a3b8;
+      pointer-events: none;
+      stroke-width: 2;
+    }
+    .filter-input-text.search-with-icon {
+      width: 100%;
+      padding: 0.42rem 0.75rem 0.42rem 2.1rem;
+      font-size: 0.8rem;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 7px;
+      color: #1e293b;
+      outline: none;
+      transition: all 0.15s ease;
+    }
+    .filter-input-text.search-with-icon:focus {
+      background: #ffffff;
+      border-color: #135596;
+      box-shadow: 0 0 0 3px rgba(19, 85, 150, 0.12);
+    }
+    .filter-select-box {
+      display: flex;
+      align-items: center;
+    }
+    .filter-select {
+      padding: 0.42rem 0.75rem;
+      font-size: 0.78rem;
+      font-weight: 500;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 7px;
+      color: #334155;
+      outline: none;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+    .filter-select:focus {
+      background: #ffffff;
+      border-color: #135596;
+      box-shadow: 0 0 0 3px rgba(19, 85, 150, 0.12);
+    }
+    .filter-date-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 7px;
+      padding: 0.25rem 0.6rem;
+    }
+    .date-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #64748b;
+    }
+    .filter-date-input {
+      border: none;
+      background: transparent;
+      font-size: 0.75rem;
+      color: #1e293b;
+      outline: none;
+      cursor: pointer;
+    }
+    .btn-filter-clear {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.42rem 0.65rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #64748b;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-filter-clear:hover {
+      background: #f1f5f9;
+      color: #0f2d4a;
+      border-color: #94a3b8;
+    }
+    .clear-icon {
+      width: 13px;
+      height: 13px;
+      stroke-width: 2;
+    }
+    .filters-footer-meta {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      margin-top: 0.45rem;
+      padding-top: 0.4rem;
+      border-top: 1px solid #f1f5f9;
+    }
+    .count-badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #64748b;
+    }
 
     /* TABLA DE DATOS */
     .data-table-container{background:#fff;border:1px solid var(--border-color);border-radius:12px;margin-top:.75rem;overflow-x:auto}
@@ -935,51 +1209,124 @@
 
     <!-- PESTAÑA 2: GESTIONES DE COMERCIALIZADOR (ORGANIZACIONES & TITULARES) -->
     <section id="view-comercializador" class="app-view">
+      <!-- ENCABEZADO DE MÓDULO -->
       <div class="module-hero-bar">
         <div class="module-hero-info">
           <h2 id="lblTituloModuloComercial">📁 Mis Gestiones de Ayudas Económicas</h2>
           <p id="lblSubtituloModuloComercial">Registro, carga de documentación y seguimiento de solicitudes originadas.</p>
         </div>
-        <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-          <div class="view-switcher-control">
-            <button type="button" class="view-switcher-btn active" id="btnViewCom-tabla" onclick="setVistaModulo('comercializador', 'tabla')">📋 Tabla</button>
-            <button type="button" class="view-switcher-btn" id="btnViewCom-kanban" onclick="setVistaModulo('comercializador', 'kanban')">📊 Kanban</button>
-            <button type="button" class="view-switcher-btn" id="btnViewCom-calendario" onclick="setVistaModulo('comercializador', 'calendario')">📅 Calendario</button>
-          </div>
-          <button class="btn-restore" onclick="sincronizarConBackend()" title="Sincronizar expedientes con Google Sheets">🔄 Actualizar</button>
-          <button class="btn-hero-action" onclick="abrirModalAltaSolicitud()">+ Nueva Solicitud</button>
+      </div>
+
+      <!-- NIVEL 1: BARRA DE CONTROL PRINCIPAL (VISTAS Y ACCIONES) -->
+      <div class="gestiones-control-bar">
+        <!-- LADO IZQUIERDO: SELECTOR DE VISUALIZACIÓN SEGMENTED CONTROL -->
+        <div class="view-switcher-control">
+          <button type="button" class="view-switcher-btn active" id="btnViewCom-tabla" data-vista="tabla" onclick="setVistaModulo('comercializador', 'tabla')">
+            <svg class="view-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="3" y1="9" x2="21" y2="9"></line>
+              <line x1="3" y1="15" x2="21" y2="15"></line>
+              <line x1="9" y1="3" x2="9" y2="21"></line>
+            </svg>
+            <span>Tabla</span>
+          </button>
+          <button type="button" class="view-switcher-btn" id="btnViewCom-kanban" data-vista="kanban" onclick="setVistaModulo('comercializador', 'kanban')">
+            <svg class="view-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="5" height="18" rx="1"></rect>
+              <rect x="10" y="3" width="5" height="12" rx="1"></rect>
+              <rect x="17" y="3" width="5" height="15" rx="1"></rect>
+            </svg>
+            <span>Kanban</span>
+          </button>
+          <button type="button" class="view-switcher-btn" id="btnViewCom-calendario" data-vista="calendario" onclick="setVistaModulo('comercializador', 'calendario')">
+            <svg class="view-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>Calendario</span>
+          </button>
+        </div>
+
+        <!-- LADO DERECHO: BOTONERA DE ACCIONES JERÁRQUICAS -->
+        <div class="gestiones-actions-group">
+          <button type="button" class="btn-action-refresh" onclick="sincronizarConBackend()" title="Sincronizar solicitudes con Google Sheets">
+            <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            <span>Actualizar</span>
+          </button>
+          <button type="button" class="btn-action-primary-new" onclick="abrirModalAltaSolicitud()">
+            <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="16"></line>
+              <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg>
+            <span>+ Nueva Solicitud</span>
+          </button>
         </div>
       </div>
 
-      <div class="toolbar-filters">
-        <div class="filters-left-group" style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">
-          <div class="search-input-box"><input type="text" id="filtroComercialTexto" placeholder="🔍 Buscar por DNI, Asociado, N°..." oninput="filtrarGestionesComercializador()"/></div>
-          <select id="filtroComercialLinea" class="input-text" style="width:auto;" onchange="filtrarGestionesComercializador()">
-            <option value="">Línea de Ayuda Económica: Todas</option>
-            <option value="fedem">FEDEM Provincial</option>
-            <option value="muni">Convenio Municipal VIKINGO/QUAD</option>
-            <option value="sidecreer">Tarjeta Sidecreer</option>
-          </select>
-          <div style="display:flex;align-items:center;gap:3px;font-size:0.72rem;color:var(--text-muted);background:#fff;padding:2px 6px;border:1px solid var(--border-color);border-radius:6px;">
-            <span>Desde:</span>
-            <input type="date" id="filtroComercialFechaDesde" style="border:none;background:none;font-size:0.72rem;outline:none;" onchange="filtrarGestionesComercializador()"/>
-            <span>Hasta:</span>
-            <input type="date" id="filtroComercialFechaHasta" style="border:none;background:none;font-size:0.72rem;outline:none;" onchange="filtrarGestionesComercializador()"/>
+      <!-- NIVEL 2: BARRA DE BÚSQUEDA Y FILTROS MULTICRITERIO (CARD) -->
+      <div class="filters-card-panel">
+        <div class="filters-grid-row">
+          <div class="filter-search-box">
+            <svg class="search-lens-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="filtroComercialTexto" class="filter-input-text search-with-icon" placeholder="Buscar por Nombre, DNI o N° Solicitud..." oninput="filtrarGestionesComercializador()"/>
           </div>
-          <select id="filtroComercialEstado" class="input-text" style="width:auto;" onchange="filtrarGestionesComercializador()">
-            <option value="">Todos los Estados</option>
-            <option value="Pendiente">Pendiente 🟡</option>
-            <option value="En Análisis">En Gestión / Análisis 🔵</option>
-            <option value="Observado">Observado 🟠</option>
-            <option value="Aprobado">Aprobado 🟢</option>
-            <option value="Liquidado">Liquidado 🟢</option>
-            <option value="Rechazado">Rechazado 🔴</option>
-          </select>
-          <select id="filtroComercialAsesor" class="input-text" style="width:auto;display:none;" onchange="filtrarGestionesComercializador()">
-            <option value="">Todos los Asesores</option>
-          </select>
+
+          <div class="filter-select-box">
+            <select id="filtroComercialLinea" class="filter-select" onchange="filtrarGestionesComercializador()" title="Línea de Ayuda Económica">
+              <option value="">Todas las Líneas</option>
+              <option value="FEDEM Provincial">FEDEM Provincial</option>
+              <option value="QUAD Municipal">QUAD Municipal</option>
+              <option value="Convenio Sidecreer">Convenio Sidecreer</option>
+            </select>
+          </div>
+
+          <div class="filter-select-box">
+            <select id="filtroComercialEstado" class="filter-select" onchange="filtrarGestionesComercializador()" title="Estado de Solicitud">
+              <option value="">Todos los Estados</option>
+              <option value="Pendiente">Pendiente 🟡</option>
+              <option value="En Análisis">En Gestión / Análisis 🔵</option>
+              <option value="Observado">Observado 🟠</option>
+              <option value="Aprobado">Aprobado 🟢</option>
+              <option value="Liquidado">Liquidado 🟢</option>
+              <option value="Rechazado">Rechazado 🔴</option>
+            </select>
+          </div>
+
+          <div class="filter-date-group">
+            <span class="date-label">Desde</span>
+            <input type="date" id="filtroComercialFechaDesde" class="filter-date-input" onchange="filtrarGestionesComercializador()"/>
+            <span class="date-label">Hasta</span>
+            <input type="date" id="filtroComercialFechaHasta" class="filter-date-input" onchange="filtrarGestionesComercializador()"/>
+          </div>
+
+          <div class="filter-select-box" id="wrapFiltroComercialAsesor" style="display:none;">
+            <select id="filtroComercialAsesor" class="filter-select" onchange="filtrarGestionesComercializador()" title="Comercializador / Asesor">
+              <option value="">Todos los Asesores</option>
+            </select>
+          </div>
+
+          <button type="button" class="btn-filter-clear" onclick="limpiarFiltros('comercializador')" title="Restablecer todos los filtros de búsqueda">
+            <svg class="clear-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            <span>Limpiar</span>
+          </button>
         </div>
-        <span style="font-size:0.75rem;color:var(--text-muted);" id="lblTotalComercializador">0 solicitudes registradas</span>
+
+        <div class="filters-footer-meta">
+          <span class="count-badge" id="lblTotalComercializador">0 solicitudes registradas</span>
+        </div>
       </div>
 
       <!-- VISTA 1: TABLA -->
@@ -1025,64 +1372,146 @@
 
     <!-- PESTAÑA 2 (ANALISTA/ADMIN): MIS GESTIONES MUTUAL (SEDE CENTRAL) -->
     <section id="view-mutual-propias" class="app-view">
+      <!-- ENCABEZADO DE MÓDULO -->
       <div class="module-hero-bar">
         <div class="module-hero-info">
           <h2>🏛️ Mis Gestiones Mutual (Sede Central)</h2>
           <p>Originación directa en sede central, mostrador y canales oficiales de atención al socio.</p>
         </div>
-        <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-          <div class="view-switcher-control">
-            <button type="button" class="view-switcher-btn active" id="btnViewMutProp-tabla" onclick="setVistaModulo('mutualPropias', 'tabla')">📋 Tabla</button>
-            <button type="button" class="view-switcher-btn" id="btnViewMutProp-kanban" onclick="setVistaModulo('mutualPropias', 'kanban')">📊 Kanban</button>
-            <button type="button" class="view-switcher-btn" id="btnViewMutProp-calendario" onclick="setVistaModulo('mutualPropias', 'calendario')">📅 Calendario</button>
-          </div>
-          <button class="btn-restore" onclick="sincronizarConBackend()" title="Sincronizar solicitudes con Google Sheets">🔄 Actualizar Sede</button>
-          <button class="btn-hero-action btn-nuevo-asociado-action" style="background:#2563eb;" id="btnNuevoAsociadoPropias" onclick="abrirModalAltaAsociado()">
-            👤 + Nuevo Asociado
+      </div>
+
+      <!-- NIVEL 1: BARRA DE CONTROL PRINCIPAL (VISTAS Y ACCIONES) -->
+      <div class="gestiones-control-bar">
+        <!-- LADO IZQUIERDO: SELECTOR DE VISUALIZACIÓN SEGMENTED CONTROL -->
+        <div class="view-switcher-control">
+          <button type="button" class="view-switcher-btn active" id="btnViewMutProp-tabla" data-vista="tabla" onclick="setVistaModulo('mutualPropias', 'tabla')">
+            <svg class="view-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="3" y1="9" x2="21" y2="9"></line>
+              <line x1="3" y1="15" x2="21" y2="15"></line>
+              <line x1="9" y1="3" x2="9" y2="21"></line>
+            </svg>
+            <span>Tabla</span>
           </button>
-          <button class="btn-hero-action" style="background:#059669;" onclick="abrirModalAltaSolicitud('mutual_sede')">
-            ➕ Nueva Solicitud Mutual (Presencial/WhatsApp)
+          <button type="button" class="view-switcher-btn" id="btnViewMutProp-kanban" data-vista="kanban" onclick="setVistaModulo('mutualPropias', 'kanban')">
+            <svg class="view-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="5" height="18" rx="1"></rect>
+              <rect x="10" y="3" width="5" height="12" rx="1"></rect>
+              <rect x="17" y="3" width="5" height="15" rx="1"></rect>
+            </svg>
+            <span>Kanban</span>
+          </button>
+          <button type="button" class="view-switcher-btn" id="btnViewMutProp-calendario" data-vista="calendario" onclick="setVistaModulo('mutualPropias', 'calendario')">
+            <svg class="view-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>Calendario</span>
+          </button>
+        </div>
+
+        <!-- LADO DERECHO: BOTONERA DE ACCIONES JERÁRQUICAS -->
+        <div class="gestiones-actions-group">
+          <button type="button" class="btn-action-refresh" onclick="sincronizarConBackend()" title="Sincronizar solicitudes con Google Sheets">
+            <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            <span>Actualizar Sede</span>
+          </button>
+          <!-- BOTÓN SECUNDARIO: + NUEVO ASOCIADO -->
+          <button type="button" class="btn-action-secondary-asoc btn-nuevo-asociado-action" id="btnNuevoAsociadoPropias" onclick="abrirModalAltaAsociado()">
+            <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="8.5" cy="7" r="4"></circle>
+              <line x1="20" y1="8" x2="20" y2="14"></line>
+              <line x1="23" y1="11" x2="17" y2="11"></line>
+            </svg>
+            <span>+ Nuevo Asociado</span>
+          </button>
+          <!-- BOTÓN PRIMARIO: + NUEVA SOLICITUD MUTUAL -->
+          <button type="button" class="btn-action-primary-new" onclick="abrirModalAltaSolicitud('mutual_sede')">
+            <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="16"></line>
+              <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg>
+            <span>+ Nueva Solicitud Mutual</span>
           </button>
         </div>
       </div>
 
-      <div class="toolbar-filters">
-        <div class="filters-left-group" style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">
-          <div class="search-input-box"><input type="text" id="filtroMutualPropiasTexto" placeholder="🔍 Buscar por DNI, N°, Asociado..." oninput="filtrarGestionesMutualPropias()"/></div>
-          <select id="filtroMutualPropiasLinea" class="input-text" style="width:auto;" onchange="filtrarGestionesMutualPropias()">
-            <option value="">Línea de Ayuda Económica: Todas</option>
-            <option value="fedem">FEDEM Provincial</option>
-            <option value="muni">Convenio Municipal VIKINGO/QUAD</option>
-            <option value="sidecreer">Tarjeta Sidecreer</option>
-          </select>
-          <div style="display:flex;align-items:center;gap:3px;font-size:0.72rem;color:var(--text-muted);background:#fff;padding:2px 6px;border:1px solid var(--border-color);border-radius:6px;">
-            <span>Desde:</span>
-            <input type="date" id="filtroMutualPropiasFechaDesde" style="border:none;background:none;font-size:0.72rem;outline:none;" onchange="filtrarGestionesMutualPropias()"/>
-            <span>Hasta:</span>
-            <input type="date" id="filtroMutualPropiasFechaHasta" style="border:none;background:none;font-size:0.72rem;outline:none;" onchange="filtrarGestionesMutualPropias()"/>
+      <!-- NIVEL 2: BARRA DE BÚSQUEDA Y FILTROS MULTICRITERIO (CARD) -->
+      <div class="filters-card-panel">
+        <div class="filters-grid-row">
+          <div class="filter-search-box">
+            <svg class="search-lens-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="filtroMutualPropiasTexto" class="filter-input-text search-with-icon" placeholder="Buscar por Nombre, DNI o N° Solicitud..." oninput="filtrarGestionesMutualPropias()"/>
           </div>
-          <select id="filtroMutualPropiasEstado" class="input-text" style="width:auto;" onchange="filtrarGestionesMutualPropias()">
-            <option value="">Todos los Estados</option>
-            <option value="Pendiente">Pendiente 🟡</option>
-            <option value="En Análisis">En Gestión / Análisis 🔵</option>
-            <option value="Observado">Observado 🟠</option>
-            <option value="Aprobado">Aprobado 🟢</option>
-            <option value="Liquidado">Liquidado 🟢</option>
-            <option value="Rechazado">Rechazado 🔴</option>
-          </select>
-          <select id="filtroMutualPropiasCanal" class="input-text" style="width:auto;" onchange="filtrarGestionesMutualPropias()">
-            <option value="">Todos los Canales</option>
-            <option value="Presencial Sede Central">🏛️ Presencial Sede Central</option>
-            <option value="WhatsApp Oficial">💬 WhatsApp Oficial</option>
-            <option value="Telefónico">📞 Telefónico</option>
-          </select>
-          <select id="filtroMutualPropiasOrganismo" class="input-text" style="width:auto;" onchange="filtrarGestionesMutualPropias()">
-            <option value="">Todos los Organismos</option>
-            <option value="Provincial">Provincial</option>
-            <option value="Municipal">Municipal</option>
-          </select>
+
+          <div class="filter-select-box">
+            <select id="filtroMutualPropiasLinea" class="filter-select" onchange="filtrarGestionesMutualPropias()" title="Línea de Ayuda Económica">
+              <option value="">Todas las Líneas</option>
+              <option value="FEDEM Provincial">FEDEM Provincial</option>
+              <option value="QUAD Municipal">QUAD Municipal</option>
+              <option value="Convenio Sidecreer">Convenio Sidecreer</option>
+            </select>
+          </div>
+
+          <div class="filter-select-box">
+            <select id="filtroMutualPropiasEstado" class="filter-select" onchange="filtrarGestionesMutualPropias()" title="Estado de Gestión">
+              <option value="">Todos los Estados</option>
+              <option value="Pendiente">Pendiente 🟡</option>
+              <option value="En Análisis">En Gestión / Análisis 🔵</option>
+              <option value="Observado">Observado 🟠</option>
+              <option value="Aprobado">Aprobado 🟢</option>
+              <option value="Liquidado">Liquidado 🟢</option>
+              <option value="Rechazado">Rechazado 🔴</option>
+            </select>
+          </div>
+
+          <div class="filter-date-group">
+            <span class="date-label">Desde</span>
+            <input type="date" id="filtroMutualPropiasFechaDesde" class="filter-date-input" onchange="filtrarGestionesMutualPropias()"/>
+            <span class="date-label">Hasta</span>
+            <input type="date" id="filtroMutualPropiasFechaHasta" class="filter-date-input" onchange="filtrarGestionesMutualPropias()"/>
+          </div>
+
+          <div class="filter-select-box">
+            <select id="filtroMutualPropiasCanal" class="filter-select" onchange="filtrarGestionesMutualPropias()" title="Canal de Ingreso">
+              <option value="">Todos los Canales</option>
+              <option value="Presencial Sede Central">🏛️ Presencial Sede Central</option>
+              <option value="WhatsApp Oficial">💬 WhatsApp Oficial</option>
+              <option value="Telefónico">📞 Telefónico</option>
+            </select>
+          </div>
+
+          <div class="filter-select-box">
+            <select id="filtroMutualPropiasOrganismo" class="filter-select" onchange="filtrarGestionesMutualPropias()" title="Tipo de Organismo">
+              <option value="">Todos los Organismos</option>
+              <option value="Provincial">Provincial</option>
+              <option value="Municipal">Municipal</option>
+            </select>
+          </div>
+
+          <button type="button" class="btn-filter-clear" onclick="limpiarFiltros('mutualPropias')" title="Restablecer filtros de búsqueda">
+            <svg class="clear-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            <span>Limpiar</span>
+          </button>
         </div>
-        <span style="font-size:0.75rem;color:var(--text-muted);" id="lblTotalMutualPropias">0 solicitudes sede</span>
+
+        <div class="filters-footer-meta">
+          <span class="count-badge" id="lblTotalMutualPropias">0 solicitudes sede</span>
+        </div>
       </div>
 
       <!-- VISTA 1: TABLA PROPIAS -->
@@ -1127,59 +1556,139 @@
 
     <!-- PESTAÑA 3: GESTIONES DE COMERCIALIZADORES & AUDITORÍA -->
     <section id="view-mutual" class="app-view">
+      <!-- ENCABEZADO DE MÓDULO -->
       <div class="module-hero-bar">
         <div class="module-hero-info">
           <h2>🏢 Gestiones de Comercializadores & Auditoría</h2>
           <p>Auditoría, revisión, control de legajos y dictamen de expedientes externos originados por la red de comercializadores.</p>
         </div>
-        <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-          <div class="view-switcher-control">
-            <button type="button" class="view-switcher-btn active" id="btnViewMut-tabla" onclick="setVistaModulo('mutual', 'tabla')">📋 Tabla</button>
-            <button type="button" class="view-switcher-btn" id="btnViewMut-kanban" onclick="setVistaModulo('mutual', 'kanban')">📊 Kanban</button>
-            <button type="button" class="view-switcher-btn" id="btnViewMut-calendario" onclick="setVistaModulo('mutual', 'calendario')">📅 Calendario</button>
-            <button type="button" class="view-switcher-btn" id="btnViewMut-auditoria" onclick="setVistaModulo('mutual', 'auditoria')">🤖 Auditoría IA</button>
-          </div>
-          <button class="btn-restore" onclick="sincronizarConBackend()" title="Sincronizar solicitudes con Google Sheets">🔄 Actualizar Bandeja</button>
+      </div>
+
+      <!-- NIVEL 1: BARRA DE CONTROL PRINCIPAL (VISTAS Y ACCIONES) -->
+      <div class="gestiones-control-bar">
+        <!-- LADO IZQUIERDO: SELECTOR DE VISUALIZACIÓN SEGMENTED CONTROL -->
+        <div class="view-switcher-control">
+          <button type="button" class="view-switcher-btn active" id="btnViewMut-tabla" data-vista="tabla" onclick="setVistaModulo('mutual', 'tabla')">
+            <svg class="view-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="3" y1="9" x2="21" y2="9"></line>
+              <line x1="3" y1="15" x2="21" y2="15"></line>
+              <line x1="9" y1="3" x2="9" y2="21"></line>
+            </svg>
+            <span>Tabla</span>
+          </button>
+          <button type="button" class="view-switcher-btn" id="btnViewMut-kanban" data-vista="kanban" onclick="setVistaModulo('mutual', 'kanban')">
+            <svg class="view-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="5" height="18" rx="1"></rect>
+              <rect x="10" y="3" width="5" height="12" rx="1"></rect>
+              <rect x="17" y="3" width="5" height="15" rx="1"></rect>
+            </svg>
+            <span>Kanban</span>
+          </button>
+          <button type="button" class="view-switcher-btn" id="btnViewMut-calendario" data-vista="calendario" onclick="setVistaModulo('mutual', 'calendario')">
+            <svg class="view-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>Calendario</span>
+          </button>
+          <button type="button" class="view-switcher-btn" id="btnViewMut-auditoria" data-vista="auditoria" onclick="setVistaModulo('mutual', 'auditoria')">
+            <svg class="view-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"></path>
+              <rect x="3" y="11" width="18" height="10" rx="3"></rect>
+              <circle cx="8.5" cy="16" r="1.5"></circle>
+              <circle cx="15.5" cy="16" r="1.5"></circle>
+            </svg>
+            <span>Auditoría IA</span>
+          </button>
+        </div>
+
+        <!-- LADO DERECHO: ACCIONES -->
+        <div class="gestiones-actions-group">
+          <button type="button" class="btn-action-refresh" onclick="sincronizarConBackend()" title="Sincronizar solicitudes con Google Sheets">
+            <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            <span>Actualizar Bandeja</span>
+          </button>
         </div>
       </div>
 
-      <div class="toolbar-filters">
-        <div class="filters-left-group" style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">
-          <div class="search-input-box"><input type="text" id="filtroMutualTexto" placeholder="🔍 Buscar por DNI, N°, Asociado o Asesor..." oninput="filtrarGestionesMutual()"/></div>
-          <select id="filtroMutualLinea" class="input-text" style="width:auto;" onchange="filtrarGestionesMutual()">
-            <option value="">Línea de Ayuda Económica: Todas</option>
-            <option value="fedem">FEDEM Provincial</option>
-            <option value="muni">Convenio Municipal VIKINGO/QUAD</option>
-            <option value="sidecreer">Tarjeta Sidecreer</option>
-          </select>
-          <div style="display:flex;align-items:center;gap:3px;font-size:0.72rem;color:var(--text-muted);background:#fff;padding:2px 6px;border:1px solid var(--border-color);border-radius:6px;">
-            <span>Desde:</span>
-            <input type="date" id="filtroMutualFechaDesde" style="border:none;background:none;font-size:0.72rem;outline:none;" onchange="filtrarGestionesMutual()"/>
-            <span>Hasta:</span>
-            <input type="date" id="filtroMutualFechaHasta" style="border:none;background:none;font-size:0.72rem;outline:none;" onchange="filtrarGestionesMutual()"/>
+      <!-- NIVEL 2: BARRA DE BÚSQUEDA Y FILTROS MULTICRITERIO (CARD) -->
+      <div class="filters-card-panel">
+        <div class="filters-grid-row">
+          <div class="filter-search-box">
+            <svg class="search-lens-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="filtroMutualTexto" class="filter-input-text search-with-icon" placeholder="Buscar por Nombre, DNI, N° o Asesor..." oninput="filtrarGestionesMutual()"/>
           </div>
-          <select id="filtroMutualEstado" class="input-text" style="width:auto;" onchange="filtrarGestionesMutual()">
-            <option value="">Todos los Estados</option>
-            <option value="Pendiente">Pendiente 🟡</option>
-            <option value="En Análisis">En Gestión / Análisis 🔵</option>
-            <option value="Observado">Observado 🟠</option>
-            <option value="Aprobado">Aprobado 🟢</option>
-            <option value="Liquidado">Liquidado 🟢</option>
-            <option value="Rechazado">Rechazado 🔴</option>
-          </select>
-          <select id="filtroMutualOrganizacion" class="input-text" style="width:auto;" onchange="filtrarGestionesMutual()">
-            <option value="">Todas las Organizaciones</option>
-          </select>
-          <select id="filtroMutualComercial" class="input-text" style="width:auto;" onchange="filtrarGestionesMutual()">
-            <option value="">Todos los Comercializadores / Asesores</option>
-          </select>
-          <select id="filtroMutualOrganismo" class="input-text" style="width:auto;" onchange="filtrarGestionesMutual()">
-            <option value="">Todos los Organismos</option>
-            <option value="Provincial">Provincial</option>
-            <option value="Municipal">Municipal</option>
-          </select>
+
+          <div class="filter-select-box">
+            <select id="filtroMutualLinea" class="filter-select" onchange="filtrarGestionesMutual()" title="Línea de Ayuda Económica">
+              <option value="">Todas las Líneas</option>
+              <option value="FEDEM Provincial">FEDEM Provincial</option>
+              <option value="QUAD Municipal">QUAD Municipal</option>
+              <option value="Convenio Sidecreer">Convenio Sidecreer</option>
+            </select>
+          </div>
+
+          <div class="filter-select-box">
+            <select id="filtroMutualEstado" class="filter-select" onchange="filtrarGestionesMutual()" title="Estado de Gestión">
+              <option value="">Todos los Estados</option>
+              <option value="Pendiente">Pendiente 🟡</option>
+              <option value="En Análisis">En Gestión / Análisis 🔵</option>
+              <option value="Observado">Observado 🟠</option>
+              <option value="Aprobado">Aprobado 🟢</option>
+              <option value="Liquidado">Liquidado 🟢</option>
+              <option value="Rechazado">Rechazado 🔴</option>
+            </select>
+          </div>
+
+          <div class="filter-date-group">
+            <span class="date-label">Desde</span>
+            <input type="date" id="filtroMutualFechaDesde" class="filter-date-input" onchange="filtrarGestionesMutual()"/>
+            <span class="date-label">Hasta</span>
+            <input type="date" id="filtroMutualFechaHasta" class="filter-date-input" onchange="filtrarGestionesMutual()"/>
+          </div>
+
+          <div class="filter-select-box">
+            <select id="filtroMutualOrganizacion" class="filter-select" onchange="filtrarGestionesMutual()" title="Organización Comercial">
+              <option value="">Todas las Organizaciones</option>
+            </select>
+          </div>
+
+          <div class="filter-select-box">
+            <select id="filtroMutualComercial" class="filter-select" onchange="filtrarGestionesMutual()" title="Comercializador / Asesor">
+              <option value="">Todos los Asesores</option>
+            </select>
+          </div>
+
+          <div class="filter-select-box">
+            <select id="filtroMutualOrganismo" class="filter-select" onchange="filtrarGestionesMutual()" title="Tipo de Organismo">
+              <option value="">Todos los Organismos</option>
+              <option value="Provincial">Provincial</option>
+              <option value="Municipal">Municipal</option>
+            </select>
+          </div>
+
+          <button type="button" class="btn-filter-clear" onclick="limpiarFiltros('mutual')" title="Restablecer filtros de búsqueda">
+            <svg class="clear-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            <span>Limpiar</span>
+          </button>
         </div>
-        <span style="font-size:0.75rem;color:var(--text-muted);" id="lblTotalMutual">0 solicitudes</span>
+
+        <div class="filters-footer-meta">
+          <span class="count-badge" id="lblTotalMutual">0 solicitudes</span>
+        </div>
       </div>
 
       <!-- VISTA 1: TABLA -->
@@ -2659,6 +3168,53 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
     }
 
+    function cambiarVista(moduloKey, modo) {
+      setVistaModulo(moduloKey, modo);
+    }
+
+    function matchLineaFiltro(prestamo, filtroLinea) {
+      if (!filtroLinea) return true;
+      if (!prestamo) return false;
+      const l = String(prestamo.linea || '').toLowerCase().trim();
+      const ln = String(prestamo.lineaNombre || '').toLowerCase().trim();
+      const f = String(filtroLinea).toLowerCase().trim();
+      if (f.includes('fedem')) {
+        return l.includes('fedem') || ln.includes('fedem') || l === 'fedem';
+      }
+      if (f.includes('quad') || f.includes('muni')) {
+        return l.includes('muni') || l.includes('quad') || ln.includes('muni') || ln.includes('quad');
+      }
+      if (f.includes('sidecreer')) {
+        return l.includes('sidecreer') || ln.includes('sidecreer');
+      }
+      return l === f || ln === f;
+    }
+
+    function limpiarFiltros(modulo) {
+      if (modulo === 'comercializador') {
+        const ids = ['filtroComercialTexto', 'filtroComercialLinea', 'filtroComercialEstado', 'filtroComercialAsesor', 'filtroComercialFechaDesde', 'filtroComercialFechaHasta'];
+        ids.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = '';
+        });
+        filtrarGestionesComercializador();
+      } else if (modulo === 'mutualPropias') {
+        const ids = ['filtroMutualPropiasTexto', 'filtroMutualPropiasLinea', 'filtroMutualPropiasEstado', 'filtroMutualPropiasCanal', 'filtroMutualPropiasOrganismo', 'filtroMutualPropiasFechaDesde', 'filtroMutualPropiasFechaHasta'];
+        ids.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = '';
+        });
+        filtrarGestionesMutualPropias();
+      } else if (modulo === 'mutual') {
+        const ids = ['filtroMutualTexto', 'filtroMutualLinea', 'filtroMutualEstado', 'filtroMutualOrganizacion', 'filtroMutualComercial', 'filtroMutualOrganismo', 'filtroMutualFechaDesde', 'filtroMutualFechaHasta'];
+        ids.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = '';
+        });
+        filtrarGestionesMutual();
+      }
+    }
+
     function navegarCalendario(moduloKey, delta) {
       const prop = (moduloKey === 'comercializador') ? 'calDateComercializador' :
                    (moduloKey === 'mutualPropias') ? 'calDateMutualPropias' : 'calDateMutual';
@@ -2704,7 +3260,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           (s.solicitante?.nombre && s.solicitante.nombre.toLowerCase().includes(q)) ||
           (s.comercializador && s.comercializador.toLowerCase().includes(q));
 
-        const matchLinea = !linea || (s.prestamo?.linea === linea);
+        const matchLinea = matchLineaFiltro(s.prestamo, linea);
         const matchEst = !est || (s.estado === est || (est === 'En Análisis' && (s.estado === 'En Análisis' || s.estado === 'En Gestión' || s.estado === 'En Evaluación')));
         const matchAsesor = !filAsesor || s.comercializador === filAsesor;
 
@@ -2726,8 +3282,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       const thAsesor = document.getElementById('colHeadAsesor');
       const cboAsesor = document.getElementById('filtroComercialAsesor');
+      const wrapAsesor = document.getElementById('wrapFiltroComercialAsesor');
       const showAsesorCol = (isTitular || isAdmin);
       if (thAsesor) thAsesor.style.display = showAsesorCol ? '' : 'none';
+      if (wrapAsesor) wrapAsesor.style.display = showAsesorCol ? 'flex' : 'none';
 
       const titMod = document.getElementById('lblTituloModuloComercial');
       const subMod = document.getElementById('lblSubtituloModuloComercial');
@@ -4127,7 +4685,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           (s.solicitante?.nombre && s.solicitante.nombre.toLowerCase().includes(q)) ||
           (s.origen_canal && s.origen_canal.toLowerCase().includes(q));
 
-        const matchLinea = !linea || (s.prestamo?.linea === linea);
+        const matchLinea = matchLineaFiltro(s.prestamo, linea);
         const matchEst = !est || (s.estado === est || (est === 'En Análisis' && (s.estado === 'En Análisis' || s.estado === 'En Gestión' || s.estado === 'En Evaluación')));
         const matchCanal = !canal || (s.origen_canal === canal);
         const matchOrgaTipo = !orgaTipo || (s.solicitante?.organismo === orgaTipo);
@@ -4229,7 +4787,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           (s.solicitante?.nombre && s.solicitante.nombre.toLowerCase().includes(q)) ||
           (s.comercializador && s.comercializador.toLowerCase().includes(q));
 
-        const matchLinea = !linea || (s.prestamo?.linea === linea);
+        const matchLinea = matchLineaFiltro(s.prestamo, linea);
         const matchEst = !est || (s.estado === est || (est === 'En Análisis' && (s.estado === 'En Análisis' || s.estado === 'En Gestión' || s.estado === 'En Evaluación')));
         const matchOrg = !org || (s.nombre_organizacion || 'Organización Paraná Centro') === org;
         const matchCom = !com || s.comercializador === com;
@@ -5919,6 +6477,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.togglePasswordVisibility = togglePasswordVisibility;
     window.cambiarPestana = cambiarPestana;
     window.setVistaModulo = setVistaModulo;
+    window.cambiarVista = cambiarVista;
+    window.limpiarFiltros = limpiarFiltros;
     window.navegarCalendario = navegarCalendario;
     window.filtrarGestionesComercializador = filtrarGestionesComercializador;
     window.abrirModalAltaSolicitud = abrirModalAltaSolicitud;

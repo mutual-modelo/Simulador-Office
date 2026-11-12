@@ -36,6 +36,7 @@ const HEADERS_SOLICITUDES = [
   'Carpeta_Drive_URL',
   'Archivos_Adjuntos_JSON',
   'Historial_Comentarios_JSON',
+  'Nro_Definitivo',
   'Historial_Ofertas_JSON',
   'Dictamen_IA_JSON',
   'Analista_Asignado',
@@ -519,7 +520,9 @@ function registrarNuevaSolicitud(payload) {
       sol.id || payload.ID_Solicitud || payload.ID_OPERACION || payload.id || Math.floor(10000 + Math.random() * 90000)
     ).trim();
     const idProvisorio = String(sol.id_provisorio || payload.id_provisorio || ('PROV-' + idSolicitud)).trim();
-    const idDefinitivo = String(sol.id_definitivo || payload.id_definitivo || '').trim();
+    const idDefinitivo = String(
+      sol.id_definitivo || payload.Nro_Definitivo || payload.nroDefinitivo || payload.id_definitivo || ''
+    ).trim();
     const nowStr = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd HH:mm');
     const fechaRegistro = String(sol.fecha || payload.Fecha_Registro || payload.fecha || payload.Fecha || nowStr);
 
@@ -550,35 +553,71 @@ function registrarNuevaSolicitud(payload) {
     ).trim();
 
     const solicitante = sol.solicitante || {};
-    const dni = String(solicitante.dni || sol.dni || payload.DNI || payload.dni || '').trim();
-    const apellidoNombre = String(solicitante.nombre || sol.apellidoNombre || payload.Apellido_Nombre || payload.apellido_nombre || payload.nombre || 'Sin_Nombre').trim();
-    const domicilioHistorico = String(sol.domicilio_historico || solicitante.domicilio || sol.domicilio || payload.Domicilio || payload.domicilio || 'Sin domicilio declarado').trim();
-    const legajo = String(solicitante.legajo || sol.legajo || payload.Legajo || payload.legajo || '').trim();
+    const dni = String(
+      solicitante.dni || sol.dni || payload.DNI_Asociado || payload.DNI || payload.dni || ''
+    ).trim();
+    const apellidoNombre = String(
+      solicitante.nombre || sol.apellidoNombre || payload.Apellido_Nombre || payload.apellido_nombre || payload.apellidoNombre || payload.nombre || 'Sin_Nombre'
+    ).trim();
+    const domicilioHistorico = String(
+      sol.domicilio_historico || solicitante.domicilio || sol.domicilio || payload.Domicilio_Historico_Solicitud || payload.Domicilio || payload.domicilio || 'Sin domicilio declarado'
+    ).trim();
+    const legajo = String(
+      solicitante.legajo || sol.legajo || payload.Legajo_Municipal || payload.Legajo || payload.legajo || ''
+    ).trim();
+
+    const contactoExtra = parseJSONSafe_(payload.Datos_Contacto_JSON, {});
+    const laboralesExtra = parseJSONSafe_(payload.Datos_Laborales_JSON, {});
 
     const datosContacto = {
-      cuil: solicitante.cuil || sol.cuil || payload.CUIL || payload.cuil || '',
-      localidad: solicitante.localidad || sol.localidad || payload.Localidad || payload.localidad || '',
-      fechaNac: solicitante.fechaNac || sol.fechaNac || payload.Fecha_Nac || payload.fechaNac || '',
-      email: solicitante.email || sol.email || payload.Email || payload.email || '',
-      celular: solicitante.celular || sol.telefono || sol.celular || payload.Celular || payload.celular || '',
+      cuil: solicitante.cuil || sol.cuil || payload.CUIL || payload.cuil || contactoExtra.cuil || '',
+      localidad: solicitante.localidad || sol.localidad || payload.Localidad || payload.localidad || contactoExtra.localidad || '',
+      fechaNac: solicitante.fechaNac || sol.fechaNac || payload.Fecha_Nac || payload.fechaNac || contactoExtra.fechaNac || '',
+      email: solicitante.email || sol.email || payload.Email || payload.email || contactoExtra.email || '',
+      celular: solicitante.celular || sol.telefono || sol.celular || payload.Celular || payload.celular || contactoExtra.celular || '',
       domicilio: domicilioHistorico
     };
 
     const datosLaborales = {
-      condicion: solicitante.condicion || sol.condicion || payload.Condicion || payload.condicion || 'Activo',
-      organismo: solicitante.organismo || sol.organismo || payload.Organismo || payload.organismo || 'Provincial',
-      dependencia: solicitante.dependencia || sol.dependencia || payload.Dependencia || payload.dependencia || '',
-      cargo: solicitante.cargo || sol.cargo || payload.Cargo || payload.cargo || 'Titular',
+      condicion: solicitante.condicion || sol.condicion || payload.Condicion || payload.condicion || laboralesExtra.condicion || 'Activo',
+      organismo: solicitante.organismo || sol.organismo || payload.Organismo || payload.organismo || laboralesExtra.organismo || 'Provincial',
+      dependencia: solicitante.dependencia || sol.dependencia || payload.Dependencia || payload.dependencia || laboralesExtra.dependencia || '',
+      cargo: solicitante.cargo || sol.cargo || payload.Cargo || payload.cargo || laboralesExtra.cargo || 'Titular',
       legajo: legajo
     };
 
+    const parseNumSafe = (v, defVal) => {
+      if (typeof v === 'number') return isNaN(v) ? defVal : v;
+      if (v === null || v === undefined || v === '') return defVal;
+      let s = String(v).replace(/[$\s]/g, '');
+      if (s.indexOf(',') !== -1 && s.indexOf('.') !== -1) s = s.replace(/\./g, '').replace(',', '.');
+      else if (s.indexOf(',') !== -1) s = s.replace(',', '.');
+      else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+      const n = Number(s);
+      return isNaN(n) ? defVal : n;
+    };
+
     const prestamo = sol.prestamo || {};
-    const lineaAyuda = String(prestamo.lineaNombre || prestamo.linea || sol.lineaAyuda || payload.Linea_Nombre || payload.Linea || payload.linea || 'FEDEM Provincial');
+    const lineaAyuda = String(
+      prestamo.lineaNombre || prestamo.linea || sol.lineaAyuda || payload.Linea_Ayuda || payload.Linea_Nombre || payload.Linea || payload.linea || 'FEDEM Provincial'
+    );
     const lineaKey = String(prestamo.linea || sol.linea || payload.Linea || payload.linea || 'fedem');
-    const montoNeto = Number(prestamo.monto || sol.montoNeto || payload.Monto || payload.monto || 0);
-    const cantCuotas = Number(prestamo.cuotas || sol.cuotas || payload.Cuotas || payload.cuotas || payload.Plazo || 12);
-    const montoCuota = Number(prestamo.cuotaEstimada || sol.montoCuota || payload.Cuota_Estimada || payload.cuotaEstimada || 0);
-    const totalADevolver = Number(sol.totalDevolver || payload.Total_A_Devolver || (montoCuota * cantCuotas) || 0);
+    const montoNeto = parseNumSafe(
+      prestamo.monto !== undefined ? prestamo.monto : (sol.montoNeto !== undefined ? sol.montoNeto : (payload.Monto_Solicitado_Neto !== undefined ? payload.Monto_Solicitado_Neto : (payload.Monto !== undefined ? payload.Monto : payload.monto))),
+      0
+    );
+    const cantCuotas = parseNumSafe(
+      prestamo.cuotas !== undefined ? prestamo.cuotas : (sol.cuotas !== undefined ? sol.cuotas : (payload.Cantidad_Cuotas !== undefined ? payload.Cantidad_Cuotas : (payload.Cuotas !== undefined ? payload.Cuotas : (payload.cuotas !== undefined ? payload.cuotas : payload.Plazo)))),
+      12
+    );
+    const montoCuota = parseNumSafe(
+      prestamo.cuotaEstimada !== undefined ? prestamo.cuotaEstimada : (sol.montoCuota !== undefined ? sol.montoCuota : (payload.Monto_Cuota !== undefined ? payload.Monto_Cuota : (payload.Cuota_Estimada !== undefined ? payload.Cuota_Estimada : payload.cuotaEstimada))),
+      0
+    );
+    const totalADevolver = parseNumSafe(
+      prestamo.totalADevolver !== undefined ? prestamo.totalADevolver : (sol.totalDevolver !== undefined ? sol.totalDevolver : payload.Total_A_Devolver),
+      Number((montoCuota * cantCuotas).toFixed(2)) || 0
+    );
     const estadoTramite = String(sol.estado || payload.Estado_Tramite || 'Pendiente');
     const analistaAsignado = String(sol.analistaAsignado || sol.Analista_Asignado || payload.Analista_Asignado || payload.analistaAsignado || 'Sin Asignar').trim();
 
@@ -594,9 +633,10 @@ function registrarNuevaSolicitud(payload) {
       ? sol.observaciones
       : parseJSONSafe_(payload.Historial_Comentarios_JSON, []);
 
+    const ofertasParsed = parseJSONSafe_(payload.Historial_Ofertas_JSON, null);
     const historialOfertasObj = {
-      propuestaMutual: sol.propuestaMutual || null,
-      historialPropuestas: Array.isArray(sol.historialPropuestas) ? sol.historialPropuestas : []
+      propuestaMutual: sol.propuestaMutual || (ofertasParsed && ofertasParsed.propuestaMutual) || null,
+      historialPropuestas: Array.isArray(sol.historialPropuestas) ? sol.historialPropuestas : ((ofertasParsed && Array.isArray(ofertasParsed.historialPropuestas)) ? ofertasParsed.historialPropuestas : [])
     };
 
     const dictamenIA = sol.auditoriaIA || parseJSONSafe_(payload.Dictamen_IA_JSON, null);
@@ -634,6 +674,7 @@ function registrarNuevaSolicitud(payload) {
     set('Carpeta_Drive_URL', carpetaDriveUrl);
     set('Archivos_Adjuntos_JSON', JSON.stringify(adjuntosDrive));
     set('Historial_Comentarios_JSON', JSON.stringify(historialComentarios));
+    set('Nro_Definitivo', idDefinitivo);
     set('Historial_Ofertas_JSON', JSON.stringify(historialOfertasObj));
     set('Dictamen_IA_JSON', dictamenIA ? JSON.stringify(dictamenIA) : '');
     set('Analista_Asignado', analistaAsignado);
@@ -716,10 +757,12 @@ function listarSolicitudes(usuarioActivoInput) {
       ? ofertasData.historialPropuestas
       : (Array.isArray(ofertasData) ? ofertasData : []);
 
+    const nroDefVal = String(get('Nro_Definitivo') || get('ID_Definitivo') || meta.id_definitivo || '').trim();
     const item = {
       id: idSol,
       id_provisorio: meta.id_provisorio || ('PROV-' + idSol),
-      id_definitivo: meta.id_definitivo || '',
+      id_definitivo: nroDefVal,
+      Nro_Definitivo: nroDefVal,
       fecha: String(get('Fecha_Registro') || ''),
       usuario_id: idAsesor,
       idAsesor: idAsesor,
@@ -1065,14 +1108,19 @@ function asignarNumeroDefinitivoBackend(payload) {
   try {
     const sheet = obtenerOInicializarHoja_(CONFIG_AMMER.SHEET_SOLICITUDES, HEADERS_SOLICITUDES);
     const { map } = obtenerHeaderMap_(sheet);
-    const idTarget = payload.idSolicitud || payload.id;
+    const idTarget = payload.idSolicitud || payload.id || payload.ID_Solicitud;
     const rowNum = encontrarFilaPorId_(sheet, map, idTarget);
     if (rowNum === -1) return { ok: false, error: 'Expediente no encontrado: ' + idTarget };
 
-    const nroFinal = String(payload.nroDefinitivoInput || payload.id_definitivo || payload.nroDefinitivo || '').trim();
+    const nroFinal = String(payload.nroDefinitivoInput || payload.id_definitivo || payload.nroDefinitivo || payload.Nro_Definitivo || '').trim();
     if (!nroFinal) return { ok: false, error: 'Debe ingresar un número definitivo válido.' };
 
     const nowStr = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd HH:mm');
+    const colNroDefIdx = (map['Nro_Definitivo'] !== undefined)
+      ? map['Nro_Definitivo']
+      : ((map['ID_Definitivo'] !== undefined) ? map['ID_Definitivo'] : 22); // Columna 23 (1-based)
+    sheet.getRange(rowNum, colNroDefIdx + 1).setValue(nroFinal);
+
     if (map['Metadata_Extra_JSON'] !== undefined) {
       const cell = sheet.getRange(rowNum, map['Metadata_Extra_JSON'] + 1);
       const meta = parseJSONSafe_(cell.getValue(), {});
@@ -1095,7 +1143,7 @@ function asignarNumeroDefinitivoBackend(payload) {
     }
 
     SpreadsheetApp.flush();
-    return { ok: true, id: idTarget, id_definitivo: nroFinal, nroDefinitivo: nroFinal };
+    return { ok: true, id: idTarget, id_definitivo: nroFinal, nroDefinitivo: nroFinal, Nro_Definitivo: nroFinal, columna: colNroDefIdx + 1 };
   } finally {
     lock.releaseLock();
   }

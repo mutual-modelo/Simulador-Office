@@ -1226,8 +1226,8 @@
     <div class="api-loading-box">
       <div class="api-spinner"></div>
       <div class="api-loading-text">
-        <strong id="apiLoadingTitle">Conectando con Google Apps Script...</strong>
-        <span id="apiLoadingSub">Sincronizando expedientes y Google Drive</span>
+        <strong id="apiLoadingTitle">Conectando...</strong>
+        <span id="apiLoadingSub">Sincronizando expedientes</span>
       </div>
     </div>
   </div>
@@ -2808,7 +2808,7 @@
                   </div>
                   <div class="doc-row-info">
                     <div class="doc-row-header-line">
-                      <span class="doc-row-title">TARJETA SIDECREER</span>
+                      <span class="doc-row-title">TARJETA SIDECREER (FRENTE Y DORSO)</span>
                       <span class="doc-row-badge badge-opcional" id="badge-fileSidecreer">Opcional</span>
                     </div>
                     <div class="doc-row-subtitle" id="sub-fileSidecreer">Formatos admitidos: PDF, JPG, PNG (Frente y Dorso)</div>
@@ -3683,7 +3683,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         clave: passVal
       }, {
         title: 'Verificando Credenciales...',
-        sub: 'Consultando base de usuarios en Google Sheets'
+        sub: 'Consultando base de usuarios'
       });
 
       let loggedUser = null;
@@ -3715,7 +3715,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     async function handleQuickLogin() {
-      console.warn('Acceso demo deshabilitado. La autenticación es exclusiva mediante credenciales activas en Google Apps Script.');
+      console.warn('Acceso deshabilitado. La autenticación es exclusiva mediante credenciales activas.');
     }
 
     function togglePasswordVisibility(id, btn) {

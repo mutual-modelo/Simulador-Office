@@ -412,7 +412,7 @@
           <img src="logo.jpg" alt="Mutual Modelo de Entre Ríos" class="app-logo-img" onerror="handleLogoFallback(this)"/>
           <div class="header-app-title">
             <span class="title-main">Calculador de Ayudas Económicas</span>
-            <span class="title-sub">Simulador Oficial 1.0v</span>
+            <span class="title-sub">Aplicativo Oficial 1.0v</span>
           </div>
         </div>
         <nav class="nav-tabs-wrap" id="navTabsMenu"></nav>
@@ -436,7 +436,7 @@
           </div>
         </div>
         <div class="user-header-chip" id="userHeaderChip"></div>
-        <button class="btn-logout" onclick="handleLogout()">Cerrar Sesión 🚪</button>
+        <button class="btn-logout" onclick="handleLogout()">Cerrar Sesión</button>
       </div>
     </div>
   </header>
@@ -960,7 +960,7 @@
           <div class="ai-audit-header">
             <div>
               <div class="ai-audit-title">
-                <span>🤖 Auditoría Documental Inteligente &amp; Due Diligence</span>
+                <span>Auditoría Documental Inteligente &amp; Due Diligence</span>
                 <span class="tech-badge">Multimodal Gemini AI • Reglas AMMER V4.5</span>
               </div>
               <div class="ai-audit-desc">
@@ -1994,7 +1994,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const star = session.es_titular_organizacion ? ' ⭐' : '';
         const rolLabel = (session.rol === 'Comercializador') ? (session.es_titular_organizacion ? 'Titular Org.' : 'Asesor') : session.rol;
         chip.innerHTML = '<div class="user-avatar-circle">' + session.nombre.charAt(0) + '</div>' +
-          '<div class="user-info-text"><span class="user-info-name">' + session.nombre + star + '</span>' +
+          '<div class="user-info-text"><span class="user-info-name">' + session.nombre + '</span>' +
           '<span class="user-info-role">' + rolLabel + ' • ' + (session.nombre_organizacion || 'Mutual Modelo') + '</span></div>';
       }
 

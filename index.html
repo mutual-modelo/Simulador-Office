@@ -1782,28 +1782,6 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     /* ========================================================================
        2. MODELO DE USUARIOS, SESIÓN Y LOGIN EN GOOGLE APPS SCRIPT
        ======================================================================== */
-    const USUARIOS_DEMO_FALLBACK = {
-      'titular1': {
-        id: 'usr_titular1', usuario: 'titular1', clave: 'clave123', nombre: 'Mariano Benítez',
-        rol: 'Comercializador', organizacion_id: 'org_parana_centro', nombre_organizacion: 'Organización Paraná Centro',
-        es_titular_organizacion: true, sub: 'Titular Org.'
-      },
-      'asesor1': {
-        id: 'usr_asesor1', usuario: 'asesor1', clave: 'clave123', nombre: 'Carlos Gómez',
-        rol: 'Comercializador', organizacion_id: 'org_parana_centro', nombre_organizacion: 'Organización Paraná Centro',
-        es_titular_organizacion: false, sub: 'Asesor Comercial'
-      },
-      'analista1': {
-        id: 'usr_analista1', usuario: 'analista1', clave: 'clave123', nombre: 'Mariana López',
-        rol: 'Analista', organizacion_id: 'org_mutual_central', nombre_organizacion: 'Casa Central Mutual',
-        es_titular_organizacion: false, sub: 'Créditos Mutual'
-      },
-      'admin': {
-        id: 'usr_admin', usuario: 'admin', clave: 'admin123', nombre: 'Administrador General',
-        rol: 'Admin', organizacion_id: 'org_mutual_central', nombre_organizacion: 'Casa Central Mutual',
-        es_titular_organizacion: true, sub: 'Acceso Total'
-      }
-    };
 
     function getSession() {
       try {
@@ -1914,13 +1892,6 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         loggedUser = d.usuario || d.user || (d.ok || d.success ? d : null);
       }
 
-      if (!loggedUser) {
-        const fallback = USUARIOS_DEMO_FALLBACK[userVal];
-        if (fallback && fallback.clave === passVal) {
-          loggedUser = fallback;
-        }
-      }
-
       if (loggedUser) {
         setSession(loggedUser);
         checkAuthAndInit();
@@ -1935,19 +1906,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
     }
 
-    async function handleQuickLogin(rolKey) {
-      if (!checkSubmitCooldown('btnLoginSubmit', 1500)) return;
-      const u = (rolKey === 'titular') ? USUARIOS_DEMO_FALLBACK['titular1'] :
-                (rolKey === 'asesor') ? USUARIOS_DEMO_FALLBACK['asesor1'] :
-                (rolKey === 'analista') ? USUARIOS_DEMO_FALLBACK['analista1'] :
-                USUARIOS_DEMO_FALLBACK['admin'];
-
-      callApi({ action: 'login', usuario: u.usuario, clave: u.clave }).catch(console.warn);
-
-      setSession(u);
-      checkAuthAndInit();
-      sincronizarConBackend(true);
-      showToast('Sesión iniciada como ' + u.nombre + ' (' + u.sub + ')');
+    async function handleQuickLogin() {
+      console.warn('Acceso demo deshabilitado. La autenticación es exclusiva mediante credenciales activas en Google Apps Script.');
     }
 
     function togglePasswordVisibility(id, btn) {

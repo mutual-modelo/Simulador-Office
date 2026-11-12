@@ -1866,11 +1866,11 @@
           <!-- SELECTOR DE CANAL PARA GESTIONES PROPIAS DE SEDE CENTRAL -->
           <div id="groupCanalIngresoModal" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;padding:0.75rem 1rem;border-radius:10px;margin-bottom:1rem;">
             <label class="form-label" style="font-weight:700;color:#166534;margin-bottom:0.35rem;display:flex;align-items:center;gap:4px;">
-              🏛️ Canal de Ingreso Oficial Sede Central Mutual *
+              🏛️ Canal de Ingreso Oficial Sede Social Mutual *
             </label>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0.5rem;align-items:center;">
               <select id="solCanalIngreso" class="input-text" style="font-weight:700;border-color:#86efac;background:#fff;">
-                <option value="Presencial Sede Central" selected>🏛️ Presencial Sede Central (Mostrador / Mesa de Entradas)</option>
+                <option value="Presencial Sede Central" selected>🏛️ Presencial Sede Social (Mostrador / Mesa de Entradas)</option>
                 <option value="WhatsApp Oficial">💬 Canal Oficial WhatsApp Mutual</option>
                 <option value="Telefónico">📞 Canal Oficial Telefónico</option>
               </select>
@@ -1906,7 +1906,7 @@
             <div class="form-group"><label class="form-label">Cargo *</label><select id="solCargo" class="input-text" required><option value="Titular">Titular</option><option value="Suplente">Suplente</option></select></div>
           </div>
 
-          <div class="section-title-divider">3. Datos del Préstamo Deseado por el Solicitante</div>
+          <div class="section-title-divider">3. Datos de la Ayuda Economica deseada por el Solicitante</div>
           <div class="grid-3-cols">
             <div class="form-group"><label class="form-label">Línea de Ayuda *</label><select id="solLinea" class="input-text" required onchange="ajustarPlazosModalAlta(this.value)"><option value="fedem">FEDEM Provincial</option><option value="muni">Convenio Municipal VIKINGO / QUAD</option><option value="sidecreer">Tarjeta Sidecreer</option></select></div>
             <div class="form-group"><label class="form-label">Monto Solicitado (Neto) *</label><input type="number" id="solMonto" class="input-text" required min="10000" step="1000" value="100000"/></div>

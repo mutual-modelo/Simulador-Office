@@ -1277,9 +1277,12 @@ function asignarNumeroDefinitivoBackend(payload) {
   try {
     const sheet = obtenerOInicializarHoja_(CONFIG_AMMER.SHEET_SOLICITUDES, HEADERS_SOLICITUDES);
     const { map } = obtenerHeaderMap_(sheet);
-    const idTarget = payload.idSolicitud || payload.id || payload.ID_Solicitud;
+    const idTarget = String(payload.idSolicitud || payload.ID_Solicitud || payload.id || payload.id_solicitud || payload.id_provisorio || '').trim();
+    if (!idTarget || idTarget === 'undefined' || idTarget === 'null') {
+      return { ok: false, error: 'ID de solicitud inválido o no recibido.' };
+    }
     const rowNum = encontrarFilaPorId_(sheet, map, idTarget);
-    if (rowNum === -1) return { ok: false, error: 'Expediente no encontrado: ' + idTarget };
+    if (rowNum === -1) return { ok: false, error: 'No se encontró la solicitud ' + idTarget + ' en la base de datos.' };
 
     const nroFinal = String(
       payload.ID_Definitivo_Expediente || payload.idDefinitivoExpediente ||

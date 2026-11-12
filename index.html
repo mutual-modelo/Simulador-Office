@@ -7279,9 +7279,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       if (!s || typeof s !== 'object') return s;
 
       // Mapeo tolerante desde columnas planas de Google Sheets hacia estructura CRM
-      if (!s.id && (s.ID_Solicitud || s.ID_OPERACION)) {
-        s.id = String(s.ID_Solicitud || s.ID_OPERACION);
+      const rawIdNorm = s.id || s.idSolicitud || s.ID_Solicitud || s.id_solicitud || s.ID_OPERACION;
+      if (rawIdNorm !== undefined && rawIdNorm !== null && String(rawIdNorm).trim() !== '' && String(rawIdNorm).trim() !== 'undefined' && String(rawIdNorm).trim() !== 'null') {
+        s.id = String(rawIdNorm).trim();
       }
+      if (s.id && !s.idSolicitud) s.idSolicitud = s.id;
+      if (s.id && !s.ID_Solicitud) s.ID_Solicitud = s.id;
       if (!s.fecha && s.Fecha_Registro) s.fecha = String(s.Fecha_Registro);
       if (!s.estado && s.Estado_Tramite) s.estado = String(s.Estado_Tramite);
 
@@ -8538,10 +8541,78 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     /* ========================================================================
        6. FICHA INTEGRAL DE EXPEDIENTE (EDICIÓN, OFERTAS, DOCUMENTOS, CHAT)
        ======================================================================== */
+    var solicitudSeleccionada = null;
+
+    function obtenerIdSolicitudActiva() {
+      // 1. Desde el objeto global en memoria si existe
+      const memSol = solicitudSeleccionada || window.solicitudSeleccionada;
+      if (memSol && typeof memSol === 'object') {
+        const id = memSol.idSolicitud || memSol.ID_Solicitud || memSol.id || memSol.id_solicitud;
+        if (id && String(id).trim() !== '' && String(id).trim() !== 'undefined' && String(id).trim() !== 'null') {
+          return String(id).trim();
+        }
+      }
+
+      // 2. Desde el atributo data-id del modal de detalle o controles internos
+      const modal = document.getElementById('modalFichaCompleta') || document.getElementById('modal-detalle-solicitud') || document.getElementById('modal-expediente');
+      if (modal && modal.dataset) {
+        const mId = modal.dataset.idSolicitud || modal.dataset.solicitudId || modal.dataset.id;
+        if (mId && String(mId).trim() !== '' && String(mId).trim() !== 'undefined' && String(mId).trim() !== 'null') {
+          return String(mId).trim();
+        }
+      }
+      const hidModalNro = document.getElementById('asignarNroDefIdSolicitud');
+      if (hidModalNro && hidModalNro.value) {
+        const hId = String(hidModalNro.value).trim();
+        if (hId && hId !== 'undefined' && hId !== 'null') return hId;
+      }
+      const btnFicha = document.getElementById('btnAsignarNroDefinitivoFicha');
+      if (btnFicha && btnFicha.dataset && btnFicha.dataset.solicitudId) {
+        const bId = String(btnFicha.dataset.solicitudId).trim();
+        if (bId && bId !== 'undefined' && bId !== 'null') return bId;
+      }
+
+      // 3. Desde algún elemento visible en la cabecera del expediente
+      const spanId = document.getElementById('detalle-id-solicitud') || document.getElementById('expediente-id-texto') || document.getElementById('fichaModalTitle');
+      if (spanId) {
+        if (spanId.dataset && spanId.dataset.id && spanId.dataset.id !== 'undefined' && spanId.dataset.id !== 'null') {
+          return String(spanId.dataset.id).trim();
+        }
+        if (spanId.textContent) {
+          const txt = spanId.textContent.trim();
+          const matchAyu = txt.match(/AYU-\d+/i);
+          if (matchAyu) return matchAyu[0].toUpperCase();
+          const matchProv = txt.match(/PROV-(\d+)/i);
+          if (matchProv) return matchProv[1];
+        }
+      }
+
+      return null;
+    }
+
     function verFichaCompleta(id) {
       const all = getStoredSolicitudes();
-      const s = all.find(x => String(x.id) === String(id)); if (!s) return;
+      const targetId = String(id || '').trim();
+      const s = all.find(x =>
+        String(x.id || '') === targetId ||
+        String(x.idSolicitud || '') === targetId ||
+        String(x.ID_Solicitud || '') === targetId ||
+        String(x.id_provisorio || '') === targetId
+      );
+      if (!s) return;
       normalizarSolicitud(s);
+      const idActivo = String(s.idSolicitud || s.ID_Solicitud || s.id || targetId).trim();
+      s.id = idActivo;
+      s.idSolicitud = idActivo;
+      s.ID_Solicitud = idActivo;
+      solicitudSeleccionada = s;
+      window.solicitudSeleccionada = s;
+
+      const modalFichaEl = document.getElementById('modalFichaCompleta');
+      if (modalFichaEl) {
+        modalFichaEl.dataset.idSolicitud = idActivo;
+      }
+
       const session = getSession();
       const rolLow = String(session?.rol || '').toLowerCase();
       const isAnalistaOAdmin = Boolean(session && (rolLow.includes('analista') || rolLow.includes('admin') || rolLow.includes('mutual') || rolLow.includes('supervisor')));
@@ -8551,7 +8622,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const numLabel = s.id_definitivo ?
           '<span class="badge-definitivo">' + s.id_definitivo + '</span> <span style="font-size:0.75rem;color:var(--text-muted);">(Prov: ' + s.id_provisorio + ')</span>' :
           '<span class="badge-provisorio">' + s.id_provisorio + '</span>';
-        tit.innerHTML = 'Expediente ' + numLabel + ' — ' + (s.solicitante?.nombre || '');
+        tit.innerHTML = 'Expediente ' + numLabel + ' — ' + (s.solicitante?.nombre || '') + '<span id="detalle-id-solicitud" data-id="' + sanitizeHTML(idActivo) + '" style="display:none;">' + sanitizeHTML(idActivo) + '</span>';
       }
 
       const body = document.getElementById('fichaModalBody'); if (!body) return;
@@ -8602,8 +8673,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       if (isAnalistaOAdmin) {
         html += '<div style="display:flex;gap:0.45rem;align-items:center;flex-wrap:wrap;">' +
-          '<input type="text" id="inpNumDefinitivoModal" name="ID_Definitivo_Expediente" class="input-text" style="width:185px;font-size:0.75rem;font-weight:700;background:#ffffff;border-color:#93c5fd;" placeholder="Ej: EXP-' + s.id + '" value="' + sanitizeHTML(s.id_definitivo || '') + '" onkeydown="if(event.key===\'Enter\'){event.preventDefault();guardarNumeroDefinitivo(\'' + s.id + '\');}"/>' +
-          '<button type="button" id="btnAsignarNroDefinitivoFicha" data-solicitud-id="' + sanitizeHTML(s.id) + '" class="btn-asignar-nro-definitivo" onclick="guardarNumeroDefinitivo(\'' + s.id + '\')">🏷️ Asignar N° Definitivo</button>' +
+          '<input type="text" id="inpNumDefinitivoModal" name="ID_Definitivo_Expediente" class="input-text" style="width:185px;font-size:0.75rem;font-weight:700;background:#ffffff;border-color:#93c5fd;" placeholder="Ej: EXP-' + sanitizeHTML(idActivo) + '" value="' + sanitizeHTML(s.id_definitivo || '') + '" onkeydown="if(event.key===\'Enter\'){event.preventDefault();guardarNumeroDefinitivo(\'' + sanitizeHTML(idActivo) + '\');}"/>' +
+          '<button type="button" id="btnAsignarNroDefinitivoFicha" data-solicitud-id="' + sanitizeHTML(idActivo) + '" class="btn-asignar-nro-definitivo" onclick="guardarNumeroDefinitivo(\'' + sanitizeHTML(idActivo) + '\')">🏷️ Asignar N° Definitivo</button>' +
         '</div>';
       }
       html += '</div>';
@@ -9191,21 +9262,39 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
     /* ASIGNAR NÚMERO DEFINITIVO (MUTUAL) */
     function abrirModalAsignarNroDefinitivo(idSolicitud) {
+      const rawId = (idSolicitud !== undefined && idSolicitud !== null && String(idSolicitud).trim() !== '' && String(idSolicitud).trim() !== 'undefined' && String(idSolicitud).trim() !== 'null')
+        ? String(idSolicitud).trim()
+        : (obtenerIdSolicitudActiva() || '');
+      if (!rawId) {
+        showToast('⚠️ No se encontró el ID del expediente activo.');
+        return;
+      }
       const all = getStoredSolicitudes();
-      const s = all.find(x => String(x.id) === String(idSolicitud));
-      if (!s) return;
+      const s = all.find(x =>
+        String(x.id || '') === rawId ||
+        String(x.idSolicitud || '') === rawId ||
+        String(x.ID_Solicitud || '') === rawId ||
+        String(x.id_provisorio || '') === rawId
+      );
+      if (!s) {
+        showToast('⚠️ No se encontró la solicitud ' + rawId + ' en la sesión.');
+        return;
+      }
+      const idResuelto = String(s.idSolicitud || s.ID_Solicitud || s.id || rawId).trim();
+      solicitudSeleccionada = s;
+      window.solicitudSeleccionada = s;
 
       const inpInline = document.getElementById('inpNumDefinitivoModal')?.value?.trim();
-      const sugerencia = inpInline || s.id_definitivo || ('EXP-' + s.id);
+      const sugerencia = inpInline || s.id_definitivo || ('EXP-' + idResuelto);
 
       const hid = document.getElementById('asignarNroDefIdSolicitud');
       const inp = document.getElementById('inpModalNroDefinitivo');
       const meta = document.getElementById('asignarNroDefMeta');
 
-      if (hid) hid.value = String(s.id);
+      if (hid) hid.value = idResuelto;
       if (inp) inp.value = sugerencia;
       if (meta) {
-        meta.innerHTML = 'Expediente provisorio: <strong>' + sanitizeHTML(s.id_provisorio || ('PROV-' + s.id)) + '</strong> · Titular: <strong>' + sanitizeHTML(s.solicitante?.nombre || 'Socio') + '</strong> (DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + ')';
+        meta.innerHTML = 'Expediente provisorio: <strong>' + sanitizeHTML(s.id_provisorio || ('PROV-' + idResuelto)) + '</strong> · Titular: <strong>' + sanitizeHTML(s.solicitante?.nombre || 'Socio') + '</strong> (DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + ')';
       }
 
       abrirModal('modal-asignar-nro-definitivo');
@@ -9213,7 +9302,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     async function submitModalAsignarNroDefinitivo() {
-      const idSolicitud = document.getElementById('asignarNroDefIdSolicitud')?.value?.trim();
+      const rawHid = document.getElementById('asignarNroDefIdSolicitud')?.value?.trim();
+      const idSolicitud = (rawHid && rawHid !== 'undefined' && rawHid !== 'null') ? rawHid : (obtenerIdSolicitudActiva() || '');
       const nroIngresado = document.getElementById('inpModalNroDefinitivo')?.value?.trim();
       if (!idSolicitud || !nroIngresado) {
         showToast('⚠️ Ingrese un número definitivo válido para el expediente.');
@@ -9225,9 +9315,16 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
     async function confirmarAsignacionNroDefinitivo(idSolicitud, nroIngresado) {
       const usuarioSesionActual = getSession();
-      const idSolicitudSeleccionada = String(idSolicitud || '').trim();
+      let idSolicitudSeleccionada = (idSolicitud !== undefined && idSolicitud !== null) ? String(idSolicitud).trim() : '';
+      if (!idSolicitudSeleccionada || idSolicitudSeleccionada === 'undefined' || idSolicitudSeleccionada === 'null') {
+        idSolicitudSeleccionada = obtenerIdSolicitudActiva() || '';
+      }
       const val = sanitizeHTML(String(nroIngresado || '').trim());
-      if (!idSolicitudSeleccionada || !val) {
+      if (!idSolicitudSeleccionada || idSolicitudSeleccionada === 'undefined' || idSolicitudSeleccionada === 'null') {
+        showToast('⚠️ Error: No se pudo determinar el ID de la solicitud activa.');
+        return;
+      }
+      if (!val) {
         showToast('⚠️ Ingrese un número de expediente formal.');
         return;
       }
@@ -9259,11 +9356,17 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           const nroFinal = (res.data && (res.data.ID_Definitivo_Expediente || res.data.Nro_Definitivo || res.data.nroDefinitivo || res.data.id_definitivo)) || val;
           const aplicarNumeroLocal = () => {
             const allLocal = getStoredSolicitudes();
-            const idxLocal = allLocal.findIndex(x => String(x.id) === idSolicitudSeleccionada);
+            const idxLocal = allLocal.findIndex(x =>
+              String(x.id || '') === idSolicitudSeleccionada ||
+              String(x.idSolicitud || '') === idSolicitudSeleccionada ||
+              String(x.ID_Solicitud || '') === idSolicitudSeleccionada
+            );
             if (idxLocal !== -1) {
               allLocal[idxLocal].id_definitivo = nroFinal;
               allLocal[idxLocal].Nro_Definitivo = nroFinal;
               allLocal[idxLocal].ID_Definitivo_Expediente = nroFinal;
+              solicitudSeleccionada = allLocal[idxLocal];
+              window.solicitudSeleccionada = allLocal[idxLocal];
               saveStoredSolicitudes(allLocal);
             }
           };
@@ -9277,7 +9380,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           showToast('N° Definitivo asignado en Sheets: ' + nroFinal);
           await sincronizarGestionesDesdeNube(true);
           const postSync = getStoredSolicitudes();
-          const itemPost = postSync.find(x => String(x.id) === idSolicitudSeleccionada);
+          const itemPost = postSync.find(x =>
+            String(x.id || '') === idSolicitudSeleccionada ||
+            String(x.idSolicitud || '') === idSolicitudSeleccionada ||
+            String(x.ID_Solicitud || '') === idSolicitudSeleccionada
+          );
           if (itemPost && !itemPost.id_definitivo) {
             itemPost.id_definitivo = nroFinal;
             itemPost.Nro_Definitivo = nroFinal;
@@ -9311,13 +9418,16 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     async function guardarNumeroDefinitivo(id) {
+      const idValido = (id !== undefined && id !== null && String(id).trim() !== '' && String(id).trim() !== 'undefined' && String(id).trim() !== 'null')
+        ? String(id).trim()
+        : (obtenerIdSolicitudActiva() || '');
       const inp = document.getElementById('inpNumDefinitivoModal');
       const rawVal = inp?.value?.trim();
       if (!rawVal) {
-        abrirModalAsignarNroDefinitivo(id);
+        abrirModalAsignarNroDefinitivo(idValido);
         return;
       }
-      await confirmarAsignacionNroDefinitivo(id, rawVal);
+      await confirmarAsignacionNroDefinitivo(idValido, rawVal);
     }
 
     const asignarNumeroDefinitivoModal = guardarNumeroDefinitivo;
@@ -12497,6 +12607,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.obtenerAnalistasMutual = obtenerAnalistasMutual;
     window.cargarSolicitudesDesdeNube = cargarSolicitudesDesdeNube;
     window.sincronizarGestionesDesdeNube = sincronizarGestionesDesdeNube;
+    window.obtenerIdSolicitudActiva = obtenerIdSolicitudActiva;
     window.abrirModalAsignarNroDefinitivo = abrirModalAsignarNroDefinitivo;
     window.submitModalAsignarNroDefinitivo = submitModalAsignarNroDefinitivo;
     window.confirmarAsignacionNroDefinitivo = confirmarAsignacionNroDefinitivo;

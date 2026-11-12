@@ -7266,7 +7266,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
       if (s.id && !s.idSolicitud) s.idSolicitud = s.id;
       if (s.id && !s.ID_Solicitud) s.ID_Solicitud = s.id;
-      if (!s.fecha && s.Fecha_Registro) s.fecha = String(s.Fecha_Registro);
+      if (!s.fecha && (s.Fecha_Registro || s.fechaRegistro || s.Fecha || s.createdAt || s.ultimaActualizacion || s.Ultima_Actualizacion)) {
+        s.fecha = String(s.Fecha_Registro || s.fechaRegistro || s.Fecha || s.createdAt || s.ultimaActualizacion || s.Ultima_Actualizacion);
+      }
       if (!s.estado && s.Estado_Tramite) s.estado = String(s.Estado_Tramite);
 
       if (!s.id_provisorio) s.id_provisorio = 'PROV-' + s.id;
@@ -7809,9 +7811,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
         let matchFecha = true;
         if (fDesde || fHasta) {
-          const sFecha = (s.fecha || '').slice(0, 10);
-          if (fDesde && sFecha < fDesde) matchFecha = false;
-          if (fHasta && sFecha > fHasta) matchFecha = false;
+          const sFecha = formatearFechaClaveLocal(obtenerFechaSolicitud(s));
+          if (!sFecha || (fDesde && sFecha < fDesde) || (fHasta && sFecha > fHasta)) matchFecha = false;
         }
 
         return matchQ && matchLinea && matchEst && matchAsesor && matchFecha;
@@ -7861,7 +7862,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const modo = vistaModulosState.comercializador;
       if (modo === 'tabla') renderTablaComercializador(filtered, showAsesorCol);
       else if (modo === 'kanban') renderKanbanModulo('comercializador', filtered);
-      else if (modo === 'calendario') renderCalendarioModulo('comercializador');
+      else if (modo === 'calendario') renderCalendarioModulo('comercializador', filtered);
     }
 
     function renderTablaComercializador(filtered, showAsesorCol) {
@@ -10584,9 +10585,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
         let matchFecha = true;
         if (fDesde || fHasta) {
-          const sFecha = (s.fecha || '').slice(0, 10);
-          if (fDesde && sFecha < fDesde) matchFecha = false;
-          if (fHasta && sFecha > fHasta) matchFecha = false;
+          const sFecha = formatearFechaClaveLocal(obtenerFechaSolicitud(s));
+          if (!sFecha || (fDesde && sFecha < fDesde) || (fHasta && sFecha > fHasta)) matchFecha = false;
         }
 
         return matchQ && matchLinea && matchEst && matchCanal && matchOrgaTipo && matchFecha;
@@ -10601,7 +10601,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const modo = vistaModulosState.mutualPropias || 'tabla';
       if (modo === 'tabla') renderTablaMutualPropias(filtered);
       else if (modo === 'kanban') renderKanbanModulo('mutualPropias', filtered);
-      else if (modo === 'calendario') renderCalendarioModulo('mutualPropias');
+      else if (modo === 'calendario') renderCalendarioModulo('mutualPropias', filtered);
     }
 
     function renderTablaMutualPropias(filtered) {
@@ -10700,9 +10700,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
         let matchFecha = true;
         if (fDesde || fHasta) {
-          const sFecha = (s.fecha || '').slice(0, 10);
-          if (fDesde && sFecha < fDesde) matchFecha = false;
-          if (fHasta && sFecha > fHasta) matchFecha = false;
+          const sFecha = formatearFechaClaveLocal(obtenerFechaSolicitud(s));
+          if (!sFecha || (fDesde && sFecha < fDesde) || (fHasta && sFecha > fHasta)) matchFecha = false;
         }
 
         return matchQ && matchLinea && matchEst && matchOrg && matchCom && matchOrgaTipo && matchFecha;
@@ -10731,7 +10730,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const modo = vistaModulosState.mutual;
       if (modo === 'tabla') renderTablaMutual(filtered);
       else if (modo === 'kanban') renderKanbanModulo('mutual', filtered);
-      else if (modo === 'calendario') renderCalendarioModulo('mutual');
+      else if (modo === 'calendario') renderCalendarioModulo('mutual', filtered);
     }
 
     function renderTablaMutual(filtered) {
@@ -10930,24 +10929,113 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
        ======================================================================== */
     const NOMBRES_MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-    function renderCalendarioModulo(moduloKey) {
-      const prop = (moduloKey === 'comercializador') ? 'calDateComercializador' :
-                   (moduloKey === 'mutualPropias') ? 'calDateMutualPropias' : 'calDateMutual';
-      const curDate = vistaModulosState[prop];
+    function parsearFechaGestion(fechaStr) {
+      if (!fechaStr) return null;
+      if (fechaStr instanceof Date && !isNaN(fechaStr.getTime())) return fechaStr;
+
+      const str = String(fechaStr).trim();
+      if (!str) return null;
+
+      // Caso 1: Formato argentino "DD/MM/YYYY, HH:mm:ss", "DD/MM/YYYY HH:mm" o "DD/MM/YYYY"
+      const soloFechaSlash = str.split(',')[0].trim().split(/\s+/)[0];
+      const partesFecha = soloFechaSlash.split('/');
+      if (partesFecha.length === 3) {
+        const dia = parseInt(partesFecha[0], 10);
+        const mes = parseInt(partesFecha[1], 10) - 1;
+        let anio = parseInt(partesFecha[2], 10);
+        if (anio > 0 && anio < 100) anio += 2000;
+        if (!isNaN(dia) && !isNaN(mes) && !isNaN(anio) && mes >= 0 && mes <= 11 && dia >= 1 && dia <= 31) {
+          const d = new Date(anio, mes, dia);
+          if (!isNaN(d.getTime()) && d.getFullYear() === anio && d.getMonth() === mes && d.getDate() === dia) {
+            return d;
+          }
+        }
+      }
+
+      // Caso 2: Formato ISO local "YYYY-MM-DD" o "YYYY-MM-DD HH:mm(:ss)" sin zona horaria
+      const isoLocalMatch = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T\s](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?$/);
+      if (isoLocalMatch) {
+        const anio = parseInt(isoLocalMatch[1], 10);
+        const mes = parseInt(isoLocalMatch[2], 10) - 1;
+        const dia = parseInt(isoLocalMatch[3], 10);
+        const hh = isoLocalMatch[4] ? parseInt(isoLocalMatch[4], 10) : 0;
+        const mm = isoLocalMatch[5] ? parseInt(isoLocalMatch[5], 10) : 0;
+        const ss = isoLocalMatch[6] ? parseInt(isoLocalMatch[6], 10) : 0;
+        const d = new Date(anio, mes, dia, hh, mm, ss);
+        if (!isNaN(d.getTime())) return d;
+      }
+
+      // Caso 3: Formato ISO con Z/offset o Date.toString() devuelto por Google Sheets
+      const dIso = new Date(str);
+      if (!isNaN(dIso.getTime())) return dIso;
+
+      return null;
+    }
+
+    function obtenerFechaSolicitud(s) {
+      if (!s || typeof s !== 'object') return null;
+      const candidatos = [
+        s.fecha,
+        s.Fecha_Registro,
+        s.fechaRegistro,
+        s.Fecha,
+        s.createdAt,
+        s.fechaCreacion,
+        s.ultimaActualizacion,
+        s.Ultima_Actualizacion
+      ];
+      for (const cand of candidatos) {
+        const parsed = parsearFechaGestion(cand);
+        if (parsed) return parsed;
+      }
+      return null;
+    }
+
+    function formatearFechaClaveLocal(d) {
+      if (!(d instanceof Date) || isNaN(d.getTime())) return '';
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function renderCalendarioModulo(moduloKey, listaOpcional) {
+      let mod = moduloKey;
+      if (mod === 'comercial') mod = 'comercializador';
+      if (!mod) {
+        if (document.getElementById('view-mutual-propias')?.classList.contains('active')) mod = 'mutualPropias';
+        else if (document.getElementById('view-mutual')?.classList.contains('active')) mod = 'mutual';
+        else mod = 'comercializador';
+      }
+
+      const prop = (mod === 'comercializador') ? 'calDateComercializador' :
+                   (mod === 'mutualPropias') ? 'calDateMutualPropias' : 'calDateMutual';
+      const curDate = vistaModulosState[prop] instanceof Date && !isNaN(vistaModulosState[prop].getTime())
+        ? vistaModulosState[prop]
+        : new Date();
       const year = curDate.getFullYear();
       const month = curDate.getMonth();
 
-      const titleId = (moduloKey === 'comercializador') ? 'calComMonthTitle' :
-                      (moduloKey === 'mutualPropias') ? 'calMutPropMonthTitle' : 'calMutMonthTitle';
-      const gridId = (moduloKey === 'comercializador') ? 'gridComercialCalendario' :
-                     (moduloKey === 'mutualPropias') ? 'gridMutualPropiasCalendario' : 'gridMutualCalendario';
+      const titleId = (mod === 'comercializador') ? 'calComMonthTitle' :
+                      (mod === 'mutualPropias') ? 'calMutPropMonthTitle' : 'calMutMonthTitle';
+      const gridId = (mod === 'comercializador') ? 'gridComercialCalendario' :
+                     (mod === 'mutualPropias') ? 'gridMutualPropiasCalendario' : 'gridMutualCalendario';
 
       const titEl = document.getElementById(titleId);
       if (titEl) titEl.textContent = NOMBRES_MESES[month] + ' ' + year;
 
       const gridEl = document.getElementById(gridId); if (!gridEl) return;
-      const solicitudes = (moduloKey === 'comercializador') ? getListaFiltradaComercializador() :
-                          (moduloKey === 'mutualPropias') ? getListaFiltradaMutualPropias() : getListaFiltradaMutual();
+      const solicitudes = Array.isArray(listaOpcional)
+        ? listaOpcional
+        : ((mod === 'comercializador') ? getListaFiltradaComercializador() :
+           (mod === 'mutualPropias') ? getListaFiltradaMutualPropias() : getListaFiltradaMutual());
+
+      const eventosPorDia = {};
+      (solicitudes || []).forEach(s => {
+        const d = obtenerFechaSolicitud(s);
+        if (!d) return;
+        const clave = formatearFechaClaveLocal(d);
+        if (!clave) return;
+        if (!eventosPorDia[clave]) eventosPorDia[clave] = [];
+        eventosPorDia[clave].push(s);
+      });
 
       const daysOfWeek = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
       let html = daysOfWeek.map(d => '<div class="calendar-head-cell">' + d + '</div>').join('');
@@ -10970,21 +11058,25 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       for (let day = 1; day <= daysInMonth; day++) {
         const dayDateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
         const isToday = isCurrentMonth && (today.getDate() === day);
-
-        const events = solicitudes.filter(s => {
-          if (!s.fecha) return false;
-          return s.fecha.startsWith(dayDateStr);
-        });
+        const events = eventosPorDia[dayDateStr] || [];
 
         const evsHtml = events.map(s => {
-          const bg = (s.estado === 'Aprobado' || s.estado === 'Liquidado') ? '#dcfce7' :
-                     (s.estado === 'Observado') ? '#ffedd5' :
-                     (s.estado === 'En Análisis') ? '#dbeafe' : '#fef9c3';
-          const fg = (s.estado === 'Aprobado' || s.estado === 'Liquidado') ? '#166534' :
-                     (s.estado === 'Observado') ? '#9a3412' :
-                     (s.estado === 'En Análisis') ? '#1e40af' : '#854d0e';
-          return '<div class="calendar-event-chip" style="background:' + bg + ';color:' + fg + ';" onclick="verFichaCompleta(\'' + s.id + '\')" title="' + s.solicitante?.nombre + ' - ' + s.estado + '">' +
-            '<strong>' + (s.id_definitivo || s.id_provisorio) + '</strong> ' + (s.solicitante?.nombre ? s.solicitante.nombre.split(' ')[0] : '') +
+          const st = String(s.estado || s.Estado_Tramite || 'Pendiente').trim();
+          const bg = (st === 'Aprobado' || st === 'Liquidado') ? '#dcfce7' :
+                     (st === 'Observado') ? '#ffedd5' :
+                     (st === 'Rechazado') ? '#fee2e2' :
+                     (st === 'En Análisis') ? '#dbeafe' : '#fef9c3';
+          const fg = (st === 'Aprobado' || st === 'Liquidado') ? '#166534' :
+                     (st === 'Observado') ? '#9a3412' :
+                     (st === 'Rechazado') ? '#991b1b' :
+                     (st === 'En Análisis') ? '#1e40af' : '#854d0e';
+          const rawId = s.id || s.idSolicitud || s.ID_Solicitud || s.id_definitivo || s.id_provisorio || '';
+          const idLabel = s.id_definitivo || s.ID_Definitivo || s.id_provisorio || s.ID_Solicitud || ('#' + rawId);
+          const nombreFull = String((s.solicitante?.nombre && s.solicitante.nombre !== 'Socio' ? s.solicitante.nombre : '') || s.Apellido_Nombre || s.Nombre_Apellido || s.nombre || s.titular || s.solicitante?.nombre || 'Socio').trim();
+          const nombreCorto = nombreFull.split(/\s+/)[0] || 'Socio';
+          const titleTip = sanitizeHTML(nombreFull + ' - ' + st);
+          return '<div class="calendar-event-chip" style="background:' + bg + ';color:' + fg + ';" onclick="verFichaCompleta(\'' + sanitizeHTML(String(rawId)) + '\')" title="' + titleTip + '">' +
+            '<strong>' + sanitizeHTML(idLabel) + '</strong> ' + sanitizeHTML(nombreCorto) +
           '</div>';
         }).join('');
 
@@ -10996,6 +11088,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       gridEl.innerHTML = html;
     }
+
+    const renderizarCalendarioGestiones = renderCalendarioModulo;
 
     /* ========================================================================
        10. MÓDULO DE AUDITORÍA DOCUMENTAL INTELIGENTE (OCR, SCORING & DUE DILIGENCE)
@@ -12518,6 +12612,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.cambiarVista = cambiarVista;
     window.limpiarFiltros = limpiarFiltros;
     window.navegarCalendario = navegarCalendario;
+    window.parsearFechaGestion = parsearFechaGestion;
+    window.renderCalendarioModulo = renderCalendarioModulo;
+    window.renderizarCalendarioGestiones = renderizarCalendarioGestiones;
     window.filtrarGestionesComercializador = filtrarGestionesComercializador;
     window.abrirModalAltaSolicitud = abrirModalAltaSolicitud;
     window.ajustarPlazosModalAlta = ajustarPlazosModalAlta;

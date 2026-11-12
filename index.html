@@ -1821,6 +1821,13 @@
     .modal-footer-bar{padding:.75rem 1.25rem;border-top:1px solid var(--border-color);background:#f8fafc;display:flex;justify-content:flex-end;gap:.5rem}
     .section-title-divider{font-size:.75rem;font-weight:700;color:var(--color-primary);text-transform:uppercase;letter-spacing:.03em;border-bottom:1px solid var(--border-color);padding-bottom:.3rem;margin:.85rem 0 .5rem}
     .grid-3-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.65rem}
+    .grid.grid-cols-1.md\:grid-cols-2{display:grid;grid-template-columns:1fr;gap:1rem;width:100%}
+    @media (min-width:768px){.grid.grid-cols-1.md\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    .antiguedad-reactive-label{display:block;font-size:.75rem;font-weight:600;color:#334155;margin-bottom:.25rem}
+    .antiguedad-reactive-input{width:100%;height:38px;padding:.5rem .75rem;border:1px solid #cbd5e1;border-radius:.75rem;font-size:.875rem;font-family:var(--font-sans);color:var(--text-main);background:#fff;outline:none;transition:border-color .15s,box-shadow .15s}
+    .antiguedad-reactive-input:focus{border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,.22)}
+    .antiguedad-reactive-badge{width:100%;height:38px;padding:0 .75rem;background:rgba(239,246,255,.75);border:1px solid #bfdbfe;border-radius:.75rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.75rem;font-weight:600;color:#135596}
+    .antiguedad-auto-pill{font-size:.625rem;color:#2563eb;background:#ffffff;padding:.125rem .5rem;border-radius:.375rem;border:1px solid #dbeafe;box-shadow:0 1px 2px rgba(15,23,42,.04);white-space:nowrap}
     .file-input-box{border:1px dashed var(--border-color);padding:.6rem;border-radius:8px;background:#f8fafc;font-size:.72rem}
 
     /* =====================================================================
@@ -3498,9 +3505,32 @@
                   <option value="Jubilado / Pensionado">Jubilado / Pensionado</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label class="form-label">Antigüedad Laboral</label>
-                <input type="text" id="asocAntiguedad" class="input-text" placeholder="Ej: 5 años"/>
+              <div class="form-group" style="grid-column:1 / -1;">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="antiguedad-reactive-label" for="asocFechaIngreso">
+                      Fecha de Ingreso Laboral
+                    </label>
+                    <input
+                      type="date"
+                      id="asocFechaIngreso"
+                      name="Fecha_Ingreso_Laboral"
+                      class="antiguedad-reactive-input"
+                      onchange="calcularAntiguedadReactiva(this.value, 'asocTextoAntiguedad', 'asocAntiguedad')"
+                      oninput="calcularAntiguedadReactiva(this.value, 'asocTextoAntiguedad', 'asocAntiguedad')"
+                    />
+                  </div>
+                  <div>
+                    <label class="antiguedad-reactive-label">
+                      Antigüedad Calculada (AÑOS - MESES)
+                    </label>
+                    <div id="asocBadgeAntiguedad" class="antiguedad-reactive-badge">
+                      <span id="asocTextoAntiguedad">-- AÑOS - -- MESES</span>
+                      <span class="antiguedad-auto-pill">Automático</span>
+                    </div>
+                    <input type="hidden" id="asocAntiguedad" value=""/>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -3984,9 +4014,38 @@
                   <option value="Jubilado / Pensionado">Jubilado / Pensionado</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label class="form-label">Antigüedad</label>
-                <input type="text" id="solAntiguedad" class="input-text" placeholder="Ej: 5 años"/>
+              <div class="form-group" style="grid-column:1 / -1;">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <!-- 1. Input Fecha de Ingreso -->
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1 antiguedad-reactive-label" for="solicitud-fecha-ingreso">
+                      Fecha de Ingreso Laboral <span class="text-red-500" style="color:#ef4444;">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      id="solicitud-fecha-ingreso"
+                      name="Fecha_Ingreso_Laboral"
+                      class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all antiguedad-reactive-input"
+                      onchange="calcularAntiguedadReactiva(this.value)"
+                      oninput="calcularAntiguedadReactiva(this.value)"
+                    />
+                  </div>
+
+                  <!-- 2. Recuadro Informativo de Antigüedad Calculada -->
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1 antiguedad-reactive-label">
+                      Antigüedad Calculada (AÑOS - MESES)
+                    </label>
+                    <div
+                      id="badge-antiguedad-calculada"
+                      class="w-full h-[38px] px-3 bg-blue-50/70 border border-blue-200 rounded-xl flex items-center justify-between text-xs font-semibold text-[#135596] antiguedad-reactive-badge"
+                    >
+                      <span id="texto-antiguedad">-- AÑOS - -- MESES</span>
+                      <span class="text-[10px] text-blue-600 bg-white px-2 py-0.5 rounded-md border border-blue-100 shadow-2xs antiguedad-auto-pill">Automático</span>
+                    </div>
+                    <input type="hidden" id="solicitud-antiguedad-formateada" value=""/>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -4011,7 +4070,7 @@
               </div>
               <div class="form-group">
                 <label class="form-label">Monto Solicitado (Neto) *</label>
-                <input type="number" id="solMonto" class="input-text" required min="10000" step="1000" value="100000" oninput="actualizarResumenCuotaAlta();"/>
+                <input type="number" id="solMonto" class="input-text" required min="10000" step="1000" value="100000" oninput="this.dataset.lastValid=this.value; actualizarResumenCuotaAlta();"/>
               </div>
               <div class="form-group">
                 <label class="form-label">Plazo de Cuotas *</label>
@@ -4025,6 +4084,8 @@
                 </select>
               </div>
             </div>
+            <input type="hidden" id="solCuotaEstimada" value="0"/>
+            <input type="hidden" id="solTotalDevolver" value="0"/>
 
             <!-- CUADRO RESUMEN DE CUOTA CALCULADA (AZUL INSTITUCIONAL) -->
             <div class="live-cuota-preview-card" id="boxResumenCuotaAlta">
@@ -6289,9 +6350,16 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
                 const el = document.getElementById('solSituacionRevista');
                 if (el) el.value = asoc.situacionRevista;
               }
-              if (asoc.antiguedad) {
-                const el = document.getElementById('solAntiguedad');
-                if (el) el.value = asoc.antiguedad;
+              const fechaIng = asoc.fechaIngresoLaboral || asoc.Fecha_Ingreso_Laboral || asoc.fechaIngreso || '';
+              if (fechaIng) {
+                const elFI = document.getElementById('solicitud-fecha-ingreso');
+                if (elFI) elFI.value = String(fechaIng).slice(0, 10);
+                calcularAntiguedadReactiva(String(fechaIng).slice(0, 10));
+              } else if (asoc.antiguedad) {
+                const elHid = document.getElementById('solicitud-antiguedad-formateada');
+                const elTxt = document.getElementById('texto-antiguedad');
+                if (elHid) elHid.value = asoc.antiguedad;
+                if (elTxt) elTxt.textContent = asoc.antiguedad;
               }
               showToast('✓ Asociado encontrado en Padrón: ' + (inpNombre ? inpNombre.value : ''));
             }
@@ -6700,41 +6768,95 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
     }
 
+    function calcularAntiguedadReactiva(fechaStr, targetTextId = 'texto-antiguedad', targetHiddenId = 'solicitud-antiguedad-formateada') {
+      const txtEl = document.getElementById(targetTextId);
+      const hidEl = document.getElementById(targetHiddenId);
+      const clean = String(fechaStr || '').trim().slice(0, 10);
+      if (!clean || !/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
+        if (txtEl) txtEl.textContent = '-- AÑOS - -- MESES';
+        if (hidEl) hidEl.value = '';
+        return '';
+      }
+      const parts = clean.split('-').map(n => parseInt(n, 10));
+      const ingreso = new Date(parts[0], parts[1] - 1, parts[2]);
+      const hoy = new Date();
+      if (isNaN(ingreso.getTime()) || ingreso > hoy) {
+        const ceroTxt = '0 AÑOS - 0 MESES';
+        if (txtEl) txtEl.textContent = (ingreso > hoy) ? ceroTxt : '-- AÑOS - -- MESES';
+        if (hidEl) hidEl.value = (ingreso > hoy) ? ceroTxt : '';
+        return (ingreso > hoy) ? ceroTxt : '';
+      }
+      let anios = hoy.getFullYear() - ingreso.getFullYear();
+      let meses = hoy.getMonth() - ingreso.getMonth();
+      if (hoy.getDate() < ingreso.getDate()) {
+        meses -= 1;
+      }
+      if (meses < 0) {
+        anios -= 1;
+        meses += 12;
+      }
+      if (anios < 0) {
+        anios = 0;
+        meses = 0;
+      }
+      const formateado = anios + ' AÑOS - ' + meses + ' MESES';
+      if (txtEl) txtEl.textContent = formateado;
+      if (hidEl) hidEl.value = formateado;
+      return formateado;
+    }
+
     function actualizarResumenCuotaAlta() {
       const box = document.getElementById('boxResumenCuotaAlta');
-      if (!box) return;
+      const hidCuota = document.getElementById('solCuotaEstimada');
+      const hidTotal = document.getElementById('solTotalDevolver');
       const lineaKey = document.getElementById('solLinea')?.value || 'fedem';
-      const monto = parseFloat(document.getElementById('solMonto')?.value) || 0;
+      const monto = parsearNumeroTolerante(document.getElementById('solMonto')?.value || document.getElementById('solMonto')?.dataset?.lastValid || '0', 0);
       const cuotas = parseInt(document.getElementById('solPlazo')?.value, 10) || 12;
 
       if (monto <= 0) {
-        box.innerHTML = '<div class="live-cuota-preview-left">' +
-          '<span class="live-cuota-preview-label">Estimación de Cuota Mensual</span>' +
-          '<span class="live-cuota-preview-sub">Ingrese un monto válido para proyectar</span>' +
-        '</div>' +
-        '<div class="live-cuota-preview-right"><span class="live-cuota-preview-value">$ —</span></div>';
+        if (hidCuota) hidCuota.value = '0';
+        if (hidTotal) hidTotal.value = '0';
+        if (box) {
+          box.innerHTML = '<div class="live-cuota-preview-left">' +
+            '<span class="live-cuota-preview-label">Estimación de Cuota Mensual</span>' +
+            '<span class="live-cuota-preview-sub">Ingrese un monto válido para proyectar</span>' +
+          '</div>' +
+          '<div class="live-cuota-preview-right"><span class="live-cuota-preview-value">$ —</span></div>';
+        }
         return;
       }
 
       try {
         const sim = calculateSimulation(lineaKey, cuotas, 'neto', monto);
         if (sim && sim.cuota) {
+          const cuotaNum = Number(sim.cuota.toFixed(2));
+          const totalNum = Number((cuotaNum * cuotas).toFixed(2));
+          if (hidCuota) hidCuota.value = String(cuotaNum);
+          if (hidTotal) hidTotal.value = String(totalNum);
           const lineaNombre = (lineaKey === 'muni') ? 'QUAD Municipal' :
                               (lineaKey === 'sidecreer') ? 'Convenio Sidecreer' : 'FEDEM Provincial';
-          box.innerHTML = '<div class="live-cuota-preview-left">' +
-            '<span class="live-cuota-preview-label">Cuota Estimada Oficial (' + lineaNombre + ')</span>' +
-            '<span class="live-cuota-preview-sub">Plan ' + cuotas + ' cuotas fijas | Capital neto: ' + formatMoney(monto) + ' | Amortización Francesa</span>' +
-          '</div>' +
-          '<div class="live-cuota-preview-right">' +
-            '<span class="live-cuota-preview-value">' + formatMoney(sim.cuota) + '</span>' +
-            '<span class="live-cuota-preview-unit">/ mes</span>' +
-          '</div>';
+          if (box) {
+            box.dataset.cuota = String(cuotaNum);
+            box.dataset.total = String(totalNum);
+            box.innerHTML = '<div class="live-cuota-preview-left">' +
+              '<span class="live-cuota-preview-label">Cuota Estimada Oficial (' + lineaNombre + ')</span>' +
+              '<span class="live-cuota-preview-sub">Plan ' + cuotas + ' cuotas fijas | Capital neto: ' + formatMoney(monto) + ' | Total a devolver: ' + formatMoney(totalNum) + '</span>' +
+            '</div>' +
+            '<div class="live-cuota-preview-right">' +
+              '<span class="live-cuota-preview-value" id="valPreviewCuotaAlta">' + formatMoney(cuotaNum) + '</span>' +
+              '<span class="live-cuota-preview-unit">/ mes</span>' +
+            '</div>';
+          }
         } else {
-          box.innerHTML = '<div class="live-cuota-preview-left">' +
-            '<span class="live-cuota-preview-label">Estimación de Cuota</span>' +
-            '<span class="live-cuota-preview-sub">Plazo no habilitado para la línea</span>' +
-          '</div>' +
-          '<div class="live-cuota-preview-right"><span class="live-cuota-preview-value">$ —</span></div>';
+          if (hidCuota) hidCuota.value = '0';
+          if (hidTotal) hidTotal.value = '0';
+          if (box) {
+            box.innerHTML = '<div class="live-cuota-preview-left">' +
+              '<span class="live-cuota-preview-label">Estimación de Cuota</span>' +
+              '<span class="live-cuota-preview-sub">Plazo no habilitado para la línea</span>' +
+            '</div>' +
+            '<div class="live-cuota-preview-right"><span class="live-cuota-preview-value">$ —</span></div>';
+          }
         }
       } catch (e) {
         console.warn('Error calculando cuota preview alta:', e);
@@ -6833,6 +6955,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     function abrirModalAltaAsociado() {
       const f = document.getElementById('formAltaAsociado');
       if (f) f.reset();
+      calcularAntiguedadReactiva('', 'asocTextoAntiguedad', 'asocAntiguedad');
       handleOrganismoChange('Provincial', 'asocLegajo');
       resetDocumentRows('formAltaAsociado');
       abrirModal('modalAltaAsociado');
@@ -6861,7 +6984,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const dependenciaVal = (document.getElementById('asocDependencia')?.value || '').trim();
       const cargoVal = document.getElementById('asocCargo')?.value || 'Titular';
       const situacionRevistaVal = document.getElementById('asocSituacionRevista')?.value || 'Planta Permanente';
-      const antiguedadVal = (document.getElementById('asocAntiguedad')?.value || '').trim();
+      const fechaIngresoVal = (document.getElementById('asocFechaIngreso')?.value || '').trim();
+      const antiguedadVal = fechaIngresoVal
+        ? calcularAntiguedadReactiva(fechaIngresoVal, 'asocTextoAntiguedad', 'asocAntiguedad')
+        : (document.getElementById('asocAntiguedad')?.value || '').trim();
 
       const fileInputs = [
         { el: document.getElementById('asocFileDni'), tipo: 'DNI' },
@@ -6946,6 +7072,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         dependencia: dependenciaVal,
         cargo: cargoVal,
         situacionRevista: situacionRevistaVal,
+        fechaIngresoLaboral: fechaIngresoVal,
+        Fecha_Ingreso_Laboral: fechaIngresoVal,
         antiguedad: antiguedadVal,
         fechaAlta: new Date().toISOString().slice(0, 10),
         creadoPor: session.nombre
@@ -6979,6 +7107,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         Condicion: condicionVal,
         Situacion_Revista: situacionRevistaVal,
         situacionRevista: situacionRevistaVal,
+        Fecha_Ingreso_Laboral: fechaIngresoVal,
+        fechaIngresoLaboral: fechaIngresoVal,
+        fechaIngreso: fechaIngresoVal,
         Antiguedad: antiguedadVal,
         antiguedad: antiguedadVal,
         Archivos_Adjuntos_JSON: JSON.stringify(adjuntosBase64),
@@ -7152,6 +7283,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const contacto = Object.assign({}, parseJSONCampoSeguro(s.Datos_Contacto_JSON, {}), (s.datosContacto && typeof s.datosContacto === 'object') ? s.datosContacto : {});
       const laborales = Object.assign({}, parseJSONCampoSeguro(s.Datos_Laborales_JSON, {}), (s.datosLaborales && typeof s.datosLaborales === 'object') ? s.datosLaborales : {});
 
+      const fechaIngresoLabNorm = String(
+        laborales.fechaIngresoLaboral || laborales.Fecha_Ingreso_Laboral || laborales.fechaIngreso ||
+        s.Fecha_Ingreso_Laboral || s.fechaIngresoLaboral || s.fechaIngreso || ''
+      ).trim();
+
       if (!s.solicitante || typeof s.solicitante !== 'object') {
         s.solicitante = {
           dni: String(s.DNI_Asociado || s.dni || ''),
@@ -7172,6 +7308,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           dependencia: laborales.dependencia || s.dependencia || '',
           cargo: laborales.cargo || s.cargo || 'Titular',
           situacionRevista: laborales.situacionRevista || s.situacionRevista || 'Planta Permanente',
+          fechaIngresoLaboral: fechaIngresoLabNorm,
+          Fecha_Ingreso_Laboral: fechaIngresoLabNorm,
           antiguedad: laborales.antiguedad || s.antiguedad || ''
         };
       } else {
@@ -7182,6 +7320,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         if (!s.solicitante.sexo && (contacto.sexo || s.sexo)) s.solicitante.sexo = contacto.sexo || s.sexo;
         if (!s.solicitante.estadoCivil && (contacto.estadoCivil || s.estadoCivil)) s.solicitante.estadoCivil = contacto.estadoCivil || s.estadoCivil;
         if (!s.solicitante.situacionRevista && (laborales.situacionRevista || s.situacionRevista)) s.solicitante.situacionRevista = laborales.situacionRevista || s.situacionRevista;
+        if (!s.solicitante.fechaIngresoLaboral && fechaIngresoLabNorm) s.solicitante.fechaIngresoLaboral = fechaIngresoLabNorm;
+        if (!s.solicitante.Fecha_Ingreso_Laboral && (s.solicitante.fechaIngresoLaboral || fechaIngresoLabNorm)) s.solicitante.Fecha_Ingreso_Laboral = s.solicitante.fechaIngresoLaboral || fechaIngresoLabNorm;
         if (!s.solicitante.antiguedad && (laborales.antiguedad || s.antiguedad)) s.solicitante.antiguedad = laborales.antiguedad || s.antiguedad;
       }
       s.datosContacto = Object.assign({
@@ -7202,25 +7342,33 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         cargo: s.solicitante.cargo || 'Titular',
         legajo: s.solicitante.legajo || '',
         situacionRevista: s.solicitante.situacionRevista || 'Planta Permanente',
+        fechaIngresoLaboral: s.solicitante.fechaIngresoLaboral || fechaIngresoLabNorm || '',
+        Fecha_Ingreso_Laboral: s.solicitante.fechaIngresoLaboral || fechaIngresoLabNorm || '',
         antiguedad: s.solicitante.antiguedad || ''
       }, laborales);
 
       if (!s.domicilio_historico && (s.Domicilio_Historico_Solicitud || s.solicitante?.domicilio)) {
         s.domicilio_historico = s.Domicilio_Historico_Solicitud || s.solicitante?.domicilio || '';
       }
-      if (!s.prestamo || typeof s.prestamo !== 'object') {
-        const lineaNom = String(s.Linea_Ayuda || 'FEDEM Provincial');
-        const lineaLow = lineaNom.toLowerCase();
-        const lineaKey = (lineaLow.includes('muni') || lineaLow.includes('quad')) ? 'muni' :
-                         lineaLow.includes('sidecreer') ? 'sidecreer' : 'fedem';
-        s.prestamo = {
-          linea: lineaKey,
-          lineaNombre: lineaNom,
-          monto: Number(s.Monto_Solicitado_Neto || s.monto || 0),
-          cuotas: Number(s.Cantidad_Cuotas || s.cuotas || 12),
-          cuotaEstimada: Number(s.Monto_Cuota || s.cuotaEstimada || 0)
-        };
-      }
+
+      const prevPrest = (s.prestamo && typeof s.prestamo === 'object') ? s.prestamo : {};
+      const lineaNomNorm = String(prevPrest.lineaNombre || s.Linea_Ayuda || s.lineaAyuda || s.Linea_Nombre || 'FEDEM Provincial').trim() || 'FEDEM Provincial';
+      const lineaLowNorm = lineaNomNorm.toLowerCase();
+      const lineaKeyNorm = prevPrest.linea || ((lineaLowNorm.includes('muni') || lineaLowNorm.includes('quad') || lineaLowNorm.includes('vikingo')) ? 'muni' :
+                           lineaLowNorm.includes('sidecreer') ? 'sidecreer' : 'fedem');
+      const montoNorm = parsearNumeroTolerante(prevPrest.monto || s.Monto_Solicitado_Neto || s.montoNeto || s.Monto || s.monto || 0, 0);
+      const cuotasNorm = parseInt(prevPrest.cuotas || s.Cantidad_Cuotas || s.cuotas || s.Plazo || 12, 10) || 12;
+      const cuotaNorm = parsearNumeroTolerante(prevPrest.cuotaEstimada || s.Monto_Cuota || s.montoCuota || s.valorCuota || s.Cuota_Estimada || s.cuotaEstimada || 0, 0);
+      const totalNorm = parsearNumeroTolerante(prevPrest.totalADevolver || s.Total_A_Devolver || s.totalDevolver || s.totalADevolver || (cuotaNorm * cuotasNorm), 0);
+      s.prestamo = {
+        linea: lineaKeyNorm,
+        lineaNombre: lineaNomNorm,
+        monto: montoNorm,
+        cuotas: cuotasNorm,
+        cuotaEstimada: cuotaNorm,
+        totalADevolver: totalNorm
+      };
+
       const adjuntosNorm = normalizarListaArchivos(s);
       s.adjuntos = adjuntosNorm;
       s.archivosLegajo = adjuntosNorm;
@@ -7234,8 +7382,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       if (!s.carpetaDriveUrl && s.Carpeta_Drive_URL) {
         s.carpetaDriveUrl = s.Carpeta_Drive_URL;
       }
-      if (!s.id_definitivo && (s.Nro_Definitivo || s.nroDefinitivo || s.ID_Definitivo)) {
-        s.id_definitivo = String(s.Nro_Definitivo || s.nroDefinitivo || s.ID_Definitivo).trim();
+      if (!s.id_definitivo && (s.ID_Definitivo_Expediente || s.Nro_Definitivo || s.nroDefinitivo || s.ID_Definitivo)) {
+        s.id_definitivo = String(s.ID_Definitivo_Expediente || s.Nro_Definitivo || s.nroDefinitivo || s.ID_Definitivo).trim();
       }
       if (s.Metadata_Extra_JSON) {
         const metaExtra = parseJSONCampoSeguro(s.Metadata_Extra_JSON, {});
@@ -7243,6 +7391,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         if (metaExtra.id_definitivo && !s.id_definitivo) s.id_definitivo = metaExtra.id_definitivo;
         if (Array.isArray(metaExtra.requerimientosDocumentales) && !s.requerimientosDocumentales) s.requerimientosDocumentales = metaExtra.requerimientosDocumentales;
         if (metaExtra.ultimaDerivacion && !s.ultimaDerivacion) s.ultimaDerivacion = metaExtra.ultimaDerivacion;
+      }
+      if (s.id_definitivo) {
+        s.Nro_Definitivo = s.Nro_Definitivo || s.id_definitivo;
+        s.ID_Definitivo_Expediente = s.ID_Definitivo_Expediente || s.id_definitivo;
       }
       if (!s.propuestaMutual && s.Historial_Ofertas_JSON) {
         const ofertasRaw = parseJSONCampoSeguro(s.Historial_Ofertas_JSON, {});
@@ -7755,7 +7907,34 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     function abrirModalAltaSolicitud(origen = 'comercializador') {
       window._origenModalAlta = origen;
       document.getElementById('formAltaSolicitud')?.reset();
-      ajustarPlazosModalAlta('fedem');
+      calcularAntiguedadReactiva('');
+
+      // Sincronizar con el simulador activo para no perder el Plan Deseado ni el Monto simulado
+      const lineaSim = (typeof state !== 'undefined' && state.linea) ? state.linea : 'fedem';
+      const selLinea = document.getElementById('solLinea');
+      if (selLinea) selLinea.value = lineaSim;
+      ajustarPlazosModalAlta(lineaSim);
+
+      let plazoSim = (typeof state !== 'undefined' && state.plazo) ? state.plazo : 12;
+      if (lineaSim === 'muni' && plazoSim !== 12 && plazoSim !== 24) plazoSim = 12;
+      const selPlazo = document.getElementById('solPlazo');
+      if (selPlazo) selPlazo.value = String(plazoSim);
+
+      let montoNetoSim = 100000;
+      if (typeof state !== 'undefined' && state.montoInputRaw > 0) {
+        if (state.modo === 'cuota' && typeof calculateSimulation === 'function') {
+          const calc = calculateSimulation(lineaSim, plazoSim, 'cuota', state.montoInputRaw);
+          montoNetoSim = (calc && calc.neto > 0) ? Math.round(calc.neto) : state.montoInputRaw;
+        } else {
+          montoNetoSim = Math.round(state.montoInputRaw);
+        }
+      }
+      const inpMonto = document.getElementById('solMonto');
+      if (inpMonto) {
+        inpMonto.value = String(montoNetoSim);
+        inpMonto.dataset.lastValid = String(montoNetoSim);
+      }
+
       handleOrganismoChange('Provincial', 'solLegajo');
       resetDocumentRows('formAltaSolicitud');
       actualizarResumenCuotaAlta();
@@ -7864,15 +8043,33 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const dependenciaVal = obtenerValorInput(['solDependencia', 'solicitud-dependencia', 'dependencia'], '');
       const cargoVal = obtenerValorInput(['solCargo', 'solicitud-cargo', 'cargo'], 'Titular');
       const situacionRevistaVal = obtenerValorInput(['solSituacionRevista', 'solicitud-situacion-revista', 'situacion_revista', 'situacionRevista'], 'Planta Permanente');
-      const antiguedadVal = obtenerValorInput(['solAntiguedad', 'solicitud-antiguedad', 'antiguedad'], '');
+      const fechaIngresoVal = obtenerValorInput(['solicitud-fecha-ingreso', 'solFechaIngreso', 'Fecha_Ingreso_Laboral', 'fecha_ingreso_laboral'], '');
+      const antiguedadVal = fechaIngresoVal
+        ? calcularAntiguedadReactiva(fechaIngresoVal)
+        : obtenerValorInput(['solicitud-antiguedad-formateada', 'solAntiguedad', 'solicitud-antiguedad', 'antiguedad'], '');
 
-      const lineaRaw = obtenerValorInput(['solLinea', 'solicitud-linea', 'linea_ayuda', 'simulador-linea', 'linea'], 'fedem');
+      const lineaRaw = obtenerValorInput(['solLinea', 'solicitud-linea', 'linea_ayuda', 'simulador-linea', 'linea'], (typeof state !== 'undefined' && state.linea) ? state.linea : 'fedem');
       const lineaLow = lineaRaw.toLowerCase();
       const lineaKey = (lineaLow.includes('muni') || lineaLow.includes('quad') || lineaLow.includes('vikingo')) ? 'muni' :
                        lineaLow.includes('sidecreer') ? 'sidecreer' : 'fedem';
       const lineaNombre = (FINANCIAL_DATA[lineaKey] && FINANCIAL_DATA[lineaKey].name) || 'FEDEM Provincial';
 
-      const monto = parsearNumeroTolerante(obtenerValorInput(['solMonto', 'solicitud-monto', 'monto_solicitado', 'sim-monto-neto', 'amountInput'], '0'), 0);
+      const cuotas = parseInt(obtenerValorInput(['solPlazo', 'solicitud-cuotas', 'cuotas', 'sim-cuotas', 'termSelect'], String((typeof state !== 'undefined' && state.plazo) ? state.plazo : 12)), 10) || 12;
+
+      let monto = parsearNumeroTolerante(obtenerValorInput(['solMonto', 'solicitud-monto', 'monto_solicitado', 'sim-monto-neto'], '0'), 0);
+      if (monto <= 0) {
+        const lastValidModal = parsearNumeroTolerante(document.getElementById('solMonto')?.dataset?.lastValid || '0', 0);
+        if (lastValidModal > 0) monto = lastValidModal;
+      }
+      if (monto <= 0) {
+        const simRaw = parsearNumeroTolerante(obtenerValorInput(['amountInput'], '0'), 0);
+        if (typeof state !== 'undefined' && state.modo === 'cuota' && simRaw > 0 && typeof calculateSimulation === 'function') {
+          const calcSim = calculateSimulation(lineaKey, cuotas, 'cuota', simRaw);
+          monto = (calcSim && calcSim.neto > 0) ? Math.round(calcSim.neto) : simRaw;
+        } else {
+          monto = simRaw || ((typeof state !== 'undefined' && state.montoInputRaw > 0) ? state.montoInputRaw : 0);
+        }
+      }
       if (isNaN(monto) || monto <= 0) {
         showToast('⚠️ Error: El monto solicitado debe ser mayor a $0.');
         return;
@@ -7882,13 +8079,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         return;
       }
 
-      const cuotas = parseInt(obtenerValorInput(['solPlazo', 'solicitud-cuotas', 'cuotas', 'sim-cuotas', 'termSelect'], '12'), 10) || 12;
       const sim = calculateSimulation(lineaKey, cuotas, 'neto', monto);
       const cuotaEstimada = (sim && sim.cuota > 0)
         ? Number(sim.cuota.toFixed(2))
         : parsearNumeroTolerante(obtenerValorInput(['solCuotaEstimada', 'solicitud-cuota', 'valor_cuota', 'sim-cuota-mensual'], '0'), 0);
-      const totalADevolverCalc = Number((cuotaEstimada * cuotas).toFixed(2)) ||
-        parsearNumeroTolerante(obtenerValorInput(['solTotalDevolver', 'solicitud-total', 'total_devolver', 'sim-total-devolver'], '0'), 0);
+      const totalADevolverCalc = (sim && sim.totalAyuda > 0)
+        ? Number(sim.totalAyuda.toFixed(2))
+        : (Number((cuotaEstimada * cuotas).toFixed(2)) ||
+           parsearNumeroTolerante(obtenerValorInput(['solTotalDevolver', 'solicitud-total', 'total_devolver', 'sim-total-devolver'], '0'), 0));
 
       const rawRand = String(Math.floor(10000 + Math.random() * 90000));
       const provId = 'PROV-' + rawRand;
@@ -8041,6 +8239,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         dependencia: sanitizeHTML(dependenciaVal),
         cargo: sanitizeHTML(cargoVal),
         situacionRevista: sanitizeHTML(situacionRevistaVal),
+        fechaIngresoLaboral: sanitizeHTML(fechaIngresoVal),
+        Fecha_Ingreso_Laboral: sanitizeHTML(fechaIngresoVal),
         antiguedad: sanitizeHTML(antiguedadVal),
         legajo: sanitizeHTML(legajoVal)
       };
@@ -8050,6 +8250,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         id_provisorio: provId,
         id_definitivo: '',
         Nro_Definitivo: '',
+        ID_Definitivo_Expediente: '',
         fecha: nowStr,
         usuario_id: session.id,
         idUsuarioAsesor: session.id,
@@ -8071,12 +8272,15 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         montoNeto: monto,
         cuotas: cuotas,
         montoCuota: cuotaEstimada,
+        valorCuota: cuotaEstimada,
         totalDevolver: totalADevolver,
         lineaAyuda: lineaNombre,
         organismo: sanitizeHTML(organismoVal),
         dependencia: sanitizeHTML(dependenciaVal),
         cargo: sanitizeHTML(cargoVal),
         situacionRevista: sanitizeHTML(situacionRevistaVal),
+        fechaIngresoLaboral: sanitizeHTML(fechaIngresoVal),
+        Fecha_Ingreso_Laboral: sanitizeHTML(fechaIngresoVal),
         antiguedad: sanitizeHTML(antiguedadVal),
         legajo: sanitizeHTML(legajoVal),
         cuil: sanitizeHTML(cuilVal),
@@ -8107,6 +8311,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           dependencia: sanitizeHTML(dependenciaVal),
           cargo: sanitizeHTML(cargoVal),
           situacionRevista: sanitizeHTML(situacionRevistaVal),
+          fechaIngresoLaboral: sanitizeHTML(fechaIngresoVal),
+          Fecha_Ingreso_Laboral: sanitizeHTML(fechaIngresoVal),
           antiguedad: sanitizeHTML(antiguedadVal)
         },
         prestamo: {
@@ -8230,21 +8436,30 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         cargo: cargoVal,
         Situacion_Revista: situacionRevistaVal,
         situacionRevista: situacionRevistaVal,
+        Fecha_Ingreso_Laboral: fechaIngresoVal,
+        fechaIngresoLaboral: fechaIngresoVal,
+        fechaIngreso: fechaIngresoVal,
         Antiguedad: antiguedadVal,
         antiguedad: antiguedadVal,
         Monto: monto,
         monto: monto,
+        montoNeto: monto,
         Cuotas: cuotas,
         cuotas: cuotas,
         Plazo: cuotas,
         plazo: cuotas,
         Cuota_Estimada: cuotaEstimada,
         cuotaEstimada: cuotaEstimada,
+        montoCuota: cuotaEstimada,
+        valorCuota: cuotaEstimada,
         cuota: cuotaEstimada,
+        totalDevolver: totalADevolver,
+        totalADevolver: totalADevolver,
         Linea: lineaKey,
         linea: lineaKey,
         Linea_Nombre: lineaNombre,
         lineaNombre: lineaNombre,
+        lineaAyuda: lineaNombre,
         archivosBase64: adjuntosBase64,
         archivos: adjuntosBase64,
         adjuntos: adjuntosBase64,
@@ -8296,7 +8511,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const s = all.find(x => String(x.id) === String(id)); if (!s) return;
       normalizarSolicitud(s);
       const session = getSession();
-      const isAnalistaOAdmin = (session && (session.rol === 'Analista' || session.rol === 'Admin' || session.rol === 'Asesor Mutual'));
+      const rolLow = String(session?.rol || '').toLowerCase();
+      const isAnalistaOAdmin = Boolean(session && (rolLow.includes('analista') || rolLow.includes('admin') || rolLow.includes('mutual') || rolLow.includes('supervisor')));
 
       const tit = document.getElementById('fichaModalTitle');
       if (tit) {
@@ -8348,14 +8564,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           '<span style="font-size:0.7rem;color:#92400e;font-weight:700;text-transform:uppercase;">Identificación Oficial del Expediente</span>' +
           '<div style="font-size:0.78rem;margin-top:2px;">' +
             'N° Provisorio: <strong>' + s.id_provisorio + '</strong> &nbsp;|&nbsp; ' +
-            'N° Definitivo de Expediente: ' + (s.id_definitivo ? '<strong style="color:#166534;">' + sanitizeHTML(s.id_definitivo) + '</strong>' : '<em style="color:var(--text-muted);">Sin Asignar aún</em>') +
+            'N° Definitivo de Expediente: <span id="lblNroDefinitivoActual">' + (s.id_definitivo ? '<strong style="color:#166534;">' + sanitizeHTML(s.id_definitivo) + '</strong>' : '<em style="color:var(--text-muted);">Sin Asignar aún</em>') + '</span>' +
           '</div>' +
         '</div>';
 
       if (isAnalistaOAdmin) {
         html += '<div style="display:flex;gap:0.45rem;align-items:center;flex-wrap:wrap;">' +
-          '<input type="text" id="inpNumDefinitivoModal" class="input-text" style="width:185px;font-size:0.75rem;font-weight:700;background:#ffffff;border-color:#93c5fd;" placeholder="Ej: EXP-' + s.id + '" value="' + sanitizeHTML(s.id_definitivo || '') + '" onkeydown="if(event.key===\'Enter\'){event.preventDefault();guardarNumeroDefinitivo(\'' + s.id + '\');}"/>' +
-          '<button type="button" class="btn-asignar-nro-definitivo" onclick="guardarNumeroDefinitivo(\'' + s.id + '\')">🏷️ Asignar N° Definitivo</button>' +
+          '<input type="text" id="inpNumDefinitivoModal" name="ID_Definitivo_Expediente" class="input-text" style="width:185px;font-size:0.75rem;font-weight:700;background:#ffffff;border-color:#93c5fd;" placeholder="Ej: EXP-' + s.id + '" value="' + sanitizeHTML(s.id_definitivo || '') + '" onkeydown="if(event.key===\'Enter\'){event.preventDefault();guardarNumeroDefinitivo(\'' + s.id + '\');}"/>' +
+          '<button type="button" id="btnAsignarNroDefinitivoFicha" data-solicitud-id="' + sanitizeHTML(s.id) + '" class="btn-asignar-nro-definitivo" onclick="guardarNumeroDefinitivo(\'' + s.id + '\')">🏷️ Asignar N° Definitivo</button>' +
         '</div>';
       }
       html += '</div>';
@@ -8407,7 +8623,22 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
                 ['Planta Permanente', 'Contratado / Interino', 'Suplente', 'Jubilado / Pensionado'].map(sr => '<option value="' + sr + '" ' + ((s.solicitante?.situacionRevista || 'Planta Permanente') === sr ? 'selected' : '') + '>' + sr + '</option>').join('') +
               '</select>' +
             '</div>' +
-            '<div class="form-group"><label class="form-label">Antigüedad</label><input type="text" id="editAntiguedad" class="input-text" value="' + sanitizeHTML(s.solicitante?.antiguedad || '') + '" placeholder="Ej: 5 años"/></div>' +
+            '<div class="form-group" style="grid-column:1 / -1;">' +
+              '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">' +
+                '<div>' +
+                  '<label class="antiguedad-reactive-label" for="editFechaIngreso">Fecha de Ingreso Laboral</label>' +
+                  '<input type="date" id="editFechaIngreso" name="Fecha_Ingreso_Laboral" class="antiguedad-reactive-input" value="' + sanitizeHTML(String(s.solicitante?.fechaIngresoLaboral || s.solicitante?.Fecha_Ingreso_Laboral || '').slice(0, 10)) + '" onchange="calcularAntiguedadReactiva(this.value, \'editTextoAntiguedad\', \'editAntiguedad\')" oninput="calcularAntiguedadReactiva(this.value, \'editTextoAntiguedad\', \'editAntiguedad\')"/>' +
+                '</div>' +
+                '<div>' +
+                  '<label class="antiguedad-reactive-label">Antigüedad Calculada (AÑOS - MESES)</label>' +
+                  '<div id="editBadgeAntiguedad" class="antiguedad-reactive-badge">' +
+                    '<span id="editTextoAntiguedad">' + sanitizeHTML(s.solicitante?.antiguedad || '-- AÑOS - -- MESES') + '</span>' +
+                    '<span class="antiguedad-auto-pill">Automático</span>' +
+                  '</div>' +
+                  '<input type="hidden" id="editAntiguedad" value="' + sanitizeHTML(s.solicitante?.antiguedad || '') + '"/>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
           '</div>' +
           '<div style="text-align:right;margin-top:.4rem;margin-bottom:1rem;">' +
             '<button type="submit" class="btn-restore" style="border-color:#3b82f6;color:#1d4ed8;font-weight:700;">💾 Guardar Cambios del Solicitante</button>' +
@@ -8418,6 +8649,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const prop = s.propuestaMutual || {};
       const tieneRefinanciacion = !!(prop.esRefinanciacion && prop.refinanciacion);
       const historial = s.historialPropuestas || [];
+      const totalDeseadoShow = s.prestamo?.totalADevolver || ((s.prestamo?.cuotaEstimada || 0) * (s.prestamo?.cuotas || 0));
 
       html += '<div class="section-title-divider">2. Condiciones Deseadas vs. Oferta Oficial Mutual</div>' +
         '<div class="compare-offers-grid">' +
@@ -8427,6 +8659,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             '<div><strong>Línea:</strong> ' + (s.prestamo?.lineaNombre || '—') + '</div>' +
             '<div style="font-size:1.1rem;font-weight:800;color:var(--color-primary);margin:4px 0;">' + formatMoney(s.prestamo?.monto || 0) + '</div>' +
             '<div><strong>Plazo:</strong> ' + (s.prestamo?.cuotas || '—') + ' cuotas estimadas de <strong>' + formatMoney(s.prestamo?.cuotaEstimada || 0) + '</strong></div>' +
+            (totalDeseadoShow > 0 ? ('<div style="font-size:0.74rem;color:#334155;margin-top:2px;"><strong>Total a devolver:</strong> ' + formatMoney(totalDeseadoShow) + '</div>') : '') +
             '<p style="font-size:0.68rem;color:var(--text-muted);margin-top:6px;">Referencia inicial cargada en la originación del crédito.</p>' +
           '</div>' +
 
@@ -8821,6 +9054,13 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       '</div>';
 
       body.innerHTML = html;
+      if (s.solicitante?.fechaIngresoLaboral || s.solicitante?.Fecha_Ingreso_Laboral) {
+        calcularAntiguedadReactiva(
+          String(s.solicitante.fechaIngresoLaboral || s.solicitante.Fecha_Ingreso_Laboral).slice(0, 10),
+          'editTextoAntiguedad',
+          'editAntiguedad'
+        );
+      }
       handleOrganismoChange(s.solicitante?.organismo || 'Provincial', 'editLegajo');
       abrirModal('modalFichaCompleta');
 
@@ -8890,7 +9130,17 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       s.solicitante.dependencia = sanitizeHTML(document.getElementById('editDependencia').value.trim());
       s.solicitante.cargo = sanitizeHTML(document.getElementById('editCargo').value);
       s.solicitante.situacionRevista = sanitizeHTML(document.getElementById('editSituacionRevista')?.value || 'Planta Permanente');
-      s.solicitante.antiguedad = sanitizeHTML(document.getElementById('editAntiguedad')?.value?.trim() || '');
+      const editFechaIngVal = sanitizeHTML(document.getElementById('editFechaIngreso')?.value?.trim() || '');
+      s.solicitante.fechaIngresoLaboral = editFechaIngVal;
+      s.solicitante.Fecha_Ingreso_Laboral = editFechaIngVal;
+      s.solicitante.antiguedad = editFechaIngVal
+        ? calcularAntiguedadReactiva(editFechaIngVal, 'editTextoAntiguedad', 'editAntiguedad')
+        : sanitizeHTML(document.getElementById('editAntiguedad')?.value?.trim() || '');
+      if (s.datosLaborales) {
+        s.datosLaborales.fechaIngresoLaboral = editFechaIngVal;
+        s.datosLaborales.Fecha_Ingreso_Laboral = editFechaIngVal;
+        s.datosLaborales.antiguedad = s.solicitante.antiguedad;
+      }
 
       const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
       if (!s.observaciones) s.observaciones = [];
@@ -8951,12 +9201,20 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         showToast('⚠️ Ingrese un número de expediente formal.');
         return;
       }
+      const btnFicha = document.getElementById('btnAsignarNroDefinitivoFicha');
+      const prevBtnText = btnFicha ? btnFicha.innerHTML : '';
+      if (btnFicha) {
+        btnFicha.disabled = true;
+        btnFicha.innerHTML = '⏳ Guardando...';
+      }
       try {
         const res = await callApi({
           action: 'asignarNumeroDefinitivo',
           idSolicitud: idSolicitud,
           ID_Solicitud: idSolicitud,
           id: idSolicitud,
+          ID_Definitivo_Expediente: val,
+          idDefinitivoExpediente: val,
           nroDefinitivoInput: val,
           id_definitivo: val,
           nroDefinitivo: val,
@@ -8964,20 +9222,39 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           usuarioActivo: session
         }, {
           title: 'Asignando número definitivo de expediente...',
-          sub: 'Registrando código ' + val + ' en la columna 23 de Google Sheets'
+          sub: 'Registrando código ' + val + ' en Google Sheets'
         });
 
         if (res && res.ok && (!res.data || res.data.ok !== false)) {
-          const nroFinal = (res.data && (res.data.Nro_Definitivo || res.data.nroDefinitivo || res.data.id_definitivo)) || val;
-          const allLocal = getStoredSolicitudes();
-          const idxLocal = allLocal.findIndex(x => String(x.id) === String(idSolicitud));
-          if (idxLocal !== -1) {
-            allLocal[idxLocal].id_definitivo = nroFinal;
-            allLocal[idxLocal].Nro_Definitivo = nroFinal;
-            saveStoredSolicitudes(allLocal);
-          }
+          const nroFinal = (res.data && (res.data.ID_Definitivo_Expediente || res.data.Nro_Definitivo || res.data.nroDefinitivo || res.data.id_definitivo)) || val;
+          const aplicarNumeroLocal = () => {
+            const allLocal = getStoredSolicitudes();
+            const idxLocal = allLocal.findIndex(x => String(x.id) === String(idSolicitud));
+            if (idxLocal !== -1) {
+              allLocal[idxLocal].id_definitivo = nroFinal;
+              allLocal[idxLocal].Nro_Definitivo = nroFinal;
+              allLocal[idxLocal].ID_Definitivo_Expediente = nroFinal;
+              saveStoredSolicitudes(allLocal);
+            }
+          };
+          aplicarNumeroLocal();
+
+          const lblActual = document.getElementById('lblNroDefinitivoActual');
+          if (lblActual) lblActual.innerHTML = '<strong style="color:#166534;">' + sanitizeHTML(nroFinal) + '</strong>';
+          const inpModal = document.getElementById('inpNumDefinitivoModal');
+          if (inpModal) inpModal.value = nroFinal;
+
           showToast('N° Definitivo asignado en Sheets: ' + nroFinal);
           await sincronizarGestionesDesdeNube(true);
+          // Re-asegurar persistencia visual inmediata por si el Sheet tiene otro alias o latencia de lectura
+          const postSync = getStoredSolicitudes();
+          const itemPost = postSync.find(x => String(x.id) === String(idSolicitud));
+          if (itemPost && !itemPost.id_definitivo) {
+            itemPost.id_definitivo = nroFinal;
+            itemPost.Nro_Definitivo = nroFinal;
+            itemPost.ID_Definitivo_Expediente = nroFinal;
+            saveStoredSolicitudes(postSync);
+          }
           actualizarVistaDetalleExpediente(idSolicitud);
         } else {
           showToast('⚠️ ' + ((res && (res.error || (res.data && res.data.error))) || 'Error al asignar número'));
@@ -8985,6 +9262,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       } catch (e) {
         console.error('Error asignando N° Definitivo:', e);
         showToast('⚠️ Error de conexión con el servidor central');
+      } finally {
+        if (btnFicha) {
+          btnFicha.disabled = false;
+          btnFicha.innerHTML = prevBtnText || '🏷️ Asignar N° Definitivo';
+        }
       }
     }
 
@@ -8996,7 +9278,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     async function guardarNumeroDefinitivo(id) {
-      const rawVal = document.getElementById('inpNumDefinitivoModal')?.value?.trim();
+      const inp = document.getElementById('inpNumDefinitivoModal');
+      const rawVal = inp?.value?.trim();
       if (!rawVal) {
         abrirModalAsignarNroDefinitivo(id);
         return;
@@ -12184,6 +12467,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.confirmarAsignacionNroDefinitivo = confirmarAsignacionNroDefinitivo;
     window.actualizarVistaDetalleExpediente = actualizarVistaDetalleExpediente;
     window.handleArchivoComplementarioSeleccionado = handleArchivoComplementarioSeleccionado;
+    window.calcularAntiguedadReactiva = calcularAntiguedadReactiva;
     window.estadoApp = window.estadoApp;
 
     window.addEventListener('DOMContentLoaded', () => {

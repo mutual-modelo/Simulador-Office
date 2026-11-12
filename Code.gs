@@ -74,6 +74,7 @@ const HEADERS_ASOCIADOS = [
   'Dependencia',
   'Cargo',
   'Situacion_Revista',
+  'Fecha_Ingreso_Laboral',
   'Antiguedad',
   'Fecha_Alta',
   'Creado_Por',
@@ -467,6 +468,8 @@ function buscarAsociadoPorDNI(dniRaw) {
           dependencia: getCol('Dependencia', ''),
           cargo: getCol('Cargo', 'Titular'),
           situacionRevista: getCol('Situacion_Revista', 'Planta Permanente'),
+          fechaIngresoLaboral: getCol('Fecha_Ingreso_Laboral', ''),
+          Fecha_Ingreso_Laboral: getCol('Fecha_Ingreso_Laboral', ''),
           antiguedad: getCol('Antiguedad', ''),
           carpetaDriveUrl: getCol('Carpeta_Drive_URL', ''),
           archivosLegajo: Array.isArray(archivosArr) ? archivosArr : [],
@@ -524,6 +527,7 @@ function sincronizarAsociadoEnPadron_(datos) {
     pick('Dependencia', datos.dependencia, '');
     pick('Cargo', datos.cargo, 'Titular');
     pick('Situacion_Revista', datos.situacionRevista, 'Planta Permanente');
+    pick('Fecha_Ingreso_Laboral', datos.fechaIngresoLaboral || datos.fechaIngreso, '');
     pick('Antiguedad', datos.antiguedad, '');
     pick('Fecha_Alta', datos.fechaAlta || Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd'), '');
     pick('Creado_Por', datos.creadoPor, 'Sistema');
@@ -587,6 +591,7 @@ function registrarNuevoAsociado(payload) {
     set('Dependencia', payload.Dependencia || asoc.dependencia || '');
     set('Cargo', payload.Cargo || asoc.cargo || 'Titular');
     set('Situacion_Revista', payload.Situacion_Revista || payload.situacionRevista || asoc.situacionRevista || 'Planta Permanente');
+    set('Fecha_Ingreso_Laboral', payload.Fecha_Ingreso_Laboral || payload.fechaIngresoLaboral || payload.fechaIngreso || asoc.fechaIngresoLaboral || asoc.fechaIngreso || '');
     set('Antiguedad', payload.Antiguedad || payload.antiguedad || asoc.antiguedad || '');
     set('Fecha_Alta', asoc.fechaAlta || Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd'));
     set('Creado_Por', asoc.creadoPor || 'Usuario');
@@ -619,7 +624,7 @@ function registrarNuevaSolicitud(payload) {
     ).trim();
     const idProvisorio = String(sol.id_provisorio || payload.id_provisorio || ('PROV-' + idSolicitud)).trim();
     const idDefinitivo = String(
-      sol.id_definitivo || payload.Nro_Definitivo || payload.nroDefinitivo || payload.id_definitivo || ''
+      sol.id_definitivo || sol.ID_Definitivo_Expediente || payload.ID_Definitivo_Expediente || payload.Nro_Definitivo || payload.nroDefinitivo || payload.id_definitivo || ''
     ).trim();
     const nowStr = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd HH:mm');
     const fechaRegistro = String(sol.fecha || payload.Fecha_Registro || payload.fecha || payload.Fecha || nowStr);
@@ -681,12 +686,15 @@ function registrarNuevaSolicitud(payload) {
       domicilio: domicilioHistorico
     };
 
+    const fechaIngresoLab = solicitante.fechaIngresoLaboral || solicitante.fechaIngreso || solLaborales.fechaIngresoLaboral || solLaborales.fechaIngreso || sol.fechaIngresoLaboral || sol.fechaIngreso || payload.Fecha_Ingreso_Laboral || payload.fechaIngresoLaboral || payload.fechaIngreso || laboralesExtra.fechaIngresoLaboral || '';
     const datosLaborales = {
       condicion: solicitante.condicion || solLaborales.condicion || sol.condicion || payload.Condicion || payload.condicion || laboralesExtra.condicion || 'Activo',
       organismo: solicitante.organismo || solLaborales.organismo || sol.organismo || payload.Organismo || payload.organismo || laboralesExtra.organismo || 'Provincial',
       dependencia: solicitante.dependencia || solLaborales.dependencia || sol.dependencia || payload.Dependencia || payload.dependencia || laboralesExtra.dependencia || '',
       cargo: solicitante.cargo || solLaborales.cargo || sol.cargo || payload.Cargo || payload.cargo || laboralesExtra.cargo || 'Titular',
       situacionRevista: solicitante.situacionRevista || solLaborales.situacionRevista || sol.situacionRevista || payload.Situacion_Revista || payload.situacionRevista || laboralesExtra.situacionRevista || 'Planta Permanente',
+      fechaIngresoLaboral: fechaIngresoLab,
+      Fecha_Ingreso_Laboral: fechaIngresoLab,
       antiguedad: solicitante.antiguedad || solLaborales.antiguedad || sol.antiguedad || payload.Antiguedad || payload.antiguedad || laboralesExtra.antiguedad || '',
       legajo: legajo
     };
@@ -781,6 +789,8 @@ function registrarNuevaSolicitud(payload) {
     set('Archivos_Adjuntos_JSON', JSON.stringify(adjuntosDrive));
     set('Historial_Comentarios_JSON', JSON.stringify(historialComentarios));
     set('Nro_Definitivo', idDefinitivo);
+    set('ID_Definitivo_Expediente', idDefinitivo);
+    set('Fecha_Ingreso_Laboral', datosLaborales.fechaIngresoLaboral);
     set('Historial_Ofertas_JSON', JSON.stringify(historialOfertasObj));
     set('Dictamen_IA_JSON', dictamenIA ? JSON.stringify(dictamenIA) : '');
     set('Analista_Asignado', analistaAsignado);
@@ -807,6 +817,7 @@ function registrarNuevaSolicitud(payload) {
       dependencia: datosLaborales.dependencia,
       cargo: datosLaborales.cargo,
       situacionRevista: datosLaborales.situacionRevista,
+      fechaIngresoLaboral: datosLaborales.fechaIngresoLaboral,
       antiguedad: datosLaborales.antiguedad,
       creadoPor: asesorNombre,
       carpetaDriveUrl: carpetaDriveUrl,
@@ -887,12 +898,14 @@ function listarSolicitudes(usuarioActivoInput) {
       ? ofertasData.historialPropuestas
       : (Array.isArray(ofertasData) ? ofertasData : []);
 
-    const nroDefVal = String(get('Nro_Definitivo') || get('ID_Definitivo') || meta.id_definitivo || '').trim();
+    const nroDefVal = String(get('ID_Definitivo_Expediente') || get('Nro_Definitivo') || get('ID_Definitivo') || meta.id_definitivo || '').trim();
+    const fechaIngresoRow = String(laborales.fechaIngresoLaboral || laborales.Fecha_Ingreso_Laboral || get('Fecha_Ingreso_Laboral') || '').trim();
     const item = {
       id: idSol,
       id_provisorio: meta.id_provisorio || ('PROV-' + idSol),
       id_definitivo: nroDefVal,
       Nro_Definitivo: nroDefVal,
+      ID_Definitivo_Expediente: nroDefVal,
       fecha: String(get('Fecha_Registro') || ''),
       usuario_id: idAsesor,
       idAsesor: idAsesor,
@@ -930,10 +943,12 @@ function listarSolicitudes(usuarioActivoInput) {
         dependencia: laborales.dependencia || '',
         cargo: laborales.cargo || 'Titular',
         situacionRevista: laborales.situacionRevista || 'Planta Permanente',
+        fechaIngresoLaboral: fechaIngresoRow,
+        Fecha_Ingreso_Laboral: fechaIngresoRow,
         antiguedad: laborales.antiguedad || ''
       },
       datosContacto: contacto,
-      datosLaborales: laborales,
+      datosLaborales: Object.assign({}, laborales, { fechaIngresoLaboral: fechaIngresoRow, Fecha_Ingreso_Laboral: fechaIngresoRow }),
       prestamo: {
         linea: lineaKey,
         lineaNombre: lineaNombre,
@@ -1255,14 +1270,21 @@ function asignarNumeroDefinitivoBackend(payload) {
     const rowNum = encontrarFilaPorId_(sheet, map, idTarget);
     if (rowNum === -1) return { ok: false, error: 'Expediente no encontrado: ' + idTarget };
 
-    const nroFinal = String(payload.nroDefinitivoInput || payload.id_definitivo || payload.nroDefinitivo || payload.Nro_Definitivo || '').trim();
+    const nroFinal = String(
+      payload.ID_Definitivo_Expediente || payload.idDefinitivoExpediente ||
+      payload.nroDefinitivoInput || payload.id_definitivo || payload.nroDefinitivo || payload.Nro_Definitivo || payload.ID_Definitivo || ''
+    ).trim();
     if (!nroFinal) return { ok: false, error: 'Debe ingresar un número definitivo válido.' };
 
     const nowStr = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd HH:mm');
     const colNroDefIdx = (map['Nro_Definitivo'] !== undefined)
       ? map['Nro_Definitivo']
-      : ((map['ID_Definitivo'] !== undefined) ? map['ID_Definitivo'] : 22); // Columna 23 (1-based)
+      : ((map['ID_Definitivo_Expediente'] !== undefined) ? map['ID_Definitivo_Expediente']
+        : ((map['ID_Definitivo'] !== undefined) ? map['ID_Definitivo'] : 22)); // Columna 23 (1-based)
     sheet.getRange(rowNum, colNroDefIdx + 1).setValue(nroFinal);
+    if (map['ID_Definitivo_Expediente'] !== undefined && map['ID_Definitivo_Expediente'] !== colNroDefIdx) {
+      sheet.getRange(rowNum, map['ID_Definitivo_Expediente'] + 1).setValue(nroFinal);
+    }
 
     if (map['Metadata_Extra_JSON'] !== undefined) {
       const cell = sheet.getRange(rowNum, map['Metadata_Extra_JSON'] + 1);
@@ -1286,7 +1308,15 @@ function asignarNumeroDefinitivoBackend(payload) {
     }
 
     SpreadsheetApp.flush();
-    return { ok: true, id: idTarget, id_definitivo: nroFinal, nroDefinitivo: nroFinal, Nro_Definitivo: nroFinal, columna: colNroDefIdx + 1 };
+    return {
+      ok: true,
+      id: idTarget,
+      id_definitivo: nroFinal,
+      nroDefinitivo: nroFinal,
+      Nro_Definitivo: nroFinal,
+      ID_Definitivo_Expediente: nroFinal,
+      columna: colNroDefIdx + 1
+    };
   } finally {
     lock.releaseLock();
   }
@@ -1331,17 +1361,23 @@ function actualizarDatosSolicitanteBackend(payload) {
       sheet.getRange(rowNum, map['Datos_Contacto_JSON'] + 1).setValue(JSON.stringify(nuevoContacto));
     }
 
+    const fechaIngresoUpd = sol.fechaIngresoLaboral || sol.Fecha_Ingreso_Laboral || sol.fechaIngreso || prevLaborales.fechaIngresoLaboral || '';
     const nuevosLaborales = {
       condicion: sol.condicion || prevLaborales.condicion || 'Activo',
       organismo: sol.organismo || prevLaborales.organismo || 'Provincial',
       dependencia: sol.dependencia !== undefined ? sol.dependencia : (prevLaborales.dependencia || ''),
       cargo: sol.cargo || prevLaborales.cargo || 'Titular',
       situacionRevista: sol.situacionRevista || prevLaborales.situacionRevista || 'Planta Permanente',
+      fechaIngresoLaboral: fechaIngresoUpd,
+      Fecha_Ingreso_Laboral: fechaIngresoUpd,
       antiguedad: sol.antiguedad !== undefined ? sol.antiguedad : (prevLaborales.antiguedad || ''),
       legajo: sol.legajo !== undefined ? sol.legajo : (prevLaborales.legajo || '')
     };
     if (map['Datos_Laborales_JSON'] !== undefined) {
       sheet.getRange(rowNum, map['Datos_Laborales_JSON'] + 1).setValue(JSON.stringify(nuevosLaborales));
+    }
+    if (map['Fecha_Ingreso_Laboral'] !== undefined && fechaIngresoUpd) {
+      sheet.getRange(rowNum, map['Fecha_Ingreso_Laboral'] + 1).setValue(fechaIngresoUpd);
     }
     if (map['Ultima_Actualizacion'] !== undefined) {
       sheet.getRange(rowNum, map['Ultima_Actualizacion'] + 1).setValue(nowStr);
@@ -1365,6 +1401,7 @@ function actualizarDatosSolicitanteBackend(payload) {
       dependencia: nuevosLaborales.dependencia,
       cargo: nuevosLaborales.cargo,
       situacionRevista: nuevosLaborales.situacionRevista,
+      fechaIngresoLaboral: nuevosLaborales.fechaIngresoLaboral,
       antiguedad: nuevosLaborales.antiguedad
     });
     return { ok: true, id: idTarget };

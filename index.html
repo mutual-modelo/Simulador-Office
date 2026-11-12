@@ -3491,24 +3491,21 @@
                 <input type="text" id="asocLegajo" class="input-text" placeholder="Ej: 14209" disabled style="opacity:0.5;background:#f1f5f9;cursor:not-allowed;"/>
               </div>
               <div class="form-group"><label class="form-label">Dependencia / Lugar *</label><input type="text" id="asocDependencia" class="input-text" required placeholder="Ej: Hospital San Martín" oninput="evaluarDocumentacionRequeridaAsociado()"/></div>
-              <div class="form-group col-span-1 md:col-span-2" style="grid-column:1 / -1;">
+              <div class="form-group">
                 <label class="block text-xs font-semibold text-slate-700 mb-1 antiguedad-reactive-label" for="asocCargo">
-                  Cargo / Función y Situación de Revista <span class="text-red-500" style="color:#ef4444;">*</span>
+                  Cargo <span class="text-red-500" style="color:#ef4444;">*</span>
                 </label>
-                <input
-                  type="text"
+                <select
                   id="asocCargo"
                   name="Cargo"
-                  list="datalist-cargos-revista"
-                  placeholder="Ej: Docente - Titular / Administrativo - Planta Permanente / Contratado"
-                  class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all antiguedad-reactive-input"
+                  class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all antiguedad-reactive-input"
                   required
-                  oninput="evaluarDocumentacionRequeridaAsociado()"
                   onchange="evaluarDocumentacionRequeridaAsociado()"
-                />
-                <p class="text-[11px] text-slate-400 mt-1" style="font-size:11px;color:#94a3b8;margin-top:0.25rem;margin-bottom:0;">
-                  Indicar cargo u ocupación junto a la condición laboral (Planta Permanente, Contratado, Jubilado, etc.).
-                </p>
+                >
+                  <option value="" disabled selected>Seleccione condición...</option>
+                  <option value="Titular">Titular</option>
+                  <option value="Suplente">Suplente</option>
+                </select>
               </div>
               <div class="form-group" style="grid-column:1 / -1;">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -4003,36 +4000,21 @@
                 </select>
               </div>
               <div class="form-group"><label class="form-label">Dependencia / Lugar *</label><input type="text" id="solDependencia" class="input-text" required placeholder="Ej: Hospital San Martín" oninput="evaluarDocumentacionRequerida()"/></div>
-              <div class="form-group col-span-1 md:col-span-2" style="grid-column:1 / -1;">
+              <div class="form-group">
                 <label class="block text-xs font-semibold text-slate-700 mb-1 antiguedad-reactive-label" for="solicitud-cargo">
-                  Cargo / Función y Situación de Revista <span class="text-red-500" style="color:#ef4444;">*</span>
+                  Cargo <span class="text-red-500" style="color:#ef4444;">*</span>
                 </label>
-                <input
-                  type="text"
+                <select
                   id="solicitud-cargo"
                   name="Cargo"
-                  list="datalist-cargos-revista"
-                  placeholder="Ej: Docente - Titular / Administrativo - Planta Permanente / Contratado"
-                  class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all antiguedad-reactive-input"
+                  class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all antiguedad-reactive-input"
                   required
-                  oninput="evaluarDocumentacionRequerida()"
                   onchange="evaluarDocumentacionRequerida()"
-                />
-                <datalist id="datalist-cargos-revista">
-                  <option value="Docente - Titular"></option>
-                  <option value="Docente - Suplente / Interino"></option>
-                  <option value="Administrativo - Planta Permanente"></option>
-                  <option value="Administrativo - Contratado"></option>
-                  <option value="Enfermero/a / Salud - Planta Permanente"></option>
-                  <option value="Enfermero/a / Salud - Suplente / Contratado"></option>
-                  <option value="Policía / Servicio Penitenciario - Planta Permanente"></option>
-                  <option value="Municipal - Planta Permanente"></option>
-                  <option value="Municipal - Contratado"></option>
-                  <option value="Jubilado / Pensionado"></option>
-                </datalist>
-                <p class="text-[11px] text-slate-400 mt-1" style="font-size:11px;color:#94a3b8;margin-top:0.25rem;margin-bottom:0;">
-                  Indicar cargo u ocupación junto a la condición laboral (Planta Permanente, Contratado, Jubilado, etc.).
-                </p>
+                >
+                  <option value="" disabled selected>Seleccione condición...</option>
+                  <option value="Titular">Titular</option>
+                  <option value="Suplente">Suplente</option>
+                </select>
               </div>
               <div class="form-group" style="grid-column:1 / -1;">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -6369,12 +6351,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
                 const el = document.getElementById('solDependencia');
                 if (el) el.value = asoc.dependencia;
               }
-              const cargoUnificado = [asoc.cargo, asoc.situacionRevista]
-                .filter((v, idx, arr) => v && (idx === 0 || !String(arr[0] || '').toLowerCase().includes(String(v).toLowerCase())))
-                .join(' - ');
-              if (cargoUnificado) {
+              const cargoAsocRaw = String(asoc.cargo || '').toLowerCase();
+              const cargoSelectVal = cargoAsocRaw.includes('suplente') ? 'Suplente' : (cargoAsocRaw.includes('titular') ? 'Titular' : '');
+              if (cargoSelectVal) {
                 const elCargo = document.getElementById('solicitud-cargo') || document.getElementById('solCargo');
-                if (elCargo) elCargo.value = cargoUnificado;
+                if (elCargo) elCargo.value = cargoSelectVal;
                 if (typeof evaluarDocumentacionRequerida === 'function') evaluarDocumentacionRequerida();
               }
               const fechaIng = asoc.fechaIngresoLaboral || asoc.Fecha_Ingreso_Laboral || asoc.fechaIngreso || '';
@@ -7898,8 +7879,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const fechaStr = s.fecha ? String(s.fecha).split(' ')[0] : 'Hoy';
 
         const idBadge = s.id_definitivo ?
-          '<span class="badge-definitivo">' + s.id_definitivo + '</span><br><span style="font-size:0.65rem;color:var(--text-muted);">' + (s.id_provisorio || ('#' + s.id)) + '</span>' :
-          '<span class="badge-provisorio">' + (s.id_provisorio || ('#' + s.id)) + '</span>';
+          '<span class="badge-definitivo">' + sanitizeHTML(s.id_definitivo) + '</span>' :
+          '<span class="badge-provisorio">' + sanitizeHTML(s.id_provisorio || ('#' + s.id)) + '</span>';
 
         const prop = s.propuestaMutual;
         const propHtml = prop && prop.activa ?
@@ -8074,7 +8055,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const dependenciaVal = obtenerValorInput(['solDependencia', 'solicitud-dependencia', 'dependencia'], '');
       const cargoVal = obtenerValorInput(['solicitud-cargo', 'solCargo', 'cargo'], '');
       if (!cargoVal) {
-        showToast('⚠️ Error: Ingrese el Cargo / Función y Situación de Revista.');
+        showToast('⚠️ Error: Seleccione el Cargo (Titular o Suplente).');
         return;
       }
       const situacionRevistaVal = '';
@@ -8620,9 +8601,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const tit = document.getElementById('fichaModalTitle');
       if (tit) {
         const numLabel = s.id_definitivo ?
-          '<span class="badge-definitivo">' + s.id_definitivo + '</span> <span style="font-size:0.75rem;color:var(--text-muted);">(Prov: ' + s.id_provisorio + ')</span>' :
-          '<span class="badge-provisorio">' + s.id_provisorio + '</span>';
-        tit.innerHTML = 'Expediente ' + numLabel + ' — ' + (s.solicitante?.nombre || '') + '<span id="detalle-id-solicitud" data-id="' + sanitizeHTML(idActivo) + '" style="display:none;">' + sanitizeHTML(idActivo) + '</span>';
+          '<span class="badge-definitivo">' + sanitizeHTML(s.id_definitivo) + '</span>' :
+          '<span class="badge-provisorio">' + sanitizeHTML(s.id_provisorio || ('#' + idActivo)) + '</span>';
+        tit.innerHTML = 'Expediente ' + numLabel + ' — ' + sanitizeHTML(s.solicitante?.nombre || '') + '<span id="detalle-id-solicitud" data-id="' + sanitizeHTML(idActivo) + '" style="display:none;">' + sanitizeHTML(idActivo) + '</span>';
       }
 
       const body = document.getElementById('fichaModalBody'); if (!body) return;
@@ -8666,8 +8647,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         '<div>' +
           '<span style="font-size:0.7rem;color:#92400e;font-weight:700;text-transform:uppercase;">Identificación Oficial del Expediente</span>' +
           '<div style="font-size:0.78rem;margin-top:2px;">' +
-            'N° Provisorio: <strong>' + s.id_provisorio + '</strong> &nbsp;|&nbsp; ' +
-            'N° Definitivo de Expediente: <span id="lblNroDefinitivoActual">' + (s.id_definitivo ? '<strong style="color:#166534;">' + sanitizeHTML(s.id_definitivo) + '</strong>' : '<em style="color:var(--text-muted);">Sin Asignar aún</em>') + '</span>' +
+            (s.id_definitivo
+              ? 'N° Definitivo de Expediente: <span id="lblNroDefinitivoActual"><strong style="color:#166534;">' + sanitizeHTML(s.id_definitivo) + '</strong></span>'
+              : '<span id="lblNroProvisorioWrap">N° Provisorio: <strong>' + sanitizeHTML(s.id_provisorio) + '</strong> &nbsp;|&nbsp; </span>N° Definitivo de Expediente: <span id="lblNroDefinitivoActual"><em style="color:var(--text-muted);">Sin Asignar aún</em></span>') +
           '</div>' +
         '</div>';
 
@@ -8716,10 +8698,17 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
               '</select>' +
             '</div>' +
             '<div class="form-group"><label class="form-label">Dependencia / Lugar *</label><input type="text" id="editDependencia" class="input-text" value="' + (s.solicitante?.dependencia || '') + '" required/></div>' +
-            '<div class="form-group col-span-1 md:col-span-2" style="grid-column:1 / -1;">' +
-              '<label class="antiguedad-reactive-label" for="editCargo">Cargo / Función y Situación de Revista <span style="color:#ef4444;">*</span></label>' +
-              '<input type="text" id="editCargo" name="Cargo" list="datalist-cargos-revista" class="antiguedad-reactive-input" required placeholder="Ej: Docente - Titular / Administrativo - Planta Permanente / Contratado" value="' + sanitizeHTML([s.solicitante?.cargo, s.solicitante?.situacionRevista].filter((v, idx, arr) => v && (idx === 0 || !String(arr[0] || '').toLowerCase().includes(String(v).toLowerCase()))).join(' - ')) + '"/>' +
-              '<p style="font-size:11px;color:#94a3b8;margin-top:0.25rem;margin-bottom:0;">Indicar cargo u ocupación junto a la condición laboral (Planta Permanente, Contratado, Jubilado, etc.).</p>' +
+            '<div class="form-group">' +
+              '<label class="antiguedad-reactive-label" for="editCargo">Cargo <span style="color:#ef4444;">*</span></label>' +
+              '<select id="editCargo" name="Cargo" class="antiguedad-reactive-input" required>' +
+                (() => {
+                  const cr = String(s.solicitante?.cargo || '').toLowerCase();
+                  const ce = cr.includes('suplente') ? 'Suplente' : (cr.includes('titular') ? 'Titular' : '');
+                  return '<option value="" disabled ' + (!ce ? 'selected' : '') + '>Seleccione condición...</option>' +
+                    '<option value="Titular" ' + (ce === 'Titular' ? 'selected' : '') + '>Titular</option>' +
+                    '<option value="Suplente" ' + (ce === 'Suplente' ? 'selected' : '') + '>Suplente</option>';
+                })() +
+              '</select>' +
             '</div>' +
             '<div class="form-group" style="grid-column:1 / -1;">' +
               '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">' +
@@ -9294,7 +9283,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       if (hid) hid.value = idResuelto;
       if (inp) inp.value = sugerencia;
       if (meta) {
-        meta.innerHTML = 'Expediente provisorio: <strong>' + sanitizeHTML(s.id_provisorio || ('PROV-' + idResuelto)) + '</strong> · Titular: <strong>' + sanitizeHTML(s.solicitante?.nombre || 'Socio') + '</strong> (DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + ')';
+        meta.innerHTML = (s.id_definitivo
+          ? 'Expediente: <strong>' + sanitizeHTML(s.id_definitivo) + '</strong>'
+          : 'Expediente provisorio: <strong>' + sanitizeHTML(s.id_provisorio || ('PROV-' + idResuelto)) + '</strong>') +
+          ' · Titular: <strong>' + sanitizeHTML(s.solicitante?.nombre || 'Socio') + '</strong> (DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + ')';
       }
 
       abrirModal('modal-asignar-nro-definitivo');
@@ -9372,6 +9364,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           };
           aplicarNumeroLocal();
 
+          const lblProvWrap = document.getElementById('lblNroProvisorioWrap');
+          if (lblProvWrap) lblProvWrap.style.display = 'none';
           const lblActual = document.getElementById('lblNroDefinitivoActual');
           if (lblActual) lblActual.innerHTML = '<strong style="color:#166534;">' + sanitizeHTML(nroFinal) + '</strong>';
           const inpModal = document.getElementById('inpNumDefinitivoModal');
@@ -10620,8 +10614,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       tbody.innerHTML = filtered.map(s => {
         const fechaStr = s.fecha ? String(s.fecha).split(' ')[0] : 'Hoy';
         const idBadge = s.id_definitivo ?
-          '<span class="badge-definitivo">' + s.id_definitivo + '</span><br><span style="font-size:0.65rem;color:var(--text-muted);">' + (s.id_provisorio || ('#' + s.id)) + '</span>' :
-          '<span class="badge-provisorio">' + (s.id_provisorio || ('#' + s.id)) + '</span>';
+          '<span class="badge-definitivo">' + sanitizeHTML(s.id_definitivo) + '</span>' :
+          '<span class="badge-provisorio">' + sanitizeHTML(s.id_provisorio || ('#' + s.id)) + '</span>';
 
         const canalIcon = (s.origen_canal === 'WhatsApp Oficial') ? '💬 ' :
                           (s.origen_canal === 'Telefónico') ? '📞 ' : '🏛️ ';
@@ -10750,8 +10744,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       tbody.innerHTML = filtered.map(s => {
         const fechaStr = s.fecha ? String(s.fecha).split(' ')[0] : 'Hoy';
         const idBadge = s.id_definitivo ?
-          '<span class="badge-definitivo">' + s.id_definitivo + '</span><br><span style="font-size:0.65rem;color:var(--text-muted);">' + (s.id_provisorio || ('#' + s.id)) + '</span>' :
-          '<span class="badge-provisorio">' + (s.id_provisorio || ('#' + s.id)) + '</span>';
+          '<span class="badge-definitivo">' + sanitizeHTML(s.id_definitivo) + '</span>' :
+          '<span class="badge-provisorio">' + sanitizeHTML(s.id_provisorio || ('#' + s.id)) + '</span>';
 
         const prop = s.propuestaMutual;
         const propHtml = prop && prop.activa ?
@@ -12311,13 +12305,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             }
           }
 
+          const idNotifVisible = s.id_definitivo || s.id_provisorio || s.id;
           // 1. Nuevas solicitudes pendientes originadas por comercializadores externos
           if (!esSede && (s.estado === 'Pendiente' || s.estado === 'En Análisis')) {
             notifs.push({
               id: 'notif_nueva_' + s.id,
               solicitudId: s.id,
               icono: '📥',
-              titulo: 'Solicitud externa #' + (s.id_provisorio || s.id),
+              titulo: 'Solicitud externa #' + idNotifVisible,
               descripcion: (s.solicitante?.nombre || 'Socio') + ' • ' + (s.comercializador || 'Comercializador') + ' (' + (s.nombre_organizacion || 'Org Externa') + ')',
               fecha: s.fecha || 'Reciente',
               destinoView: 'view-mutual'
@@ -12331,7 +12326,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
                 id: 'notif_obs_' + s.id + '_' + s.observaciones.length,
                 solicitudId: s.id,
                 icono: '💬',
-                titulo: 'Mensaje de asesor en #' + (s.id_provisorio || s.id),
+                titulo: 'Mensaje de asesor en #' + idNotifVisible,
                 descripcion: lastObs.autor + ': "' + (lastObs.texto.length > 50 ? lastObs.texto.slice(0, 50) + '...' : lastObs.texto) + '"',
                 fecha: lastObs.fecha || s.fecha,
                 destinoView: esSede ? 'view-mutual-propias' : 'view-mutual'
@@ -12344,13 +12339,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
               id: 'notif_docs_' + s.id + '_' + s.adjuntos.length,
               solicitudId: s.id,
               icono: '📎',
-              titulo: 'Legajo digital en #' + (s.id_provisorio || s.id),
+              titulo: 'Legajo digital en #' + idNotifVisible,
               descripcion: s.adjuntos.length + ' archivos digitalizados disponibles para ' + (s.solicitante?.nombre || 'asociado'),
               fecha: s.fecha || 'Reciente',
               destinoView: esSede ? 'view-mutual-propias' : 'view-mutual'
             });
           }
         } else {
+          const idNotifVisible = s.id_definitivo || s.id_provisorio || s.id;
           // Vista Comercializador
           // 1. Propuestas de la mutual enviadas para revisión o aceptación
           if (s.propuestaMutual && s.propuestaMutual.activa) {
@@ -12358,7 +12354,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
               id: 'notif_prop_' + s.id + '_' + (s.propuestaMutual.version || 1),
               solicitudId: s.id,
               icono: '💡',
-              titulo: 'Propuesta Mutual en #' + (s.id_provisorio || s.id),
+              titulo: 'Propuesta Mutual en #' + idNotifVisible,
               descripcion: 'Monto: ' + formatMoney(s.propuestaMutual.monto) + ' en ' + s.propuestaMutual.cuotas + ' cuotas para ' + (s.solicitante?.nombre || 'socio'),
               fecha: s.propuestaMutual.fecha || s.fecha,
               destinoView: 'view-comercializador'
@@ -12374,7 +12370,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
                 id: 'notif_reqdoc_' + s.id + '_' + (r.id || idxReq),
                 solicitudId: s.id,
                 icono: '⚠️',
-                titulo: 'Doc. Requerida en #' + (s.id_provisorio || s.id) + ': ' + r.tipo,
+                titulo: 'Doc. Requerida en #' + idNotifVisible + ': ' + r.tipo,
                 descripcion: (s.solicitante?.nombre || 'Socio') + ' — Sede Central solicita: "' + r.motivo + '"',
                 fecha: r.fecha || s.fecha || 'Reciente',
                 destinoView: 'view-comercializador'
@@ -12385,7 +12381,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
                 id: 'notif_adjobs_' + s.id + '_' + idxAdj + '_' + (a.fechaObservacion || ''),
                 solicitudId: s.id,
                 icono: '⚠️',
-                titulo: 'Subsanar ' + a.tipo + ' en #' + (s.id_provisorio || s.id),
+                titulo: 'Subsanar ' + a.tipo + ' en #' + idNotifVisible,
                 descripcion: (s.solicitante?.nombre || 'Socio') + ' — Motivo: "' + (a.motivoObservacion || 'Reemplazar archivo legible') + '"',
                 fecha: a.fechaObservacion || s.fecha || 'Reciente',
                 destinoView: 'view-comercializador'
@@ -12396,7 +12392,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
               id: 'notif_obs_est_' + s.id,
               solicitudId: s.id,
               icono: '⚠️',
-              titulo: 'Expediente Observado #' + (s.id_provisorio || s.id),
+              titulo: 'Expediente Observado #' + idNotifVisible,
               descripcion: 'Se requiere adjuntar recibo legible o documentación complementaria para ' + (s.solicitante?.nombre || 'socio'),
               fecha: s.fecha || 'Reciente',
               destinoView: 'view-comercializador'

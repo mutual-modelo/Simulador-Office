@@ -60,15 +60,21 @@ const HEADERS_USUARIOS = [
 const HEADERS_ASOCIADOS = [
   'DNI',
   'Apellido_Nombre',
+  'CUIL',
   'Fecha_Nac',
+  'Sexo',
+  'Estado_Civil',
   'Celular',
   'Email',
   'Domicilio',
+  'Localidad',
   'Condicion',
   'Organismo',
   'Legajo',
   'Dependencia',
   'Cargo',
+  'Situacion_Revista',
+  'Antiguedad',
   'Fecha_Alta',
   'Creado_Por',
   'Carpeta_Drive_URL',
@@ -434,28 +440,114 @@ function buscarAsociadoPorDNI(dniRaw) {
 
   for (let i = data.length - 1; i >= 1; i--) {
     const row = data[i];
-    const dniRow = String(row[map['DNI']] || '').replace(/\D/g, '').trim();
+    const getCol = (colName, defVal) => (map[colName] !== undefined && row[map[colName]] !== undefined && row[map[colName]] !== '') ? String(row[map[colName]]) : (defVal || '');
+    const dniRow = String(getCol('DNI', '')).replace(/\D/g, '').trim();
     if (dniRow === dniBuscado) {
+      const fechaNacVal = getCol('Fecha_Nac', '');
+      const archivosRaw = getCol('Archivos_Adjuntos_JSON', '[]');
+      const archivosArr = parseJSONSafe_(archivosRaw, []);
       return {
         ok: true,
         encontrado: true,
         asociado: {
           dni: dniRow,
-          nombre: String(row[map['Apellido_Nombre']] || ''),
-          fechaNac: String(row[map['Fecha_Nac']] || ''),
-          celular: String(row[map['Celular']] || ''),
-          email: String(row[map['Email']] || ''),
-          domicilio: String(row[map['Domicilio']] || ''),
-          condicion: String(row[map['Condicion']] || 'Activo'),
-          organismo: String(row[map['Organismo']] || 'Provincial'),
-          legajo: String(row[map['Legajo']] || ''),
-          dependencia: String(row[map['Dependencia']] || ''),
-          cargo: String(row[map['Cargo']] || 'Titular')
+          nombre: getCol('Apellido_Nombre', ''),
+          cuil: getCol('CUIL', ''),
+          fechaNac: fechaNacVal,
+          fechaNacimiento: fechaNacVal,
+          sexo: getCol('Sexo', ''),
+          estadoCivil: getCol('Estado_Civil', ''),
+          celular: getCol('Celular', ''),
+          email: getCol('Email', ''),
+          domicilio: getCol('Domicilio', ''),
+          localidad: getCol('Localidad', ''),
+          condicion: getCol('Condicion', 'Activo'),
+          organismo: getCol('Organismo', 'Provincial'),
+          legajo: getCol('Legajo', ''),
+          dependencia: getCol('Dependencia', ''),
+          cargo: getCol('Cargo', 'Titular'),
+          situacionRevista: getCol('Situacion_Revista', 'Planta Permanente'),
+          antiguedad: getCol('Antiguedad', ''),
+          carpetaDriveUrl: getCol('Carpeta_Drive_URL', ''),
+          archivosLegajo: Array.isArray(archivosArr) ? archivosArr : [],
+          Archivos_Legajo_JSON: archivosRaw,
+          archivos: Array.isArray(archivosArr) ? archivosArr : []
         }
       };
     }
   }
   return { ok: true, encontrado: false };
+}
+
+function sincronizarAsociadoEnPadron_(datos) {
+  if (!datos || !datos.dni) return;
+  try {
+    const sheet = obtenerOInicializarHoja_(CONFIG_AMMER.SHEET_ASOCIADOS, HEADERS_ASOCIADOS);
+    const { map, totalCols } = obtenerHeaderMap_(sheet);
+    const data = sheet.getDataRange().getValues();
+    const dniTarget = String(datos.dni || '').replace(/\D/g, '').trim();
+    if (!dniTarget) return;
+
+    let rowIdx = -1;
+    for (let i = data.length - 1; i >= 1; i--) {
+      const dniRow = String((map['DNI'] !== undefined ? data[i][map['DNI']] : '') || '').replace(/\D/g, '').trim();
+      if (dniRow === dniTarget) {
+        rowIdx = i + 1;
+        break;
+      }
+    }
+
+    const existingRow = (rowIdx !== -1) ? data[rowIdx - 1] : new Array(totalCols).fill('');
+    const row = existingRow.slice(0, totalCols);
+    while (row.length < totalCols) row.push('');
+
+    const pick = (colName, newVal, fallbackVal) => {
+      if (map[colName] === undefined) return;
+      const prev = row[map[colName]];
+      const cleaned = (newVal !== undefined && newVal !== null && String(newVal).trim() !== '') ? newVal : (prev || fallbackVal || '');
+      row[map[colName]] = cleaned;
+    };
+
+    pick('DNI', dniTarget, '');
+    pick('Apellido_Nombre', datos.nombre, '');
+    pick('CUIL', datos.cuil, '');
+    pick('Fecha_Nac', datos.fechaNac || datos.fechaNacimiento, '');
+    pick('Sexo', datos.sexo, '');
+    pick('Estado_Civil', datos.estadoCivil, '');
+    pick('Celular', datos.celular, '');
+    pick('Email', datos.email, '');
+    pick('Domicilio', datos.domicilio, '');
+    pick('Localidad', datos.localidad, '');
+    pick('Condicion', datos.condicion, 'Activo');
+    pick('Organismo', datos.organismo, 'Provincial');
+    pick('Legajo', datos.legajo, '');
+    pick('Dependencia', datos.dependencia, '');
+    pick('Cargo', datos.cargo, 'Titular');
+    pick('Situacion_Revista', datos.situacionRevista, 'Planta Permanente');
+    pick('Antiguedad', datos.antiguedad, '');
+    pick('Fecha_Alta', datos.fechaAlta || Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd'), '');
+    pick('Creado_Por', datos.creadoPor, 'Sistema');
+    pick('Carpeta_Drive_URL', datos.carpetaDriveUrl, '');
+
+    if (map['Archivos_Adjuntos_JSON'] !== undefined && Array.isArray(datos.archivos) && datos.archivos.length > 0) {
+      const prevArchivos = parseJSONSafe_(row[map['Archivos_Adjuntos_JSON']], []);
+      const merged = Array.isArray(prevArchivos) ? prevArchivos.slice() : [];
+      datos.archivos.forEach(a => {
+        if (!a) return;
+        const exists = merged.some(m => (a.fileId && m.fileId === a.fileId) || (a.nombre && m.nombre === a.nombre));
+        if (!exists) merged.push(a);
+      });
+      row[map['Archivos_Adjuntos_JSON']] = JSON.stringify(merged);
+    }
+
+    if (rowIdx !== -1) {
+      sheet.getRange(rowIdx, 1, 1, totalCols).setValues([row]);
+    } else {
+      sheet.appendRow(row);
+    }
+  } catch (errSync) {
+    // No bloquear el alta de solicitud si falla sincronización secundaria
+  }
 }
 
 function registrarNuevoAsociado(payload) {
@@ -481,15 +573,21 @@ function registrarNuevoAsociado(payload) {
     const set = (colName, val) => { if (map[colName] !== undefined) row[map[colName]] = val; };
     set('DNI', dni);
     set('Apellido_Nombre', nombre);
-    set('Fecha_Nac', asoc.fechaNac || '');
+    set('CUIL', payload.CUIL || payload.cuil || asoc.cuil || '');
+    set('Fecha_Nac', payload.Fecha_Nacimiento || payload.fechaNacimiento || asoc.fechaNacimiento || asoc.fechaNac || '');
+    set('Sexo', payload.Sexo || payload.sexo || asoc.sexo || '');
+    set('Estado_Civil', payload.Estado_Civil || payload.estadoCivil || asoc.estadoCivil || '');
     set('Celular', payload.Celular || asoc.celular || '');
     set('Email', payload.Email || asoc.email || '');
     set('Domicilio', payload.Domicilio || asoc.domicilio || '');
+    set('Localidad', payload.Localidad || payload.localidad || asoc.localidad || '');
     set('Condicion', payload.Condicion || asoc.condicion || 'Activo');
     set('Organismo', payload.Organismo || asoc.organismo || 'Provincial');
     set('Legajo', payload.Legajo || asoc.legajo || '');
     set('Dependencia', payload.Dependencia || asoc.dependencia || '');
     set('Cargo', payload.Cargo || asoc.cargo || 'Titular');
+    set('Situacion_Revista', payload.Situacion_Revista || payload.situacionRevista || asoc.situacionRevista || 'Planta Permanente');
+    set('Antiguedad', payload.Antiguedad || payload.antiguedad || asoc.antiguedad || '');
     set('Fecha_Alta', asoc.fechaAlta || Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd'));
     set('Creado_Por', asoc.creadoPor || 'Usuario');
     set('Carpeta_Drive_URL', carpetaUrl);
@@ -497,7 +595,7 @@ function registrarNuevoAsociado(payload) {
 
     sheet.appendRow(row);
     SpreadsheetApp.flush();
-    return { ok: true, dni: dni, carpetaDriveUrl: carpetaUrl, archivos: adjuntosGuardados };
+    return { ok: true, dni: dni, carpetaDriveUrl: carpetaUrl, archivos: adjuntosGuardados, archivosLegajo: adjuntosGuardados };
   } finally {
     lock.releaseLock();
   }
@@ -568,21 +666,28 @@ function registrarNuevaSolicitud(payload) {
 
     const contactoExtra = parseJSONSafe_(payload.Datos_Contacto_JSON, {});
     const laboralesExtra = parseJSONSafe_(payload.Datos_Laborales_JSON, {});
+    const solContacto = sol.datosContacto || {};
+    const solLaborales = sol.datosLaborales || {};
 
     const datosContacto = {
-      cuil: solicitante.cuil || sol.cuil || payload.CUIL || payload.cuil || contactoExtra.cuil || '',
-      localidad: solicitante.localidad || sol.localidad || payload.Localidad || payload.localidad || contactoExtra.localidad || '',
-      fechaNac: solicitante.fechaNac || sol.fechaNac || payload.Fecha_Nac || payload.fechaNac || contactoExtra.fechaNac || '',
-      email: solicitante.email || sol.email || payload.Email || payload.email || contactoExtra.email || '',
-      celular: solicitante.celular || sol.telefono || sol.celular || payload.Celular || payload.celular || contactoExtra.celular || '',
+      cuil: solicitante.cuil || solContacto.cuil || sol.cuil || payload.CUIL || payload.cuil || contactoExtra.cuil || '',
+      localidad: solicitante.localidad || solContacto.localidad || sol.localidad || payload.Localidad || payload.localidad || contactoExtra.localidad || '',
+      fechaNac: solicitante.fechaNac || solicitante.fechaNacimiento || solContacto.fechaNacimiento || solContacto.fechaNac || sol.fechaNacimiento || sol.fechaNac || payload.Fecha_Nacimiento || payload.Fecha_Nac || payload.fechaNacimiento || payload.fechaNac || contactoExtra.fechaNac || contactoExtra.fechaNacimiento || '',
+      fechaNacimiento: solicitante.fechaNacimiento || solicitante.fechaNac || solContacto.fechaNacimiento || solContacto.fechaNac || sol.fechaNacimiento || sol.fechaNac || payload.Fecha_Nacimiento || payload.Fecha_Nac || payload.fechaNacimiento || payload.fechaNac || contactoExtra.fechaNacimiento || contactoExtra.fechaNac || '',
+      sexo: solicitante.sexo || solContacto.sexo || sol.sexo || payload.Sexo || payload.sexo || contactoExtra.sexo || '',
+      estadoCivil: solicitante.estadoCivil || solContacto.estadoCivil || sol.estadoCivil || payload.Estado_Civil || payload.estadoCivil || contactoExtra.estadoCivil || '',
+      email: solicitante.email || solContacto.email || sol.email || payload.Email || payload.email || contactoExtra.email || '',
+      celular: solicitante.celular || solContacto.celular || solContacto.telefono || sol.telefono || sol.celular || payload.Celular || payload.celular || contactoExtra.celular || '',
       domicilio: domicilioHistorico
     };
 
     const datosLaborales = {
-      condicion: solicitante.condicion || sol.condicion || payload.Condicion || payload.condicion || laboralesExtra.condicion || 'Activo',
-      organismo: solicitante.organismo || sol.organismo || payload.Organismo || payload.organismo || laboralesExtra.organismo || 'Provincial',
-      dependencia: solicitante.dependencia || sol.dependencia || payload.Dependencia || payload.dependencia || laboralesExtra.dependencia || '',
-      cargo: solicitante.cargo || sol.cargo || payload.Cargo || payload.cargo || laboralesExtra.cargo || 'Titular',
+      condicion: solicitante.condicion || solLaborales.condicion || sol.condicion || payload.Condicion || payload.condicion || laboralesExtra.condicion || 'Activo',
+      organismo: solicitante.organismo || solLaborales.organismo || sol.organismo || payload.Organismo || payload.organismo || laboralesExtra.organismo || 'Provincial',
+      dependencia: solicitante.dependencia || solLaborales.dependencia || sol.dependencia || payload.Dependencia || payload.dependencia || laboralesExtra.dependencia || '',
+      cargo: solicitante.cargo || solLaborales.cargo || sol.cargo || payload.Cargo || payload.cargo || laboralesExtra.cargo || 'Titular',
+      situacionRevista: solicitante.situacionRevista || solLaborales.situacionRevista || sol.situacionRevista || payload.Situacion_Revista || payload.situacionRevista || laboralesExtra.situacionRevista || 'Planta Permanente',
+      antiguedad: solicitante.antiguedad || solLaborales.antiguedad || sol.antiguedad || payload.Antiguedad || payload.antiguedad || laboralesExtra.antiguedad || '',
       legajo: legajo
     };
 
@@ -626,7 +731,8 @@ function registrarNuevaSolicitud(payload) {
     const carpetaDriveUrl = folder.getUrl();
 
     const archivosEntrada = parseJSONSafe_(payload.Archivos_Adjuntos_JSON, null) ||
-      payload.archivosBase64 || payload.adjuntosBase64 || payload.archivos || payload.adjuntos || sol.adjuntos || [];
+      payload.archivosBase64 || payload.adjuntosBase64 || sol.archivosBase64 || sol.adjuntosBase64 ||
+      payload.archivos || payload.adjuntos || sol.archivos || sol.adjuntos || [];
     const adjuntosDrive = guardarArchivosEnDrive_(folder, archivosEntrada, idSolicitud, asesorNombre);
 
     const historialComentarios = Array.isArray(sol.observaciones)
@@ -684,6 +790,29 @@ function registrarNuevaSolicitud(payload) {
     sheet.appendRow(row);
     SpreadsheetApp.flush();
 
+    sincronizarAsociadoEnPadron_({
+      dni: dni,
+      nombre: apellidoNombre,
+      cuil: datosContacto.cuil,
+      fechaNac: datosContacto.fechaNacimiento || datosContacto.fechaNac,
+      sexo: datosContacto.sexo,
+      estadoCivil: datosContacto.estadoCivil,
+      celular: datosContacto.celular,
+      email: datosContacto.email,
+      domicilio: domicilioHistorico,
+      localidad: datosContacto.localidad,
+      condicion: datosLaborales.condicion,
+      organismo: datosLaborales.organismo,
+      legajo: legajo,
+      dependencia: datosLaborales.dependencia,
+      cargo: datosLaborales.cargo,
+      situacionRevista: datosLaborales.situacionRevista,
+      antiguedad: datosLaborales.antiguedad,
+      creadoPor: asesorNombre,
+      carpetaDriveUrl: carpetaDriveUrl,
+      archivos: adjuntosDrive
+    });
+
     return {
       ok: true,
       id: idSolicitud,
@@ -691,7 +820,8 @@ function registrarNuevaSolicitud(payload) {
       id_provisorio: idProvisorio,
       carpetaDriveUrl: carpetaDriveUrl,
       archivos: adjuntosDrive,
-      mensaje: 'Expediente ' + idProvisorio + ' registrado en Google Sheets y Google Drive.'
+      archivosLegajo: adjuntosDrive,
+      mensaje: 'Expediente ' + idProvisorio + ' registrado en Google Sheets, Padrón de Asociados y Google Drive.'
     };
   } finally {
     lock.releaseLock();
@@ -786,7 +916,10 @@ function listarSolicitudes(usuarioActivoInput) {
         cuil: contacto.cuil || '',
         legajo: String(get('Legajo_Municipal') || laborales.legajo || ''),
         nombre: nombreSoc,
-        fechaNac: contacto.fechaNac || '',
+        fechaNac: contacto.fechaNac || contacto.fechaNacimiento || '',
+        fechaNacimiento: contacto.fechaNacimiento || contacto.fechaNac || '',
+        sexo: contacto.sexo || '',
+        estadoCivil: contacto.estadoCivil || '',
         email: contacto.email || '',
         celular: contacto.celular || '',
         domicilio: String(get('Domicilio_Historico_Solicitud') || contacto.domicilio || ''),
@@ -795,8 +928,12 @@ function listarSolicitudes(usuarioActivoInput) {
         condicion: laborales.condicion || 'Activo',
         organismo: laborales.organismo || 'Provincial',
         dependencia: laborales.dependencia || '',
-        cargo: laborales.cargo || 'Titular'
+        cargo: laborales.cargo || 'Titular',
+        situacionRevista: laborales.situacionRevista || 'Planta Permanente',
+        antiguedad: laborales.antiguedad || ''
       },
+      datosContacto: contacto,
+      datosLaborales: laborales,
       prestamo: {
         linea: lineaKey,
         lineaNombre: lineaNombre,
@@ -812,7 +949,13 @@ function listarSolicitudes(usuarioActivoInput) {
       carpetaDriveUrl: String(get('Carpeta_Drive_URL') || ''),
       Carpeta_Drive_URL: String(get('Carpeta_Drive_URL') || ''),
       adjuntos: Array.isArray(adjuntos) ? adjuntos : [],
+      archivosLegajo: Array.isArray(adjuntos) ? adjuntos : [],
+      archivos: Array.isArray(adjuntos) ? adjuntos : [],
+      Archivos_Adjuntos_JSON: String(get('Archivos_Adjuntos_JSON') || '[]'),
       observaciones: Array.isArray(observaciones) ? observaciones : [],
+      historialComentarios: Array.isArray(observaciones) ? observaciones : [],
+      comentarios: Array.isArray(observaciones) ? observaciones : [],
+      Historial_Comentarios_JSON: String(get('Historial_Comentarios_JSON') || '[]'),
       auditoriaIA: dictamenIA || null,
       estado: String(get('Estado_Tramite') || 'Pendiente'),
       analistaAsignado: analistaAsig || 'Sin Asignar',
@@ -1162,31 +1305,68 @@ function actualizarDatosSolicitanteBackend(payload) {
     const sol = payload.solicitante || {};
     const nowStr = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd HH:mm');
 
+    const prevContacto = (map['Datos_Contacto_JSON'] !== undefined)
+      ? parseJSONSafe_(sheet.getRange(rowNum, map['Datos_Contacto_JSON'] + 1).getValue(), {})
+      : {};
+    const prevLaborales = (map['Datos_Laborales_JSON'] !== undefined)
+      ? parseJSONSafe_(sheet.getRange(rowNum, map['Datos_Laborales_JSON'] + 1).getValue(), {})
+      : {};
+
     if (map['DNI_Asociado'] !== undefined && sol.dni) sheet.getRange(rowNum, map['DNI_Asociado'] + 1).setValue(sol.dni);
     if (map['Apellido_Nombre'] !== undefined && sol.nombre) sheet.getRange(rowNum, map['Apellido_Nombre'] + 1).setValue(sol.nombre);
     if (map['Legajo_Municipal'] !== undefined && sol.legajo !== undefined) sheet.getRange(rowNum, map['Legajo_Municipal'] + 1).setValue(sol.legajo);
+
+    const nuevoContacto = {
+      cuil: sol.cuil !== undefined ? sol.cuil : (prevContacto.cuil || ''),
+      fechaNac: sol.fechaNac || sol.fechaNacimiento || prevContacto.fechaNac || '',
+      fechaNacimiento: sol.fechaNacimiento || sol.fechaNac || prevContacto.fechaNacimiento || prevContacto.fechaNac || '',
+      sexo: sol.sexo !== undefined ? sol.sexo : (prevContacto.sexo || ''),
+      estadoCivil: sol.estadoCivil !== undefined ? sol.estadoCivil : (prevContacto.estadoCivil || ''),
+      localidad: sol.localidad !== undefined ? sol.localidad : (prevContacto.localidad || ''),
+      email: sol.email !== undefined ? sol.email : (prevContacto.email || ''),
+      celular: sol.celular !== undefined ? sol.celular : (prevContacto.celular || ''),
+      domicilio: sol.domicilio !== undefined ? sol.domicilio : (prevContacto.domicilio || '')
+    };
     if (map['Datos_Contacto_JSON'] !== undefined) {
-      sheet.getRange(rowNum, map['Datos_Contacto_JSON'] + 1).setValue(JSON.stringify({
-        fechaNac: sol.fechaNac || '',
-        email: sol.email || '',
-        celular: sol.celular || '',
-        domicilio: sol.domicilio || ''
-      }));
+      sheet.getRange(rowNum, map['Datos_Contacto_JSON'] + 1).setValue(JSON.stringify(nuevoContacto));
     }
+
+    const nuevosLaborales = {
+      condicion: sol.condicion || prevLaborales.condicion || 'Activo',
+      organismo: sol.organismo || prevLaborales.organismo || 'Provincial',
+      dependencia: sol.dependencia !== undefined ? sol.dependencia : (prevLaborales.dependencia || ''),
+      cargo: sol.cargo || prevLaborales.cargo || 'Titular',
+      situacionRevista: sol.situacionRevista || prevLaborales.situacionRevista || 'Planta Permanente',
+      antiguedad: sol.antiguedad !== undefined ? sol.antiguedad : (prevLaborales.antiguedad || ''),
+      legajo: sol.legajo !== undefined ? sol.legajo : (prevLaborales.legajo || '')
+    };
     if (map['Datos_Laborales_JSON'] !== undefined) {
-      sheet.getRange(rowNum, map['Datos_Laborales_JSON'] + 1).setValue(JSON.stringify({
-        condicion: sol.condicion || 'Activo',
-        organismo: sol.organismo || 'Provincial',
-        dependencia: sol.dependencia || '',
-        cargo: sol.cargo || 'Titular',
-        legajo: sol.legajo || ''
-      }));
+      sheet.getRange(rowNum, map['Datos_Laborales_JSON'] + 1).setValue(JSON.stringify(nuevosLaborales));
     }
     if (map['Ultima_Actualizacion'] !== undefined) {
       sheet.getRange(rowNum, map['Ultima_Actualizacion'] + 1).setValue(nowStr);
     }
 
     SpreadsheetApp.flush();
+    sincronizarAsociadoEnPadron_({
+      dni: sol.dni || '',
+      nombre: sol.nombre || '',
+      cuil: nuevoContacto.cuil,
+      fechaNac: nuevoContacto.fechaNac,
+      sexo: nuevoContacto.sexo,
+      estadoCivil: nuevoContacto.estadoCivil,
+      celular: nuevoContacto.celular,
+      email: nuevoContacto.email,
+      domicilio: nuevoContacto.domicilio,
+      localidad: nuevoContacto.localidad,
+      condicion: nuevosLaborales.condicion,
+      organismo: nuevosLaborales.organismo,
+      legajo: nuevosLaborales.legajo,
+      dependencia: nuevosLaborales.dependencia,
+      cargo: nuevosLaborales.cargo,
+      situacionRevista: nuevosLaborales.situacionRevista,
+      antiguedad: nuevosLaborales.antiguedad
+    });
     return { ok: true, id: idTarget };
   } finally {
     lock.releaseLock();

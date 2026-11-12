@@ -3489,6 +3489,19 @@
                   <option value="Suplente">Suplente</option>
                 </select>
               </div>
+              <div class="form-group">
+                <label class="form-label">Situación de Revista</label>
+                <select id="asocSituacionRevista" class="input-text">
+                  <option value="Planta Permanente" selected>Planta Permanente</option>
+                  <option value="Contratado / Interino">Contratado / Interino</option>
+                  <option value="Suplente">Suplente</option>
+                  <option value="Jubilado / Pensionado">Jubilado / Pensionado</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Antigüedad Laboral</label>
+                <input type="text" id="asocAntiguedad" class="input-text" placeholder="Ej: 5 años"/>
+              </div>
             </div>
           </div>
 
@@ -3899,6 +3912,26 @@
               </div>
               <div class="form-group"><label class="form-label">Apellido y Nombres *</label><input type="text" id="solNombre" class="input-text" required placeholder="Ej: Juan Carlos Pérez"/></div>
               <div class="form-group"><label class="form-label">Fecha de Nacimiento *</label><input type="date" id="solFechaNac" class="input-text" required/></div>
+              <div class="form-group">
+                <label class="form-label">Sexo</label>
+                <select id="solSexo" class="input-text">
+                  <option value="">Seleccionar...</option>
+                  <option value="Masculino">Masculino</option>
+                  <option value="Femenino">Femenino</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Estado Civil</label>
+                <select id="solEstadoCivil" class="input-text">
+                  <option value="">Seleccionar...</option>
+                  <option value="Soltero/a">Soltero/a</option>
+                  <option value="Casado/a">Casado/a</option>
+                  <option value="Divorciado/a">Divorciado/a</option>
+                  <option value="Viudo/a">Viudo/a</option>
+                  <option value="Unión Convivencial">Unión Convivencial</option>
+                </select>
+              </div>
               <div class="form-group"><label class="form-label">Email</label><input type="email" id="solEmail" class="input-text" placeholder="socio@email.com"/></div>
               <div class="form-group"><label class="form-label">Celular / WhatsApp *</label><input type="tel" id="solCelular" class="input-text" required placeholder="Ej: 3434123456"/></div>
               <div class="form-group"><label class="form-label">Localidad</label><input type="text" id="solLocalidad" class="input-text" placeholder="Ej: Paraná, Entre Ríos"/></div>
@@ -3941,6 +3974,19 @@
                   <option value="Titular">Titular</option>
                   <option value="Suplente">Suplente</option>
                 </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Situación de Revista</label>
+                <select id="solSituacionRevista" class="input-text">
+                  <option value="Planta Permanente" selected>Planta Permanente</option>
+                  <option value="Contratado / Interino">Contratado / Interino</option>
+                  <option value="Suplente">Suplente</option>
+                  <option value="Jubilado / Pensionado">Jubilado / Pensionado</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Antigüedad</label>
+                <input type="text" id="solAntiguedad" class="input-text" placeholder="Ej: 5 años"/>
               </div>
             </div>
           </div>
@@ -6188,9 +6234,17 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
                 const el = document.getElementById('solCuil');
                 if (el) el.value = asoc.cuil;
               }
-              if (asoc.fechaNac) {
+              if (asoc.fechaNac || asoc.fechaNacimiento) {
                 const el = document.getElementById('solFechaNac');
-                if (el) el.value = asoc.fechaNac.slice(0, 10);
+                if (el) el.value = String(asoc.fechaNac || asoc.fechaNacimiento).slice(0, 10);
+              }
+              if (asoc.sexo) {
+                const el = document.getElementById('solSexo');
+                if (el) el.value = asoc.sexo;
+              }
+              if (asoc.estadoCivil) {
+                const el = document.getElementById('solEstadoCivil');
+                if (el) el.value = asoc.estadoCivil;
               }
               if (asoc.email) {
                 const el = document.getElementById('solEmail');
@@ -6230,6 +6284,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
               if (asoc.cargo) {
                 const el = document.getElementById('solCargo');
                 if (el) el.value = asoc.cargo;
+              }
+              if (asoc.situacionRevista) {
+                const el = document.getElementById('solSituacionRevista');
+                if (el) el.value = asoc.situacionRevista;
+              }
+              if (asoc.antiguedad) {
+                const el = document.getElementById('solAntiguedad');
+                if (el) el.value = asoc.antiguedad;
               }
               showToast('✓ Asociado encontrado en Padrón: ' + (inpNombre ? inpNombre.value : ''));
             }
@@ -6798,6 +6860,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const legajoVal = (organismoVal === 'Municipal') ? (document.getElementById('asocLegajo')?.value || '').trim() : '';
       const dependenciaVal = (document.getElementById('asocDependencia')?.value || '').trim();
       const cargoVal = document.getElementById('asocCargo')?.value || 'Titular';
+      const situacionRevistaVal = document.getElementById('asocSituacionRevista')?.value || 'Planta Permanente';
+      const antiguedadVal = (document.getElementById('asocAntiguedad')?.value || '').trim();
 
       const fileInputs = [
         { el: document.getElementById('asocFileDni'), tipo: 'DNI' },
@@ -6867,15 +6931,22 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const nuevoAsociado = {
         dni: dniVal,
         nombre: nombreVal,
+        cuil: cuilVal,
         fechaNac: fechaNacVal,
+        fechaNacimiento: fechaNacVal,
+        sexo: sexoVal,
+        estadoCivil: estadoCivilVal,
         celular: celularVal,
         email: emailVal,
         domicilio: domicilioVal,
+        localidad: localidadVal,
         condicion: condicionVal,
         organismo: organismoVal,
         legajo: legajoVal,
         dependencia: dependenciaVal,
         cargo: cargoVal,
+        situacionRevista: situacionRevistaVal,
+        antiguedad: antiguedadVal,
         fechaAlta: new Date().toISOString().slice(0, 10),
         creadoPor: session.nombre
       };
@@ -6887,8 +6958,18 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         nombre: nombreVal,
         DNI: dniVal,
         dni: dniVal,
+        CUIL: cuilVal,
+        cuil: cuilVal,
+        Fecha_Nacimiento: fechaNacVal,
+        fechaNacimiento: fechaNacVal,
+        Sexo: sexoVal,
+        sexo: sexoVal,
+        Estado_Civil: estadoCivilVal,
+        estadoCivil: estadoCivilVal,
         Domicilio: domicilioVal,
         domicilio: domicilioVal,
+        Localidad: localidadVal,
+        localidad: localidadVal,
         Celular: celularVal,
         Email: emailVal,
         Organismo: organismoVal,
@@ -6896,6 +6977,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         Dependencia: dependenciaVal,
         Cargo: cargoVal,
         Condicion: condicionVal,
+        Situacion_Revista: situacionRevistaVal,
+        situacionRevista: situacionRevistaVal,
+        Antiguedad: antiguedadVal,
+        antiguedad: antiguedadVal,
         Archivos_Adjuntos_JSON: JSON.stringify(adjuntosBase64),
         archivos: adjuntosBase64,
         adjuntos: adjuntosBase64,
@@ -6918,8 +7003,99 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
     function parseJSONCampoSeguro(val, fallback) {
       if (val === null || val === undefined || val === '') return fallback;
-      if (typeof val !== 'string') return val;
-      try { return JSON.parse(val); } catch (_) { return fallback; }
+      let cur = val;
+      for (let i = 0; i < 2; i++) {
+        if (typeof cur !== 'string') break;
+        const trimmed = cur.trim();
+        if (!trimmed) return fallback;
+        try {
+          cur = JSON.parse(trimmed);
+        } catch (_) {
+          return fallback;
+        }
+      }
+      return (cur === null || cur === undefined) ? fallback : cur;
+    }
+
+    function normalizarListaArchivos(obj) {
+      if (!obj || typeof obj !== 'object') return [];
+      const candidatos = [
+        obj.adjuntos,
+        obj.archivosLegajo,
+        obj.Archivos_Legajo_JSON,
+        obj.Archivos_Adjuntos_JSON,
+        obj.archivos,
+        obj.Archivos_JSON,
+        obj.adjuntosBase64
+      ];
+      let lista = [];
+      for (const cand of candidatos) {
+        const parsed = Array.isArray(cand) ? cand : parseJSONCampoSeguro(cand, null);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          lista = parsed;
+          break;
+        }
+      }
+      return lista.filter(Boolean).map((a, idx) => {
+        if (typeof a === 'string') {
+          const isUrl = /^https?:\/\//i.test(a);
+          return {
+            tipo: 'DOCUMENTO',
+            nombre: isUrl ? ('Archivo Drive #' + (idx + 1)) : a,
+            urlDrive: isUrl ? a : '',
+            previewUrl: isUrl ? normalizarUrlVisorDrive(a) : '',
+            fecha: obj.fecha || '',
+            autor: obj.comercializador || 'Usuario'
+          };
+        }
+        const rawUrl = a.urlDrive || a.url || a.webViewLink || a.alternateLink || a.driveUrl || a.link || (a.fileId ? ('https://drive.google.com/file/d/' + a.fileId + '/view') : '');
+        const rawPreview = a.previewUrl || (rawUrl ? normalizarUrlVisorDrive(rawUrl) : '');
+        const fileIdMatch = String(a.fileId || rawUrl || '').match(/\/d\/([a-zA-Z0-9_-]+)|[?&]id=([a-zA-Z0-9_-]+)/);
+        const extractedFileId = a.fileId || (fileIdMatch ? (fileIdMatch[1] || fileIdMatch[2]) : '');
+        return Object.assign({}, a, {
+          tipo: a.tipo || a.tipoDoc || a.categoria || 'DOCUMENTO',
+          nombre: a.nombre || a.nombreArchivo || a.fileName || a.filename || a.name || a.nombreOriginal || a.titulo || a.title || ('Documento_' + (idx + 1)),
+          fileId: extractedFileId || '',
+          urlDrive: rawUrl || (extractedFileId ? ('https://drive.google.com/file/d/' + extractedFileId + '/view') : ''),
+          previewUrl: rawPreview || (extractedFileId ? ('https://drive.google.com/file/d/' + extractedFileId + '/preview') : ''),
+          tipoMime: a.tipoMime || a.mimeType || a.type || '',
+          fecha: a.fecha || a.fechaSubida || a.createdAt || obj.fecha || '',
+          autor: a.autor || a.author || a.usuario || obj.comercializador || 'Usuario',
+          observado: Boolean(a.observado)
+        });
+      });
+    }
+
+    function normalizarBitacoraComentarios(obj) {
+      if (!obj || typeof obj !== 'object') return [];
+      const candidatos = [
+        obj.observaciones,
+        obj.historialComentarios,
+        obj.Historial_Comentarios_JSON,
+        obj.comentarios,
+        obj.Comentarios_JSON,
+        obj.bitacora,
+        obj.Bitacora_JSON
+      ];
+      let lista = [];
+      for (const cand of candidatos) {
+        const parsed = Array.isArray(cand) ? cand : parseJSONCampoSeguro(cand, null);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          lista = parsed;
+          break;
+        }
+      }
+      return lista.filter(Boolean).map(c => {
+        if (typeof c === 'string') {
+          return { autor: 'Auditoría', rol: 'Sistema', fecha: obj.fecha || '', texto: c };
+        }
+        return {
+          autor: c.autor || c.author || c.usuario || c.nombre || c.user || 'Usuario',
+          rol: c.rol || c.perfil || c.role || 'Auditoría',
+          fecha: c.fecha || c.timestamp || c.fechaHora || c.createdAt || c.date || obj.fecha || '',
+          texto: c.texto || c.mensaje || c.comentario || c.detalle || c.descripcion || c.note || ''
+        };
+      });
     }
 
     function getStoredSolicitudes() {
@@ -6973,29 +7149,62 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         s.origen_canal = (s.organizacion_id === 'org_sede_central') ? 'Presencial Sede Central' : 'Comercializador Externo';
       }
 
+      const contacto = Object.assign({}, parseJSONCampoSeguro(s.Datos_Contacto_JSON, {}), (s.datosContacto && typeof s.datosContacto === 'object') ? s.datosContacto : {});
+      const laborales = Object.assign({}, parseJSONCampoSeguro(s.Datos_Laborales_JSON, {}), (s.datosLaborales && typeof s.datosLaborales === 'object') ? s.datosLaborales : {});
+
       if (!s.solicitante || typeof s.solicitante !== 'object') {
-        const contacto = parseJSONCampoSeguro(s.Datos_Contacto_JSON, {});
-        const laborales = parseJSONCampoSeguro(s.Datos_Laborales_JSON, {});
         s.solicitante = {
           dni: String(s.DNI_Asociado || s.dni || ''),
           cuil: String(contacto.cuil || s.cuil || ''),
           legajo: String(s.Legajo_Municipal || laborales.legajo || ''),
           nombre: String(s.Apellido_Nombre || s.nombre || 'Socio'),
-          fechaNac: contacto.fechaNac || '',
-          email: contacto.email || '',
-          celular: contacto.celular || '',
+          fechaNac: contacto.fechaNac || contacto.fechaNacimiento || s.fechaNacimiento || '',
+          fechaNacimiento: contacto.fechaNacimiento || contacto.fechaNac || s.fechaNacimiento || '',
+          sexo: contacto.sexo || s.sexo || '',
+          estadoCivil: contacto.estadoCivil || s.estadoCivil || '',
+          email: contacto.email || s.email || '',
+          celular: contacto.celular || contacto.telefono || s.telefono || '',
           domicilio: String(s.Domicilio_Historico_Solicitud || contacto.domicilio || ''),
           domicilio_historico: String(s.Domicilio_Historico_Solicitud || contacto.domicilio || ''),
           localidad: String(contacto.localidad || s.localidad || ''),
           condicion: laborales.condicion || 'Activo',
-          organismo: laborales.organismo || 'Provincial',
-          dependencia: laborales.dependencia || '',
-          cargo: laborales.cargo || 'Titular'
+          organismo: laborales.organismo || s.organismo || 'Provincial',
+          dependencia: laborales.dependencia || s.dependencia || '',
+          cargo: laborales.cargo || s.cargo || 'Titular',
+          situacionRevista: laborales.situacionRevista || s.situacionRevista || 'Planta Permanente',
+          antiguedad: laborales.antiguedad || s.antiguedad || ''
         };
       } else {
-        if (!s.solicitante.cuil && s.cuil) s.solicitante.cuil = s.cuil;
-        if (!s.solicitante.localidad && s.localidad) s.solicitante.localidad = s.localidad;
+        if (!s.solicitante.cuil && (contacto.cuil || s.cuil)) s.solicitante.cuil = contacto.cuil || s.cuil;
+        if (!s.solicitante.localidad && (contacto.localidad || s.localidad)) s.solicitante.localidad = contacto.localidad || s.localidad;
+        if (!s.solicitante.fechaNac && (s.solicitante.fechaNacimiento || contacto.fechaNac || contacto.fechaNacimiento)) s.solicitante.fechaNac = s.solicitante.fechaNacimiento || contacto.fechaNac || contacto.fechaNacimiento;
+        if (!s.solicitante.fechaNacimiento && s.solicitante.fechaNac) s.solicitante.fechaNacimiento = s.solicitante.fechaNac;
+        if (!s.solicitante.sexo && (contacto.sexo || s.sexo)) s.solicitante.sexo = contacto.sexo || s.sexo;
+        if (!s.solicitante.estadoCivil && (contacto.estadoCivil || s.estadoCivil)) s.solicitante.estadoCivil = contacto.estadoCivil || s.estadoCivil;
+        if (!s.solicitante.situacionRevista && (laborales.situacionRevista || s.situacionRevista)) s.solicitante.situacionRevista = laborales.situacionRevista || s.situacionRevista;
+        if (!s.solicitante.antiguedad && (laborales.antiguedad || s.antiguedad)) s.solicitante.antiguedad = laborales.antiguedad || s.antiguedad;
       }
+      s.datosContacto = Object.assign({
+        cuil: s.solicitante.cuil || '',
+        fechaNac: s.solicitante.fechaNac || '',
+        fechaNacimiento: s.solicitante.fechaNacimiento || s.solicitante.fechaNac || '',
+        sexo: s.solicitante.sexo || '',
+        estadoCivil: s.solicitante.estadoCivil || '',
+        localidad: s.solicitante.localidad || '',
+        email: s.solicitante.email || '',
+        celular: s.solicitante.celular || '',
+        domicilio: s.solicitante.domicilio || ''
+      }, contacto);
+      s.datosLaborales = Object.assign({
+        condicion: s.solicitante.condicion || 'Activo',
+        organismo: s.solicitante.organismo || 'Provincial',
+        dependencia: s.solicitante.dependencia || '',
+        cargo: s.solicitante.cargo || 'Titular',
+        legajo: s.solicitante.legajo || '',
+        situacionRevista: s.solicitante.situacionRevista || 'Planta Permanente',
+        antiguedad: s.solicitante.antiguedad || ''
+      }, laborales);
+
       if (!s.domicilio_historico && (s.Domicilio_Historico_Solicitud || s.solicitante?.domicilio)) {
         s.domicilio_historico = s.Domicilio_Historico_Solicitud || s.solicitante?.domicilio || '';
       }
@@ -7012,12 +7221,16 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           cuotaEstimada: Number(s.Monto_Cuota || s.cuotaEstimada || 0)
         };
       }
-      if (!Array.isArray(s.adjuntos) && s.Archivos_Adjuntos_JSON) {
-        s.adjuntos = parseJSONCampoSeguro(s.Archivos_Adjuntos_JSON, []);
-      }
-      if (!Array.isArray(s.observaciones) && s.Historial_Comentarios_JSON) {
-        s.observaciones = parseJSONCampoSeguro(s.Historial_Comentarios_JSON, []);
-      }
+      const adjuntosNorm = normalizarListaArchivos(s);
+      s.adjuntos = adjuntosNorm;
+      s.archivosLegajo = adjuntosNorm;
+      s.archivos = adjuntosNorm;
+
+      const bitacoraNorm = normalizarBitacoraComentarios(s);
+      s.observaciones = bitacoraNorm;
+      s.historialComentarios = bitacoraNorm;
+      s.comentarios = bitacoraNorm;
+
       if (!s.carpetaDriveUrl && s.Carpeta_Drive_URL) {
         s.carpetaDriveUrl = s.Carpeta_Drive_URL;
       }
@@ -7643,11 +7856,15 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const cuilVal = obtenerValorInput(['solCuil', 'solicitud-cuil', 'solicitud_cuil', 'cuil'], '');
 
       const legajoVal = obtenerValorInput(['solLegajo', 'solicitud-legajo', 'solicitud_legajo', 'legajo'], '');
-      const fechaNacVal = obtenerValorInput(['solFechaNac', 'solicitud-fecha-nac', 'fecha_nac'], '');
+      const fechaNacVal = obtenerValorInput(['solFechaNac', 'solicitud-fecha-nacimiento', 'fecha_nacimiento', 'solicitud-fecha-nac', 'fecha_nac'], '');
+      const sexoVal = obtenerValorInput(['solSexo', 'solicitud-sexo', 'sexo'], '');
+      const estadoCivilVal = obtenerValorInput(['solEstadoCivil', 'solicitud-estado-civil', 'estado_civil', 'estadoCivil'], '');
       const condicionVal = obtenerValorInput(['solCondicion', 'solicitud-condicion', 'condicion'], 'Activo');
       const organismoVal = obtenerValorInput(['solOrganismo', 'solicitud-organismo', 'organismo'], 'Provincial');
       const dependenciaVal = obtenerValorInput(['solDependencia', 'solicitud-dependencia', 'dependencia'], '');
       const cargoVal = obtenerValorInput(['solCargo', 'solicitud-cargo', 'cargo'], 'Titular');
+      const situacionRevistaVal = obtenerValorInput(['solSituacionRevista', 'solicitud-situacion-revista', 'situacion_revista', 'situacionRevista'], 'Planta Permanente');
+      const antiguedadVal = obtenerValorInput(['solAntiguedad', 'solicitud-antiguedad', 'antiguedad'], '');
 
       const lineaRaw = obtenerValorInput(['solLinea', 'solicitud-linea', 'linea_ayuda', 'simulador-linea', 'linea'], 'fedem');
       const lineaLow = lineaRaw.toLowerCase();
@@ -7810,8 +8027,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         cuil: sanitizeHTML(cuilVal),
         localidad: sanitizeHTML(localidadVal),
         fechaNac: sanitizeHTML(fechaNacVal),
+        fechaNacimiento: sanitizeHTML(fechaNacVal),
+        sexo: sanitizeHTML(sexoVal),
+        estadoCivil: sanitizeHTML(estadoCivilVal),
         email: sanitizeHTML(emailVal),
         celular: sanitizeHTML(celVal),
+        telefono: sanitizeHTML(celVal),
         domicilio: domHistVal
       };
       const datosLaboralesObj = {
@@ -7819,6 +8040,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         organismo: sanitizeHTML(organismoVal),
         dependencia: sanitizeHTML(dependenciaVal),
         cargo: sanitizeHTML(cargoVal),
+        situacionRevista: sanitizeHTML(situacionRevistaVal),
+        antiguedad: sanitizeHTML(antiguedadVal),
         legajo: sanitizeHTML(legajoVal)
       };
 
@@ -7853,16 +8076,27 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         organismo: sanitizeHTML(organismoVal),
         dependencia: sanitizeHTML(dependenciaVal),
         cargo: sanitizeHTML(cargoVal),
+        situacionRevista: sanitizeHTML(situacionRevistaVal),
+        antiguedad: sanitizeHTML(antiguedadVal),
         legajo: sanitizeHTML(legajoVal),
         cuil: sanitizeHTML(cuilVal),
+        fechaNac: sanitizeHTML(fechaNacVal),
+        fechaNacimiento: sanitizeHTML(fechaNacVal),
+        sexo: sanitizeHTML(sexoVal),
+        estadoCivil: sanitizeHTML(estadoCivilVal),
         telefono: sanitizeHTML(celVal),
         email: sanitizeHTML(emailVal),
+        datosContacto: datosContactoObj,
+        datosLaborales: datosLaboralesObj,
         solicitante: {
           dni: sanitizeHTML(dniVal),
           cuil: sanitizeHTML(cuilVal),
           legajo: sanitizeHTML(legajoVal),
           nombre: finalNombre,
           fechaNac: sanitizeHTML(fechaNacVal),
+          fechaNacimiento: sanitizeHTML(fechaNacVal),
+          sexo: sanitizeHTML(sexoVal),
+          estadoCivil: sanitizeHTML(estadoCivilVal),
           email: sanitizeHTML(emailVal),
           celular: sanitizeHTML(celVal),
           domicilio: domHistVal,
@@ -7871,7 +8105,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           condicion: sanitizeHTML(condicionVal),
           organismo: sanitizeHTML(organismoVal),
           dependencia: sanitizeHTML(dependenciaVal),
-          cargo: sanitizeHTML(cargoVal)
+          cargo: sanitizeHTML(cargoVal),
+          situacionRevista: sanitizeHTML(situacionRevistaVal),
+          antiguedad: sanitizeHTML(antiguedadVal)
         },
         prestamo: {
           linea: lineaKey,
@@ -7939,7 +8175,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         Analista_Asignado: analistaAsig,
         Ultima_Actualizacion: nowStr,
 
-        // Alias de compatibilidad y archivos Base64 para Google Drive
+        // Alias de compatibilidad y archivos Base64 para Google Drive y Padron_Asociados
         ID_OPERACION: rawRand,
         id: rawRand,
         id_provisorio: provId,
@@ -7968,7 +8204,13 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         Legajo: legajoVal,
         legajo: legajoVal,
         Fecha_Nac: fechaNacVal,
+        Fecha_Nacimiento: fechaNacVal,
         fechaNac: fechaNacVal,
+        fechaNacimiento: fechaNacVal,
+        Sexo: sexoVal,
+        sexo: sexoVal,
+        Estado_Civil: estadoCivilVal,
+        estadoCivil: estadoCivilVal,
         Email: emailVal,
         email: emailVal,
         Celular: celVal,
@@ -7986,6 +8228,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         dependencia: dependenciaVal,
         Cargo: cargoVal,
         cargo: cargoVal,
+        Situacion_Revista: situacionRevistaVal,
+        situacionRevista: situacionRevistaVal,
+        Antiguedad: antiguedadVal,
+        antiguedad: antiguedadVal,
         Monto: monto,
         monto: monto,
         Cuotas: cuotas,
@@ -8119,10 +8365,22 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         '<form onsubmit="guardarEdicionSolicitante(event, \'' + s.id + '\')" id="formEditSolicitante">' +
           '<div class="grid-3-cols">' +
             '<div class="form-group"><label class="form-label">DNI *</label><input type="text" id="editDni" class="input-text" value="' + (s.solicitante?.dni || '') + '" required/></div>' +
+            '<div class="form-group"><label class="form-label">CUIL</label><input type="text" id="editCuil" class="input-text" value="' + sanitizeHTML(s.solicitante?.cuil || '') + '" placeholder="Ej: 20-32111222-9"/></div>' +
             '<div class="form-group"><label class="form-label">Nombre y Apellido *</label><input type="text" id="editNombre" class="input-text" value="' + (s.solicitante?.nombre || '') + '" required/></div>' +
-            '<div class="form-group"><label class="form-label">Fecha Nacimiento *</label><input type="date" id="editFechaNac" class="input-text" value="' + (s.solicitante?.fechaNac || '') + '" required/></div>' +
+            '<div class="form-group"><label class="form-label">Fecha Nacimiento *</label><input type="date" id="editFechaNac" class="input-text" value="' + String(s.solicitante?.fechaNac || s.solicitante?.fechaNacimiento || '').slice(0, 10) + '" required/></div>' +
+            '<div class="form-group"><label class="form-label">Sexo</label>' +
+              '<select id="editSexo" class="input-text">' +
+                ['', 'Masculino', 'Femenino', 'Otro'].map(sx => '<option value="' + sx + '" ' + (s.solicitante?.sexo === sx ? 'selected' : '') + '>' + (sx || 'Seleccionar...') + '</option>').join('') +
+              '</select>' +
+            '</div>' +
+            '<div class="form-group"><label class="form-label">Estado Civil</label>' +
+              '<select id="editEstadoCivil" class="input-text">' +
+                ['', 'Soltero/a', 'Casado/a', 'Divorciado/a', 'Viudo/a', 'Unión Convivencial'].map(ec => '<option value="' + ec + '" ' + (s.solicitante?.estadoCivil === ec ? 'selected' : '') + '>' + (ec || 'Seleccionar...') + '</option>').join('') +
+              '</select>' +
+            '</div>' +
             '<div class="form-group"><label class="form-label">Celular / Teléfono *</label><input type="tel" id="editCelular" class="input-text" value="' + (s.solicitante?.celular || '') + '" required/></div>' +
             '<div class="form-group"><label class="form-label">Email</label><input type="email" id="editEmail" class="input-text" value="' + (s.solicitante?.email || '') + '"/></div>' +
+            '<div class="form-group"><label class="form-label">Localidad</label><input type="text" id="editLocalidad" class="input-text" value="' + sanitizeHTML(s.solicitante?.localidad || '') + '"/></div>' +
             '<div class="form-group"><label class="form-label">Legajo Municipal</label><input type="text" id="editLegajo" class="input-text" value="' + (s.solicitante?.legajo || '') + '"/></div>' +
           '</div>' +
           '<div class="form-group"><label class="form-label">Domicilio Completo *</label><input type="text" id="editDomicilio" class="input-text" value="' + (s.solicitante?.domicilio || '') + '" required/></div>' +
@@ -8144,6 +8402,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
                 ['Titular', 'Suplente'].map(cg => '<option value="' + cg + '" ' + (s.solicitante?.cargo === cg ? 'selected' : '') + '>' + cg + '</option>').join('') +
               '</select>' +
             '</div>' +
+            '<div class="form-group"><label class="form-label">Situación de Revista</label>' +
+              '<select id="editSituacionRevista" class="input-text">' +
+                ['Planta Permanente', 'Contratado / Interino', 'Suplente', 'Jubilado / Pensionado'].map(sr => '<option value="' + sr + '" ' + ((s.solicitante?.situacionRevista || 'Planta Permanente') === sr ? 'selected' : '') + '>' + sr + '</option>').join('') +
+              '</select>' +
+            '</div>' +
+            '<div class="form-group"><label class="form-label">Antigüedad</label><input type="text" id="editAntiguedad" class="input-text" value="' + sanitizeHTML(s.solicitante?.antiguedad || '') + '" placeholder="Ej: 5 años"/></div>' +
           '</div>' +
           '<div style="text-align:right;margin-top:.4rem;margin-bottom:1rem;">' +
             '<button type="submit" class="btn-restore" style="border-color:#3b82f6;color:#1d4ed8;font-weight:700;">💾 Guardar Cambios del Solicitante</button>' +
@@ -8428,10 +8692,13 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         });
       }
 
-      if ((!s.adjuntos || s.adjuntos.length === 0) && reqsActivos.length === 0) {
+      const listaArchivosFicha = normalizarListaArchivos(s);
+      s.adjuntos = listaArchivosFicha;
+
+      if (listaArchivosFicha.length === 0 && reqsActivos.length === 0) {
         html += '<div style="font-size:0.75rem;color:var(--text-muted);padding:0.85rem;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;text-align:center;">No se registran archivos adjuntos cargados en este expediente.</div>';
-      } else if (s.adjuntos && s.adjuntos.length > 0) {
-        s.adjuntos.forEach((a, idx) => {
+      } else if (listaArchivosFicha.length > 0) {
+        listaArchivosFicha.forEach((a, idx) => {
           const esObs = Boolean(a.observado);
           const rowCls = esObs ? 'document-row-card is-observed' : 'document-row-card is-loaded';
           const badgeHtml = esObs ?
@@ -8439,6 +8706,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             '<span class="doc-row-badge badge-cargado">✓ Archivo en Legajo Digital</span>';
           const replaceLabelCls = esObs ? 'btn-doc-subsanar' : 'btn-doc-attach';
           const replaceBtnText = esObs ? '🔄 Subsanar Archivo' : '🔄 Reemplazar';
+          const linkDriveDirecto = a.urlDrive || a.previewUrl || (a.fileId ? ('https://drive.google.com/file/d/' + a.fileId + '/view') : '');
 
           html += '<div class="' + rowCls + '" style="margin-bottom:0.5rem;">' +
             '<div class="doc-row-left">' +
@@ -8464,6 +8732,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             '</div>' +
             '<div class="doc-row-actions" style="flex-wrap:wrap;justify-content:flex-end;">' +
               '<button type="button" class="btn-doc-attach" onclick="abrirVisorOnline(\'' + s.id + '\', ' + idx + ')">👁️ Ver Online</button>' +
+              (linkDriveDirecto ? '<a href="' + sanitizeHTML(linkDriveDirecto) + '" target="_blank" rel="noopener noreferrer" class="btn-doc-attach" title="Abrir archivo directamente en Google Drive">🔗 Drive</a>' : '') +
               '<button type="button" class="btn-doc-attach" onclick="descargarDocumentoOnline(\'' + s.id + '\', ' + idx + ')">📥 Descargar</button>' +
               '<label class="' + replaceLabelCls + '" style="cursor:pointer;margin:0;" title="Reemplazar o subsanar archivo">' +
                 replaceBtnText + ' <input type="file" accept="image/*,application/pdf" style="display:none;" onchange="reemplazarDocumentoExistente(\'' + s.id + '\', ' + idx + ', this)"/>' +
@@ -8515,23 +8784,30 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       '</div>';
 
       // 6. SECCIÓN 4: CHAT DE AUDITORÍA Y LÍNEA DE TIEMPO (TÍTULO EXACTO)
-      html += '<div class="section-title-divider">Chat de Auditoría y Línea de Tiempo</div>' +
+      const listaBitacora = normalizarBitacoraComentarios(s);
+      s.observaciones = listaBitacora;
+
+      html += '<div class="section-title-divider">Chat de Auditoría y Línea de Tiempo (' + listaBitacora.length + ')</div>' +
         '<div class="chat-container" id="fichaChatContainer">';
 
-      (s.observaciones || []).forEach(o => {
-        const esMutual = (o.rol && (o.rol.includes('Analista') || o.rol.includes('Mutual') || o.rol.includes('Admin') || o.rol.includes('Automático')));
-        const bubbleClass = esMutual ? 'chat-bubble-mutual' : 'chat-bubble-comercializador';
-        const tagClass = esMutual ? 'chat-tag-mutual' : 'chat-tag-comercializador';
-        const tagText = esMutual ? 'Mutual Créditos' : 'Comercializador';
+      if (listaBitacora.length === 0) {
+        html += '<div style="font-size:0.74rem;color:var(--text-muted);text-align:center;padding:1rem;">Sin movimientos ni observaciones registradas aún en la bitácora de auditoría.</div>';
+      } else {
+        listaBitacora.forEach(o => {
+          const esMutual = (o.rol && (o.rol.includes('Analista') || o.rol.includes('Mutual') || o.rol.includes('Admin') || o.rol.includes('Automático')));
+          const bubbleClass = esMutual ? 'chat-bubble-mutual' : 'chat-bubble-comercializador';
+          const tagClass = esMutual ? 'chat-tag-mutual' : 'chat-tag-comercializador';
+          const tagText = esMutual ? 'Mutual Créditos' : 'Comercializador';
 
-        html += '<div class="chat-bubble ' + bubbleClass + '">' +
-          '<div class="chat-meta">' +
-            '<span><strong>' + sanitizeHTML(o.autor) + '</strong> <span class="chat-tag ' + tagClass + '">' + tagText + '</span></span>' +
-            '<span class="chat-timestamp">' + formatearFechaHoraChat(o.fecha) + '</span>' +
-          '</div>' +
-          '<div style="margin-top:2px;">' + sanitizeHTML(o.texto) + '</div>' +
-        '</div>';
-      });
+          html += '<div class="chat-bubble ' + bubbleClass + '">' +
+            '<div class="chat-meta">' +
+              '<span><strong>' + sanitizeHTML(o.autor || 'Sistema') + '</strong> <span class="chat-tag ' + tagClass + '">' + tagText + '</span></span>' +
+              '<span class="chat-timestamp">' + formatearFechaHoraChat(o.fecha) + '</span>' +
+            '</div>' +
+            '<div style="margin-top:2px;">' + sanitizeHTML(o.texto || '') + '</div>' +
+          '</div>';
+        });
+      }
 
       html += '</div>';
 
@@ -8598,16 +8874,23 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
 
       s.solicitante.dni = sanitizeHTML(editDniVal);
+      s.solicitante.cuil = sanitizeHTML(document.getElementById('editCuil')?.value?.trim() || '');
       s.solicitante.nombre = sanitizeHTML(document.getElementById('editNombre').value.trim());
       s.solicitante.fechaNac = sanitizeHTML(document.getElementById('editFechaNac').value);
+      s.solicitante.fechaNacimiento = s.solicitante.fechaNac;
+      s.solicitante.sexo = sanitizeHTML(document.getElementById('editSexo')?.value || '');
+      s.solicitante.estadoCivil = sanitizeHTML(document.getElementById('editEstadoCivil')?.value || '');
       s.solicitante.celular = sanitizeHTML(editCelVal);
       s.solicitante.email = sanitizeHTML(editEmailVal);
+      s.solicitante.localidad = sanitizeHTML(document.getElementById('editLocalidad')?.value?.trim() || '');
       s.solicitante.legajo = sanitizeHTML(document.getElementById('editLegajo').value.trim());
       s.solicitante.domicilio = sanitizeHTML(document.getElementById('editDomicilio').value.trim());
       s.solicitante.condicion = sanitizeHTML(document.getElementById('editCondicion').value);
       s.solicitante.organismo = sanitizeHTML(document.getElementById('editOrganismo').value);
       s.solicitante.dependencia = sanitizeHTML(document.getElementById('editDependencia').value.trim());
       s.solicitante.cargo = sanitizeHTML(document.getElementById('editCargo').value);
+      s.solicitante.situacionRevista = sanitizeHTML(document.getElementById('editSituacionRevista')?.value || 'Planta Permanente');
+      s.solicitante.antiguedad = sanitizeHTML(document.getElementById('editAntiguedad')?.value?.trim() || '');
 
       const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
       if (!s.observaciones) s.observaciones = [];
@@ -9126,7 +9409,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     function abrirVisorOnline(solicitudId, adjuntoIndex) {
       const s = getStoredSolicitudes().find(x => String(x.id) === String(solicitudId));
       if (!s) return;
-      const adj = s.adjuntos && s.adjuntos[adjuntoIndex];
+      const listaArchivos = normalizarListaArchivos(s);
+      const adj = listaArchivos[adjuntoIndex];
       if (!adj) {
         renderizarDocumento({ nombre: 'Sin archivo', tipo: 'Legajo' }, s.id_definitivo || s.id_provisorio || s.id);
         abrirModal('modalVisorDocumento');
@@ -9140,17 +9424,19 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
     function descargarDocumentoOnline(solicitudId, adjuntoIndex) {
       const s = getStoredSolicitudes().find(x => String(x.id) === String(solicitudId)); if (!s) return;
-      const adj = s.adjuntos && s.adjuntos[adjuntoIndex]; if (!adj) return;
+      const listaArchivos = normalizarListaArchivos(s);
+      const adj = listaArchivos[adjuntoIndex]; if (!adj) return;
       if (adj.dataUrl) {
         const a = document.createElement('a');
         a.href = adj.dataUrl;
         a.download = adj.nombre;
         a.click();
-      } else if (adj.urlDrive) {
-        const cleanUrl = normalizarUrlVisorDrive(adj.urlDrive);
-        if (cleanUrl) {
+      } else if (adj.fileId || adj.urlDrive || adj.previewUrl) {
+        const fileId = adj.fileId || (String(adj.urlDrive || adj.previewUrl).match(/\/d\/([a-zA-Z0-9_-]+)|[?&]id=([a-zA-Z0-9_-]+)/) || [])[1];
+        const dlUrl = fileId ? ('https://drive.google.com/uc?export=download&id=' + fileId) : (adj.urlDrive || normalizarUrlVisorDrive(adj.previewUrl));
+        if (dlUrl) {
           const a = document.createElement('a');
-          a.href = cleanUrl;
+          a.href = dlUrl;
           a.target = '_blank';
           a.rel = 'noopener noreferrer';
           a.click();

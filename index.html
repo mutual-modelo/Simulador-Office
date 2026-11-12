@@ -1807,38 +1807,66 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
     function getSession() {
       try {
-        const raw = sessionStorage.getItem('AMMER_AUTH_SESSION');
+        const raw = sessionStorage.getItem('sesion_mutual') || sessionStorage.getItem('AMMER_AUTH_SESSION');
         if (!raw) return null;
         const s = JSON.parse(raw);
-        if (!s || !s.id || !s.rol) return null;
+        if (!s) return null;
+        s.id = s.id || s.idUsuario || s.usuario_id || '';
+        s.email = String(s.email || '').toLowerCase();
+        s.nombre = s.nombre || 'Usuario';
+        s.rol = s.rol || 'Comercializador';
+        s.idOrganizacion = s.idOrganizacion || s.organizacion_id || 'org_parana_centro';
+        s.nombreOrganizacion = s.nombreOrganizacion || s.nombre_organizacion || 'Mutual Modelo';
         s.organizacion_id = s.idOrganizacion;
         s.nombre_organizacion = s.nombreOrganizacion;
-        s.es_titular_organizacion = s.esTitular;
+        s.es_titular_organizacion = !!(s.esTitular !== undefined ? s.esTitular : s.es_titular_organizacion);
+        s.esTitular = s.es_titular_organizacion;
         return s;
       } catch(e) {
         return null;
       }
     }
 
-    function setSession(u) {
-      if (!u) {
+    function setSession(data) {
+      if (!data) {
+        sessionStorage.removeItem('sesion_mutual');
         sessionStorage.removeItem('AMMER_AUTH_SESSION');
         return;
       }
-      // Puntos 6, 7 y 10: Guardar ÚNICAMENTE datos mínimos de sesión, PROHIBIDO contraseñas
+
+      // Extrae el objeto usuario de forma segura (objeto plano o anidado en .usuario o .user)
+      const user = data.usuario || data.user || data;
+
+      // Lectura tipada y segura de propiedades (NUNCA invocar .includes en user object)
+      const email = String(user.email || (typeof user.usuario === 'string' && user.usuario.includes('@') ? user.usuario : '')).toLowerCase();
+      const rolRaw = String(user.rol || '').trim();
+      let rolNormalizado = 'Comercializador';
+      const rolLower = rolRaw.toLowerCase();
+      if (rolLower.includes('admin')) {
+        rolNormalizado = 'Admin';
+      } else if (rolLower.includes('analista') || rolLower.includes('mutual')) {
+        rolNormalizado = 'Analista';
+      } else {
+        rolNormalizado = 'Comercializador';
+      }
+
       const safeUser = {
-        id: u.id || '',
-        email: u.email || (u.usuario && u.usuario.includes('@') ? u.usuario : (u.usuario ? u.usuario + '@mutualmodelo.com.ar' : '')),
-        nombre: u.nombre || u.usuario || 'Usuario',
-        rol: u.rol || 'Comercializador',
-        idOrganizacion: u.organizacion_id || u.idOrganizacion || 'org_parana_centro',
-        nombreOrganizacion: u.nombre_organizacion || u.nombreOrganizacion || 'Mutual Modelo',
-        esTitular: !!(u.es_titular_organizacion || u.esTitular)
+        id: user.id || user.idUsuario || user.usuario_id || (typeof user.usuario === 'string' ? user.usuario : '') || 'usr_' + Date.now(),
+        email: email || (typeof user.usuario === 'string' && user.usuario ? user.usuario + '@mutualmodelo.com.ar' : 'usuario@mutualmodelo.com.ar'),
+        nombre: user.nombre || (typeof user.usuario === 'string' ? user.usuario : '') || 'Usuario',
+        rol: rolNormalizado,
+        idOrganizacion: user.idOrganizacion || user.organizacion_id || 'org_parana_centro',
+        nombreOrganizacion: user.nombreOrganizacion || user.nombre_organizacion || 'Mutual Modelo',
+        esTitular: !!(user.esTitular !== undefined ? user.esTitular : user.es_titular_organizacion),
+        es_titular_organizacion: !!(user.esTitular !== undefined ? user.esTitular : user.es_titular_organizacion)
       };
+
+      sessionStorage.setItem('sesion_mutual', JSON.stringify(safeUser));
       sessionStorage.setItem('AMMER_AUTH_SESSION', JSON.stringify(safeUser));
     }
 
     function handleLogout() {
+      sessionStorage.removeItem('sesion_mutual');
       sessionStorage.removeItem('AMMER_AUTH_SESSION');
       checkAuthAndInit();
       showToast('Sesión finalizada de forma segura');
@@ -1857,16 +1885,16 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       // Rate limiting local anti-spam
       if (!checkSubmitCooldown('btnLoginSubmit', 2500)) return;
 
-      const user = document.getElementById('loginUsuario')?.value?.trim().toLowerCase();
-      const pass = document.getElementById('loginClave')?.value;
+      const userVal = document.getElementById('loginUsuario')?.value?.trim().toLowerCase();
+      const passVal = document.getElementById('loginClave')?.value;
       const err = document.getElementById('loginErrorMsg');
       if (err) err.style.display = 'none';
 
       const res = await callApi({
         action: 'login',
-        usuario: user,
-        password: pass,
-        clave: pass
+        usuario: userVal,
+        password: passVal,
+        clave: passVal
       }, {
         title: 'Verificando Credenciales...',
         sub: 'Consultando base de usuarios en Google Sheets'
@@ -1874,31 +1902,31 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       let loggedUser = null;
       if (res.ok && res.data) {
-        if ((res.data.success || res.data.ok) && res.data.user) {
-          loggedUser = res.data.user;
-        } else if (res.data.usuario || res.data.nombre) {
-          loggedUser = res.data;
-        } else if ((res.data.success === false || res.data.ok === false) && (res.data.message || res.data.error)) {
-          if (err) { err.textContent = res.data.message || res.data.error; err.style.display = 'block'; }
+        const d = res.data;
+        if (d.ok === false || d.success === false) {
+          if (err) {
+            err.textContent = d.message || d.error || 'Usuario o contraseña incorrectos.';
+            err.style.display = 'block';
+          }
           return;
         }
+        // Extrae el objeto usuario de forma segura
+        loggedUser = d.usuario || d.user || (d.ok || d.success ? d : null);
       }
 
       if (!loggedUser) {
-        const fallback = USUARIOS_DEMO_FALLBACK[user];
-        if (fallback && fallback.clave === pass) {
+        const fallback = USUARIOS_DEMO_FALLBACK[userVal];
+        if (fallback && fallback.clave === passVal) {
           loggedUser = fallback;
         }
       }
 
       if (loggedUser) {
-        if (loggedUser.es_titular_organizacion === undefined && loggedUser.esTitular !== undefined) {
-          loggedUser.es_titular_organizacion = !!loggedUser.esTitular;
-        }
         setSession(loggedUser);
         checkAuthAndInit();
         sincronizarConBackend(true);
-        showToast('Bienvenido/a, ' + loggedUser.nombre);
+        const sess = getSession();
+        showToast('Bienvenido/a, ' + (sess?.nombre || 'Usuario'));
       } else {
         if (err) {
           err.textContent = 'Usuario o contraseña incorrectos. Verifique sus datos o intente nuevamente.';

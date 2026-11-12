@@ -32,25 +32,274 @@
     .tabular-nums{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
     .app-view{display:none}.app-view.active{display:block}
 
-    /* TOP HEADER */
-    header.top-header{background:#fff;border-bottom:1px solid var(--border-color);position:sticky;top:0;z-index:40;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-    .header-content{display:flex;align-items:center;justify-content:space-between;height:68px}
-    .brand-group{display:flex;align-items:center;gap:.75rem;cursor:pointer;text-decoration:none;color:inherit}
-    .app-logo-img{height:46px;width:auto;max-width:240px;object-fit:contain;display:block}
-    .header-app-title{display:flex;flex-direction:column;border-left:1px solid var(--border-color);padding-left:.85rem}
-    .header-app-title .title-main{font-size:.85rem;font-weight:700;color:var(--color-primary)}
-    .header-app-title .title-sub{font-size:.7rem;font-weight:500;color:var(--text-muted)}
-    .nav-tabs-wrap{display:flex;align-items:center;gap:.35rem}
-    .nav-tab-btn{display:inline-flex;align-items:center;gap:.35rem;padding:.45rem .85rem;font-size:.78rem;font-weight:600;color:var(--text-muted);background:transparent;border:1px solid transparent;border-radius:8px;cursor:pointer;transition:all .15s}
-    .nav-tab-btn:hover{background:#f1f5f9;color:var(--color-brand-blue)}
-    .nav-tab-btn.active{background:#eff6ff;color:var(--color-brand-blue);border-color:#bfdbfe;font-weight:700}
-    .user-header-chip{display:flex;align-items:center;gap:.5rem;padding:.25rem .65rem;background:#f8fafc;border:1px solid var(--border-color);border-radius:8px}
-    .user-avatar-circle{width:28px;height:28px;border-radius:50%;background:var(--color-brand-blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700}
-    .user-info-text{display:flex;flex-direction:column;line-height:1.15}
-    .user-info-name{font-size:.74rem;font-weight:700;color:var(--color-primary);display:flex;align-items:center;gap:3px}
-    .user-info-role{font-size:.64rem;font-weight:600;color:var(--text-muted)}
-    .btn-logout{padding:.38rem .7rem;font-size:.74rem;font-weight:600;border-radius:6px;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;cursor:pointer}
-    .btn-logout:hover{background:#fee2e2}
+    /* ========================================================================
+       TOP HEADER REDISEÑADO: 3 ZONAS BALANCEADAS, ERGONOMÍA & BRANDING
+       ======================================================================== */
+    header.top-header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 1px 3px rgba(15, 39, 68, 0.04);
+      height: 64px;
+      display: flex;
+      align-items: center;
+    }
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      height: 100%;
+      width: 100%;
+    }
+
+    /* ZONA 1: BRANDING & IDENTIDAD INSTITUCIONAL */
+    .header-zone-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      flex-shrink: 0;
+      user-select: none;
+    }
+    .header-zone-brand:hover .title-main {
+      color: var(--color-brand-blue);
+    }
+    .app-logo-img {
+      height: 38px;
+      width: auto;
+      max-width: 180px;
+      object-fit: contain;
+      display: block;
+    }
+    .header-app-title {
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid var(--border-color);
+      padding-left: 0.85rem;
+      line-height: 1.25;
+    }
+    .header-app-title .title-main {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #0f2d4a;
+      letter-spacing: -0.01em;
+      transition: color 0.15s ease;
+      white-space: nowrap;
+    }
+    .header-app-title .title-sub-row {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      margin-top: 1px;
+    }
+    .header-app-title .title-sub {
+      font-size: 0.74rem;
+      font-weight: 500;
+      color: #64748b;
+      white-space: nowrap;
+    }
+    .badge-version-pill {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.64rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 9999px;
+      background: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid #bae6fd;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    /* ZONA 2: PESTAÑAS DE NAVEGACIÓN TIPO SEGMENTED CONTROL */
+    .header-zone-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      min-width: 0;
+      padding: 0 0.5rem;
+    }
+    .nav-tabs-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      background: #f1f5f9;
+      padding: 3px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      max-width: 100%;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .nav-tabs-wrap::-webkit-scrollbar {
+      display: none;
+    }
+    .nav-tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.42rem 0.85rem;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: #64748b;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .nav-tab-btn:hover {
+      color: #0f2d4a;
+      background: rgba(255, 255, 255, 0.75);
+    }
+    .nav-tab-btn.active {
+      background: #ffffff;
+      color: #135596;
+      font-weight: 700;
+      border-color: #cbd5e1;
+      box-shadow: 0 1px 3px rgba(15, 39, 68, 0.08);
+    }
+
+    /* ZONA 3: CENTRO DE USUARIO, NOTIFICACIONES Y SALIDA */
+    .header-zone-user {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-shrink: 0;
+    }
+    .btn-notif-bell {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1px solid var(--border-color);
+      background: #ffffff;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      position: relative;
+      padding: 0;
+    }
+    .btn-notif-bell:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      color: #0f2d4a;
+    }
+    .notif-bell-icon {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+    .notif-badge {
+      position: absolute;
+      top: -3px;
+      right: -3px;
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 0.62rem;
+      font-weight: 800;
+      border-radius: 9999px;
+      min-width: 17px;
+      height: 17px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+      line-height: 1;
+    }
+    .user-header-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.28rem 0.65rem 0.28rem 0.35rem;
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 9999px;
+      transition: all 0.15s ease;
+    }
+    .user-header-chip:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+    .user-avatar-circle {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #135596, #0d3d6c);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      box-shadow: 0 1px 3px rgba(19, 85, 150, 0.25);
+    }
+    .user-info-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.18;
+      text-align: left;
+    }
+    .user-info-name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #1e293b;
+      white-space: nowrap;
+    }
+    .user-info-role {
+      font-size: 0.68rem;
+      font-weight: 500;
+      color: #64748b;
+      white-space: nowrap;
+    }
+    .btn-logout {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.38rem 0.65rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border-radius: 7px;
+      border: 1px solid var(--border-color);
+      background: #ffffff;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .btn-logout:hover {
+      background: #fef2f2;
+      color: #dc2626;
+      border-color: #fca5a5;
+    }
+    .logout-icon {
+      width: 13px;
+      height: 13px;
+      display: block;
+    }
+
+    @media (max-width: 1080px) {
+      .header-app-title .title-sub-row { display: none; }
+      .header-zone-nav { justify-content: flex-start; }
+    }
+    @media (max-width: 768px) {
+      .header-app-title { display: none; }
+      .user-info-text { display: none; }
+      .btn-logout span { display: none; }
+    }
 
     /* LOGIN */
     .login-container-wrap{min-height:calc(100vh - 70px);display:flex;align-items:center;justify-content:center;padding:1.5rem}
@@ -205,9 +454,6 @@
 
     /* CENTRO DE NOTIFICACIONES REACTIVO */
     .notif-wrapper{position:relative;display:inline-block;}
-    .btn-notif-bell{background:#fff;border:1px solid var(--border-color);border-radius:8px;padding:.4rem .55rem;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;color:var(--text-main);transition:all .15s ease;}
-    .btn-notif-bell:hover{background:#f8fafc;border-color:#cbd5e1;}
-    .notif-badge{position:absolute;top:-5px;right:-5px;background:#ef4444;color:#fff;font-size:.65rem;font-weight:800;border-radius:9999px;padding:1px 5px;min-width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.2);line-height:1;}
     .notif-dropdown{position:absolute;right:0;top:calc(100% + 8px);width:350px;max-width:90vw;background:#fff;border:1px solid var(--border-color);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.15);z-index:999;overflow:hidden;display:flex;flex-direction:column;}
     .notif-dropdown-header{padding:.65rem .85rem;background:#f8fafc;border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between;font-size:.78rem;font-weight:800;color:var(--color-primary);}
     .notif-header-count{background:#e0e7ff;color:#3730a3;font-size:.65rem;font-weight:700;padding:2px 6px;border-radius:9999px;}
@@ -404,24 +650,35 @@
     </div>
   </div>
 
-  <!-- CABECERA INSTITUCIONAL CON NAVEGACIÓN Y PERFIL -->
+  <!-- CABECERA INSTITUCIONAL CON NAVEGACIÓN Y PERFIL (3 ZONAS BALANCEADAS) -->
   <header class="top-header" id="mainAppHeader" style="display:none;">
     <div class="container header-content">
-      <div style="display:flex;align-items:center;gap:1rem;">
-        <div onclick="cambiarPestana('view-simulador')" class="brand-group" title="Mutual Modelo de Entre Ríos">
-          <img src="logo.jpg" alt="Mutual Modelo de Entre Ríos" class="app-logo-img" onerror="handleLogoFallback(this)"/>
-          <div class="header-app-title">
-            <span class="title-main">Calculador de Ayudas Económicas</span>
-            <span class="title-sub">Aplicativo Oficial 1.0v</span>
+      <!-- ZONA 1: IDENTIDAD INSTITUCIONAL & BRANDING -->
+      <div class="header-zone-brand" onclick="cambiarPestana('view-simulador')" title="Mutual Modelo de Entre Ríos - Calculador Oficial">
+        <img src="logo.jpg" alt="Mutual Modelo de Entre Ríos" class="app-logo-img" onerror="handleLogoFallback(this)"/>
+        <div class="header-app-title">
+          <span class="title-main">Mutual Modelo de Entre Ríos</span>
+          <div class="title-sub-row">
+            <span class="title-sub">Calculador de Ayudas Económicas</span>
+            <span class="badge-version-pill">v1.0 Oficial</span>
           </div>
         </div>
+      </div>
+
+      <!-- ZONA 2: PESTAÑAS DE NAVEGACIÓN ESTILIZADAS (SEGMENTED CONTROL) -->
+      <div class="header-zone-nav">
         <nav class="nav-tabs-wrap" id="navTabsMenu"></nav>
       </div>
-      <div style="display:flex;align-items:center;gap:0.75rem;">
+
+      <!-- ZONA 3: CENTRO DE USUARIO, NOTIFICACIONES Y SALIDA -->
+      <div class="header-zone-user">
         <!-- CENTRO DE NOTIFICACIONES REACTIVO -->
         <div class="notif-wrapper" id="notifWrapper">
-          <button class="btn-notif-bell" id="btnNotifBell" type="button" onclick="toggleDropdownNotificaciones(event)" title="Centro de Notificaciones y Novedades">
-            <span style="font-size:1.1rem;line-height:1;">🔔</span>
+          <button class="btn-notif-bell" id="btnNotifBell" type="button" onclick="toggleDropdownNotificaciones(event)" title="Centro de Notificaciones y Novedades" aria-label="Notificaciones">
+            <svg class="notif-bell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
             <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
           </button>
           <div class="notif-dropdown" id="notifDropdown" style="display:none;">
@@ -435,8 +692,19 @@
             <div class="notif-dropdown-list" id="notifDropdownList"></div>
           </div>
         </div>
+
+        <!-- TARJETA DE USUARIO -->
         <div class="user-header-chip" id="userHeaderChip"></div>
-        <button class="btn-logout" onclick="handleLogout()">Cerrar Sesión</button>
+
+        <!-- BOTÓN CERRAR SESIÓN ESTILIZADO -->
+        <button class="btn-logout" type="button" onclick="handleLogout()" title="Cerrar sesión segura">
+          <svg class="logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Salir</span>
+        </button>
       </div>
     </div>
   </header>

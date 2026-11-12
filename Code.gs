@@ -550,33 +550,35 @@ function registrarNuevaSolicitud(payload) {
     ).trim();
 
     const solicitante = sol.solicitante || {};
-    const dni = String(solicitante.dni || payload.DNI || payload.dni || '').trim();
-    const apellidoNombre = String(solicitante.nombre || payload.Apellido_Nombre || payload.apellido_nombre || payload.nombre || 'Sin_Nombre').trim();
-    const domicilioHistorico = String(sol.domicilio_historico || solicitante.domicilio || payload.Domicilio || payload.domicilio || 'Sin domicilio declarado').trim();
-    const legajo = String(solicitante.legajo || payload.Legajo || payload.legajo || '').trim();
+    const dni = String(solicitante.dni || sol.dni || payload.DNI || payload.dni || '').trim();
+    const apellidoNombre = String(solicitante.nombre || sol.apellidoNombre || payload.Apellido_Nombre || payload.apellido_nombre || payload.nombre || 'Sin_Nombre').trim();
+    const domicilioHistorico = String(sol.domicilio_historico || solicitante.domicilio || sol.domicilio || payload.Domicilio || payload.domicilio || 'Sin domicilio declarado').trim();
+    const legajo = String(solicitante.legajo || sol.legajo || payload.Legajo || payload.legajo || '').trim();
 
     const datosContacto = {
-      fechaNac: solicitante.fechaNac || payload.Fecha_Nac || payload.fechaNac || '',
-      email: solicitante.email || payload.Email || payload.email || '',
-      celular: solicitante.celular || payload.Celular || payload.celular || '',
+      cuil: solicitante.cuil || sol.cuil || payload.CUIL || payload.cuil || '',
+      localidad: solicitante.localidad || sol.localidad || payload.Localidad || payload.localidad || '',
+      fechaNac: solicitante.fechaNac || sol.fechaNac || payload.Fecha_Nac || payload.fechaNac || '',
+      email: solicitante.email || sol.email || payload.Email || payload.email || '',
+      celular: solicitante.celular || sol.telefono || sol.celular || payload.Celular || payload.celular || '',
       domicilio: domicilioHistorico
     };
 
     const datosLaborales = {
-      condicion: solicitante.condicion || payload.Condicion || payload.condicion || 'Activo',
-      organismo: solicitante.organismo || payload.Organismo || payload.organismo || 'Provincial',
-      dependencia: solicitante.dependencia || payload.Dependencia || payload.dependencia || '',
-      cargo: solicitante.cargo || payload.Cargo || payload.cargo || 'Titular',
+      condicion: solicitante.condicion || sol.condicion || payload.Condicion || payload.condicion || 'Activo',
+      organismo: solicitante.organismo || sol.organismo || payload.Organismo || payload.organismo || 'Provincial',
+      dependencia: solicitante.dependencia || sol.dependencia || payload.Dependencia || payload.dependencia || '',
+      cargo: solicitante.cargo || sol.cargo || payload.Cargo || payload.cargo || 'Titular',
       legajo: legajo
     };
 
     const prestamo = sol.prestamo || {};
-    const lineaAyuda = String(prestamo.lineaNombre || prestamo.linea || payload.Linea_Nombre || payload.Linea || payload.linea || 'FEDEM Provincial');
-    const lineaKey = String(prestamo.linea || payload.Linea || payload.linea || 'fedem');
-    const montoNeto = Number(prestamo.monto || payload.Monto || payload.monto || 0);
-    const cantCuotas = Number(prestamo.cuotas || payload.Cuotas || payload.cuotas || payload.Plazo || 12);
-    const montoCuota = Number(prestamo.cuotaEstimada || payload.Cuota_Estimada || payload.cuotaEstimada || 0);
-    const totalADevolver = Number(payload.Total_A_Devolver || (montoCuota * cantCuotas) || 0);
+    const lineaAyuda = String(prestamo.lineaNombre || prestamo.linea || sol.lineaAyuda || payload.Linea_Nombre || payload.Linea || payload.linea || 'FEDEM Provincial');
+    const lineaKey = String(prestamo.linea || sol.linea || payload.Linea || payload.linea || 'fedem');
+    const montoNeto = Number(prestamo.monto || sol.montoNeto || payload.Monto || payload.monto || 0);
+    const cantCuotas = Number(prestamo.cuotas || sol.cuotas || payload.Cuotas || payload.cuotas || payload.Plazo || 12);
+    const montoCuota = Number(prestamo.cuotaEstimada || sol.montoCuota || payload.Cuota_Estimada || payload.cuotaEstimada || 0);
+    const totalADevolver = Number(sol.totalDevolver || payload.Total_A_Devolver || (montoCuota * cantCuotas) || 0);
     const estadoTramite = String(sol.estado || payload.Estado_Tramite || 'Pendiente');
     const analistaAsignado = String(sol.analistaAsignado || sol.Analista_Asignado || payload.Analista_Asignado || payload.analistaAsignado || 'Sin Asignar').trim();
 
@@ -585,7 +587,7 @@ function registrarNuevaSolicitud(payload) {
     const carpetaDriveUrl = folder.getUrl();
 
     const archivosEntrada = parseJSONSafe_(payload.Archivos_Adjuntos_JSON, null) ||
-      payload.adjuntosBase64 || payload.archivos || payload.adjuntos || sol.adjuntos || [];
+      payload.archivosBase64 || payload.adjuntosBase64 || payload.archivos || payload.adjuntos || sol.adjuntos || [];
     const adjuntosDrive = guardarArchivosEnDrive_(folder, archivosEntrada, idSolicitud, asesorNombre);
 
     const historialComentarios = Array.isArray(sol.observaciones)
@@ -738,6 +740,7 @@ function listarSolicitudes(usuarioActivoInput) {
       domicilio_historico: String(get('Domicilio_Historico_Solicitud') || contacto.domicilio || ''),
       solicitante: {
         dni: dni,
+        cuil: contacto.cuil || '',
         legajo: String(get('Legajo_Municipal') || laborales.legajo || ''),
         nombre: nombreSoc,
         fechaNac: contacto.fechaNac || '',
@@ -745,6 +748,7 @@ function listarSolicitudes(usuarioActivoInput) {
         celular: contacto.celular || '',
         domicilio: String(get('Domicilio_Historico_Solicitud') || contacto.domicilio || ''),
         domicilio_historico: String(get('Domicilio_Historico_Solicitud') || contacto.domicilio || ''),
+        localidad: contacto.localidad || '',
         condicion: laborales.condicion || 'Activo',
         organismo: laborales.organismo || 'Provincial',
         dependencia: laborales.dependencia || '',
@@ -1065,19 +1069,33 @@ function asignarNumeroDefinitivoBackend(payload) {
     const rowNum = encontrarFilaPorId_(sheet, map, idTarget);
     if (rowNum === -1) return { ok: false, error: 'Expediente no encontrado: ' + idTarget };
 
+    const nroFinal = String(payload.nroDefinitivoInput || payload.id_definitivo || payload.nroDefinitivo || '').trim();
+    if (!nroFinal) return { ok: false, error: 'Debe ingresar un número definitivo válido.' };
+
     const nowStr = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd HH:mm');
     if (map['Metadata_Extra_JSON'] !== undefined) {
       const cell = sheet.getRange(rowNum, map['Metadata_Extra_JSON'] + 1);
       const meta = parseJSONSafe_(cell.getValue(), {});
-      meta.id_definitivo = String(payload.id_definitivo || '').trim();
+      meta.id_definitivo = nroFinal;
       cell.setValue(JSON.stringify(meta));
+    }
+    if (map['Historial_Comentarios_JSON'] !== undefined) {
+      const histCell = sheet.getRange(rowNum, map['Historial_Comentarios_JSON'] + 1);
+      const hist = parseJSONSafe_(histCell.getValue(), []);
+      hist.push({
+        autor: (payload.usuarioActivo && payload.usuarioActivo.nombre) || 'Analista Mutual',
+        rol: 'Analista Mutual',
+        fecha: nowStr,
+        texto: 'N° formal definitivo asignado: ' + nroFinal
+      });
+      histCell.setValue(JSON.stringify(hist));
     }
     if (map['Ultima_Actualizacion'] !== undefined) {
       sheet.getRange(rowNum, map['Ultima_Actualizacion'] + 1).setValue(nowStr);
     }
 
     SpreadsheetApp.flush();
-    return { ok: true, id: idTarget, id_definitivo: payload.id_definitivo };
+    return { ok: true, id: idTarget, id_definitivo: nroFinal, nroDefinitivo: nroFinal };
   } finally {
     lock.releaseLock();
   }

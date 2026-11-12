@@ -782,8 +782,316 @@
     .modal-body-scroll{padding:1rem 1.25rem;overflow-y:auto;flex:1}
     .modal-footer-bar{padding:.75rem 1.25rem;border-top:1px solid var(--border-color);background:#f8fafc;display:flex;justify-content:flex-end;gap:.5rem}
     .section-title-divider{font-size:.75rem;font-weight:700;color:var(--color-primary);text-transform:uppercase;letter-spacing:.03em;border-bottom:1px solid var(--border-color);padding-bottom:.3rem;margin:.85rem 0 .5rem}
-    .grid-3-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.5rem}
+    .grid-3-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.65rem}
     .file-input-box{border:1px dashed var(--border-color);padding:.6rem;border-radius:8px;background:#f8fafc;font-size:.72rem}
+
+    /* =====================================================================
+       DISEÑO MODAL RENOVADO: CARDS AGRUPADORAS Y FILAS DOCUMENTALES
+       ===================================================================== */
+    .modal-card-section {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.1rem 1.25rem;
+      margin-bottom: 1.15rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      transition: border-color 0.15s ease;
+    }
+    .modal-card-section:hover {
+      border-color: #cbd5e1;
+    }
+    .modal-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      margin-bottom: 0.9rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .modal-card-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.05rem;
+      flex-shrink: 0;
+    }
+    .modal-card-title-group h4 {
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin: 0;
+    }
+    .modal-card-title-group p {
+      font-size: 0.6875rem;
+      color: #64748b;
+      margin: 1px 0 0 0;
+    }
+
+    /* PREVISUALIZACIÓN EN VIVO DE CUOTA ESTIMADA (CARD 3) */
+    .live-cuota-preview-card {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      margin-top: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .live-cuota-preview-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .live-cuota-preview-label {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      color: #0369a1;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .live-cuota-preview-sub {
+      font-size: 0.72rem;
+      color: #0c4a6e;
+    }
+    .live-cuota-preview-right {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+    .live-cuota-preview-value {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #0284c7;
+      letter-spacing: -0.02em;
+    }
+    .live-cuota-preview-unit {
+      font-size: 0.75rem;
+      color: #0369a1;
+      font-weight: 600;
+    }
+
+    /* ZONA DE ARRASTRE COMPACTA (DROPZONE) */
+    .document-dropzone {
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      text-align: center;
+      background: #f8fafc;
+      color: #64748b;
+      font-size: 0.75rem;
+      margin-bottom: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+    }
+    .document-dropzone:hover, .document-dropzone.is-dragover {
+      border-color: #0284c7;
+      background: #f0f9ff;
+      color: #0369a1;
+    }
+    .document-dropzone-icon {
+      color: #94a3b8;
+      transition: color 0.15s ease;
+    }
+    .document-dropzone:hover .document-dropzone-icon, .document-dropzone.is-dragover .document-dropzone-icon {
+      color: #0284c7;
+    }
+    .document-dropzone-text {
+      font-weight: 600;
+      color: #334155;
+    }
+    .document-dropzone-sub {
+      font-size: 0.6875rem;
+      color: #94a3b8;
+    }
+
+    /* FILA DOCUMENTAL MODERNA (DOCUMENT ROW CARD) */
+    .document-row-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background: #ffffff;
+      border-radius: 11px;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 0.55rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+      transition: all 0.2s ease-in-out;
+      gap: 0.85rem;
+    }
+    .document-row-card:hover {
+      border-color: #93c5fd;
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.07);
+    }
+    .document-row-card.is-loaded {
+      background: #f0fdf4;
+      border-color: #a7f3d0;
+      box-shadow: 0 1px 3px rgba(16, 185, 129, 0.08);
+    }
+    .doc-row-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex: 1;
+      min-width: 0;
+    }
+    .doc-row-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      color: #0284c7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+    .document-row-card.is-loaded .doc-row-icon {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+    .doc-row-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .doc-row-header-line {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .doc-row-title {
+      font-size: 0.78125rem;
+      font-weight: 700;
+      color: #1e293b;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .doc-row-badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.625rem;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 9999px;
+      line-height: 1.4;
+      white-space: nowrap;
+    }
+    .badge-obligatorio {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+    .badge-opcional {
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+    .badge-interno {
+      background: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid #bae6fd;
+    }
+    .badge-cargado {
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #86efac;
+    }
+    .doc-row-subtitle {
+      font-size: 0.6875rem;
+      color: #64748b;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .document-row-card.is-loaded .doc-row-subtitle {
+      color: #166534;
+      font-weight: 500;
+    }
+
+    /* ACCIONES DE FILA DOCUMENTAL */
+    .doc-row-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      flex-shrink: 0;
+    }
+    .doc-row-native-input {
+      display: none !important;
+    }
+    .btn-doc-attach {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.35rem 0.75rem;
+      background: #ffffff;
+      color: #0284c7;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-doc-attach:hover {
+      background: #f0f9ff;
+      border-color: #0284c7;
+    }
+    .document-row-card.is-loaded .btn-doc-attach {
+      background: #f8fafc;
+      color: #334155;
+      border-color: #cbd5e1;
+    }
+    .document-row-card.is-loaded .btn-doc-attach:hover {
+      background: #ffffff;
+      color: #0284c7;
+      border-color: #0284c7;
+    }
+    .btn-doc-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 29px;
+      height: 29px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-doc-preview {
+      color: #0369a1;
+    }
+    .btn-doc-preview:hover {
+      background: #f0f9ff;
+      border-color: #7dd3fc;
+      color: #0284c7;
+    }
+    .btn-doc-delete {
+      color: #ef4444;
+    }
+    .btn-doc-delete:hover {
+      background: #fef2f2;
+      border-color: #fca5a5;
+      color: #dc2626;
+    }
 
     /* COMPARATIVO: DESEADO VS PROPUESTA MUTUAL */
     .compare-offers-grid{display:grid;grid-template-columns:1fr;gap:.75rem;margin-bottom:1rem}
@@ -1809,44 +2117,317 @@
   <div id="modalAltaAsociado" class="modal-backdrop">
     <div class="modal-window modal-large">
       <div class="modal-header-bar">
-        <div class="modal-header-title"><span>👤 Alta de Nuevo Asociado al Padrón Institucional</span></div>
+        <div class="modal-header-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="8.5" cy="7" r="4"/>
+            <line x1="20" y1="8" x2="20" y2="14"/>
+            <line x1="23" y1="11" x2="17" y2="11"/>
+          </svg>
+          <span>Alta de Nuevo Asociado al Padrón Institucional</span>
+        </div>
         <button class="btn-close-modal" onclick="cerrarModal('modalAltaAsociado')">&times;</button>
       </div>
       <div class="modal-body-scroll">
         <form id="formAltaAsociado" onsubmit="guardarNuevoAsociado(event)">
-          <div class="section-title-divider">1. Datos Personales del Asociado</div>
-          <div class="grid-3-cols">
-            <div class="form-group"><label class="form-label">DNI *</label><input type="text" id="asocDni" class="input-text" required placeholder="Sin puntos"/></div>
-            <div class="form-group"><label class="form-label">Apellido y Nombres *</label><input type="text" id="asocNombre" class="input-text" required placeholder="Ej: Juan Carlos Pérez"/></div>
-            <div class="form-group"><label class="form-label">Fecha de Nacimiento *</label><input type="date" id="asocFechaNac" class="input-text" required/></div>
-            <div class="form-group"><label class="form-label">Celular / WhatsApp *</label><input type="tel" id="asocCelular" class="input-text" required placeholder="Ej: 3434123456"/></div>
-            <div class="form-group"><label class="form-label">Email</label><input type="email" id="asocEmail" class="input-text" placeholder="socio@email.com"/></div>
-            <div class="form-group"><label class="form-label">Domicilio Completo *</label><input type="text" id="asocDomicilio" class="input-text" required placeholder="Ej: Urquiza 840, Paraná, Entre Ríos"/></div>
+          
+          <!-- CARD 1: DATOS PERSONALES Y DE FILIACIÓN -->
+          <div class="modal-card-section">
+            <div class="modal-card-header">
+              <div class="modal-card-icon">👤</div>
+              <div class="modal-card-title-group">
+                <h4>1. Datos Personales y de Filiación</h4>
+                <p>Información de identidad y contacto oficial del asociado para el padrón AMMER</p>
+              </div>
+            </div>
+            <div class="grid-3-cols">
+              <div class="form-group"><label class="form-label">DNI *</label><input type="text" id="asocDni" class="input-text" required placeholder="Sin puntos"/></div>
+              <div class="form-group"><label class="form-label">Apellido y Nombres *</label><input type="text" id="asocNombre" class="input-text" required placeholder="Ej: Juan Carlos Pérez"/></div>
+              <div class="form-group"><label class="form-label">CUIL (Opcional)</label><input type="text" id="asocCuil" class="input-text" placeholder="Ej: 20-31890452-9"/></div>
+              <div class="form-group"><label class="form-label">Fecha de Nacimiento *</label><input type="date" id="asocFechaNac" class="input-text" required/></div>
+              <div class="form-group">
+                <label class="form-label">Sexo</label>
+                <select id="asocSexo" class="input-text">
+                  <option value="Masculino">Masculino</option>
+                  <option value="Femenino">Femenino</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Estado Civil</label>
+                <select id="asocEstadoCivil" class="input-text">
+                  <option value="Soltero/a">Soltero/a</option>
+                  <option value="Casado/a">Casado/a</option>
+                  <option value="Divorciado/a">Divorciado/a</option>
+                  <option value="Viudo/a">Viudo/a</option>
+                  <option value="Unión Convivencial">Unión Convivencial</option>
+                </select>
+              </div>
+              <div class="form-group"><label class="form-label">Celular / WhatsApp *</label><input type="tel" id="asocCelular" class="input-text" required placeholder="Ej: 3434123456"/></div>
+              <div class="form-group"><label class="form-label">Email</label><input type="email" id="asocEmail" class="input-text" placeholder="socio@email.com"/></div>
+              <div class="form-group"><label class="form-label">Localidad / Ciudad</label><input type="text" id="asocLocalidad" class="input-text" placeholder="Ej: Paraná"/></div>
+            </div>
+            <div class="form-group" style="margin-top:0.65rem;">
+              <label class="form-label">Domicilio Completo *</label>
+              <input type="text" id="asocDomicilio" class="input-text" required placeholder="Ej: Urquiza 840, Paraná, Entre Ríos"/>
+            </div>
           </div>
 
-          <div class="section-title-divider">2. Datos Laborales</div>
-          <div class="grid-3-cols">
-            <div class="form-group"><label class="form-label">Condición *</label><select id="asocCondicion" class="input-text" required><option value="Activo">Activo</option><option value="Jubilado">Jubilado</option><option value="Pensionado">Pensionado</option></select></div>
-            <div class="form-group"><label class="form-label">Organismo *</label><select id="asocOrganismo" class="input-text" required onchange="handleOrganismoChange(this.value, 'asocLegajo')"><option value="Provincial" selected>Provincial</option><option value="Municipal">Municipal</option></select></div>
-            <div class="form-group"><label class="form-label">Legajo Municipal (Opcional)</label><input type="text" id="asocLegajo" class="input-text" placeholder="Ej: 14209" disabled style="opacity:0.5;background:#f1f5f9;cursor:not-allowed;"/></div>
-            <div class="form-group"><label class="form-label">Dependencia / Lugar *</label><input type="text" id="asocDependencia" class="input-text" required placeholder="Ej: Hospital San Martín"/></div>
-            <div class="form-group"><label class="form-label">Cargo *</label><select id="asocCargo" class="input-text" required><option value="Titular">Titular</option><option value="Suplente">Suplente</option></select></div>
+          <!-- CARD 2: DATOS LABORALES Y EMPLEADOR -->
+          <div class="modal-card-section">
+            <div class="modal-card-header">
+              <div class="modal-card-icon">💼</div>
+              <div class="modal-card-title-group">
+                <h4>2. Datos Laborales y Empleador</h4>
+                <p>Repartición pagadora, situación de revista y estabilidad funcional</p>
+              </div>
+            </div>
+            <div class="grid-3-cols">
+              <div class="form-group">
+                <label class="form-label">Organismo *</label>
+                <select id="asocOrganismo" class="input-text" required onchange="handleOrganismoChange(this.value, 'asocLegajo')">
+                  <option value="Provincial" selected>Provincial</option>
+                  <option value="Municipal">Municipal</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Condición *</label>
+                <select id="asocCondicion" class="input-text" required>
+                  <option value="Activo">Activo</option>
+                  <option value="Jubilado">Jubilado</option>
+                  <option value="Pensionado">Pensionado</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Legajo Municipal (Opcional)</label>
+                <input type="text" id="asocLegajo" class="input-text" placeholder="Ej: 14209" disabled style="opacity:0.5;background:#f1f5f9;cursor:not-allowed;"/>
+              </div>
+              <div class="form-group"><label class="form-label">Dependencia / Lugar *</label><input type="text" id="asocDependencia" class="input-text" required placeholder="Ej: Hospital San Martín"/></div>
+              <div class="form-group">
+                <label class="form-label">Cargo *</label>
+                <select id="asocCargo" class="input-text" required>
+                  <option value="Titular">Titular</option>
+                  <option value="Suplente">Suplente</option>
+                </select>
+              </div>
+            </div>
           </div>
 
-          <div class="section-title-divider">3. Documentación Digital del Asociado (Opcional - Google Drive)</div>
-          <p style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.5rem;">Los archivos se clasificarán y nombrarán en mayúsculas en Google Drive en la carpeta del asociado.</p>
-          <div class="grid-3-cols">
-            <div class="file-input-box"><label class="form-label">DNI (Frente y Dorso)</label><input type="file" id="asocFileDni" class="input-text" accept="image/*,application/pdf"/></div>
-            <div class="file-input-box"><label class="form-label">RECIBO DE SUELDO</label><input type="file" id="asocFileRecibo" class="input-text" accept="image/*,application/pdf"/></div>
-            <div class="file-input-box"><label class="form-label">SERVICIO</label><input type="file" id="asocFileServicio" class="input-text" accept="image/*,application/pdf"/></div>
-            <div class="file-input-box"><label class="form-label">CONSTANCIA DE CBU</label><input type="file" id="asocFileCbu" class="input-text" accept="image/*,application/pdf"/></div>
-            <div class="file-input-box"><label class="form-label">CERTIFICADO SAGE</label><input type="file" id="asocFileSage" class="input-text" accept="image/*,application/pdf"/></div>
-            <div class="file-input-box"><label class="form-label">OTROS DOCUMENTOS</label><input type="file" id="asocFileOtros" class="input-text" accept="image/*,application/pdf" multiple/></div>
+          <!-- CARD 3: DOCUMENTACIÓN DIGITAL DEL ASOCIADO (LEGAJO EN DRIVE) -->
+          <div class="modal-card-section">
+            <div class="modal-card-header">
+              <div class="modal-card-icon">📁</div>
+              <div class="modal-card-title-group">
+                <h4>3. Documentación para Legajo en Drive</h4>
+                <p>Digitalización de constancias oficiales archivadas en mayúsculas en la carpeta del asociado</p>
+              </div>
+            </div>
+
+            <!-- DROPZONE COMPACTO -->
+            <div class="document-dropzone" ondragover="event.preventDefault(); this.classList.add('is-dragover');" ondragleave="this.classList.remove('is-dragover');" ondrop="handleDropzoneDrop(event, 'asociado')">
+              <svg class="document-dropzone-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <div class="document-dropzone-text">Arrastra tus comprobantes aquí o adjúntalos fila por fila</div>
+              <div class="document-dropzone-sub">PDF, JPG o PNG de hasta 10 MB por archivo</div>
+            </div>
+
+            <!-- FILAS DOCUMENTALES -->
+            <div class="document-rows-container">
+              <!-- DNI -->
+              <div class="document-row-card" id="row-asocFileDni">
+                <div class="doc-row-left">
+                  <div class="doc-row-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="10" r="2"/><line x1="15" y1="9" x2="19" y2="9"/><line x1="15" y1="13" x2="19" y2="13"/>
+                    </svg>
+                  </div>
+                  <div class="doc-row-info">
+                    <div class="doc-row-header-line">
+                      <span class="doc-row-title">DNI (FRENTE Y DORSO)</span>
+                      <span class="doc-row-badge badge-opcional" id="badge-asocFileDni">Opcional</span>
+                    </div>
+                    <div class="doc-row-subtitle" id="sub-asocFileDni">Formatos admitidos: PDF, JPG, PNG</div>
+                  </div>
+                </div>
+                <div class="doc-row-actions">
+                  <input type="file" id="asocFileDni" class="doc-row-native-input" accept="image/*,application/pdf" onchange="handleDocRowFileChange(this, 'asocFileDni', 'opcional')"/>
+                  <button type="button" class="btn-doc-attach" onclick="document.getElementById('asocFileDni').click()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    <span id="btnLbl-asocFileDni">Adjuntar</span>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-preview" id="prev-asocFileDni" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('asocFileDni')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-delete" id="del-asocFileDni" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('asocFileDni', 'opcional')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- RECIBO DE SUELDO -->
+              <div class="document-row-card" id="row-asocFileRecibo">
+                <div class="doc-row-left">
+                  <div class="doc-row-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                  </div>
+                  <div class="doc-row-info">
+                    <div class="doc-row-header-line">
+                      <span class="doc-row-title">RECIBO DE SUELDO</span>
+                      <span class="doc-row-badge badge-opcional" id="badge-asocFileRecibo">Opcional</span>
+                    </div>
+                    <div class="doc-row-subtitle" id="sub-asocFileRecibo">Formatos admitidos: PDF, JPG, PNG</div>
+                  </div>
+                </div>
+                <div class="doc-row-actions">
+                  <input type="file" id="asocFileRecibo" class="doc-row-native-input" accept="image/*,application/pdf" onchange="handleDocRowFileChange(this, 'asocFileRecibo', 'opcional')"/>
+                  <button type="button" class="btn-doc-attach" onclick="document.getElementById('asocFileRecibo').click()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    <span id="btnLbl-asocFileRecibo">Adjuntar</span>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-preview" id="prev-asocFileRecibo" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('asocFileRecibo')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-delete" id="del-asocFileRecibo" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('asocFileRecibo', 'opcional')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- SERVICIO -->
+              <div class="document-row-card" id="row-asocFileServicio">
+                <div class="doc-row-left">
+                  <div class="doc-row-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                  </div>
+                  <div class="doc-row-info">
+                    <div class="doc-row-header-line">
+                      <span class="doc-row-title">SERVICIO</span>
+                      <span class="doc-row-badge badge-opcional" id="badge-asocFileServicio">Opcional</span>
+                    </div>
+                    <div class="doc-row-subtitle" id="sub-asocFileServicio">Formatos admitidos: PDF, JPG, PNG</div>
+                  </div>
+                </div>
+                <div class="doc-row-actions">
+                  <input type="file" id="asocFileServicio" class="doc-row-native-input" accept="image/*,application/pdf" onchange="handleDocRowFileChange(this, 'asocFileServicio', 'opcional')"/>
+                  <button type="button" class="btn-doc-attach" onclick="document.getElementById('asocFileServicio').click()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    <span id="btnLbl-asocFileServicio">Adjuntar</span>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-preview" id="prev-asocFileServicio" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('asocFileServicio')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-delete" id="del-asocFileServicio" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('asocFileServicio', 'opcional')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- CONSTANCIA DE CBU -->
+              <div class="document-row-card" id="row-asocFileCbu">
+                <div class="doc-row-left">
+                  <div class="doc-row-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+                    </svg>
+                  </div>
+                  <div class="doc-row-info">
+                    <div class="doc-row-header-line">
+                      <span class="doc-row-title">CONSTANCIA DE CBU</span>
+                      <span class="doc-row-badge badge-opcional" id="badge-asocFileCbu">Opcional</span>
+                    </div>
+                    <div class="doc-row-subtitle" id="sub-asocFileCbu">Formatos admitidos: PDF, JPG, PNG</div>
+                  </div>
+                </div>
+                <div class="doc-row-actions">
+                  <input type="file" id="asocFileCbu" class="doc-row-native-input" accept="image/*,application/pdf" onchange="handleDocRowFileChange(this, 'asocFileCbu', 'opcional')"/>
+                  <button type="button" class="btn-doc-attach" onclick="document.getElementById('asocFileCbu').click()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    <span id="btnLbl-asocFileCbu">Adjuntar</span>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-preview" id="prev-asocFileCbu" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('asocFileCbu')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-delete" id="del-asocFileCbu" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('asocFileCbu', 'opcional')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- CERTIFICADO SAGE -->
+              <div class="document-row-card" id="row-asocFileSage">
+                <div class="doc-row-left">
+                  <div class="doc-row-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                  </div>
+                  <div class="doc-row-info">
+                    <div class="doc-row-header-line">
+                      <span class="doc-row-title">CERTIFICADO SAGE</span>
+                      <span class="doc-row-badge badge-opcional" id="badge-asocFileSage">Opcional</span>
+                    </div>
+                    <div class="doc-row-subtitle" id="sub-asocFileSage">Formatos admitidos: PDF, JPG, PNG</div>
+                  </div>
+                </div>
+                <div class="doc-row-actions">
+                  <input type="file" id="asocFileSage" class="doc-row-native-input" accept="image/*,application/pdf" onchange="handleDocRowFileChange(this, 'asocFileSage', 'opcional')"/>
+                  <button type="button" class="btn-doc-attach" onclick="document.getElementById('asocFileSage').click()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    <span id="btnLbl-asocFileSage">Adjuntar</span>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-preview" id="prev-asocFileSage" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('asocFileSage')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-delete" id="del-asocFileSage" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('asocFileSage', 'opcional')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- OTROS DOCUMENTOS -->
+              <div class="document-row-card" id="row-asocFileOtros">
+                <div class="doc-row-left">
+                  <div class="doc-row-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                    </svg>
+                  </div>
+                  <div class="doc-row-info">
+                    <div class="doc-row-header-line">
+                      <span class="doc-row-title">OTROS DOCUMENTOS</span>
+                      <span class="doc-row-badge badge-opcional" id="badge-asocFileOtros">Opcional</span>
+                    </div>
+                    <div class="doc-row-subtitle" id="sub-asocFileOtros">Formatos admitidos: PDF, JPG, PNG (Múltiples archivos)</div>
+                  </div>
+                </div>
+                <div class="doc-row-actions">
+                  <input type="file" id="asocFileOtros" class="doc-row-native-input" accept="image/*,application/pdf" multiple onchange="handleDocRowFileChange(this, 'asocFileOtros', 'opcional')"/>
+                  <button type="button" class="btn-doc-attach" onclick="document.getElementById('asocFileOtros').click()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    <span id="btnLbl-asocFileOtros">Adjuntar</span>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-preview" id="prev-asocFileOtros" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('asocFileOtros')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-delete" id="del-asocFileOtros" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('asocFileOtros', 'opcional')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div class="modal-footer-bar" style="margin-top:1rem;padding:0.75rem 0 0 0;background:none;">
+          <!-- FOOTER DE ACCIONES -->
+          <div class="modal-footer-bar" style="margin-top:1.25rem;padding:0.85rem 0 0 0;background:none;border-top:1px solid #e2e8f0;">
             <button type="button" class="btn-restore" onclick="cerrarModal('modalAltaAsociado')">Cancelar</button>
-            <button type="submit" id="btnSubmitAltaAsociado" class="btn-primary-action" style="width:auto;padding:0.55rem 1.25rem;">Guardar Asociado en Padrón 👤</button>
+            <button type="submit" id="btnSubmitAltaAsociado" class="btn-primary-action" style="width:auto;padding:0.55rem 1.35rem;">Guardar Asociado en Padrón 👤</button>
           </div>
         </form>
       </div>
@@ -1856,7 +2437,16 @@
   <div id="modalAltaSolicitud" class="modal-backdrop">
     <div class="modal-window modal-large">
       <div class="modal-header-bar">
-        <div class="modal-header-title"><span id="lblAltaModalTitle">📝 Nueva Solicitud de Ayuda Económica</span></div>
+        <div class="modal-header-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          <span id="lblAltaModalTitle">📝 Nueva Solicitud de Ayuda Económica</span>
+        </div>
         <button class="btn-close-modal" onclick="cerrarModal('modalAltaSolicitud')">&times;</button>
       </div>
       <div class="modal-body-scroll">
@@ -1864,7 +2454,7 @@
           <input type="text" name="website_trap" id="form-trap-field-alta" style="display:none !important;" tabindex="-1" autocomplete="off"/>
           
           <!-- SELECTOR DE CANAL PARA GESTIONES PROPIAS DE SEDE CENTRAL -->
-          <div id="groupCanalIngresoModal" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;padding:0.75rem 1rem;border-radius:10px;margin-bottom:1rem;">
+          <div id="groupCanalIngresoModal" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;padding:0.75rem 1rem;border-radius:10px;margin-bottom:1.15rem;">
             <label class="form-label" style="font-weight:700;color:#166534;margin-bottom:0.35rem;display:flex;align-items:center;gap:4px;">
               🏛️ Canal de Ingreso Oficial Sede Social Mutual *
             </label>
@@ -1878,72 +2468,513 @@
             </div>
           </div>
 
-          <div class="section-title-divider">1. Datos Personales del Solicitante</div>
-          <div class="grid-3-cols">
-            <div class="form-group">
-              <label class="form-label">
-                <span>DNI *</span>
-                <span id="badgePadronDni" style="display:none;font-size:0.68rem;color:#166534;background:#dcfce7;padding:1px 6px;border-radius:4px;border:1px solid #86efac;font-weight:700;">✓ Asociado encontrado en Padrón</span>
-              </label>
-              <input type="text" id="solDni" class="input-text" required placeholder="Sin puntos" oninput="handleDniInputDebounced(this.value)"/>
+          <!-- CARD 1: IDENTIFICACIÓN Y DATOS PERSONALES DEL SOLICITANTE -->
+          <div class="modal-card-section">
+            <div class="modal-card-header">
+              <div class="modal-card-icon">👤</div>
+              <div class="modal-card-title-group">
+                <h4>1. Identificación y Datos Personales del Solicitante</h4>
+                <p>Búsqueda en padrón institucional y verificación de identidad</p>
+              </div>
             </div>
-            <div class="form-group">
-              <label class="form-label">Legajo Municipal (Opcional)</label>
-              <input type="text" id="solLegajo" class="input-text" placeholder="Ej: 14209" disabled style="opacity:0.5;background:#f1f5f9;cursor:not-allowed;"/>
-            </div>
-            <div class="form-group"><label class="form-label">Apellido y Nombres *</label><input type="text" id="solNombre" class="input-text" required placeholder="Ej: Juan Carlos Pérez"/></div>
-            <div class="form-group"><label class="form-label">Fecha de Nacimiento *</label><input type="date" id="solFechaNac" class="input-text" required/></div>
-            <div class="form-group"><label class="form-label">Email</label><input type="email" id="solEmail" class="input-text" placeholder="socio@email.com"/></div>
-            <div class="form-group"><label class="form-label">Celular / WhatsApp *</label><input type="tel" id="solCelular" class="input-text" required placeholder="Ej: 3434123456"/></div>
-          </div>
-          <div class="form-group"><label class="form-label">Domicilio Completo *</label><input type="text" id="solDomicilio" class="input-text" required placeholder="Ej: Urquiza 840, Paraná, Entre Ríos"/></div>
-
-          <div class="section-title-divider">2. Datos Laborales</div>
-          <div class="grid-3-cols">
-            <div class="form-group"><label class="form-label">Condición *</label><select id="solCondicion" class="input-text" required><option value="Activo">Activo</option><option value="Jubilado">Jubilado</option><option value="Pensionado">Pensionado</option></select></div>
-            <div class="form-group"><label class="form-label">Organismo *</label><select id="solOrganismo" class="input-text" required onchange="handleOrganismoChange(this.value, 'solLegajo')"><option value="Provincial" selected>Provincial</option><option value="Municipal">Municipal</option></select></div>
-            <div class="form-group"><label class="form-label">Dependencia / Lugar *</label><input type="text" id="solDependencia" class="input-text" required placeholder="Ej: Hospital San Martín"/></div>
-            <div class="form-group"><label class="form-label">Cargo *</label><select id="solCargo" class="input-text" required><option value="Titular">Titular</option><option value="Suplente">Suplente</option></select></div>
-          </div>
-
-          <div class="section-title-divider">3. Datos de la Ayuda Economica deseada por el Solicitante</div>
-          <div class="grid-3-cols">
-            <div class="form-group"><label class="form-label">Línea de Ayuda *</label><select id="solLinea" class="input-text" required onchange="ajustarPlazosModalAlta(this.value)"><option value="fedem">FEDEM Provincial</option><option value="muni">Convenio Municipal VIKINGO / QUAD</option><option value="sidecreer">Tarjeta Sidecreer</option></select></div>
-            <div class="form-group"><label class="form-label">Monto Solicitado (Neto) *</label><input type="number" id="solMonto" class="input-text" required min="10000" step="1000" value="100000"/></div>
-            <div class="form-group"><label class="form-label">Plazo de Cuotas *</label><select id="solPlazo" class="input-text" required><option value="6">6 cuotas</option><option value="12" selected>12 cuotas</option><option value="18">18 cuotas</option><option value="24">24 cuotas</option><option value="36">36 cuotas</option><option value="48">48 cuotas</option></select></div>
-          </div>
-
-          <div class="section-title-divider">4. Adjuntar Documentación (Google Drive)</div>
-          <p style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.5rem;">Los archivos se subirán y nombrarán automáticamente en Google Drive con nomenclatura formal en mayúsculas.</p>
-          <div class="grid-3-cols">
-            <div class="file-input-box"><label class="form-label">DNI (Frente y Dorso) *</label><input type="file" id="fileDni" class="input-text" accept="image/*,application/pdf" multiple required/></div>
-            <div class="file-input-box"><label class="form-label">RECIBO DE SUELDO *</label><input type="file" id="fileRecibo" class="input-text" accept="image/*,application/pdf" required/></div>
-            <div class="file-input-box"><label class="form-label">SERVICIO (Opcional)</label><input type="file" id="fileServicio" class="input-text" accept="image/*,application/pdf"/></div>
-            <div class="file-input-box"><label class="form-label">CONSTANCIA DE CBU (Opcional)</label><input type="file" id="fileCbu" class="input-text" accept="image/*,application/pdf"/></div>
-            <div class="file-input-box"><label class="form-label">CERTIFICADO SAGE (Opcional)</label><input type="file" id="fileSage" class="input-text" accept="image/*,application/pdf"/></div>
-            <div class="file-input-box"><label class="form-label">COMPROBANTE DE MOVIMIENTOS BANCARIOS</label><input type="file" id="fileMovimientos" class="input-text" accept="image/*,application/pdf"/></div>
-            <div class="file-input-box"><label class="form-label">TARJETA SIDECREER (Frente y Dorso)</label><input type="file" id="fileSidecreer" class="input-text" accept="image/*,application/pdf"/></div>
-            <div class="file-input-box"><label class="form-label">OTROS DOCUMENTOS</label><input type="file" id="fileOtros" class="input-text" accept="image/*,application/pdf" multiple/></div>
-          </div>
-
-          <!-- DOCUMENTOS INTERNOS MUTUAL (EXCLUSIVOS ANALISTA/ADMIN) -->
-          <div id="groupDocsInternosMutual" style="margin-top:0.75rem;padding:0.75rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;display:none;">
-            <div style="font-size:0.75rem;font-weight:700;color:#166534;margin-bottom:0.4rem;">🏛️ Documentación Interna Mutual (Exclusivo Créditos / Sede Central)</div>
             <div class="grid-3-cols">
-              <div class="file-input-box"><label class="form-label">TRANSFERENCIA</label><input type="file" id="fileTransferencia" class="input-text" accept="image/*,application/pdf"/></div>
-              <div class="file-input-box"><label class="form-label">SOLICITUD DE AYUDA ECONOMICA</label><input type="file" id="fileSolicitudAyuda" class="input-text" accept="image/*,application/pdf"/></div>
-              <div class="file-input-box"><label class="form-label">AUTORIZACION PARA DESCUENTO DE HABERES</label><input type="file" id="fileAutorizacionDescuento" class="input-text" accept="image/*,application/pdf"/></div>
+              <div class="form-group">
+                <label class="form-label">
+                  <span>DNI *</span>
+                  <span id="badgePadronDni" style="display:none;font-size:0.68rem;color:#166534;background:#dcfce7;padding:1px 6px;border-radius:4px;border:1px solid #86efac;font-weight:700;">✓ Asociado encontrado en Padrón</span>
+                </label>
+                <input type="text" id="solDni" class="input-text" required placeholder="Sin puntos" oninput="handleDniInputDebounced(this.value)"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Legajo Municipal (Opcional)</label>
+                <input type="text" id="solLegajo" class="input-text" placeholder="Ej: 14209" disabled style="opacity:0.5;background:#f1f5f9;cursor:not-allowed;"/>
+              </div>
+              <div class="form-group"><label class="form-label">Apellido y Nombres *</label><input type="text" id="solNombre" class="input-text" required placeholder="Ej: Juan Carlos Pérez"/></div>
+              <div class="form-group"><label class="form-label">Fecha de Nacimiento *</label><input type="date" id="solFechaNac" class="input-text" required/></div>
+              <div class="form-group"><label class="form-label">Email</label><input type="email" id="solEmail" class="input-text" placeholder="socio@email.com"/></div>
+              <div class="form-group"><label class="form-label">Celular / WhatsApp *</label><input type="tel" id="solCelular" class="input-text" required placeholder="Ej: 3434123456"/></div>
+            </div>
+            <div class="form-group" style="margin-top:0.65rem;">
+              <label class="form-label">Domicilio Completo *</label>
+              <input type="text" id="solDomicilio" class="input-text" required placeholder="Ej: Urquiza 840, Paraná, Entre Ríos"/>
+              <div style="font-size:0.6875rem;color:#0369a1;margin-top:4px;display:flex;align-items:center;gap:4px;">
+                <span>🏠</span>
+                <span>Se registrará como domicilio legal contractual para la cesión de la ayuda económica.</span>
+              </div>
             </div>
           </div>
 
-          <div class="modal-footer-bar" style="margin-top:1rem;padding:0.75rem 0 0 0;background:none;">
-            <button type="button" class="btn-restore" onclick="cerrarModal('modalAltaSolicitud')">Cancelar</button>
-            <button type="submit" id="btnSubmitAlta" class="btn-primary-action" style="width:auto;padding:0.55rem 1.25rem;">Registrar Solicitud en Servidor 🚀</button>
+          <!-- CARD 2: DATOS LABORALES Y REPARTICIÓN -->
+          <div class="modal-card-section">
+            <div class="modal-card-header">
+              <div class="modal-card-icon">💼</div>
+              <div class="modal-card-title-group">
+                <h4>2. Datos Laborales y Repartición</h4>
+                <p>Organismo empleador pagador y situación de revista de haberes</p>
+              </div>
+            </div>
+            <div class="grid-3-cols">
+              <div class="form-group">
+                <label class="form-label">Condición *</label>
+                <select id="solCondicion" class="input-text" required>
+                  <option value="Activo">Activo</option>
+                  <option value="Jubilado">Jubilado</option>
+                  <option value="Pensionado">Pensionado</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Organismo *</label>
+                <select id="solOrganismo" class="input-text" required onchange="handleOrganismoChange(this.value, 'solLegajo')">
+                  <option value="Provincial" selected>Provincial</option>
+                  <option value="Municipal">Municipal</option>
+                </select>
+              </div>
+              <div class="form-group"><label class="form-label">Dependencia / Lugar *</label><input type="text" id="solDependencia" class="input-text" required placeholder="Ej: Hospital San Martín"/></div>
+              <div class="form-group">
+                <label class="form-label">Cargo *</label>
+                <select id="solCargo" class="input-text" required>
+                  <option value="Titular">Titular</option>
+                  <option value="Suplente">Suplente</option>
+                </select>
+              </div>
+            </div>
           </div>
-        </form>
-      </div>
+
+          <!-- CARD 3: PARÁMETROS DEL CRÉDITO SOLICITADO -->
+          <div class="modal-card-section">
+            <div class="modal-card-header">
+              <div class="modal-card-icon">📊</div>
+              <div class="modal-card-title-group">
+                <h4>3. Datos de la Ayuda Economica deseada por el Solicitante</h4>
+                <p>Línea crediticia, capital requerido y simulación financiera en tiempo real</p>
+              </div>
+            </div>
+            <div class="grid-3-cols">
+              <div class="form-group">
+                <label class="form-label">Línea de Ayuda *</label>
+                <select id="solLinea" class="input-text" required onchange="ajustarPlazosModalAlta(this.value); actualizarResumenCuotaAlta();">
+                  <option value="fedem">FEDEM Provincial</option>
+                  <option value="muni">Convenio Municipal VIKINGO / QUAD</option>
+                  <option value="sidecreer">Tarjeta Sidecreer</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Monto Solicitado (Neto) *</label>
+                <input type="number" id="solMonto" class="input-text" required min="10000" step="1000" value="100000" oninput="actualizarResumenCuotaAlta();"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Plazo de Cuotas *</label>
+                <select id="solPlazo" class="input-text" required onchange="actualizarResumenCuotaAlta();">
+                  <option value="6">6 cuotas</option>
+                  <option value="12" selected>12 cuotas</option>
+                  <option value="18">18 cuotas</option>
+                  <option value="24">24 cuotas</option>
+                  <option value="36">36 cuotas</option>
+                  <option value="48">48 cuotas</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- CUADRO RESUMEN DE CUOTA CALCULADA (AZUL INSTITUCIONAL) -->
+            <div class="live-cuota-preview-card" id="boxResumenCuotaAlta">
+              <div class="live-cuota-preview-left">
+                <span class="live-cuota-preview-label">Cuota Estimada Oficial (FEDEM Provincial)</span>
+                <span class="live-cuota-preview-sub">Plan 12 cuotas fijas | Capital neto: $ 100.000 | Amortización Francesa</span>
+              </div>
+              <div class="live-cuota-preview-right">
+                <span class="live-cuota-preview-value" id="valPreviewCuotaAlta">$ 15.698,40</span>
+                <span class="live-cuota-preview-unit">/ mes</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 4: CARGA DE DOCUMENTACIÓN DEL EXPEDIENTE -->
+          <div class="modal-card-section">
+            <div class="modal-card-header">
+              <div class="modal-card-icon">📁</div>
+              <div class="modal-card-title-group">
+                <h4>4. Carga y Gestión de Documentación del Expediente</h4>
+                <p>Los archivos se subirán y nombrarán automáticamente en Google Drive con formato legal</p>
+              </div>
+            </div>
+
+            <!-- DROPZONE COMPACTO -->
+            <div class="document-dropzone" ondragover="event.preventDefault(); this.classList.add('is-dragover');" ondragleave="this.classList.remove('is-dragover');" ondrop="handleDropzoneDrop(event, 'altaSolicitud')">
+              <svg class="document-dropzone-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <div class="document-dropzone-text">Arrastra tus comprobantes aquí o adjúntalos fila por fila</div>
+              <div class="document-dropzone-sub">Formatos admitidos: PDF, JPG, PNG (hasta 10 MB por archivo)</div>
+            </div>
+
+            <!-- LISTA DE FILAS DOCUMENTALES -->
+            <div class="document-rows-container">
+              
+              <!-- 1. DNI (FRENTE Y DORSO) -->
+              <div class="document-row-card" id="row-fileDni">
+                <div class="doc-row-left">
+                  <div class="doc-row-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="10" r="2"/><line x1="15" y1="9" x2="19" y2="9"/><line x1="15" y1="13" x2="19" y2="13"/>
+                    </svg>
+                  </div>
+                  <div class="doc-row-info">
+                    <div class="doc-row-header-line">
+                      <span class="doc-row-title">DNI (FRENTE Y DORSO)</span>
+                      <span class="doc-row-badge badge-obligatorio" id="badge-fileDni">Obligatorio</span>
+                    </div>
+                    <div class="doc-row-subtitle" id="sub-fileDni">Formatos admitidos: PDF, JPG, PNG</div>
+                  </div>
+                </div>
+                <div class="doc-row-actions">
+                  <input type="file" id="fileDni" class="doc-row-native-input" accept="image/*,application/pdf" multiple required onchange="handleDocRowFileChange(this, 'fileDni', 'obligatorio')"/>
+                  <button type="button" class="btn-doc-attach" onclick="document.getElementById('fileDni').click()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    <span id="btnLbl-fileDni">Adjuntar</span>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-preview" id="prev-fileDni" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('fileDni')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-delete" id="del-fileDni" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('fileDni', 'obligatorio')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 2. RECIBO DE SUELDO -->
+              <div class="document-row-card" id="row-fileRecibo">
+                <div class="doc-row-left">
+                  <div class="doc-row-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                  </div>
+                  <div class="doc-row-info">
+                    <div class="doc-row-header-line">
+                      <span class="doc-row-title">RECIBO DE SUELDO</span>
+                      <span class="doc-row-badge badge-obligatorio" id="badge-fileRecibo">Obligatorio</span>
+                    </div>
+                    <div class="doc-row-subtitle" id="sub-fileRecibo">Formatos admitidos: PDF, JPG, PNG</div>
+                  </div>
+                </div>
+                <div class="doc-row-actions">
+                  <input type="file" id="fileRecibo" class="doc-row-native-input" accept="image/*,application/pdf" required onchange="handleDocRowFileChange(this, 'fileRecibo', 'obligatorio')"/>
+                  <button type="button" class="btn-doc-attach" onclick="document.getElementById('fileRecibo').click()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    <span id="btnLbl-fileRecibo">Adjuntar</span>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-preview" id="prev-fileRecibo" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('fileRecibo')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-delete" id="del-fileRecibo" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('fileRecibo', 'obligatorio')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 3. SERVICIO -->
+              <div class="document-row-card" id="row-fileServicio">
+                <div class="doc-row-left">
+                  <div class="doc-row-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                  </div>
+                  <div class="doc-row-info">
+                    <div class="doc-row-header-line">
+                      <span class="doc-row-title">SERVICIO</span>
+                      <span class="doc-row-badge badge-opcional" id="badge-fileServicio">Opcional</span>
+                    </div>
+                    <div class="doc-row-subtitle" id="sub-fileServicio">Formatos admitidos: PDF, JPG, PNG</div>
+                  </div>
+                </div>
+                <div class="doc-row-actions">
+                  <input type="file" id="fileServicio" class="doc-row-native-input" accept="image/*,application/pdf" onchange="handleDocRowFileChange(this, 'fileServicio', 'opcional')"/>
+                  <button type="button" class="btn-doc-attach" onclick="document.getElementById('fileServicio').click()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    <span id="btnLbl-fileServicio">Adjuntar</span>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-preview" id="prev-fileServicio" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('fileServicio')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-delete" id="del-fileServicio" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('fileServicio', 'opcional')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 4. CONSTANCIA DE CBU -->
+              <div class="document-row-card" id="row-fileCbu">
+                <div class="doc-row-left">
+                  <div class="doc-row-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+                    </svg>
+                  </div>
+                  <div class="doc-row-info">
+                    <div class="doc-row-header-line">
+                      <span class="doc-row-title">CONSTANCIA DE CBU</span>
+                      <span class="doc-row-badge badge-opcional" id="badge-fileCbu">Opcional</span>
+                    </div>
+                    <div class="doc-row-subtitle" id="sub-fileCbu">Formatos admitidos: PDF, JPG, PNG</div>
+                  </div>
+                </div>
+                <div class="doc-row-actions">
+                  <input type="file" id="fileCbu" class="doc-row-native-input" accept="image/*,application/pdf" onchange="handleDocRowFileChange(this, 'fileCbu', 'opcional')"/>
+                  <button type="button" class="btn-doc-attach" onclick="document.getElementById('fileCbu').click()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    <span id="btnLbl-fileCbu">Adjuntar</span>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-preview" id="prev-fileCbu" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('fileCbu')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-delete" id="del-fileCbu" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('fileCbu', 'opcional')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 5. CERTIFICADO SAGE -->
+              <div class="document-row-card" id="row-fileSage">
+                <div class="doc-row-left">
+                  <div class="doc-row-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                  </div>
+                  <div class="doc-row-info">
+                    <div class="doc-row-header-line">
+                      <span class="doc-row-title">CERTIFICADO SAGE</span>
+                      <span class="doc-row-badge badge-opcional" id="badge-fileSage">Opcional</span>
+                    </div>
+                    <div class="doc-row-subtitle" id="sub-fileSage">Formatos admitidos: PDF, JPG, PNG</div>
+                  </div>
+                </div>
+                <div class="doc-row-actions">
+                  <input type="file" id="fileSage" class="doc-row-native-input" accept="image/*,application/pdf" onchange="handleDocRowFileChange(this, 'fileSage', 'opcional')"/>
+                  <button type="button" class="btn-doc-attach" onclick="document.getElementById('fileSage').click()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    <span id="btnLbl-fileSage">Adjuntar</span>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-preview" id="prev-fileSage" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('fileSage')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-delete" id="del-fileSage" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('fileSage', 'opcional')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 6. COMPROBANTE DE MOVIMIENTOS BANCARIOS -->
+              <div class="document-row-card" id="row-fileMovimientos">
+                <div class="doc-row-left">
+                  <div class="doc-row-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                  </div>
+                  <div class="doc-row-info">
+                    <div class="doc-row-header-line">
+                      <span class="doc-row-title">COMPROBANTE DE MOVIMIENTOS BANCARIOS</span>
+                      <span class="doc-row-badge badge-opcional" id="badge-fileMovimientos">Opcional</span>
+                    </div>
+                    <div class="doc-row-subtitle" id="sub-fileMovimientos">Formatos admitidos: PDF, JPG, PNG</div>
+                  </div>
+                </div>
+                <div class="doc-row-actions">
+                  <input type="file" id="fileMovimientos" class="doc-row-native-input" accept="image/*,application/pdf" onchange="handleDocRowFileChange(this, 'fileMovimientos', 'opcional')"/>
+                  <button type="button" class="btn-doc-attach" onclick="document.getElementById('fileMovimientos').click()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    <span id="btnLbl-fileMovimientos">Adjuntar</span>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-preview" id="prev-fileMovimientos" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('fileMovimientos')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-delete" id="del-fileMovimientos" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('fileMovimientos', 'opcional')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 7. TARJETA SIDECREER -->
+              <div class="document-row-card" id="row-fileSidecreer">
+                <div class="doc-row-left">
+                  <div class="doc-row-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+                    </svg>
+                  </div>
+                  <div class="doc-row-info">
+                    <div class="doc-row-header-line">
+                      <span class="doc-row-title">TARJETA SIDECREER</span>
+                      <span class="doc-row-badge badge-opcional" id="badge-fileSidecreer">Opcional</span>
+                    </div>
+                    <div class="doc-row-subtitle" id="sub-fileSidecreer">Formatos admitidos: PDF, JPG, PNG (Frente y Dorso)</div>
+                  </div>
+                </div>
+                <div class="doc-row-actions">
+                  <input type="file" id="fileSidecreer" class="doc-row-native-input" accept="image/*,application/pdf" onchange="handleDocRowFileChange(this, 'fileSidecreer', 'opcional')"/>
+                  <button type="button" class="btn-doc-attach" onclick="document.getElementById('fileSidecreer').click()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    <span id="btnLbl-fileSidecreer">Adjuntar</span>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-preview" id="prev-fileSidecreer" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('fileSidecreer')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-delete" id="del-fileSidecreer" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('fileSidecreer', 'opcional')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 8. OTROS DOCUMENTOS -->
+              <div class="document-row-card" id="row-fileOtros">
+                <div class="doc-row-left">
+                  <div class="doc-row-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                    </svg>
+                  </div>
+                  <div class="doc-row-info">
+                    <div class="doc-row-header-line">
+                      <span class="doc-row-title">OTROS DOCUMENTOS</span>
+                      <span class="doc-row-badge badge-opcional" id="badge-fileOtros">Opcional</span>
+                    </div>
+                    <div class="doc-row-subtitle" id="sub-fileOtros">Formatos admitidos: PDF, JPG, PNG (Múltiples archivos)</div>
+                  </div>
+                </div>
+                <div class="doc-row-actions">
+                  <input type="file" id="fileOtros" class="doc-row-native-input" accept="image/*,application/pdf" multiple onchange="handleDocRowFileChange(this, 'fileOtros', 'opcional')"/>
+                  <button type="button" class="btn-doc-attach" onclick="document.getElementById('fileOtros').click()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    <span id="btnLbl-fileOtros">Adjuntar</span>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-preview" id="prev-fileOtros" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('fileOtros')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-delete" id="del-fileOtros" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('fileOtros', 'opcional')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- DOCUMENTOS INTERNOS MUTUAL (EXCLUSIVOS ANALISTA/ADMIN) -->
+            <div id="groupDocsInternosMutual" style="margin-top:1rem;padding:0.85rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;display:none;">
+              <div style="font-size:0.75rem;font-weight:700;color:#166534;margin-bottom:0.6rem;display:flex;align-items:center;gap:5px;">
+                <span>🏛️</span>
+                <span>Documentación Interna Mutual (Exclusivo Créditos / Sede Central)</span>
+              </div>
+              <div class="document-rows-container">
+                <!-- TRANSFERENCIA -->
+                <div class="document-row-card" id="row-fileTransferencia">
+                  <div class="doc-row-left">
+                    <div class="doc-row-icon" style="background:#e0f2fe;color:#0369a1;">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+                      </svg>
+                    </div>
+                    <div class="doc-row-info">
+                      <div class="doc-row-header-line">
+                        <span class="doc-row-title">TRANSFERENCIA</span>
+                        <span class="doc-row-badge badge-interno" id="badge-fileTransferencia">Uso Interno</span>
+                      </div>
+                      <div class="doc-row-subtitle" id="sub-fileTransferencia">Comprobante bancario oficial de liquidación / transferencia</div>
+                    </div>
+                  </div>
+                  <div class="doc-row-actions">
+                    <input type="file" id="fileTransferencia" class="doc-row-native-input" accept="image/*,application/pdf" onchange="handleDocRowFileChange(this, 'fileTransferencia', 'interno')"/>
+                    <button type="button" class="btn-doc-attach" onclick="document.getElementById('fileTransferencia').click()">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                      <span id="btnLbl-fileTransferencia">Adjuntar</span>
+                    </button>
+                    <button type="button" class="btn-doc-action btn-doc-preview" id="prev-fileTransferencia" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('fileTransferencia')">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <button type="button" class="btn-doc-action btn-doc-delete" id="del-fileTransferencia" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('fileTransferencia', 'interno')">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- SOLICITUD DE AYUDA ECONOMICA -->
+                <div class="document-row-card" id="row-fileSolicitudAyuda">
+                  <div class="doc-row-left">
+                    <div class="doc-row-icon" style="background:#e0f2fe;color:#0369a1;">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                      </svg>
+                    </div>
+                    <div class="doc-row-info">
+                      <div class="doc-row-header-line">
+                        <span class="doc-row-title">SOLICITUD DE AYUDA ECONOMICA</span>
+                        <span class="doc-row-badge badge-interno" id="badge-fileSolicitudAyuda">Uso Interno</span>
+                      </div>
+                      <div class="doc-row-subtitle" id="sub-fileSolicitudAyuda">Formulario físico firmado por el requirente</div>
+                    </div>
+                  </div>
+                  <div class="doc-row-actions">
+                    <input type="file" id="fileSolicitudAyuda" class="doc-row-native-input" accept="image/*,application/pdf" onchange="handleDocRowFileChange(this, 'fileSolicitudAyuda', 'interno')"/>
+                    <button type="button" class="btn-doc-attach" onclick="document.getElementById('fileSolicitudAyuda').click()">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                      <span id="btnLbl-fileSolicitudAyuda">Adjuntar</span>
+                    </button>
+                    <button type="button" class="btn-doc-action btn-doc-preview" id="prev-fileSolicitudAyuda" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('fileSolicitudAyuda')">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <button type="button" class="btn-doc-action btn-doc-delete" id="del-fileSolicitudAyuda" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('fileSolicitudAyuda', 'interno')">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- AUTORIZACION PARA DESCUENTO DE HABERES -->
+                <div class="document-row-card" id="row-fileAutorizacionDescuento">
+                  <div class="doc-row-left">
+                    <div class="doc-row-icon" style="background:#e0f2fe;color:#0369a1;">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                      </svg>
+                    </div>
+                    <div class="doc-row-info">
+                      <div class="doc-row-header-line">
+                        <span class="doc-row-title">AUTORIZACION PARA DESCUENTO DE HABERES</span>
+                        <span class="doc-row-badge badge-interno" id="badge-fileAutorizacionDescuento">Uso Interno</span>
+                      </div>
+                      <div class="doc-row-subtitle" id="sub-fileAutorizacionDescuento">Autorización irrevocable de descuento por código mutual</div>
+                    </div>
+                  </div>
+                  <div class="doc-row-actions">
+                    <input type="file" id="fileAutorizacionDescuento" class="doc-row-native-input" accept="image/*,application/pdf" onchange="handleDocRowFileChange(this, 'fileAutorizacionDescuento', 'interno')"/>
+                    <button type="button" class="btn-doc-attach" onclick="document.getElementById('fileAutorizacionDescuento').click()">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    <span id="btnLbl-fileAutorizacionDescuento">Adjuntar</span>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-preview" id="prev-fileAutorizacionDescuento" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('fileAutorizacionDescuento')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                  <button type="button" class="btn-doc-action btn-doc-delete" id="del-fileAutorizacionDescuento" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('fileAutorizacionDescuento', 'interno')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- FOOTER DE ACCIONES -->
+        <div class="modal-footer-bar" style="margin-top:1.25rem;padding:0.85rem 0 0 0;background:none;border-top:1px solid #e2e8f0;">
+          <button type="button" class="btn-restore" onclick="cerrarModal('modalAltaSolicitud')">Cancelar</button>
+          <button type="submit" id="btnSubmitAlta" class="btn-primary-action" style="width:auto;padding:0.55rem 1.35rem;">Registrar Solicitud en Servidor 🚀</button>
+        </div>
+      </form>
     </div>
   </div>
+</div>
 
   <!-- MODAL 2: VER FICHA COMPLETA (EDICIÓN INTEGRAL, OFERTAS, DOCUMENTAL Y CHAT) -->
   <div id="modalFichaCompleta" class="modal-backdrop">
@@ -2877,10 +3908,216 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }, 350);
     }
 
+    /* ========================================================================
+       GESTIÓN DE FILAS DOCUMENTALES (DOCUMENT ROW CARDS) Y PREVISUALIZACIÓN
+       ======================================================================== */
+    function handleDocRowFileChange(inputEl, idKey, defaultBadgeType) {
+      const row = document.getElementById('row-' + idKey);
+      const sub = document.getElementById('sub-' + idKey);
+      const badge = document.getElementById('badge-' + idKey);
+      const btnLbl = document.getElementById('btnLbl-' + idKey);
+      const prevBtn = document.getElementById('prev-' + idKey);
+      const delBtn = document.getElementById('del-' + idKey);
+      if (!row || !sub || !badge) return;
+
+      const files = inputEl.files;
+      if (files && files.length > 0) {
+        row.classList.add('is-loaded');
+        badge.className = 'doc-row-badge badge-cargado';
+        badge.textContent = '✓ Cargado';
+        if (btnLbl) btnLbl.textContent = 'Cambiar';
+        if (prevBtn) prevBtn.style.display = 'inline-flex';
+        if (delBtn) delBtn.style.display = 'inline-flex';
+
+        if (files.length === 1) {
+          const f = files[0];
+          const mb = (f.size / (1024 * 1024)).toFixed(2);
+          sub.textContent = f.name + ' (' + mb + ' MB)';
+        } else {
+          sub.textContent = files.length + ' archivos seleccionados (' + Array.from(files).map(f => f.name).join(', ') + ')';
+        }
+      } else {
+        row.classList.remove('is-loaded');
+        badge.className = 'doc-row-badge badge-' + defaultBadgeType;
+        badge.textContent = (defaultBadgeType === 'obligatorio') ? 'Obligatorio' :
+                            (defaultBadgeType === 'interno') ? 'Uso Interno' : 'Opcional';
+        if (btnLbl) btnLbl.textContent = 'Adjuntar';
+        if (prevBtn) prevBtn.style.display = 'none';
+        if (delBtn) delBtn.style.display = 'none';
+        sub.textContent = 'Formatos admitidos: PDF, JPG, PNG';
+      }
+    }
+
+    function eliminarDocRow(idKey, defaultBadgeType) {
+      const input = document.getElementById(idKey);
+      if (input) {
+        input.value = '';
+        handleDocRowFileChange(input, idKey, defaultBadgeType);
+      }
+    }
+
+    function previsualizarDocRow(idKey) {
+      const input = document.getElementById(idKey);
+      if (!input || !input.files || input.files.length === 0) {
+        showToast('No hay archivo seleccionado para previsualizar.');
+        return;
+      }
+      const file = input.files[0];
+      const blobUrl = URL.createObjectURL(file);
+      const visor = document.getElementById('modalVisorDocumento');
+      const docViewerContent = document.getElementById('docViewerContent');
+      const visorDocNombre = document.getElementById('visorDocNombre');
+      const btnDescargar = document.getElementById('btnVisorDescargar');
+      const toolbar = document.getElementById('visorImageToolbar');
+
+      if (visorDocNombre) visorDocNombre.textContent = file.name;
+      if (btnDescargar) {
+        btnDescargar.href = blobUrl;
+        btnDescargar.download = file.name;
+      }
+
+      if (file.type && file.type.includes('pdf')) {
+        if (toolbar) toolbar.style.display = 'none';
+        if (docViewerContent) {
+          docViewerContent.innerHTML = '<iframe src="' + blobUrl + '" class="doc-viewer-frame"></iframe>';
+        }
+      } else {
+        if (toolbar) toolbar.style.display = 'flex';
+        resetearTransformVisor();
+        if (docViewerContent) {
+          docViewerContent.innerHTML = '<div class="doc-viewer-img-container"><img id="visorImgTarget" src="' + blobUrl + '" class="doc-viewer-img" alt="Vista previa"/></div>';
+        }
+      }
+      if (visor) visor.classList.add('open');
+    }
+
+    function actualizarResumenCuotaAlta() {
+      const box = document.getElementById('boxResumenCuotaAlta');
+      if (!box) return;
+      const lineaKey = document.getElementById('solLinea')?.value || 'fedem';
+      const monto = parseFloat(document.getElementById('solMonto')?.value) || 0;
+      const cuotas = parseInt(document.getElementById('solPlazo')?.value, 10) || 12;
+
+      if (monto <= 0) {
+        box.innerHTML = '<div class="live-cuota-preview-left">' +
+          '<span class="live-cuota-preview-label">Estimación de Cuota Mensual</span>' +
+          '<span class="live-cuota-preview-sub">Ingrese un monto válido para proyectar</span>' +
+        '</div>' +
+        '<div class="live-cuota-preview-right"><span class="live-cuota-preview-value">$ —</span></div>';
+        return;
+      }
+
+      try {
+        const sim = calculateSimulation(lineaKey, cuotas, 'neto', monto);
+        if (sim && sim.cuota) {
+          const lineaNombre = (lineaKey === 'muni') ? 'QUAD Municipal' :
+                              (lineaKey === 'sidecreer') ? 'Convenio Sidecreer' : 'FEDEM Provincial';
+          box.innerHTML = '<div class="live-cuota-preview-left">' +
+            '<span class="live-cuota-preview-label">Cuota Estimada Oficial (' + lineaNombre + ')</span>' +
+            '<span class="live-cuota-preview-sub">Plan ' + cuotas + ' cuotas fijas | Capital neto: ' + formatMoney(monto) + ' | Amortización Francesa</span>' +
+          '</div>' +
+          '<div class="live-cuota-preview-right">' +
+            '<span class="live-cuota-preview-value">' + formatMoney(sim.cuota) + '</span>' +
+            '<span class="live-cuota-preview-unit">/ mes</span>' +
+          '</div>';
+        } else {
+          box.innerHTML = '<div class="live-cuota-preview-left">' +
+            '<span class="live-cuota-preview-label">Estimación de Cuota</span>' +
+            '<span class="live-cuota-preview-sub">Plazo no habilitado para la línea</span>' +
+          '</div>' +
+          '<div class="live-cuota-preview-right"><span class="live-cuota-preview-value">$ —</span></div>';
+        }
+      } catch (e) {
+        console.warn('Error calculando cuota preview alta:', e);
+      }
+    }
+
+    function handleDropzoneDrop(event, context) {
+      event.preventDefault();
+      event.stopPropagation();
+      const dropzone = event.currentTarget;
+      if (dropzone) dropzone.classList.remove('is-dragover');
+
+      const dt = event.dataTransfer;
+      if (!dt || !dt.files || dt.files.length === 0) return;
+
+      const files = Array.from(dt.files);
+
+      files.forEach(f => {
+        const name = f.name.toLowerCase();
+        let targetId = null;
+        let badgeType = 'opcional';
+
+        if (name.includes('dni')) {
+          targetId = (context === 'asociado') ? 'asocFileDni' : 'fileDni';
+          badgeType = (context === 'asociado') ? 'opcional' : 'obligatorio';
+        } else if (name.includes('recibo') || name.includes('sueldo') || name.includes('haber')) {
+          targetId = (context === 'asociado') ? 'asocFileRecibo' : 'fileRecibo';
+          badgeType = (context === 'asociado') ? 'opcional' : 'obligatorio';
+        } else if (name.includes('servicio') || name.includes('luz') || name.includes('gas') || name.includes('inmobiliario')) {
+          targetId = (context === 'asociado') ? 'asocFileServicio' : 'fileServicio';
+          badgeType = 'opcional';
+        } else if (name.includes('cbu') || name.includes('banc')) {
+          targetId = (context === 'asociado') ? 'asocFileCbu' : 'fileCbu';
+          badgeType = 'opcional';
+        } else if (name.includes('sage')) {
+          targetId = (context === 'asociado') ? 'asocFileSage' : 'fileSage';
+          badgeType = 'opcional';
+        } else if (name.includes('movimiento') || name.includes('extracto')) {
+          targetId = 'fileMovimientos';
+          badgeType = 'opcional';
+        } else if (name.includes('sidecreer')) {
+          targetId = 'fileSidecreer';
+          badgeType = 'opcional';
+        } else if (name.includes('transferencia')) {
+          targetId = 'fileTransferencia';
+          badgeType = 'interno';
+        } else if (name.includes('solicitud')) {
+          targetId = 'fileSolicitudAyuda';
+          badgeType = 'interno';
+        } else if (name.includes('autorizacion') || name.includes('descuento')) {
+          targetId = 'fileAutorizacionDescuento';
+          badgeType = 'interno';
+        } else {
+          targetId = (context === 'asociado') ? 'asocFileOtros' : 'fileOtros';
+          badgeType = 'opcional';
+        }
+
+        const input = document.getElementById(targetId);
+        if (input) {
+          const check = validarArchivoAdjunto(f);
+          if (check.valido) {
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(f);
+            input.files = dataTransfer.files;
+            handleDocRowFileChange(input, targetId, badgeType);
+            showToast('✓ Archivo asignado a ' + targetId.replace('asocFile', '').replace('file', ''));
+          } else {
+            showToast('⚠️ ' + check.error);
+          }
+        }
+      });
+    }
+
+    function resetDocumentRows(formId) {
+      const form = document.getElementById(formId);
+      if (!form) return;
+      form.querySelectorAll('.document-row-card').forEach(row => {
+        const idKey = row.id.replace('row-', '');
+        const input = document.getElementById(idKey);
+        if (input) input.value = '';
+        const isOblig = row.querySelector('.badge-obligatorio') || idKey.includes('Dni') || idKey.includes('Recibo');
+        const isInterno = row.querySelector('.badge-interno') || idKey.includes('Transferencia') || idKey.includes('SolicitudAyuda') || idKey.includes('AutorizacionDescuento');
+        const defType = (isOblig && formId === 'formAltaSolicitud') ? 'obligatorio' : (isInterno ? 'interno' : 'opcional');
+        handleDocRowFileChange({ files: [] }, idKey, defType);
+      });
+    }
+
     function abrirModalAltaAsociado() {
       const f = document.getElementById('formAltaAsociado');
       if (f) f.reset();
       handleOrganismoChange('Provincial', 'asocLegajo');
+      resetDocumentRows('formAltaAsociado');
       abrirModal('modalAltaAsociado');
     }
 
@@ -2893,10 +4130,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         return;
       }
       const nombreVal = (document.getElementById('asocNombre')?.value || '').trim();
+      const cuilVal = (document.getElementById('asocCuil')?.value || '').trim();
       const fechaNacVal = document.getElementById('asocFechaNac')?.value;
+      const sexoVal = document.getElementById('asocSexo')?.value || 'Masculino';
+      const estadoCivilVal = document.getElementById('asocEstadoCivil')?.value || 'Soltero/a';
       const celularVal = (document.getElementById('asocCelular')?.value || '').trim();
       const emailVal = (document.getElementById('asocEmail')?.value || '').trim();
       const domicilioVal = (document.getElementById('asocDomicilio')?.value || '').trim();
+      const localidadVal = (document.getElementById('asocLocalidad')?.value || '').trim();
       const condicionVal = document.getElementById('asocCondicion')?.value || 'Activo';
       const organismoVal = document.getElementById('asocOrganismo')?.value || 'Provincial';
       const legajoVal = (organismoVal === 'Municipal') ? (document.getElementById('asocLegajo')?.value || '').trim() : '';
@@ -3368,6 +4609,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       document.getElementById('formAltaSolicitud')?.reset();
       ajustarPlazosModalAlta('fedem');
       handleOrganismoChange('Provincial', 'solLegajo');
+      resetDocumentRows('formAltaSolicitud');
+      actualizarResumenCuotaAlta();
       const b = document.getElementById('badgePadronDni'); if (b) b.style.display = 'none';
       const session = getSession();
       const isAnalistaOAdmin = (session && (session.rol === 'Analista' || session.rol === 'Admin'));
@@ -3923,49 +5166,67 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       // 5. SECCIÓN 3: GESTOR Y VISOR DOCUMENTAL ONLINE (VER, DESCARGAR, REEMPLAZAR)
       html += '<div class="section-title-divider">3. Legajo Documental Online (Ver, Descargar, Reemplazar)</div>' +
-        '<div style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:.75rem;">';
+        '<div class="document-rows-container" style="margin-bottom:.85rem;">';
 
-      (s.adjuntos || []).forEach((a, idx) => {
-        html += '<div style="display:flex;justify-content:space-between;align-items:center;background:#fff;padding:.45rem .65rem;border:1px solid var(--border-color);border-radius:6px;font-size:.72rem;flex-wrap:wrap;gap:.35rem;">' +
-          '<div>' +
-            '📄 <strong>' + a.tipo + ':</strong> <code style="color:var(--color-brand-blue);">' + a.nombre + '</code> ' +
-            '<span style="font-size:.65rem;color:var(--text-muted);margin-left:4px;">(' + formatearFechaHoraChat(a.fecha || s.fecha) + ' por ' + (a.autor || s.comercializador) + ')</span>' +
-          '</div>' +
-          '<div style="display:flex;gap:4px;align-items:center;">' +
-            '<button type="button" class="btn-restore" style="padding:.2rem .5rem;font-size:.68rem;" onclick="abrirVisorOnline(\'' + s.id + '\', ' + idx + ')">👁️ Ver Online</button>' +
-            '<button type="button" class="btn-restore" style="padding:.2rem .5rem;font-size:.68rem;" onclick="descargarDocumentoOnline(\'' + s.id + '\', ' + idx + ')">📥 Descargar</button>' +
-            '<label class="btn-restore" style="padding:.2rem .5rem;font-size:.68rem;cursor:pointer;margin:0;" title="Reemplazar archivo observado">' +
-              '🔄 Reemplazar <input type="file" style="display:none;" onchange="reemplazarDocumentoExistente(\'' + s.id + '\', ' + idx + ', this)"/>' +
-            '</label>' +
-          '</div>' +
-        '</div>';
-      });
+      if (!s.adjuntos || s.adjuntos.length === 0) {
+        html += '<div style="font-size:0.75rem;color:var(--text-muted);padding:0.85rem;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;text-align:center;">No se registran archivos adjuntos cargados en este expediente.</div>';
+      } else {
+        s.adjuntos.forEach((a, idx) => {
+          html += '<div class="document-row-card is-loaded" style="margin-bottom:0.5rem;">' +
+            '<div class="doc-row-left">' +
+              '<div class="doc-row-icon" style="background:#dcfce7;color:#16a34a;">' +
+                '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+                  '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>' +
+                '</svg>' +
+              '</div>' +
+              '<div class="doc-row-info">' +
+                '<div class="doc-row-header-line">' +
+                  '<span class="doc-row-title">' + a.tipo + '</span>' +
+                  '<span class="doc-row-badge badge-cargado">✓ Archivo en Drive</span>' +
+                '</div>' +
+                '<div class="doc-row-subtitle" style="color:#0369a1;font-weight:500;">' +
+                  a.nombre + ' <span style="font-size:.65rem;color:var(--text-muted);font-weight:400;">(' + formatearFechaHoraChat(a.fecha || s.fecha) + ' por ' + (a.autor || s.comercializador) + ')</span>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="doc-row-actions">' +
+              '<button type="button" class="btn-doc-attach" onclick="abrirVisorOnline(\'' + s.id + '\', ' + idx + ')">👁️ Ver Online</button>' +
+              '<button type="button" class="btn-doc-attach" onclick="descargarDocumentoOnline(\'' + s.id + '\', ' + idx + ')">📥 Descargar</button>' +
+              '<label class="btn-doc-attach" style="cursor:pointer;margin:0;" title="Reemplazar archivo">' +
+                '🔄 Reemplazar <input type="file" style="display:none;" onchange="reemplazarDocumentoExistente(\'' + s.id + '\', ' + idx + ', this)"/>' +
+              '</label>' +
+            '</div>' +
+          '</div>';
+        });
+      }
 
       html += '</div>';
 
       // Subir nuevo documento
-      html += '<div style="background:#f0f9ff;border:1px dashed #0284c7;border-radius:8px;padding:.75rem;margin-bottom:1rem;">' +
-        '<div style="font-size:.75rem;font-weight:700;color:#0369a1;margin-bottom:.4rem;">➕ Subir Documentación Complementaria al Expediente (Drive)</div>' +
+      html += '<div style="background:#f0f9ff;border:1px dashed #0284c7;border-radius:10px;padding:.85rem;margin-bottom:1rem;">' +
+        '<div style="font-size:.78rem;font-weight:700;color:#0369a1;margin-bottom:.45rem;display:flex;align-items:center;gap:5px;">' +
+          '<span>➕</span><span>Subir Documentación Complementaria al Expediente (Drive)</span>' +
+        '</div>' +
         '<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:.5rem;align-items:center;">' +
-          '<select id="cboFichaDocTipo" class="input-text" style="font-size:.72rem;">' +
-            '<option value="DNI (Frente y Dorso)">DNI (Frente y Dorso)</option>' +
+          '<select id="cboFichaDocTipo" class="input-text" style="font-size:.75rem;">' +
+            '<option value="DNI (FRENTE Y DORSO)">DNI (FRENTE Y DORSO)</option>' +
             '<option value="RECIBO DE SUELDO">RECIBO DE SUELDO</option>' +
             '<option value="SERVICIO">SERVICIO</option>' +
             '<option value="CONSTANCIA DE CBU">CONSTANCIA DE CBU</option>' +
             '<option value="CERTIFICADO SAGE">CERTIFICADO SAGE</option>' +
             '<option value="COMPROBANTE DE MOVIMIENTOS BANCARIOS">COMPROBANTE DE MOVIMIENTOS BANCARIOS</option>' +
-            '<option value="TARJETA SIDECREER (Frente y Dorso)">TARJETA SIDECREER (Frente y Dorso)</option>' +
+            '<option value="TARJETA SIDECREER">TARJETA SIDECREER</option>' +
             '<option value="OTROS DOCUMENTOS">OTROS DOCUMENTOS</option>' +
             (isAnalistaOAdmin ? (
-              '<option value="TRANSFERENCIA">TRANSFERENCIA (Mutual)</option>' +
-              '<option value="SOLICITUD DE AYUDA ECONOMICA">SOLICITUD DE AYUDA ECONOMICA (Mutual)</option>' +
-              '<option value="AUTORIZACION PARA DESCUENTO DE HABERES">AUTORIZACION PARA DESCUENTO DE HABERES (Mutual)</option>'
+              '<option value="TRANSFERENCIA">TRANSFERENCIA (Uso Interno)</option>' +
+              '<option value="SOLICITUD DE AYUDA ECONOMICA">SOLICITUD DE AYUDA ECONOMICA (Uso Interno)</option>' +
+              '<option value="AUTORIZACION PARA DESCUENTO DE HABERES">AUTORIZACION PARA DESCUENTO DE HABERES (Uso Interno)</option>'
             ) : '') +
           '</select>' +
-          '<input type="file" id="fileFichaAdicional" class="input-text" style="font-size:.72rem;" accept="image/*,application/pdf"/>' +
-          '<button type="button" class="btn-hero-action" style="padding:.45rem .85rem;font-size:.72rem;white-space:nowrap;" onclick="adjuntarDocumentoAdicionalFicha(\'' + s.id + '\')">Subir a Drive 📤</button>' +
+          '<input type="file" id="fileFichaAdicional" class="input-text" style="font-size:.75rem;" accept="image/*,application/pdf"/>' +
+          '<button type="button" class="btn-hero-action" style="padding:.45rem .95rem;font-size:.75rem;white-space:nowrap;" onclick="adjuntarDocumentoAdicionalFicha(\'' + s.id + '\')">Subir a Drive 📤</button>' +
         '</div>' +
-        '<p style="font-size:.65rem;color:#0369a1;margin-top:.35rem;">Se renombrará automáticamente según el formato Drive: <code>[' + s.id + '] [Tipo_Documento]_[Fecha/Hora].[ext]</code></p>' +
+        '<p style="font-size:.67rem;color:#0369a1;margin-top:.4rem;margin-bottom:0;">Se renombrará automáticamente según el formato Drive: <code>[' + s.id + '] [Tipo_Documento]_[Fecha/Hora].[ext]</code></p>' +
       '</div>';
 
       // 6. SECCIÓN 4: CHAT DE AUDITORÍA Y LÍNEA DE TIEMPO (TÍTULO EXACTO)
@@ -6528,6 +7789,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.renderWaPlazosSelector = renderWaPlazosSelector;
     window.renderApartadoEjecutivoAuditoriaFicha = renderApartadoEjecutivoAuditoriaFicha;
     window.copiarResumenIAAlChatAuditoria = copiarResumenIAAlChatAuditoria;
+    window.handleDocRowFileChange = handleDocRowFileChange;
+    window.eliminarDocRow = eliminarDocRow;
+    window.previsualizarDocRow = previsualizarDocRow;
+    window.actualizarResumenCuotaAlta = actualizarResumenCuotaAlta;
+    window.handleDropzoneDrop = handleDropzoneDrop;
+    window.resetDocumentRows = resetDocumentRows;
 
     window.addEventListener('DOMContentLoaded', () => {
       const input = document.getElementById('amountInput');

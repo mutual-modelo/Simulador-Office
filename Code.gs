@@ -139,6 +139,10 @@ function doPost(e) {
       case 'subirAdjuntoAdicional':
         return crearRespuestaJSON(subirAdjuntoAdicionalBackend(payload));
 
+      case 'eliminarDocumento':
+      case 'eliminarAdjunto':
+        return crearRespuestaJSON(eliminarDocumentoBackend(payload));
+
       case 'guardarPropuestaMutual':
         return crearRespuestaJSON(guardarPropuestaMutualBackend(payload));
 
@@ -339,12 +343,12 @@ function normalizarNombreArchivoConPrefijo_(nombreRaw, tipoDoc, prefijoOficial, 
   else if (tipoUpper.indexOf('DESCUENTO') !== -1 || tipoUpper.indexOf('HABERES') !== -1) tipoUpper = 'AUTORIZACION PARA DESCUENTO DE HABERES';
   else if (tipoUpper.indexOf('OTRO') !== -1) tipoUpper = 'OTROS DOCUMENTOS';
 
-  const extMatch = base.match(/\.([A-Za-z0-9]{2,5})$/);
-  const ext = extMatch ? extMatch[1].toUpperCase() : 'PDF';
-  if (!prefijo) return base || (tipoUpper + '.' + ext);
+  const baseSinExt = base.replace(/\.(jpg|jpeg|png|webp|gif|bmp|heic|heif|tif|tiff|jfif|pdf)$/i, '').replace(/\.[^.]{2,5}$/, '').trim();
+  const ext = 'PDF';
+  if (!prefijo) return (baseSinExt ? baseSinExt.toUpperCase() : tipoUpper) + '.' + ext;
 
-  if (base && base.indexOf(prefijo + ' ') === 0) {
-    return base.toUpperCase();
+  if (baseSinExt && baseSinExt.toUpperCase().indexOf(prefijo.toUpperCase() + ' ') === 0) {
+    return baseSinExt.toUpperCase() + '.' + ext;
   }
   return prefijo + ' ' + tipoUpper + '.' + ext;
 }
@@ -361,9 +365,14 @@ function guardarArchivosEnDrive_(folder, archivosRaw, idExpediente, autor) {
       base64Str = String(item.dataUrl).split('base64,')[1];
     }
 
-    const nombreArchivo = String(item.nombre || item.nombreArchivo || item.name || (idExpediente + ' ADJUNTO_' + (idx + 1) + '.pdf')).trim();
-    const mimeType = String(item.tipoMime || item.mimeType || item.type || (nombreArchivo.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'));
     const tipoDoc = String(item.tipo || 'OTROS DOCUMENTOS');
+    let nombreArchivo = String(item.nombre || item.nombreArchivo || item.name || (idExpediente + ' ADJUNTO_' + (idx + 1) + '.PDF')).trim();
+    const rawMime = String(item.tipoMime || item.mimeType || item.type || '').toLowerCase();
+    const esPdfEnBase64 = base64Str.indexOf('JVBERi0') === 0 || rawMime === 'application/pdf';
+    if (esPdfEnBase64 || /\.(jpg|jpeg|png|webp|gif|bmp|heic|heif|tif|tiff|jfif|pdf)$/i.test(nombreArchivo) || !/\.[a-z0-9]{2,5}$/i.test(nombreArchivo)) {
+      nombreArchivo = normalizarNombreArchivoConPrefijo_(nombreArchivo, tipoDoc, idExpediente, idExpediente);
+    }
+    const mimeType = esPdfEnBase64 ? 'application/pdf' : String(item.tipoMime || item.mimeType || item.type || 'application/pdf');
 
     if (base64Str) {
       try {
@@ -1318,6 +1327,100 @@ function subirAdjuntoAdicionalBackend(payload) {
       prefijoOficial: prefijoOficial,
       archivos: guardados,
       carpetaDriveUrl: folder.getUrl()
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function eliminarDocumentoBackend(payload) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const sheet = obtenerOInicializarHoja_(CONFIG_AMMER.SHEET_SOLICITUDES, HEADERS_SOLICITUDES);
+    const { map } = obtenerHeaderMap_(sheet);
+    const idTarget = String(payload.idSolicitud || payload.id || payload.ID_Solicitud || '').trim();
+    const rowNum = encontrarFilaPorId_(sheet, map, idTarget);
+    if (rowNum === -1) return { ok: false, error: 'Expediente no encontrado: ' + idTarget };
+
+    // Columna 20 (0-based) = Columna 21 (1-based) 'Archivos_Adjuntos_JSON'
+    const colArchivosIdx = (map['Archivos_Adjuntos_JSON'] !== undefined) ? map['Archivos_Adjuntos_JSON'] : 20;
+    const cellArchivos = sheet.getRange(rowNum, colArchivosIdx + 1);
+    const actuales = parseJSONSafe_(cellArchivos.getValue(), []);
+    const lista = Array.isArray(actuales) ? actuales.slice() : [];
+
+    const reqFileId = String(payload.fileId || '').trim();
+    const reqUrlDrive = String(payload.urlDrive || '').trim();
+    const reqNombre = String(payload.nombre || '').trim().toUpperCase();
+    const reqTipo = String(payload.tipo || '').trim().toUpperCase();
+    const reqIdx = (payload.adjuntoIndex !== undefined && payload.adjuntoIndex !== null && payload.adjuntoIndex !== '')
+      ? Number(payload.adjuntoIndex)
+      : -1;
+
+    let matchIdx = -1;
+    if (reqFileId) {
+      matchIdx = lista.findIndex(a => a && String(a.fileId || '').trim() === reqFileId);
+    }
+    if (matchIdx === -1 && reqUrlDrive) {
+      matchIdx = lista.findIndex(a => a && String(a.urlDrive || '').trim() === reqUrlDrive);
+    }
+    if (matchIdx === -1 && !isNaN(reqIdx) && reqIdx >= 0 && reqIdx < lista.length) {
+      matchIdx = reqIdx;
+    }
+    if (matchIdx === -1 && reqNombre) {
+      matchIdx = lista.findIndex(a => a && String(a.nombre || '').trim().toUpperCase() === reqNombre);
+    }
+    if (matchIdx === -1 && reqTipo) {
+      matchIdx = lista.findIndex(a => a && String(a.tipo || '').trim().toUpperCase() === reqTipo);
+    }
+
+    let docEliminado = null;
+    if (matchIdx !== -1) {
+      docEliminado = lista[matchIdx];
+      lista.splice(matchIdx, 1);
+      cellArchivos.setValue(JSON.stringify(lista));
+    }
+
+    // Enviar archivo físico en Google Drive a la papelera mediante setTrashed(true)
+    const rawUrlParaId = (docEliminado && (docEliminado.urlDrive || docEliminado.previewUrl)) || reqUrlDrive || '';
+    const matchDriveId = String(rawUrlParaId).match(/\/d\/([a-zA-Z0-9_-]+)|[?&]id=([a-zA-Z0-9_-]+)/);
+    const driveFileId = (docEliminado && docEliminado.fileId) || reqFileId || (matchDriveId ? (matchDriveId[1] || matchDriveId[2]) : '');
+    let driveTrashed = false;
+    if (driveFileId) {
+      try {
+        const driveFile = DriveApp.getFileById(driveFileId);
+        if (driveFile) {
+          driveFile.setTrashed(true);
+          driveTrashed = true;
+        }
+      } catch (_) {}
+    }
+
+    const nowStr = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd HH:mm');
+    if (map['Historial_Comentarios_JSON'] !== undefined) {
+      const histCell = sheet.getRange(rowNum, map['Historial_Comentarios_JSON'] + 1);
+      const hist = parseJSONSafe_(histCell.getValue(), []);
+      const nombreReg = (docEliminado && docEliminado.nombre) || payload.nombre || 'Documento';
+      const tipoReg = (docEliminado && docEliminado.tipo) || payload.tipo || 'LEGAJO';
+      hist.push({
+        autor: payload.autor || 'Operador',
+        rol: payload.rol || 'Operador',
+        fecha: nowStr,
+        texto: '🗑️ Documento eliminado del legajo: ' + tipoReg + ' (' + nombreReg + ')'
+      });
+      histCell.setValue(JSON.stringify(hist));
+    }
+    if (map['Ultima_Actualizacion'] !== undefined) {
+      sheet.getRange(rowNum, map['Ultima_Actualizacion'] + 1).setValue(nowStr);
+    }
+
+    SpreadsheetApp.flush();
+    return {
+      ok: true,
+      id: idTarget,
+      archivos: lista,
+      eliminado: docEliminado,
+      driveTrashed: driveTrashed
     };
   } finally {
     lock.releaseLock();

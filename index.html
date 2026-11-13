@@ -2700,6 +2700,202 @@
       color: #dc2626;
     }
 
+    /* FILA DOCUMENTAL COMPACTA Y TOOLBAR DE ÍCONOS SVG CON TOOLTIP */
+    .doc-compact-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.72rem 0.8rem;
+      background: #ffffff;
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      border-radius: 0.75rem;
+      gap: 0.75rem;
+      margin-bottom: 0.45rem;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+      transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+    .doc-compact-card:hover {
+      background: rgba(248, 250, 252, 0.85);
+      border-color: #cbd5e1;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+    }
+    .doc-compact-card.is-observed {
+      background: #fffbeb;
+      border: 1.5px solid #f59e0b;
+      box-shadow: 0 3px 10px rgba(245, 158, 11, 0.12);
+    }
+    .doc-compact-left {
+      display: flex;
+      align-items: center;
+      gap: 0.72rem;
+      min-width: 0;
+      flex: 1;
+    }
+    .doc-compact-pdf-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 0.55rem;
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fee2e2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-weight: 800;
+      font-size: 10px;
+      letter-spacing: 0.03em;
+    }
+    .doc-compact-card.is-observed .doc-compact-pdf-badge {
+      background: #fef3c7;
+      color: #b45309;
+      border-color: #fde68a;
+    }
+    .doc-compact-meta {
+      min-width: 0;
+      flex: 1;
+    }
+    .doc-compact-title-line {
+      display: flex;
+      align-items: center;
+      gap: 0.42rem;
+      min-width: 0;
+      flex-wrap: wrap;
+    }
+    .doc-compact-filename {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    .doc-compact-pill-ok {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      padding: 1px 6px;
+      border-radius: 5px;
+      font-size: 9.5px;
+      font-weight: 700;
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .doc-compact-pill-obs {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      padding: 1px 6px;
+      border-radius: 5px;
+      font-size: 9.5px;
+      font-weight: 700;
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #f59e0b;
+      white-space: nowrap;
+      flex-shrink: 0;
+      animation: pulseAmberDoc 2.2s infinite;
+    }
+    .doc-compact-tipo-tag {
+      font-size: 9.5px;
+      font-weight: 600;
+      color: #475569;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      padding: 1px 6px;
+      border-radius: 5px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .doc-compact-sub {
+      font-size: 0.65rem;
+      color: #64748b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+    .doc-toolbar-compact {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      background: #f8fafc;
+      padding: 0.25rem;
+      border-radius: 0.75rem;
+      border: 1px solid rgba(203, 213, 225, 0.85);
+      flex-shrink: 0;
+    }
+    .doc-tool-btn {
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.5rem;
+      border: none;
+      background: transparent;
+      color: #475569;
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
+      text-decoration: none;
+      transition: background-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
+    }
+    .doc-tool-btn svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+    .doc-tool-btn:focus-visible {
+      outline: 2px solid #135596;
+      outline-offset: 1px;
+    }
+    .doc-tool-view:hover {
+      color: #1d4ed8;
+      background: #eff6ff;
+    }
+    .doc-tool-download:hover {
+      color: #0f172a;
+      background: rgba(226, 232, 240, 0.75);
+    }
+    .doc-tool-replace:hover {
+      color: #4338ca;
+      background: #eef2ff;
+    }
+    .doc-tool-replace.is-urgent {
+      color: #135596;
+      background: #dbeafe;
+    }
+    .doc-tool-replace.is-urgent:hover {
+      color: #ffffff;
+      background: #135596;
+    }
+    .doc-tool-observe:hover {
+      color: #b45309;
+      background: #fffbeb;
+    }
+    .doc-tool-delete {
+      color: #94a3b8;
+    }
+    .doc-tool-delete:hover {
+      color: #e11d48;
+      background: #fff1f2;
+    }
+    @media (max-width: 640px) {
+      .doc-compact-card {
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
+      .doc-toolbar-compact {
+        margin-left: auto;
+      }
+    }
+
     /* COMPARATIVO: DESEADO VS PROPUESTA MUTUAL */
     .compare-offers-grid{display:grid;grid-template-columns:1fr;gap:.75rem;margin-bottom:1rem}
     @media(min-width:768px){.compare-offers-grid{grid-template-columns:1fr 1fr}}
@@ -4008,13 +4204,18 @@
                 </div>
                 <button type="button" class="doc-frente-dorso-banner" onclick="abrirAsistenteFrenteDorso('asocFileDni', 'DNI COMPLETO', 'row')" title="Unificar 2 fotos (Frente y Dorso) en un único PDF A4">
                   <span class="doc-frente-dorso-banner-left">
-                    <span class="doc-frente-dorso-banner-icon">🪪</span>
+                    <span class="doc-frente-dorso-banner-icon" aria-hidden="true">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8.5" cy="11.5" r="2"/><path d="M5.5 16c.8-1.4 2-2 3-2s2.2.6 3 2"/><line x1="14" y1="10" x2="19" y2="10"/><line x1="14" y1="14" x2="18" y2="14"/></svg>
+                    </span>
                     <span>
                       <div class="doc-frente-dorso-banner-title">Unificar Frente y Dorso de DNI en 1 PDF A4</div>
                       <div class="doc-frente-dorso-banner-sub">¿Tenés las dos fotos por separado? Combinalas automáticamente en una sola hoja A4 oficial.</div>
                     </span>
                   </span>
-                  <span class="doc-frente-dorso-banner-cta">✨ Unificar 2 Fotos →</span>
+                  <span class="doc-frente-dorso-banner-cta">
+                    <span>Unificar 2 Fotos</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                  </span>
                 </button>
               </div>
 
@@ -4682,13 +4883,18 @@
                 </div>
                 <button type="button" class="doc-frente-dorso-banner" onclick="abrirAsistenteFrenteDorso('fileDni', 'DNI COMPLETO', 'row')" title="Unificar 2 fotos (Frente y Dorso) en un único PDF A4">
                   <span class="doc-frente-dorso-banner-left">
-                    <span class="doc-frente-dorso-banner-icon">🪪</span>
+                    <span class="doc-frente-dorso-banner-icon" aria-hidden="true">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8.5" cy="11.5" r="2"/><path d="M5.5 16c.8-1.4 2-2 3-2s2.2.6 3 2"/><line x1="14" y1="10" x2="19" y2="10"/><line x1="14" y1="14" x2="18" y2="14"/></svg>
+                    </span>
                     <span>
                       <div class="doc-frente-dorso-banner-title">Unificar Frente y Dorso de DNI en 1 PDF A4</div>
                       <div class="doc-frente-dorso-banner-sub">¿Tenés las dos fotos por separado? Combinalas automáticamente en una sola hoja A4 oficial.</div>
                     </span>
                   </span>
-                  <span class="doc-frente-dorso-banner-cta">✨ Unificar 2 Fotos →</span>
+                  <span class="doc-frente-dorso-banner-cta">
+                    <span>Unificar 2 Fotos</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                  </span>
                 </button>
               </div>
 
@@ -4952,13 +5158,18 @@
                 </div>
                 <button type="button" class="doc-frente-dorso-banner" onclick="abrirAsistenteFrenteDorso('fileSidecreer', 'TARJETA SIDECREER', 'row')" title="Unificar 2 fotos (Frente y Dorso) en un único PDF A4">
                   <span class="doc-frente-dorso-banner-left">
-                    <span class="doc-frente-dorso-banner-icon">💳</span>
+                    <span class="doc-frente-dorso-banner-icon" aria-hidden="true">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="11" y2="15"/></svg>
+                    </span>
                     <span>
                       <div class="doc-frente-dorso-banner-title">Unificar Frente y Dorso de Tarjeta Sidecreer en 1 PDF A4</div>
                       <div class="doc-frente-dorso-banner-sub">¿Tenés las dos fotos por separado? Combinalas automáticamente en una sola hoja A4 oficial.</div>
                     </span>
                   </span>
-                  <span class="doc-frente-dorso-banner-cta">✨ Unificar 2 Fotos →</span>
+                  <span class="doc-frente-dorso-banner-cta">
+                    <span>Unificar 2 Fotos</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                  </span>
                 </button>
               </div>
 
@@ -5238,6 +5449,38 @@
       </div>
       <div class="doc-viewer-frame-wrap" id="docViewerContent">
         <!-- Renderizado dinámico de PDF en iframe o Imagen directa -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4B: CONFIRMAR ELIMINACIÓN DE DOCUMENTO DEL LEGAJO -->
+  <div id="modalConfirmarEliminarDoc" class="modal-backdrop modal-backdrop-elevated" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
+    <div class="modal-window" style="max-width:440px;">
+      <div class="modal-header-bar" style="border-bottom:1px solid #fee2e2;background:#fff1f2;">
+        <div class="modal-header-title" style="color:#be123c;display:flex;align-items:center;gap:0.5rem;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+          <span>Eliminar Documento del Legajo</span>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="cerrarConfirmarEliminarDoc()" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="modal-body-scroll" style="padding:1rem 1.15rem;">
+        <p style="font-size:0.8rem;color:#334155;line-height:1.5;margin-bottom:0.75rem;">
+          ¿Confirmás que deseás eliminar permanentemente este documento del expediente digital?
+        </p>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:0.65rem;padding:0.7rem 0.85rem;margin-bottom:0.85rem;">
+          <div style="font-size:0.68rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.03em;" id="lblEliminarDocTipo">DOCUMENTO</div>
+          <div style="font-size:0.82rem;font-weight:700;color:#0f172a;word-break:break-word;margin-top:2px;" id="lblEliminarDocNombre">archivo.pdf</div>
+        </div>
+        <p style="font-size:0.72rem;color:#64748b;line-height:1.45;margin-bottom:1rem;">
+          El archivo será enviado a la papelera de la bóveda documental y eliminado del listado del legajo en la base central.
+        </p>
+        <div style="display:flex;justify-content:flex-end;gap:0.55rem;">
+          <button type="button" class="btn-restore" onclick="cerrarConfirmarEliminarDoc()">Cancelar</button>
+          <button type="button" id="btnConfirmarEliminarDoc" onclick="confirmarEliminarDocumento()" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.48rem 0.95rem;border-radius:0.55rem;border:1px solid #be123c;background:#e11d48;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span>Sí, Eliminar Documento</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -5639,8 +5882,9 @@
   <div id="modalAsistenteFrenteDorso" class="modal-backdrop modal-backdrop-elevated" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
     <div class="modal-window" style="max-width:640px;">
       <div class="modal-header-bar">
-        <div class="modal-header-title">
-          <span>🪪 Unificar Frente y Dorso en PDF A4</span>
+        <div class="modal-header-title" style="display:flex;align-items:center;gap:0.45rem;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#135596" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8.5" cy="11.5" r="2"/><path d="M5.5 16c.8-1.4 2-2 3-2s2.2.6 3 2"/><line x1="14" y1="10" x2="19" y2="10"/><line x1="14" y1="14" x2="18" y2="14"/></svg>
+          <span>Unificar Frente y Dorso en PDF A4</span>
         </div>
         <button type="button" class="btn-close-modal" onclick="cerrarAsistenteFrenteDorso()" aria-label="Cerrar">&times;</button>
       </div>
@@ -7022,7 +7266,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         }
       }
 
-      const ext = (extension || 'PDF').toUpperCase().replace(/^\./, '');
+      const extRaw = String(extension || 'PDF').toUpperCase().replace(/^\./, '');
+      const esImagenExt = /^(JPG|JPEG|PNG|WEBP|GIF|BMP|HEIC|HEIF|TIF|TIFF|JFIF|PDF|)$/i.test(extRaw);
+      const ext = esImagenExt ? 'PDF' : extRaw;
       let tipoUpper = String(tipoDoc).toUpperCase().trim();
       if (tipoUpper.includes('DNI')) tipoUpper = 'DNI';
       else if (tipoUpper.includes('RECIBO')) tipoUpper = 'RECIBO DE SUELDO';
@@ -7455,6 +7701,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         autor: session.nombre,
         dataUrl: pdfRes.dataUrl,
         tipoMime: 'application/pdf',
+        fileId: (guardado && guardado.fileId) || '',
         urlDrive: (guardado && guardado.urlDrive) || '',
         previewUrl: (guardado && guardado.previewUrl) || '',
         observado: false
@@ -8462,8 +8709,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const memoriaArr = window.stateArchivosAdjuntos ? window.stateArchivosAdjuntos[item.el?.id] : null;
         if (Array.isArray(memoriaArr) && memoriaArr.length > 0) {
           memoriaArr.forEach((m, idx) => {
-            const extUpper = ((m.nombre || '').split('.').pop() || 'PDF').toUpperCase();
-            const nombreFormateado = normalizarNombreArchivoDrive(dniVal, item.tipo, extUpper, idx);
+            const nombreFormateado = normalizarNombreArchivoDrive(dniVal, item.tipo, 'PDF', idx);
             adjuntosBase64.push({
               tipo: item.tipo,
               nombre: nombreFormateado,
@@ -8486,8 +8732,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             if (check.valido) {
               const b64 = await fileToBase64(f);
               if (b64) {
-                const ext = (f.name.split('.').pop() || 'PDF').toUpperCase();
-                const nombreFormateado = normalizarNombreArchivoDrive(dniVal, item.tipo, ext, i);
+                const nombreFormateado = normalizarNombreArchivoDrive(dniVal, item.tipo, 'PDF', i);
                 adjuntosBase64.push({
                   tipo: item.tipo,
                   nombre: nombreFormateado,
@@ -8616,6 +8861,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         obj.Archivos_JSON,
         obj.adjuntosBase64
       ];
+      if (Array.isArray(obj.adjuntos) && obj.adjuntos.length === 0 && typeof obj.Archivos_Adjuntos_JSON === 'string' && obj.Archivos_Adjuntos_JSON.trim() === '[]') {
+        return [];
+      }
       let lista = [];
       for (const cand of candidatos) {
         const parsed = Array.isArray(cand) ? cand : parseJSONCampoSeguro(cand, null);
@@ -8640,13 +8888,18 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const rawPreview = a.previewUrl || (rawUrl ? normalizarUrlVisorDrive(rawUrl) : '');
         const fileIdMatch = String(a.fileId || rawUrl || '').match(/\/d\/([a-zA-Z0-9_-]+)|[?&]id=([a-zA-Z0-9_-]+)/);
         const extractedFileId = a.fileId || (fileIdMatch ? (fileIdMatch[1] || fileIdMatch[2]) : '');
+        const resolvedMime = a.tipoMime || a.mimeType || a.type || '';
+        const rawNombre = a.nombre || a.nombreArchivo || a.fileName || a.filename || a.name || a.nombreOriginal || a.titulo || a.title || ('Documento_' + (idx + 1));
+        const nombreNorm = (String(resolvedMime).toLowerCase() === 'application/pdf')
+          ? String(rawNombre).replace(/\.(jpg|jpeg|png|webp|gif|bmp|heic|heif|tif|tiff|jfif|pdf)$/i, '.PDF')
+          : rawNombre;
         return Object.assign({}, a, {
           tipo: a.tipo || a.tipoDoc || a.categoria || 'DOCUMENTO',
-          nombre: a.nombre || a.nombreArchivo || a.fileName || a.filename || a.name || a.nombreOriginal || a.titulo || a.title || ('Documento_' + (idx + 1)),
+          nombre: nombreNorm,
           fileId: extractedFileId || '',
           urlDrive: rawUrl || (extractedFileId ? ('https://drive.google.com/file/d/' + extractedFileId + '/view') : ''),
           previewUrl: rawPreview || (extractedFileId ? ('https://drive.google.com/file/d/' + extractedFileId + '/preview') : ''),
-          tipoMime: a.tipoMime || a.mimeType || a.type || '',
+          tipoMime: resolvedMime,
           fecha: a.fecha || a.fechaSubida || a.createdAt || obj.fecha || '',
           autor: a.autor || a.author || a.usuario || obj.comercializador || 'Usuario',
           observado: Boolean(a.observado)
@@ -9683,8 +9936,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const memoriaArr = window.stateArchivosAdjuntos ? window.stateArchivosAdjuntos[item.key] : null;
         if (Array.isArray(memoriaArr) && memoriaArr.length > 0) {
           memoriaArr.forEach((m, idx) => {
-            const extUpper = ((m.nombre || '').split('.').pop() || 'PDF').toUpperCase();
-            const nombreFormateado = normalizarNombreArchivoDrive(rawRand, item.tipo, extUpper, idx);
+            const nombreFormateado = normalizarNombreArchivoDrive(rawRand, item.tipo, 'PDF', idx);
             const tipoUpper = String(item.tipo || 'OTROS DOCUMENTOS').toUpperCase();
             adjuntosBase64.push({
               tipo: tipoUpper,
@@ -9716,8 +9968,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             try {
               const b64 = await fileToBase64(f);
               if (b64) {
-                const extUpper = (f.name.split('.').pop() || 'PDF').toUpperCase();
-                const nombreFormateado = normalizarNombreArchivoDrive(rawRand, item.tipo, extUpper, i);
+                const nombreFormateado = normalizarNombreArchivoDrive(rawRand, item.tipo, 'PDF', i);
                 const tipoUpper = String(item.tipo || 'OTROS DOCUMENTOS').toUpperCase();
                 adjuntosBase64.push({
                   tipo: tipoUpper,
@@ -9754,9 +10005,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       if (listaAdjuntosObj.length === 0) {
         listaAdjuntosObj.push(
-          { tipo: 'DNI', nombre: rawRand + ' DNI Frente y Dorso.pdf', fecha: nowStr, autor: session.nombre },
-          { tipo: 'RECIBO DE SUELDO', nombre: rawRand + ' Recibo de Sueldo.pdf', fecha: nowStr, autor: session.nombre },
-          { tipo: 'SERVICIO', nombre: rawRand + ' Constancia Domicilio.pdf', fecha: nowStr, autor: session.nombre }
+          { tipo: 'DNI', nombre: rawRand + ' DNI.PDF', fecha: nowStr, autor: session.nombre },
+          { tipo: 'RECIBO DE SUELDO', nombre: rawRand + ' RECIBO DE SUELDO.PDF', fecha: nowStr, autor: session.nombre },
+          { tipo: 'SERVICIO', nombre: rawRand + ' SERVICIO.PDF', fecha: nowStr, autor: session.nombre }
         );
       }
 
@@ -10559,28 +10810,28 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       } else if (listaArchivosFicha.length > 0) {
         listaArchivosFicha.forEach((a, idx) => {
           const esObs = Boolean(a.observado);
-          const rowCls = esObs ? 'document-row-card is-observed' : 'document-row-card is-loaded';
-          const badgeHtml = esObs ?
-            '<span class="doc-row-badge badge-requerido-sede">⚠️ Documentación requerida por Sede Central</span>' :
-            '<span class="doc-row-badge badge-cargado">✓ Archivo en Legajo Digital</span>';
-          const replaceLabelCls = esObs ? 'btn-doc-subsanar' : 'btn-doc-attach';
-          const replaceBtnText = esObs ? '🔄 Subsanar Archivo' : '🔄 Reemplazar';
+          const rowCls = esObs ? 'doc-compact-card is-observed' : 'doc-compact-card';
+          const nombreVisualRaw = String(a.nombre || 'DOCUMENTO.PDF');
+          const nombreVisual = (String(a.tipoMime || '').toLowerCase() === 'application/pdf')
+            ? nombreVisualRaw.replace(/\.(jpg|jpeg|png|webp|gif|bmp|heic|pdf)$/i, '.PDF')
+            : nombreVisualRaw;
+          const badgeEstadoHtml = esObs
+            ? '<span class="doc-compact-pill-obs">⚠️ Requerido</span>'
+            : '<span class="doc-compact-pill-ok">✓ Legajo</span>';
+          const replaceTooltip = esObs ? 'Subsanar / Reemplazar Archivo' : 'Reemplazar Archivo';
 
-          html += '<div class="' + rowCls + '" style="margin-bottom:0.5rem;">' +
-            '<div class="doc-row-left">' +
-              '<div class="doc-row-icon" style="' + (esObs ? '' : 'background:#dcfce7;color:#16a34a;') + '">' +
-                '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
-                  '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>' +
-                '</svg>' +
-              '</div>' +
-              '<div class="doc-row-info">' +
-                '<div class="doc-row-header-line">' +
-                  '<span class="doc-row-title">' + sanitizeHTML(a.tipo || 'DOCUMENTO') + '</span>' +
-                  badgeHtml +
+          html += '<div class="' + rowCls + '">' +
+            '<div class="doc-compact-left">' +
+              '<div class="doc-compact-pdf-badge">' + (esObs ? 'OBS' : 'PDF') + '</div>' +
+              '<div class="doc-compact-meta">' +
+                '<div class="doc-compact-title-line">' +
+                  '<h5 class="doc-compact-filename" title="' + sanitizeHTML(nombreVisual) + '">' + sanitizeHTML(nombreVisual) + '</h5>' +
+                  badgeEstadoHtml +
+                  '<span class="doc-compact-tipo-tag">' + sanitizeHTML(a.tipo || 'DOCUMENTO') + '</span>' +
                 '</div>' +
-                '<div class="doc-row-subtitle" style="color:' + (esObs ? '#92400e' : '#0369a1') + ';font-weight:500;">' +
-                  sanitizeHTML(a.nombre || 'comprobante') + ' <span style="font-size:.65rem;color:var(--text-muted);font-weight:400;">(' + formatearFechaHoraChat(a.fecha || s.fecha) + ' por ' + sanitizeHTML(a.autor || s.comercializador || 'Usuario') + ')</span>' +
-                '</div>' +
+                '<p class="doc-compact-sub">' +
+                  formatearFechaHoraChat(a.fecha || s.fecha) + ' • por <span style="font-weight:600;color:#334155;">' + sanitizeHTML(a.autor || s.comercializador || 'Operador') + '</span>' +
+                '</p>' +
                 (esObs ? (
                   '<div class="doc-obs-reason-box">' +
                     '<strong>Motivo indicado por Sede Central:</strong> ' + sanitizeHTML(a.motivoObservacion || 'Por favor reemplazar por una copia legible y actualizada.') +
@@ -10588,14 +10839,25 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
                 ) : '') +
               '</div>' +
             '</div>' +
-            '<div class="doc-row-actions" style="flex-wrap:wrap;justify-content:flex-end;">' +
-              '<button type="button" class="btn-doc-attach" onclick="abrirVisorOnline(\'' + s.id + '\', ' + idx + ')">👁️ Ver Online</button>' +
-              '<button type="button" class="btn-doc-attach" onclick="descargarDocumentoOnline(\'' + s.id + '\', ' + idx + ')">📥 Descargar</button>' +
-              '<label class="' + replaceLabelCls + '" style="cursor:pointer;margin:0;" title="Reemplazar o subsanar archivo">' +
-                replaceBtnText + ' <input type="file" accept="image/*,application/pdf" style="display:none;" onchange="reemplazarDocumentoExistente(\'' + s.id + '\', ' + idx + ', this)"/>' +
+            '<div class="doc-toolbar-compact">' +
+              '<button type="button" class="doc-tool-btn doc-tool-view" onclick="abrirVisorOnline(\'' + s.id + '\', ' + idx + ')" title="Ver Online" aria-label="Ver Online">' +
+                '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
+              '</button>' +
+              '<button type="button" class="doc-tool-btn doc-tool-download" onclick="descargarDocumentoOnline(\'' + s.id + '\', ' + idx + ')" title="Descargar Archivo" aria-label="Descargar Archivo">' +
+                '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>' +
+              '</button>' +
+              '<label class="doc-tool-btn doc-tool-replace' + (esObs ? ' is-urgent' : '') + '" title="' + replaceTooltip + '" aria-label="' + replaceTooltip + '">' +
+                '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>' +
+                '<input type="file" accept="image/*,application/pdf" style="display:none;" onchange="reemplazarDocumentoExistente(\'' + s.id + '\', ' + idx + ', this)"/>' +
               '</label>' +
-              (isAnalistaOAdmin ?
-                '<button type="button" class="btn-doc-observe" title="Observar este documento y notificar al comercializador" onclick="abrirPanelObservarDocumento(\'' + s.id + '\', ' + idx + ')">⚠️ Solicitar / Observar</button>' : '') +
+              (isAnalistaOAdmin ? (
+                '<button type="button" class="doc-tool-btn doc-tool-observe" onclick="abrirPanelObservarDocumento(\'' + s.id + '\', ' + idx + ')" title="Observar o Solicitar Corrección" aria-label="Observar o Solicitar Corrección">' +
+                  '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>' +
+                '</button>'
+              ) : '') +
+              '<button type="button" class="doc-tool-btn doc-tool-delete" onclick="solicitarEliminarDocumento(\'' + s.id + '\', ' + idx + ')" title="Eliminar Documento del Legajo" aria-label="Eliminar Documento del Legajo">' +
+                '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>' +
+              '</button>' +
             '</div>' +
           '</div>';
         });
@@ -10612,13 +10874,18 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         '</div>' +
         '<button type="button" class="doc-frente-dorso-banner" style="margin-top:0;margin-bottom:0.75rem;" onclick="abrirAsistenteFrenteDorso(\'fileFichaAdicional\', null, \'ficha\', \'' + s.id + '\')" title="Combinar 2 fotos (Frente y Dorso) en un único PDF A4">' +
           '<span class="doc-frente-dorso-banner-left">' +
-            '<span class="doc-frente-dorso-banner-icon">🪪</span>' +
+            '<span class="doc-frente-dorso-banner-icon" aria-hidden="true">' +
+              '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8.5" cy="11.5" r="2"/><path d="M5.5 16c.8-1.4 2-2 3-2s2.2.6 3 2"/><line x1="14" y1="10" x2="19" y2="10"/><line x1="14" y1="14" x2="18" y2="14"/></svg>' +
+            '</span>' +
             '<span>' +
               '<div class="doc-frente-dorso-banner-title">Unificar Frente y Dorso en PDF A4</div>' +
               '<div class="doc-frente-dorso-banner-sub">Fusioná dos fotos (DNI o Tarjeta) en un solo PDF A4 listo para archivar en el expediente #' + sanitizeHTML(prefijoOficialFicha) + '.</div>' +
             '</span>' +
           '</span>' +
-          '<span class="doc-frente-dorso-banner-cta">✨ Abrir Asistente →</span>' +
+          '<span class="doc-frente-dorso-banner-cta">' +
+            '<span>Abrir Asistente</span>' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>' +
+          '</span>' +
         '</button>' +
         '<div style="display:grid;grid-template-columns:minmax(200px,1fr) minmax(240px,1.5fr);gap:0.65rem;align-items:center;">' +
           '<select id="cboFichaDocTipo" class="doc-complementaria-select">' +
@@ -11561,9 +11828,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         showToast('⚠️ ' + (err.message || 'Error procesando archivo'));
         return;
       }
-      const ext = (b64Data?.tipoMime === 'application/pdf' || /\.pdf$/i.test(b64Data?.nombreArchivo || ''))
-        ? 'PDF'
-        : (file.name.split('.').pop() || 'PDF').toUpperCase();
+      const ext = 'PDF';
       const prefijoOficial = obtenerPrefijoOficialExpediente(s);
       const expDefinitivo = (s.idDefinitivoExpediente || s.ID_Definitivo_Expediente || s.id_definitivo || s.Nro_Definitivo || '').toString().trim();
       const generatedName = normalizarNombreArchivoDrive(prefijoOficial, tipo, ext);
@@ -11575,7 +11840,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         fecha: nowStr,
         autor: session?.nombre || 'Comercializador',
         dataUrl: b64Data ? b64Data.dataUrl : '',
-        tipoMime: b64Data ? b64Data.tipoMime : file.type,
+        tipoMime: 'application/pdf',
         observado: false
       });
 
@@ -11606,9 +11871,23 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         tipo: tipo,
         nombre: generatedName,
         base64: b64Data ? b64Data.base64 : '',
-        tipoMime: b64Data ? b64Data.tipoMime : 'application/pdf',
+        tipoMime: 'application/pdf',
         autor: session?.nombre || 'Comercializador',
         rol: session?.rol || 'Comercializador'
+      }).then(resApi => {
+        const g = resApi && resApi.data && Array.isArray(resApi.data.archivos) && resApi.data.archivos[0] ? resApi.data.archivos[0] : null;
+        if (g) {
+          const allAct = getStoredSolicitudes();
+          const sAct = allAct.find(x => String(x.id) === String(solicitudId));
+          if (sAct && Array.isArray(sAct.adjuntos) && sAct.adjuntos.length > 0) {
+            const ultimo = sAct.adjuntos[sAct.adjuntos.length - 1];
+            if (g.nombre) ultimo.nombre = g.nombre;
+            if (g.fileId) ultimo.fileId = g.fileId;
+            if (g.urlDrive) ultimo.urlDrive = g.urlDrive;
+            if (g.previewUrl) ultimo.previewUrl = g.previewUrl;
+            saveStoredSolicitudes(allAct);
+          }
+        }
       }).catch(console.warn);
 
       ejecutarAuditoriaAutomaticaExpediente(s.id, b64Data ? [{ nombre: generatedName, mimeType: b64Data.tipoMime, base64: b64Data.base64 }] : null);
@@ -11648,9 +11927,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         showToast('⚠️ ' + (err.message || 'Error procesando archivo'));
         return;
       }
-      const ext = (b64?.tipoMime === 'application/pdf' || /\.pdf$/i.test(b64?.nombreArchivo || ''))
-        ? 'PDF'
-        : (file.name.split('.').pop() || 'PDF').toUpperCase();
+      const ext = 'PDF';
       const prefijoOficial = obtenerPrefijoOficialExpediente(s);
       const expDefinitivo = (s.idDefinitivoExpediente || s.ID_Definitivo_Expediente || s.id_definitivo || s.Nro_Definitivo || '').toString().trim();
       const nuevoNombre = normalizarNombreArchivoDrive(prefijoOficial, prevTipo, ext);
@@ -11661,7 +11938,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         fecha: nowStr,
         autor: session?.nombre || 'Usuario',
         dataUrl: b64 ? b64.dataUrl : '',
-        tipoMime: b64 ? b64.tipoMime : 'application/pdf',
+        tipoMime: 'application/pdf',
+        fileId: '',
         urlDrive: '',
         observado: false,
         motivoObservacion: ''
@@ -11685,7 +11963,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       saveStoredSolicitudes(all);
       // Disparo automático reactivo de Auditoría IA en segundo plano
-      ejecutarAuditoriaAutomaticaExpediente(solicitudId, b64 ? [{ nombre: nuevoNombre, mimeType: b64.tipoMime, base64: b64.base64 }] : null);
+      ejecutarAuditoriaAutomaticaExpediente(solicitudId, b64 ? [{ nombre: nuevoNombre, mimeType: 'application/pdf', base64: b64.base64 }] : null);
 
       callApi({
         action: 'subirAdjuntoAdicional',
@@ -11696,7 +11974,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         reemplazaIndice: adjuntoIndex,
         tipo: prevTipo,
         nombre: nuevoNombre,
-        tipoMime: b64 ? b64.tipoMime : 'application/pdf',
+        tipoMime: 'application/pdf',
         base64: b64 ? b64.base64 : '',
         autor: session?.nombre || 'Usuario',
         rol: session?.rol || 'Comercializador'
@@ -11707,6 +11985,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           const sAct = allAct.find(x => String(x.id) === String(solicitudId));
           if (sAct && Array.isArray(sAct.adjuntos) && sAct.adjuntos[adjuntoIndex]) {
             sAct.adjuntos[adjuntoIndex].nombre = g.nombre || nuevoNombre;
+            if (g.fileId) sAct.adjuntos[adjuntoIndex].fileId = g.fileId;
             if (g.urlDrive) sAct.adjuntos[adjuntoIndex].urlDrive = g.urlDrive;
             if (g.previewUrl) sAct.adjuntos[adjuntoIndex].previewUrl = g.previewUrl;
             saveStoredSolicitudes(allAct);
@@ -11753,9 +12032,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         showToast('⚠️ ' + (err.message || 'Error codificando archivo'));
         return;
       }
-      const extension = (b64Data?.tipoMime === 'application/pdf' || /\.pdf$/i.test(b64Data?.nombreArchivo || ''))
-        ? 'PDF'
-        : (file.name.split('.').pop() || 'PDF').toUpperCase();
+      const extension = 'PDF';
       const prefijoOficial = obtenerPrefijoOficialExpediente(s);
       const expDefinitivo = (s.idDefinitivoExpediente || s.ID_Definitivo_Expediente || s.id_definitivo || s.Nro_Definitivo || '').toString().trim();
       const generatedName = normalizarNombreArchivoDrive(prefijoOficial, tipo, extension);
@@ -11769,7 +12046,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         tipo: tipo,
         nombre: generatedName,
         base64: b64Data ? b64Data.base64 : '',
-        tipoMime: b64Data ? b64Data.tipoMime : 'application/pdf',
+        tipoMime: 'application/pdf',
         autor: session.nombre,
         rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor')
       }, {
@@ -11786,7 +12063,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         fecha: nowStr,
         autor: session.nombre,
         dataUrl: b64Data ? b64Data.dataUrl : '',
-        tipoMime: b64Data ? b64Data.tipoMime : 'application/pdf',
+        tipoMime: 'application/pdf',
+        fileId: (guardado && guardado.fileId) || '',
         urlDrive: (guardado && guardado.urlDrive) || '',
         previewUrl: (guardado && guardado.previewUrl) || '',
         observado: false
@@ -11814,6 +12092,125 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       renderModuloMutual();
       verFichaCompleta(id);
       showToast('Documento archivado exitosamente como ' + nombreFinalGuardado + ' 📄');
+    }
+
+    let _docAEliminarPending = null;
+
+    function solicitarEliminarDocumento(solicitudIdOrTipo, adjuntoIndexOrNombre) {
+      let solicitudId = solicitudIdOrTipo;
+      let adjuntoIndex = (typeof adjuntoIndexOrNombre === 'number') ? adjuntoIndexOrNombre : parseInt(adjuntoIndexOrNombre, 10);
+
+      const all = getStoredSolicitudes();
+      let s = all.find(x => String(x.id) === String(solicitudId));
+      if (!s && typeof obtenerIdSolicitudActiva === 'function') {
+        const activeId = obtenerIdSolicitudActiva();
+        s = all.find(x => String(x.id) === String(activeId));
+        if (s) {
+          solicitudId = s.id;
+          const lista = normalizarListaArchivos(s);
+          adjuntoIndex = lista.findIndex(a =>
+            String(a.tipo || '') === String(solicitudIdOrTipo || '') &&
+            String(a.nombre || '') === String(adjuntoIndexOrNombre || '')
+          );
+          if (adjuntoIndex === -1) {
+            adjuntoIndex = lista.findIndex(a => String(a.nombre || '') === String(adjuntoIndexOrNombre || ''));
+          }
+        }
+      }
+      if (!s || isNaN(adjuntoIndex) || adjuntoIndex < 0) return;
+
+      const listaArchivos = normalizarListaArchivos(s);
+      const adj = listaArchivos[adjuntoIndex];
+      if (!adj) return;
+
+      _docAEliminarPending = {
+        solicitudId: s.id,
+        adjuntoIndex: adjuntoIndex,
+        tipo: adj.tipo || 'DOCUMENTO',
+        nombre: adj.nombre || 'archivo.pdf',
+        fileId: adj.fileId || '',
+        urlDrive: adj.urlDrive || ''
+      };
+
+      const lblTipo = document.getElementById('lblEliminarDocTipo');
+      const lblNom = document.getElementById('lblEliminarDocNombre');
+      if (lblTipo) lblTipo.textContent = _docAEliminarPending.tipo;
+      if (lblNom) lblNom.textContent = _docAEliminarPending.nombre;
+      abrirModal('modalConfirmarEliminarDoc');
+    }
+
+    function cerrarConfirmarEliminarDoc() {
+      _docAEliminarPending = null;
+      cerrarModal('modalConfirmarEliminarDoc');
+    }
+
+    async function confirmarEliminarDocumento() {
+      if (!_docAEliminarPending) return;
+      const pending = _docAEliminarPending;
+      const session = getSession();
+      const all = getStoredSolicitudes();
+      const s = all.find(x => String(x.id) === String(pending.solicitudId));
+      if (!s) {
+        cerrarConfirmarEliminarDoc();
+        return;
+      }
+
+      cerrarModal('modalConfirmarEliminarDoc');
+      mostrarCargando('Eliminando documento del legajo...', 'Moviendo archivo a papelera en Bóveda Documental');
+
+      let resApi = null;
+      try {
+        resApi = await callApi({
+          action: 'eliminarDocumento',
+          id: s.id,
+          idSolicitud: s.id,
+          adjuntoIndex: pending.adjuntoIndex,
+          fileId: pending.fileId || '',
+          urlDrive: pending.urlDrive || '',
+          nombre: pending.nombre || '',
+          tipo: pending.tipo || '',
+          autor: session?.nombre || 'Operador',
+          rol: session ? (session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor')) : 'Operador'
+        });
+      } catch (err) {
+        console.warn('Error eliminando documento en backend:', err);
+      }
+
+      const listaAct = normalizarListaArchivos(s);
+      let nuevaLista = listaAct;
+      if (resApi && resApi.ok && resApi.data && Array.isArray(resApi.data.archivos)) {
+        nuevaLista = resApi.data.archivos;
+      } else if (pending.adjuntoIndex >= 0 && pending.adjuntoIndex < listaAct.length) {
+        listaAct.splice(pending.adjuntoIndex, 1);
+        nuevaLista = listaAct;
+      }
+
+      const jsonLista = JSON.stringify(nuevaLista);
+      s.adjuntos = nuevaLista;
+      s.archivosLegajo = nuevaLista;
+      s.archivos = nuevaLista;
+      s.Archivos_Adjuntos_JSON = jsonLista;
+      s.Archivos_Legajo_JSON = jsonLista;
+      s.Archivos_JSON = jsonLista;
+      const nowStr = new Date().toISOString().slice(0, 16).replace('T', ' ');
+      if (!Array.isArray(s.observaciones)) s.observaciones = [];
+      s.observaciones.push({
+        autor: session?.nombre || 'Operador',
+        rol: session ? (session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor')) : 'Operador',
+        fecha: nowStr,
+        texto: '🗑️ Documento eliminado del legajo: ' + pending.tipo + ' (' + pending.nombre + ')'
+      });
+      verificarSalidaEstadoObservado(s);
+      saveStoredSolicitudes(all);
+
+      _docAEliminarPending = null;
+      ocultarCargando();
+      actualizarCentroNotificaciones();
+      renderModuloComercializador();
+      renderModuloMutual();
+      renderModuloMutualPropias();
+      verFichaCompleta(s.id);
+      showToast('🗑️ Documento "' + pending.nombre + '" eliminado del legajo');
     }
 
     async function enviarComentarioComercializador(id) {
@@ -14305,6 +14702,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.descargarDocumentoOnline = descargarDocumentoOnline;
     window.reemplazarDocumentoExistente = reemplazarDocumentoExistente;
     window.adjuntarDocumentoAdicionalFicha = adjuntarDocumentoAdicionalFicha;
+    window.solicitarEliminarDocumento = solicitarEliminarDocumento;
+    window.confirmarEliminarDocumento = confirmarEliminarDocumento;
+    window.cerrarConfirmarEliminarDoc = cerrarConfirmarEliminarDoc;
     window.enviarComentarioComercializador = enviarComentarioComercializador;
     window.filtrarGestionesMutual = filtrarGestionesMutual;
     window.gestionarSolicitudMutual = gestionarSolicitudMutual;

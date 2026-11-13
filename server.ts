@@ -134,16 +134,20 @@ app.post('/api/auditar-documentos', async (req, res) => {
 Actúa como Auditor Crediticio Senior y Especialista en Verificación Documental Forense de la Asociación Mutual Modelo de Entre Ríos (AMMER).
 FECHA DE AUDITORÍA: ${fechaActualStr} (Mes ${mesActual}/${anioActual})
 
-REGLAS INVIOLABLES — CERO ALUCINACIÓN:
-1. PROHIBICIÓN ABSOLUTA DE INFERENCIAS O ALUCINACIÓN:
+REGLAS DE CALIBRACIÓN EQUILIBRADA (LECTURA EXHAUSTIVA SIN INVENTAR NI BLOQUEAR):
+1. EXTRACCIÓN ACTIVA Y LITERAL:
+   - Lee y extrae con precisión todos los conceptos impresos visibles en el comprobante: Sueldo Bruto Total, Descuentos de Ley, consumos BERSA, consumos SIDECREER, otras mutuales, Códigos FEDEM (366, 368, 1115, 1117), embargos, Total Descuentos, Sueldo Líquido, titular, DNI, CUIL, período y organismo empleador.
+   - Si el documento es legible, NUNCA bloquees la auditoría ni devuelvas todo "ILEGIBLE" por ausencia de campos secundarios o por falta de carátula previa.
+2. CERO ALUCINACIÓN SIN FALSOS POSITIVOS:
    - Prohibido inventar, redondear o estimar importes, fechas o nombres.
-   - Si un casillero, concepto o número está cortado, borroso, tapado o resulta ilegible, debes clasificar ese campo de texto estrictamente como "ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO" (y en campos numéricos no legibles colocar null y listar el campo en camposIlegibles).
-   - Cada dato extraído debe ser un reflejo exacto y literal de lo impreso en el documento digitalizado.
-2. PRIVACIDAD Y SECRETO OPERATIVO:
-   - No utilices ejemplos ni datos de legajos previos; evalúa únicamente los documentos adjuntos y la carátula actual.
+   - Si un concepto de descuento OPCIONAL (consumos BERSA, SIDECREER, otras mutuales, códigos FEDEM o embargos) NO aparece descontado en el recibo, coloca 0 (y embargoDetectado: false). NUNCA lo marques como "ILEGIBLE".
+   - Solo coloca null (y agrega a camposIlegibles / "ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO") en un campo OBLIGATORIO (Sueldo Bruto Total, Total Descuentos, Sueldo Líquido, Titular o Período) si dicho número/texto está físicamente cortado, tapado o borroso en la imagen/PDF.
+   - Si un dato no corresponde al tipo de documento subido (ej. fechaVencimientoDni cuando solo se subió un recibo de sueldo), escribe "No consta en este comprobante" sin penalizar el puntaje.
+3. PRIVACIDAD Y SECRETO OPERATIVO:
+   - Evalúa únicamente los documentos adjuntos y la carátula actual.
 
 CARÁTULA DE LA SOLICITUD ACTUAL (PARA CONTRASTAR):
-${datosDeclarados ? `
+${datosDeclarados && (datosDeclarados.nombre || datosDeclarados.dni) ? `
 - Apellido y Nombre declarado: "${datosDeclarados.nombre || 'NO INFORMADO'}"
 - DNI declarado: "${datosDeclarados.dni || 'NO INFORMADO'}"
 - CUIL declarado: "${datosDeclarados.cuil || 'NO INFORMADO'}"
@@ -152,34 +156,34 @@ ${datosDeclarados ? `
 - Cuota simulada del plan: $ ${datosDeclarados.cuota || 0}
 - Plazo en cuotas del plan: ${datosDeclarados.plazoCuotas || datosDeclarados.cuotas || 0} meses
 - Monto solicitado: $ ${datosDeclarados.monto || 0}
-` : 'NO SE ENVIÓ CARÁTULA PREVIA. EXTRAE EXCLUSIVAMENTE LO IMPRESO EN LOS DOCUMENTOS.'}
+` : 'NO SE ENVIÓ CARÁTULA PREVIA (AUDITORÍA DIRECTA DE DOCUMENTO). Marca estadoCotejoCaratula como "VERIFICADO EN DOCUMENTO (SIN CARÁTULA PREVIA)" y extrae todos los datos visibles del comprobante.'}
 
 DIRECTIVAS DE EXTRACCIÓN Y LECTURA FORENSE:
 
 1. DATOS PERSONALES Y COINCIDENCIA DE IDENTIDAD:
-   - Extraer Apellido y Nombres completos, DNI, CUIL, Fecha de Nacimiento (YYYY-MM-DD si consta literalmente, sino "ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO" o "NO CONSTA EN DOCUMENTO"), Vencimiento del DNI si se adjuntó DNI.
-   - Contrastar DNI y Apellido/Nombre del recibo/DNI contra la carátula: marcar estadoCotejoIdentidad = "COINCIDE" o "DISCREPANCIA DETECTADA" (o "ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO" si no se puede leer).
+   - Extraer Apellido y Nombres completos, DNI, CUIL (o "No consta en recibo" si el comprobante no lo imprime), Fecha de Nacimiento (YYYY-MM-DD si consta literalmente, sino "No consta en este comprobante"), Vencimiento del DNI si se adjuntó DNI (sino "No consta en este comprobante").
+   - Contrastar DNI y Apellido/Nombre contra la carátula cuando exista: marcar estadoCotejoCaratula = "COINCIDE" o "DISCREPANCIA DETECTADA" (o "VERIFICADO EN DOCUMENTO (SIN CARÁTULA PREVIA)" si no hay carátula previa).
 
 2. DATOS LABORALES Y CONDICIÓN DE REVISTA:
    - Organismo / Empleador exacto: identificar si pertenece a CGE (Docentes), Ministerio de Salud, Policía, Administración Central, Municipios o Caja de Jubilaciones de Entre Ríos.
-   - Fecha de Ingreso / Antigüedad: extraer fecha exacta de ingreso y computar años/meses. Validar requisito operativo de MÍNIMO 1 AÑO DE ANTIGÜEDAD COMPROBABLE (cumpleAntiguedadMinima).
-   - Situación de Revista: clasificar estrictamente en "ACTIVO TITULAR" (Planta Permanente), "ACTIVO SUPLENTE", o "PASIVO" (Jubilado/Pensionado), o "ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO".
+   - Fecha de Ingreso / Antigüedad: extraer fecha exacta de ingreso y computar años/meses si figura impresa. Validar requisito operativo de MÍNIMO 1 AÑO DE ANTIGÜEDAD COMPROBABLE (cumpleAntiguedadMinima: true/false o null si no figura impreso en el recibo).
+   - Situación de Revista: clasificar en "ACTIVO TITULAR" (Planta Permanente), "ACTIVO SUPLENTE", o "PASIVO" (Jubilado/Pensionado), o "ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO" solo si está borroso.
    - En Ministerio de Salud: verificar si es suplente (cobro día 19) para chequear vigencia del período.
    - En CGE (Docentes): indicar en observacionesEspeciales si requiere situación de revista de SAGE por múltiples cargos o suplencias.
 
 3. VIGENCIA DEL PERÍODO DEL RECIBO:
    - Extraer mes y año liquidado en formato MM/YYYY (ej. "10/2026").
-   - Validar si corresponde al último o anteúltimo mes inmediato exigible respecto a ${String(mesActual).padStart(2, '0')}/${anioActual} (estadoPeriodo: "VIGENTE" | "DESACTUALIZADO" | "ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO").
+   - Validar si corresponde al último o anteúltimo mes inmediato exigible respecto a ${String(mesActual).padStart(2, '0')}/${anioActual} (estadoVigencia: "VIGENTE" | "DESACTUALIZADO" | "ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO").
 
 4. ESTRUCTURA SALARIAL Y LIQUIDACIÓN EXACTA (CIFRAS LITERALES SIN REDONDEO):
    - sueldoBrutoTotal: Suma exclusiva de conceptos remunerativos y no remunerativos (Haberes con Aporte + Haberes sin Aporte). NO confundir con el líquido de bolsillo ni subtotales parciales.
    - descuentosLey: Suma de aportes jubilatorios, obra social (IOSPER) y leyes asistenciales obligatorias (ej. Ley 4035).
-   - consumosBersa: Retenciones BERSA / Entidades Financieras.
-   - consumosSidecreer: Retenciones SIDECREER.
-   - otrasMutuales: Cuotas de otras Mutuales y Cooperativas.
-   - codigosFedem: Suma de Códigos Oficiales FEDEM detectados: Código 366 (Cuota Social Activos), 368 (Consumos FEDEM Activos), 1115 (Cuota Social Pasivos) o 1117 (Consumos FEDEM Pasivos). Listar literalmente los códigos detectados en codigosFedemDetectados.
-   - Embargos Judiciales: Rastrear embargos ejecutivos, retenciones comerciales o alimentos (embargoDetectado, embargoMonto, embargoConcepto).
-   - totalDescuentosRecibo: Total de descuentos consolidados impresos en el recibo.
+   - consumosBersa: Retenciones BERSA / Entidades Financieras (0 si no hay).
+   - consumosSidecreer: Retenciones SIDECREER (0 si no hay).
+   - otrasMutuales: Cuotas de otras Mutuales y Cooperativas (0 si no hay).
+   - codigosFedemMonto: Suma de Códigos Oficiales FEDEM detectados: Código 366 (Cuota Social Activos), 368 (Consumos FEDEM Activos), 1115 (Cuota Social Pasivos) o 1117 (Consumos FEDEM Pasivos) (0 si no hay). Listar literalmente los códigos detectados en codigosFedemDetectados.
+   - Embargos Judiciales: Rastrear embargos ejecutivos, retenciones comerciales o alimentos (embargoDetectado, embargoMonto = 0 si no hay, embargoConcepto).
+   - totalDescuentosRecibo: Total de descuentos consolidados impresos en el recibo (si el recibo no muestra una celda totalizada pero muestra Bruto y Líquido claros, informar el valor consolidado de deducciones).
    - sueldoLiquido: Importe final neto de bolsillo a cobrar.
 
 5. CÁLCULO DE AFECTACIÓN LEGAL (TOPE 50% DEL BRUTO):
@@ -195,7 +199,7 @@ DIRECTIVAS DE EXTRACCIÓN Y LECTURA FORENSE:
    - puntajeTotal: 0 a 100.
    - calificacionLetra: "A (Riesgo Bajo)" | "B (Riesgo Moderado)" | "C (Riesgo Crítico / No Viable)".
    - dictamen: "APTO_OTORGAMIENTO" | "OBSERVADO" | "RECHAZADO".
-   - dictamenAuditor: conclusión clara en exactamente 2 renglones sobre viabilidad y documentación faltante o ilegible.
+   - dictamenAuditor: conclusión clara en exactamente 2 renglones sobre viabilidad, hallazgos del recibo y eventual documentación complementaria.
 
 Devuelve estrictamente JSON conforme al schema.
 `;
@@ -206,7 +210,7 @@ Devuelve estrictamente JSON conforme al schema.
       model: 'gemini-4-hydrogen',
       contents: [{ parts }],
       config: {
-        systemInstruction: 'Eres Auditor Crediticio Senior y Especialista en Verificación Documental Forense de AMMER. Cero alucinación: extrae solo valores impresos literalmente. Marca como "ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO" cualquier campo borroso, cortado o no verificable. Devuelve exclusivamente JSON conforme al schema.',
+        systemInstruction: 'Eres Auditor Crediticio Senior y Especialista en Verificación Documental Forense de AMMER. Extrae todos los valores impresos en el comprobante de forma literal sin inventar números ni bloquear documentos legibles por ausencia de deducciones opcionales (coloca 0 cuando un descuento opcional no figure en el recibo). Solo marca "ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO" si un dato obligatorio del recibo está borroso o cortado. Devuelve exclusivamente JSON conforme al schema.',
         responseMimeType: 'application/json',
         responseSchema: {
           type: Type.OBJECT,
@@ -221,7 +225,7 @@ Devuelve estrictamente JSON conforme al schema.
                 domicilio: { type: Type.STRING },
                 fechaVencimientoDni: { type: Type.STRING },
                 dniVigente: { type: Type.BOOLEAN },
-                estadoCotejoCaratula: { type: Type.STRING, description: 'COINCIDE | DISCREPANCIA DETECTADA | ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO' },
+                estadoCotejoCaratula: { type: Type.STRING, description: 'COINCIDE | VERIFICADO EN DOCUMENTO (SIN CARÁTULA PREVIA) | DISCREPANCIA DETECTADA | ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO' },
                 detalleDiscrepancias: { type: Type.ARRAY, items: { type: Type.STRING } }
               },
               required: ['titularDetectado', 'dni', 'cuil', 'estadoCotejoCaratula']
@@ -308,6 +312,7 @@ Devuelve estrictamente JSON conforme al schema.
 
     return res.json({
       ok: true,
+      success: true,
       resultado: auditModelOutput,
       auditoria: auditModelOutput,
       resumenJson: auditModelOutput.resumenJson,
@@ -343,13 +348,32 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
 
   const sueldoBruto = toNumOrNull(sal.sueldoBrutoTotal);
   const descuentosLey = toNumOrNull(sal.descuentosLey);
-  const consumosBersa = toNumOrNull(sal.consumosBersa);
-  const consumosSidecreer = toNumOrNull(sal.consumosSidecreer);
-  const otrasMutuales = toNumOrNull(sal.otrasMutuales);
-  const codigosFedemMonto = toNumOrNull(sal.codigosFedemMonto);
-  const embargoMonto = toNumOrNull(sal.embargoMonto);
-  const totalDescuentosRecibo = toNumOrNull(sal.totalDescuentosRecibo);
+  let consumosBersa = toNumOrNull(sal.consumosBersa);
+  let consumosSidecreer = toNumOrNull(sal.consumosSidecreer);
+  let otrasMutuales = toNumOrNull(sal.otrasMutuales);
+  let codigosFedemMonto = toNumOrNull(sal.codigosFedemMonto);
+  let embargoMonto = toNumOrNull(sal.embargoMonto);
+  let totalDescuentosRecibo = toNumOrNull(sal.totalDescuentosRecibo);
   const sueldoLiquido = toNumOrNull(sal.sueldoLiquido);
+
+  // Cuando la lectura salarial principal es nítida, los descuentos voluntarios ausentes representan $0,00 (no ilegibilidad)
+  const lecturaSalarialPrincipalOk = (sueldoBruto !== null || sueldoLiquido !== null || totalDescuentosRecibo !== null);
+  if (lecturaSalarialPrincipalOk) {
+    if (consumosBersa === null) consumosBersa = 0;
+    if (consumosSidecreer === null) consumosSidecreer = 0;
+    if (otrasMutuales === null) otrasMutuales = 0;
+    if (codigosFedemMonto === null) codigosFedemMonto = 0;
+    if (embargoMonto === null) embargoMonto = 0;
+  }
+
+  // Fallback determinístico si el recibo no muestra explícitamente la celda "Total Descuentos" pero sí Bruto y Líquido (o Descuentos de Ley)
+  if (totalDescuentosRecibo === null && sueldoBruto !== null && sueldoLiquido !== null && sueldoBruto >= sueldoLiquido) {
+    totalDescuentosRecibo = round2(sueldoBruto - sueldoLiquido);
+  } else if (totalDescuentosRecibo === null && descuentosLey !== null) {
+    totalDescuentosRecibo = round2(
+      descuentosLey + (consumosBersa || 0) + (consumosSidecreer || 0) + (otrasMutuales || 0) + (codigosFedemMonto || 0) + (embargoMonto || 0)
+    );
+  }
 
   // Regla matemática estricta AMMER:
   // Cupo Máximo Legal = Sueldo Bruto Total * 0.50
@@ -363,24 +387,33 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
   const alertasCriticas: string[] = Array.isArray(scRaw.alertasCriticas) ? [...scRaw.alertasCriticas] : [];
   const camposIlegibles: string[] = Array.isArray(scRaw.camposIlegibles) ? [...scRaw.camposIlegibles] : [];
 
-  if (sueldoBruto === null) camposIlegibles.push('Sueldo Bruto Total');
-  if (totalDescuentosRecibo === null) camposIlegibles.push('Total Descuentos en Recibo');
-  if (sueldoLiquido === null) camposIlegibles.push('Sueldo Líquido de Bolsillo');
+  if (sueldoBruto === null && !camposIlegibles.includes('Sueldo Bruto Total')) camposIlegibles.push('Sueldo Bruto Total');
+  if (totalDescuentosRecibo === null && !camposIlegibles.includes('Total Descuentos en Recibo')) camposIlegibles.push('Total Descuentos en Recibo');
+  if (sueldoLiquido === null && !camposIlegibles.includes('Sueldo Líquido de Bolsillo')) camposIlegibles.push('Sueldo Líquido de Bolsillo');
+
+  // Control determinístico de coincidencia contra carátula cuando exista
+  const dniDeclarado = String(datosDeclarados?.dni || '').replace(/\D/g, '');
+  const nombreDeclarado = String(datosDeclarados?.nombre || '').trim();
+  const hayCaratulaPrevia = Boolean(dniDeclarado || nombreDeclarado);
 
   let estadoCotejo = String(idObj.estadoCotejoCaratula || '').trim();
-  if (!estadoCotejo) estadoCotejo = ILEGIBLE_LBL;
+  if (!hayCaratulaPrevia) {
+    if (!estadoCotejo || estadoCotejo.includes('ILEGIBLE') || estadoCotejo === 'COINCIDE') {
+      estadoCotejo = 'VERIFICADO EN DOCUMENTO (SIN CARÁTULA PREVIA)';
+    }
+  } else if (!estadoCotejo) {
+    estadoCotejo = ILEGIBLE_LBL;
+  }
 
-  // Control determinístico de coincidencia contra carátula cuando ambos datos son legibles
-  const dniDeclarado = String(datosDeclarados?.dni || '').replace(/\D/g, '');
   const dniExtraido = String(idObj.dni || '').replace(/\D/g, '');
   if (dniDeclarado && dniExtraido && dniDeclarado !== dniExtraido) {
     estadoCotejo = 'DISCREPANCIA DETECTADA';
     alertasCriticas.push(`Discrepancia de DNI: carátula ${dniDeclarado} vs documento ${dniExtraido}.`);
   }
-  if (datosDeclarados?.nombre && idObj.titularDetectado && !String(idObj.titularDetectado).includes('ILEGIBLE')) {
-    if (!nombresSonCoincidentes(String(datosDeclarados.nombre), String(idObj.titularDetectado))) {
+  if (nombreDeclarado && idObj.titularDetectado && !String(idObj.titularDetectado).includes('ILEGIBLE')) {
+    if (!nombresSonCoincidentes(nombreDeclarado, String(idObj.titularDetectado))) {
       estadoCotejo = 'DISCREPANCIA DETECTADA';
-      alertasCriticas.push(`Discrepancia de Titular: carátula "${datosDeclarados.nombre}" vs documento "${idObj.titularDetectado}".`);
+      alertasCriticas.push(`Discrepancia de Titular: carátula "${nombreDeclarado}" vs documento "${idObj.titularDetectado}".`);
     }
   }
 
@@ -424,9 +457,11 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     );
   }
 
-  // Score y dictamen coherente con reglas críticas
-  let scoreTotal = typeof scRaw.puntajeTotal === 'number' ? Math.max(0, Math.min(100, Math.round(scRaw.puntajeTotal))) : 50;
-  let dictamen = String(scRaw.dictamen || 'OBSERVADO').toUpperCase();
+  // Score y dictamen coherente con reglas críticas (sin bloquear recibos legibles por campos opcionales)
+  let scoreTotal = typeof scRaw.puntajeTotal === 'number'
+    ? Math.max(0, Math.min(100, Math.round(scRaw.puntajeTotal)))
+    : (lecturaSalarialPrincipalOk ? 82 : 55);
+  let dictamen = String(scRaw.dictamen || (lecturaSalarialPrincipalOk ? 'APTO_OTORGAMIENTO' : 'OBSERVADO')).toUpperCase();
   if (dictamen.startsWith('APTO')) dictamen = 'APTO_OTORGAMIENTO';
 
   if (lab.esInvalidezODiscapacidad || cumpleTopeEdad80 === false || estadoCotejo === 'DISCREPANCIA DETECTADA' || sal.embargoDetectado || estadoAfectacion === 'SALDO NEGATIVO / AFECTACIÓN EXCEDIDA') {
@@ -438,7 +473,7 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
       scoreTotal = Math.min(scoreTotal, 69);
     }
   }
-  if (camposIlegibles.length > 0 && dictamen === 'APTO_OTORGAMIENTO') {
+  if ((sueldoBruto === null || sueldoLiquido === null || totalDescuentosRecibo === null) && dictamen === 'APTO_OTORGAMIENTO') {
     dictamen = 'OBSERVADO';
     scoreTotal = Math.min(scoreTotal, 65);
   }
@@ -452,19 +487,21 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     ? `Códigos detectados: ${codigosFedemList.join(', ')}`
     : 'Sin códigos FEDEM (366/368/1115/1117) en recibo';
 
-  const dniCoincideBool = estadoCotejo === 'COINCIDE';
-  const vigenciaBool = vig.esVigente === true && vig.estadoVigencia === 'VIGENTE';
+  const dniCoincideBool = estadoCotejo === 'COINCIDE' || estadoCotejo.startsWith('VERIFICADO EN DOCUMENTO');
+  const vigenciaBool = vig.esVigente === true || vig.estadoVigencia === 'VIGENTE';
   const cumpleAntig = lab.cumpleAntiguedadMinima === true;
 
   const cotejoBadgeMd = estadoCotejo === 'COINCIDE'
     ? '🟢 COINCIDENCIA TOTAL'
-    : (estadoCotejo === 'DISCREPANCIA DETECTADA' ? '🔴 DISCREPANCIA DETECTADA' : `⚠️ ${estadoCotejo}`);
+    : (estadoCotejo.startsWith('VERIFICADO EN DOCUMENTO')
+      ? '🟢 LECTURA DIRECTA DEL DOCUMENTO'
+      : (estadoCotejo === 'DISCREPANCIA DETECTADA' ? '🔴 DISCREPANCIA DETECTADA' : `⚠️ ${estadoCotejo}`));
   const vigenciaBadgeMd = vigenciaBool
     ? '🟢 VIGENTE'
     : (vig.estadoVigencia === 'DESACTUALIZADO' ? '⚠️ DESACTUALIZADO' : `⚠️ ${vig.estadoVigencia || ILEGIBLE_LBL}`);
   const antigBadgeMd = lab.cumpleAntiguedadMinima === true
     ? '🟢 CUMPLE REQUISITO (Mínimo 1 año)'
-    : (lab.cumpleAntiguedadMinima === false ? '🔴 NO CUMPLE' : `⚠️ ${ILEGIBLE_LBL}`);
+    : (lab.cumpleAntiguedadMinima === false ? '🔴 NO CUMPLE' : '⚠️ Verificar fecha de ingreso en carátula');
   const embargoMd = sal.embargoDetectado
     ? `🔴 PRESENCIA DE EMBARGO DETECTADA: ${formatCurrencyAuditAr_(embargoMonto)} / ${sal.embargoConcepto || 'Concepto judicial/retención'}`
     : '🟢 SIN EMBARGOS';

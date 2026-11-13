@@ -13427,47 +13427,84 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       if (archivos.length === 0) return null;
 
-      const enAppsScriptHost = (typeof window !== 'undefined' && window.location && window.location.hostname.includes('script.google'));
-      const endpoint = (contexto && contexto.endpoint)
+      const hostName = (typeof window !== 'undefined' && window.location && window.location.hostname)
+        ? String(window.location.hostname).toLowerCase()
+        : '';
+      const esHostEstatico = hostName.includes('script.google') ||
+        hostName.includes('github.io') ||
+        (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:');
+
+      const endpointPrimario = (contexto && contexto.endpoint)
         ? String(contexto.endpoint)
-        : (enAppsScriptHost ? APPS_SCRIPT_URL : '/api/auditar-documentos');
+        : (esHostEstatico ? APPS_SCRIPT_URL : '/api/auditar-documentos');
 
-      const isAppsScript = endpoint === APPS_SCRIPT_URL || endpoint.includes('script.google.com');
-      const payload = isAppsScript
-        ? {
-            action: 'auditarConIA',
-            idSolicitud: (contexto && contexto.idSolicitud) || 'DOCUMENTOS_SUELTOS',
-            archivos: archivos,
-            datosDeclarados: (contexto && contexto.datosDeclarados) || null
+      const ejecutarPeticionAuditoria = async (urlDestino) => {
+        const esAppsScript = urlDestino === APPS_SCRIPT_URL || urlDestino.includes('script.google.com');
+        const primerArchivo = archivos[0] || {};
+        const datosDecl = (contexto && contexto.datosDeclarados) || null;
+        const bodyPayload = esAppsScript
+          ? {
+              action: 'auditarReciboIA',
+              idSolicitud: (contexto && contexto.idSolicitud) || 'DOCUMENTOS_SUELTOS',
+              archivos: archivos,
+              base64Archivo: primerArchivo.base64 || '',
+              mimeType: primerArchivo.mimeType || 'application/pdf',
+              nombreArchivo: primerArchivo.nombre || 'documento_auditoria.pdf',
+              datosDeclarados: datosDecl,
+              datosContexto: datosDecl
+            }
+          : {
+              archivos: archivos,
+              datosDeclarados: datosDecl
+            };
+
+        const fetchOpts = {
+          method: 'POST',
+          headers: {
+            'Content-Type': esAppsScript ? 'text/plain;charset=utf-8' : 'application/json'
+          },
+          redirect: 'follow',
+          body: JSON.stringify(bodyPayload)
+        };
+        if (contexto && contexto.signal) {
+          fetchOpts.signal = contexto.signal;
+        }
+
+        const timeoutMs = (contexto && Number(contexto.timeoutMs) > 0) ? Number(contexto.timeoutMs) : 35000;
+        const resp = await fetchConTimeout(urlDestino, fetchOpts, timeoutMs);
+        let data = null;
+        let rawText = '';
+        try {
+          if (typeof resp.json === 'function') {
+            data = await resp.json();
+          } else if (typeof resp.text === 'function') {
+            rawText = await resp.text();
+            data = JSON.parse(rawText);
           }
-        : {
-            archivos: archivos,
-            datosDeclarados: (contexto && contexto.datosDeclarados) || null
-          };
-
-      const fetchOpts = {
-        method: 'POST',
-        headers: {
-          'Content-Type': isAppsScript ? 'text/plain;charset=utf-8' : 'application/json'
-        },
-        body: JSON.stringify(payload)
+        } catch (_) {
+          data = null;
+        }
+        return { resp, data, esAppsScript };
       };
-      if (contexto && contexto.signal) {
-        fetchOpts.signal = contexto.signal;
+
+      let resultadoRed = await ejecutarPeticionAuditoria(endpointPrimario);
+
+      // Si un hosting estático (ej. GitHub Pages / Vite preview) rechaza POST /api/auditar-documentos con 404/405 o HTML, conmutar automáticamente a Google Apps Script con text/plain (sin preflight CORS 405)
+      if (!resultadoRed.esAppsScript && (!resultadoRed.resp || resultadoRed.resp.status === 404 || resultadoRed.resp.status === 405 || (!resultadoRed.resp.ok && !resultadoRed.data))) {
+        if (typeof APPS_SCRIPT_URL === 'string' && APPS_SCRIPT_URL.startsWith('http')) {
+          resultadoRed = await ejecutarPeticionAuditoria(APPS_SCRIPT_URL);
+        }
       }
 
-      const timeoutMs = (contexto && Number(contexto.timeoutMs) > 0) ? Number(contexto.timeoutMs) : 35000;
-      const resp = await fetchConTimeout(endpoint, fetchOpts, timeoutMs);
-      let data = null;
-      try {
-        data = await resp.json();
-      } catch (_) {
-        data = null;
-      }
-      if (!resp || !resp.ok || (data && data.ok === false)) {
-        const msgErr = (data && data.error) ? data.error : ('Servidor de auditoría respondió ' + (resp ? resp.status : 'sin respuesta'));
+      const { resp, data } = resultadoRed;
+      const operacionExitosa = Boolean(resp && resp.ok && data && data.ok !== false && data.success !== false);
+      if (!operacionExitosa) {
+        const msgErr = (data && data.error)
+          ? data.error
+          : ('Servidor de auditoría respondió ' + (resp ? resp.status : 'sin respuesta'));
         throw new Error(msgErr);
       }
+
       const rawAudit = data && (data.auditoria || data.resultado);
       const normalized = normalizarResultadoAuditoriaIA(rawAudit);
       if (normalized && data) {
@@ -13732,7 +13769,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
 
       const estadoCotejo = cruce.estadoCotejo || ((cruce.coincideDni && cruce.coincideNombre) ? 'COINCIDE' : 'DISCREPANCIA DETECTADA');
-      const idIcon = estadoCotejo === 'COINCIDE' ? '✅' : (estadoCotejo === 'DISCREPANCIA DETECTADA' ? '🔴' : '⚠️');
+      const idOkCotejo = estadoCotejo === 'COINCIDE' || estadoCotejo.startsWith('VERIFICADO EN DOCUMENTO');
+      const idIcon = idOkCotejo ? '✅' : (estadoCotejo === 'DISCREPANCIA DETECTADA' ? '🔴' : '⚠️');
       const recVig = (!rec.reciboVencido && rec.estadoPeriodo === 'VIGENTE');
       const recIcon = recVig ? '✅' : '⚠️';
       const antOk = rec.cumpleAntiguedadMinima === true;
@@ -14267,15 +14305,16 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       // 2. VERIFICACIÓN DE IDENTIDAD, LABORAL Y SITUACIÓN DE REVISTA
       const estadoCotejo = cruce.estadoCotejo || ((cruce.coincideDni && cruce.coincideNombre) ? 'COINCIDE' : 'DISCREPANCIA DETECTADA');
+      const cotejoEsOk = estadoCotejo === 'COINCIDE' || estadoCotejo.startsWith('VERIFICADO EN DOCUMENTO');
       html += '<div class="section-title-divider" style="margin-top:1rem;">1 &amp; 2. Identidad, Organismo Empleador y Situación de Revista</div>' +
         '<div class="crosscheck-table-wrap">' +
           '<table class="crosscheck-table">' +
             '<thead><tr><th>Indicador Auditado</th><th>Valor Literal Extraído</th><th>Carátula / Regla AMMER</th><th>Estado</th></tr></thead>' +
             '<tbody>' +
-              '<tr><td><strong>Titular / DNI / CUIL</strong></td><td>' + sanitizeHTML((rec.titular || TEXTO_ILEGIBLE_AMMER) + ' — DNI ' + (rec.dni || TEXTO_ILEGIBLE_AMMER) + ' / ' + (rec.cuil || TEXTO_ILEGIBLE_AMMER)) + '</td><td>' + sanitizeHTML(solAct ? ((solAct.solicitante?.nombre || 'S/D') + ' (' + (solAct.solicitante?.dni || 'S/D') + ')') : 'Auditoría libre') + '</td><td>' + (estadoCotejo === 'COINCIDE' ? '<span class="status-match">🟢 COINCIDE</span>' : '<span class="status-diff">🔴 ' + sanitizeHTML(estadoCotejo) + '</span>') + '</td></tr>' +
+              '<tr><td><strong>Titular / DNI / CUIL</strong></td><td>' + sanitizeHTML((rec.titular || TEXTO_ILEGIBLE_AMMER) + ' — DNI ' + (rec.dni || TEXTO_ILEGIBLE_AMMER) + ' / ' + (rec.cuil || 'No consta en recibo')) + '</td><td>' + sanitizeHTML(solAct ? ((solAct.solicitante?.nombre || 'S/D') + ' (' + (solAct.solicitante?.dni || 'S/D') + ')') : 'Auditoría libre') + '</td><td>' + (cotejoEsOk ? '<span class="status-match">🟢 ' + sanitizeHTML(estadoCotejo) + '</span>' : '<span class="status-diff">🔴 ' + sanitizeHTML(estadoCotejo) + '</span>') + '</td></tr>' +
               '<tr><td><strong>Período Liquidado</strong></td><td><strong>' + sanitizeHTML(rec.periodo || TEXTO_ILEGIBLE_AMMER) + '</strong></td><td>Último o anteúltimo mes exigible</td><td>' + (!rec.reciboVencido && rec.estadoPeriodo === 'VIGENTE' ? '<span class="status-match">🟢 VIGENTE</span>' : '<span class="status-diff">⚠️ ' + sanitizeHTML(rec.estadoPeriodo || TEXTO_ILEGIBLE_AMMER) + '</span>') + '</td></tr>' +
               '<tr><td><strong>Organismo y Revista</strong></td><td>' + sanitizeHTML((rec.organismo || TEXTO_ILEGIBLE_AMMER) + ' — ' + (rec.situacionRevista || TEXTO_ILEGIBLE_AMMER)) + '</td><td>CGE / Salud / Policía / Adm. Central / Muni / Caja</td><td><span class="status-match">' + (rec.esInvalidezODiscapacidad ? '🔴 EXCLUIDO (Invalidez/Disc.)' : '✓ Identificado') + '</span></td></tr>' +
-              '<tr><td><strong>Fecha Ingreso / Antigüedad</strong></td><td>' + sanitizeHTML((rec.fechaIngreso || TEXTO_ILEGIBLE_AMMER) + ' (' + (rec.antiguedadDetalle || TEXTO_ILEGIBLE_AMMER) + ')') + '</td><td>Mínimo 1 año comprobable</td><td>' + (rec.cumpleAntiguedadMinima === true ? '<span class="status-match">🟢 CUMPLE (&ge; 1 año)</span>' : (rec.cumpleAntiguedadMinima === false ? '<span class="status-diff">🔴 NO CUMPLE</span>' : '<span class="status-diff">⚠️ ' + TEXTO_ILEGIBLE_AMMER + '</span>')) + '</td></tr>' +
+              '<tr><td><strong>Fecha Ingreso / Antigüedad</strong></td><td>' + sanitizeHTML((rec.fechaIngreso || 'No consta en recibo') + ' (' + (rec.antiguedadDetalle || 'No especificada') + ')') + '</td><td>Mínimo 1 año comprobable</td><td>' + (rec.cumpleAntiguedadMinima === true ? '<span class="status-match">🟢 CUMPLE (&ge; 1 año)</span>' : (rec.cumpleAntiguedadMinima === false ? '<span class="status-diff">🔴 NO CUMPLE</span>' : '<span class="status-match">ℹ️ Verificar en carátula</span>')) + '</td></tr>' +
               '<tr><td><strong>Observaciones Especiales</strong></td><td colspan="2">' + sanitizeHTML(rec.observacionesEspeciales || 'Sin observaciones especiales registradas') + '</td><td>' + (rec.cumpleTopeEdad80 === false ? '<span class="status-diff">🔴 SUPERA 80 AÑOS</span>' : '<span class="status-match">Verificado</span>') + '</td></tr>' +
             '</tbody>' +
           '</table>' +
@@ -14364,6 +14403,73 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       container.innerHTML = html;
       container.style.display = 'block';
       container.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function mostrarLoaderAuditoria(mensaje = 'Analizando documento y realizando verificación forense con IA...') {
+      const loadBar = document.getElementById('aiAuditLoadingBar');
+      const stageText = document.getElementById('aiAuditStageText');
+      const loaderIA = document.getElementById('loader-auditoria-ia');
+      if (stageText) stageText.textContent = mensaje;
+      if (loadBar) loadBar.style.display = 'block';
+      if (loaderIA) loaderIA.classList.remove('hidden');
+    }
+
+    function ocultarLoaderAuditoria() {
+      const loadBar = document.getElementById('aiAuditLoadingBar');
+      const loaderIA = document.getElementById('loader-auditoria-ia');
+      if (loadBar) loadBar.style.display = 'none';
+      if (loaderIA) loaderIA.classList.add('hidden');
+    }
+
+    function mostrarErrorAuditoria(msg) {
+      renderErrorAuditoria(msg || 'No se pudo completar la lectura documental.');
+    }
+
+    function renderizarInformeAuditoriaIA(audit) {
+      return renderResultadosAuditoria(audit);
+    }
+
+    async function ejecutarAuditoriaDocumental(base64Data, tipoMime = 'application/pdf') {
+      try {
+        mostrarLoaderAuditoria('Analizando documento y realizando verificación forense con IA...');
+        let datosContexto = null;
+        if (idExpedienteAuditadoActivo) {
+          const all = getStoredSolicitudes();
+          const s = all.find(x => String(x.id) === String(idExpedienteAuditadoActivo));
+          if (s) {
+            datosContexto = {
+              nombre: s.solicitante?.nombre || '',
+              dni: s.solicitante?.dni || '',
+              cuil: s.solicitante?.cuil || s.datosContacto?.cuil || '',
+              fechaNacimiento: s.solicitante?.fechaNacimiento || s.solicitante?.fechaNac || '',
+              organismo: s.solicitante?.organismo || '',
+              cuota: s.propuestaMutual?.cuotaEstimada || s.prestamo?.cuotaEstimada || 0,
+              plazoCuotas: s.propuestaMutual?.cuotas || s.prestamo?.cuotas || 0
+            };
+          }
+        }
+        const auditRes = await procesarAuditoriaConTimeout(base64Data, {
+          idSolicitud: idExpedienteAuditadoActivo || 'DOCUMENTOS_SUELTOS',
+          mimeType: tipoMime,
+          datosDeclarados: datosContexto,
+          permitirBackendSinKey: true,
+          preservarLoadingBar: true,
+          timeoutMs: 35000
+        });
+        ocultarLoaderAuditoria();
+        if (auditRes) {
+          ultimoResultadoAuditoria = auditRes;
+          renderizarInformeAuditoriaIA(auditRes);
+          return auditRes;
+        }
+        mostrarErrorAuditoria(window._ultimaErrorAuditoriaIA || 'No se pudo completar la auditoría.');
+        return null;
+      } catch (err) {
+        ocultarLoaderAuditoria();
+        console.error('Error en auditoría IA:', err);
+        mostrarErrorAuditoria('No se pudo completar la auditoría: ' + (err && err.message ? err.message : String(err)));
+        return null;
+      }
     }
 
     function aplicarDatosExtraidosAlExpediente() {
@@ -15019,6 +15125,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.construirInformeMarkdownAMMER = construirInformeMarkdownAMMER;
     window.formatMontoAuditoriaExacto = formatMontoAuditoriaExacto;
     window.renderErrorAuditoria = renderErrorAuditoria;
+    window.ejecutarAuditoriaDocumental = ejecutarAuditoriaDocumental;
+    window.renderizarInformeAuditoriaIA = renderizarInformeAuditoriaIA;
+    window.mostrarLoaderAuditoria = mostrarLoaderAuditoria;
+    window.ocultarLoaderAuditoria = ocultarLoaderAuditoria;
+    window.mostrarErrorAuditoria = mostrarErrorAuditoria;
     window.estadoApp = window.estadoApp;
 
     window.addEventListener('DOMContentLoaded', () => {

@@ -153,6 +153,7 @@ function doPost(e) {
         return crearRespuestaJSON(actualizarDatosSolicitanteBackend(payload));
 
       case 'auditarConIA':
+      case 'auditarReciboIA':
         return crearRespuestaJSON(auditarLegajoConIA(payload));
 
       default:
@@ -1660,33 +1661,512 @@ function actualizarDatosSolicitanteBackend(payload) {
 }
 
 /* ============================================================================
-   8. AUDITORÍA DOCUMENTAL IA (PERSISTENCIA SIN DATOS FICTICIOS)
+   8. AUDITORÍA DOCUMENTAL IA (FORENSE EQUILIBRADA — CERO ALUCINACIÓN)
    ============================================================================ */
-function auditarLegajoConIA(payload) {
-  const resultadoEntrante = payload && (payload.resultado || payload.auditoria) ? (payload.resultado || payload.auditoria) : null;
+function persistirDictamenAuditoriaEnHoja_(idSolicitud, resultadoAudit) {
+  if (!idSolicitud || !resultadoAudit) return;
+  try {
+    const sheet = obtenerOInicializarHoja_(CONFIG_AMMER.SHEET_SOLICITUDES, HEADERS_SOLICITUDES);
+    const { map } = obtenerHeaderMap_(sheet);
+    const rowNum = encontrarFilaPorId_(sheet, map, idSolicitud);
+    if (rowNum !== -1 && map['Dictamen_IA_JSON'] !== undefined) {
+      sheet.getRange(rowNum, map['Dictamen_IA_JSON'] + 1).setValue(JSON.stringify({
+        estado: 'completado',
+        fechaFin: obtenerFechaHora24Argentina_(),
+        resultado: resultadoAudit
+      }));
+      SpreadsheetApp.flush();
+    }
+  } catch (_) {}
+}
 
-  if (!resultadoEntrante) {
+function round2Audit_(n) {
+  return Math.round(Number(n) * 100) / 100;
+}
+
+function formatCurrencyAuditGs_(val) {
+  if (val === null || val === undefined || isNaN(Number(val))) {
+    return 'ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO';
+  }
+  const num = Number(val);
+  const sign = num < 0 ? '-' : '';
+  const absFixed = Math.abs(num).toFixed(2);
+  const parts = absFixed.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return sign + '$' + parts[0] + ',' + parts[1];
+}
+
+function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
+  const ILEGIBLE_LBL = 'ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO';
+  const idObj = (raw && raw.identidad) || {};
+  const lab = (raw && raw.datosLaborales) || {};
+  const vig = (raw && raw.vigenciaRecibo) || {};
+  const sal = (raw && raw.radiografiaSalarial) || {};
+  const scRaw = (raw && raw.scoringAmmer) || {};
+
+  const toNumOrNull = (v) => (v === null || v === undefined || v === '' || isNaN(Number(v))) ? null : round2Audit_(Number(v));
+
+  const sueldoBruto = toNumOrNull(sal.sueldoBrutoTotal);
+  const descuentosLey = toNumOrNull(sal.descuentosLey);
+  let consumosBersa = toNumOrNull(sal.consumosBersa);
+  let consumosSidecreer = toNumOrNull(sal.consumosSidecreer);
+  let otrasMutuales = toNumOrNull(sal.otrasMutuales);
+  let codigosFedemMonto = toNumOrNull(sal.codigosFedemMonto);
+  let embargoMonto = toNumOrNull(sal.embargoMonto);
+  let totalDescuentosRecibo = toNumOrNull(sal.totalDescuentosRecibo);
+  const sueldoLiquido = toNumOrNull(sal.sueldoLiquido);
+
+  const lecturaSalarialPrincipalOk = (sueldoBruto !== null || sueldoLiquido !== null || totalDescuentosRecibo !== null);
+  if (lecturaSalarialPrincipalOk) {
+    if (consumosBersa === null) consumosBersa = 0;
+    if (consumosSidecreer === null) consumosSidecreer = 0;
+    if (otrasMutuales === null) otrasMutuales = 0;
+    if (codigosFedemMonto === null) codigosFedemMonto = 0;
+    if (embargoMonto === null) embargoMonto = 0;
+  }
+
+  if (totalDescuentosRecibo === null && sueldoBruto !== null && sueldoLiquido !== null && sueldoBruto >= sueldoLiquido) {
+    totalDescuentosRecibo = round2Audit_(sueldoBruto - sueldoLiquido);
+  } else if (totalDescuentosRecibo === null && descuentosLey !== null) {
+    totalDescuentosRecibo = round2Audit_(
+      descuentosLey + (consumosBersa || 0) + (consumosSidecreer || 0) + (otrasMutuales || 0) + (codigosFedemMonto || 0) + (embargoMonto || 0)
+    );
+  }
+
+  const cupoMaximoLegal = sueldoBruto !== null ? round2Audit_(sueldoBruto * 0.50) : null;
+  const margenDisponibleMensual = (cupoMaximoLegal !== null && totalDescuentosRecibo !== null)
+    ? round2Audit_(cupoMaximoLegal - totalDescuentosRecibo)
+    : null;
+
+  const cuotaSimulada = Number((datosDeclarados && datosDeclarados.cuota) || 0);
+  const alertasCriticas = Array.isArray(scRaw.alertasCriticas) ? scRaw.alertasCriticas.slice() : [];
+  const camposIlegibles = Array.isArray(scRaw.camposIlegibles) ? scRaw.camposIlegibles.slice() : [];
+
+  if (sueldoBruto === null && camposIlegibles.indexOf('Sueldo Bruto Total') === -1) camposIlegibles.push('Sueldo Bruto Total');
+  if (totalDescuentosRecibo === null && camposIlegibles.indexOf('Total Descuentos en Recibo') === -1) camposIlegibles.push('Total Descuentos en Recibo');
+  if (sueldoLiquido === null && camposIlegibles.indexOf('Sueldo Líquido de Bolsillo') === -1) camposIlegibles.push('Sueldo Líquido de Bolsillo');
+
+  const dniDeclarado = String((datosDeclarados && datosDeclarados.dni) || '').replace(/\D/g, '');
+  const nombreDeclarado = String((datosDeclarados && datosDeclarados.nombre) || '').trim();
+  const hayCaratulaPrevia = Boolean(dniDeclarado || nombreDeclarado);
+
+  let estadoCotejo = String(idObj.estadoCotejoCaratula || '').trim();
+  if (!hayCaratulaPrevia) {
+    if (!estadoCotejo || estadoCotejo.indexOf('ILEGIBLE') !== -1 || estadoCotejo === 'COINCIDE') {
+      estadoCotejo = 'VERIFICADO EN DOCUMENTO (SIN CARÁTULA PREVIA)';
+    }
+  } else if (!estadoCotejo) {
+    estadoCotejo = ILEGIBLE_LBL;
+  }
+
+  const dniExtraido = String(idObj.dni || '').replace(/\D/g, '');
+  if (dniDeclarado && dniExtraido && dniDeclarado !== dniExtraido) {
+    estadoCotejo = 'DISCREPANCIA DETECTADA';
+    alertasCriticas.push('Discrepancia de DNI: carátula ' + dniDeclarado + ' vs documento ' + dniExtraido + '.');
+  }
+
+  if (lab.esInvalidezODiscapacidad) {
+    alertasCriticas.push('Exclusión reglamentaria: Jubilación por Invalidez o Pensión por Discapacidad no viable.');
+  }
+  if (sal.embargoDetectado) {
+    alertasCriticas.push('Presencia de embargo judicial/retención: ' + (sal.embargoConcepto || 'Embargo') + ' (' + formatCurrencyAuditGs_(embargoMonto) + ').');
+  }
+
+  let estadoAfectacion = 'MARGEN DISPONIBLE';
+  if (margenDisponibleMensual === null) {
+    estadoAfectacion = ILEGIBLE_LBL;
+  } else if (margenDisponibleMensual <= 0 || (cuotaSimulada > 0 && margenDisponibleMensual < cuotaSimulada)) {
+    estadoAfectacion = 'SALDO NEGATIVO / AFECTACIÓN EXCEDIDA';
+    alertasCriticas.push(
+      cuotaSimulada > 0
+        ? ('Margen disponible (' + formatCurrencyAuditGs_(margenDisponibleMensual) + ') insuficiente para cuota simulada (' + formatCurrencyAuditGs_(cuotaSimulada) + ').')
+        : ('Margen disponible negativo o agotado (' + formatCurrencyAuditGs_(margenDisponibleMensual) + ').')
+    );
+  }
+
+  let scoreTotal = typeof scRaw.puntajeTotal === 'number' ? Math.max(0, Math.min(100, Math.round(scRaw.puntajeTotal))) : (lecturaSalarialPrincipalOk ? 82 : 55);
+  let dictamen = String(scRaw.dictamen || (lecturaSalarialPrincipalOk ? 'APTO_OTORGAMIENTO' : 'OBSERVADO')).toUpperCase();
+  if (dictamen.indexOf('APTO') === 0) dictamen = 'APTO_OTORGAMIENTO';
+
+  const cumpleTopeEdad80 = lab.cumpleTopeEdad80 !== undefined ? lab.cumpleTopeEdad80 : null;
+  if (lab.esInvalidezODiscapacidad || cumpleTopeEdad80 === false || estadoCotejo === 'DISCREPANCIA DETECTADA' || sal.embargoDetectado || estadoAfectacion === 'SALDO NEGATIVO / AFECTACIÓN EXCEDIDA') {
+    if (lab.esInvalidezODiscapacidad || cumpleTopeEdad80 === false || estadoCotejo === 'DISCREPANCIA DETECTADA' || (margenDisponibleMensual !== null && margenDisponibleMensual < 0)) {
+      dictamen = 'RECHAZADO';
+      scoreTotal = Math.min(scoreTotal, 45);
+    } else if (dictamen === 'APTO_OTORGAMIENTO') {
+      dictamen = 'OBSERVADO';
+      scoreTotal = Math.min(scoreTotal, 69);
+    }
+  }
+  if ((sueldoBruto === null || sueldoLiquido === null || totalDescuentosRecibo === null) && dictamen === 'APTO_OTORGAMIENTO') {
+    dictamen = 'OBSERVADO';
+    scoreTotal = Math.min(scoreTotal, 65);
+  }
+
+  const calificacionLetra = scoreTotal >= 80
+    ? 'A (Riesgo Bajo)'
+    : (scoreTotal >= 60 ? 'B (Riesgo Moderado)' : 'C (Riesgo Crítico / No Viable)');
+
+  const codigosFedemList = Array.isArray(sal.codigosFedemDetectados) ? sal.codigosFedemDetectados : [];
+  const fedemObs = codigosFedemList.length > 0
+    ? ('Códigos detectados: ' + codigosFedemList.join(', '))
+    : 'Sin códigos FEDEM (366/368/1115/1117) en recibo';
+
+  const dniCoincideBool = estadoCotejo === 'COINCIDE' || estadoCotejo.indexOf('VERIFICADO EN DOCUMENTO') === 0;
+  const vigenciaBool = vig.esVigente === true || vig.estadoVigencia === 'VIGENTE';
+  const cumpleAntig = lab.cumpleAntiguedadMinima === true;
+
+  const cotejoBadgeMd = estadoCotejo === 'COINCIDE'
+    ? '🟢 COINCIDENCIA TOTAL'
+    : (estadoCotejo.indexOf('VERIFICADO EN DOCUMENTO') === 0
+      ? '🟢 LECTURA DIRECTA DEL DOCUMENTO'
+      : (estadoCotejo === 'DISCREPANCIA DETECTADA' ? '🔴 DISCREPANCIA DETECTADA' : '⚠️ ' + estadoCotejo));
+  const vigenciaBadgeMd = vigenciaBool
+    ? '🟢 VIGENTE'
+    : (vig.estadoVigencia === 'DESACTUALIZADO' ? '⚠️ DESACTUALIZADO' : ('⚠️ ' + (vig.estadoVigencia || ILEGIBLE_LBL)));
+  const antigBadgeMd = lab.cumpleAntiguedadMinima === true
+    ? '🟢 CUMPLE REQUISITO (Mínimo 1 año)'
+    : (lab.cumpleAntiguedadMinima === false ? '🔴 NO CUMPLE' : '⚠️ Verificar fecha de ingreso en carátula');
+  const embargoMd = sal.embargoDetectado
+    ? ('🔴 PRESENCIA DE EMBARGO DETECTADA: ' + formatCurrencyAuditGs_(embargoMonto) + ' / ' + (sal.embargoConcepto || 'Retención judicial'))
+    : '🟢 SIN EMBARGOS';
+  const afectacionMd = estadoAfectacion === 'MARGEN DISPONIBLE'
+    ? '🟢 MARGEN DISPONIBLE'
+    : (estadoAfectacion === 'SALDO NEGATIVO / AFECTACIÓN EXCEDIDA' ? '🔴 SALDO NEGATIVO / CUPO EXCEDIDO' : ('⚠️ ' + estadoAfectacion));
+
+  const dictamenTextoFinal = scRaw.dictamenAuditor ||
+    (dictamen === 'APTO_OTORGAMIENTO'
+      ? ('Trámite viable conforme normativa AMMER con margen disponible de ' + formatCurrencyAuditGs_(margenDisponibleMensual) + '. Legajo leído sin observaciones críticas.')
+      : ('Trámite con observaciones o restricciones crediticias (' + (alertasCriticas[0] || 'verificar legajo') + '). Revisar antes de otorgar.'));
+
+  const informeMarkdown = [
+    '### 📑 INFORME DE AUDITORÍA DOCUMENTAL Y CREDITICIA AMMER',
+    '---',
+    '',
+    '#### 👤 1. Verificación de Identidad y Coincidencias',
+    '* **Titular Detectado:** ' + (idObj.titularDetectado || ILEGIBLE_LBL),
+    '* **DNI / CUIL:** ' + (idObj.dni || ILEGIBLE_LBL) + ' / ' + (idObj.cuil || 'No consta en recibo'),
+    '* **Cotejo con Carátula:** ' + cotejoBadgeMd,
+    '* **Período Liquidado:** ' + (vig.periodoLiquidado || ILEGIBLE_LBL) + ' • ' + vigenciaBadgeMd,
+    '',
+    '#### 🏢 2. Datos Laborales y Situación de Revista',
+    '* **Organismo Empleador:** ' + (lab.organismoEmpleador || ILEGIBLE_LBL),
+    '* **Condición de Revista:** ' + (lab.situacionRevista || ILEGIBLE_LBL),
+    '* **Antigüedad Registrada:** ' + (lab.antiguedadDetalle || 'No especificada en recibo') + ' • ' + antigBadgeMd,
+    '* **Observaciones Especiales:** ' + (lab.observacionesEspeciales || 'Sin observaciones especiales registradas'),
+    '',
+    '#### 💵 3. Radiografía Salarial y Descuentos',
+    '| Concepto | Monto Detectado ($) | Observaciones / Estado |',
+    '| :--- | :--- | :--- |',
+    '| **Sueldo Bruto Total** | ' + formatCurrencyAuditGs_(sueldoBruto) + ' | Remunerativo + No Remunerativo |',
+    '| **Descuentos de Ley** | ' + formatCurrencyAuditGs_(descuentosLey) + ' | Jubilación, IOSPER, Ley 4035 |',
+    '| **Consumos BERSA / Préstamos** | ' + formatCurrencyAuditGs_(consumosBersa) + ' | Retenciones bancarias |',
+    '| **Consumos SIDECREER** | ' + formatCurrencyAuditGs_(consumosSidecreer) + ' | Descuento por tarjeta oficial |',
+    '| **Otras Mutuales / Cuotas** | ' + formatCurrencyAuditGs_(otrasMutuales) + ' | Descuentos por código voluntario |',
+    '| **Códigos FEDEM Activos** | ' + formatCurrencyAuditGs_(codigosFedemMonto) + ' | ' + fedemObs + ' |',
+    '| **Total Descuentos en Recibo** | ' + formatCurrencyAuditGs_(totalDescuentosRecibo) + ' | Deducciones consolidadas |',
+    '| **Sueldo Líquido de Bolsillo** | ' + formatCurrencyAuditGs_(sueldoLiquido) + ' | Neto final a cobrar |',
+    '',
+    '* **Embargos Judiciales / Inhibiciones:** ' + embargoMd,
+    '',
+    '#### 📊 4. Análisis de Afectación Salarial y Margen',
+    '* **Cupo Máximo Legal (50% del Bruto):** ' + formatCurrencyAuditGs_(cupoMaximoLegal),
+    '* **Margen Disponible Estimado:** ' + formatCurrencyAuditGs_(margenDisponibleMensual),
+    '* **Estado de Afectación:** ' + afectacionMd,
+    '',
+    '#### 🛡️ 5. Calificación Crediticia AMMER (Scoring)',
+    '* **Score AMMER:** ' + scoreTotal + ' / 100 • **Calificación:** ' + calificacionLetra,
+    '* **Dictamen del Auditor:** ' + dictamenTextoFinal
+  ].join('\n');
+
+  const pCalidad = (sueldoBruto !== null && sueldoLiquido !== null && totalDescuentosRecibo !== null) ? 19 : 10;
+  const pVigencia = vigenciaBool ? 19 : 9;
+  const pIdentidad = dniCoincideBool ? 29 : 10;
+  const pFinanciera = Math.max(0, Math.min(30, scoreTotal - (pCalidad + pVigencia + pIdentidad)));
+
+  const resumenJson = {
+    identidad: {
+      titularDetectado: idObj.titularDetectado || ILEGIBLE_LBL,
+      dni: idObj.dni || ILEGIBLE_LBL,
+      cuil: idObj.cuil || 'No consta en recibo',
+      estadoCotejoCaratula: estadoCotejo,
+      periodoLiquidado: vig.periodoLiquidado || ILEGIBLE_LBL,
+      vigenciaPeriodo: vig.estadoVigencia || ILEGIBLE_LBL
+    },
+    laboral: {
+      organismoEmpleador: lab.organismoEmpleador || ILEGIBLE_LBL,
+      situacionRevista: lab.situacionRevista || ILEGIBLE_LBL,
+      fechaIngreso: lab.fechaIngreso || 'No consta en recibo',
+      antiguedadDetalle: lab.antiguedadDetalle || 'No especificada en recibo',
+      cumpleAntiguedadMinima: cumpleAntig,
+      esSaludSuplenteDia19: Boolean(lab.esSaludSuplenteDia19),
+      requiereSituacionSage: Boolean(lab.requiereSituacionSage),
+      esInvalidezODiscapacidad: Boolean(lab.esInvalidezODiscapacidad),
+      cumpleTopeEdad80,
+      observacionesEspeciales: lab.observacionesEspeciales || ''
+    },
+    salarial: {
+      sueldoBrutoTotal: sueldoBruto,
+      descuentosLey,
+      consumosBersa,
+      consumosSidecreer,
+      otrasMutuales,
+      codigosFedemMonto,
+      codigosFedemDetectados: codigosFedemList,
+      embargoDetectado: Boolean(sal.embargoDetectado),
+      embargoMonto,
+      embargoConcepto: sal.embargoConcepto || '',
+      totalDescuentosRecibo,
+      sueldoLiquido
+    },
+    afectacion50: {
+      formulaCupo: 'Sueldo Bruto Total * 0.50',
+      cupoMaximoLegal,
+      margenDisponibleMensual,
+      cuotaSimulada: cuotaSimulada || null,
+      estadoAfectacion
+    },
+    scoring: {
+      scoreAmmer: scoreTotal,
+      calificacion: calificacionLetra,
+      dictamen,
+      dictamenAuditor: dictamenTextoFinal,
+      alertasCriticas,
+      camposIlegibles
+    }
+  };
+
+  const descuentosVoluntariosTotal = round2Audit_(
+    (consumosBersa || 0) + (consumosSidecreer || 0) + (otrasMutuales || 0) + (codigosFedemMonto || 0) + (embargoMonto || 0)
+  );
+
+  return {
+    scoringCrediticio: {
+      puntajeTotal: scoreTotal,
+      calificacionLetra,
+      dictamen,
+      nivelConfianza: scRaw.nivelConfianza || (scoreTotal >= 80 ? 'ALTO' : (scoreTotal >= 60 ? 'MEDIO' : 'BAJO')),
+      pilares: {
+        calidadDocumental: { puntaje: pCalidad, maximo: 20, detalle: camposIlegibles.length ? ('Campos a revisar: ' + camposIlegibles.join(', ')) : 'Lectura literal verificada sin campos cortados o borrosos.' },
+        vigenciaYFormalidad: { puntaje: pVigencia, maximo: 20, detalle: vigenciaBool ? ('Período ' + (vig.periodoLiquidado || '') + ' vigente según calendario.') : ('Período ' + (vig.periodoLiquidado || 'sin fecha') + ' observado.') },
+        coincidenciaIdentidad: { puntaje: pIdentidad, maximo: 30, detalle: dniCoincideBool ? 'Identidad verificada en el comprobante.' : 'Discrepancia o ilegibilidad en cotejo de identidad.' },
+        capacidadFinanciera: { puntaje: pFinanciera, maximo: 30, detalle: 'Tope 50% Bruto (' + formatCurrencyAuditGs_(cupoMaximoLegal) + ') vs Descuentos (' + formatCurrencyAuditGs_(totalDescuentosRecibo) + ').' }
+      }
+    },
+    reciboSueldo: {
+      titular: idObj.titularDetectado || ILEGIBLE_LBL,
+      dni: idObj.dni || ILEGIBLE_LBL,
+      cuil: idObj.cuil || 'No consta en recibo',
+      legajo: lab.legajo || '—',
+      organismo: lab.organismoEmpleador || ILEGIBLE_LBL,
+      dependencia: lab.dependencia || '',
+      cargo: lab.situacionRevista || ILEGIBLE_LBL,
+      situacionRevista: lab.situacionRevista || ILEGIBLE_LBL,
+      fechaIngreso: lab.fechaIngreso || 'No consta en recibo',
+      antiguedadDetalle: lab.antiguedadDetalle || 'No especificada en recibo',
+      antiguedadAnios: lab.antiguedadAnios !== undefined ? lab.antiguedadAnios : null,
+      cumpleAntiguedadMinima: lab.cumpleAntiguedadMinima !== undefined ? lab.cumpleAntiguedadMinima : null,
+      esSaludSuplenteDia19: Boolean(lab.esSaludSuplenteDia19),
+      requiereSituacionSage: Boolean(lab.requiereSituacionSage),
+      esInvalidezODiscapacidad: Boolean(lab.esInvalidezODiscapacidad),
+      cumpleTopeEdad80,
+      observacionesEspeciales: lab.observacionesEspeciales || '',
+      periodo: vig.periodoLiquidado || ILEGIBLE_LBL,
+      estadoPeriodo: vig.estadoVigencia || ILEGIBLE_LBL,
+      reciboVencido: !vigenciaBool,
+      sueldoBruto,
+      descuentosLey,
+      consumosBersa,
+      consumosSidecreer,
+      otrasMutuales,
+      codigosFedemMonto,
+      codigosFedemDetectados: codigosFedemList,
+      embargoDetectado: Boolean(sal.embargoDetectado),
+      embargoMonto,
+      embargoConcepto: sal.embargoConcepto || '',
+      descuentosPrestamosYMutuales: descuentosVoluntariosTotal,
+      totalDescuentosRecibo,
+      sueldoNeto: sueldoLiquido,
+      topeLegal50Porciento: cupoMaximoLegal,
+      margenDisponibleCuota: margenDisponibleMensual,
+      estadoAfectacion
+    },
+    dni: {
+      numero: idObj.dni || ILEGIBLE_LBL,
+      nombreCompleto: idObj.titularDetectado || ILEGIBLE_LBL,
+      fechaNacimiento: idObj.fechaNacimiento || '',
+      domicilio: idObj.domicilio || '',
+      fechaVencimiento: idObj.fechaVencimientoDni || 'No consta en este comprobante',
+      dniVigente: idObj.dniVigente !== false
+    },
+    cruceIdentidad: {
+      estadoCotejo,
+      coincideDni: dniCoincideBool,
+      coincideNombre: dniCoincideBool,
+      coincideCuil: dniCoincideBool,
+      discrepanciasDetectadas: Array.isArray(idObj.detalleDiscrepancias) ? idObj.detalleDiscrepancias : []
+    },
+    alertasCriticas,
+    camposIlegibles,
+    observacionesAuditor: [
+      'Organismo: ' + (lab.organismoEmpleador || ILEGIBLE_LBL) + ' (' + (lab.situacionRevista || ILEGIBLE_LBL) + ').',
+      'Cupo Máximo Legal (50% del Bruto): ' + formatCurrencyAuditGs_(cupoMaximoLegal) + ' | Margen Disponible: ' + formatCurrencyAuditGs_(margenDisponibleMensual) + '.',
+      lab.observacionesEspeciales || ''
+    ].filter(Boolean),
+    informeEjecutivo: dictamenTextoFinal,
+    informeMarkdown,
+    resumenJson
+  };
+}
+
+function auditarLegajoConIA(payload) {
+  const dataIn = payload || {};
+  const resultadoEntrante = (dataIn.resultado || dataIn.auditoria) ? (dataIn.resultado || dataIn.auditoria) : null;
+
+  if (resultadoEntrante) {
+    persistirDictamenAuditoriaEnHoja_(dataIn.idSolicitud, resultadoEntrante);
+    return { ok: true, success: true, auditoria: resultadoEntrante, resultado: resultadoEntrante };
+  }
+
+  let archivos = Array.isArray(dataIn.archivos) ? dataIn.archivos.filter(function(a) { return a && a.base64; }) : [];
+  if (archivos.length === 0 && dataIn.base64Archivo) {
+    archivos = [{
+      nombre: dataIn.nombreArchivo || 'documento_auditoria.pdf',
+      mimeType: dataIn.mimeType || dataIn.tipoMime || 'application/pdf',
+      base64: dataIn.base64Archivo
+    }];
+  }
+
+  if (archivos.length === 0) {
     return {
       ok: false,
-      error: 'La lectura documental forense requiere análisis multimodal en el servidor (/api/auditar-documentos). No se generan importes ni fechas estimadas.'
+      success: false,
+      error: 'No se recibió ningún archivo digitalizado válido para auditar.'
     };
   }
 
-  if (payload.idSolicitud) {
-    try {
-      const sheet = obtenerOInicializarHoja_(CONFIG_AMMER.SHEET_SOLICITUDES, HEADERS_SOLICITUDES);
-      const { map } = obtenerHeaderMap_(sheet);
-      const rowNum = encontrarFilaPorId_(sheet, map, payload.idSolicitud);
-      if (rowNum !== -1 && map['Dictamen_IA_JSON'] !== undefined) {
-        sheet.getRange(rowNum, map['Dictamen_IA_JSON'] + 1).setValue(JSON.stringify({
-          estado: 'completado',
-          fechaFin: obtenerFechaHora24Argentina_(),
-          resultado: resultadoEntrante
-        }));
-        SpreadsheetApp.flush();
-      }
-    } catch (_) {}
+  const apiKey = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+  if (!apiKey) {
+    return {
+      ok: false,
+      success: false,
+      error: 'Falta configurar GEMINI_API_KEY en Propiedades del Script de Google Apps Script o utilizar el servidor institucional (/api/auditar-documentos).'
+    };
   }
 
-  return { ok: true, resultado: resultadoEntrante };
+  const datosDeclarados = dataIn.datosDeclarados || dataIn.datosContexto || null;
+  const parts = [];
+  archivos.forEach(function(arch) {
+    let mimeType = String(arch.mimeType || 'application/pdf').toLowerCase();
+    if (mimeType.indexOf('pdf') !== -1) mimeType = 'application/pdf';
+    else if (mimeType.indexOf('png') !== -1) mimeType = 'image/png';
+    else if (mimeType.indexOf('webp') !== -1) mimeType = 'image/webp';
+    else mimeType = 'image/jpeg';
+
+    let base64Pure = String(arch.base64 || '');
+    const b64Idx = base64Pure.indexOf('base64,');
+    if (b64Idx !== -1) base64Pure = base64Pure.substring(b64Idx + 7);
+
+    parts.push({
+      inlineData: {
+        mimeType: mimeType,
+        data: base64Pure
+      }
+    });
+  });
+
+  const fechaActual = new Date();
+  const mesActual = fechaActual.getMonth() + 1;
+  const anioActual = fechaActual.getFullYear();
+  const fechaActualStr = String(fechaActual.getDate()).padStart(2, '0') + '/' + String(mesActual).padStart(2, '0') + '/' + anioActual;
+
+  const promptAuditor = [
+    'Actúa como Auditor Crediticio Senior y Especialista en Verificación Documental Forense de la Asociación Mutual Modelo de Entre Ríos (AMMER).',
+    'FECHA DE AUDITORÍA: ' + fechaActualStr + ' (Mes ' + mesActual + '/' + anioActual + ')',
+    '',
+    'REGLAS DE CALIBRACIÓN EQUILIBRADA (LECTURA COMPLETA SIN INVENTAR NI BLOQUEAR):',
+    '1. EXTRAE SIEMPRE TODOS LOS DATOS VISIBLES: Lee proactivamente haberes brutos, descuentos de ley, descuentos voluntarios (BERSA, SIDECREER, Otras Mutuales), Códigos FEDEM (366, 368, 1115, 1117), embargos, total descuentos, sueldo líquido, titular, DNI, CUIL, período e institución empleadora.',
+    '2. CERO ALUCINACIÓN SIN FALSOS POSITIVOS: Prohibido inventar cifras no impresas. Sin embargo, si un concepto de descuento opcional (BERSA, SIDECREER, otras mutuales, códigos FEDEM o embargo) NO figura descontado en el recibo, devuelve 0 (y embargoDetectado: false). NO lo marques como "ILEGIBLE".',
+    '3. SOLO MARCA COMO "ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO" (o null en monto) un campo OBLIGATORIO del recibo (Bruto, Total Descuentos, Líquido, Período, Titular) que esté realmente borroso, tapado o cortado.',
+    '4. SI UN DATO NO APLICA AL COMPROBANTE (ej. fechaVencimientoDni cuando solo se subió recibo de sueldo), escribe "No consta en este comprobante" sin penalizar el scoring.',
+    '',
+    datosDeclarados
+      ? ('CARÁTULA DECLARADA: Nombre="' + (datosDeclarados.nombre || 'NO INFORMADO') + '", DNI="' + (datosDeclarados.dni || 'NO INFORMADO') + '", Organismo="' + (datosDeclarados.organismo || 'NO INFORMADO') + '", Cuota=' + (datosDeclarados.cuota || 0) + ', Plazo=' + (datosDeclarados.plazoCuotas || 0))
+      : 'NO SE ENVIÓ CARÁTULA PREVIA. Indica estadoCotejoCaratula: "VERIFICADO EN DOCUMENTO (SIN CARÁTULA PREVIA)" y extrae los datos literales del comprobante.',
+    '',
+    'Devuelve exclusivamente JSON con la estructura: { identidad: { titularDetectado, dni, cuil, fechaNacimiento, domicilio, fechaVencimientoDni, dniVigente, estadoCotejoCaratula, detalleDiscrepancias }, datosLaborales: { organismoEmpleador, dependencia, legajo, situacionRevista, fechaIngreso, antiguedadDetalle, antiguedadAnios, cumpleAntiguedadMinima, esSaludSuplenteDia19, requiereSituacionSage, esInvalidezODiscapacidad, cumpleTopeEdad80, observacionesEspeciales }, vigenciaRecibo: { periodoLiquidado, estadoVigencia, esVigente }, radiografiaSalarial: { sueldoBrutoTotal, descuentosLey, consumosBersa, consumosSidecreer, otrasMutuales, codigosFedemMonto, codigosFedemDetectados, embargoDetectado, embargoMonto, embargoConcepto, totalDescuentosRecibo, sueldoLiquido }, scoringAmmer: { puntajeTotal, calificacionLetra, dictamen, nivelConfianza, dictamenAuditor, alertasCriticas, camposIlegibles } }.'
+  ].join('\n');
+
+  parts.push({ text: promptAuditor });
+
+  try {
+    const endpointGemini = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-4-hydrogen:generateContent?key=' + encodeURIComponent(apiKey);
+    const resp = UrlFetchApp.fetch(endpointGemini, {
+      method: 'post',
+      contentType: 'application/json',
+      muteHttpExceptions: true,
+      payload: JSON.stringify({
+        contents: [{ parts: parts }],
+        generationConfig: {
+          responseMimeType: 'application/json'
+        }
+      })
+    });
+
+    const code = resp.getResponseCode();
+    const rawRespText = resp.getContentText() || '{}';
+    if (code < 200 || code >= 300) {
+      return {
+        ok: false,
+        success: false,
+        error: 'Motor documental respondió HTTP ' + code + ': ' + rawRespText.slice(0, 220)
+      };
+    }
+
+    const geminiJson = JSON.parse(rawRespText);
+    const candidateText = geminiJson && geminiJson.candidates && geminiJson.candidates[0] &&
+      geminiJson.candidates[0].content && geminiJson.candidates[0].content.parts &&
+      geminiJson.candidates[0].content.parts[0] && geminiJson.candidates[0].content.parts[0].text;
+
+    if (!candidateText) {
+      return {
+        ok: false,
+        success: false,
+        error: 'El motor documental no devolvió contenido legible.'
+      };
+    }
+
+    let dataParsed = null;
+    try {
+      dataParsed = JSON.parse(candidateText);
+    } catch (_) {
+      const m = String(candidateText).match(/\{[\s\S]*\}/);
+      if (m) dataParsed = JSON.parse(m[0]);
+    }
+    if (!dataParsed) {
+      return {
+        ok: false,
+        success: false,
+        error: 'La respuesta del motor documental no contenía JSON válido.'
+      };
+    }
+
+    const mapped = mapearAuditoriaEnAppsScript_(dataParsed, datosDeclarados);
+    persistirDictamenAuditoriaEnHoja_(dataIn.idSolicitud, mapped);
+
+    return {
+      ok: true,
+      success: true,
+      auditoria: mapped,
+      resultado: mapped,
+      resumenJson: mapped.resumenJson,
+      informeMarkdown: mapped.informeMarkdown
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      success: false,
+      error: 'Error al auditar documentación en Apps Script: ' + (err && err.message ? err.message : String(err))
+    };
+  }
 }

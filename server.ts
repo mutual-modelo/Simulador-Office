@@ -104,11 +104,8 @@ app.post('/api/auditar-documentos', async (req, res) => {
       else if (mimeType.includes('webp')) mimeType = 'image/webp';
       else mimeType = 'image/jpeg';
 
-      let base64Pure = String(arch.base64);
-      const idx = base64Pure.indexOf('base64,');
-      if (idx !== -1) {
-        base64Pure = base64Pure.substring(idx + 7);
-      }
+      const rawB64 = String(arch.base64 || '');
+      const base64Pure = (rawB64.includes(',') ? rawB64.split(',').pop() || '' : rawB64).trim();
 
       parts.push({
         inlineData: {
@@ -175,16 +172,16 @@ DIRECTIVAS DE EXTRACCIÓN Y LECTURA FORENSE:
    - Extraer mes y año liquidado en formato MM/YYYY (ej. "10/2026").
    - Validar si corresponde al último o anteúltimo mes inmediato exigible respecto a ${String(mesActual).padStart(2, '0')}/${anioActual} (estadoVigencia: "VIGENTE" | "DESACTUALIZADO" | "ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO").
 
-4. ESTRUCTURA SALARIAL Y LIQUIDACIÓN EXACTA (CIFRAS LITERALES SIN REDONDEO):
-   - sueldoBrutoTotal: Suma exclusiva de conceptos remunerativos y no remunerativos (Haberes con Aporte + Haberes sin Aporte). NO confundir con el líquido de bolsillo ni subtotales parciales.
-   - descuentosLey: Suma de aportes jubilatorios, obra social (IOSPER) y leyes asistenciales obligatorias (ej. Ley 4035).
-   - consumosBersa: Retenciones BERSA / Entidades Financieras (0 si no hay).
-   - consumosSidecreer: Retenciones SIDECREER (0 si no hay).
-   - otrasMutuales: Cuotas de otras Mutuales y Cooperativas (0 si no hay).
-   - codigosFedemMonto: Suma de Códigos Oficiales FEDEM detectados: Código 366 (Cuota Social Activos), 368 (Consumos FEDEM Activos), 1115 (Cuota Social Pasivos) o 1117 (Consumos FEDEM Pasivos) (0 si no hay). Listar literalmente los códigos detectados en codigosFedemDetectados.
-   - Embargos Judiciales: Rastrear embargos ejecutivos, retenciones comerciales o alimentos (embargoDetectado, embargoMonto = 0 si no hay, embargoConcepto).
+4. ESTRUCTURA SALARIAL Y LIQUIDACIÓN EXACTA (RECIBOS PROVINCIALES DE ENTRE RÍOS — CIFRAS LITERALES SIN REDONDEO):
+   - sueldoBrutoTotal: Suma exclusiva de todos los conceptos remunerativos y no remunerativos (asignación, adicionales y plus — ej. Códigos 1 al 286 en recibos provinciales de Policía/Administración/CGE/Salud). NO confundir con el líquido de bolsillo ni subtotales parciales.
+   - descuentosLey: Suma de Jubilación (ej. Cód. 502), Obra Social IOSPER (Cód. 505), Seguros obligatorios (Códs. 510, 524, 327) y Ley 4035.
+   - consumosBersa: Retenciones BERSA / Entidades Financieras (0.00 si no figura).
+   - consumosSidecreer: Retenciones SIDECREER (0.00 si no figura).
+   - otrasMutuales: Cuotas de otras Mutuales, Cooperativas y Proveeduría (ej. MUPER Cód. 491) (0.00 si no figura).
+   - codigosFedemMonto: Suma de Códigos Oficiales FEDEM detectados: Código 366 (Cuota Social Activos), 368 (Consumos FEDEM Activos), 1115 (Cuota Social Pasivos) o 1117 (Consumos FEDEM Pasivos) (0.00 si no figura). Listar literalmente los códigos detectados en codigosFedemDetectados.
+   - Embargos Judiciales: Rastrear embargos ejecutivos, retenciones comerciales o alimentos (embargoDetectado: true/false, embargoMonto = 0.00 si no hay, embargoConcepto).
    - totalDescuentosRecibo: Total de descuentos consolidados impresos en el recibo (si el recibo no muestra una celda totalizada pero muestra Bruto y Líquido claros, informar el valor consolidado de deducciones).
-   - sueldoLiquido: Importe final neto de bolsillo a cobrar.
+   - sueldoLiquido: Importe final neto de bolsillo a percibir en cuenta bancaria.
 
 5. CÁLCULO DE AFECTACIÓN LEGAL (TOPE 50% DEL BRUTO):
    - cupoMaximoLegal = Sueldo Bruto Total * 0.50.

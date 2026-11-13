@@ -5933,6 +5933,14 @@
        0. CONEXIÓN API EN VIVO & SEGURIDAD FRONTEND BLINDADA
        ======================================================================== */
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypo5JRygnotB7NbJ3l0mvY7xVM0mSgbUVHFjGrC1Zn52icqOb0kE8duCzwMS7JcVEX/exec";
+    const CONFIG = { SCRIPT_URL: APPS_SCRIPT_URL };
+
+    function mostrarNotificacionToast(msg, tipo = 'info') {
+      if (typeof showToast === 'function') {
+        const prefix = tipo === 'success' ? '✅ ' : (tipo === 'warning' ? '⚠️ ' : '');
+        showToast(prefix + String(msg || ''));
+      }
+    }
 
     // 0.1 SANITIZACIÓN UNIVERSAL CONTRA CROSS-SITE SCRIPTING (XSS)
     function sanitizeHTML(str) {
@@ -13357,6 +13365,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       return extraerJSONResiliente(rawText);
     }
 
+    function limpiarBase64ParaAPI(raw) {
+      let base64Limpio = String(raw || '');
+      if (base64Limpio.includes(',')) {
+        base64Limpio = base64Limpio.split(',').pop() || '';
+      }
+      return base64Limpio.trim();
+    }
+
     function normalizarResultadoAuditoriaIA(auditRes) {
       let obj = auditRes;
       if (typeof obj === 'string') {
@@ -13369,10 +13385,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       if (obj.auditoria && typeof obj.auditoria === 'object') obj = obj.auditoria;
       else if (obj.resultado && typeof obj.resultado === 'object') obj = obj.resultado;
 
-      // Adaptador resiliente si el modelo o servidor devolvió estructura cruda (identidad / datosLaborales / radiografiaSalarial / scoringAmmer) o campos planos
+      // Adaptador resiliente para esquema normalizado, esquema crudo Gemini, esquema compacto {datosAgente, liquidacion, scoring}, o campos planos
       const tieneFormaNormalizada = Boolean(obj.scoringCrediticio || obj.reciboSueldo || obj.resumenJson);
+      const tieneFormaCompactaER = Boolean(obj.datosAgente || obj.liquidacion || obj.scoring);
       const tieneFormaCruda = Boolean(
         obj.identidad || obj.datosLaborales || obj.radiografiaSalarial || obj.scoringAmmer ||
+        tieneFormaCompactaER ||
         obj.sueldoBrutoTotal !== undefined || obj.sueldoBruto !== undefined || obj.sueldoLiquido !== undefined || obj.sueldoNeto !== undefined
       );
 
@@ -13387,19 +13405,35 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       };
 
       if (!obj.reciboSueldo && tieneFormaCruda) {
-        const idObj = obj.identidad || {};
-        const lab = obj.datosLaborales || {};
-        const vig = obj.vigenciaRecibo || {};
-        const sal = obj.radiografiaSalarial || obj;
+        const idObj = obj.identidad || (obj.datosAgente ? {
+          titularDetectado: obj.datosAgente.nombreTitular || obj.datosAgente.nombreApellido || obj.datosAgente.nombre,
+          dni: obj.datosAgente.dni || obj.datosAgente.dniCuil,
+          cuil: obj.datosAgente.cuil
+        } : {});
+        const lab = obj.datosLaborales || (obj.datosAgente ? {
+          organismoEmpleador: obj.datosAgente.organismo,
+          situacionRevista: obj.datosAgente.situacionRevista,
+          fechaIngreso: obj.datosAgente.fechaIngreso,
+          antiguedadDetalle: obj.datosAgente.antiguedad || (obj.datosAgente.antiguedadAnios !== undefined ? (obj.datosAgente.antiguedadAnios + ' años') : undefined),
+          cumpleAntiguedadMinima: obj.datosAgente.cumpleAntiguedadMinima !== undefined
+            ? obj.datosAgente.cumpleAntiguedadMinima
+            : (obj.scoring && obj.scoring.cumpleAntiguedad1Anio !== undefined ? obj.scoring.cumpleAntiguedad1Anio : undefined)
+        } : {});
+        const vig = obj.vigenciaRecibo || (obj.liquidacion ? {
+          periodoLiquidado: obj.liquidacion.periodo || obj.liquidacion.periodoLiquidado || (obj.datosAgente && obj.datosAgente.periodoLiquidado),
+          estadoVigencia: 'VIGENTE',
+          esVigente: true
+        } : {});
+        const sal = obj.radiografiaSalarial || obj.liquidacion || obj;
 
         const bruto = toNumOrNullLocal(sal.sueldoBrutoTotal ?? sal.sueldoBruto);
-        const liquido = toNumOrNullLocal(sal.sueldoLiquido ?? sal.sueldoNeto);
+        const liquido = toNumOrNullLocal(sal.sueldoLiquido ?? sal.sueldoNetoBolsillo ?? sal.sueldoNeto);
         const descLey = toNumZeroLocal(sal.descuentosLey);
-        const bersa = toNumZeroLocal(sal.consumosBersa);
+        const bersa = toNumZeroLocal(sal.consumosBersa ?? sal.consumosBancariosBersa);
         const sidecreer = toNumZeroLocal(sal.consumosSidecreer);
-        const mutuales = toNumZeroLocal(sal.otrasMutuales);
-        const fedem = toNumZeroLocal(sal.codigosFedemMonto);
-        const embargo = toNumZeroLocal(sal.embargoMonto);
+        const mutuales = toNumZeroLocal(sal.otrasMutuales ?? sal.otrasMutualesOProveeduria ?? sal.consumosProveeduria);
+        const fedem = toNumZeroLocal(sal.codigosFedemMonto ?? sal.consumosFedem);
+        const embargo = typeof sal.embargosJudiciales === 'number' ? toNumZeroLocal(sal.embargosJudiciales) : toNumZeroLocal(sal.embargoMonto);
         let totalDesc = toNumOrNullLocal(sal.totalDescuentosRecibo ?? sal.totalDescuentos);
         if (totalDesc === null && bruto !== null && liquido !== null && bruto >= liquido) {
           totalDesc = Math.round((bruto - liquido) * 100) / 100;
@@ -13427,8 +13461,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           consumosSidecreer: sidecreer,
           otrasMutuales: mutuales,
           codigosFedemMonto: fedem,
-          codigosFedemDetectados: Array.isArray(sal.codigosFedemDetectados) ? sal.codigosFedemDetectados : [],
-          embargoDetectado: Boolean(sal.embargoDetectado) || embargo > 0,
+          codigosFedemDetectados: Array.isArray(sal.codigosFedemDetectados) ? sal.codigosFedemDetectados : (Array.isArray(sal.codigosDetectados) ? sal.codigosDetectados : []),
+          embargoDetectado: Boolean(sal.embargoDetectado ?? sal.embargosJudiciales) || embargo > 0,
           embargoMonto: embargo,
           embargoConcepto: sal.embargoConcepto || '',
           totalDescuentosRecibo: totalDesc,
@@ -13444,6 +13478,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         };
         if (obj.scoringAmmer && !obj.scoringCrediticio) {
           obj.scoringCrediticio = obj.scoringAmmer;
+        } else if (obj.scoring && !obj.scoringCrediticio) {
+          const ptsSc = Number(obj.scoring.puntaje ?? obj.scoring.puntajeTotal ?? 85);
+          obj.scoringCrediticio = {
+            puntajeTotal: ptsSc,
+            calificacionLetra: obj.scoring.calificacion || obj.scoring.calificacionLetra || (ptsSc >= 80 ? 'A (Riesgo Bajo)' : (ptsSc >= 60 ? 'B (Riesgo Moderado)' : 'C (Riesgo Crítico / No Viable)')),
+            dictamen: ptsSc >= 80 ? 'APTO_OTORGAMIENTO' : (ptsSc >= 60 ? 'OBSERVADO' : 'RECHAZADO'),
+            dictamenAuditor: obj.scoring.motivoDictamen || obj.scoring.dictamen || obj.scoring.dictamenAuditor || ''
+          };
         }
         if (obj.scoringCrediticio && obj.scoringCrediticio.dictamenAuditor && !obj.informeEjecutivo) {
           obj.informeEjecutivo = obj.scoringCrediticio.dictamenAuditor;
@@ -13555,6 +13597,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         }];
       }
 
+      archivos = archivos.map(a => Object.assign({}, a, {
+        base64: limpiarBase64ParaAPI(a.base64)
+      })).filter(a => Boolean(a.base64));
+
       if (archivos.length === 0) return null;
 
       const hostName = (typeof window !== 'undefined' && window.location && window.location.hostname)
@@ -13577,11 +13623,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
               action: 'auditarReciboIA',
               idSolicitud: (contexto && contexto.idSolicitud) || 'DOCUMENTOS_SUELTOS',
               archivos: archivos,
-              base64Archivo: primerArchivo.base64 || '',
+              base64Archivo: limpiarBase64ParaAPI(primerArchivo.base64 || ''),
               mimeType: primerArchivo.mimeType || 'application/pdf',
               nombreArchivo: primerArchivo.nombre || 'documento_auditoria.pdf',
               datosDeclarados: datosDecl,
-              datosContexto: datosDecl
+              datosContexto: datosDecl,
+              promptInstruccion: (contexto && contexto.promptInstruccion) || undefined
             }
           : {
               archivos: archivos,
@@ -14624,7 +14671,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       html += '</div>';
       container.innerHTML = html;
       container.style.display = 'block';
-      container.scrollIntoView({ behavior: 'smooth' });
+      if (typeof container.scrollIntoView === 'function') {
+        container.scrollIntoView({ behavior: 'smooth' });
+      }
     }
 
     function mostrarLoaderAuditoria(mensaje = 'Analizando documento y realizando verificación forense con IA...') {
@@ -14652,8 +14701,41 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     async function ejecutarAuditoriaDocumental(base64Data, tipoMime = 'application/pdf') {
+      return auditarReciboConIA(base64Data, tipoMime);
+    }
+
+    async function auditarReciboConIA(archivoBase64, tipoMime = 'application/pdf') {
+      mostrarLoaderAuditoria('Escaneando recibo y analizando afectación salarial...');
+      const base64Limpio = limpiarBase64ParaAPI(archivoBase64);
+      const promptInstruccion = [
+        'Actúa como Auditor Crediticio Forense de AMMER. Analiza este recibo de sueldo de Entre Ríos.',
+        'Extrae estrictamente en formato JSON:',
+        '{',
+        '  "datosAgente": { "nombreTitular": "STRING", "dni": "STRING", "organismo": "STRING", "antiguedad": "STRING" },',
+        '  "liquidacion": {',
+        '    "periodo": "STRING",',
+        '    "sueldoBrutoTotal": 0.00,',
+        '    "descuentosLey": 0.00,',
+        '    "consumosBancariosBersa": 0.00,',
+        '    "consumosSidecreer": 0.00,',
+        '    "otrasMutualesOProveeduria": 0.00,',
+        '    "consumosFedem": 0.00,',
+        '    "totalDescuentos": 0.00,',
+        '    "sueldoLiquido": 0.00,',
+        '    "embargosJudiciales": false',
+        '  },',
+        '  "scoring": { "puntaje": 85, "calificacion": "A (Bajo Riesgo) | B (Riesgo Moderado) | C (Observado)", "dictamen": "STRING" }',
+        '}',
+        'Reglas:',
+        '- Suma todos los conceptos remunerativos y no remunerativos (Conceptos 1 al 286 en recibos provinciales) en sueldoBrutoTotal.',
+        '- Incluye Jubilación (502), Obra Social (505) y Seguros (510, 524, 327) en descuentosLey.',
+        '- Incluye MUPER (491), proveeduría y mutuales en otrasMutualesOProveeduria; FEDEM (366/368/1115/1117) en consumosFedem.',
+        '- Ubica el importe final neto en cuenta bancaria en sueldoLiquido.',
+        '- Si no hay embargos o consumos de Sidecreer/BERSA/FEDEM, coloca 0.00 o false sin rechazar la lectura.',
+        '- Responde ÚNICAMENTE JSON puro.'
+      ].join('\n');
+
       try {
-        mostrarLoaderAuditoria('Analizando documento y realizando verificación forense con IA...');
         let datosContexto = null;
         if (idExpedienteAuditadoActivo) {
           const all = getStoredSolicitudes();
@@ -14670,27 +14752,34 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             };
           }
         }
-        const auditRes = await procesarAuditoriaConTimeout(base64Data, {
+        const auditRes = await procesarAuditoriaConTimeout(base64Limpio, {
           idSolicitud: idExpedienteAuditadoActivo || 'DOCUMENTOS_SUELTOS',
-          mimeType: tipoMime,
+          mimeType: tipoMime || 'application/pdf',
           datosDeclarados: datosContexto,
+          promptInstruccion: promptInstruccion,
           permitirBackendSinKey: true,
           preservarLoadingBar: true,
-          timeoutMs: 35000
+          timeoutMs: 55000
         });
-        ocultarLoaderAuditoria();
         if (auditRes) {
           ultimoResultadoAuditoria = auditRes;
           renderizarInformeAuditoriaIA(auditRes);
+          mostrarNotificacionToast('Auditoría completada exitosamente.', 'success');
           return auditRes;
         }
-        mostrarErrorAuditoria(window._ultimaErrorAuditoriaIA || 'No se pudo completar la auditoría.');
+        if (window._ultimaErrorAuditoriaIA) {
+          mostrarErrorAuditoria(window._ultimaErrorAuditoriaIA);
+        } else {
+          mostrarNotificacionToast('Aviso: Documento procesado. Verifique los importes en el detalle.', 'warning');
+        }
         return null;
       } catch (err) {
-        ocultarLoaderAuditoria();
-        console.error('Error en auditoría IA:', err);
-        mostrarErrorAuditoria('No se pudo completar la auditoría: ' + (err && err.message ? err.message : String(err)));
+        console.error('Fallo de comunicación en auditoría:', err);
+        mostrarErrorAuditoria('Error de conexión al consultar el motor documental: ' + (err && err.message ? err.message : String(err)));
+        mostrarNotificacionToast('Error de conexión al consultar el motor documental.', 'warning');
         return null;
+      } finally {
+        ocultarLoaderAuditoria();
       }
     }
 
@@ -15354,6 +15443,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.mostrarErrorAuditoria = mostrarErrorAuditoria;
     window.limpiarYParsearJSONAuditoria = limpiarYParsearJSONAuditoria;
     window.extraerJSONResiliente = extraerJSONResiliente;
+    window.limpiarBase64ParaAPI = limpiarBase64ParaAPI;
+    window.mostrarNotificacionToast = mostrarNotificacionToast;
+    window.auditarReciboConIA = auditarReciboConIA;
+    window.CONFIG = CONFIG;
     window.estadoApp = window.estadoApp;
 
     window.addEventListener('DOMContentLoaded', () => {

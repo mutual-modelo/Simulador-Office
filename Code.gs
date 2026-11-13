@@ -1698,23 +1698,60 @@ function formatCurrencyAuditGs_(val) {
 
 function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
   const ILEGIBLE_LBL = 'ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO';
-  const idObj = (raw && raw.identidad) || {};
-  const lab = (raw && raw.datosLaborales) || {};
-  const vig = (raw && raw.vigenciaRecibo) || {};
-  const sal = (raw && raw.radiografiaSalarial) || {};
-  const scRaw = (raw && raw.scoringAmmer) || {};
+  const rawIn = raw || {};
+  const idObj = rawIn.identidad || (rawIn.datosAgente ? {
+    titularDetectado: rawIn.datosAgente.nombreTitular || rawIn.datosAgente.nombreApellido || rawIn.datosAgente.nombre,
+    dni: rawIn.datosAgente.dni || rawIn.datosAgente.dniCuil,
+    cuil: rawIn.datosAgente.cuil || 'No consta en recibo',
+    estadoCotejoCaratula: rawIn.datosAgente.estadoCotejoCaratula || ''
+  } : {});
+  const lab = rawIn.datosLaborales || (rawIn.datosAgente ? {
+    organismoEmpleador: rawIn.datosAgente.organismo,
+    situacionRevista: rawIn.datosAgente.situacionRevista || 'ACTIVO TITULAR',
+    fechaIngreso: rawIn.datosAgente.fechaIngreso || '',
+    antiguedadAnios: rawIn.datosAgente.antiguedadAnios,
+    antiguedadDetalle: rawIn.datosAgente.antiguedad || (rawIn.datosAgente.antiguedadAnios !== undefined ? (rawIn.datosAgente.antiguedadAnios + ' años') : 'Verificar en carátula'),
+    cumpleAntiguedadMinima: rawIn.datosAgente.cumpleAntiguedadMinima !== undefined
+      ? rawIn.datosAgente.cumpleAntiguedadMinima
+      : (rawIn.scoring && rawIn.scoring.cumpleAntiguedad1Anio !== undefined ? rawIn.scoring.cumpleAntiguedad1Anio : (rawIn.datosAgente.antiguedadAnios !== undefined ? Number(rawIn.datosAgente.antiguedadAnios) >= 1 : undefined)),
+    cumpleTopeEdad80: rawIn.scoring && rawIn.scoring.cumpleEdadMax80 !== undefined ? rawIn.scoring.cumpleEdadMax80 : undefined
+  } : {});
+  const vig = rawIn.vigenciaRecibo || (rawIn.liquidacion ? {
+    periodoLiquidado: rawIn.liquidacion.periodo || rawIn.liquidacion.periodoLiquidado || (rawIn.datosAgente && rawIn.datosAgente.periodoLiquidado),
+    estadoVigencia: rawIn.liquidacion.estadoVigencia || 'VIGENTE',
+    esVigente: rawIn.liquidacion.esVigente !== false
+  } : {});
+  const sal = rawIn.radiografiaSalarial || (rawIn.liquidacion ? {
+    sueldoBrutoTotal: rawIn.liquidacion.sueldoBrutoTotal ?? rawIn.liquidacion.sueldoBruto,
+    descuentosLey: rawIn.liquidacion.descuentosLey,
+    consumosBersa: rawIn.liquidacion.consumosBancariosBersa ?? rawIn.liquidacion.consumosBersa,
+    consumosSidecreer: rawIn.liquidacion.consumosSidecreer,
+    otrasMutuales: rawIn.liquidacion.otrasMutualesOProveeduria ?? rawIn.liquidacion.otrasMutuales ?? rawIn.liquidacion.consumosProveeduria,
+    codigosFedemMonto: rawIn.liquidacion.consumosFedem ?? rawIn.liquidacion.codigosFedemMonto,
+    codigosFedemDetectados: rawIn.liquidacion.codigosFedemDetectados || rawIn.liquidacion.codigosDetectados || [],
+    embargoDetectado: Boolean(rawIn.liquidacion.embargosJudiciales ?? rawIn.liquidacion.embargoDetectado),
+    embargoMonto: typeof rawIn.liquidacion.embargosJudiciales === 'number' ? rawIn.liquidacion.embargosJudiciales : (rawIn.liquidacion.embargoMonto ?? 0),
+    totalDescuentosRecibo: rawIn.liquidacion.totalDescuentos ?? rawIn.liquidacion.totalDescuentosRecibo,
+    sueldoLiquido: rawIn.liquidacion.sueldoLiquido ?? rawIn.liquidacion.sueldoNetoBolsillo ?? rawIn.liquidacion.sueldoNeto
+  } : rawIn);
+  const scRaw = rawIn.scoringAmmer || (rawIn.scoring ? {
+    puntajeTotal: rawIn.scoring.puntaje ?? rawIn.scoring.puntajeTotal,
+    calificacionLetra: rawIn.scoring.calificacion || rawIn.scoring.calificacionLetra,
+    dictamen: (typeof rawIn.scoring.puntaje === 'number' && rawIn.scoring.puntaje < 60) ? 'RECHAZADO' : ((typeof rawIn.scoring.puntaje === 'number' && rawIn.scoring.puntaje < 80) ? 'OBSERVADO' : (String(rawIn.scoring.dictamen || '').toUpperCase().indexOf('RECHAZ') !== -1 ? 'RECHAZADO' : (String(rawIn.scoring.dictamen || '').toUpperCase().indexOf('OBSERV') !== -1 ? 'OBSERVADO' : 'APTO_OTORGAMIENTO'))),
+    dictamenAuditor: rawIn.scoring.motivoDictamen || rawIn.scoring.dictamen || rawIn.scoring.dictamenAuditor
+  } : {});
 
   const toNumOrNull = (v) => (v === null || v === undefined || v === '' || isNaN(Number(v))) ? null : round2Audit_(Number(v));
 
-  const sueldoBruto = toNumOrNull(sal.sueldoBrutoTotal);
+  const sueldoBruto = toNumOrNull(sal.sueldoBrutoTotal ?? sal.sueldoBruto);
   const descuentosLey = toNumOrNull(sal.descuentosLey);
-  let consumosBersa = toNumOrNull(sal.consumosBersa);
+  let consumosBersa = toNumOrNull(sal.consumosBersa ?? sal.consumosBancariosBersa);
   let consumosSidecreer = toNumOrNull(sal.consumosSidecreer);
-  let otrasMutuales = toNumOrNull(sal.otrasMutuales);
-  let codigosFedemMonto = toNumOrNull(sal.codigosFedemMonto);
+  let otrasMutuales = toNumOrNull(sal.otrasMutuales ?? sal.otrasMutualesOProveeduria);
+  let codigosFedemMonto = toNumOrNull(sal.codigosFedemMonto ?? sal.consumosFedem);
   let embargoMonto = toNumOrNull(sal.embargoMonto);
-  let totalDescuentosRecibo = toNumOrNull(sal.totalDescuentosRecibo);
-  const sueldoLiquido = toNumOrNull(sal.sueldoLiquido);
+  let totalDescuentosRecibo = toNumOrNull(sal.totalDescuentosRecibo ?? sal.totalDescuentos);
+  const sueldoLiquido = toNumOrNull(sal.sueldoLiquido ?? sal.sueldoNeto);
 
   const lecturaSalarialPrincipalOk = (sueldoBruto !== null || sueldoLiquido !== null || totalDescuentosRecibo !== null);
   if (consumosBersa === null) consumosBersa = 0;
@@ -2085,13 +2122,12 @@ function auditarLegajoConIA(payload) {
     else if (mimeType.indexOf('webp') !== -1) mimeType = 'image/webp';
     else mimeType = 'image/jpeg';
 
-    let base64Pure = String(arch.base64 || '');
-    const b64Idx = base64Pure.indexOf('base64,');
-    if (b64Idx !== -1) base64Pure = base64Pure.substring(b64Idx + 7);
+    const rawB64 = String(arch.base64 || '');
+    const base64Pure = (rawB64.indexOf(',') !== -1 ? rawB64.split(',').pop() : rawB64).trim();
 
     parts.push({
-      inlineData: {
-        mimeType: mimeType,
+      inline_data: {
+        mime_type: mimeType,
         data: base64Pure
       }
     });
@@ -2102,15 +2138,16 @@ function auditarLegajoConIA(payload) {
   const anioActual = fechaActual.getFullYear();
   const fechaActualStr = String(fechaActual.getDate()).padStart(2, '0') + '/' + String(mesActual).padStart(2, '0') + '/' + anioActual;
 
-  const promptAuditor = [
-    'Actúa como Auditor Crediticio Senior y Especialista en Verificación Documental y Cesión de Cartera de la Asociación Mutual Modelo de Entre Ríos (AMMER).',
+  const promptAuditor = dataIn.promptInstruccion ? String(dataIn.promptInstruccion) : [
+    'Actúa como Auditor Crediticio Senior y Especialista en Verificación Documental y Cesión de Cartera de AMMER (Entre Ríos).',
     'FECHA DE AUDITORÍA: ' + fechaActualStr + ' (Mes ' + mesActual + '/' + anioActual + ')',
     '',
-    'REGLAS DE CALIBRACIÓN EQUILIBRADA (LECTURA COMPLETA SIN INVENTAR NI BLOQUEAR):',
-    '1. EXTRAE SIEMPRE TODOS LOS DATOS VISIBLES: Lee proactivamente Datos Personales (Titular, DNI, CUIL), Empleador, Antigüedad (mínimo 1 año), Período liquidado, Sueldo Bruto Total, Descuentos de Ley, BERSA, Sidecreer, Mutuales, Códigos FEDEM (366/368 o 1115/1117), Embargos y Sueldo Líquido.',
-    '2. CERO ALUCINACIÓN SIN FALSOS POSITIVOS: Prohibido inventar cifras no impresas. Si un concepto opcional (ej. BERSA, Sidecreer, otras mutuales, códigos FEDEM o embargos) NO está presente en el recibo, consignar exactamente 0.00 (y embargoDetectado: false), SIN arrojar error ni alertar "documento ilegible".',
-    '3. SOLO MARCA COMO "ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO" (o null en monto) un campo OBLIGATORIO del recibo (Bruto, Total Descuentos, Líquido, Período o Titular) si está físicamente borroso, tapado o cortado.',
-    '4. SI UN DATO NO APLICA AL COMPROBANTE (ej. fechaVencimientoDni cuando solo se subió recibo de sueldo), escribe "No consta en este comprobante" sin penalizar el scoring.',
+    'CALIBRACIÓN ESPECÍFICA RECIBOS OFICIALES DE ENTRE RÍOS (Policía, CGE, Salud, Administración Central, Municipios, Caja de Jubilaciones):',
+    '- Haberes Brutos (sueldoBrutoTotal): Totalizar asignación, adicionales y plus remunerativos/no remunerativos (ej. conceptos 1 al 286).',
+    '- Descuentos de Ley (descuentosLey): Jubilación (Cód. 502), Obra Social IOSPER (Cód. 505), Seguros obligatorios (Códs. 510, 524, 327) y Ley 4035.',
+    '- Consumos / Proveeduría / Mutuales: MUPER (Cód. 491) u otras mutuales en otrasMutuales; códigos oficiales FEDEM (366/368 Activos o 1115/1117 Pasivos) en codigosFedemMonto; BERSA en consumosBersa; SIDECREER en consumosSidecreer.',
+    '- Sueldo Líquido (sueldoLiquido): Importe final neto en mano a percibir en cuenta bancaria.',
+    '- CERO ALUCINACIÓN SIN FALSOS POSITIVOS: Si un concepto opcional (Sidecreer, BERSA, otras mutuales, códigos FEDEM o embargos) NO figura descontado en el recibo, coloca 0.00 (y embargoDetectado: false). Prohibido rechazar o marcar ilegible si los importes principales son visibles.',
     '',
     datosDeclarados
       ? ('CARÁTULA DECLARADA: Nombre="' + (datosDeclarados.nombre || 'NO INFORMADO') + '", DNI="' + (datosDeclarados.dni || 'NO INFORMADO') + '", Organismo="' + (datosDeclarados.organismo || 'NO INFORMADO') + '", Cuota=' + (datosDeclarados.cuota || 0) + ', Plazo=' + (datosDeclarados.plazoCuotas || 0))

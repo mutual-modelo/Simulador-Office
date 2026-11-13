@@ -353,10 +353,23 @@ function normalizarNombreArchivoConPrefijo_(nombreRaw, tipoDoc, prefijoOficial, 
   return prefijo + ' ' + tipoUpper + '.' + ext;
 }
 
+function obtenerFechaHora24Argentina_(fechaObj) {
+  const d = (fechaObj instanceof Date && !isNaN(fechaObj.getTime())) ? fechaObj : new Date();
+  return Utilities.formatDate(d, 'GMT-3', "dd/MM/yyyy, HH:mm 'hs'");
+}
+
+function formatearFecha24Backend_(val) {
+  if (val === null || val === undefined || val === '') return '';
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    return Utilities.formatDate(val, 'GMT-3', "dd/MM/yyyy, HH:mm 'hs'");
+  }
+  return String(val);
+}
+
 function guardarArchivosEnDrive_(folder, archivosRaw, idExpediente, autor) {
   const resultado = [];
   if (!Array.isArray(archivosRaw) || archivosRaw.length === 0) return resultado;
-  const nowStr = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd HH:mm');
+  const nowStr = obtenerFechaHora24Argentina_();
 
   archivosRaw.forEach((item, idx) => {
     if (!item) return;
@@ -710,7 +723,7 @@ function registrarNuevaSolicitud(payload) {
     const idDefinitivo = String(
       sol.id_definitivo || sol.ID_Definitivo_Expediente || payload.ID_Definitivo_Expediente || payload.Nro_Definitivo || payload.nroDefinitivo || payload.id_definitivo || ''
     ).trim();
-    const nowStr = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd HH:mm');
+    const nowStr = obtenerFechaHora24Argentina_();
     const fechaRegistro = String(sol.fecha || payload.Fecha_Registro || payload.fecha || payload.Fecha || nowStr);
 
     // Captura garantizada de identidad de origen y organización para RBAC multiplataforma
@@ -997,7 +1010,7 @@ function listarSolicitudes(usuarioActivoInput) {
       id_definitivo: nroDefVal,
       Nro_Definitivo: nroDefVal,
       ID_Definitivo_Expediente: nroDefVal,
-      fecha: String(get('Fecha_Registro') || ''),
+      fecha: formatearFecha24Backend_(get('Fecha_Registro')),
       usuario_id: idAsesor,
       idAsesor: idAsesor,
       idUsuarioAsesor: idAsesor,
@@ -1055,6 +1068,7 @@ function listarSolicitudes(usuarioActivoInput) {
       carpetaDriveUrl: String(get('Carpeta_Drive_URL') || ''),
       Carpeta_Drive_URL: String(get('Carpeta_Drive_URL') || ''),
       adjuntos: Array.isArray(adjuntos) ? adjuntos : [],
+      archivosAdjuntos: Array.isArray(adjuntos) ? adjuntos : [],
       archivosLegajo: Array.isArray(adjuntos) ? adjuntos : [],
       archivos: Array.isArray(adjuntos) ? adjuntos : [],
       Archivos_Adjuntos_JSON: String(get('Archivos_Adjuntos_JSON') || '[]'),
@@ -1066,7 +1080,7 @@ function listarSolicitudes(usuarioActivoInput) {
       estado: String(get('Estado_Tramite') || 'Pendiente'),
       analistaAsignado: analistaAsig || 'Sin Asignar',
       Analista_Asignado: analistaAsig || 'Sin Asignar',
-      ultimaActualizacion: String(get('Ultima_Actualizacion') || '')
+      ultimaActualizacion: formatearFecha24Backend_(get('Ultima_Actualizacion'))
     };
 
     todas.push(item);
@@ -1165,7 +1179,7 @@ function actualizarEstadoSolicitudBackend(payload) {
     const rowNum = encontrarFilaPorId_(sheet, map, idTarget);
     if (rowNum === -1) return { ok: false, error: 'Expediente no encontrado: ' + idTarget };
 
-    const nowStr = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd HH:mm');
+    const nowStr = obtenerFechaHora24Argentina_();
     if (map['Estado_Tramite'] !== undefined && payload.estado) {
       sheet.getRange(rowNum, map['Estado_Tramite'] + 1).setValue(String(payload.estado));
     }
@@ -1205,7 +1219,7 @@ function reasignarAnalistaBackend(payload) {
     const rowNum = encontrarFilaPorId_(sheet, map, idTarget);
     if (rowNum === -1) return { ok: false, error: 'Expediente no encontrado: ' + idTarget };
 
-    const nowStr = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd HH:mm');
+    const nowStr = obtenerFechaHora24Argentina_();
     const nuevoAnalista = String(payload.nuevoAnalista || payload.Analista_Asignado || '').trim();
     const motivo = String(payload.motivo || '').trim();
     const autor = String(payload.autor || (payload.usuarioActivo && payload.usuarioActivo.nombre) || 'Analista').trim();
@@ -1261,7 +1275,7 @@ function agregarComentarioBackend(payload) {
     const rowNum = encontrarFilaPorId_(sheet, map, idTarget);
     if (rowNum === -1) return { ok: false, error: 'Expediente no encontrado: ' + idTarget };
 
-    const nowStr = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd HH:mm');
+    const nowStr = obtenerFechaHora24Argentina_();
     if (map['Historial_Comentarios_JSON'] !== undefined) {
       const cell = sheet.getRange(rowNum, map['Historial_Comentarios_JSON'] + 1);
       const hist = parseJSONSafe_(cell.getValue(), []);
@@ -1340,7 +1354,7 @@ function subirAdjuntoAdicionalBackend(payload) {
       cell.setValue(JSON.stringify(listaActualizada));
     }
 
-    const nowStr = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd HH:mm');
+    const nowStr = obtenerFechaHora24Argentina_();
     if (map['Ultima_Actualizacion'] !== undefined) {
       sheet.getRange(rowNum, map['Ultima_Actualizacion'] + 1).setValue(nowStr);
     }
@@ -1424,7 +1438,7 @@ function eliminarDocumentoBackend(payload) {
       } catch (_) {}
     }
 
-    const nowStr = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd HH:mm');
+    const nowStr = obtenerFechaHora24Argentina_();
     if (map['Historial_Comentarios_JSON'] !== undefined) {
       const histCell = sheet.getRange(rowNum, map['Historial_Comentarios_JSON'] + 1);
       const hist = parseJSONSafe_(histCell.getValue(), []);
@@ -1465,7 +1479,7 @@ function guardarPropuestaMutualBackend(payload) {
     const rowNum = encontrarFilaPorId_(sheet, map, idTarget);
     if (rowNum === -1) return { ok: false, error: 'Expediente no encontrado: ' + idTarget };
 
-    const nowStr = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd HH:mm');
+    const nowStr = obtenerFechaHora24Argentina_();
     if (map['Historial_Ofertas_JSON'] !== undefined) {
       sheet.getRange(rowNum, map['Historial_Ofertas_JSON'] + 1).setValue(JSON.stringify({
         propuestaMutual: payload.propuesta || null,
@@ -1502,7 +1516,7 @@ function asignarNumeroDefinitivoBackend(payload) {
     ).trim();
     if (!nroFinal) return { ok: false, error: 'Debe ingresar un número definitivo válido.' };
 
-    const nowStr = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd HH:mm');
+    const nowStr = obtenerFechaHora24Argentina_();
     const colNroDefIdx = (map['Nro_Definitivo'] !== undefined)
       ? map['Nro_Definitivo']
       : ((map['ID_Definitivo_Expediente'] !== undefined) ? map['ID_Definitivo_Expediente']
@@ -1568,7 +1582,7 @@ function actualizarDatosSolicitanteBackend(payload) {
     if (rowNum === -1) return { ok: false, error: 'Expediente no encontrado: ' + idTarget };
 
     const sol = payload.solicitante || {};
-    const nowStr = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd HH:mm');
+    const nowStr = obtenerFechaHora24Argentina_();
 
     const prevContacto = (map['Datos_Contacto_JSON'] !== undefined)
       ? parseJSONSafe_(sheet.getRange(rowNum, map['Datos_Contacto_JSON'] + 1).getValue(), {})

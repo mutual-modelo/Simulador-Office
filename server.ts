@@ -203,96 +203,119 @@ Devuelve estrictamente JSON conforme al schema.
 
     parts.push({ text: promptAuditor });
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-4-hydrogen',
-      contents: [{ parts }],
-      config: {
-        systemInstruction: 'Eres Auditor Crediticio Senior y Especialista en Verificación Documental Forense de AMMER. Extrae todos los valores impresos en el comprobante de forma literal sin inventar números ni bloquear documentos legibles por ausencia de deducciones opcionales (coloca 0 cuando un descuento opcional no figure en el recibo). Solo marca "ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO" si un dato obligatorio del recibo está borroso o cortado. Devuelve exclusivamente JSON conforme al schema.',
-        responseMimeType: 'application/json',
-        responseSchema: {
+    const responseSchema = {
+      type: Type.OBJECT,
+      properties: {
+        identidad: {
           type: Type.OBJECT,
           properties: {
-            identidad: {
-              type: Type.OBJECT,
-              properties: {
-                titularDetectado: { type: Type.STRING },
-                dni: { type: Type.STRING },
-                cuil: { type: Type.STRING },
-                fechaNacimiento: { type: Type.STRING },
-                domicilio: { type: Type.STRING },
-                fechaVencimientoDni: { type: Type.STRING },
-                dniVigente: { type: Type.BOOLEAN },
-                estadoCotejoCaratula: { type: Type.STRING, description: 'COINCIDE | VERIFICADO EN DOCUMENTO (SIN CARÁTULA PREVIA) | DISCREPANCIA DETECTADA | ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO' },
-                detalleDiscrepancias: { type: Type.ARRAY, items: { type: Type.STRING } }
-              },
-              required: ['titularDetectado', 'dni', 'cuil', 'estadoCotejoCaratula']
-            },
-            datosLaborales: {
-              type: Type.OBJECT,
-              properties: {
-                organismoEmpleador: { type: Type.STRING },
-                dependencia: { type: Type.STRING },
-                legajo: { type: Type.STRING },
-                situacionRevista: { type: Type.STRING, description: 'ACTIVO TITULAR | ACTIVO SUPLENTE | PASIVO | ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO' },
-                fechaIngreso: { type: Type.STRING },
-                antiguedadDetalle: { type: Type.STRING },
-                antiguedadAnios: { type: Type.NUMBER, nullable: true },
-                cumpleAntiguedadMinima: { type: Type.BOOLEAN, nullable: true },
-                esSaludSuplenteDia19: { type: Type.BOOLEAN },
-                requiereSituacionSage: { type: Type.BOOLEAN },
-                esInvalidezODiscapacidad: { type: Type.BOOLEAN },
-                cumpleTopeEdad80: { type: Type.BOOLEAN, nullable: true },
-                observacionesEspeciales: { type: Type.STRING }
-              },
-              required: ['organismoEmpleador', 'situacionRevista', 'antiguedadDetalle', 'observacionesEspeciales']
-            },
-            vigenciaRecibo: {
-              type: Type.OBJECT,
-              properties: {
-                periodoLiquidado: { type: Type.STRING, description: 'MM/YYYY o ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO' },
-                estadoVigencia: { type: Type.STRING, description: 'VIGENTE | DESACTUALIZADO | ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO' },
-                esVigente: { type: Type.BOOLEAN }
-              },
-              required: ['periodoLiquidado', 'estadoVigencia', 'esVigente']
-            },
-            radiografiaSalarial: {
-              type: Type.OBJECT,
-              properties: {
-                sueldoBrutoTotal: { type: Type.NUMBER, nullable: true },
-                descuentosLey: { type: Type.NUMBER, nullable: true },
-                consumosBersa: { type: Type.NUMBER, nullable: true },
-                consumosSidecreer: { type: Type.NUMBER, nullable: true },
-                otrasMutuales: { type: Type.NUMBER, nullable: true },
-                codigosFedemMonto: { type: Type.NUMBER, nullable: true },
-                codigosFedemDetectados: { type: Type.ARRAY, items: { type: Type.STRING } },
-                embargoDetectado: { type: Type.BOOLEAN },
-                embargoMonto: { type: Type.NUMBER, nullable: true },
-                embargoConcepto: { type: Type.STRING },
-                totalDescuentosRecibo: { type: Type.NUMBER, nullable: true },
-                sueldoLiquido: { type: Type.NUMBER, nullable: true }
-              },
-              required: ['embargoDetectado', 'codigosFedemDetectados']
-            },
-            scoringAmmer: {
-              type: Type.OBJECT,
-              properties: {
-                puntajeTotal: { type: Type.NUMBER },
-                calificacionLetra: { type: Type.STRING, description: 'A (Riesgo Bajo) | B (Riesgo Moderado) | C (Riesgo Crítico / No Viable)' },
-                dictamen: { type: Type.STRING, description: 'APTO_OTORGAMIENTO | OBSERVADO | RECHAZADO' },
-                nivelConfianza: { type: Type.STRING, description: 'ALTO | MEDIO | BAJO' },
-                dictamenAuditor: { type: Type.STRING },
-                alertasCriticas: { type: Type.ARRAY, items: { type: Type.STRING } },
-                camposIlegibles: { type: Type.ARRAY, items: { type: Type.STRING } }
-              },
-              required: ['puntajeTotal', 'calificacionLetra', 'dictamen', 'dictamenAuditor', 'alertasCriticas', 'camposIlegibles']
-            }
+            titularDetectado: { type: Type.STRING },
+            dni: { type: Type.STRING },
+            cuil: { type: Type.STRING },
+            fechaNacimiento: { type: Type.STRING },
+            domicilio: { type: Type.STRING },
+            fechaVencimientoDni: { type: Type.STRING },
+            dniVigente: { type: Type.BOOLEAN },
+            estadoCotejoCaratula: { type: Type.STRING, description: 'COINCIDE | VERIFICADO EN DOCUMENTO (SIN CARÁTULA PREVIA) | DISCREPANCIA DETECTADA | ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO' },
+            detalleDiscrepancias: { type: Type.ARRAY, items: { type: Type.STRING } }
           },
-          required: ['identidad', 'datosLaborales', 'vigenciaRecibo', 'radiografiaSalarial', 'scoringAmmer']
+          required: ['titularDetectado', 'dni', 'cuil', 'estadoCotejoCaratula']
+        },
+        datosLaborales: {
+          type: Type.OBJECT,
+          properties: {
+            organismoEmpleador: { type: Type.STRING },
+            dependencia: { type: Type.STRING },
+            legajo: { type: Type.STRING },
+            situacionRevista: { type: Type.STRING, description: 'ACTIVO TITULAR | ACTIVO SUPLENTE | PASIVO | ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO' },
+            fechaIngreso: { type: Type.STRING },
+            antiguedadDetalle: { type: Type.STRING },
+            antiguedadAnios: { type: Type.NUMBER },
+            cumpleAntiguedadMinima: { type: Type.BOOLEAN },
+            esSaludSuplenteDia19: { type: Type.BOOLEAN },
+            requiereSituacionSage: { type: Type.BOOLEAN },
+            esInvalidezODiscapacidad: { type: Type.BOOLEAN },
+            cumpleTopeEdad80: { type: Type.BOOLEAN },
+            observacionesEspeciales: { type: Type.STRING }
+          },
+          required: ['organismoEmpleador', 'situacionRevista', 'antiguedadDetalle', 'observacionesEspeciales']
+        },
+        vigenciaRecibo: {
+          type: Type.OBJECT,
+          properties: {
+            periodoLiquidado: { type: Type.STRING, description: 'MM/YYYY o ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO' },
+            estadoVigencia: { type: Type.STRING, description: 'VIGENTE | DESACTUALIZADO | ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO' },
+            esVigente: { type: Type.BOOLEAN }
+          },
+          required: ['periodoLiquidado', 'estadoVigencia', 'esVigente']
+        },
+        radiografiaSalarial: {
+          type: Type.OBJECT,
+          properties: {
+            sueldoBrutoTotal: { type: Type.NUMBER },
+            descuentosLey: { type: Type.NUMBER },
+            consumosBersa: { type: Type.NUMBER },
+            consumosSidecreer: { type: Type.NUMBER },
+            otrasMutuales: { type: Type.NUMBER },
+            codigosFedemMonto: { type: Type.NUMBER },
+            codigosFedemDetectados: { type: Type.ARRAY, items: { type: Type.STRING } },
+            embargoDetectado: { type: Type.BOOLEAN },
+            embargoMonto: { type: Type.NUMBER },
+            embargoConcepto: { type: Type.STRING },
+            totalDescuentosRecibo: { type: Type.NUMBER },
+            sueldoLiquido: { type: Type.NUMBER }
+          },
+          required: ['sueldoBrutoTotal', 'descuentosLey', 'totalDescuentosRecibo', 'sueldoLiquido', 'embargoDetectado', 'codigosFedemDetectados']
+        },
+        scoringAmmer: {
+          type: Type.OBJECT,
+          properties: {
+            puntajeTotal: { type: Type.NUMBER },
+            calificacionLetra: { type: Type.STRING, description: 'A (Riesgo Bajo) | B (Riesgo Moderado) | C (Riesgo Crítico / No Viable)' },
+            dictamen: { type: Type.STRING, description: 'APTO_OTORGAMIENTO | OBSERVADO | RECHAZADO' },
+            nivelConfianza: { type: Type.STRING, description: 'ALTO | MEDIO | BAJO' },
+            dictamenAuditor: { type: Type.STRING },
+            alertasCriticas: { type: Type.ARRAY, items: { type: Type.STRING } },
+            camposIlegibles: { type: Type.ARRAY, items: { type: Type.STRING } }
+          },
+          required: ['puntajeTotal', 'calificacionLetra', 'dictamen', 'dictamenAuditor', 'alertasCriticas', 'camposIlegibles']
         }
-      }
-    });
+      },
+      required: ['identidad', 'datosLaborales', 'vigenciaRecibo', 'radiografiaSalarial', 'scoringAmmer']
+    };
 
-    const textOutput = response.text || '{}';
+    const modelosActivos = ['gemini-2.5-flash', 'gemini-4-hydrogen', 'gemini-3.1-flash-lite'];
+    let textOutput = '';
+    let ultimoErrorModelo: any = null;
+
+    for (const modelo of modelosActivos) {
+      try {
+        const response = await ai.models.generateContent({
+          model: modelo,
+          contents: [{ parts }],
+          config: {
+            systemInstruction: 'Eres Auditor Crediticio Senior y Especialista en Verificación Documental Forense de AMMER. Extrae todos los valores impresos en el comprobante de forma literal sin inventar números ni bloquear documentos legibles por ausencia de deducciones opcionales (coloca 0 cuando un descuento opcional no figure en el recibo). Solo marca "ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO" si un dato obligatorio del recibo está borroso o cortado. Devuelve exclusivamente JSON conforme al schema.',
+            responseMimeType: 'application/json',
+            responseSchema
+          }
+        });
+        if (response.text && response.text.trim()) {
+          textOutput = response.text;
+          break;
+        }
+      } catch (errMod: any) {
+        console.warn(`[AMMER Audit] Modelo ${modelo} no disponible o con error:`, errMod?.message || errMod);
+        ultimoErrorModelo = errMod;
+      }
+    }
+
+    if (!textOutput) {
+      const statusErr = Number(ultimoErrorModelo?.status) || 502;
+      return res.status(statusErr >= 400 && statusErr < 600 ? statusErr : 502).json({
+        ok: false,
+        error: ultimoErrorModelo?.message || 'No se recibió respuesta válida de los modelos de auditoría documental.'
+      });
+    }
     const dataParsed: any = (() => {
       let cleaned = String(textOutput).replace(/```json/gi, '').replace(/```/g, '').trim();
       const firstIdx = cleaned.indexOf('{');
@@ -340,11 +363,44 @@ function formatCurrencyAuditAr_(val: number | null | undefined): string {
 
 function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
   const ILEGIBLE_LBL = 'ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO';
-  const idObj = raw.identidad || {};
-  const lab = raw.datosLaborales || {};
-  const vig = raw.vigenciaRecibo || {};
-  const sal = raw.radiografiaSalarial || {};
-  const scRaw = raw.scoringAmmer || {};
+  const rawIn = raw || {};
+  const idObj = rawIn.identidad || (rawIn.datosAgente ? {
+    titularDetectado: rawIn.datosAgente.nombreTitular || rawIn.datosAgente.nombreApellido || rawIn.datosAgente.nombre,
+    dni: rawIn.datosAgente.dni || rawIn.datosAgente.dniCuil,
+    cuil: rawIn.datosAgente.cuil || 'No consta en recibo',
+    estadoCotejoCaratula: rawIn.datosAgente.estadoCotejoCaratula || ''
+  } : {});
+  const lab = rawIn.datosLaborales || (rawIn.datosAgente ? {
+    organismoEmpleador: rawIn.datosAgente.organismo,
+    situacionRevista: rawIn.datosAgente.situacionRevista || 'ACTIVO TITULAR',
+    fechaIngreso: rawIn.datosAgente.fechaIngreso || 'No consta en recibo',
+    antiguedadDetalle: rawIn.datosAgente.antiguedad || 'Verificar en carátula',
+    cumpleAntiguedadMinima: rawIn.datosAgente.cumpleAntiguedadMinima
+  } : {});
+  const vig = rawIn.vigenciaRecibo || (rawIn.liquidacion ? {
+    periodoLiquidado: rawIn.liquidacion.periodo || rawIn.liquidacion.periodoLiquidado || rawIn.datosAgente?.periodoLiquidado,
+    estadoVigencia: rawIn.liquidacion.estadoVigencia || 'VIGENTE',
+    esVigente: rawIn.liquidacion.esVigente !== false
+  } : {});
+  const sal = rawIn.radiografiaSalarial || (rawIn.liquidacion ? {
+    sueldoBrutoTotal: rawIn.liquidacion.sueldoBrutoTotal ?? rawIn.liquidacion.sueldoBruto,
+    descuentosLey: rawIn.liquidacion.descuentosLey,
+    consumosBersa: rawIn.liquidacion.consumosBancariosBersa ?? rawIn.liquidacion.consumosBersa,
+    consumosSidecreer: rawIn.liquidacion.consumosSidecreer,
+    otrasMutuales: rawIn.liquidacion.otrasMutualesOProveeduria ?? rawIn.liquidacion.otrasMutuales ?? rawIn.liquidacion.consumosProveeduria,
+    codigosFedemMonto: rawIn.liquidacion.consumosFedem ?? rawIn.liquidacion.codigosFedemMonto,
+    codigosFedemDetectados: rawIn.liquidacion.codigosFedemDetectados || rawIn.liquidacion.codigosDetectados || [],
+    embargoDetectado: Boolean(rawIn.liquidacion.embargosJudiciales ?? rawIn.liquidacion.embargoDetectado),
+    embargoMonto: typeof rawIn.liquidacion.embargosJudiciales === 'number' ? rawIn.liquidacion.embargosJudiciales : (rawIn.liquidacion.embargoMonto ?? 0),
+    totalDescuentosRecibo: rawIn.liquidacion.totalDescuentos ?? rawIn.liquidacion.totalDescuentosRecibo,
+    sueldoLiquido: rawIn.liquidacion.sueldoLiquidoBolsillo ?? rawIn.liquidacion.sueldoLiquido ?? rawIn.liquidacion.sueldoNetoBolsillo ?? rawIn.liquidacion.sueldoNeto
+  } : rawIn);
+  const scRaw = rawIn.scoringAmmer || (rawIn.scoring ? {
+    puntajeTotal: rawIn.scoring.puntaje ?? rawIn.scoring.puntajeTotal,
+    calificacionLetra: rawIn.scoring.calificacion || rawIn.scoring.calificacionLetra,
+    dictamen: (typeof rawIn.scoring.puntaje === 'number' && rawIn.scoring.puntaje < 60) ? 'RECHAZADO' : ((typeof rawIn.scoring.puntaje === 'number' && rawIn.scoring.puntaje < 80) ? 'OBSERVADO' : 'APTO_OTORGAMIENTO'),
+    dictamenAuditor: rawIn.scoring.dictamen || rawIn.scoring.dictamenAuditor
+  } : {});
 
   const round2 = (n: number) => Math.round(n * 100) / 100;
   const toNumOrNull = (v: any): number | null => (v === null || v === undefined || v === '' || Number.isNaN(Number(v))) ? null : round2(Number(v));

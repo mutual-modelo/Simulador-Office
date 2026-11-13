@@ -5937,7 +5937,7 @@
 
     function mostrarNotificacionToast(msg, tipo = 'info') {
       if (typeof showToast === 'function') {
-        const prefix = tipo === 'success' ? '✅ ' : (tipo === 'warning' ? '⚠️ ' : '');
+        const prefix = tipo === 'success' ? '✅ ' : (tipo === 'error' ? '❌ ' : (tipo === 'warning' ? '⚠️ ' : ''));
         showToast(prefix + String(msg || ''));
       }
     }
@@ -13427,7 +13427,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const sal = obj.radiografiaSalarial || obj.liquidacion || obj;
 
         const bruto = toNumOrNullLocal(sal.sueldoBrutoTotal ?? sal.sueldoBruto);
-        const liquido = toNumOrNullLocal(sal.sueldoLiquido ?? sal.sueldoNetoBolsillo ?? sal.sueldoNeto);
+        const liquido = toNumOrNullLocal(sal.sueldoLiquidoBolsillo ?? sal.sueldoLiquido ?? sal.sueldoNetoBolsillo ?? sal.sueldoNeto);
         const descLey = toNumZeroLocal(sal.descuentosLey);
         const bersa = toNumZeroLocal(sal.consumosBersa ?? sal.consumosBancariosBersa);
         const sidecreer = toNumZeroLocal(sal.consumosSidecreer);
@@ -13601,7 +13601,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         base64: limpiarBase64ParaAPI(a.base64)
       })).filter(a => Boolean(a.base64));
 
-      if (archivos.length === 0) return null;
+      if (archivos.length === 0) {
+        window._ultimaErrorAuditoriaIA = 'No se encontró contenido binario Base64 válido para auditar.';
+        return null;
+      }
 
       const hostName = (typeof window !== 'undefined' && window.location && window.location.hostname)
         ? String(window.location.hostname).toLowerCase()
@@ -13627,8 +13630,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
               mimeType: primerArchivo.mimeType || 'application/pdf',
               nombreArchivo: primerArchivo.nombre || 'documento_auditoria.pdf',
               datosDeclarados: datosDecl,
-              datosContexto: datosDecl,
-              promptInstruccion: (contexto && contexto.promptInstruccion) || undefined
+              datosContexto: datosDecl
             }
           : {
               archivos: archivos,
@@ -13663,36 +13665,39 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             data = await resp.json();
           }
         } catch (errFetch) {
-          return { resp, data: null, esAppsScript, error: errFetch && errFetch.message ? errFetch.message : String(errFetch) };
+          return {
+            resp,
+            data: null,
+            rawText,
+            esAppsScript,
+            error: errFetch && errFetch.message ? errFetch.message : String(errFetch)
+          };
         }
-        return { resp, data, esAppsScript, error: null };
+        return { resp, data, rawText, esAppsScript, error: null };
       };
 
       let resultadoRed = await ejecutarPeticionAuditoria(endpointPrimario);
 
-      // Si /api/auditar-documentos no está disponible (404/405 en hosting estático) o falla en servidor sin clave local, conmutar automáticamente a Google Apps Script con text/plain (sin preflight CORS 405)
-      const falloPrimarioReintentable = !resultadoRed.esAppsScript && (
+      const falloRutaLocalNoDisponible = !resultadoRed.esAppsScript && (
         !resultadoRed.resp ||
         resultadoRed.resp.status === 404 ||
-        resultadoRed.resp.status === 405 ||
-        resultadoRed.resp.status >= 500 ||
-        !resultadoRed.resp.ok ||
-        !resultadoRed.data ||
-        resultadoRed.data.ok === false
+        resultadoRed.resp.status === 405
       );
-      if (falloPrimarioReintentable && typeof APPS_SCRIPT_URL === 'string' && APPS_SCRIPT_URL.startsWith('http')) {
+      if (falloRutaLocalNoDisponible && typeof APPS_SCRIPT_URL === 'string' && APPS_SCRIPT_URL.startsWith('http')) {
         const resBackup = await ejecutarPeticionAuditoria(APPS_SCRIPT_URL);
-        if (resBackup && resBackup.resp && resBackup.resp.ok && resBackup.data && resBackup.data.ok !== false && resBackup.data.success !== false) {
+        if (resBackup && resBackup.resp) {
           resultadoRed = resBackup;
         }
       }
 
-      const { resp, data, error: errRed } = resultadoRed;
+      const { resp, data, rawText, error: errRed } = resultadoRed;
       const operacionExitosa = Boolean(resp && resp.ok && data && data.ok !== false && data.success !== false);
       if (!operacionExitosa) {
+        const statusNum = resp ? resp.status : 0;
         const msgErr = (data && data.error)
-          ? data.error
-          : (errRed || ('El servicio de auditoría respondió HTTP ' + (resp ? resp.status : 'sin respuesta')));
+          ? (statusNum && !String(data.error).includes(String(statusNum)) ? ('Error ' + statusNum + ': ' + data.error) : String(data.error))
+          : (errRed || ('Error ' + (statusNum || 'de red') + ': ' + String(rawText || 'Sin respuesta del servidor documental').substring(0, 160)));
+        console.warn('Servicio de auditoría devolvió error técnico:', msgErr);
         window._ultimaErrorAuditoriaIA = msgErr;
         return null;
       }
@@ -13700,7 +13705,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const rawAudit = data && (
         data.auditoria ||
         data.resultado ||
-        ((data.identidad || data.radiografiaSalarial || data.reciboSueldo || data.scoringCrediticio || data.scoringAmmer) ? data : null)
+        ((data.identidad || data.datosAgente || data.liquidacion || data.radiografiaSalarial || data.reciboSueldo || data.scoringCrediticio || data.scoringAmmer) ? data : null)
       );
       const normalized = normalizarResultadoAuditoriaIA(rawAudit);
       if (normalized && data) {
@@ -13731,12 +13736,6 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       });
 
       try {
-        const configApp = (typeof window !== 'undefined' && window.estadoApp && window.estadoApp.config) ? window.estadoApp.config : {};
-        const tieneGeminiKey = Boolean((typeof window !== 'undefined' && window.GEMINI_API_KEY) || configApp.geminiApiKey);
-        const usaBackendInstitucional = Boolean(contexto && contexto.permitirBackendSinKey !== false);
-        if (!tieneGeminiKey && !usaBackendInstitucional) {
-          return null;
-        }
         const ctxConSignal = Object.assign({}, contexto, { timeoutMs }, abortController ? { signal: abortController.signal } : {});
         const resultado = await Promise.race([
           realizarAuditoriaOCR(base64, ctxConSignal),
@@ -14701,40 +14700,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     async function ejecutarAuditoriaDocumental(base64Data, tipoMime = 'application/pdf') {
-      return auditarReciboConIA(base64Data, tipoMime);
+      return auditarReciboDirectoGemini(base64Data, tipoMime);
     }
 
-    async function auditarReciboConIA(archivoBase64, tipoMime = 'application/pdf') {
-      mostrarLoaderAuditoria('Escaneando recibo y analizando afectación salarial...');
-      const base64Limpio = limpiarBase64ParaAPI(archivoBase64);
-      const promptInstruccion = [
-        'Actúa como Auditor Crediticio Forense de AMMER. Analiza este recibo de sueldo de Entre Ríos.',
-        'Extrae estrictamente en formato JSON:',
-        '{',
-        '  "datosAgente": { "nombreTitular": "STRING", "dni": "STRING", "organismo": "STRING", "antiguedad": "STRING" },',
-        '  "liquidacion": {',
-        '    "periodo": "STRING",',
-        '    "sueldoBrutoTotal": 0.00,',
-        '    "descuentosLey": 0.00,',
-        '    "consumosBancariosBersa": 0.00,',
-        '    "consumosSidecreer": 0.00,',
-        '    "otrasMutualesOProveeduria": 0.00,',
-        '    "consumosFedem": 0.00,',
-        '    "totalDescuentos": 0.00,',
-        '    "sueldoLiquido": 0.00,',
-        '    "embargosJudiciales": false',
-        '  },',
-        '  "scoring": { "puntaje": 85, "calificacion": "A (Bajo Riesgo) | B (Riesgo Moderado) | C (Observado)", "dictamen": "STRING" }',
-        '}',
-        'Reglas:',
-        '- Suma todos los conceptos remunerativos y no remunerativos (Conceptos 1 al 286 en recibos provinciales) en sueldoBrutoTotal.',
-        '- Incluye Jubilación (502), Obra Social (505) y Seguros (510, 524, 327) en descuentosLey.',
-        '- Incluye MUPER (491), proveeduría y mutuales en otrasMutualesOProveeduria; FEDEM (366/368/1115/1117) en consumosFedem.',
-        '- Ubica el importe final neto en cuenta bancaria en sueldoLiquido.',
-        '- Si no hay embargos o consumos de Sidecreer/BERSA/FEDEM, coloca 0.00 o false sin rechazar la lectura.',
-        '- Responde ÚNICAMENTE JSON puro.'
-      ].join('\n');
-
+    async function auditarReciboDirectoGemini(base64Data, mimeType = 'application/pdf') {
+      mostrarLoaderAuditoria('Analizando recibo de haberes con IA...');
+      const base64Limpio = limpiarBase64ParaAPI(base64Data);
       try {
         let datosContexto = null;
         if (idExpedienteAuditadoActivo) {
@@ -14752,35 +14723,40 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             };
           }
         }
+
         const auditRes = await procesarAuditoriaConTimeout(base64Limpio, {
           idSolicitud: idExpedienteAuditadoActivo || 'DOCUMENTOS_SUELTOS',
-          mimeType: tipoMime || 'application/pdf',
+          mimeType: mimeType || 'application/pdf',
           datosDeclarados: datosContexto,
-          promptInstruccion: promptInstruccion,
-          permitirBackendSinKey: true,
           preservarLoadingBar: true,
           timeoutMs: 55000
         });
+
         if (auditRes) {
           ultimoResultadoAuditoria = auditRes;
           renderizarInformeAuditoriaIA(auditRes);
-          mostrarNotificacionToast('Auditoría completada exitosamente.', 'success');
+          mostrarNotificacionToast('Auditoría documental completada exitosamente.', 'success');
           return auditRes;
         }
-        if (window._ultimaErrorAuditoriaIA) {
-          mostrarErrorAuditoria(window._ultimaErrorAuditoriaIA);
-        } else {
-          mostrarNotificacionToast('Aviso: Documento procesado. Verifique los importes en el detalle.', 'warning');
-        }
+
+        const detalleError = window._ultimaErrorAuditoriaIA || 'Respuesta no válida del servicio de auditoría documental.';
+        console.error('Aviso de Auditoría (sin resultado):', detalleError);
+        mostrarErrorAuditoria(detalleError);
+        mostrarNotificacionToast('No se pudo procesar el recibo: ' + detalleError, 'error');
         return null;
       } catch (err) {
-        console.error('Fallo de comunicación en auditoría:', err);
-        mostrarErrorAuditoria('Error de conexión al consultar el motor documental: ' + (err && err.message ? err.message : String(err)));
-        mostrarNotificacionToast('Error de conexión al consultar el motor documental.', 'warning');
+        const msgErr = err && err.message ? err.message : String(err);
+        console.error('Fallo de comunicación en auditoría documental:', err);
+        mostrarErrorAuditoria(msgErr);
+        mostrarNotificacionToast('Error en auditoría documental: ' + msgErr, 'error');
         return null;
       } finally {
         ocultarLoaderAuditoria();
       }
+    }
+
+    async function auditarReciboConIA(archivoBase64, tipoMime = 'application/pdf') {
+      return auditarReciboDirectoGemini(archivoBase64, tipoMime);
     }
 
     function aplicarDatosExtraidosAlExpediente() {
@@ -15445,6 +15421,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.extraerJSONResiliente = extraerJSONResiliente;
     window.limpiarBase64ParaAPI = limpiarBase64ParaAPI;
     window.mostrarNotificacionToast = mostrarNotificacionToast;
+    window.auditarReciboDirectoGemini = auditarReciboDirectoGemini;
     window.auditarReciboConIA = auditarReciboConIA;
     window.CONFIG = CONFIG;
     window.estadoApp = window.estadoApp;

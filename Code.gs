@@ -1732,7 +1732,7 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
     embargoDetectado: Boolean(rawIn.liquidacion.embargosJudiciales ?? rawIn.liquidacion.embargoDetectado),
     embargoMonto: typeof rawIn.liquidacion.embargosJudiciales === 'number' ? rawIn.liquidacion.embargosJudiciales : (rawIn.liquidacion.embargoMonto ?? 0),
     totalDescuentosRecibo: rawIn.liquidacion.totalDescuentos ?? rawIn.liquidacion.totalDescuentosRecibo,
-    sueldoLiquido: rawIn.liquidacion.sueldoLiquido ?? rawIn.liquidacion.sueldoNetoBolsillo ?? rawIn.liquidacion.sueldoNeto
+    sueldoLiquido: rawIn.liquidacion.sueldoLiquidoBolsillo ?? rawIn.liquidacion.sueldoLiquido ?? rawIn.liquidacion.sueldoNetoBolsillo ?? rawIn.liquidacion.sueldoNeto
   } : rawIn);
   const scRaw = rawIn.scoringAmmer || (rawIn.scoring ? {
     puntajeTotal: rawIn.scoring.puntaje ?? rawIn.scoring.puntajeTotal,
@@ -2159,39 +2159,46 @@ function auditarLegajoConIA(payload) {
   parts.push({ text: promptAuditor });
 
   try {
-    const endpointGemini = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-4-hydrogen:generateContent?key=' + encodeURIComponent(apiKey);
-    const resp = UrlFetchApp.fetch(endpointGemini, {
-      method: 'post',
-      contentType: 'application/json',
-      muteHttpExceptions: true,
-      payload: JSON.stringify({
-        contents: [{ parts: parts }],
-        generationConfig: {
-          responseMimeType: 'application/json'
+    const modelosGemini = ['gemini-2.5-flash', 'gemini-4-hydrogen', 'gemini-3.1-flash-lite'];
+    let candidateText = '';
+    let ultimoErrorHttp = '';
+
+    for (let idxMod = 0; idxMod < modelosGemini.length; idxMod++) {
+      const modeloActual = modelosGemini[idxMod];
+      const endpointGemini = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(modeloActual) + ':generateContent?key=' + encodeURIComponent(apiKey);
+      const resp = UrlFetchApp.fetch(endpointGemini, {
+        method: 'post',
+        contentType: 'application/json',
+        muteHttpExceptions: true,
+        payload: JSON.stringify({
+          contents: [{ parts: parts }],
+          generationConfig: {
+            responseMimeType: 'application/json'
+          }
+        })
+      });
+
+      const code = resp.getResponseCode();
+      const rawRespText = resp.getContentText() || '{}';
+      if (code >= 200 && code < 300) {
+        const geminiJson = limpiarYParsearJSONAuditoria_(rawRespText);
+        const partsResp = geminiJson && geminiJson.candidates && geminiJson.candidates[0] &&
+          geminiJson.candidates[0].content && geminiJson.candidates[0].content.parts;
+        if (Array.isArray(partsResp)) {
+          candidateText = partsResp.map(function(p) { return (p && p.text) ? String(p.text) : ''; }).join('\n').trim();
         }
-      })
-    });
-
-    const code = resp.getResponseCode();
-    const rawRespText = resp.getContentText() || '{}';
-    if (code < 200 || code >= 300) {
-      return {
-        ok: false,
-        success: false,
-        error: 'Motor documental respondió HTTP ' + code + ': ' + rawRespText.slice(0, 220)
-      };
+        if (candidateText) break;
+        ultimoErrorHttp = 'Modelo ' + modeloActual + ' devolvió respuesta vacía.';
+      } else {
+        ultimoErrorHttp = 'Motor documental (' + modeloActual + ') respondió HTTP ' + code + ': ' + rawRespText.slice(0, 220);
+      }
     }
-
-    const geminiJson = limpiarYParsearJSONAuditoria_(rawRespText);
-    const candidateText = geminiJson && geminiJson.candidates && geminiJson.candidates[0] &&
-      geminiJson.candidates[0].content && geminiJson.candidates[0].content.parts &&
-      geminiJson.candidates[0].content.parts[0] && geminiJson.candidates[0].content.parts[0].text;
 
     if (!candidateText) {
       return {
         ok: false,
         success: false,
-        error: 'El motor documental no devolvió contenido legible.'
+        error: ultimoErrorHttp || 'El motor documental no devolvió contenido legible.'
       };
     }
 

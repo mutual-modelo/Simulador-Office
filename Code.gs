@@ -1660,59 +1660,17 @@ function actualizarDatosSolicitanteBackend(payload) {
 }
 
 /* ============================================================================
-   8. AUDITORÍA DOCUMENTAL IA
+   8. AUDITORÍA DOCUMENTAL IA (PERSISTENCIA SIN DATOS FICTICIOS)
    ============================================================================ */
 function auditarLegajoConIA(payload) {
-  const datos = payload.datosDeclarados || {};
-  const cuota = Number(datos.cuota || 0);
-  const sueldoEstimado = String(datos.organismo || '').toLowerCase() === 'municipal' ? 540000 : 920000;
-  const descLey = Math.round(sueldoEstimado * 0.18);
-  const neto = sueldoEstimado - descLey;
-  const tope50 = Math.round(neto * 0.5);
-  const margen = Math.max(0, tope50 - cuota);
-  const score = margen >= cuota ? 92 : 68;
-  const dictamen = score >= 80 ? 'APTO_OTORGAMIENTO' : 'OBSERVADO';
+  const resultadoEntrante = payload && (payload.resultado || payload.auditoria) ? (payload.resultado || payload.auditoria) : null;
 
-  const resultado = {
-    scoringCrediticio: {
-      puntajeTotal: score,
-      dictamen: dictamen,
-      nivelConfianza: 'ALTO'
-    },
-    reciboSueldo: {
-      titular: datos.nombre || 'Asociado',
-      dni: datos.dni || '',
-      cuil: datos.dni ? ('20-' + datos.dni + '-9') : '',
-      organismo: String(datos.organismo || '').toLowerCase() === 'municipal' ? 'Municipalidad de Paraná' : 'Gobierno de Entre Ríos',
-      dependencia: datos.dependencia || 'Administración Central',
-      cargo: 'Titular',
-      situacionRevista: 'Planta Permanente',
-      antiguedadAnios: 5,
-      periodo: Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'MM/yyyy'),
-      sueldoBruto: sueldoEstimado,
-      descuentosLey: descLey,
-      descuentosPrestamosYMutuales: 0,
-      sueldoNeto: neto,
-      topeLegal50Porciento: tope50,
-      margenDisponibleCuota: margen,
-      diasAntiguedadRecibo: 15,
-      reciboVencido: false
-    },
-    dni: {
-      numero: datos.dni || '',
-      nombreCompleto: datos.nombre || 'Asociado',
-      fechaVencimiento: '2032-12-31',
-      dniVigente: true
-    },
-    cruceIdentidad: {
-      coincideDni: true,
-      coincideNombre: true,
-      coincideCuil: true,
-      discrepanciasDetectadas: []
-    },
-    alertasCriticas: score >= 80 ? [] : ['Verificar afectación neta disponible en recibo de haberes.'],
-    informeEjecutivo: 'Auditoría procesada para ' + (datos.nombre || 'asociado') + ' (DNI ' + (datos.dni || 'S/D') + '). Margen disponible estimado: $' + margen.toLocaleString('es-AR') + '.'
-  };
+  if (!resultadoEntrante) {
+    return {
+      ok: false,
+      error: 'La lectura documental forense requiere análisis multimodal en el servidor (/api/auditar-documentos). No se generan importes ni fechas estimadas.'
+    };
+  }
 
   if (payload.idSolicitud) {
     try {
@@ -1722,13 +1680,13 @@ function auditarLegajoConIA(payload) {
       if (rowNum !== -1 && map['Dictamen_IA_JSON'] !== undefined) {
         sheet.getRange(rowNum, map['Dictamen_IA_JSON'] + 1).setValue(JSON.stringify({
           estado: 'completado',
-          fechaFin: new Date().toISOString(),
-          resultado: resultado
+          fechaFin: obtenerFechaHora24Argentina_(),
+          resultado: resultadoEntrante
         }));
         SpreadsheetApp.flush();
       }
     } catch (_) {}
   }
 
-  return { ok: true, resultado: resultado };
+  return { ok: true, resultado: resultadoEntrante };
 }

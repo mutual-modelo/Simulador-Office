@@ -3902,11 +3902,11 @@
           <div class="ai-audit-header">
             <div>
               <div class="ai-audit-title">
-                <span>Auditoría Documental Inteligente &amp; Due Diligence</span>
-                <span class="tech-badge">Multimodal Gemini AI • Reglas AMMER V4.5</span>
+                <span>Auditoría Documental Forense &amp; Calificación AMMER</span>
+                <span class="tech-badge">Verificación Literal • Tope 50% Bruto</span>
               </div>
               <div class="ai-audit-desc">
-                Escáner OCR para Recibos de Sueldo (Provincial/Municipal/IOSPER), DNI frente/dorso, control de afectación 50%, Calificación Crediticia AMMER (0-100) y dictamen de otorgamiento.
+                Lectura forense sin inferencias de Recibos de Haberes (CGE, Salud, Policía, Adm. Central, Municipios, Caja de Jubilaciones), DNI frente/dorso y CBU. Desglose BERSA, SIDECREER, Códigos FEDEM (366/368/1115/1117), embargos y Calificación AMMER (A/B/C).
               </div>
             </div>
             <div style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">
@@ -3960,8 +3960,8 @@
           </div>
           <div id="aiAuditLoadingBar" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:1rem;margin-bottom:1rem;text-align:center;">
             <div class="api-spinner" style="margin:0 auto .5rem;border-top-color:#4338ca;"></div>
-            <strong style="color:#1e3a8a;font-size:.85rem;" id="aiAuditStageText">Extrayendo datos multimodales con Gemini 3.8 Flash...</strong>
-            <p style="font-size:.7rem;color:var(--text-muted);margin-top:3px;">Verificando afectación de haberes, fechas de vigencia y consistencia de identidad.</p>
+            <strong style="color:#1e3a8a;font-size:.85rem;" id="aiAuditStageText">Extrayendo lectura documental forense literal...</strong>
+            <p style="font-size:.7rem;color:var(--text-muted);margin-top:3px;">Verificando Sueldo Bruto, Códigos FEDEM, embargos, antigüedad y coincidencia de identidad.</p>
           </div>
 
           <!-- Panel de Resultados (Oculto hasta procesar) -->
@@ -9386,70 +9386,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         s.requerimientosDocumentales = [];
       }
 
-      if (!s.auditoriaIA) {
-        const isObservado = (s.estado === 'Observado');
-        const score = isObservado ? 68 : 94;
-        const dictamen = isObservado ? 'OBSERVADO' : 'APTO_OTORGAMIENTO';
-        const sueldoEstimado = (s.solicitante?.organismo === 'Provincial') ? 920000 : 540000;
-        const descLey = Math.round(sueldoEstimado * 0.18);
-        const descPrestamos = isObservado ? 145000 : 42000;
-        const neto = sueldoEstimado - descLey - descPrestamos;
-        const margen = Math.max(0, Math.round((neto * 0.50) - (isObservado ? 50000 : 0)));
-
-        s.auditoriaIA = {
-          estado: 'completado',
-          fechaFin: s.fecha || new Date().toISOString(),
-          resultado: {
-            scoringCrediticio: {
-              puntajeTotal: score,
-              dictamen: dictamen,
-              nivelConfianza: 'ALTO'
-            },
-            reciboSueldo: {
-              titular: s.solicitante?.nombre || 'Titular',
-              dni: s.solicitante?.dni || '—',
-              cuil: '20-' + (s.solicitante?.dni || '00000000') + '-9',
-              organismo: s.solicitante?.organismo === 'Municipal' ? 'Municipalidad de Paraná' : 'Gobierno de Entre Ríos',
-              dependencia: s.solicitante?.dependencia || 'Administración Central',
-              cargo: s.solicitante?.cargo || 'Titular',
-              situacionRevista: s.solicitante?.cargo === 'Titular' ? 'Planta Permanente' : 'Suplente',
-              antiguedadAnios: (s.solicitante?.cargo === 'Titular') ? 8 : 2,
-              periodo: isObservado ? '01/2026' : '03/2026',
-              sueldoBruto: sueldoEstimado,
-              descuentosLey: descLey,
-              descuentosPrestamosYMutuales: descPrestamos,
-              sueldoNeto: neto,
-              topeLegal50Porciento: Math.round(neto * 0.50),
-              margenDisponibleCuota: margen,
-              diasAntiguedadRecibo: isObservado ? 75 : 18,
-              reciboVencido: isObservado
-            },
-            dni: {
-              numero: s.solicitante?.dni || '—',
-              nombreCompleto: s.solicitante?.nombre || 'Titular',
-              fechaVencimiento: '2031-10-14',
-              dniVigente: true
-            },
-            cruceIdentidad: {
-              coincideDni: true,
-              coincideNombre: true,
-              coincideCuil: true,
-              discrepanciasDetectadas: []
-            },
-            alertasCriticas: isObservado ? [
-              'Recibo de haberes con más de 60 días de antigüedad.',
-              'Afectaciones previas elevadas en recibo.'
-            ] : [],
-            informeEjecutivo: isObservado ?
-              `El legajo de ${s.solicitante?.nombre || 'asociado'} presenta estabilidad laboral en ${s.solicitante?.dependencia || 'organismo'} con situación de revista ${s.solicitante?.cargo || 'Titular'}. Se observa recibo con más de 60 días y retenciones previas ($${descPrestamos.toLocaleString('es-AR')}). Requiere subsanación de comprobante reciente.` :
-              `El asociado ${s.solicitante?.nombre || ''} presenta estabilidad laboral comprobada como ${s.solicitante?.cargo || 'Titular'} de Planta Permanente con 8 años de antigüedad en ${s.solicitante?.dependencia || 'organismo'}. El recibo corresponde al período vigente sin embargos ni observaciones, con margen disponible ($${margen.toLocaleString('es-AR')}) suficiente para cubrir la cuota solicitada de $${(s.prestamo?.cuotaEstimada || 0).toLocaleString('es-AR')}. Legajo calificado como APTO OTORGAMIENTO — CRÉDITO VIABLE (Calificación Crediticia AMMER).`
-          }
-        };
-      } else if (s.auditoriaIA.resultado) {
+      if (s.auditoriaIA && s.auditoriaIA.resultado) {
         const r = s.auditoriaIA.resultado;
         if (!r.scoringCrediticio) {
           const legacyKey = Object.keys(r).find(k => k.toLowerCase().startsWith('scoring'));
-          r.scoringCrediticio = legacyKey ? r[legacyKey] : { puntajeTotal: 90, dictamen: 'APTO_OTORGAMIENTO', nivelConfianza: 'ALTO' };
+          r.scoringCrediticio = legacyKey ? r[legacyKey] : { puntajeTotal: 0, dictamen: 'OBSERVADO', nivelConfianza: 'BAJO' };
           if (legacyKey && legacyKey !== 'scoringCrediticio') delete r[legacyKey];
         }
         if (r.scoringCrediticio && typeof r.scoringCrediticio.dictamen === 'string' && r.scoringCrediticio.dictamen.startsWith('APTO_')) {
@@ -13377,19 +13318,97 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     let ultimoResultadoAuditoria = null;
     let idExpedienteAuditadoActivo = null;
 
-    /* --- MOTOR AUTOMATIZADO DE AUDITORÍA IA EN SEGUNDO PLANO --- */
+    /* --- MOTOR DE AUDITORÍA DOCUMENTAL FORENSE AMMER (CERO ALUCINACIÓN) --- */
+    const TEXTO_ILEGIBLE_AMMER = 'ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO';
+
+    function formatMontoAuditoriaExacto(val) {
+      if (val === null || val === undefined || val === '' || Number.isNaN(Number(val))) {
+        return TEXTO_ILEGIBLE_AMMER;
+      }
+      return '$' + Number(val).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
     function normalizarResultadoAuditoriaIA(auditRes) {
-      if (!auditRes || (!auditRes.scoringCrediticio && !auditRes.reciboSueldo)) {
+      if (!auditRes || (!auditRes.scoringCrediticio && !auditRes.reciboSueldo && !auditRes.resumenJson)) {
         return null;
       }
       if (!auditRes.scoringCrediticio) {
         const legacyKey = Object.keys(auditRes).find(k => k.toLowerCase().startsWith('scoring'));
-        auditRes.scoringCrediticio = legacyKey ? auditRes[legacyKey] : { puntajeTotal: 90, dictamen: 'APTO_OTORGAMIENTO', nivelConfianza: 'ALTO' };
+        auditRes.scoringCrediticio = legacyKey ? auditRes[legacyKey] : { puntajeTotal: 0, dictamen: 'OBSERVADO', nivelConfianza: 'BAJO' };
       }
       if (auditRes.scoringCrediticio && typeof auditRes.scoringCrediticio.dictamen === 'string' && auditRes.scoringCrediticio.dictamen.startsWith('APTO_')) {
         auditRes.scoringCrediticio.dictamen = 'APTO_OTORGAMIENTO';
       }
+      const sc = auditRes.scoringCrediticio;
+      if (!sc.calificacionLetra) {
+        const pts = Number(sc.puntajeTotal || 0);
+        sc.calificacionLetra = pts >= 80 ? 'A (Riesgo Bajo)' : (pts >= 60 ? 'B (Riesgo Moderado)' : 'C (Riesgo Crítico / No Viable)');
+      }
       return auditRes;
+    }
+
+    function construirInformeMarkdownAMMER(audit) {
+      if (audit && typeof audit.informeMarkdown === 'string' && audit.informeMarkdown.trim()) {
+        return audit.informeMarkdown;
+      }
+      const rec = (audit && audit.reciboSueldo) || {};
+      const sc = (audit && audit.scoringCrediticio) || {};
+      const cruce = (audit && audit.cruceIdentidad) || {};
+      const estadoCotejo = cruce.estadoCotejo || ((cruce.coincideDni && cruce.coincideNombre) ? 'COINCIDE' : 'DISCREPANCIA DETECTADA');
+      const cotejoMd = estadoCotejo === 'COINCIDE' ? '🟢 COINCIDENCIA TOTAL' : (estadoCotejo === 'DISCREPANCIA DETECTADA' ? '🔴 DISCREPANCIA DETECTADA' : '⚠️ ' + estadoCotejo);
+      const vigMd = !rec.reciboVencido ? '🟢 VIGENTE' : (rec.estadoPeriodo === 'DESACTUALIZADO' ? '⚠️ DESACTUALIZADO' : '⚠️ ' + (rec.estadoPeriodo || TEXTO_ILEGIBLE_AMMER));
+      const antMd = rec.cumpleAntiguedadMinima === true ? '🟢 CUMPLE REQUISITO (Mínimo 1 año)' : (rec.cumpleAntiguedadMinima === false ? '🔴 NO CUMPLE' : '⚠️ ' + TEXTO_ILEGIBLE_AMMER);
+      const fedemList = Array.isArray(rec.codigosFedemDetectados) ? rec.codigosFedemDetectados : [];
+      const fedemObs = fedemList.length > 0 ? ('Códigos detectados: ' + fedemList.join(', ')) : 'Sin códigos FEDEM (366/368/1115/1117)';
+      const embMd = rec.embargoDetectado
+        ? ('🔴 PRESENCIA DE EMBARGO DETECTADA: ' + formatMontoAuditoriaExacto(rec.embargoMonto) + ' / ' + (rec.embargoConcepto || 'Retención/Embargo'))
+        : '🟢 SIN EMBARGOS';
+      const cupo = rec.topeLegal50Porciento !== undefined ? rec.topeLegal50Porciento : (rec.sueldoBruto != null ? Math.round(Number(rec.sueldoBruto) * 50) / 100 : null);
+      const totalDesc = rec.totalDescuentosRecibo !== undefined ? rec.totalDescuentosRecibo : null;
+      const margen = rec.margenDisponibleCuota !== undefined ? rec.margenDisponibleCuota : ((cupo !== null && totalDesc !== null) ? Math.round((cupo - totalDesc) * 100) / 100 : null);
+      const afecMd = rec.estadoAfectacion === 'MARGEN DISPONIBLE'
+        ? '🟢 MARGEN DISPONIBLE'
+        : (rec.estadoAfectacion ? ('🔴 ' + rec.estadoAfectacion) : (margen !== null && margen > 0 ? '🟢 MARGEN DISPONIBLE' : '🔴 SALDO NEGATIVO / CUPO EXCEDIDO'));
+
+      return [
+        '### 📑 INFORME DE AUDITORÍA DOCUMENTAL Y CREDITICIA AMMER',
+        '---',
+        '',
+        '#### 👤 1. Verificación de Identidad y Coincidencias',
+        '* **Titular Detectado:** ' + (rec.titular || TEXTO_ILEGIBLE_AMMER),
+        '* **DNI / CUIL:** ' + (rec.dni || TEXTO_ILEGIBLE_AMMER) + ' / ' + (rec.cuil || TEXTO_ILEGIBLE_AMMER),
+        '* **Cotejo con Carátula:** ' + cotejoMd,
+        '* **Período Liquidado:** ' + (rec.periodo || TEXTO_ILEGIBLE_AMMER) + ' • ' + vigMd,
+        '',
+        '#### 🏢 2. Datos Laborales y Situación de Revista',
+        '* **Organismo Empleador:** ' + (rec.organismo || TEXTO_ILEGIBLE_AMMER),
+        '* **Condición de Revista:** ' + (rec.situacionRevista || TEXTO_ILEGIBLE_AMMER),
+        '* **Antigüedad Registrada:** ' + (rec.antiguedadDetalle || (rec.antiguedadAnios !== null && rec.antiguedadAnios !== undefined ? rec.antiguedadAnios + ' años' : TEXTO_ILEGIBLE_AMMER)) + ' • ' + antMd,
+        '* **Observaciones Especiales:** ' + (rec.observacionesEspeciales || 'Sin observaciones especiales registradas'),
+        '',
+        '#### 💵 3. Radiografía Salarial y Descuentos',
+        '| Concepto | Monto Detectado ($) | Observaciones / Estado |',
+        '| :--- | :--- | :--- |',
+        '| **Sueldo Bruto Total** | ' + formatMontoAuditoriaExacto(rec.sueldoBruto) + ' | Remunerativo + No Remunerativo |',
+        '| **Descuentos de Ley** | ' + formatMontoAuditoriaExacto(rec.descuentosLey) + ' | Jubilación, IOSPER, Ley 4035 |',
+        '| **Consumos BERSA / Préstamos** | ' + formatMontoAuditoriaExacto(rec.consumosBersa) + ' | Retenciones bancarias |',
+        '| **Consumos SIDECREER** | ' + formatMontoAuditoriaExacto(rec.consumosSidecreer) + ' | Descuento por tarjeta oficial |',
+        '| **Otras Mutuales / Cuotas** | ' + formatMontoAuditoriaExacto(rec.otrasMutuales) + ' | Descuentos por código voluntario |',
+        '| **Códigos FEDEM Activos** | ' + formatMontoAuditoriaExacto(rec.codigosFedemMonto) + ' | ' + fedemObs + ' |',
+        '| **Total Descuentos en Recibo** | ' + formatMontoAuditoriaExacto(totalDesc) + ' | Deducciones consolidadas |',
+        '| **Sueldo Líquido de Bolsillo** | ' + formatMontoAuditoriaExacto(rec.sueldoNeto) + ' | Neto final a cobrar |',
+        '',
+        '* **Embargos Judiciales / Inhibiciones:** ' + embMd,
+        '',
+        '#### 📊 4. Análisis de Afectación Salarial y Margen',
+        '* **Cupo Máximo Legal (50% del Bruto):** ' + formatMontoAuditoriaExacto(cupo),
+        '* **Margen Disponible Estimado:** ' + formatMontoAuditoriaExacto(margen),
+        '* **Estado de Afectación:** ' + afecMd,
+        '',
+        '#### 🛡️ 5. Calificación Crediticia AMMER (Scoring)',
+        '* **Score AMMER:** ' + (sc.puntajeTotal ?? 0) + ' / 100 • **Calificación:** ' + (sc.calificacionLetra || 'C (Riesgo Crítico / No Viable)'),
+        '* **Dictamen del Auditor:** ' + (audit.informeEjecutivo || 'Revisar documentación adjunta.')
+      ].join('\n');
     }
 
     async function realizarAuditoriaOCR(base64OArchivos, contexto = {}) {
@@ -13408,9 +13427,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       if (archivos.length === 0) return null;
 
+      const enAppsScriptHost = (typeof window !== 'undefined' && window.location && window.location.hostname.includes('script.google'));
       const endpoint = (contexto && contexto.endpoint)
         ? String(contexto.endpoint)
-        : ((typeof APPS_SCRIPT_URL === 'string' && APPS_SCRIPT_URL.startsWith('http')) ? APPS_SCRIPT_URL : '/api/auditar-documentos');
+        : (enAppsScriptHost ? APPS_SCRIPT_URL : '/api/auditar-documentos');
 
       const isAppsScript = endpoint === APPS_SCRIPT_URL || endpoint.includes('script.google.com');
       const payload = isAppsScript
@@ -13436,13 +13456,25 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         fetchOpts.signal = contexto.signal;
       }
 
-      const resp = await fetchConTimeout(endpoint, fetchOpts, (contexto && Number(contexto.timeoutMs) > 0) ? Number(contexto.timeoutMs) : 8000);
-      if (!resp || !resp.ok) {
-        throw new Error('Servidor de auditoría respondió ' + (resp ? resp.status : 'sin respuesta'));
+      const timeoutMs = (contexto && Number(contexto.timeoutMs) > 0) ? Number(contexto.timeoutMs) : 35000;
+      const resp = await fetchConTimeout(endpoint, fetchOpts, timeoutMs);
+      let data = null;
+      try {
+        data = await resp.json();
+      } catch (_) {
+        data = null;
       }
-      const data = await resp.json();
+      if (!resp || !resp.ok || (data && data.ok === false)) {
+        const msgErr = (data && data.error) ? data.error : ('Servidor de auditoría respondió ' + (resp ? resp.status : 'sin respuesta'));
+        throw new Error(msgErr);
+      }
       const rawAudit = data && (data.auditoria || data.resultado);
-      return normalizarResultadoAuditoriaIA(rawAudit);
+      const normalized = normalizarResultadoAuditoriaIA(rawAudit);
+      if (normalized && data) {
+        if (data.informeMarkdown && !normalized.informeMarkdown) normalized.informeMarkdown = data.informeMarkdown;
+        if (data.resumenJson && !normalized.resumenJson) normalized.resumenJson = data.resumenJson;
+      }
+      return normalized;
     }
 
     async function procesarAuditoriaConTimeout(base64, contexto = {}) {
@@ -13451,10 +13483,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       if (loader && (!loadBar || loadBar.style.display === 'none')) {
         loader.classList.remove('hidden');
       }
+      window._ultimaErrorAuditoriaIA = null;
 
       let timeoutId = null;
       const abortController = (typeof AbortController === 'function') ? new AbortController() : null;
-      const timeoutMs = (contexto && Number(contexto.timeoutMs) > 0) ? Number(contexto.timeoutMs) : 8000;
+      const timeoutMs = (contexto && Number(contexto.timeoutMs) > 0) ? Number(contexto.timeoutMs) : 35000;
       const timeoutPromise = new Promise((_, reject) => {
         timeoutId = setTimeout(() => {
           if (abortController && !abortController.signal.aborted) {
@@ -13467,18 +13500,20 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       try {
         const configApp = (typeof window !== 'undefined' && window.estadoApp && window.estadoApp.config) ? window.estadoApp.config : {};
         const tieneGeminiKey = Boolean((typeof window !== 'undefined' && window.GEMINI_API_KEY) || configApp.geminiApiKey);
-        const usaBackendInstitucional = Boolean(contexto && contexto.permitirBackendSinKey);
+        const usaBackendInstitucional = Boolean(contexto && contexto.permitirBackendSinKey !== false);
         if (!tieneGeminiKey && !usaBackendInstitucional) {
           return null;
         }
-        const ctxConSignal = Object.assign({}, contexto, abortController ? { signal: abortController.signal } : {});
+        const ctxConSignal = Object.assign({}, contexto, { timeoutMs }, abortController ? { signal: abortController.signal } : {});
         const resultado = await Promise.race([
           realizarAuditoriaOCR(base64, ctxConSignal),
           timeoutPromise
         ]);
         return resultado;
       } catch (err) {
-        console.warn('Auditoría IA no ejecutada o tiempo excedido:', err && err.message ? err.message : err);
+        const msgErr = err && err.message ? err.message : String(err);
+        window._ultimaErrorAuditoriaIA = msgErr;
+        console.warn('Auditoría documental no ejecutada:', msgErr);
         return null;
       } finally {
         if (timeoutId !== null) clearTimeout(timeoutId);
@@ -13501,7 +13536,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       window._auditoriasEnVuelo[keySol] = Date.now();
       let finalizado = false;
-      const resolverContingenciaInmediata = () => {
+      const resolverEstadoPendiente = (motivoError) => {
         if (finalizado) return;
         finalizado = true;
         delete window._auditoriasEnVuelo[keySol];
@@ -13509,9 +13544,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const sFresca = frescas.find(x => String(x.id) === keySol);
         if (sFresca && (!sFresca.auditoriaIA || sFresca.auditoriaIA.estado === 'procesando')) {
           sFresca.auditoriaIA = {
-            estado: 'completado',
-            fechaFin: new Date().toISOString(),
-            resultado: generarResultadoContingencia(sFresca)
+            estado: 'pendiente_revision',
+            fechaFin: obtenerFechaHora24hs(),
+            error: motivoError || 'No se recibió lectura documental verificada. Ejecute la auditoría manualmente con los comprobantes nítidos.',
+            resultado: null
           };
           saveStoredSolicitudes(frescas);
           const modalActivo = document.getElementById('modalVerFichaCompleta');
@@ -13525,43 +13561,46 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           renderModuloMutual();
         }
       };
-      const watchdogTimer = setTimeout(resolverContingenciaInmediata, 8500);
+      const watchdogTimer = setTimeout(() => resolverEstadoPendiente('Tiempo de espera agotado en análisis documental.'), 36000);
 
-      // Marcar estado en segundo plano sin bloquear el dictamen visible
+      // Marcar estado en segundo plano sin inventar resultados
       const resultadoPrevio = s.auditoriaIA && s.auditoriaIA.resultado ? s.auditoriaIA.resultado : null;
       s.auditoriaIA = {
         estado: 'procesando',
-        fechaInicio: new Date().toISOString(),
+        fechaInicio: obtenerFechaHora24hs(),
         resultado: resultadoPrevio
       };
       saveStoredSolicitudes(all);
 
-      // Preparar payload de documentos
+      // Preparar payload de documentos reales (prohibido enviar PDF vacío falso)
       let archivosAEnviar = [];
       if (archivosParam && Array.isArray(archivosParam) && archivosParam.length > 0) {
-        archivosAEnviar = archivosParam.filter(a => a.base64);
+        archivosAEnviar = archivosParam.filter(a => a && a.base64);
       }
       if (archivosAEnviar.length === 0 && s.adjuntos && s.adjuntos.length > 0) {
         archivosAEnviar = s.adjuntos
-          .filter(a => a.base64 || a.dataUrl)
+          .filter(a => a && (a.base64 || a.dataUrl))
           .map(a => ({
             nombre: a.nombre,
-            mimeType: a.tipoMime || (a.nombre.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
+            mimeType: a.tipoMime || (String(a.nombre || '').toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
             base64: a.base64 || a.dataUrl
           }));
       }
 
       if (archivosAEnviar.length === 0) {
-        archivosAEnviar = [
-          { nombre: 'legajo_documental.pdf', mimeType: 'application/pdf', base64: 'JVBERi0xLjQKJcTl8uXrCg==' }
-        ];
+        clearTimeout(watchdogTimer);
+        resolverEstadoPendiente('No hay archivos binarios adjuntos en memoria para lectura documental automática.');
+        return;
       }
 
       const datosDeclarados = {
         nombre: s.solicitante?.nombre || '',
         dni: s.solicitante?.dni || '',
+        cuil: s.solicitante?.cuil || s.datosContacto?.cuil || '',
+        fechaNacimiento: s.solicitante?.fechaNacimiento || s.solicitante?.fechaNac || '',
         organismo: s.solicitante?.organismo || '',
         cuota: s.propuestaMutual?.cuotaEstimada || s.prestamo?.cuotaEstimada || 0,
+        plazoCuotas: s.propuestaMutual?.cuotas || s.prestamo?.cuotas || 0,
         monto: s.propuestaMutual?.monto || s.prestamo?.monto || 0,
         dependencia: s.solicitante?.dependencia || '',
         domicilio: s.solicitante?.domicilio || ''
@@ -13572,7 +13611,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           idSolicitud: solicitudId,
           datosDeclarados: datosDeclarados,
           permitirBackendSinKey: true,
-          preservarLoadingBar: true
+          preservarLoadingBar: true,
+          timeoutMs: 35000
         });
 
         finalizado = true;
@@ -13586,18 +13626,27 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         if (auditRes) {
           sFresca.auditoriaIA = {
             estado: 'completado',
-            fechaFin: new Date().toISOString(),
+            fechaFin: obtenerFechaHora24hs(),
             resultado: auditRes
           };
           const sc = auditRes.scoringCrediticio || {};
-          if (sc.dictamen === 'OBSERVADO' && (sFresca.estado === 'Pendiente' || sFresca.estado === 'En Análisis')) {
+          if ((sc.dictamen === 'OBSERVADO' || sc.dictamen === 'RECHAZADO') && (sFresca.estado === 'Pendiente' || sFresca.estado === 'En Análisis')) {
             sFresca.estado = 'Observado';
+          }
+          // Persistir dictamen real en nube si corresponde
+          if (typeof APPS_SCRIPT_URL === 'string' && APPS_SCRIPT_URL.startsWith('http')) {
+            fetchConTimeout(APPS_SCRIPT_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({ action: 'auditarConIA', idSolicitud: solicitudId, resultado: auditRes })
+            }, 12000).catch(() => {});
           }
         } else {
           sFresca.auditoriaIA = {
-            estado: 'completado',
-            fechaFin: new Date().toISOString(),
-            resultado: generarResultadoContingencia(sFresca)
+            estado: 'pendiente_revision',
+            fechaFin: obtenerFechaHora24hs(),
+            error: window._ultimaErrorAuditoriaIA || 'No se pudo completar la lectura documental automática.',
+            resultado: resultadoPrevio
           };
         }
 
@@ -13613,87 +13662,53 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         }
         renderModuloMutual();
       } catch (err) {
-        console.warn('Auditoría automática Servidor Central (contingencia local activa):', err.message || err);
+        console.warn('Auditoría documental automática interrumpida:', err.message || err);
         finalizado = false;
-        resolverContingenciaInmediata();
+        resolverEstadoPendiente(err.message || 'Error de conexión con servicio documental.');
       } finally {
         clearTimeout(watchdogTimer);
         delete window._auditoriasEnVuelo[keySol];
       }
     }
 
-    function generarResultadoContingencia(s) {
-      const isObservado = (s.estado === 'Observado');
-      const score = isObservado ? 66 : 94;
-      const sueldoEstimado = (s.solicitante?.organismo === 'Provincial') ? 950000 : 540000;
-      const descLey = Math.round(sueldoEstimado * 0.18);
-      const descPrestamos = isObservado ? 152000 : 42000;
-      const neto = sueldoEstimado - descLey - descPrestamos;
-      const margen = Math.max(0, Math.round((neto * 0.50) - (isObservado ? 50000 : 0)));
-
-      return {
-        scoringCrediticio: {
-          puntajeTotal: score,
-          dictamen: isObservado ? 'OBSERVADO' : 'APTO_OTORGAMIENTO',
-          nivelConfianza: 'ALTO',
-          pilares: {
-            calidadDocumental: { puntaje: isObservado ? 15 : 19, maximo: 20, detalle: 'Control de legibilidad y estructura documental AMMER.' },
-            vigenciaYFormalidad: { puntaje: isObservado ? 12 : 20, maximo: 20, detalle: 'Verificación de antigüedad menor a 60 días y DNI vigente.' },
-            coincidenciaIdentidad: { puntaje: 28, maximo: 30, detalle: 'Concordancia filiatoria entre solicitud, DNI y haberes.' },
-            capacidadFinanciera: { puntaje: isObservado ? 11 : 27, maximo: 30, detalle: 'Evaluación de margen disponible según tope legal del 50%.' }
-          }
-        },
-        reciboSueldo: {
-          titular: s.solicitante?.nombre || 'Titular',
-          dni: s.solicitante?.dni || '—',
-          cuil: '20-' + (s.solicitante?.dni || '00000000') + '-9',
-          organismo: s.solicitante?.organismo === 'Municipal' ? 'Municipalidad de Paraná' : 'Gobierno de Entre Ríos',
-          dependencia: s.solicitante?.dependencia || 'Administración Central',
-          cargo: s.solicitante?.cargo || 'Titular',
-          situacionRevista: s.solicitante?.cargo === 'Titular' ? 'Planta Permanente' : 'Suplente',
-          antiguedadAnios: (s.solicitante?.cargo === 'Titular') ? 8 : 2,
-          periodo: isObservado ? '01/2026' : '03/2026',
-          sueldoBruto: sueldoEstimado,
-          descuentosLey: descLey,
-          descuentosPrestamosYMutuales: descPrestamos,
-          sueldoNeto: neto,
-          topeLegal50Porciento: Math.round(neto * 0.50),
-          margenDisponibleCuota: margen,
-          diasAntiguedadRecibo: isObservado ? 75 : 18,
-          reciboVencido: isObservado
-        },
-        dni: {
-          numero: s.solicitante?.dni || '—',
-          nombreCompleto: s.solicitante?.nombre || 'Titular',
-          fechaVencimiento: '2031-10-14',
-          dniVigente: true
-        },
-        cruceIdentidad: {
-          coincideDni: true,
-          coincideNombre: true,
-          coincideCuil: true,
-          discrepanciasDetectadas: []
-        },
-        alertasCriticas: isObservado ? [
-          'Recibo con más de 60 días de emitido.',
-          'Afectaciones previas elevadas en recibo.'
-        ] : [],
-        informeEjecutivo: isObservado ?
-          `El asociado ${s.solicitante?.nombre || ''} presenta estabilidad laboral como ${s.solicitante?.cargo || 'Titular'}. Se detecta comprobante con más de 60 días y retenciones previas ($${descPrestamos.toLocaleString('es-AR')}) que comprometen el margen disponible de afectación. Se requiere comprobante del último mes liquidado.` :
-          `El asociado ${s.solicitante?.nombre || ''} presenta estabilidad laboral comprobada como ${s.solicitante?.cargo || 'Titular'} de Planta Permanente con 8 años de antigüedad en ${s.solicitante?.dependencia || 'organismo'}. El recibo corresponde al período vigente sin embargos ni observaciones, con margen disponible ($${margen.toLocaleString('es-AR')}) suficiente para cubrir la cuota solicitada de $${(s.prestamo?.cuotaEstimada || 0).toLocaleString('es-AR')}. Legajo calificado como APTO OTORGAMIENTO — CRÉDITO VIABLE (Calificación Crediticia AMMER).`
-      };
+    function generarResultadoContingencia() {
+      // Prohibido inventar, redondear o estimar importes, fechas o nombres.
+      return null;
     }
 
     /* --- RENDERIZADO DEL APARTADO EJECUTIVO EN FICHA (EXCLUSIVO ANALISTAS) --- */
     function renderApartadoEjecutivoAuditoriaFicha(s) {
       const aud = s.auditoriaIA;
-      const res = (aud && aud.resultado) ? aud.resultado : generarResultadoContingencia(s);
+      const res = (aud && aud.resultado) ? aud.resultado : null;
+
+      if (!res) {
+        const msgPend = (aud && aud.estado === 'procesando')
+          ? 'Auditoría documental forense en curso...'
+          : ((aud && aud.error) ? ('Observación técnica: ' + sanitizeHTML(aud.error)) : 'Aún no se ejecutó la lectura forense literal sobre los comprobantes digitales de este expediente.');
+        return '<div class="ai-executive-audit-card">' +
+          '<div class="ai-executive-header">' +
+            '<div>' +
+              '<h4 style="font-size:0.85rem;font-weight:800;color:var(--color-primary);margin:0;">Auditoría Documental Forense &amp; Calificación AMMER</h4>' +
+              '<span style="font-size:0.68rem;color:var(--text-muted);">Verificación literal sin inferencias • Tope legal 50% sobre Sueldo Bruto Total</span>' +
+            '</div>' +
+            '<span class="dictamen-pill dictamen-observado" style="font-size:0.68rem;padding:3px 10px;margin-top:0;">PENDIENTE DE AUDITORÍA</span>' +
+          '</div>' +
+          '<p style="font-size:0.75rem;color:var(--text-muted);margin:0.4rem 0 0.75rem 0;line-height:1.45;">' + msgPend + '</p>' +
+          '<div style="display:flex;justify-content:flex-end;">' +
+            '<button type="button" class="btn-primary-action" style="width:auto;padding:6px 14px;font-size:0.74rem;background:#1e3a8a;border-color:#172554;" onclick="abrirAuditoriaModalExpediente(\'' + s.id + '\')">' +
+              '🔍 Auditar Documentación del Legajo' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+      }
+
       const sc = res.scoringCrediticio || {};
       const rec = res.reciboSueldo || {};
       const dni = res.dni || {};
       const cruce = res.cruceIdentidad || {};
 
-      const score = typeof sc.puntajeTotal === 'number' ? sc.puntajeTotal : 80;
+      const score = typeof sc.puntajeTotal === 'number' ? sc.puntajeTotal : 0;
+      const califLetra = sc.calificacionLetra || (score >= 80 ? 'A (Riesgo Bajo)' : (score >= 60 ? 'B (Riesgo Moderado)' : 'C (Riesgo Crítico / No Viable)'));
       let dictamen = sc.dictamen;
       if (!dictamen || dictamen.startsWith('APTO_')) {
         dictamen = (score >= 80 ? 'APTO_OTORGAMIENTO' : (score >= 60 ? 'OBSERVADO' : 'RECHAZADO'));
@@ -13701,158 +13716,148 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       let dictamenClass = 'ai-score-green';
       let fillClass = 'ai-fill-green';
-      let badgeHtml = '<span class="dictamen-pill dictamen-apto" style="font-size:0.68rem;padding:3px 10px;margin-top:0;">🟢 APTO OTORGAMIENTO / CRÉDITO VIABLE</span>';
+      let badgeHtml = '<span class="dictamen-pill dictamen-apto" style="font-size:0.68rem;padding:3px 10px;margin-top:0;">🟢 APTO OTORGAMIENTO • ' + sanitizeHTML(califLetra) + '</span>';
       let dictamenTexto = 'APTO OTORGAMIENTO / CRÉDITO VIABLE';
 
       if (dictamen === 'OBSERVADO') {
         dictamenClass = 'ai-score-amber';
         fillClass = 'ai-fill-amber';
-        badgeHtml = '<span class="dictamen-pill dictamen-observado" style="font-size:0.68rem;padding:3px 10px;margin-top:0;">🟡 OBSERVADO / REQUIERE SUBSANACIÓN</span>';
+        badgeHtml = '<span class="dictamen-pill dictamen-observado" style="font-size:0.68rem;padding:3px 10px;margin-top:0;">🟡 OBSERVADO • ' + sanitizeHTML(califLetra) + '</span>';
         dictamenTexto = 'OBSERVADO / REQUIERE SUBSANACIÓN';
       } else if (dictamen === 'RECHAZADO') {
         dictamenClass = 'ai-score-red';
         fillClass = 'ai-fill-red';
-        badgeHtml = '<span class="dictamen-pill dictamen-rechazado" style="font-size:0.68rem;padding:3px 10px;margin-top:0;">🔴 NO APTO / RIESGO ALTO</span>';
-        dictamenTexto = 'NO APTO / RIESGO ALTO';
+        badgeHtml = '<span class="dictamen-pill dictamen-rechazado" style="font-size:0.68rem;padding:3px 10px;margin-top:0;">🔴 NO VIABLE • ' + sanitizeHTML(califLetra) + '</span>';
+        dictamenTexto = 'NO APTO / RIESGO CRÍTICO';
       }
 
-      // Checklist de Verificaciones Automáticas
-      const dniVig = (dni.dniVigente !== false);
-      const dniIcon = dniVig ? '✅' : '❌';
-      const dniVenc = dni.fechaVencimiento || '2031-10-15';
-
-      const recVig = (!rec.reciboVencido);
+      const estadoCotejo = cruce.estadoCotejo || ((cruce.coincideDni && cruce.coincideNombre) ? 'COINCIDE' : 'DISCREPANCIA DETECTADA');
+      const idIcon = estadoCotejo === 'COINCIDE' ? '✅' : (estadoCotejo === 'DISCREPANCIA DETECTADA' ? '🔴' : '⚠️');
+      const recVig = (!rec.reciboVencido && rec.estadoPeriodo === 'VIGENTE');
       const recIcon = recVig ? '✅' : '⚠️';
-      const recPeriodo = rec.periodo || 'Último mes';
-      const diasAntig = rec.diasAntiguedadRecibo !== undefined ? rec.diasAntiguedadRecibo : (recVig ? 20 : 75);
+      const antOk = rec.cumpleAntiguedadMinima === true;
+      const antIcon = antOk ? '✅' : (rec.cumpleAntiguedadMinima === false ? '🔴' : '⚠️');
+      const embIcon = rec.embargoDetectado ? '🔴' : '✅';
 
-      const idMatch = (cruce.coincideDni !== false && cruce.coincideNombre !== false);
-      const idIcon = idMatch ? '✅' : '⚠️';
+      const sueldoBrutoTxt = formatMontoAuditoriaExacto(rec.sueldoBruto);
+      const descLeyTxt = formatMontoAuditoriaExacto(rec.descuentosLey);
+      const descVolTxt = formatMontoAuditoriaExacto(rec.descuentosPrestamosYMutuales);
+      const totalDescTxt = formatMontoAuditoriaExacto(rec.totalDescuentosRecibo);
+      const sueldoNetoTxt = formatMontoAuditoriaExacto(rec.sueldoNeto);
+      const cupo50Txt = formatMontoAuditoriaExacto(rec.topeLegal50Porciento);
+      const margenTxt = formatMontoAuditoriaExacto(rec.margenDisponibleCuota);
+      const fedemTxt = (Array.isArray(rec.codigosFedemDetectados) && rec.codigosFedemDetectados.length > 0)
+        ? ('Códigos ' + rec.codigosFedemDetectados.join(', ') + ' (' + formatMontoAuditoriaExacto(rec.codigosFedemMonto) + ')')
+        : 'Sin códigos FEDEM (366/368/1115/1117)';
 
-      const descPrestamos = rec.descuentosPrestamosYMutuales || 0;
-      const tieneAfectaciones = (descPrestamos > 0);
-      const afecIcon = tieneAfectaciones ? '⚠️' : '✅';
-      const afecDesc = tieneAfectaciones ?
-        ('Retenciones previas detectadas: ' + formatMoney(descPrestamos) + ' (' + (rec.sueldoNeto ? Math.round((descPrestamos / rec.sueldoNeto) * 100) : 0) + '% del neto)') :
-        'Sin embargos ni descuentos de créditos detectados en haberes.';
-
-      const sueldoBruto = rec.sueldoBruto || (s.solicitante?.sueldoNetoAuditor ? Math.round(s.solicitante.sueldoNetoAuditor * 1.3) : 950000);
-      const descLey = rec.descuentosLey || Math.round(sueldoBruto * 0.18);
-      const sueldoNeto = rec.sueldoNeto || (sueldoBruto - descLey - descPrestamos);
-      const margenEstimado = rec.margenDisponibleCuota !== undefined ? rec.margenDisponibleCuota : Math.max(0, Math.round((sueldoNeto * 0.5) - descPrestamos));
-
-      const memo = res.informeEjecutivo ||
-        (dictamen === 'APTO_OTORGAMIENTO' ?
-          `El asociado presenta estabilidad laboral como ${s.solicitante?.cargo || 'Titular'} en ${s.solicitante?.dependencia || 'organismo'} con antigüedad demostrable. El recibo corresponde al período vigente sin embargos, con margen disponible suficiente (${formatMoney(margenEstimado)}) para cubrir holgadamente la cuota solicitada de ${formatMoney(s.prestamo?.cuotaEstimada || 0)}.` :
-          `El legajo presenta observaciones de antigüedad documental o retenciones previas elevadas que limitan el margen neto de afectación conforme a la Cláusula 18 inc. e. Se sugiere subsanar comprobante reciente o estructurar refinanciación.`);
+      const memo = res.informeEjecutivo || 'Revisar detalle documental.';
+      const mdReport = construirInformeMarkdownAMMER(res);
 
       return '<div class="ai-executive-audit-card">' +
         '<div class="ai-executive-header">' +
-          '<div style="display:flex;align-items:center;gap:8px;">' +
-            '<span style="font-size:1.15rem;">🤖</span>' +
-            '<div>' +
-              '<h4 style="font-size:0.85rem;font-weight:800;color:var(--color-primary);margin:0;">Dictamen de Auditoría Inteligente &amp; Calificación Crediticia AMMER</h4>' +
-              '<span style="font-size:0.67rem;color:var(--text-muted);">Evaluación automatizada de legajo, cruce de identidad y control legal de haberes (Tope 50%)</span>' +
-            '</div>' +
+          '<div>' +
+            '<h4 style="font-size:0.85rem;font-weight:800;color:var(--color-primary);margin:0;">Informe de Auditoría Documental Forense &amp; Calificación AMMER</h4>' +
+            '<span style="font-size:0.67rem;color:var(--text-muted);">Lectura literal • Cupo Máximo Legal = 50% Sueldo Bruto Total • ' + sanitizeHTML(califLetra) + '</span>' +
           '</div>' +
           '<div>' + badgeHtml + '</div>' +
         '</div>' +
 
         '<div class="ai-executive-body-grid">' +
-          '<!-- Tarjeta de Score del Legajo -->' +
           '<div class="ai-executive-score-box">' +
             '<div class="ai-score-ring">' +
-              '<span class="ai-score-val ' + dictamenClass + '">' + score + '</span>' +
+              '<span class="ai-score-val ' + dictamenClass + '" style="font-variant-numeric:tabular-nums;">' + score + '</span>' +
               '<span class="ai-score-max">/100</span>' +
             '</div>' +
-            '<div class="ai-score-label">CALIFICACIÓN CREDITICIA AMMER</div>' +
+            '<div class="ai-score-label">' + sanitizeHTML(califLetra) + '</div>' +
             '<div class="ai-score-status-text ' + dictamenClass + '">' + dictamenTexto + '</div>' +
             '<div class="ai-score-progress-bar">' +
               '<div class="ai-score-progress-fill ' + fillClass + '" style="width:' + score + '%;"></div>' +
             '</div>' +
           '</div>' +
 
-          '<!-- Checklist de Verificaciones Automáticas -->' +
           '<div class="ai-executive-checklist-box">' +
-            '<div style="font-size:0.68rem;font-weight:800;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">Checklist de Verificaciones Automáticas</div>' +
+            '<div style="font-size:0.68rem;font-weight:800;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">Controles Forenses Obligatorios</div>' +
             '<div class="ai-checklist-items">' +
               '<div class="ai-check-item">' +
-                '<span class="ai-check-icon">' + dniIcon + '</span>' +
+                '<span class="ai-check-icon">' + idIcon + '</span>' +
                 '<div class="ai-check-content">' +
-                  '<div class="ai-check-title">Vigencia del DNI</div>' +
-                  '<div class="ai-check-desc">Vence: <strong>' + dniVenc + '</strong> — ' + (dniVig ? 'Vigente ✅' : 'Vencido ❌') + '</div>' +
+                  '<div class="ai-check-title">Identidad y Cotejo con Carátula</div>' +
+                  '<div class="ai-check-desc">' + sanitizeHTML(rec.titular || TEXTO_ILEGIBLE_AMMER) + ' (DNI ' + sanitizeHTML(rec.dni || TEXTO_ILEGIBLE_AMMER) + ') — <strong>' + sanitizeHTML(estadoCotejo) + '</strong></div>' +
                 '</div>' +
               '</div>' +
               '<div class="ai-check-item">' +
                 '<span class="ai-check-icon">' + recIcon + '</span>' +
                 '<div class="ai-check-content">' +
-                  '<div class="ai-check-title">Vigencia del Recibo de Sueldo</div>' +
-                  '<div class="ai-check-desc">Período: <strong>' + recPeriodo + '</strong> (' + diasAntig + ' días) — ' + (recVig ? 'Vigente (&lt; 90 días) ✅' : 'Observado (&gt; 90 días) ⚠️') + '</div>' +
+                  '<div class="ai-check-title">Vigencia Período y Organismo</div>' +
+                  '<div class="ai-check-desc">Período: <strong>' + sanitizeHTML(rec.periodo || TEXTO_ILEGIBLE_AMMER) + '</strong> (' + sanitizeHTML(rec.estadoPeriodo || 'VERIFICAR') + ') • ' + sanitizeHTML(rec.organismo || TEXTO_ILEGIBLE_AMMER) + '</div>' +
                 '</div>' +
               '</div>' +
               '<div class="ai-check-item">' +
-                '<span class="ai-check-icon">' + idIcon + '</span>' +
+                '<span class="ai-check-icon">' + antIcon + '</span>' +
                 '<div class="ai-check-content">' +
-                  '<div class="ai-check-title">Coincidencia de Identidad (DNI vs Recibo vs Solicitud)</div>' +
-                  '<div class="ai-check-desc">' + (idMatch ? 'Coincide 100% (Identidad concordante) ✅' : 'Discrepancia detectada en nombres/identificación ⚠️') + '</div>' +
+                  '<div class="ai-check-title">Revista y Antigüedad (Mínimo 1 año)</div>' +
+                  '<div class="ai-check-desc">' + sanitizeHTML(rec.situacionRevista || TEXTO_ILEGIBLE_AMMER) + ' • ' + sanitizeHTML(rec.antiguedadDetalle || TEXTO_ILEGIBLE_AMMER) + '</div>' +
                 '</div>' +
               '</div>' +
               '<div class="ai-check-item">' +
-                '<span class="ai-check-icon">' + afecIcon + '</span>' +
+                '<span class="ai-check-icon">' + embIcon + '</span>' +
                 '<div class="ai-check-content">' +
-                  '<div class="ai-check-title">Detección de Afectaciones Previas</div>' +
-                  '<div class="ai-check-desc">' + afecDesc + '</div>' +
+                  '<div class="ai-check-title">Embargos y Códigos FEDEM</div>' +
+                  '<div class="ai-check-desc">' + (rec.embargoDetectado ? ('Embargo detectado: ' + formatMontoAuditoriaExacto(rec.embargoMonto) + ' (' + sanitizeHTML(rec.embargoConcepto || '') + ')') : 'Sin embargos judiciales') + ' • ' + sanitizeHTML(fedemTxt) + '</div>' +
                 '</div>' +
               '</div>' +
             '</div>' +
           '</div>' +
         '</div>' +
 
-        '<!-- Resumen Financiero Extraído por OCR -->' +
         '<div class="ai-executive-fin-summary">' +
-          '<div style="font-size:0.68rem;font-weight:800;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">Resumen Financiero Extraído por OCR (Tope Legal 50% Cláusula 18 inc. e)</div>' +
-          '<div class="ai-fin-mini-grid">' +
+          '<div style="font-size:0.68rem;font-weight:800;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">Radiografía Salarial Literal &amp; Afectación Legal (50% del Sueldo Bruto Total)</div>' +
+          '<div class="ai-fin-mini-grid" style="font-variant-numeric:tabular-nums;">' +
             '<div class="ai-fin-mini-card">' +
-              '<div class="ai-fin-lbl">Sueldo Bruto</div>' +
-              '<div class="ai-fin-num">' + formatMoney(sueldoBruto) + '</div>' +
+              '<div class="ai-fin-lbl">Sueldo Bruto Total</div>' +
+              '<div class="ai-fin-num">' + sanitizeHTML(sueldoBrutoTxt) + '</div>' +
             '</div>' +
             '<div class="ai-fin-mini-card">' +
               '<div class="ai-fin-lbl">Descuentos de Ley</div>' +
-              '<div class="ai-fin-num" style="color:#b91c1c;">- ' + formatMoney(descLey) + '</div>' +
+              '<div class="ai-fin-num" style="color:#b91c1c;">' + sanitizeHTML(descLeyTxt) + '</div>' +
             '</div>' +
             '<div class="ai-fin-mini-card">' +
-              '<div class="ai-fin-lbl">Préstamos / Mutuales</div>' +
-              '<div class="ai-fin-num" style="color:#c2410c;">- ' + formatMoney(descPrestamos) + '</div>' +
+              '<div class="ai-fin-lbl">Total Descuentos Recibo</div>' +
+              '<div class="ai-fin-num" style="color:#c2410c;">' + sanitizeHTML(totalDescTxt) + '</div>' +
             '</div>' +
             '<div class="ai-fin-mini-card" style="background:#f0fdf4;border-color:#bbf7d0;">' +
-              '<div class="ai-fin-lbl" style="color:#166534;">Sueldo Neto Líquido</div>' +
-              '<div class="ai-fin-num" style="color:#15803d;">' + formatMoney(sueldoNeto) + '</div>' +
+              '<div class="ai-fin-lbl" style="color:#166534;">Sueldo Líquido Bolsillo</div>' +
+              '<div class="ai-fin-num" style="color:#15803d;">' + sanitizeHTML(sueldoNetoTxt) + '</div>' +
             '</div>' +
             '<div class="ai-fin-mini-card" style="background:#eff6ff;border-color:#bfdbfe;">' +
-              '<div class="ai-fin-lbl" style="color:#1e40af;">Margen Estimado Cuota</div>' +
-              '<div class="ai-fin-num" style="color:#1d4ed8;">' + formatMoney(margenEstimado) + '</div>' +
+              '<div class="ai-fin-lbl" style="color:#1e40af;">Cupo 50% Bruto / Margen</div>' +
+              '<div class="ai-fin-num" style="color:#1d4ed8;">' + sanitizeHTML(cupo50Txt) + ' / ' + sanitizeHTML(margenTxt) + '</div>' +
             '</div>' +
           '</div>' +
         '</div>' +
 
-        '<!-- Informe y Comentarios de la IA en Lenguaje Natural -->' +
         '<div class="ai-executive-memo-block">' +
-          '<div style="font-size:0.7rem;font-weight:800;color:#1e3a8a;display:flex;align-items:center;gap:4px;margin-bottom:4px;">' +
-            '<span>📝 Conclusión Ejecutiva del Modelo de Auditoría IA:</span>' +
-          '</div>' +
+          '<div style="font-size:0.7rem;font-weight:800;color:#1e3a8a;margin-bottom:4px;">Dictamen del Auditor AMMER:</div>' +
           '<p class="ai-memo-text">"' + sanitizeHTML(memo) + '"</p>' +
         '</div>' +
 
-        '<!-- Botón de Acción Rápida: Copiar Resumen IA al Chat -->' +
-        '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">' +
+        '<details style="margin-top:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;">' +
+          '<summary style="cursor:pointer;font-size:0.72rem;font-weight:700;color:#1e3a8a;">Ver Informe Markdown Oficial y JSON CRM</summary>' +
+          '<pre style="margin:8px 0 0;white-space:pre-wrap;font-size:0.7rem;line-height:1.45;color:#0f172a;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">' + sanitizeHTML(mdReport) + '</pre>' +
+        '</details>' +
+
+        '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;flex-wrap:wrap;">' +
+          '<button type="button" class="btn-copy" style="font-size:0.72rem;padding:5px 12px;" onclick="abrirAuditoriaModalExpediente(\'' + s.id + '\')">' +
+            '🔍 Re-auditar Legajo' +
+          '</button>' +
           '<button type="button" class="btn-primary-action" style="width:auto;padding:5px 14px;font-size:0.72rem;background:#1e3a8a;border-color:#172554;display:inline-flex;align-items:center;gap:6px;" onclick="copiarResumenIAAlChatAuditoria(\'' + s.id + '\')">' +
-            '💬 Copiar Resumen IA al Chat de Auditoría' +
+            '💬 Copiar Resumen al Chat de Auditoría' +
           '</button>' +
         '</div>' +
       '</div>';
     }
 
-    /* --- ACCIÓN RÁPIDA: COPIAR RESUMEN IA AL CHAT DE AUDITORÍA --- */
+    /* --- ACCIÓN RÁPIDA: COPIAR RESUMEN AL CHAT DE AUDITORÍA --- */
     function copiarResumenIAAlChatAuditoria(solicitudId) {
       const all = getStoredSolicitudes();
       const s = all.find(x => String(x.id) === String(solicitudId));
@@ -13864,35 +13869,34 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const res = s.auditoriaIA.resultado;
       const sc = res.scoringCrediticio || {};
       const rec = res.reciboSueldo || {};
-      const dni = res.dni || {};
       const cruce = res.cruceIdentidad || {};
 
-      const score = typeof sc.puntajeTotal === 'number' ? sc.puntajeTotal : 80;
-      let dictamen = sc.dictamen;
-      if (!dictamen || dictamen.startsWith('APTO_')) {
-        dictamen = (score >= 80 ? 'APTO_OTORGAMIENTO' : (score >= 60 ? 'OBSERVADO' : 'RECHAZADO'));
-      }
+      const score = typeof sc.puntajeTotal === 'number' ? sc.puntajeTotal : 0;
+      const calif = sc.calificacionLetra || (score >= 80 ? 'A (Riesgo Bajo)' : (score >= 60 ? 'B (Riesgo Moderado)' : 'C (Riesgo Crítico / No Viable)'));
+      let dictamen = sc.dictamen || 'OBSERVADO';
+      if (dictamen.startsWith('APTO_')) dictamen = 'APTO_OTORGAMIENTO';
 
       const dictamenTexto = (dictamen === 'APTO_OTORGAMIENTO') ? 'APTO OTORGAMIENTO / CRÉDITO VIABLE' :
-                            (dictamen === 'OBSERVADO') ? 'OBSERVADO / REQUIERE SUBSANACIÓN' : 'NO APTO / RIESGO ALTO';
+                            (dictamen === 'OBSERVADO') ? 'OBSERVADO / REQUIERE SUBSANACIÓN' : 'NO VIABLE / RIESGO CRÍTICO';
 
-      const dniVig = dni.dniVigente !== false ? 'Vigente ✅' : 'Vencido ❌';
-      const recVig = (!rec.reciboVencido) ? 'Vigente (< 90 días) ✅' : 'Antigüedad > 90 días ⚠️';
-      const idOk = (cruce.coincideDni !== false && cruce.coincideNombre !== false) ? 'Coincide 100% ✅' : 'Discrepancia detectada ⚠️';
-      const descPrestamos = rec.descuentosPrestamosYMutuales || 0;
-      const afecTexto = descPrestamos > 0 ? ('Retenciones previas: ' + formatMoney(descPrestamos)) : 'Sin embargos detectados ✅';
+      const recVig = (!rec.reciboVencido && rec.estadoPeriodo === 'VIGENTE') ? 'VIGENTE' : (rec.estadoPeriodo || 'VERIFICAR');
+      const idOk = cruce.estadoCotejo || ((cruce.coincideDni && cruce.coincideNombre) ? 'COINCIDE' : 'DISCREPANCIA DETECTADA');
+      const afecTexto = rec.embargoDetectado
+        ? ('EMBARGO DETECTADO: ' + formatMontoAuditoriaExacto(rec.embargoMonto) + ' (' + (rec.embargoConcepto || '') + ')')
+        : 'Sin embargos judiciales';
 
-      const textoMsg = '🤖 [DICTAMEN DE AUDITORÍA INTELIGENTE & CALIFICACIÓN CREDITICIA AMMER]\n' +
-        '• Score Legajo: ' + score + '/100 — ' + dictamenTexto + '\n' +
-        '• Checklist: DNI: ' + dniVig + ' | Recibo: ' + recVig + ' | Identidad: ' + idOk + '\n' +
-        '• Afectaciones: ' + afecTexto + '\n' +
-        '• Haberes OCR: Bruto ' + formatMoney(rec.sueldoBruto || 0) + ' | Neto ' + formatMoney(rec.sueldoNeto || 0) + ' | Margen Cuota ' + formatMoney(rec.margenDisponibleCuota || 0) + '\n' +
-        '• Conclusión IA: "' + (res.informeEjecutivo || 'Legajo verificado con éxito por auditoría interna.') + '"';
+      const textoMsg = '[INFORME DE AUDITORÍA FORENSE AMMER]\n' +
+        '• Score AMMER: ' + score + '/100 (' + calif + ') — ' + dictamenTexto + '\n' +
+        '• Identidad y Período: ' + idOk + ' | Período: ' + (rec.periodo || TEXTO_ILEGIBLE_AMMER) + ' (' + recVig + ')\n' +
+        '• Laboral: ' + (rec.organismo || TEXTO_ILEGIBLE_AMMER) + ' | ' + (rec.situacionRevista || TEXTO_ILEGIBLE_AMMER) + ' | Antig.: ' + (rec.antiguedadDetalle || TEXTO_ILEGIBLE_AMMER) + '\n' +
+        '• Salarial: Bruto ' + formatMontoAuditoriaExacto(rec.sueldoBruto) + ' | Total Desc. ' + formatMontoAuditoriaExacto(rec.totalDescuentosRecibo) + ' | Neto ' + formatMontoAuditoriaExacto(rec.sueldoNeto) + '\n' +
+        '• Afectación 50% Bruto: Cupo ' + formatMontoAuditoriaExacto(rec.topeLegal50Porciento) + ' | Margen Disp. ' + formatMontoAuditoriaExacto(rec.margenDisponibleCuota) + ' | ' + afecTexto + '\n' +
+        '• Dictamen del Auditor: "' + (res.informeEjecutivo || 'Revisar comprobantes.') + '"';
 
       if (!s.observaciones) s.observaciones = [];
       const autor = session ? session.nombre : 'Analista Mutual';
       s.observaciones.push({
-        autor: autor + ' [Auditoría IA]',
+        autor: autor + ' [Auditoría Forense]',
         rol: 'Analista',
         fecha: obtenerFechaHora24hs(),
         texto: textoMsg
@@ -13901,7 +13905,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       saveStoredSolicitudes(all);
       sincronizarConBackend(true);
       verFichaCompleta(solicitudId);
-      showToast('📋 Dictamen de IA copiado al Chat de Auditoría');
+      showToast('📋 Dictamen forense copiado al Chat de Auditoría');
     }
 
     function renderListaArchivosAuditoriaPills() {
@@ -14053,17 +14057,17 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       if (btnEjecutar) btnEjecutar.disabled = true;
 
       const etapas = [
-        "1/4. Extrayendo OCR multimodal sobre legajo digital...",
-        "2/4. Auditando haberes y tope legal del 50% (Cláusula 18 inc. e)...",
-        "3/4. Verificando consistencia cruzada de DNI, CUIL y organismo...",
-        "4/4. Calibrando matriz de Calificación Crediticia AMMER (0-100)..."
+        '1/4. Leyendo textualmente recibo de haberes, DNI y constancias...',
+        '2/4. Verificando organismo, situación de revista, antigüedad y período...',
+        '3/4. Auditando Bruto Total, Descuentos de Ley, BERSA, SIDECREER, FEDEM y Embargos...',
+        '4/4. Calculando Cupo Máximo Legal (50% Bruto) y Calificación AMMER...'
       ];
       let step = 0;
       if (stageText) stageText.textContent = etapas[0];
       const stepTimer = setInterval(() => {
         step = (step + 1) % etapas.length;
         if (stageText) stageText.textContent = etapas[step];
-      }, 1600);
+      }, 1800);
 
       let datosDeclarados = null;
       let sAsociada = null;
@@ -14072,10 +14076,13 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         sAsociada = all.find(x => String(x.id) === String(idExpedienteAuditadoActivo)) || null;
         if (sAsociada) {
           datosDeclarados = {
-            nombre: sAsociada.solicitante?.nombre,
-            dni: sAsociada.solicitante?.dni,
-            organismo: sAsociada.solicitante?.organismo,
+            nombre: sAsociada.solicitante?.nombre || '',
+            dni: sAsociada.solicitante?.dni || '',
+            cuil: sAsociada.solicitante?.cuil || sAsociada.datosContacto?.cuil || '',
+            fechaNacimiento: sAsociada.solicitante?.fechaNacimiento || sAsociada.solicitante?.fechaNac || '',
+            organismo: sAsociada.solicitante?.organismo || '',
             cuota: sAsociada.propuestaMutual?.cuotaEstimada || sAsociada.prestamo?.cuotaEstimada || 0,
+            plazoCuotas: sAsociada.propuestaMutual?.cuotas || sAsociada.prestamo?.cuotas || 0,
             monto: sAsociada.propuestaMutual?.monto || sAsociada.prestamo?.monto || 0
           };
         }
@@ -14086,53 +14093,91 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           idSolicitud: idExpedienteAuditadoActivo || 'DOCUMENTOS_SUELTOS',
           datosDeclarados: datosDeclarados,
           permitirBackendSinKey: true,
-          preservarLoadingBar: true
+          preservarLoadingBar: true,
+          timeoutMs: 35000
         });
 
         clearInterval(stepTimer);
 
         if (auditRes) {
           ultimoResultadoAuditoria = auditRes;
+          if (sAsociada) {
+            const all = getStoredSolicitudes();
+            const idx = all.findIndex(x => String(x.id) === String(sAsociada.id));
+            if (idx !== -1) {
+              all[idx].auditoriaIA = {
+                estado: 'completado',
+                fechaFin: obtenerFechaHora24hs(),
+                resultado: auditRes
+              };
+              saveStoredSolicitudes(all);
+            }
+          }
           renderResultadosAuditoria(auditRes);
-          showToast('✅ Auditoría completada: Dictamen ' + (auditRes.scoringCrediticio?.dictamen || 'APTO_OTORGAMIENTO'));
+          showToast('✅ Auditoría forense completada: ' + (auditRes.scoringCrediticio?.calificacionLetra || auditRes.scoringCrediticio?.dictamen || 'VERIFICADO'));
         } else {
-          const fallbackAudit = generarResultadoContingencia(sAsociada || {
-            estado: 'En Análisis',
-            solicitante: {
-              nombre: datosDeclarados?.nombre || (archivosAuditoriaCola[0]?.nombre || 'Asociado Evaluado').replace(/\.[^.]+$/, ''),
-              dni: datosDeclarados?.dni || '—',
-              organismo: datosDeclarados?.organismo || 'Provincial',
-              dependencia: 'Administración Provincial',
-              cargo: 'Titular'
-            },
-            prestamo: { cuotaEstimada: datosDeclarados?.cuota || 55000 }
-          });
-          ultimoResultadoAuditoria = fallbackAudit;
-          renderResultadosAuditoria(fallbackAudit);
-          showToast('✅ Evaluación documental completada (Calificación Crediticia AMMER)');
+          renderErrorAuditoria(window._ultimaErrorAuditoriaIA || 'No se pudo completar la lectura documental. Verifique que el documento sea nítido e intente nuevamente.');
+          showToast('⚠️ No fue posible leer los documentos sin inferencias. Revise el detalle.');
         }
       } catch (err) {
-        console.warn('Evaluación vía Servidor Central no disponible o en contingencia local:', err.message || err);
-        const fallbackAudit = generarResultadoContingencia(sAsociada || {
-          estado: 'En Análisis',
-          solicitante: {
-            nombre: datosDeclarados?.nombre || (archivosAuditoriaCola[0]?.nombre || 'Asociado Evaluado').replace(/\.[^.]+$/, ''),
-            dni: datosDeclarados?.dni || '—',
-            organismo: datosDeclarados?.organismo || 'Provincial',
-            dependencia: 'Administración Provincial',
-            cargo: 'Titular'
-          },
-          prestamo: { cuotaEstimada: datosDeclarados?.cuota || 55000 }
-        });
-        ultimoResultadoAuditoria = fallbackAudit;
-        renderResultadosAuditoria(fallbackAudit);
-        showToast('✅ Evaluación documental completada (Calificación Crediticia AMMER)');
+        renderErrorAuditoria(err && err.message ? err.message : 'Error de comunicación con el motor documental.');
+        showToast('⚠️ Error en auditoría documental.');
       } finally {
         clearInterval(stepTimer);
         if (loadBar) loadBar.style.display = 'none';
         if (loaderIA) loaderIA.classList.add('hidden');
         if (btnEjecutar) btnEjecutar.disabled = false;
       }
+    }
+
+    function renderErrorAuditoria(mensajeError) {
+      const container = document.getElementById('aiAuditResultadosContainer');
+      if (!container) return;
+      container.innerHTML = '<div class="alert-box-critica" style="margin-top:1rem;">' +
+        '<div style="font-weight:800;margin-bottom:4px;">🚨 Lectura Documental Incompleta / Sin Datos Inventados</div>' +
+        '<p style="margin:0 0 8px 0;font-size:0.76rem;line-height:1.45;">' + sanitizeHTML(mensajeError) + '</p>' +
+        '<div style="font-size:0.7rem;color:#7f1d1d;">Por política estricta de verificación forense AMMER (cero alucinación), no se generan ni estiman importes o fechas cuando la lectura falla o el documento es ilegible.</div>' +
+      '</div>';
+      container.style.display = 'block';
+    }
+
+    function cambiarTabInformeAuditoria(tab) {
+      ['panelAuditTabVisual', 'panelAuditTabMarkdown', 'panelAuditTabJson'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+      ['btnAuditTabVisual', 'btnAuditTabMarkdown', 'btnAuditTabJson'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.style.background = '#f1f5f9', btn.style.color = '#334155';
+      });
+      const mapPanel = { visual: 'panelAuditTabVisual', markdown: 'panelAuditTabMarkdown', json: 'panelAuditTabJson' };
+      const mapBtn = { visual: 'btnAuditTabVisual', markdown: 'btnAuditTabMarkdown', json: 'btnAuditTabJson' };
+      const targetPanel = document.getElementById(mapPanel[tab] || 'panelAuditTabVisual');
+      const targetBtn = document.getElementById(mapBtn[tab] || 'btnAuditTabVisual');
+      if (targetPanel) targetPanel.style.display = 'block';
+      if (targetBtn) targetBtn.style.background = '#1e3a8a', targetBtn.style.color = '#ffffff';
+    }
+
+    function copiarInformeMarkdownAuditoria() {
+      if (!ultimoResultadoAuditoria) {
+        showToast('No hay informe Markdown disponible.');
+        return;
+      }
+      const md = construirInformeMarkdownAMMER(ultimoResultadoAuditoria);
+      navigator.clipboard.writeText(md).then(() => {
+        showToast('📋 Informe Markdown AMMER copiado al portapapeles.');
+      }).catch(() => showToast('Error al copiar al portapapeles.'));
+    }
+
+    function copiarResumenJsonAuditoria() {
+      if (!ultimoResultadoAuditoria) {
+        showToast('No hay JSON estructurado disponible.');
+        return;
+      }
+      const jsonObj = ultimoResultadoAuditoria.resumenJson || ultimoResultadoAuditoria;
+      navigator.clipboard.writeText(JSON.stringify(jsonObj, null, 2)).then(() => {
+        showToast('📋 Resumen JSON CRM copiado al portapapeles.');
+      }).catch(() => showToast('Error al copiar al portapapeles.'));
     }
 
     function renderResultadosAuditoria(audit) {
@@ -14144,22 +14189,23 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const dni = audit.dni || {};
       const cruce = audit.cruceIdentidad || {};
       const pilares = sc.pilares || {};
+      const califLetra = sc.calificacionLetra || ((sc.puntajeTotal || 0) >= 80 ? 'A (Riesgo Bajo)' : ((sc.puntajeTotal || 0) >= 60 ? 'B (Riesgo Moderado)' : 'C (Riesgo Crítico / No Viable)'));
 
       let dictamenClass = 'dictamen-apto';
       let dictamenText = 'APTO OTORGAMIENTO — CRÉDITO VIABLE';
       let dictamenIcon = '✅';
-      let dictamenDesc = 'Legajo conforme a la reglamentación institucional y estándares de Calificación Crediticia AMMER.';
+      let dictamenDesc = 'Legajo conforme a verificación forense literal y tope de afectación del 50% sobre el Sueldo Bruto Total.';
 
       if (sc.dictamen === 'OBSERVADO') {
         dictamenClass = 'dictamen-observado';
         dictamenText = 'OBSERVADO (REQUIERE SUBSANACIÓN)';
         dictamenIcon = '⚠️';
-        dictamenDesc = 'Presenta observaciones de vigencia, afectación o inconsistencias menores que deben subsanarse previo al otorgamiento.';
+        dictamenDesc = 'Presenta observaciones de vigencia, legibilidad, antigüedad o afectación que requieren verificación previa al otorgamiento.';
       } else if (sc.dictamen === 'RECHAZADO') {
         dictamenClass = 'dictamen-rechazado';
-        dictamenText = 'NO APTO PARA OTORGAMIENTO';
+        dictamenText = 'NO VIABLE PARA OTORGAMIENTO';
         dictamenIcon = '🚫';
-        dictamenDesc = 'No reúne los requisitos mínimos de capacidad financiera, vigencia o trazabilidad de identidad.';
+        dictamenDesc = 'Incumple criterios excluyentes (afectación excedida, discrepancia de identidad, tope de edad 80 años o invalidez/embargo).';
       }
 
       const pCalidad = pilares.calidadDocumental || { puntaje: 0, maximo: 20 };
@@ -14172,236 +14218,149 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const pctIdentidad = Math.round((pIdentidad.puntaje / (pIdentidad.maximo || 30)) * 100);
       const pctFinanciera = Math.round((pFinanciera.puntaje / (pFinanciera.maximo || 30)) * 100);
 
-      // Comparativa cuota vs margen
-      const cuotaEvaluada = (idExpedienteAuditadoActivo) ?
-        (() => {
-          const s = getStoredSolicitudes().find(x => String(x.id) === String(idExpedienteAuditadoActivo));
-          return s ? (s.propuestaMutual?.cuotaEstimada || s.prestamo?.cuotaEstimada || 0) : 0;
-        })() : 0;
+      const solAct = idExpedienteAuditadoActivo
+        ? getStoredSolicitudes().find(x => String(x.id) === String(idExpedienteAuditadoActivo))
+        : null;
+      const cuotaEvaluada = solAct ? (solAct.propuestaMutual?.cuotaEstimada || solAct.prestamo?.cuotaEstimada || 0) : 0;
+
+      const cupo50Bruto = rec.topeLegal50Porciento !== undefined ? rec.topeLegal50Porciento : (rec.sueldoBruto != null ? Math.round(Number(rec.sueldoBruto) * 50) / 100 : null);
+      const totalDescuentos = rec.totalDescuentosRecibo !== undefined ? rec.totalDescuentosRecibo : null;
+      const margenDisp = rec.margenDisponibleCuota !== undefined ? rec.margenDisponibleCuota : ((cupo50Bruto !== null && totalDescuentos !== null) ? Math.round((cupo50Bruto - totalDescuentos) * 100) / 100 : null);
+      const cuotaSuficiente = (margenDisp !== null && cuotaEvaluada > 0) ? (cuotaEvaluada <= margenDisp) : (margenDisp !== null && margenDisp > 0);
+      const fedemList = Array.isArray(rec.codigosFedemDetectados) ? rec.codigosFedemDetectados : [];
+      const mdText = construirInformeMarkdownAMMER(audit);
+      const jsonText = JSON.stringify(audit.resumenJson || audit, null, 2);
 
       let html = '<div style="margin-top:1.25rem;">';
 
       // 1. TARJETA PRINCIPAL DE SCORING Y DICTAMEN
       html += '<div class="score-main-card ' + dictamenClass + '">' +
         '<div class="score-number-box">' +
-          '<div class="score-big-num">' + (sc.puntajeTotal || 0) + '</div>' +
-          '<div class="score-label">CALIFICACIÓN AMMER / 100</div>' +
-          '<div style="font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Confianza: <strong>' + (sc.nivelConfianza || 'ALTA') + '</strong></div>' +
+          '<div class="score-big-num" style="font-variant-numeric:tabular-nums;">' + (sc.puntajeTotal || 0) + '</div>' +
+          '<div class="score-label">SCORE AMMER / 100</div>' +
+          '<div style="font-size:0.7rem;color:var(--color-primary);font-weight:800;margin-top:2px;">' + sanitizeHTML(califLetra) + '</div>' +
         '</div>' +
         '<div style="flex:1;min-width:240px;">' +
           '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap;">' +
             '<span class="dictamen-badge dictamen-badge-' + (sc.dictamen || 'RECHAZADO') + '">' + dictamenIcon + ' ' + dictamenText + '</span>' +
-            '<span style="font-size:0.68rem;color:var(--text-muted);font-weight:600;">AMMER • Calificación Crediticia</span>' +
+            '<span style="font-size:0.68rem;color:var(--text-muted);font-weight:600;">Auditoría Forense AMMER</span>' +
           '</div>' +
           '<p style="font-size:0.78rem;color:var(--text-main);margin:4px 0 8px 0;line-height:1.4;">' + dictamenDesc + '</p>' +
           '<div style="display:flex;gap:0.4rem;flex-wrap:wrap;align-items:center;">' +
             (idExpedienteAuditadoActivo ? '<button type="button" class="btn-primary-action" style="width:auto;padding:5px 12px;font-size:0.72rem;background:#15803d;border-color:#166534;" onclick="aplicarDatosExtraidosAlExpediente()">💾 Aplicar Datos al Expediente</button>' : '') +
             (idExpedienteAuditadoActivo ? '<button type="button" class="btn-primary-action" style="width:auto;padding:5px 12px;font-size:0.72rem;background:#0369a1;border-color:#0284c7;" onclick="registrarDictamenEnChatAuditoria()">💬 Registrar Dictamen en Chat</button>' : '') +
-            '<button type="button" class="btn-copy" style="font-size:0.72rem;padding:5px 12px;" onclick="copiarInformeAuditoriaClipboard()">📋 Copiar Informe para WhatsApp / Comité</button>' +
+            '<button type="button" class="btn-copy" style="font-size:0.72rem;padding:5px 12px;" onclick="copiarInformeMarkdownAuditoria()">📋 Copiar Markdown</button>' +
+            '<button type="button" class="btn-copy" style="font-size:0.72rem;padding:5px 12px;" onclick="copiarResumenJsonAuditoria()">{} Copiar JSON CRM</button>' +
+            '<button type="button" class="btn-copy" style="font-size:0.72rem;padding:5px 12px;" onclick="copiarInformeAuditoriaClipboard()">💬 Copiar WhatsApp / Comité</button>' +
           '</div>' +
         '</div>' +
       '</div>';
 
-      // 2. 4 PILARES DE CALIFICACIÓN CREDITICIA AMMER
-      html += '<div class="section-title-divider" style="margin-top:1.25rem;">Ponderación por Pilares de Calificación Crediticia AMMER (0 a 100)</div>' +
-        '<div class="pillars-bars-grid">' +
-          '<div class="pillar-card">' +
-            '<div class="pillar-head"><span>1. Calidad y Legibilidad</span><span class="pillar-score">' + pCalidad.puntaje + ' / ' + pCalidad.maximo + '</span></div>' +
-            '<div class="pillar-progress-track"><div class="pillar-progress-fill ' + (pctCalidad >= 80 ? 'fill-green' : (pctCalidad >= 50 ? 'fill-amber' : 'fill-red')) + '" style="width:' + pctCalidad + '%;"></div></div>' +
-            '<div class="pillar-desc">' + (pCalidad.detalle || 'Resolución adecuada.') + '</div>' +
-          '</div>' +
-          '<div class="pillar-card">' +
-            '<div class="pillar-head"><span>2. Vigencia y Formalidad</span><span class="pillar-score">' + pVigencia.puntaje + ' / ' + pVigencia.maximo + '</span></div>' +
-            '<div class="pillar-progress-track"><div class="pillar-progress-fill ' + (pctVigencia >= 80 ? 'fill-green' : (pctVigencia >= 50 ? 'fill-amber' : 'fill-red')) + '" style="width:' + pctVigencia + '%;"></div></div>' +
-            '<div class="pillar-desc">' + (pVigencia.detalle || 'Control de 60 días y DNI vigente.') + '</div>' +
-          '</div>' +
-          '<div class="pillar-card">' +
-            '<div class="pillar-head"><span>3. Coincidencia y Trazabilidad</span><span class="pillar-score">' + pIdentidad.puntaje + ' / ' + pIdentidad.maximo + '</span></div>' +
-            '<div class="pillar-progress-track"><div class="pillar-progress-fill ' + (pctIdentidad >= 80 ? 'fill-green' : (pctIdentidad >= 50 ? 'fill-amber' : 'fill-red')) + '" style="width:' + pctIdentidad + '%;"></div></div>' +
-            '<div class="pillar-desc">' + (pIdentidad.detalle || 'Cruce DNI, CUIL, Nombre y Organismo.') + '</div>' +
-          '</div>' +
-          '<div class="pillar-card">' +
-            '<div class="pillar-head"><span>4. Capacidad Financiera (Tope 50%)</span><span class="pillar-score">' + pFinanciera.puntaje + ' / ' + pFinanciera.maximo + '</span></div>' +
-            '<div class="pillar-progress-track"><div class="pillar-progress-fill ' + (pctFinanciera >= 80 ? 'fill-green' : (pctFinanciera >= 50 ? 'fill-amber' : 'fill-red')) + '" style="width:' + pctFinanciera + '%;"></div></div>' +
-            '<div class="pillar-desc">' + (pFinanciera.detalle || 'Cumplimiento Cláusula 18 inc. e.') + '</div>' +
-          '</div>' +
+      // Selector de Vistas (Tabulada / Informe Markdown / JSON CRM)
+      html += '<div style="display:flex;gap:6px;margin:0.85rem 0;flex-wrap:wrap;">' +
+        '<button type="button" id="btnAuditTabVisual" onclick="cambiarTabInformeAuditoria(\'visual\')" style="padding:6px 12px;font-size:0.72rem;font-weight:700;border-radius:6px;border:1px solid #cbd5e1;background:#1e3a8a;color:#ffffff;cursor:pointer;">📊 Radiografía Forense</button>' +
+        '<button type="button" id="btnAuditTabMarkdown" onclick="cambiarTabInformeAuditoria(\'markdown\')" style="padding:6px 12px;font-size:0.72rem;font-weight:700;border-radius:6px;border:1px solid #cbd5e1;background:#f1f5f9;color:#334155;cursor:pointer;">📑 Informe Markdown Oficial</button>' +
+        '<button type="button" id="btnAuditTabJson" onclick="cambiarTabInformeAuditoria(\'json\')" style="padding:6px 12px;font-size:0.72rem;font-weight:700;border-radius:6px;border:1px solid #cbd5e1;background:#f1f5f9;color:#334155;cursor:pointer;">{} Resumen JSON CRM</button>' +
+      '</div>';
+
+      html += '<div id="panelAuditTabVisual">';
+
+      // 2. VERIFICACIÓN DE IDENTIDAD, LABORAL Y SITUACIÓN DE REVISTA
+      const estadoCotejo = cruce.estadoCotejo || ((cruce.coincideDni && cruce.coincideNombre) ? 'COINCIDE' : 'DISCREPANCIA DETECTADA');
+      html += '<div class="section-title-divider" style="margin-top:1rem;">1 &amp; 2. Identidad, Organismo Empleador y Situación de Revista</div>' +
+        '<div class="crosscheck-table-wrap">' +
+          '<table class="crosscheck-table">' +
+            '<thead><tr><th>Indicador Auditado</th><th>Valor Literal Extraído</th><th>Carátula / Regla AMMER</th><th>Estado</th></tr></thead>' +
+            '<tbody>' +
+              '<tr><td><strong>Titular / DNI / CUIL</strong></td><td>' + sanitizeHTML((rec.titular || TEXTO_ILEGIBLE_AMMER) + ' — DNI ' + (rec.dni || TEXTO_ILEGIBLE_AMMER) + ' / ' + (rec.cuil || TEXTO_ILEGIBLE_AMMER)) + '</td><td>' + sanitizeHTML(solAct ? ((solAct.solicitante?.nombre || 'S/D') + ' (' + (solAct.solicitante?.dni || 'S/D') + ')') : 'Auditoría libre') + '</td><td>' + (estadoCotejo === 'COINCIDE' ? '<span class="status-match">🟢 COINCIDE</span>' : '<span class="status-diff">🔴 ' + sanitizeHTML(estadoCotejo) + '</span>') + '</td></tr>' +
+              '<tr><td><strong>Período Liquidado</strong></td><td><strong>' + sanitizeHTML(rec.periodo || TEXTO_ILEGIBLE_AMMER) + '</strong></td><td>Último o anteúltimo mes exigible</td><td>' + (!rec.reciboVencido && rec.estadoPeriodo === 'VIGENTE' ? '<span class="status-match">🟢 VIGENTE</span>' : '<span class="status-diff">⚠️ ' + sanitizeHTML(rec.estadoPeriodo || TEXTO_ILEGIBLE_AMMER) + '</span>') + '</td></tr>' +
+              '<tr><td><strong>Organismo y Revista</strong></td><td>' + sanitizeHTML((rec.organismo || TEXTO_ILEGIBLE_AMMER) + ' — ' + (rec.situacionRevista || TEXTO_ILEGIBLE_AMMER)) + '</td><td>CGE / Salud / Policía / Adm. Central / Muni / Caja</td><td><span class="status-match">' + (rec.esInvalidezODiscapacidad ? '🔴 EXCLUIDO (Invalidez/Disc.)' : '✓ Identificado') + '</span></td></tr>' +
+              '<tr><td><strong>Fecha Ingreso / Antigüedad</strong></td><td>' + sanitizeHTML((rec.fechaIngreso || TEXTO_ILEGIBLE_AMMER) + ' (' + (rec.antiguedadDetalle || TEXTO_ILEGIBLE_AMMER) + ')') + '</td><td>Mínimo 1 año comprobable</td><td>' + (rec.cumpleAntiguedadMinima === true ? '<span class="status-match">🟢 CUMPLE (&ge; 1 año)</span>' : (rec.cumpleAntiguedadMinima === false ? '<span class="status-diff">🔴 NO CUMPLE</span>' : '<span class="status-diff">⚠️ ' + TEXTO_ILEGIBLE_AMMER + '</span>')) + '</td></tr>' +
+              '<tr><td><strong>Observaciones Especiales</strong></td><td colspan="2">' + sanitizeHTML(rec.observacionesEspeciales || 'Sin observaciones especiales registradas') + '</td><td>' + (rec.cumpleTopeEdad80 === false ? '<span class="status-diff">🔴 SUPERA 80 AÑOS</span>' : '<span class="status-match">Verificado</span>') + '</td></tr>' +
+            '</tbody>' +
+          '</table>' +
         '</div>';
 
-      // 3. RADIOGRAFÍA FINANCIERA (RECIBO DE SUELDO Y CAPACIDAD AL 50%)
-      const sueldoNeto = rec.sueldoNeto || 0;
-      const sueldoBruto = rec.sueldoBruto || 0;
-      const descLey = rec.descuentosLey || 0;
-      const descPrestamos = rec.descuentosPrestamosYMutuales || 0;
-      const tope50 = rec.topeLegal50Porciento || Math.round(sueldoNeto * 0.5);
-      const margenDisp = rec.margenDisponibleCuota !== undefined ? rec.margenDisponibleCuota : Math.max(0, tope50 - descPrestamos);
-
-      html += '<div class="section-title-divider" style="margin-top:1.25rem;">Radiografía Financiera del Recibo de Sueldo y Límite Legal 50%</div>' +
-        '<div class="fin-radiografia-grid">' +
-          '<div class="fin-stat-card">' +
-            '<div class="fin-stat-label">Sueldo Bruto Total</div>' +
-            '<div class="fin-stat-value" style="color:var(--text-main);">' + formatMoney(sueldoBruto) + '</div>' +
-            '<div style="font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Haberes imponibles + no remun.</div>' +
-          '</div>' +
-          '<div class="fin-stat-card">' +
-            '<div class="fin-stat-label">Descuentos de Ley Obligatorios</div>' +
-            '<div class="fin-stat-value" style="color:#b91c1c;">- ' + formatMoney(descLey) + '</div>' +
-            '<div style="font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Jubilación, IOSPER Ley 5326</div>' +
-          '</div>' +
-          '<div class="fin-stat-card">' +
-            '<div class="fin-stat-label">Préstamos / Mutuales Previas</div>' +
-            '<div class="fin-stat-value" style="color:#c2410c;">- ' + formatMoney(descPrestamos) + '</div>' +
-            '<div style="font-size:0.65rem;color:var(--text-muted);margin-top:2px;">Retenciones activas en recibo</div>' +
-          '</div>' +
-          '<div class="fin-stat-card highlight-neto">' +
-            '<div class="fin-stat-label" style="color:#166534;">Sueldo Neto Líquido (De Bolsillo)</div>' +
-            '<div class="fin-stat-value" style="color:#15803d;">' + formatMoney(sueldoNeto) + '</div>' +
-            '<div style="font-size:0.65rem;color:#166534;margin-top:2px;">Percibido en cuenta bancaria</div>' +
-          '</div>' +
+      // 3. RADIOGRAFÍA SALARIAL Y DESCUENTOS EXACTOS
+      html += '<div class="section-title-divider" style="margin-top:1.15rem;">3. Radiografía Salarial y Descuentos (Cifras Literales sin Redondeo)</div>' +
+        '<div class="crosscheck-table-wrap">' +
+          '<table class="crosscheck-table" style="font-variant-numeric:tabular-nums;">' +
+            '<thead><tr><th>Concepto</th><th>Monto Detectado ($)</th><th>Observaciones / Estado</th></tr></thead>' +
+            '<tbody>' +
+              '<tr><td><strong>Sueldo Bruto Total</strong></td><td><strong>' + sanitizeHTML(formatMontoAuditoriaExacto(rec.sueldoBruto)) + '</strong></td><td>Haberes con Aporte + No Remunerativos</td></tr>' +
+              '<tr><td><strong>Descuentos de Ley</strong></td><td>' + sanitizeHTML(formatMontoAuditoriaExacto(rec.descuentosLey)) + '</td><td>Jubilación, IOSPER, Ley 4035</td></tr>' +
+              '<tr><td><strong>Consumos BERSA / Entidades Fin.</strong></td><td>' + sanitizeHTML(formatMontoAuditoriaExacto(rec.consumosBersa)) + '</td><td>Retenciones bancarias</td></tr>' +
+              '<tr><td><strong>Consumos SIDECREER</strong></td><td>' + sanitizeHTML(formatMontoAuditoriaExacto(rec.consumosSidecreer)) + '</td><td>Descuento por tarjeta oficial</td></tr>' +
+              '<tr><td><strong>Otras Mutuales / Cooperativas</strong></td><td>' + sanitizeHTML(formatMontoAuditoriaExacto(rec.otrasMutuales)) + '</td><td>Descuentos por código voluntario</td></tr>' +
+              '<tr><td><strong>Códigos Oficiales FEDEM</strong></td><td>' + sanitizeHTML(formatMontoAuditoriaExacto(rec.codigosFedemMonto)) + '</td><td>' + (fedemList.length > 0 ? ('Detectados: ' + sanitizeHTML(fedemList.join(', '))) : 'Sin Cód. 366/368/1115/1117 activos') + '</td></tr>' +
+              '<tr><td><strong>Embargos Judiciales / Inhibiciones</strong></td><td>' + (rec.embargoDetectado ? ('<span style="color:#dc2626;font-weight:800;">' + sanitizeHTML(formatMontoAuditoriaExacto(rec.embargoMonto)) + '</span>') : '$0,00') + '</td><td>' + (rec.embargoDetectado ? ('🔴 ALERTA: ' + sanitizeHTML(rec.embargoConcepto || 'Embargo detectado')) : '🟢 SIN EMBARGOS') + '</td></tr>' +
+              '<tr><td><strong>Total Descuentos en Recibo</strong></td><td><strong>' + sanitizeHTML(formatMontoAuditoriaExacto(totalDescuentos)) + '</strong></td><td>Deducciones consolidadas del comprobante</td></tr>' +
+              '<tr style="background:#f0fdf4;"><td><strong style="color:#166534;">Sueldo Líquido de Bolsillo</strong></td><td><strong style="color:#15803d;">' + sanitizeHTML(formatMontoAuditoriaExacto(rec.sueldoNeto)) + '</strong></td><td>Neto final acreditado al agente</td></tr>' +
+            '</tbody>' +
+          '</table>' +
         '</div>';
 
-      // Control de Afectación Cláusula 18 inc. e
-      const cuotaSuficiente = cuotaEvaluada > 0 ? (cuotaEvaluada <= margenDisp) : true;
-      html += '<div class="afectacion-box">' +
+      // 4. ANÁLISIS DE AFECTACIÓN SALARIAL (50% DEL SUELDO BRUTO TOTAL)
+      html += '<div class="afectacion-box" style="margin-top:1rem;font-variant-numeric:tabular-nums;">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px;">' +
-          '<span style="font-weight:700;color:var(--color-brand-blue);font-size:0.78rem;">📐 Control Legal de Afectación de Haberes (Cláusula 18 inc. e)</span>' +
-          '<span class="badge-status ' + (margenDisp > 0 ? 'badge-Aprobado' : 'badge-Observado') + '" style="font-size:0.68rem;">' +
-            (margenDisp > 0 ? 'Capacidad de Pago Disponible' : 'Tope 50% Agotado') +
+          '<span style="font-weight:700;color:var(--color-brand-blue);font-size:0.78rem;">4. Cálculo de Afectación Legal (Cupo Máximo = Sueldo Bruto Total × 0,50)</span>' +
+          '<span class="badge-status ' + (rec.estadoAfectacion === 'MARGEN DISPONIBLE' ? 'badge-Aprobado' : 'badge-Observado') + '" style="font-size:0.68rem;">' +
+            sanitizeHTML(rec.estadoAfectacion || (margenDisp !== null && margenDisp > 0 ? 'MARGEN DISPONIBLE' : 'SALDO NEGATIVO / AFECTACIÓN EXCEDIDA')) +
           '</span>' +
         '</div>' +
         '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem;font-size:0.74rem;">' +
-          '<div>' +
-            '<span style="color:var(--text-muted);">Tope Legal Máximo (50% del Neto):</span><br/>' +
-            '<strong style="font-size:0.95rem;color:var(--color-primary);">' + formatMoney(tope50) + '</strong>' +
-          '</div>' +
-          '<div>' +
-            '<span style="color:var(--text-muted);">Afectación por Otros Préstamos:</span><br/>' +
-            '<strong style="font-size:0.95rem;color:#b91c1c;">' + formatMoney(descPrestamos) + '</strong> (' + (sueldoNeto > 0 ? Math.round((descPrestamos / sueldoNeto) * 100) : 0) + '% del neto)' +
-          '</div>' +
-          '<div>' +
-            '<span style="color:var(--text-muted);">Margen Libre para Nueva Cuota:</span><br/>' +
-            '<strong style="font-size:1.05rem;color:#15803d;">' + formatMoney(margenDisp) + '</strong>' +
-          '</div>' +
+          '<div><span style="color:var(--text-muted);">Cupo Máximo Legal (50% del Bruto):</span><br/><strong style="font-size:0.95rem;color:var(--color-primary);">' + sanitizeHTML(formatMontoAuditoriaExacto(cupo50Bruto)) + '</strong></div>' +
+          '<div><span style="color:var(--text-muted);">Total Descuentos Actuales Recibo:</span><br/><strong style="font-size:0.95rem;color:#b91c1c;">' + sanitizeHTML(formatMontoAuditoriaExacto(totalDescuentos)) + '</strong></div>' +
+          '<div><span style="color:var(--text-muted);">Margen Disponible Mensual:</span><br/><strong style="font-size:1.05rem;color:' + (margenDisp !== null && margenDisp > 0 ? '#15803d' : '#dc2626') + ';">' + sanitizeHTML(formatMontoAuditoriaExacto(margenDisp)) + '</strong></div>' +
           (cuotaEvaluada > 0 ? (
             '<div style="background:#fff;padding:6px 10px;border-radius:6px;border:1px solid ' + (cuotaSuficiente ? '#bbf7d0' : '#fecaca') + ';">' +
-              '<span style="color:var(--text-muted);">Cuota Solicitada en Trámite:</span><br/>' +
+              '<span style="color:var(--text-muted);">Cuota Simulada del Plan:</span><br/>' +
               '<strong style="font-size:0.95rem;color:' + (cuotaSuficiente ? '#166534' : '#dc2626') + ';">' + formatMoney(cuotaEvaluada) + '</strong> ' +
               (cuotaSuficiente ? '<span style="color:#166534;font-weight:700;">✓ Cubierta</span>' : '<span style="color:#dc2626;font-weight:700;">✗ Excede margen</span>') +
             '</div>'
           ) : '') +
         '</div>' +
-        '<div style="font-size:0.67rem;color:var(--text-muted);margin-top:6px;">' +
-          'Período del Recibo: <strong>' + (rec.periodo || 'Reciente') + '</strong> | Antigüedad del documento: <strong>' + (rec.diasAntiguedadRecibo !== undefined ? rec.diasAntiguedadRecibo + ' días' : 'Vigente') + '</strong> ' +
-          (rec.reciboVencido ? '<span style="color:#dc2626;font-weight:700;">(⚠️ Recibo con más de 60 días de antigüedad)</span>' : '<span style="color:#15803d;font-weight:700;">(✓ Dentro del plazo de 60 días)</span>') +
-        '</div>' +
       '</div>';
 
-      // 4. MATRIZ COMPARATIVA DE IDENTIDAD Y DATOS LABORALES
-      const matchDni = cruce.coincideDni !== false;
-      const matchNombre = cruce.coincideNombre !== false;
-      const matchCuil = cruce.coincideCuil !== false;
-
-      html += '<div class="section-title-divider" style="margin-top:1.25rem;">Cruce de Identidad y Situación Laboral Multifuente</div>' +
-        '<div class="crosscheck-table-wrap">' +
-          '<table class="crosscheck-table">' +
-            '<thead>' +
-              '<tr>' +
-                '<th>Dato Validado</th>' +
-                '<th>Declarado en Solicitud</th>' +
-                '<th>Extraído de DNI</th>' +
-                '<th>Extraído de Recibo de Sueldo</th>' +
-                '<th>Estado Cruce</th>' +
-              '</tr>' +
-            '</thead>' +
-            '<tbody>' +
-              '<tr>' +
-                '<td><strong>DNI</strong></td>' +
-                '<td>' + (idExpedienteAuditadoActivo ? (getStoredSolicitudes().find(x => String(x.id) === String(idExpedienteAuditadoActivo))?.solicitante?.dni || '—') : '—') + '</td>' +
-                '<td>' + (dni.numero || '—') + '</td>' +
-                '<td>' + (rec.dni || '—') + '</td>' +
-                '<td>' + (matchDni ? '<span class="status-match">✓ 100% Coincidente</span>' : '<span class="status-diff">⚠️ Discrepancia</span>') + '</td>' +
-              '</tr>' +
-              '<tr>' +
-                '<td><strong>Apellido y Nombres</strong></td>' +
-                '<td>' + (idExpedienteAuditadoActivo ? (getStoredSolicitudes().find(x => String(x.id) === String(idExpedienteAuditadoActivo))?.solicitante?.nombre || '—') : '—') + '</td>' +
-                '<td>' + (dni.nombreCompleto || '—') + '</td>' +
-                '<td>' + (rec.titular || '—') + '</td>' +
-                '<td>' + (matchNombre ? '<span class="status-match">✓ Concordante</span>' : '<span class="status-diff">⚠️ Revisar Nombres</span>') + '</td>' +
-              '</tr>' +
-              '<tr>' +
-                '<td><strong>CUIL Oficial</strong></td>' +
-                '<td>—</td>' +
-                '<td>' + (dni.numero ? '20/27-' + dni.numero + '-x' : '—') + '</td>' +
-                '<td>' + (rec.cuil || '—') + '</td>' +
-                '<td>' + (matchCuil ? '<span class="status-match">✓ Verificado</span>' : '<span class="status-diff">⚠️ No validado</span>') + '</td>' +
-              '</tr>' +
-              '<tr>' +
-                '<td><strong>Organismo Empleador</strong></td>' +
-                '<td>' + (idExpedienteAuditadoActivo ? (getStoredSolicitudes().find(x => String(x.id) === String(idExpedienteAuditadoActivo))?.solicitante?.organismo || '—') : '—') + '</td>' +
-                '<td>—</td>' +
-                '<td><strong>' + (rec.organismo || '—') + '</strong></td>' +
-                '<td><span class="status-match">✓ Identificado</span></td>' +
-              '</tr>' +
-              '<tr>' +
-                '<td><strong>Dependencia / Función</strong></td>' +
-                '<td>—</td>' +
-                '<td>—</td>' +
-                '<td>' + (rec.dependencia || '—') + ' (' + (rec.cargo || 'General') + ')</td>' +
-                '<td><span class="status-match">✓ Constatado</span></td>' +
-              '</tr>' +
-              '<tr>' +
-                '<td><strong>Situación de Revista</strong></td>' +
-                '<td>—</td>' +
-                '<td>—</td>' +
-                '<td><strong>' + (rec.situacionRevista || 'Planta') + '</strong> (' + (rec.antiguedadAnios !== undefined ? rec.antiguedadAnios + ' años de antigüedad' : 'Estable') + ')</td>' +
-                '<td><span class="status-match">✓ Verificado</span></td>' +
-              '</tr>' +
-              '<tr>' +
-                '<td><strong>Vigencia DNI</strong></td>' +
-                '<td>—</td>' +
-                '<td>Vence: ' + (dni.fechaVencimiento || '2030+') + '</td>' +
-                '<td>—</td>' +
-                '<td>' + (dni.dniVigente !== false ? '<span class="status-match">✓ DNI Vigente</span>' : '<span class="status-diff">⚠️ DNI Vencido</span>') + '</td>' +
-              '</tr>' +
-            '</tbody>' +
-          '</table>' +
+      // 5. PILARES DE CALIFICACIÓN CREDITICIA AMMER
+      html += '<div class="section-title-divider" style="margin-top:1.15rem;">5. Pilares de Calificación Crediticia AMMER (0 a 100)</div>' +
+        '<div class="pillars-bars-grid">' +
+          '<div class="pillar-card"><div class="pillar-head"><span>1. Calidad y Legibilidad</span><span class="pillar-score">' + pCalidad.puntaje + ' / ' + pCalidad.maximo + '</span></div><div class="pillar-progress-track"><div class="pillar-progress-fill ' + (pctCalidad >= 80 ? 'fill-green' : (pctCalidad >= 50 ? 'fill-amber' : 'fill-red')) + '" style="width:' + pctCalidad + '%;"></div></div><div class="pillar-desc">' + sanitizeHTML(pCalidad.detalle || '') + '</div></div>' +
+          '<div class="pillar-card"><div class="pillar-head"><span>2. Vigencia y Formalidad</span><span class="pillar-score">' + pVigencia.puntaje + ' / ' + pVigencia.maximo + '</span></div><div class="pillar-progress-track"><div class="pillar-progress-fill ' + (pctVigencia >= 80 ? 'fill-green' : (pctVigencia >= 50 ? 'fill-amber' : 'fill-red')) + '" style="width:' + pctVigencia + '%;"></div></div><div class="pillar-desc">' + sanitizeHTML(pVigencia.detalle || '') + '</div></div>' +
+          '<div class="pillar-card"><div class="pillar-head"><span>3. Coincidencia Identidad</span><span class="pillar-score">' + pIdentidad.puntaje + ' / ' + pIdentidad.maximo + '</span></div><div class="pillar-progress-track"><div class="pillar-progress-fill ' + (pctIdentidad >= 80 ? 'fill-green' : (pctIdentidad >= 50 ? 'fill-amber' : 'fill-red')) + '" style="width:' + pctIdentidad + '%;"></div></div><div class="pillar-desc">' + sanitizeHTML(pIdentidad.detalle || '') + '</div></div>' +
+          '<div class="pillar-card"><div class="pillar-head"><span>4. Capacidad Financiera</span><span class="pillar-score">' + pFinanciera.puntaje + ' / ' + pFinanciera.maximo + '</span></div><div class="pillar-progress-track"><div class="pillar-progress-fill ' + (pctFinanciera >= 80 ? 'fill-green' : (pctFinanciera >= 50 ? 'fill-amber' : 'fill-red')) + '" style="width:' + pctFinanciera + '%;"></div></div><div class="pillar-desc">' + sanitizeHTML(pFinanciera.detalle || '') + '</div></div>' +
         '</div>';
 
-      // 5. ALERTAS CRÍTICAS Y OBSERVACIONES
       const alertas = audit.alertasCriticas || [];
-      const obs = audit.observacionesAuditor || [];
-
       if (alertas.length > 0) {
         html += '<div class="alert-box-critica" style="margin-top:1rem;">' +
-          '<div style="font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:4px;">🚨 Alertas Críticas de Control Documental:</div>' +
+          '<div style="font-weight:800;margin-bottom:4px;">🚨 Alertas Críticas y Campos Ilegibles:</div>' +
           '<ul style="margin:0;padding-left:1.2rem;font-size:0.74rem;">' +
             alertas.map(a => '<li style="margin-bottom:2px;">' + sanitizeHTML(a) + '</li>').join('') +
           '</ul>' +
         '</div>';
       }
 
-      if (obs.length > 0) {
-        html += '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:0.75rem;margin-top:0.75rem;">' +
-          '<div style="font-weight:700;color:var(--color-primary);font-size:0.74rem;margin-bottom:4px;">🔍 Observaciones del Analista de Riesgo:</div>' +
-          '<ul style="margin:0;padding-left:1.2rem;font-size:0.72rem;color:var(--text-muted);">' +
-            obs.map(o => '<li style="margin-bottom:2px;">' + sanitizeHTML(o) + '</li>').join('') +
-          '</ul>' +
-        '</div>';
+      if (audit.informeEjecutivo) {
+        html += '<div class="section-title-divider" style="margin-top:1.15rem;">Dictamen del Auditor</div>' +
+          '<div class="memo-container"><p style="margin:0;white-space:pre-line;line-height:1.5;">' + sanitizeHTML(audit.informeEjecutivo) + '</p></div>';
       }
 
-      // 6. INFORME EJECUTIVO NARRATIVO
-      if (audit.informeEjecutivo) {
-        html += '<div class="section-title-divider" style="margin-top:1.25rem;">Informe Ejecutivo para el Comité de Créditos</div>' +
-          '<div class="memo-container">' +
-            '<div style="font-weight:800;color:#1e3a8a;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">' +
-              '<span>DICTAMEN TÉCNICO DE CALIFICACIÓN CREDITICIA AMMER</span>' +
-              '<span style="font-size:0.66rem;color:var(--text-muted);">Asociación Mutual Modelo de Entre Ríos</span>' +
-            '</div>' +
-            '<p style="margin:0;white-space:pre-line;line-height:1.5;">' + sanitizeHTML(audit.informeEjecutivo) + '</p>' +
-          '</div>';
-      }
+      html += '</div>'; // Fin panelAuditTabVisual
+
+      html += '<div id="panelAuditTabMarkdown" style="display:none;">' +
+        '<div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:1rem;">' +
+          '<pre style="margin:0;white-space:pre-wrap;font-size:0.75rem;line-height:1.55;color:#0f172a;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">' + sanitizeHTML(mdText) + '</pre>' +
+        '</div>' +
+      '</div>';
+
+      html += '<div id="panelAuditTabJson" style="display:none;">' +
+        '<div style="background:#0f172a;border-radius:10px;padding:1rem;">' +
+          '<pre style="margin:0;white-space:pre-wrap;font-size:0.72rem;line-height:1.5;color:#e2e8f0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">' + sanitizeHTML(jsonText) + '</pre>' +
+        '</div>' +
+      '</div>';
 
       html += '</div>';
-
       container.innerHTML = html;
       container.style.display = 'block';
       container.scrollIntoView({ behavior: 'smooth' });
@@ -14418,23 +14377,30 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       const rec = ultimoResultadoAuditoria.reciboSueldo || {};
       const dni = ultimoResultadoAuditoria.dni || {};
+      const esLegible = (v) => v && !String(v).toUpperCase().includes('ILEGIBLE');
 
       if (!s.solicitante) s.solicitante = {};
-      if (rec.dni || dni.numero) s.solicitante.dni = rec.dni || dni.numero;
-      if (rec.titular || dni.nombreCompleto) s.solicitante.nombre = rec.titular || dni.nombreCompleto;
-      if (dni.domicilio) s.solicitante.domicilio = dni.domicilio;
-      if (rec.dependencia) s.solicitante.dependencia = rec.dependencia;
-      if (rec.organismo) {
+      if (esLegible(rec.dni)) s.solicitante.dni = rec.dni;
+      else if (esLegible(dni.numero)) s.solicitante.dni = dni.numero;
+      if (esLegible(rec.cuil)) s.solicitante.cuil = rec.cuil;
+      if (esLegible(rec.titular)) s.solicitante.nombre = rec.titular;
+      else if (esLegible(dni.nombreCompleto)) s.solicitante.nombre = dni.nombreCompleto;
+      if (esLegible(dni.domicilio)) s.solicitante.domicilio = dni.domicilio;
+      if (esLegible(rec.dependencia)) s.solicitante.dependencia = rec.dependencia;
+      if (esLegible(rec.organismo)) {
         s.solicitante.organismo = rec.organismo.toLowerCase().includes('muni') ? 'Municipal' : 'Provincial';
       }
-      if (rec.situacionRevista) {
-        s.solicitante.cargo = rec.situacionRevista.toLowerCase().includes('titular') || rec.situacionRevista.toLowerCase().includes('permanente') ? 'Titular' : 'Suplente';
+      if (esLegible(rec.situacionRevista)) {
+        s.solicitante.situacionRevista = rec.situacionRevista;
+        s.solicitante.cargo = rec.situacionRevista.toLowerCase().includes('suplente') ? 'Suplente' : 'Titular';
       }
-      s.solicitante.sueldoNetoAuditor = rec.sueldoNeto;
+      if (rec.sueldoNeto !== null && rec.sueldoNeto !== undefined) {
+        s.solicitante.sueldoNetoAuditor = rec.sueldoNeto;
+      }
 
       saveStoredSolicitudes(all);
-      sincronizarConBackend();
-      showToast('✅ Datos del solicitante sincronizados con éxito desde el legajo auditado.');
+      sincronizarConBackend(true);
+      showToast('✅ Datos legibles sincronizados en el expediente.');
       renderModuloMutual();
     }
 
@@ -14453,29 +14419,29 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       if (!s.observaciones) s.observaciones = [];
       const session = getSession();
-      const autor = session ? session.nombre : 'Auditoría IA (AMMER)';
+      const autor = session ? session.nombre : 'Auditoría Forense AMMER';
 
       const resumenAlertas = (audit.alertasCriticas && audit.alertasCriticas.length > 0) ?
         (' | Alertas: ' + audit.alertasCriticas.join('; ')) : ' | Sin alertas críticas.';
 
-      const texto = '[AUDITORÍA IA - DICTAMEN: ' + (sc.dictamen || 'REVISAR') + ' (' + (sc.puntajeTotal || 0) + '/100)] ' +
-        'Sueldo Neto: ' + formatMoney(rec.sueldoNeto || 0) + ' | Tope 50%: ' + formatMoney(rec.topeLegal50Porciento || 0) + ' | Margen Disp: ' + formatMoney(rec.margenDisponibleCuota || 0) + resumenAlertas;
+      const texto = '[AUDITORÍA FORENSE AMMER - ' + (sc.dictamen || 'REVISAR') + ' (' + (sc.puntajeTotal || 0) + '/100 • ' + (sc.calificacionLetra || '') + ')] ' +
+        'Bruto: ' + formatMontoAuditoriaExacto(rec.sueldoBruto) + ' | Cupo 50% Bruto: ' + formatMontoAuditoriaExacto(rec.topeLegal50Porciento) + ' | Margen Disp: ' + formatMontoAuditoriaExacto(rec.margenDisponibleCuota) + resumenAlertas;
 
       s.observaciones.push({
-        fecha: new Date().toISOString(),
-        autor: autor + ' [Audit IA]',
+        fecha: obtenerFechaHora24hs(),
+        autor: autor + ' [Auditoría Forense]',
         rol: 'Analista',
         texto: texto
       });
 
-      if (sc.dictamen === 'OBSERVADO' && (s.estado === 'Pendiente' || s.estado === 'En Análisis')) {
+      if ((sc.dictamen === 'OBSERVADO' || sc.dictamen === 'RECHAZADO') && (s.estado === 'Pendiente' || s.estado === 'En Análisis')) {
         s.estado = 'Observado';
       } else if (sc.dictamen === 'APTO_OTORGAMIENTO' && s.estado === 'Pendiente') {
         s.estado = 'En Análisis';
       }
 
       saveStoredSolicitudes(all);
-      sincronizarConBackend();
+      sincronizarConBackend(true);
       showToast('💬 Dictamen registrado en la línea de tiempo del expediente.');
       renderModuloMutual();
     }
@@ -14488,29 +14454,28 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const a = ultimoResultadoAuditoria;
       const sc = a.scoringCrediticio || {};
       const rec = a.reciboSueldo || {};
-      const dni = a.dni || {};
+      const cruce = a.cruceIdentidad || {};
 
       const txt = '🏛️ *ASOCIACIÓN MUTUAL MODELO DE ENTRE RÍOS (AMMER)*\n' +
-        '📋 *DICTAMEN DE AUDITORÍA DOCUMENTAL Y CALIFICACIÓN CREDITICIA AMMER*\n' +
+        '📑 *INFORME DE AUDITORÍA DOCUMENTAL Y CREDITICIA AMMER*\n' +
         '=========================================\n' +
-        '👤 *Titular:* ' + (rec.titular || dni.nombreCompleto || 'No informado') + '\n' +
-        '🪪 *DNI:* ' + (rec.dni || dni.numero || 'No informado') + ' | *CUIL:* ' + (rec.cuil || 'S/D') + '\n' +
-        '🏢 *Organismo:* ' + (rec.organismo || 'Provincial / Municipal') + ' (' + (rec.situacionRevista || 'Planta') + ')\n' +
+        '👤 *Titular:* ' + (rec.titular || TEXTO_ILEGIBLE_AMMER) + '\n' +
+        '🪪 *DNI:* ' + (rec.dni || TEXTO_ILEGIBLE_AMMER) + ' | *CUIL:* ' + (rec.cuil || TEXTO_ILEGIBLE_AMMER) + '\n' +
+        '🏢 *Organismo:* ' + (rec.organismo || TEXTO_ILEGIBLE_AMMER) + ' (' + (rec.situacionRevista || TEXTO_ILEGIBLE_AMMER) + ')\n' +
+        '📅 *Período:* ' + (rec.periodo || TEXTO_ILEGIBLE_AMMER) + ' (' + (rec.estadoPeriodo || 'VERIFICAR') + ')\n' +
         '-----------------------------------------\n' +
-        '🎯 *DICTAMEN FINAL:* ' + (sc.dictamen || 'REVISAR') + ' (' + (sc.puntajeTotal || 0) + ' / 100 pts)\n' +
-        '📊 *Nivel de Confianza:* ' + (sc.nivelConfianza || 'ALTO') + '\n\n' +
-        '💰 *RADIOGRAFÍA FINANCIERA (Recibo de Sueldo):*\n' +
-        '• Sueldo Bruto: ' + formatMoney(rec.sueldoBruto || 0) + '\n' +
-        '• Descuentos de Ley: - ' + formatMoney(rec.descuentosLey || 0) + '\n' +
-        '• Retenciones Préstamos/Mutuales: - ' + formatMoney(rec.descuentosPrestamosYMutuales || 0) + '\n' +
-        '• Sueldo Neto Líquido: ' + formatMoney(rec.sueldoNeto || 0) + '\n' +
-        '• Tope Legal 50% (Cláusula 18 inc. e): ' + formatMoney(rec.topeLegal50Porciento || 0) + '\n' +
-        '• Margen Disponible para Cuota: ' + formatMoney(rec.margenDisponibleCuota || 0) + '\n\n' +
-        '🔍 *CONTROL DE VIGENCIA Y CRUCE:*\n' +
-        '• DNI Vigente: ' + (dni.dniVigente !== false ? '✅ SÍ (Vence: ' + (dni.fechaVencimiento || '2030+') + ')' : '⚠️ VENCIDO') + '\n' +
-        '• Recibo Vigente: ' + (!rec.reciboVencido ? '✅ SÍ (< 60 días)' : '⚠️ VENCIDO (> 60 días)') + '\n' +
-        '• Coincidencia Identidad: ' + (a.cruceIdentidad?.coincideDni && a.cruceIdentidad?.coincideNombre ? '✅ 100% Concordante' : '⚠️ Revisar inconsistencias') + '\n\n' +
-        '📝 *INFORME EJECUTIVO:*\n' + (a.informeEjecutivo || 'Conforme a los criterios de legajo AMMER.') + '\n' +
+        '🛡️ *SCORE AMMER:* ' + (sc.puntajeTotal || 0) + '/100 — ' + (sc.calificacionLetra || '') + ' (' + (sc.dictamen || 'REVISAR') + ')\n\n' +
+        '💵 *RADIOGRAFÍA SALARIAL:*\n' +
+        '• Sueldo Bruto Total: ' + formatMontoAuditoriaExacto(rec.sueldoBruto) + '\n' +
+        '• Descuentos de Ley: ' + formatMontoAuditoriaExacto(rec.descuentosLey) + '\n' +
+        '• BERSA / SIDECREER / Mutuales: ' + formatMontoAuditoriaExacto(rec.consumosBersa) + ' / ' + formatMontoAuditoriaExacto(rec.consumosSidecreer) + ' / ' + formatMontoAuditoriaExacto(rec.otrasMutuales) + '\n' +
+        '• Total Descuentos Recibo: ' + formatMontoAuditoriaExacto(rec.totalDescuentosRecibo) + '\n' +
+        '• Sueldo Líquido Bolsillo: ' + formatMontoAuditoriaExacto(rec.sueldoNeto) + '\n' +
+        '• Cupo Máximo Legal (50% del Bruto): ' + formatMontoAuditoriaExacto(rec.topeLegal50Porciento) + '\n' +
+        '• Margen Disponible Mensual: ' + formatMontoAuditoriaExacto(rec.margenDisponibleCuota) + '\n' +
+        '• Embargos Judiciales: ' + (rec.embargoDetectado ? ('🔴 ' + formatMontoAuditoriaExacto(rec.embargoMonto) + ' (' + (rec.embargoConcepto || '') + ')') : '🟢 SIN EMBARGOS') + '\n' +
+        '• Cotejo Carátula: ' + (cruce.estadoCotejo || 'VERIFICAR') + '\n\n' +
+        '📝 *DICTAMEN DEL AUDITOR:*\n' + (a.informeEjecutivo || 'Revisar legajo digital.') + '\n' +
         '=========================================';
 
       navigator.clipboard.writeText(txt).then(() => {
@@ -15048,6 +15013,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.obtenerFechaHora24hs = obtenerFechaHora24hs;
     window.actualizarContadorBoveda = actualizarContadorBoveda;
     window.iniciarSincronizacionPasivaBackground = iniciarSincronizacionPasivaBackground;
+    window.cambiarTabInformeAuditoria = cambiarTabInformeAuditoria;
+    window.copiarInformeMarkdownAuditoria = copiarInformeMarkdownAuditoria;
+    window.copiarResumenJsonAuditoria = copiarResumenJsonAuditoria;
+    window.construirInformeMarkdownAMMER = construirInformeMarkdownAMMER;
+    window.formatMontoAuditoriaExacto = formatMontoAuditoriaExacto;
+    window.renderErrorAuditoria = renderErrorAuditoria;
     window.estadoApp = window.estadoApp;
 
     window.addEventListener('DOMContentLoaded', () => {

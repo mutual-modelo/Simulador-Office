@@ -28,10 +28,15 @@
       --wa-header-bg:#075e54;--wa-accent:#25d366;--wa-bubble:#dcf8c6;
     }
     html, body {
-      overflow-x: hidden !important;
+      overflow-x: clip !important;
       width: 100%;
-      max-width: 100vw;
+      max-width: 100%;
       position: relative;
+    }
+    html.modal-scroll-locked,
+    body.modal-scroll-locked {
+      overflow: hidden !important;
+      overscroll-behavior: contain;
     }
     body {
       font-family: var(--font-sans);
@@ -77,7 +82,8 @@
     .app-layout {
       display: flex;
       height: 100vh;
-      width: 100vw;
+      height: 100dvh;
+      width: 100%;
       overflow: hidden;
       background: #f8fafc;
       position: relative;
@@ -1778,13 +1784,17 @@
       font-size: 0.72rem;
       font-weight: 600;
       color: #64748b;
+      min-height: 18px;
+      display: inline-flex;
+      align-items: center;
     }
 
     /* TABLA DE DATOS */
-    .data-table-container{background:#fff;border:1px solid var(--border-color);border-radius:12px;margin-top:.75rem;overflow-x:auto}
+    .data-table-container{background:#fff;border:1px solid var(--border-color);border-radius:12px;margin-top:.75rem;overflow-x:auto;min-height:180px}
     .data-table{width:100%;border-collapse:collapse;font-size:.75rem;min-width:860px}
     .data-table th{padding:.6rem .75rem;background:#f8fafc;font-size:.68rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;border-bottom:1px solid var(--border-color);text-align:left}
     .data-table td{padding:.55rem .75rem;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+    .data-table tbody tr{content-visibility:auto;contain-intrinsic-size:0 56px}
     .data-table tr:hover{background:#f8fafc}
     .badge-status{display:inline-flex;align-items:center;gap:.25rem;padding:.15rem .5rem;border-radius:9999px;font-size:.68rem;font-weight:700;white-space:nowrap}
     .badge-Pendiente{background:#fef9c3;color:#854d0e;border:1px solid #fde047}
@@ -1836,9 +1846,9 @@
     .calendar-wrapper{margin-top:.75rem;background:#fff;border:1px solid var(--border-color);border-radius:12px;padding:1rem}
     .calendar-nav-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
     .calendar-month-title{font-size:.95rem;font-weight:800;color:var(--color-primary)}
-    .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+    .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;min-height:520px}
     .calendar-head-cell{text-align:center;padding:.4rem;background:#f8fafc;font-size:.68rem;font-weight:700;color:var(--text-muted);border-radius:4px;text-transform:uppercase}
-    .calendar-day-cell{min-height:96px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:4px;display:flex;flex-direction:column;transition:background-color .12s}
+    .calendar-day-cell{min-height:96px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:4px;display:flex;flex-direction:column;transition:background-color .12s;contain:layout style}
     .calendar-day-cell:hover{background:#fafafa}
     .calendar-day-cell.other-month{background:#f8fafc;opacity:.45}
     .calendar-day-cell.is-today{background:#eff6ff;border-color:#bfdbfe}
@@ -1847,7 +1857,7 @@
     .calendar-event-chip:hover{opacity:.85}
 
     /* MODALES */
-    .modal-backdrop{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.55);backdrop-filter:blur(3px);z-index:100;display:none;align-items:center;justify-content:center;padding:1rem}
+    .modal-backdrop{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.55);backdrop-filter:blur(3px);z-index:100;display:none;align-items:center;justify-content:center;padding:1rem;overscroll-behavior:contain}
     .modal-backdrop.open{display:flex}
     .modal-backdrop-elevated{z-index:180}
     .modal-window{background:#fff;border-radius:14px;width:100%;max-width:880px;max-height:94vh;display:flex;flex-direction:column;box-shadow:0 15px 35px rgba(0,0,0,.2);border:1px solid var(--border-color);overflow:hidden}
@@ -2044,9 +2054,9 @@
     .antiguedad-reactive-label{display:flex;align-items:center;justify-content:space-between;font-size:.75rem;font-weight:600;color:#475569;margin-bottom:.375rem;min-height:18px}
     .antiguedad-reactive-input{width:100%;height:42px;padding:0 .875rem;border:1px solid #cbd5e1;border-radius:12px;font-size:.875rem;font-family:var(--font-sans);color:#1e293b;background:#fff;outline:none;transition:border-color .16s,box-shadow .16s}
     .antiguedad-reactive-input:focus{border-color:#135596;box-shadow:0 0 0 3px rgba(19,85,150,.14)}
-    .antiguedad-reactive-badge{width:100%;height:42px;padding:0 .875rem;background:rgba(239,246,255,.72);border:1px solid #bfdbfe;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.8125rem;font-weight:700;color:#135596}
+    .antiguedad-reactive-badge{width:100%;height:42px;min-height:42px;padding:0 .875rem;background:rgba(239,246,255,.72);border:1px solid #bfdbfe;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.8125rem;font-weight:700;color:#135596;contain:layout style}
     .antiguedad-auto-pill{font-size:.65rem;font-weight:700;color:#2563eb;background:#ffffff;padding:2px 8px;border-radius:9999px;border:1px solid #dbeafe;white-space:nowrap}
-    .edad-reactive-badge{width:100%;height:42px;padding:0 .875rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.875rem;font-weight:700;color:#1e293b}
+    .edad-reactive-badge{width:100%;height:42px;min-height:42px;padding:0 .875rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.875rem;font-weight:700;color:#1e293b;contain:layout style}
     .edad-auto-pill{font-size:.65rem;font-weight:700;color:#64748b;background:#ffffff;padding:2px 8px;border-radius:9999px;border:1px solid #e2e8f0;white-space:nowrap}
     .alert-policy-box{display:flex;align-items:flex-start;gap:.5rem;padding:.65rem .9rem;border-radius:12px;font-size:.75rem;font-weight:600;line-height:1.4;margin-top:.65rem;transition:all .2s ease}
     .alert-policy-red{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
@@ -2737,8 +2747,8 @@
     .api-spinner-inline{width:12px;height:12px;border:2px solid #bae6fd;border-top-color:#0284c7;border-radius:50%;animation:spin .75s linear infinite;display:inline-block}
 
     /* SPINNER & OVERLAY DE SINCRONIZACIÓN API */
-    .api-loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.45);backdrop-filter:blur(3px);z-index:9999;display:none;align-items:center;justify-content:center}
-    .api-loading-box{background:#fff;padding:1.25rem 1.75rem;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.2);display:flex;align-items:center;gap:1.15rem;border:1px solid var(--border-color)}
+    .api-loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.45);backdrop-filter:blur(3px);z-index:9999;display:none;align-items:center;justify-content:center;overscroll-behavior:contain}
+    .api-loading-box{background:#fff;padding:1.25rem 1.75rem;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.2);display:flex;align-items:center;gap:1.15rem;border:1px solid var(--border-color);min-width:280px;min-height:68px}
     .api-spinner{width:32px;height:32px;border:3px solid #e2e8f0;border-top-color:var(--color-brand-blue);border-radius:50%;animation:spin .75s linear infinite;flex-shrink:0}
     @keyframes spin{to{transform:rotate(360deg)}}
     .api-loading-text{display:flex;flex-direction:column}
@@ -2750,7 +2760,7 @@
 </head>
 <body>
   <!-- INDICADOR FLOTANTE DE COMUNICACIÓN CON SERVIDOR CENTRAL -->
-  <div id="apiLoadingOverlay" class="api-loading-overlay">
+  <div id="apiLoadingOverlay" class="api-loading-overlay" role="alertdialog" aria-modal="true" aria-live="polite" aria-hidden="true">
     <div class="api-loading-box">
       <div class="api-spinner"></div>
       <div class="api-loading-text">
@@ -3696,7 +3706,7 @@
 
   <!-- MODAL 1: ALTA SOLICITUD -->
     <!-- MODAL: ALTA DE ASOCIADO AL PADRÓN INSTITUCIONAL (EXCLUSIVO ANALISTAS Y ADMIN) -->
-  <div id="modalAltaAsociado" class="modal-backdrop" data-alias="modal-nuevo-asociado">
+  <div id="modalAltaAsociado" class="modal-backdrop" data-alias="modal-nuevo-asociado" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
     <div class="modal-window modal-form-wide">
       <div class="modal-header-bar">
         <div class="modal-header-title">
@@ -4215,7 +4225,7 @@
     </div>
   </div>
 
-  <div id="modalAltaSolicitud" class="modal-backdrop" data-alias="modal-nueva-solicitud">
+  <div id="modalAltaSolicitud" class="modal-backdrop" data-alias="modal-nueva-solicitud" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
     <div class="modal-window modal-form-wide">
       <div class="modal-header-bar">
         <div class="modal-header-title">
@@ -5014,35 +5024,35 @@
   </div>
 
   <!-- MODAL 2: VER FICHA COMPLETA (EDICIÓN INTEGRAL, OFERTAS, DOCUMENTAL Y CHAT) -->
-  <div id="modalFichaCompleta" class="modal-backdrop">
+  <div id="modalFichaCompleta" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
     <div class="modal-window modal-large">
       <div class="modal-header-bar">
         <div class="modal-header-title"><span id="fichaModalTitle">Ficha de Expediente</span></div>
-        <button class="btn-close-modal" onclick="cerrarModal('modalFichaCompleta')">&times;</button>
+        <button type="button" class="btn-close-modal" onclick="cerrarModal('modalFichaCompleta')" aria-label="Cerrar">&times;</button>
       </div>
       <div class="modal-body-scroll" id="fichaModalBody"></div>
       <div class="modal-footer-bar">
-        <button class="btn-restore" onclick="cerrarModal('modalFichaCompleta')">Cerrar Expediente</button>
+        <button type="button" class="btn-restore" onclick="cerrarModal('modalFichaCompleta')">Cerrar Expediente</button>
       </div>
     </div>
   </div>
 
   <!-- MODAL 3: GESTIÓN RESOLUCIÓN MUTUAL -->
-  <div id="modalGestionMutual" class="modal-backdrop">
+  <div id="modalGestionMutual" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
     <div class="modal-window modal-large">
       <div class="modal-header-bar">
         <div class="modal-header-title"><span id="gestionModalTitle">Resolución Integral de Solicitud</span></div>
-        <button class="btn-close-modal" onclick="cerrarModal('modalGestionMutual')">&times;</button>
+        <button type="button" class="btn-close-modal" onclick="cerrarModal('modalGestionMutual')" aria-label="Cerrar">&times;</button>
       </div>
       <div class="modal-body-scroll" id="gestionModalBody"></div>
       <div class="modal-footer-bar">
-        <button class="btn-restore" onclick="cerrarModal('modalGestionMutual')">Cerrar</button>
+        <button type="button" class="btn-restore" onclick="cerrarModal('modalGestionMutual')">Cerrar</button>
       </div>
     </div>
   </div>
 
   <!-- MODAL 3B: DERIVAR / REASIGNAR CASO ENTRE ANALISTAS (EXCLUSIVO ANALISTA / ADMIN) -->
-  <div id="modal-derivar-caso" class="modal-backdrop modal-backdrop-elevated">
+  <div id="modal-derivar-caso" class="modal-backdrop modal-backdrop-elevated" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
     <div class="modal-window modal-window-sm">
       <div class="modal-header-bar">
         <div class="modal-header-title"><span>🔄 Derivar / Reasignar Caso a Analista</span></div>
@@ -5073,7 +5083,7 @@
   </div>
 
   <!-- MODAL 3C: ASIGNAR N° DEFINITIVO AL EXPEDIENTE (ADMIN / ANALISTA) -->
-  <div id="modal-asignar-nro-definitivo" class="modal-backdrop modal-backdrop-elevated">
+  <div id="modal-asignar-nro-definitivo" class="modal-backdrop modal-backdrop-elevated" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
     <div class="modal-window modal-window-sm">
       <div class="modal-header-bar">
         <div class="modal-header-title"><span>🏷️ Asignar N° Definitivo al Expediente</span></div>
@@ -5097,7 +5107,7 @@
   </div>
 
   <!-- MODAL 4: VISOR DOCUMENTAL ONLINE INTEGRADO IN-APP -->
-  <div id="modalVisorDocumento" class="modal-backdrop">
+  <div id="modalVisorDocumento" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
     <div class="modal-window doc-viewer-modal-window">
       <div class="modal-header-bar">
         <div class="modal-header-title">
@@ -5106,7 +5116,7 @@
         </div>
         <div style="display:flex;align-items:center;gap:0.5rem;">
           <a id="btnVisorDescargar" href="#" download class="btn-restore" style="text-decoration:none;font-size:0.75rem;">📥 Descargar</a>
-          <button class="btn-close-modal" onclick="cerrarVisorDocumento()">&times;</button>
+          <button type="button" class="btn-close-modal" onclick="cerrarVisorDocumento()" aria-label="Cerrar">&times;</button>
         </div>
       </div>
       <div id="visorImageToolbar" class="doc-viewer-toolbar" style="display:none;">
@@ -5123,7 +5133,7 @@
   </div>
 
   <!-- MODAL 5: BASE DE CONOCIMIENTO & PREGUNTAS FRECUENTES (FAQ / WIKI) -->
-  <div id="modalFaqWiki" class="modal-backdrop" data-alias="modal-faq">
+  <div id="modalFaqWiki" class="modal-backdrop" data-alias="modal-faq" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
     <div class="wiki-modal-container w-[96vw] max-w-6xl md:max-w-7xl max-h-[92vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200/80 transition-all" id="modal-faq">
       <div class="wiki-header">
         <div>
@@ -5592,12 +5602,100 @@
       const s = document.getElementById('apiLoadingSub');
       if (t) t.textContent = titulo;
       if (s) s.textContent = sub;
-      if (overlay) overlay.style.display = 'flex';
+      if (overlay) {
+        overlay.style.display = 'flex';
+        overlay.setAttribute('aria-hidden', 'false');
+      }
     }
 
     function ocultarCargando() {
       const overlay = document.getElementById('apiLoadingOverlay');
-      if (overlay) overlay.style.display = 'none';
+      if (overlay) {
+        overlay.style.display = 'none';
+        overlay.setAttribute('aria-hidden', 'true');
+      }
+    }
+
+    // Helper robusto de red con AbortController y timeout explícito para evitar canales colgados
+    async function fetchConTimeout(url, options = {}, timeoutMs = 25000) {
+      const controller = (typeof AbortController === 'function') ? new AbortController() : null;
+      let timerId = null;
+      const externalSignal = options && options.signal ? options.signal : null;
+      const onExternalAbort = () => {
+        if (controller && !controller.signal.aborted) controller.abort();
+      };
+      if (controller && externalSignal) {
+        if (externalSignal.aborted) {
+          controller.abort();
+        } else if (typeof externalSignal.addEventListener === 'function') {
+          externalSignal.addEventListener('abort', onExternalAbort, { once: true });
+        }
+      }
+      if (controller && timeoutMs > 0) {
+        timerId = setTimeout(() => {
+          if (!controller.signal.aborted) controller.abort();
+        }, timeoutMs);
+      }
+      try {
+        const fetchOpts = controller
+          ? Object.assign({}, options, { signal: controller.signal })
+          : options;
+        return await fetch(url, fetchOpts);
+      } finally {
+        if (timerId !== null) clearTimeout(timerId);
+        if (controller && externalSignal && typeof externalSignal.removeEventListener === 'function') {
+          externalSignal.removeEventListener('abort', onExternalAbort);
+        }
+      }
+    }
+
+    // Helper de renderizado por lotes vía DocumentFragment para minimizar reflows en tablas y calendarios
+    function renderHtmlPorLotes(containerEl, htmlString) {
+      if (!containerEl) return;
+      const content = String(htmlString || '');
+      try {
+        if (typeof document.createRange === 'function' && typeof containerEl.replaceChildren === 'function') {
+          const range = document.createRange();
+          if (typeof range.selectNodeContents === 'function' && typeof range.createContextualFragment === 'function') {
+            range.selectNodeContents(containerEl);
+            const fragment = range.createContextualFragment(content);
+            containerEl.replaceChildren(fragment);
+            return;
+          }
+        }
+      } catch (_) {}
+      containerEl.innerHTML = content;
+    }
+
+    // Helper de carga masiva de <option> vía DocumentFragment sin lecturas/escrituras repetidas en bucle
+    function poblarSelectPorLotes(selectEl, items, defaultLabel, selectedValue) {
+      if (!selectEl) return;
+      if (typeof document.createDocumentFragment === 'function' && typeof selectEl.replaceChildren === 'function') {
+        const frag = document.createDocumentFragment();
+        if (defaultLabel !== null && defaultLabel !== undefined) {
+          const defOpt = document.createElement('option');
+          defOpt.value = '';
+          defOpt.textContent = defaultLabel;
+          frag.appendChild(defOpt);
+        }
+        (items || []).forEach(item => {
+          if (!item) return;
+          const opt = document.createElement('option');
+          opt.value = item;
+          opt.textContent = item;
+          if (selectedValue && item === selectedValue) opt.selected = true;
+          frag.appendChild(opt);
+        });
+        selectEl.replaceChildren(frag);
+        return;
+      }
+      let optsHtml = (defaultLabel !== null && defaultLabel !== undefined)
+        ? '<option value="">' + sanitizeHTML(defaultLabel) + '</option>'
+        : '';
+      optsHtml += (items || []).filter(Boolean).map(item =>
+        '<option value="' + sanitizeHTML(item) + '"' + (selectedValue && item === selectedValue ? ' selected' : '') + '>' + sanitizeHTML(item) + '</option>'
+      ).join('');
+      selectEl.innerHTML = optsHtml;
     }
 
     async function callApi(payload, loadingMsg) {
@@ -5610,13 +5708,13 @@
           const sess = (typeof getSession === 'function') ? getSession() : null;
           if (sess) bodyPayload.usuarioActivo = sess;
         }
-        const response = await fetch(APPS_SCRIPT_URL, {
+        const response = await fetchConTimeout(APPS_SCRIPT_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'text/plain;charset=utf-8'
           },
           body: JSON.stringify(bodyPayload)
-        });
+        }, 28000);
         if (!response.ok) {
           return { ok: false, error: 'HTTP ' + response.status, data: null };
         }
@@ -5643,8 +5741,15 @@
         }
         return { ok: true, data: parsed };
       } catch (err) {
+        const isTimeout = err && (err.name === 'AbortError' || String(err.message || '').toLowerCase().includes('abort'));
         console.error('Error de conexión con el Servidor Central de la Mutual:', err);
-        return { ok: false, error: '⚠️ Error de conexión con el Servidor Central de la Mutual. Verifique su conexión.', data: null };
+        return {
+          ok: false,
+          error: isTimeout
+            ? '⏱️ Tiempo de espera agotado al conectar con el Servidor Central de la Mutual. Intente nuevamente.'
+            : '⚠️ Error de conexión con el Servidor Central de la Mutual. Verifique su conexión.',
+          data: null
+        };
       } finally {
         if (loadingMsg) {
           ocultarCargando();
@@ -7024,7 +7129,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     function abrirModalFaqWiki() {
       const modal = document.getElementById('modalFaqWiki') || document.getElementById('modal-faq');
       if (modal) {
-        modal.classList.add('open');
+        if (modal.id) abrirModal(modal.id);
+        else modal.classList.add('open');
         const inp = document.getElementById('input-buscar-faq') || document.getElementById('faq-search-input') || document.getElementById('inpFaqSearch');
         if (inp) {
           inp.value = '';
@@ -7037,7 +7143,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
     function cerrarModalFaqWiki() {
       const modal = document.getElementById('modalFaqWiki') || document.getElementById('modal-faq');
-      if (modal) modal.classList.remove('open');
+      if (modal) {
+        if (modal.id) cerrarModal(modal.id);
+        else modal.classList.remove('open');
+      }
     }
 
     function limpiarBusquedaFaq() {
@@ -8162,7 +8271,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           mostrarCargando('🔄 Actualizando expedientes desde la base central...', 'Consultando expedientes y Legajos Digitales en tiempo real');
         }
         try {
-          const respuesta = await fetch(APPS_SCRIPT_URL, {
+          const respuesta = await fetchConTimeout(APPS_SCRIPT_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({
@@ -8176,7 +8285,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
               nombre_organizacion: session.nombre_organizacion,
               es_titular: !!session.es_titular_organizacion
             })
-          });
+          }, 25000);
 
           if (!respuesta.ok) {
             throw new Error('HTTP ' + respuesta.status);
@@ -8470,9 +8579,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const all = getStoredSolicitudes();
         const list = isAdmin ? all : all.filter(s => s.organizacion_id === session.organizacion_id);
         const currentVal = cboAsesor.value;
-        const asesores = [...new Set(list.map(s => s.comercializador))];
-        cboAsesor.innerHTML = '<option value="">Todos los Asesores (' + asesores.length + ')</option>' +
-          asesores.map(a => '<option value="' + a + '" ' + (a === currentVal ? 'selected' : '') + '>' + a + '</option>').join('');
+        const asesores = [...new Set(list.map(s => s.comercializador).filter(Boolean))];
+        poblarSelectPorLotes(cboAsesor, asesores, 'Todos los Asesores (' + asesores.length + ')', currentVal);
       } else if (cboAsesor) {
         cboAsesor.style.display = 'none';
       }
@@ -8494,11 +8602,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const msgVacio = (getStoredSolicitudes().length === 0)
           ? 'No se registran solicitudes en el período seleccionado. Presione "+ Nueva Solicitud" para iniciar un trámite.'
           : 'No se registran solicitudes en el período seleccionado.';
-        tbody.innerHTML = '<tr><td colspan="' + (showAsesorCol ? 11 : 10) + '" style="text-align:center;padding:1.5rem;color:var(--text-muted);">' + msgVacio + '</td></tr>';
+        renderHtmlPorLotes(tbody, '<tr><td colspan="' + (showAsesorCol ? 11 : 10) + '" style="text-align:center;padding:1.5rem;color:var(--text-muted);">' + msgVacio + '</td></tr>');
         return;
       }
 
-      tbody.innerHTML = filtered.map(s => {
+      const rowsHtml = filtered.map(s => {
         const esMio = (s.usuario_id === session.id || s.comercializador === session.nombre);
         const colAsesorHtml = showAsesorCol ?
           '<td><strong>' + s.comercializador + '</strong>' + (esMio ? ' <span style="font-size:0.65rem;color:var(--color-brand-blue);font-weight:700;">(Tú)</span>' : '') + '<br><span class="badge-org-tag">' + (s.nombre_organizacion || 'Paraná Centro') + '</span></td>' : '';
@@ -8540,6 +8648,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           '<td><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;"><button class="btn-table-action" onclick="verFichaCompleta(\'' + s.id + '\')">👁️ Ficha / Trámite</button>' + driveLinkHtml + '</div></td>' +
           '</tr>';
       }).join('');
+      renderHtmlPorLotes(tbody, rowsHtml);
     }
 
     function filtrarGestionesComercializador() { renderModuloComercializador(); }
@@ -11321,11 +11430,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const msgVacio = (getStoredSolicitudes().length === 0)
           ? 'No se registran solicitudes en el período seleccionado. Presione "+ Nueva Solicitud" para iniciar un trámite.'
           : 'No se registran solicitudes en el período seleccionado.';
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:1.5rem;color:var(--text-muted);">' + msgVacio + '</td></tr>';
+        renderHtmlPorLotes(tbody, '<tr><td colspan="10" style="text-align:center;padding:1.5rem;color:var(--text-muted);">' + msgVacio + '</td></tr>');
         return;
       }
 
-      tbody.innerHTML = filtered.map(s => {
+      const rowsHtml = filtered.map(s => {
         const fechaStr = s.fecha ? String(s.fecha).split(' ')[0] : 'Hoy';
         const idBadge = s.id_definitivo ?
           '<span class="badge-definitivo">' + sanitizeHTML(s.id_definitivo) + '</span>' :
@@ -11364,6 +11473,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           '<td><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;"><button class="btn-table-action btn-action-primary" onclick="verFichaCompleta(\'' + s.id + '\')">👁️ Ficha / Trámite</button>' + driveLinkHtml + '</div></td>' +
           '</tr>';
       }).join('');
+      renderHtmlPorLotes(tbody, rowsHtml);
     }
 
     function filtrarGestionesMutualPropias() {
@@ -11427,15 +11537,13 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const all = session ? filtrarSolicitudesParaBandeja(getStoredSolicitudes(), session) : getStoredSolicitudes();
       const cboOrg = document.getElementById('filtroMutualOrganizacion');
       if (cboOrg && cboOrg.options.length <= 1) {
-        [...new Set(all.map(s => s.nombre_organizacion || 'Organización Paraná Centro'))].forEach(o => {
-          const opt = document.createElement('option'); opt.value = o; opt.textContent = o; cboOrg.appendChild(opt);
-        });
+        const orgs = [...new Set(all.map(s => s.nombre_organizacion || 'Organización Paraná Centro').filter(Boolean))];
+        poblarSelectPorLotes(cboOrg, orgs, cboOrg.options[0]?.textContent || 'Todas las Organizaciones', cboOrg.value);
       }
       const cboCom = document.getElementById('filtroMutualComercial');
       if (cboCom && cboCom.options.length <= 1) {
-        [...new Set(all.map(s => s.comercializador))].forEach(c => {
-          const opt = document.createElement('option'); opt.value = c; opt.textContent = c; cboCom.appendChild(opt);
-        });
+        const coms = [...new Set(all.map(s => s.comercializador).filter(Boolean))];
+        poblarSelectPorLotes(cboCom, coms, cboCom.options[0]?.textContent || 'Todos los Asesores', cboCom.value);
       }
 
       const filtered = getListaFiltradaMutual();
@@ -11453,11 +11561,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const msgVacio = (getStoredSolicitudes().length === 0)
           ? 'No se registran solicitudes en el período seleccionado. Presione "+ Nueva Solicitud" para iniciar un trámite.'
           : 'No se registran solicitudes en el período seleccionado.';
-        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:1.5rem;color:var(--text-muted);">' + msgVacio + '</td></tr>';
+        renderHtmlPorLotes(tbody, '<tr><td colspan="11" style="text-align:center;padding:1.5rem;color:var(--text-muted);">' + msgVacio + '</td></tr>');
         return;
       }
 
-      tbody.innerHTML = filtered.map(s => {
+      const rowsHtml = filtered.map(s => {
         const fechaStr = s.fecha ? String(s.fecha).split(' ')[0] : 'Hoy';
         const idBadge = s.id_definitivo ?
           '<span class="badge-definitivo">' + sanitizeHTML(s.id_definitivo) + '</span>' :
@@ -11492,6 +11600,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           '<td><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;"><button class="btn-table-action btn-action-primary" onclick="gestionarSolicitudMutual(\'' + s.id + '\')">⚙️ Gestionar</button>' + driveLinkHtml + '</div></td>' +
           '</tr>';
       }).join('');
+      renderHtmlPorLotes(tbody, rowsHtml);
     }
 
     function filtrarGestionesMutual() { renderModuloMutual(); }
@@ -11803,7 +11912,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         '</div>';
       }
 
-      gridEl.innerHTML = html;
+      renderHtmlPorLotes(gridEl, html);
     }
 
     const renderizarCalendarioGestiones = renderCalendarioModulo;
@@ -11869,7 +11978,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       };
 
       try {
-        const resp = await fetch(APPS_SCRIPT_URL, {
+        const resp = await fetchConTimeout(APPS_SCRIPT_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
@@ -11878,7 +11987,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             archivos: archivosAEnviar,
             datosDeclarados: datosDeclarados
           })
-        });
+        }, 45000);
 
         if (!resp.ok) {
           throw new Error('Servidor Central respondió ' + resp.status);
@@ -12412,7 +12521,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
 
       try {
-        const resp = await fetch(APPS_SCRIPT_URL, {
+        const resp = await fetchConTimeout(APPS_SCRIPT_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
@@ -12421,7 +12530,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             archivos: archivosAuditoriaCola,
             datosDeclarados: datosDeclarados
           })
-        });
+        }, 45000);
 
         clearInterval(stepTimer);
 
@@ -12855,10 +12964,106 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     /* ========================================================================
-       11. MODALES Y NOTIFICACIONES TOAST
+       11. MODALES (INERT, ARIA-MODAL, FOCO & SCROLL LOCK) Y NOTIFICACIONES TOAST
        ======================================================================== */
-    function abrirModal(id) { const m = document.getElementById(id); if (m) m.classList.add('open'); }
-    function cerrarModal(id) { const m = document.getElementById(id); if (m) m.classList.remove('open'); }
+    const _modalOpenOrder = [];
+    const _modalFocusReturnMap = new Map();
+
+    function sincronizarEstadoModalesAccesibilidad() {
+      const openIds = _modalOpenOrder.filter(mid => {
+        const el = document.getElementById(mid);
+        return el && el.classList.contains('open');
+      });
+      _modalOpenOrder.length = 0;
+      openIds.forEach(mid => _modalOpenOrder.push(mid));
+
+      const hasOpenModal = _modalOpenOrder.length > 0;
+      const topModalId = hasOpenModal ? _modalOpenOrder[_modalOpenOrder.length - 1] : null;
+
+      if (document.documentElement && document.documentElement.classList) {
+        document.documentElement.classList.toggle('modal-scroll-locked', hasOpenModal);
+      }
+      if (document.body && document.body.classList) {
+        document.body.classList.toggle('modal-scroll-locked', hasOpenModal);
+      }
+
+      ['appLayout', 'loginScreenWrapper'].forEach(bgId => {
+        const bgEl = document.getElementById(bgId);
+        if (!bgEl) return;
+        bgEl.inert = hasOpenModal;
+        if (typeof bgEl.setAttribute === 'function') {
+          bgEl.setAttribute('aria-hidden', hasOpenModal ? 'true' : 'false');
+        }
+      });
+
+      const allModals = document.querySelectorAll('.modal-backdrop');
+      if (allModals && typeof allModals.forEach === 'function') {
+        allModals.forEach(mEl => {
+          if (!mEl) return;
+          const isOpen = mEl.classList.contains('open');
+          const isTop = isOpen && mEl.id === topModalId;
+          mEl.inert = !isTop;
+          if (typeof mEl.setAttribute === 'function') {
+            mEl.setAttribute('aria-hidden', isTop ? 'false' : 'true');
+          }
+        });
+      }
+    }
+
+    function abrirModal(id) {
+      const m = document.getElementById(id);
+      if (!m) return;
+      if (!_modalFocusReturnMap.has(id) && document.activeElement && document.activeElement !== document.body) {
+        _modalFocusReturnMap.set(id, document.activeElement);
+      }
+      const existingIdx = _modalOpenOrder.indexOf(id);
+      if (existingIdx !== -1) _modalOpenOrder.splice(existingIdx, 1);
+      _modalOpenOrder.push(id);
+      m.classList.add('open');
+      sincronizarEstadoModalesAccesibilidad();
+
+      const focusModalSafely = () => {
+        if (!m.classList.contains('open')) return;
+        const active = document.activeElement;
+        if (active && typeof m.contains === 'function' && m.contains(active)) return;
+        const firstInteractive = (typeof m.querySelector === 'function')
+          ? m.querySelector('input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])')
+          : null;
+        const target = firstInteractive || m;
+        if (target && typeof target.focus === 'function') {
+          try { target.focus({ preventScroll: true }); } catch (_) { try { target.focus(); } catch (__) {} }
+        }
+      };
+      if (typeof requestAnimationFrame === 'function') requestAnimationFrame(focusModalSafely);
+      else focusModalSafely();
+    }
+
+    function cerrarModal(id) {
+      const m = document.getElementById(id);
+      if (m) m.classList.remove('open');
+      const idx = _modalOpenOrder.indexOf(id);
+      if (idx !== -1) _modalOpenOrder.splice(idx, 1);
+      sincronizarEstadoModalesAccesibilidad();
+
+      const prevFocus = _modalFocusReturnMap.get(id);
+      _modalFocusReturnMap.delete(id);
+      if (prevFocus && typeof prevFocus.focus === 'function' && (!document.body || typeof document.body.contains !== 'function' || document.body.contains(prevFocus))) {
+        try { prevFocus.focus({ preventScroll: true }); } catch (_) { try { prevFocus.focus(); } catch (__) {} }
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape' || _modalOpenOrder.length === 0) return;
+      const topId = _modalOpenOrder[_modalOpenOrder.length - 1];
+      if (!topId) return;
+      if (topId === 'modalVisorDocumento') {
+        cerrarVisorDocumento();
+      } else if (topId === 'modalFaqWiki') {
+        cerrarModalFaqWiki();
+      } else {
+        cerrarModal(topId);
+      }
+    });
 
     let toastTimeout;
     function showToast(msg) {

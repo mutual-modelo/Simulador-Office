@@ -374,6 +374,8 @@ function guardarArchivosEnDrive_(folder, archivosRaw, idExpediente, autor) {
     }
     const mimeType = esPdfEnBase64 ? 'application/pdf' : String(item.tipoMime || item.mimeType || item.type || 'application/pdf');
 
+    const autorResuelto = String(item.cargadoPor || item.usuarioOperador || item.autor || autor || 'Operador').trim() || 'Operador';
+
     if (base64Str) {
       try {
         const bytes = Utilities.base64Decode(base64Str);
@@ -388,7 +390,8 @@ function guardarArchivosEnDrive_(folder, archivosRaw, idExpediente, autor) {
           nombre: nombreArchivo,
           tipoMime: mimeType,
           fecha: item.fecha || nowStr,
-          autor: item.autor || autor || 'Usuario',
+          cargadoPor: autorResuelto,
+          autor: autorResuelto,
           fileId: fileId,
           urlDrive: 'https://drive.google.com/file/d/' + fileId + '/view',
           previewUrl: 'https://drive.google.com/file/d/' + fileId + '/preview',
@@ -400,7 +403,8 @@ function guardarArchivosEnDrive_(folder, archivosRaw, idExpediente, autor) {
           nombre: nombreArchivo,
           tipoMime: mimeType,
           fecha: item.fecha || nowStr,
-          autor: item.autor || autor || 'Usuario',
+          cargadoPor: autorResuelto,
+          autor: autorResuelto,
           urlDrive: item.urlDrive || '',
           errorSubida: errFile && errFile.message ? errFile.message : String(errFile)
         });
@@ -411,7 +415,8 @@ function guardarArchivosEnDrive_(folder, archivosRaw, idExpediente, autor) {
         nombre: nombreArchivo,
         tipoMime: mimeType,
         fecha: item.fecha || nowStr,
-        autor: item.autor || autor || 'Usuario',
+        cargadoPor: autorResuelto,
+        autor: autorResuelto,
         fileId: item.fileId || '',
         urlDrive: item.urlDrive || '',
         previewUrl: item.previewUrl || '',
@@ -821,7 +826,13 @@ function registrarNuevaSolicitud(payload) {
     const archivosEntrada = parseJSONSafe_(payload.Archivos_Adjuntos_JSON, null) ||
       payload.archivosBase64 || payload.adjuntosBase64 || sol.archivosBase64 || sol.adjuntosBase64 ||
       payload.archivos || payload.adjuntos || sol.archivos || sol.adjuntos || [];
-    const adjuntosDrive = guardarArchivosEnDrive_(folder, archivosEntrada, prefijoInicial, asesorNombre);
+    const operadorCargaInicial = String(
+      payload.usuarioOperador ||
+      (usuarioActivo && usuarioActivo.nombre) ||
+      asesorNombre ||
+      'Operador'
+    ).trim();
+    const adjuntosDrive = guardarArchivosEnDrive_(folder, archivosEntrada, prefijoInicial, operadorCargaInicial);
 
     const historialComentarios = Array.isArray(sol.observaciones)
       ? sol.observaciones
@@ -1291,27 +1302,42 @@ function subirAdjuntoAdicionalBackend(payload) {
 
     const tipoDoc = String(payload.tipo || 'OTROS DOCUMENTOS');
     const nombreNormalizado = normalizarNombreArchivoConPrefijo_(payload.nombre, tipoDoc, prefijoOficial, idTarget);
+    const operadorActivo = String(
+      payload.usuarioOperador ||
+      payload.cargadoPor ||
+      (payload.usuarioActivo && payload.usuarioActivo.nombre) ||
+      payload.autor ||
+      'Operador'
+    ).trim() || 'Operador';
 
     const guardados = guardarArchivosEnDrive_(folder, [{
       tipo: tipoDoc,
       nombre: nombreNormalizado,
       tipoMime: payload.tipoMime || 'application/pdf',
       base64: payload.base64 || '',
-      autor: payload.autor || 'Usuario'
-    }], prefijoOficial, payload.autor || 'Usuario');
+      cargadoPor: operadorActivo,
+      usuarioOperador: operadorActivo,
+      autor: operadorActivo
+    }], prefijoOficial, operadorActivo);
 
     if (map['Carpeta_Drive_URL'] !== undefined) {
       sheet.getRange(rowNum, map['Carpeta_Drive_URL'] + 1).setValue(folder.getUrl());
     }
-    if (map['Archivos_Adjuntos_JSON'] !== undefined && guardados.length > 0) {
-      const cell = sheet.getRange(rowNum, map['Archivos_Adjuntos_JSON'] + 1);
-      const actuales = parseJSONSafe_(cell.getValue(), []);
-      if (payload.reemplazaIndice !== undefined && payload.reemplazaIndice >= 0 && actuales[payload.reemplazaIndice]) {
-        actuales[payload.reemplazaIndice] = guardados[0];
+
+    const colArchivosIdx = (map['Archivos_Adjuntos_JSON'] !== undefined) ? map['Archivos_Adjuntos_JSON'] : 20;
+    const cell = sheet.getRange(rowNum, colArchivosIdx + 1);
+    const actuales = parseJSONSafe_(cell.getValue(), []);
+    const listaActualizada = Array.isArray(actuales) ? actuales.slice() : [];
+    if (guardados.length > 0) {
+      const repIdx = (payload.reemplazaIndice !== undefined && payload.reemplazaIndice !== null && payload.reemplazaIndice !== '')
+        ? Number(payload.reemplazaIndice)
+        : -1;
+      if (!isNaN(repIdx) && repIdx >= 0 && repIdx < listaActualizada.length) {
+        listaActualizada[repIdx] = guardados[0];
       } else {
-        actuales.push(guardados[0]);
+        listaActualizada.push(guardados[0]);
       }
-      cell.setValue(JSON.stringify(actuales));
+      cell.setValue(JSON.stringify(listaActualizada));
     }
 
     const nowStr = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd HH:mm');
@@ -1325,7 +1351,9 @@ function subirAdjuntoAdicionalBackend(payload) {
       id: idTarget,
       id_definitivo: expDef,
       prefijoOficial: prefijoOficial,
-      archivos: guardados,
+      archivos: listaActualizada,
+      archivoSubido: guardados[0] || null,
+      cargadoPor: operadorActivo,
       carpetaDriveUrl: folder.getUrl()
     };
   } finally {

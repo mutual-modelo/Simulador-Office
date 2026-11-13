@@ -6854,16 +6854,24 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         s.nombre_organizacion = s.nombreOrganizacion;
         s.es_titular_organizacion = !!(s.esTitular !== undefined ? s.esTitular : s.es_titular_organizacion);
         s.esTitular = s.es_titular_organizacion;
+        if (window.estadoApp) window.estadoApp.usuarioActual = s;
         return s;
       } catch(e) {
         return null;
       }
     }
 
+    function obtenerNombreOperadorActivo() {
+      const sess = (typeof getSession === 'function') ? getSession() : null;
+      const ua = (typeof window !== 'undefined' && window.estadoApp && window.estadoApp.usuarioActual) ? window.estadoApp.usuarioActual : null;
+      return String((sess && sess.nombre) || (ua && ua.nombre) || 'Operador').trim() || 'Operador';
+    }
+
     function setSession(data) {
       if (!data) {
         sessionStorage.removeItem('sesion_mutual');
         sessionStorage.removeItem('AMMER_AUTH_SESSION');
+        if (window.estadoApp) window.estadoApp.usuarioActual = null;
         return;
       }
 
@@ -6896,6 +6904,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       sessionStorage.setItem('sesion_mutual', JSON.stringify(safeUser));
       sessionStorage.setItem('AMMER_AUTH_SESSION', JSON.stringify(safeUser));
+      if (window.estadoApp) window.estadoApp.usuarioActual = safeUser;
     }
 
     function handleLogout() {
@@ -7106,12 +7115,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const appLayout = document.getElementById('appLayout');
 
       if (!session) {
+        if (window.estadoApp) window.estadoApp.usuarioActual = null;
         if (appLayout) appLayout.style.display = 'none';
         if (loginWrapper) loginWrapper.style.display = 'block';
         cambiarPestana('view-login');
         return;
       }
 
+      if (window.estadoApp) window.estadoApp.usuarioActual = session;
       if (loginWrapper) loginWrapper.style.display = 'none';
       if (appLayout) appLayout.style.display = 'flex';
 
@@ -7666,6 +7677,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
     async function adjuntarPdfUnificadoDirectoFicha(solicitudId, pdfRes) {
       const session = getSession(); if (!session) return;
+      const operadorActual = obtenerNombreOperadorActivo();
       const all = getStoredSolicitudes();
       const s = all.find(x => String(x.id) === String(solicitudId));
       if (!s) return;
@@ -7685,31 +7697,37 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         nombre: generatedName,
         base64: pdfRes.base64,
         tipoMime: 'application/pdf',
-        autor: session.nombre,
+        usuarioOperador: operadorActual,
+        cargadoPor: operadorActual,
+        autor: operadorActual,
         rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor')
       }, {
         title: '🔒 Almacenando PDF A4 en Legajo Digital...',
         sub: 'Archivando ' + generatedName
       });
 
-      const guardado = resApi && resApi.data && Array.isArray(resApi.data.archivos) && resApi.data.archivos[0] ? resApi.data.archivos[0] : null;
-      if (!s.adjuntos) s.adjuntos = [];
-      s.adjuntos.push({
+      const localItem = {
         tipo,
-        nombre: (guardado && guardado.nombre) || generatedName,
+        nombre: generatedName,
         fecha: nowStr,
-        autor: session.nombre,
+        cargadoPor: operadorActual,
+        autor: operadorActual,
         dataUrl: pdfRes.dataUrl,
         tipoMime: 'application/pdf',
-        fileId: (guardado && guardado.fileId) || '',
-        urlDrive: (guardado && guardado.urlDrive) || '',
-        previewUrl: (guardado && guardado.previewUrl) || '',
+        fileId: '',
+        urlDrive: '',
+        previewUrl: '',
         observado: false
-      });
+      };
+      const listaSync = sincronizarAdjuntosSolicitudLocal(s, resApi, localItem);
+      const docSubido = (resApi && resApi.data && resApi.data.archivoSubido) ||
+        (listaSync.length > 0 ? listaSync[listaSync.length - 1] : localItem);
+      const nombreFinalGuardado = (docSubido && docSubido.nombre) || generatedName;
+
       verificarSalidaEstadoObservado(s);
       saveStoredSolicitudes(all);
       verFichaCompleta(solicitudId);
-      showToast('✅ PDF unificado adjuntado al legajo como ' + ((guardado && guardado.nombre) || generatedName));
+      showToast('✅ PDF unificado adjuntado al legajo como ' + nombreFinalGuardado);
     }
 
     async function handleDocRowFileChange(inputEl, idKey, defaultBadgeType) {
@@ -8705,6 +8723,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       mostrarCargando('Registrando Asociado...', 'Codificando legajo y conectando con Base Institucional');
       const adjuntosBase64 = [];
 
+      const operadorActualAsoc = obtenerNombreOperadorActivo();
       for (const item of fileInputs) {
         const memoriaArr = window.stateArchivosAdjuntos ? window.stateArchivosAdjuntos[item.el?.id] : null;
         if (Array.isArray(memoriaArr) && memoriaArr.length > 0) {
@@ -8721,6 +8740,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
               type: m.mimeType || m.tipoMime || 'application/pdf',
               tamanio: m.tamanio || m.size || 0,
               size: m.size || m.tamanio || 0,
+              cargadoPor: operadorActualAsoc,
+              usuarioOperador: operadorActualAsoc,
+              autor: operadorActualAsoc,
               dataUrl: m.dataUrl || '',
               base64: m.base64
             });
@@ -8744,6 +8766,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
                   type: b64.tipoMime,
                   tamanio: b64.tamanio,
                   size: b64.tamanio,
+                  cargadoPor: operadorActualAsoc,
+                  usuarioOperador: operadorActualAsoc,
+                  autor: operadorActualAsoc,
                   dataUrl: b64.dataUrl,
                   base64: b64.base64
                 });
@@ -8881,7 +8906,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             urlDrive: isUrl ? a : '',
             previewUrl: isUrl ? normalizarUrlVisorDrive(a) : '',
             fecha: obj.fecha || '',
-            autor: obj.comercializador || 'Usuario'
+            cargadoPor: 'Operador',
+            autor: 'Operador'
           };
         }
         const rawUrl = a.urlDrive || a.url || a.webViewLink || a.alternateLink || a.driveUrl || a.link || (a.fileId ? ('https://drive.google.com/file/d/' + a.fileId + '/view') : '');
@@ -8893,6 +8919,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const nombreNorm = (String(resolvedMime).toLowerCase() === 'application/pdf')
           ? String(rawNombre).replace(/\.(jpg|jpeg|png|webp|gif|bmp|heic|heif|tif|tiff|jfif|pdf)$/i, '.PDF')
           : rawNombre;
+        const cargadoPorDoc = String(a.cargadoPor || a.usuarioOperador || a.autor || a.author || a.usuario || a.creadoPor || '').trim() || 'Operador';
         return Object.assign({}, a, {
           tipo: a.tipo || a.tipoDoc || a.categoria || 'DOCUMENTO',
           nombre: nombreNorm,
@@ -8901,10 +8928,80 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           previewUrl: rawPreview || (extractedFileId ? ('https://drive.google.com/file/d/' + extractedFileId + '/preview') : ''),
           tipoMime: resolvedMime,
           fecha: a.fecha || a.fechaSubida || a.createdAt || obj.fecha || '',
-          autor: a.autor || a.author || a.usuario || obj.comercializador || 'Usuario',
+          cargadoPor: cargadoPorDoc,
+          autor: cargadoPorDoc,
           observado: Boolean(a.observado)
         });
       });
+    }
+
+    function sincronizarAdjuntosSolicitudLocal(s, resApi, localItem, opts) {
+      if (!s) return [];
+      const prevLista = normalizarListaArchivos(s);
+      const repIdx = (opts && typeof opts.reemplazaIndice === 'number' && !isNaN(opts.reemplazaIndice)) ? opts.reemplazaIndice : -1;
+      const data = (resApi && resApi.ok && resApi.data) ? resApi.data : null;
+      const serverArchs = (data && Array.isArray(data.archivos)) ? data.archivos : null;
+      const archivoSubido = (data && data.archivoSubido) ? data.archivoSubido : null;
+
+      let nuevaLista;
+      if (serverArchs && (archivoSubido || serverArchs.length > 1 || prevLista.length === 0 || (repIdx >= 0 && prevLista.length <= 1))) {
+        nuevaLista = serverArchs.filter(Boolean).map((item, idx) => {
+          const esMismoArchivo =
+            (archivoSubido && item.fileId && archivoSubido.fileId && String(item.fileId) === String(archivoSubido.fileId)) ||
+            (repIdx >= 0 && idx === repIdx) ||
+            (repIdx < 0 && idx === serverArchs.length - 1);
+          const prevMatch = prevLista.find(p =>
+            (item.fileId && p.fileId && String(p.fileId) === String(item.fileId)) ||
+            (item.nombre && p.nombre && String(p.nombre).toUpperCase() === String(item.nombre).toUpperCase())
+          );
+          const merged = Object.assign({}, item);
+          if (esMismoArchivo && localItem) {
+            if (!merged.dataUrl && localItem.dataUrl) merged.dataUrl = localItem.dataUrl;
+            if (!merged.cargadoPor && localItem.cargadoPor) merged.cargadoPor = localItem.cargadoPor;
+            if (!merged.autor && (localItem.cargadoPor || localItem.autor)) merged.autor = localItem.cargadoPor || localItem.autor;
+          } else if (prevMatch && !merged.dataUrl && prevMatch.dataUrl) {
+            merged.dataUrl = prevMatch.dataUrl;
+          }
+          const autorDoc = String(merged.cargadoPor || merged.usuarioOperador || merged.autor || '').trim() || 'Operador';
+          merged.cargadoPor = autorDoc;
+          merged.autor = autorDoc;
+          return merged;
+        });
+      } else if (serverArchs && serverArchs.length === 1) {
+        const g = Object.assign({}, localItem || {}, serverArchs[0]);
+        if (localItem && localItem.dataUrl && !g.dataUrl) g.dataUrl = localItem.dataUrl;
+        const autorDoc = String(g.cargadoPor || g.usuarioOperador || g.autor || (localItem && localItem.cargadoPor) || '').trim() || 'Operador';
+        g.cargadoPor = autorDoc;
+        g.autor = autorDoc;
+        nuevaLista = prevLista.slice();
+        if (repIdx >= 0 && repIdx < nuevaLista.length) {
+          nuevaLista[repIdx] = g;
+        } else {
+          nuevaLista.push(g);
+        }
+      } else {
+        nuevaLista = prevLista.slice();
+        if (localItem) {
+          if (repIdx >= 0 && repIdx < nuevaLista.length) {
+            nuevaLista[repIdx] = localItem;
+          } else {
+            nuevaLista.push(localItem);
+          }
+        }
+      }
+
+      const jsonLista = JSON.stringify(nuevaLista);
+      s.adjuntos = nuevaLista;
+      s.archivosLegajo = nuevaLista;
+      s.archivos = nuevaLista;
+      s.Archivos_Adjuntos_JSON = jsonLista;
+      s.Archivos_Legajo_JSON = jsonLista;
+      s.Archivos_JSON = jsonLista;
+      if (data && data.carpetaDriveUrl && !s.carpetaDriveUrl) {
+        s.carpetaDriveUrl = data.carpetaDriveUrl;
+        s.Carpeta_Drive_URL = data.carpetaDriveUrl;
+      }
+      return nuevaLista;
     }
 
     function normalizarBitacoraComentarios(obj) {
@@ -9931,6 +10028,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const adjuntosBase64 = [];
       const listaAdjuntosObj = [];
 
+      const operadorActualSol = obtenerNombreOperadorActivo();
       for (const item of fileInputs) {
         // A. Verificar si ya fue procesado en memoria reactiva
         const memoriaArr = window.stateArchivosAdjuntos ? window.stateArchivosAdjuntos[item.key] : null;
@@ -9949,6 +10047,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
               type: m.mimeType || m.tipoMime || 'application/pdf',
               tamanio: m.tamanio || m.size || 0,
               size: m.size || m.tamanio || 0,
+              cargadoPor: operadorActualSol,
+              usuarioOperador: operadorActualSol,
+              autor: operadorActualSol,
               dataUrl: m.dataUrl || '',
               base64: m.base64
             });
@@ -9956,7 +10057,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
               tipo: tipoUpper,
               nombre: nombreFormateado,
               fecha: nowStr,
-              autor: session.nombre,
+              cargadoPor: operadorActualSol,
+              autor: operadorActualSol,
               dataUrl: m.dataUrl || '',
               urlDrive: ''
             });
@@ -9981,6 +10083,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
                   type: b64.tipoMime,
                   tamanio: b64.tamanio,
                   size: b64.tamanio,
+                  cargadoPor: operadorActualSol,
+                  usuarioOperador: operadorActualSol,
+                  autor: operadorActualSol,
                   dataUrl: b64.dataUrl,
                   base64: b64.base64
                 });
@@ -9988,7 +10093,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
                   tipo: tipoUpper,
                   nombre: nombreFormateado,
                   fecha: nowStr,
-                  autor: session.nombre,
+                  cargadoPor: operadorActualSol,
+                  autor: operadorActualSol,
                   dataUrl: b64.dataUrl,
                   urlDrive: ''
                 });
@@ -10005,9 +10111,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       if (listaAdjuntosObj.length === 0) {
         listaAdjuntosObj.push(
-          { tipo: 'DNI', nombre: rawRand + ' DNI.PDF', fecha: nowStr, autor: session.nombre },
-          { tipo: 'RECIBO DE SUELDO', nombre: rawRand + ' RECIBO DE SUELDO.PDF', fecha: nowStr, autor: session.nombre },
-          { tipo: 'SERVICIO', nombre: rawRand + ' SERVICIO.PDF', fecha: nowStr, autor: session.nombre }
+          { tipo: 'DNI', nombre: rawRand + ' DNI.PDF', fecha: nowStr, cargadoPor: operadorActualSol, autor: operadorActualSol },
+          { tipo: 'RECIBO DE SUELDO', nombre: rawRand + ' RECIBO DE SUELDO.PDF', fecha: nowStr, cargadoPor: operadorActualSol, autor: operadorActualSol },
+          { tipo: 'SERVICIO', nombre: rawRand + ' SERVICIO.PDF', fecha: nowStr, cargadoPor: operadorActualSol, autor: operadorActualSol }
         );
       }
 
@@ -10155,6 +10261,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const payloadParaBackend = {
         action: 'crearSolicitud',
         usuarioActivo: session,
+        usuarioOperador: operadorActualSol,
 
         // 27 Columnas exactas de Solicitudes_Ayudas
         ID_Solicitud: rawRand,
@@ -10830,7 +10937,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
                   '<span class="doc-compact-tipo-tag">' + sanitizeHTML(a.tipo || 'DOCUMENTO') + '</span>' +
                 '</div>' +
                 '<p class="doc-compact-sub">' +
-                  formatearFechaHoraChat(a.fecha || s.fecha) + ' • por <span style="font-weight:600;color:#334155;">' + sanitizeHTML(a.autor || s.comercializador || 'Operador') + '</span>' +
+                  formatearFechaHoraChat(a.fecha || s.fecha) + ' • por <span style="font-weight:600;color:#334155;">' + sanitizeHTML(a.cargadoPor || a.usuarioOperador || a.autor || 'Operador') + '</span>' +
                 '</p>' +
                 (esObs ? (
                   '<div class="doc-obs-reason-box">' +
@@ -11810,6 +11917,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
 
       const session = getSession();
+      const operadorActual = obtenerNombreOperadorActivo();
       const all = getStoredSolicitudes();
       const s = all.find(x => String(x.id) === String(solicitudId));
       if (!s) return;
@@ -11826,6 +11934,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       } catch (err) {
         ocultarCargando();
         showToast('⚠️ ' + (err.message || 'Error procesando archivo'));
+        if (inputEl) inputEl.value = '';
         return;
       }
       const ext = 'PDF';
@@ -11833,16 +11942,42 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const expDefinitivo = (s.idDefinitivoExpediente || s.ID_Definitivo_Expediente || s.id_definitivo || s.Nro_Definitivo || '').toString().trim();
       const generatedName = normalizarNombreArchivoDrive(prefijoOficial, tipo, ext);
 
-      if (!s.adjuntos) s.adjuntos = [];
-      s.adjuntos.push({
+      const resApi = await callApi({
+        action: 'subirAdjuntoAdicional',
+        id: s.id,
+        idSolicitud: s.id,
+        idDefinitivoExpediente: expDefinitivo,
+        ID_Definitivo_Expediente: expDefinitivo,
+        tipo: tipo,
+        nombre: generatedName,
+        base64: b64Data ? b64Data.base64 : '',
+        tipoMime: 'application/pdf',
+        usuarioOperador: operadorActual,
+        cargadoPor: operadorActual,
+        autor: operadorActual,
+        rol: session?.rol || 'Comercializador'
+      }, {
+        title: '🔒 Subsanando requerimiento documental...',
+        sub: 'Archivando ' + generatedName + ' en Legajo Digital'
+      });
+
+      const localItem = {
         tipo: tipo,
         nombre: generatedName,
         fecha: nowStr,
-        autor: session?.nombre || 'Comercializador',
+        cargadoPor: operadorActual,
+        autor: operadorActual,
         dataUrl: b64Data ? b64Data.dataUrl : '',
         tipoMime: 'application/pdf',
+        fileId: '',
+        urlDrive: '',
+        previewUrl: '',
         observado: false
-      });
+      };
+      const listaSync = sincronizarAdjuntosSolicitudLocal(s, resApi, localItem);
+      const docSubido = (resApi && resApi.data && resApi.data.archivoSubido) ||
+        (listaSync.length > 0 ? listaSync[listaSync.length - 1] : localItem);
+      const nombreFinal = (docSubido && docSubido.nombre) || generatedName;
 
       if (req) {
         req.resuelto = true;
@@ -11853,50 +11988,22 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       if (!s.observaciones) s.observaciones = [];
       s.observaciones.push({
-        autor: session?.nombre || 'Comercializador',
+        autor: operadorActual,
         rol: session?.rol || 'Comercializador',
         fecha: nowStr,
-        texto: '✅ Subsanación documental completada: ' + tipo + ' (' + generatedName + ')'
+        texto: '✅ Subsanación documental completada: ' + tipo + ' (' + nombreFinal + ')'
       });
 
       saveStoredSolicitudes(all);
-      ocultarCargando();
+      if (inputEl) inputEl.value = '';
 
-      callApi({
-        action: 'subirAdjuntoAdicional',
-        id: s.id,
-        idSolicitud: s.id,
-        idDefinitivoExpediente: expDefinitivo,
-        ID_Definitivo_Expediente: expDefinitivo,
-        tipo: tipo,
-        nombre: generatedName,
-        base64: b64Data ? b64Data.base64 : '',
-        tipoMime: 'application/pdf',
-        autor: session?.nombre || 'Comercializador',
-        rol: session?.rol || 'Comercializador'
-      }).then(resApi => {
-        const g = resApi && resApi.data && Array.isArray(resApi.data.archivos) && resApi.data.archivos[0] ? resApi.data.archivos[0] : null;
-        if (g) {
-          const allAct = getStoredSolicitudes();
-          const sAct = allAct.find(x => String(x.id) === String(solicitudId));
-          if (sAct && Array.isArray(sAct.adjuntos) && sAct.adjuntos.length > 0) {
-            const ultimo = sAct.adjuntos[sAct.adjuntos.length - 1];
-            if (g.nombre) ultimo.nombre = g.nombre;
-            if (g.fileId) ultimo.fileId = g.fileId;
-            if (g.urlDrive) ultimo.urlDrive = g.urlDrive;
-            if (g.previewUrl) ultimo.previewUrl = g.previewUrl;
-            saveStoredSolicitudes(allAct);
-          }
-        }
-      }).catch(console.warn);
-
-      ejecutarAuditoriaAutomaticaExpediente(s.id, b64Data ? [{ nombre: generatedName, mimeType: b64Data.tipoMime, base64: b64Data.base64 }] : null);
+      ejecutarAuditoriaAutomaticaExpediente(s.id, b64Data ? [{ nombre: nombreFinal, mimeType: b64Data.tipoMime, base64: b64Data.base64 }] : null);
 
       actualizarCentroNotificaciones();
       renderModuloComercializador();
       renderModuloMutual();
       verFichaCompleta(solicitudId);
-      showToast('✅ Documentación requerida adjuntada y subsanada');
+      showToast('✅ Documentación requerida adjuntada como ' + nombreFinal);
     }
 
     async function reemplazarDocumentoExistente(solicitudId, adjuntoIndex, inputElement) {
@@ -11911,9 +12018,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const all = getStoredSolicitudes();
       const s = all.find(x => String(x.id) === String(solicitudId)); if (!s) return;
       const session = getSession();
+      const operadorActual = obtenerNombreOperadorActivo();
       const now = new Date();
       const nowStr = now.toISOString().slice(0, 16).replace('T', ' ');
-      const prevAdj = s.adjuntos[adjuntoIndex] || {};
+      const listaPrev = normalizarListaArchivos(s);
+      const prevAdj = (s.adjuntos && s.adjuntos[adjuntoIndex]) || listaPrev[adjuntoIndex] || {};
       const prevTipo = prevAdj.tipo || 'DOCUMENTO';
       const estabaObservado = Boolean(prevAdj.observado);
 
@@ -11925,6 +12034,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         console.warn(err);
         ocultarCargando();
         showToast('⚠️ ' + (err.message || 'Error procesando archivo'));
+        if (inputElement) inputElement.value = '';
         return;
       }
       const ext = 'PDF';
@@ -11932,40 +12042,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const expDefinitivo = (s.idDefinitivoExpediente || s.ID_Definitivo_Expediente || s.id_definitivo || s.Nro_Definitivo || '').toString().trim();
       const nuevoNombre = normalizarNombreArchivoDrive(prefijoOficial, prevTipo, ext);
 
-      s.adjuntos[adjuntoIndex] = {
-        tipo: prevTipo,
-        nombre: nuevoNombre,
-        fecha: nowStr,
-        autor: session?.nombre || 'Usuario',
-        dataUrl: b64 ? b64.dataUrl : '',
-        tipoMime: 'application/pdf',
-        fileId: '',
-        urlDrive: '',
-        observado: false,
-        motivoObservacion: ''
-      };
-
-      if (Array.isArray(s.requerimientosDocumentales)) {
-        s.requerimientosDocumentales.forEach(r => {
-          if (r.tipo === prevTipo) r.resuelto = true;
-        });
-      }
-      verificarSalidaEstadoObservado(s);
-      ocultarCargando();
-
-      if (!s.observaciones) s.observaciones = [];
-      s.observaciones.push({
-        autor: session?.nombre || 'Usuario',
-        rol: session?.rol || 'Comercializador',
-        fecha: nowStr,
-        texto: (estabaObservado ? '✅ Documento observado subsanado: ' : 'Documento reemplazado: ') + prevTipo + ' sustituido por ' + nuevoNombre
-      });
-
-      saveStoredSolicitudes(all);
-      // Disparo automático reactivo de Auditoría IA en segundo plano
-      ejecutarAuditoriaAutomaticaExpediente(solicitudId, b64 ? [{ nombre: nuevoNombre, mimeType: 'application/pdf', base64: b64.base64 }] : null);
-
-      callApi({
+      const resApi = await callApi({
         action: 'subirAdjuntoAdicional',
         id: s.id,
         idSolicitud: s.id,
@@ -11976,32 +12053,64 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         nombre: nuevoNombre,
         tipoMime: 'application/pdf',
         base64: b64 ? b64.base64 : '',
-        autor: session?.nombre || 'Usuario',
+        usuarioOperador: operadorActual,
+        cargadoPor: operadorActual,
+        autor: operadorActual,
         rol: session?.rol || 'Comercializador'
-      }).then(resApi => {
-        const g = resApi && resApi.data && Array.isArray(resApi.data.archivos) && resApi.data.archivos[0] ? resApi.data.archivos[0] : null;
-        if (g) {
-          const allAct = getStoredSolicitudes();
-          const sAct = allAct.find(x => String(x.id) === String(solicitudId));
-          if (sAct && Array.isArray(sAct.adjuntos) && sAct.adjuntos[adjuntoIndex]) {
-            sAct.adjuntos[adjuntoIndex].nombre = g.nombre || nuevoNombre;
-            if (g.fileId) sAct.adjuntos[adjuntoIndex].fileId = g.fileId;
-            if (g.urlDrive) sAct.adjuntos[adjuntoIndex].urlDrive = g.urlDrive;
-            if (g.previewUrl) sAct.adjuntos[adjuntoIndex].previewUrl = g.previewUrl;
-            saveStoredSolicitudes(allAct);
-          }
-        }
-      }).catch(console.warn);
+      }, {
+        title: '🔄 Actualizando documento en Legajo Digital...',
+        sub: 'Guardando ' + nuevoNombre
+      });
+
+      const localItem = {
+        tipo: prevTipo,
+        nombre: nuevoNombre,
+        fecha: nowStr,
+        cargadoPor: operadorActual,
+        autor: operadorActual,
+        dataUrl: b64 ? b64.dataUrl : '',
+        tipoMime: 'application/pdf',
+        fileId: '',
+        urlDrive: '',
+        previewUrl: '',
+        observado: false,
+        motivoObservacion: ''
+      };
+      const listaSync = sincronizarAdjuntosSolicitudLocal(s, resApi, localItem, { reemplazaIndice: adjuntoIndex });
+      const docReemplazado = (resApi && resApi.data && resApi.data.archivoSubido) ||
+        (listaSync[adjuntoIndex]) || localItem;
+      const nombreFinal = (docReemplazado && docReemplazado.nombre) || nuevoNombre;
+
+      if (Array.isArray(s.requerimientosDocumentales)) {
+        s.requerimientosDocumentales.forEach(r => {
+          if (r.tipo === prevTipo) r.resuelto = true;
+        });
+      }
+      verificarSalidaEstadoObservado(s);
+
+      if (!s.observaciones) s.observaciones = [];
+      s.observaciones.push({
+        autor: operadorActual,
+        rol: session?.rol || 'Comercializador',
+        fecha: nowStr,
+        texto: (estabaObservado ? '✅ Documento observado subsanado: ' : 'Documento reemplazado: ') + prevTipo + ' sustituido por ' + nombreFinal
+      });
+
+      saveStoredSolicitudes(all);
+      if (inputElement) inputElement.value = '';
+      // Disparo automático reactivo de Auditoría IA en segundo plano
+      ejecutarAuditoriaAutomaticaExpediente(solicitudId, b64 ? [{ nombre: nombreFinal, mimeType: 'application/pdf', base64: b64.base64 }] : null);
 
       actualizarCentroNotificaciones();
       renderModuloComercializador();
       renderModuloMutual();
-      showToast(estabaObservado ? '✅ Documento subsanado exitosamente' : 'Documento sustituido exitosamente 🔄');
+      showToast(estabaObservado ? '✅ Documento subsanado exitosamente como ' + nombreFinal : 'Documento sustituido exitosamente como ' + nombreFinal + ' 🔄');
       verFichaCompleta(solicitudId);
     }
 
     async function adjuntarDocumentoAdicionalFicha(id) {
       const session = getSession(); if (!session) return;
+      const operadorActual = obtenerNombreOperadorActivo();
       const all = getStoredSolicitudes(); const s = all.find(x => String(x.id) === String(id)); if (!s) return;
       const tipo = document.getElementById('cboFichaDocTipo')?.value || 'Documento Adicional';
       const fileInput = document.getElementById('fileFichaAdicional');
@@ -12030,6 +12139,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         console.warn(err);
         ocultarCargando();
         showToast('⚠️ ' + (err.message || 'Error codificando archivo'));
+        if (fileInput) fileInput.value = '';
         return;
       }
       const extension = 'PDF';
@@ -12047,28 +12157,32 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         nombre: generatedName,
         base64: b64Data ? b64Data.base64 : '',
         tipoMime: 'application/pdf',
-        autor: session.nombre,
+        usuarioOperador: operadorActual,
+        cargadoPor: operadorActual,
+        autor: operadorActual,
         rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor')
       }, {
         title: '🔒 Almacenando en Legajo Digital Seguro...',
-        sub: 'Guardando en la bóveda del expediente #' + prefijoOficial
+        sub: 'Guardando ' + generatedName + ' en el expediente #' + prefijoOficial
       });
 
-      const guardado = resApi && resApi.data && Array.isArray(resApi.data.archivos) && resApi.data.archivos[0] ? resApi.data.archivos[0] : null;
-      const nombreFinalGuardado = (guardado && guardado.nombre) || generatedName;
-      if (!s.adjuntos) s.adjuntos = [];
-      s.adjuntos.push({
+      const localItem = {
         tipo,
-        nombre: nombreFinalGuardado,
+        nombre: generatedName,
         fecha: nowStr,
-        autor: session.nombre,
+        cargadoPor: operadorActual,
+        autor: operadorActual,
         dataUrl: b64Data ? b64Data.dataUrl : '',
         tipoMime: 'application/pdf',
-        fileId: (guardado && guardado.fileId) || '',
-        urlDrive: (guardado && guardado.urlDrive) || '',
-        previewUrl: (guardado && guardado.previewUrl) || '',
+        fileId: '',
+        urlDrive: '',
+        previewUrl: '',
         observado: false
-      });
+      };
+      const listaSync = sincronizarAdjuntosSolicitudLocal(s, resApi, localItem);
+      const docSubido = (resApi && resApi.data && resApi.data.archivoSubido) ||
+        (listaSync.length > 0 ? listaSync[listaSync.length - 1] : localItem);
+      const nombreFinalGuardado = (docSubido && docSubido.nombre) || generatedName;
 
       if (Array.isArray(s.requerimientosDocumentales)) {
         s.requerimientosDocumentales.forEach(r => {
@@ -12079,11 +12193,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       if (!s.observaciones) s.observaciones = [];
       s.observaciones.push({
-        autor: session.nombre, rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor'),
-        fecha: nowStr, texto: 'Documentación adicional adjuntada: ' + tipo + ' (' + nombreFinalGuardado + ')'
+        autor: operadorActual,
+        rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor'),
+        fecha: nowStr,
+        texto: 'Documentación adicional adjuntada: ' + tipo + ' (' + nombreFinalGuardado + ')'
       });
 
       saveStoredSolicitudes(all);
+      if (fileInput) fileInput.value = '';
       // Disparo automático reactivo de Auditoría IA en segundo plano
       ejecutarAuditoriaAutomaticaExpediente(s.id, b64Data ? [{ nombre: nombreFinalGuardado, mimeType: b64Data.tipoMime, base64: b64Data.base64 }] : null);
 

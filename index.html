@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
@@ -3914,11 +3915,14 @@
                       <span class="doc-row-title">DNI (FRENTE Y DORSO)</span>
                       <span class="doc-row-badge badge-pendiente" id="badge-asocFileDni">Pendiente</span>
                     </div>
-                    <div class="doc-row-subtitle" id="sub-asocFileDni">Formatos admitidos: PDF, JPG, PNG</div>
+                    <div class="doc-row-subtitle" id="sub-asocFileDni">Formatos admitidos: PDF, JPG, PNG, WEBP</div>
                   </div>
                 </div>
                 <div class="doc-row-actions">
-                  <input type="file" id="asocFileDni" class="doc-row-native-input" accept="image/*,application/pdf" onchange="handleDocRowFileChange(this, 'asocFileDni', 'opcional')"/>
+                  <input type="file" id="asocFileDni" class="doc-row-native-input" accept="image/*,application/pdf" multiple onchange="handleDocRowFileChange(this, 'asocFileDni', 'opcional')"/>
+                  <button type="button" class="btn-doc-attach" style="background:#eff6ff;border-color:#93c5fd;" onclick="abrirAsistenteFrenteDorso('asocFileDni', 'DNI COMPLETO', 'row')" title="Unificar 2 fotos (Frente y Dorso) en un único PDF A4">
+                    🪪 Unificar 2 Fotos
+                  </button>
                   <button type="button" class="btn-doc-attach" onclick="document.getElementById('asocFileDni').click()">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
                     <span id="btnLbl-asocFileDni">Adjuntar</span>
@@ -4576,11 +4580,14 @@
                       <span class="doc-row-title">DNI (FRENTE Y DORSO)</span>
                       <span class="doc-row-badge badge-pendiente" id="badge-fileDni">Pendiente</span>
                     </div>
-                    <div class="doc-row-subtitle" id="sub-fileDni">Formatos admitidos: PDF, JPG, PNG</div>
+                    <div class="doc-row-subtitle" id="sub-fileDni">Formatos admitidos: PDF, JPG, PNG, WEBP</div>
                   </div>
                 </div>
                 <div class="doc-row-actions">
                   <input type="file" id="fileDni" class="doc-row-native-input" accept="image/*,application/pdf" multiple onchange="handleDocRowFileChange(this, 'fileDni', 'opcional')"/>
+                  <button type="button" class="btn-doc-attach" style="background:#eff6ff;border-color:#93c5fd;" onclick="abrirAsistenteFrenteDorso('fileDni', 'DNI COMPLETO', 'row')" title="Unificar 2 fotos (Frente y Dorso) en un único PDF A4">
+                    🪪 Unificar 2 Fotos
+                  </button>
                   <button type="button" class="btn-doc-attach" onclick="document.getElementById('fileDni').click()">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
                     <span id="btnLbl-fileDni">Adjuntar</span>
@@ -4834,11 +4841,14 @@
                       <span class="doc-row-title">TARJETA SIDECREER (FRENTE Y DORSO)</span>
                       <span class="doc-row-badge badge-pendiente" id="badge-fileSidecreer">Pendiente</span>
                     </div>
-                    <div class="doc-row-subtitle" id="sub-fileSidecreer">Formatos admitidos: PDF, JPG, PNG (Frente y Dorso)</div>
+                    <div class="doc-row-subtitle" id="sub-fileSidecreer">Formatos admitidos: PDF, JPG, PNG, WEBP (Frente y Dorso)</div>
                   </div>
                 </div>
                 <div class="doc-row-actions">
-                  <input type="file" id="fileSidecreer" class="doc-row-native-input" accept="image/*,application/pdf" onchange="handleDocRowFileChange(this, 'fileSidecreer', 'opcional')"/>
+                  <input type="file" id="fileSidecreer" class="doc-row-native-input" accept="image/*,application/pdf" multiple onchange="handleDocRowFileChange(this, 'fileSidecreer', 'opcional')"/>
+                  <button type="button" class="btn-doc-attach" style="background:#eff6ff;border-color:#93c5fd;" onclick="abrirAsistenteFrenteDorso('fileSidecreer', 'TARJETA SIDECREER', 'row')" title="Unificar 2 fotos (Frente y Dorso) en un único PDF A4">
+                    🪪 Unificar 2 Fotos
+                  </button>
                   <button type="button" class="btn-doc-attach" onclick="document.getElementById('fileSidecreer').click()">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
                     <span id="btnLbl-fileSidecreer">Adjuntar</span>
@@ -5525,6 +5535,53 @@
     </div>
   </div>
 
+  <!-- MODAL 6: ASISTENTE FRENTE Y DORSO -> PDF A4 ÚNICO -->
+  <div id="modalAsistenteFrenteDorso" class="modal-backdrop modal-backdrop-elevated" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
+    <div class="modal-window" style="max-width:640px;">
+      <div class="modal-header-bar">
+        <div class="modal-header-title">
+          <span>🪪 Unificar Frente y Dorso en PDF A4</span>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="cerrarAsistenteFrenteDorso()" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="modal-body-scroll">
+        <p style="font-size:0.78rem;color:#475569;margin-bottom:0.85rem;line-height:1.45;">
+          Seleccione las <strong>2 fotografías</strong> (Frente y Dorso). Se unificarán automáticamente en una <strong>única página A4 vertical</strong> en formato PDF optimizada para el Legajo Digital.
+        </p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0.85rem;">
+          <div style="background:#f8fafc;border:1px dashed #93c5fd;border-radius:12px;padding:0.85rem;display:flex;flex-direction:column;gap:0.55rem;align-items:center;text-align:center;">
+            <div style="font-size:0.76rem;font-weight:700;color:#135596;">1. Foto FRENTE (Mitad Superior)</div>
+            <div id="prevFrenteWrap" style="width:100%;height:130px;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+              <span id="lblFrenteEmpty" style="font-size:0.72rem;color:#94a3b8;">Sin imagen seleccionada</span>
+              <img id="prevFrenteImg" src="" alt="Vista previa frente" style="display:none;max-width:100%;max-height:100%;object-fit:contain;"/>
+            </div>
+            <input type="file" id="inpFrenteFoto" class="doc-row-native-input" accept="image/*" onchange="handleAsistenteFotoChange('frente', this)"/>
+            <button type="button" class="btn-doc-attach" style="width:100%;justify-content:center;" onclick="document.getElementById('inpFrenteFoto').click()">
+              📷 Seleccionar Foto Frente
+            </button>
+            <div id="lblFrenteStatus" style="font-size:0.68rem;color:#64748b;word-break:break-all;">JPG, PNG o WEBP</div>
+          </div>
+          <div style="background:#f8fafc;border:1px dashed #93c5fd;border-radius:12px;padding:0.85rem;display:flex;flex-direction:column;gap:0.55rem;align-items:center;text-align:center;">
+            <div style="font-size:0.76rem;font-weight:700;color:#135596;">2. Foto DORSO (Mitad Inferior)</div>
+            <div id="prevDorsoWrap" style="width:100%;height:130px;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+              <span id="lblDorsoEmpty" style="font-size:0.72rem;color:#94a3b8;">Sin imagen seleccionada</span>
+              <img id="prevDorsoImg" src="" alt="Vista previa dorso" style="display:none;max-width:100%;max-height:100%;object-fit:contain;"/>
+            </div>
+            <input type="file" id="inpDorsoFoto" class="doc-row-native-input" accept="image/*" onchange="handleAsistenteFotoChange('dorso', this)"/>
+            <button type="button" class="btn-doc-attach" style="width:100%;justify-content:center;" onclick="document.getElementById('inpDorsoFoto').click()">
+              📷 Seleccionar Foto Dorso
+            </button>
+            <div id="lblDorsoStatus" style="font-size:0.68rem;color:#64748b;word-break:break-all;">JPG, PNG o WEBP</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer-bar">
+        <button type="button" class="btn-restore" onclick="cerrarAsistenteFrenteDorso()">Cancelar</button>
+        <button type="button" id="btnConfirmarFusionFrenteDorso" class="btn-primary-action" style="width:auto;padding:0.5rem 1.15rem;" onclick="confirmarFusionFrenteDorso()">✨ Unificar en PDF A4 y Adjuntar</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toastNotification" class="toast"><span id="toastMsg">✓ Notificación</span></div>
 
   <script>
@@ -5576,8 +5633,8 @@
 
     // 0.4 CONTROL ESTRICTO DE ARCHIVOS ADJUNTOS (10 MB y extensiones seguras)
     const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
-    const ALLOWED_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png'];
-    const ALLOWED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+    const ALLOWED_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png', 'webp'];
+    const ALLOWED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
 
     function validarArchivoAdjunto(file) {
       if (!file) return { valido: false, error: 'No se ha seleccionado ningún archivo.' };
@@ -5588,10 +5645,13 @@
       const ext = (file.name.split('.').pop() || '').toLowerCase();
       const esExtValida = ALLOWED_EXTENSIONS.includes(ext);
       const mime = (file.type || '').toLowerCase();
-      const esMimeValido = ALLOWED_MIME_TYPES.includes(mime) || (!mime && esExtValida);
+      const esMimeValido = ALLOWED_MIME_TYPES.includes(mime) || mime.startsWith('image/') || (!mime && esExtValida);
 
-      if (!esExtValida || !esMimeValido) {
-        return { valido: false, error: 'El archivo "' + file.name + '" tiene una extensión o tipo no permitido. Solo se aceptan PDF, JPG o PNG.' };
+      if (!esExtValida && !mime.startsWith('image/')) {
+        return { valido: false, error: 'El archivo "' + file.name + '" tiene una extensión o tipo no permitido. Solo se aceptan PDF, JPG, PNG o WEBP.' };
+      }
+      if (!esMimeValido) {
+        return { valido: false, error: 'El archivo "' + file.name + '" tiene un formato MIME no admitido. Solo se aceptan PDF, JPG, PNG o WEBP.' };
       }
       return { valido: true };
     }
@@ -5757,28 +5817,259 @@
       }
     }
 
-    function fileToBase64(file) {
+    function esArchivoImagen(file) {
+      if (!file) return false;
+      const mime = String(file.type || '').toLowerCase();
+      if (mime.startsWith('image/')) return true;
+      return /\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(String(file.name || ''));
+    }
+
+    async function decodificarImagenParaJsPdf(file) {
       return new Promise((resolve, reject) => {
-        if (!file) return resolve(null);
-        const check = validarArchivoAdjunto(file);
-        if (!check.valido) {
-          return reject(new Error(check.error));
-        }
         const reader = new FileReader();
-        reader.onload = () => {
-          const res = reader.result || '';
-          const base64Data = String(res).includes(',') ? String(res).split(',')[1] : String(res);
-          resolve({
-            nombre: file.name,
-            tipoMime: file.type || 'application/octet-stream',
-            tamanio: file.size,
-            dataUrl: String(res),
-            base64: base64Data
-          });
+        reader.onload = (ev) => {
+          const rawDataUrl = String(ev?.target?.result || '');
+          const img = new Image();
+          img.onload = () => {
+            try {
+              const w = img.naturalWidth || img.width || 1;
+              const h = img.naturalHeight || img.height || 1;
+              const esPng = String(file.type || '').toLowerCase() === 'image/png' || /\.png$/i.test(String(file.name || ''));
+              const formato = esPng ? 'PNG' : 'JPEG';
+              const mimeOut = esPng ? 'image/png' : 'image/jpeg';
+              const maxSide = 2200;
+              let targetW = w;
+              let targetH = h;
+              if (w > maxSide || h > maxSide) {
+                const scale = maxSide / Math.max(w, h);
+                targetW = Math.max(1, Math.round(w * scale));
+                targetH = Math.max(1, Math.round(h * scale));
+              }
+              const canvas = (typeof document.createElement === 'function') ? document.createElement('canvas') : null;
+              const ctx = canvas && typeof canvas.getContext === 'function' ? canvas.getContext('2d') : null;
+              if (canvas && ctx) {
+                canvas.width = targetW;
+                canvas.height = targetH;
+                if (!esPng) {
+                  ctx.fillStyle = '#ffffff';
+                  ctx.fillRect(0, 0, targetW, targetH);
+                }
+                ctx.drawImage(img, 0, 0, targetW, targetH);
+                const normalizedDataUrl = canvas.toDataURL(mimeOut, 0.90);
+                resolve({ imgData: normalizedDataUrl, width: targetW, height: targetH, formato });
+                return;
+              }
+              resolve({ imgData: rawDataUrl, width: w, height: h, formato });
+            } catch (_) {
+              resolve({
+                imgData: rawDataUrl,
+                width: img.naturalWidth || img.width || 1,
+                height: img.naturalHeight || img.height || 1,
+                formato: (String(file.type || '').toLowerCase() === 'image/png') ? 'PNG' : 'JPEG'
+              });
+            }
+          };
+          img.onerror = () => reject(new Error('Error al decodificar la imagen "' + (file.name || '') + '".'));
+          img.src = rawDataUrl;
         };
-        reader.onerror = err => reject(err);
+        reader.onerror = () => reject(new Error('Error al leer la imagen seleccionada.'));
         reader.readAsDataURL(file);
       });
+    }
+
+    /**
+     * 1. CONVERTIDOR UNIVERSAL:
+     * Convierte cualquier imagen simple (JPG, PNG, WEBP) a PDF A4.
+     * Si ya es PDF, lo mantiene intacto.
+     */
+    async function normalizarArchivoAPDF(archivoOriginal) {
+      if (!archivoOriginal) return null;
+      const mimeOrig = String(archivoOriginal.type || '').toLowerCase();
+      const esPdf = mimeOrig === 'application/pdf' || /\.pdf$/i.test(String(archivoOriginal.name || ''));
+
+      if (esPdf) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dataUri = String(reader.result || '');
+            const b64 = dataUri.includes(',') ? dataUri.split(',')[1] : dataUri;
+            resolve({
+              base64: b64,
+              dataUrl: dataUri,
+              nombreArchivo: archivoOriginal.name,
+              mimeType: 'application/pdf',
+              tipoMime: 'application/pdf',
+              tamanio: archivoOriginal.size || Math.round(b64.length * 0.75)
+            });
+          };
+          reader.onerror = () => reject(new Error('Error al leer el archivo PDF.'));
+          reader.readAsDataURL(archivoOriginal);
+        });
+      }
+
+      if (esArchivoImagen(archivoOriginal)) {
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+          throw new Error('La librería generadora de PDF no se encuentra disponible. Verifique su conexión e intente nuevamente.');
+        }
+        const decoded = await decodificarImagenParaJsPdf(archivoOriginal);
+        const { jsPDF } = window.jspdf;
+        const esHorizontal = decoded.width > decoded.height;
+        const pdf = new jsPDF({
+          orientation: esHorizontal ? 'landscape' : 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+
+        const anchoPagina = pdf.internal.pageSize.getWidth();
+        const altoPagina = pdf.internal.pageSize.getHeight();
+        const margen = 10;
+        const anchoDisp = anchoPagina - (margen * 2);
+        const altoDisp = altoPagina - (margen * 2);
+
+        const ratioImg = decoded.width / decoded.height;
+        const ratioDisp = anchoDisp / altoDisp;
+        let wFinal, hFinal;
+        if (ratioImg > ratioDisp) {
+          wFinal = anchoDisp;
+          hFinal = anchoDisp / ratioImg;
+        } else {
+          hFinal = altoDisp;
+          wFinal = altoDisp * ratioImg;
+        }
+        const posX = margen + (anchoDisp - wFinal) / 2;
+        const posY = margen + (altoDisp - hFinal) / 2;
+
+        pdf.addImage(decoded.imgData, decoded.formato, posX, posY, wFinal, hFinal, undefined, 'FAST');
+        const dataUri = pdf.output('datauristring');
+        const b64 = dataUri.includes(',') ? dataUri.split(',')[1] : dataUri;
+        const baseName = String(archivoOriginal.name || 'DOCUMENTO').replace(/\.[^/.]+$/, '');
+        const nombreLimpio = (baseName + '.PDF').toUpperCase();
+        return {
+          base64: b64,
+          dataUrl: dataUri,
+          nombreArchivo: nombreLimpio,
+          mimeType: 'application/pdf',
+          tipoMime: 'application/pdf',
+          tamanio: Math.round(b64.length * 0.75)
+        };
+      }
+
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataUri = String(reader.result || '');
+          const b64 = dataUri.includes(',') ? dataUri.split(',')[1] : dataUri;
+          resolve({
+            base64: b64,
+            dataUrl: dataUri,
+            nombreArchivo: archivoOriginal.name,
+            mimeType: archivoOriginal.type || 'application/octet-stream',
+            tipoMime: archivoOriginal.type || 'application/octet-stream',
+            tamanio: archivoOriginal.size || Math.round(b64.length * 0.75)
+          });
+        };
+        reader.onerror = () => reject(new Error('Error al leer el archivo adjunto.'));
+        reader.readAsDataURL(archivoOriginal);
+      });
+    }
+
+    /**
+     * 2. ASISTENTE FRENTE Y DORSO:
+     * Combina dos fotos en una única hoja A4 vertical (Frente arriba, Dorso abajo).
+     */
+    async function fusionarFrenteYDorsoEnPDF(archivoFrente, archivoDorso, nombreDocumentoBase = 'DNI COMPLETO') {
+      if (!archivoFrente || !archivoDorso) {
+        throw new Error('Debe seleccionar ambas fotografías (Frente y Dorso).');
+      }
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        throw new Error('La librería generadora de PDF no se encuentra disponible. Verifique su conexión e intente nuevamente.');
+      }
+
+      const [frente, dorso] = await Promise.all([
+        decodificarImagenParaJsPdf(archivoFrente),
+        decodificarImagenParaJsPdf(archivoDorso)
+      ]);
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const margenLateral = 20;
+      const anchoMax = 210 - (margenLateral * 2); // 170mm
+      const altoMaxSlot = 115; // 115mm por cada cara
+
+      // Encabezado institucional
+      pdf.setFontSize(9);
+      pdf.setTextColor(100);
+      pdf.text('ASOCIACIÓN MUTUAL MODELO DE ENTRE RÍOS — LEGAJO DIGITAL', margenLateral, 15);
+      pdf.setFontSize(8);
+      pdf.text('Documento: ' + String(nombreDocumentoBase || 'DNI COMPLETO').toUpperCase(), margenLateral, 20);
+      pdf.setDrawColor(220, 220, 220);
+      pdf.line(margenLateral, 22, 210 - margenLateral, 22);
+
+      // 1. Frente (Mitad Superior)
+      const rF = frente.width / frente.height;
+      let wF = anchoMax;
+      let hF = anchoMax / rF;
+      if (hF > altoMaxSlot) {
+        hF = altoMaxSlot;
+        wF = altoMaxSlot * rF;
+      }
+      const xF = margenLateral + (anchoMax - wF) / 2;
+      const yF = 28 + (altoMaxSlot - hF) / 2;
+      pdf.addImage(frente.imgData, frente.formato, xF, yF, wF, hF, undefined, 'FAST');
+
+      // Línea divisoria central
+      if (typeof pdf.setLineDashPattern === 'function') {
+        pdf.setLineDashPattern([3, 2], 0);
+      } else if (typeof pdf.setLineDash === 'function') {
+        pdf.setLineDash([3, 2], 0);
+      }
+      pdf.line(margenLateral, 152, 210 - margenLateral, 152);
+      if (typeof pdf.setLineDashPattern === 'function') {
+        pdf.setLineDashPattern([], 0);
+      } else if (typeof pdf.setLineDash === 'function') {
+        pdf.setLineDash([], 0);
+      }
+
+      // 2. Dorso (Mitad Inferior)
+      const rD = dorso.width / dorso.height;
+      let wD = anchoMax;
+      let hD = anchoMax / rD;
+      if (hD > altoMaxSlot) {
+        hD = altoMaxSlot;
+        wD = altoMaxSlot * rD;
+      }
+      const xD = margenLateral + (anchoMax - wD) / 2;
+      const yD = 160 + (altoMaxSlot - hD) / 2;
+      pdf.addImage(dorso.imgData, dorso.formato, xD, yD, wD, hD, undefined, 'FAST');
+
+      const dataUri = pdf.output('datauristring');
+      const b64 = dataUri.includes(',') ? dataUri.split(',')[1] : dataUri;
+      const nombreFinal = String(nombreDocumentoBase || 'DNI COMPLETO').toUpperCase().replace(/\.PDF$/i, '') + '.PDF';
+      return {
+        base64: b64,
+        dataUrl: dataUri,
+        nombreArchivo: nombreFinal,
+        mimeType: 'application/pdf',
+        tipoMime: 'application/pdf',
+        tamanio: Math.round(b64.length * 0.75)
+      };
+    }
+
+    async function fileToBase64(file) {
+      if (!file) return null;
+      const check = validarArchivoAdjunto(file);
+      if (!check.valido) {
+        throw new Error(check.error);
+      }
+      const normalizado = await normalizarArchivoAPDF(file);
+      return {
+        nombre: normalizado.nombreArchivo,
+        nombreArchivo: normalizado.nombreArchivo,
+        tipoMime: normalizado.mimeType || 'application/pdf',
+        tamanio: normalizado.tamanio || file.size,
+        dataUrl: normalizado.dataUrl,
+        base64: normalizado.base64
+      };
     }
 
     /* ========================================================================
@@ -6790,6 +7081,235 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       asocFileOtros: 'OTROS DOCUMENTOS'
     };
 
+    let _asistenteFrenteDorsoState = {
+      targetInputId: null,
+      nombreBase: 'DNI COMPLETO',
+      mode: 'row',
+      solicitudId: null,
+      frenteFile: null,
+      dorsoFile: null,
+      frenteUrl: null,
+      dorsoUrl: null
+    };
+
+    function limpiarPreviewAsistente(lado) {
+      const urlKey = lado === 'frente' ? 'frenteUrl' : 'dorsoUrl';
+      if (_asistenteFrenteDorsoState[urlKey]) {
+        try { URL.revokeObjectURL(_asistenteFrenteDorsoState[urlKey]); } catch (_) {}
+        _asistenteFrenteDorsoState[urlKey] = null;
+      }
+    }
+
+    function abrirAsistenteFrenteDorso(targetInputId, nombreBase, mode = 'row', solicitudId = null) {
+      limpiarPreviewAsistente('frente');
+      limpiarPreviewAsistente('dorso');
+      const tipoFicha = (mode === 'ficha')
+        ? (document.getElementById('cboFichaDocTipo')?.value || 'DNI COMPLETO')
+        : null;
+      _asistenteFrenteDorsoState = {
+        targetInputId,
+        nombreBase: nombreBase || tipoFicha || 'DNI COMPLETO',
+        mode,
+        solicitudId,
+        frenteFile: null,
+        dorsoFile: null,
+        frenteUrl: null,
+        dorsoUrl: null
+      };
+
+      const inpF = document.getElementById('inpFrenteFoto');
+      const inpD = document.getElementById('inpDorsoFoto');
+      if (inpF) inpF.value = '';
+      if (inpD) inpD.value = '';
+      ['Frente', 'Dorso'].forEach(side => {
+        const img = document.getElementById('prev' + side + 'Img');
+        const emp = document.getElementById('lbl' + side + 'Empty');
+        const st = document.getElementById('lbl' + side + 'Status');
+        if (img) { img.src = ''; img.style.display = 'none'; }
+        if (emp) emp.style.display = 'inline';
+        if (st) st.textContent = 'JPG, PNG o WEBP';
+      });
+      abrirModal('modalAsistenteFrenteDorso');
+    }
+
+    function cerrarAsistenteFrenteDorso() {
+      limpiarPreviewAsistente('frente');
+      limpiarPreviewAsistente('dorso');
+      cerrarModal('modalAsistenteFrenteDorso');
+    }
+
+    function handleAsistenteFotoChange(lado, inputEl) {
+      const file = inputEl && inputEl.files && inputEl.files[0];
+      if (!file) return;
+      const check = validarArchivoAdjunto(file);
+      if (!check.valido) {
+        showToast('⚠️ ' + check.error);
+        inputEl.value = '';
+        return;
+      }
+      if (!esArchivoImagen(file)) {
+        showToast('⚠️ Seleccione una fotografía (JPG, PNG o WEBP).');
+        inputEl.value = '';
+        return;
+      }
+
+      const cap = lado === 'frente' ? 'Frente' : 'Dorso';
+      limpiarPreviewAsistente(lado);
+      let prevUrl = '';
+      try { prevUrl = URL.createObjectURL(file); } catch (_) {}
+
+      if (lado === 'frente') {
+        _asistenteFrenteDorsoState.frenteFile = file;
+        _asistenteFrenteDorsoState.frenteUrl = prevUrl;
+      } else {
+        _asistenteFrenteDorsoState.dorsoFile = file;
+        _asistenteFrenteDorsoState.dorsoUrl = prevUrl;
+      }
+
+      const img = document.getElementById('prev' + cap + 'Img');
+      const emp = document.getElementById('lbl' + cap + 'Empty');
+      const st = document.getElementById('lbl' + cap + 'Status');
+      if (img && prevUrl) { img.src = prevUrl; img.style.display = 'block'; }
+      if (emp) emp.style.display = 'none';
+      if (st) st.textContent = file.name + ' (' + (file.size / (1024 * 1024)).toFixed(2) + ' MB)';
+    }
+
+    function dataUrlToPdfFile(dataUrl, fileName) {
+      try {
+        const parts = String(dataUrl || '').split(',');
+        const binStr = atob(parts[1] || '');
+        const bytes = new Uint8Array(binStr.length);
+        for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        if (typeof File === 'function') {
+          return new File([blob], fileName, { type: 'application/pdf' });
+        }
+      } catch (_) {}
+      return null;
+    }
+
+    async function confirmarFusionFrenteDorso() {
+      const { frenteFile, dorsoFile, targetInputId, nombreBase, mode, solicitudId } = _asistenteFrenteDorsoState;
+      if (!frenteFile || !dorsoFile) {
+        showToast('⚠️ Seleccione ambas fotos (Frente y Dorso) para generar el PDF.');
+        return;
+      }
+
+      mostrarCargando('Unificando Frente y Dorso en PDF A4...', 'Generando documento único optimizado para el Legajo Digital');
+      try {
+        const pdfRes = await fusionarFrenteYDorsoEnPDF(frenteFile, dorsoFile, nombreBase);
+        const pdfFile = dataUrlToPdfFile(pdfRes.dataUrl, pdfRes.nombreArchivo);
+
+        if (mode === 'ficha' && solicitudId) {
+          ocultarCargando();
+          cerrarAsistenteFrenteDorso();
+          const inputFicha = document.getElementById(targetInputId || 'fileFichaAdicional');
+          if (inputFicha && pdfFile && typeof DataTransfer === 'function') {
+            const dt = new DataTransfer();
+            dt.items.add(pdfFile);
+            inputFicha.files = dt.files;
+            await adjuntarDocumentoAdicionalFicha(solicitudId);
+          } else {
+            await adjuntarPdfUnificadoDirectoFicha(solicitudId, pdfRes);
+          }
+          return;
+        }
+
+        if (targetInputId) {
+          const tipoDocumento = MAPA_ID_TIPO_DOC[targetInputId] || nombreBase || targetInputId;
+          const fileObj = {
+            nombre: pdfRes.nombreArchivo,
+            name: pdfRes.nombreArchivo,
+            nombreOriginal: frenteFile.name + ' + ' + dorsoFile.name,
+            nombreArchivo: pdfRes.nombreArchivo,
+            base64: pdfRes.base64,
+            mimeType: 'application/pdf',
+            tipoMime: 'application/pdf',
+            type: 'application/pdf',
+            tamanio: pdfRes.tamanio,
+            size: pdfRes.tamanio,
+            dataUrl: pdfRes.dataUrl,
+            tipo: tipoDocumento
+          };
+          window.stateArchivosAdjuntos[targetInputId] = [fileObj];
+          window.state.archivosAdjuntos[tipoDocumento] = fileObj;
+
+          const inputEl = document.getElementById(targetInputId);
+          if (inputEl && pdfFile && typeof DataTransfer === 'function') {
+            try {
+              const dt = new DataTransfer();
+              dt.items.add(pdfFile);
+              inputEl.files = dt.files;
+            } catch (_) {}
+          }
+
+          const row = document.getElementById('row-' + targetInputId);
+          const sub = document.getElementById('sub-' + targetInputId);
+          const badge = document.getElementById('badge-' + targetInputId);
+          const btnLbl = document.getElementById('btnLbl-' + targetInputId);
+          const prevBtn = document.getElementById('prev-' + targetInputId);
+          const delBtn = document.getElementById('del-' + targetInputId);
+          if (row) row.classList.add('is-loaded');
+          if (badge) {
+            badge.className = 'doc-row-badge badge-cargado';
+            badge.textContent = '✓ PDF A4 Listo';
+          }
+          if (btnLbl) btnLbl.textContent = 'Reemplazar';
+          if (prevBtn) prevBtn.style.display = 'inline-flex';
+          if (delBtn) delBtn.style.display = 'inline-flex';
+          if (sub) {
+            const mb = (pdfRes.tamanio / (1024 * 1024)).toFixed(2);
+            sub.textContent = pdfRes.nombreArchivo + ' (Frente + Dorso unificados · ' + mb + ' MB)';
+          }
+        }
+        ocultarCargando();
+        cerrarAsistenteFrenteDorso();
+        showToast('✅ Frente y Dorso unificados en PDF A4 correctamente');
+      } catch (err) {
+        ocultarCargando();
+        showToast('⚠️ ' + (err.message || 'No se pudo unificar el documento en PDF.'));
+      }
+    }
+
+    async function adjuntarPdfUnificadoDirectoFicha(solicitudId, pdfRes) {
+      const session = getSession(); if (!session) return;
+      const all = getStoredSolicitudes();
+      const s = all.find(x => String(x.id) === String(solicitudId));
+      if (!s) return;
+      const tipo = document.getElementById('cboFichaDocTipo')?.value || 'DNI (FRENTE Y DORSO)';
+      const nowStr = new Date().toISOString().slice(0, 16).replace('T', ' ');
+      const generatedName = normalizarNombreArchivoDrive(s.id, tipo, 'pdf');
+
+      await callApi({
+        action: 'subirAdjuntoAdicional',
+        id: s.id,
+        tipo: tipo,
+        nombre: generatedName,
+        base64: pdfRes.base64,
+        tipoMime: 'application/pdf',
+        autor: session.nombre,
+        rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor')
+      }, {
+        title: '🔒 Almacenando PDF A4 en Legajo Digital...',
+        sub: 'Archivando ' + generatedName
+      });
+
+      if (!s.adjuntos) s.adjuntos = [];
+      s.adjuntos.push({
+        tipo,
+        nombre: generatedName,
+        fecha: nowStr,
+        autor: session.nombre,
+        dataUrl: pdfRes.dataUrl,
+        tipoMime: 'application/pdf',
+        observado: false
+      });
+      verificarSalidaEstadoObservado(s);
+      saveStoredSolicitudes(all);
+      verFichaCompleta(solicitudId);
+      showToast('✅ PDF unificado adjuntado al legajo');
+    }
+
     async function handleDocRowFileChange(inputEl, idKey, defaultBadgeType) {
       const row = document.getElementById('row-' + idKey);
       const sub = document.getElementById('sub-' + idKey);
@@ -6805,51 +7325,101 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       if (files && files.length > 0) {
         row.classList.add('is-loaded');
         badge.className = 'doc-row-badge badge-cargado';
-        badge.textContent = '✓ Cargado';
+        badge.textContent = '⏳ Procesando PDF...';
         if (btnLbl) btnLbl.textContent = 'Reemplazar';
         if (prevBtn) prevBtn.style.display = 'inline-flex';
         if (delBtn) delBtn.style.display = 'inline-flex';
 
-        if (files.length === 1) {
-          const f = files[0];
-          const mb = (f.size / (1024 * 1024)).toFixed(2);
-          sub.textContent = f.name + ' (' + mb + ' MB)';
-        } else {
-          sub.textContent = files.length + ' archivos seleccionados (' + Array.from(files).map(f => f.name).join(', ') + ')';
-        }
-
-        // Lectura reactiva e inmediata en Base64 con FileReader y persistencia en memoria
         const processed = [];
-        for (let i = 0; i < files.length; i++) {
-          const f = files[i];
+        const esCampoFrenteDorso = (idKey === 'fileDni' || idKey === 'asocFileDni' || idKey === 'fileSidecreer');
+
+        // Si el usuario selecciona exactamente 2 fotos en DNI o Tarjeta Sidecreer, fusionar automáticamente en PDF A4 único
+        if (esCampoFrenteDorso && files.length === 2 && esArchivoImagen(files[0]) && esArchivoImagen(files[1])) {
+          const check0 = validarArchivoAdjunto(files[0]);
+          const check1 = validarArchivoAdjunto(files[1]);
+          if (!check0.valido || !check1.valido) {
+            showToast('⚠️ ' + (!check0.valido ? check0.error : check1.error));
+            if (inputEl.value !== undefined) inputEl.value = '';
+            handleDocRowFileChange({ files: [] }, idKey, defaultBadgeType);
+            return;
+          }
           try {
-            const b64 = await fileToBase64(f);
-            if (b64) {
-              const fileObj = {
-                nombre: f.name,
-                name: f.name,
-                nombreOriginal: f.name,
-                nombreArchivo: f.name,
-                base64: b64.base64,
-                mimeType: b64.tipoMime || f.type || 'application/pdf',
-                tipoMime: b64.tipoMime || f.type || 'application/pdf',
-                type: b64.tipoMime || f.type || 'application/pdf',
-                tamanio: b64.tamanio || f.size,
-                size: b64.tamanio || f.size,
-                dataUrl: b64.dataUrl,
-                tipo: tipoDocumento,
-                file: f
-              };
-              processed.push(fileObj);
-            }
+            const nombreBase = idKey === 'fileSidecreer' ? 'TARJETA SIDECREER' : 'DNI COMPLETO';
+            const merged = await fusionarFrenteYDorsoEnPDF(files[0], files[1], nombreBase);
+            const fileObj = {
+              nombre: merged.nombreArchivo,
+              name: merged.nombreArchivo,
+              nombreOriginal: files[0].name + ' + ' + files[1].name,
+              nombreArchivo: merged.nombreArchivo,
+              base64: merged.base64,
+              mimeType: 'application/pdf',
+              tipoMime: 'application/pdf',
+              type: 'application/pdf',
+              tamanio: merged.tamanio,
+              size: merged.tamanio,
+              dataUrl: merged.dataUrl,
+              tipo: tipoDocumento
+            };
+            processed.push(fileObj);
+            badge.textContent = '✓ PDF A4 Listo';
+            sub.textContent = merged.nombreArchivo + ' (2 fotos unificadas en PDF A4 · ' + (merged.tamanio / (1024 * 1024)).toFixed(2) + ' MB)';
+            showToast('✅ Frente y Dorso unificados en un único PDF A4');
           } catch (err) {
-            console.warn('Error leyendo archivo en memoria reactiva:', f.name, err);
+            console.warn('Error unificando Frente y Dorso:', err);
+            showToast('⚠️ ' + (err.message || 'No se pudo unificar las 2 fotos en PDF.'));
+            handleDocRowFileChange({ files: [] }, idKey, defaultBadgeType);
+            return;
+          }
+        } else {
+          // Conversión universal a PDF A4 para cualquier imagen cargada
+          let tuvoImagenConvertida = false;
+          for (let i = 0; i < files.length; i++) {
+            const f = files[i];
+            try {
+              const b64 = await fileToBase64(f);
+              if (b64) {
+                if (esArchivoImagen(f)) tuvoImagenConvertida = true;
+                const finalName = b64.nombreArchivo || b64.nombre || f.name;
+                const fileObj = {
+                  nombre: finalName,
+                  name: finalName,
+                  nombreOriginal: f.name,
+                  nombreArchivo: finalName,
+                  base64: b64.base64,
+                  mimeType: b64.tipoMime || 'application/pdf',
+                  tipoMime: b64.tipoMime || 'application/pdf',
+                  type: b64.tipoMime || 'application/pdf',
+                  tamanio: b64.tamanio || f.size,
+                  size: b64.tamanio || f.size,
+                  dataUrl: b64.dataUrl,
+                  tipo: tipoDocumento,
+                  file: f
+                };
+                processed.push(fileObj);
+              }
+            } catch (err) {
+              console.warn('Error leyendo/convirtiendo archivo a PDF:', f.name, err);
+              showToast('⚠️ ' + (err.message || 'Error procesando ' + f.name));
+            }
+          }
+
+          if (processed.length === 0) {
+            handleDocRowFileChange({ files: [] }, idKey, defaultBadgeType);
+            return;
+          }
+
+          badge.textContent = tuvoImagenConvertida ? '✓ PDF A4 Listo' : '✓ Cargado';
+          if (processed.length === 1) {
+            const p0 = processed[0];
+            const mb = ((p0.tamanio || 0) / (1024 * 1024)).toFixed(2);
+            sub.textContent = p0.nombre + (tuvoImagenConvertida ? ' (Convertido a PDF A4 · ' : ' (') + mb + ' MB)';
+          } else {
+            sub.textContent = processed.length + ' archivos en PDF A4 (' + processed.map(p => p.nombre).join(', ') + ')';
           }
         }
 
         if (processed.length > 0) {
           window.stateArchivosAdjuntos[idKey] = processed;
-          // Estructura requerida: state.archivosAdjuntos[tipoDocumento]
           window.state.archivosAdjuntos[tipoDocumento] = processed.length === 1 ? processed[0] : processed;
         }
       } else {
@@ -6860,7 +7430,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         if (btnLbl) btnLbl.textContent = 'Adjuntar';
         if (prevBtn) prevBtn.style.display = 'none';
         if (delBtn) delBtn.style.display = 'none';
-        sub.textContent = 'Formatos admitidos: PDF, JPG, PNG';
+        sub.textContent = 'Formatos admitidos: PDF, JPG, PNG, WEBP';
 
         delete window.stateArchivosAdjuntos[idKey];
         if (window.state && window.state.archivosAdjuntos) {
@@ -6879,10 +7449,37 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       if (input) {
         input.value = '';
         handleDocRowFileChange(input, idKey, defaultBadgeType);
+      } else {
+        handleDocRowFileChange({ files: [] }, idKey, defaultBadgeType);
       }
     }
 
     function previsualizarDocRow(idKey) {
+      const memArr = window.stateArchivosAdjuntos ? window.stateArchivosAdjuntos[idKey] : null;
+      const memDoc = Array.isArray(memArr) && memArr.length > 0 ? memArr[0] : null;
+      if (memDoc && (memDoc.dataUrl || memDoc.base64)) {
+        const tipoDoc = MAPA_ID_TIPO_DOC[idKey] || 'Legajo';
+        renderizarDocumento({
+          nombre: memDoc.nombre || memDoc.nombreArchivo || 'documento.pdf',
+          tipo: tipoDoc,
+          dataUrl: memDoc.dataUrl,
+          base64: memDoc.base64,
+          tipoMime: memDoc.tipoMime || memDoc.mimeType || 'application/pdf'
+        }, 'Previsualización');
+        const btnDescargar = document.getElementById('btnVisorDescargar');
+        if (btnDescargar && memDoc.dataUrl) {
+          btnDescargar.onclick = (e) => {
+            e.preventDefault();
+            const a = document.createElement('a');
+            a.href = memDoc.dataUrl;
+            a.download = memDoc.nombre || 'documento.pdf';
+            a.click();
+          };
+        }
+        abrirModal('modalVisorDocumento');
+        return;
+      }
+
       const input = document.getElementById(idKey);
       if (!input || !input.files || input.files.length === 0) {
         showToast('No hay archivo seleccionado para previsualizar.');
@@ -6893,7 +7490,6 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const blobUrl = URL.createObjectURL(file);
       if (typeof registrarObjectUrlVisor === 'function') registrarObjectUrlVisor(blobUrl);
 
-      const visor = document.getElementById('modalVisorDocumento');
       const docViewerContent = document.getElementById('docViewerContent');
       const visorDocNombre = document.getElementById('visorDocNombre');
       const btnDescargar = document.getElementById('btnVisorDescargar');
@@ -6929,7 +7525,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         }
       }
 
-      if (visor) visor.classList.add('open');
+      abrirModal('modalVisorDocumento');
     }
 
     /* ========================================================================
@@ -9852,6 +10448,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#135596" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>' +
             '<span>Documentación Complementaria del Legajo</span>' +
           '</div>' +
+          '<button type="button" class="btn-doc-attach" style="background:#ffffff;border-color:#93c5fd;" onclick="abrirAsistenteFrenteDorso(\'fileFichaAdicional\', null, \'ficha\', \'' + s.id + '\')" title="Combinar 2 fotos (Frente y Dorso) en un único PDF A4">🪪 Unificar Frente y Dorso en PDF</button>' +
         '</div>' +
         '<div style="display:grid;grid-template-columns:minmax(200px,1fr) minmax(240px,1.5fr);gap:0.65rem;align-items:center;">' +
           '<select id="cboFichaDocTipo" class="doc-complementaria-select">' +
@@ -10784,10 +11381,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const tipo = req ? req.tipo : 'DOCUMENTO REQUERIDO';
       const now = new Date();
       const nowStr = now.toISOString().slice(0, 16).replace('T', ' ');
-      const ext = (file.name.split('.').pop() || 'pdf').toLowerCase();
-      const generatedName = normalizarNombreArchivoDrive(s.id, tipo, ext);
 
-      mostrarCargando('Subsanando requerimiento documental...', 'Transfiriendo ' + generatedName);
+      mostrarCargando('Subsanando requerimiento documental...', 'Normalizando archivo a PDF A4...');
       let b64Data = null;
       try {
         b64Data = await fileToBase64(file);
@@ -10796,6 +11391,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         showToast('⚠️ ' + (err.message || 'Error procesando archivo'));
         return;
       }
+      const ext = (b64Data?.tipoMime === 'application/pdf' || /\.pdf$/i.test(b64Data?.nombreArchivo || ''))
+        ? 'pdf'
+        : (file.name.split('.').pop() || 'pdf').toLowerCase();
+      const generatedName = normalizarNombreArchivoDrive(s.id, tipo, ext);
 
       if (!s.adjuntos) s.adjuntos = [];
       s.adjuntos.push({
@@ -10860,14 +11459,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const session = getSession();
       const now = new Date();
       const nowStr = now.toISOString().slice(0, 16).replace('T', ' ');
-      const ext = (file.name.split('.').pop() || 'pdf').toLowerCase();
-
       const prevAdj = s.adjuntos[adjuntoIndex] || {};
       const prevTipo = prevAdj.tipo || 'DOCUMENTO';
       const estabaObservado = Boolean(prevAdj.observado);
-      const nuevoNombre = normalizarNombreArchivoDrive(s.id, prevTipo, ext);
 
-      mostrarCargando('Reemplazando archivo en el legajo...', 'Actualizando legajo digital');
+      mostrarCargando('Reemplazando archivo en el legajo...', 'Normalizando a PDF A4 y actualizando legajo digital');
       let b64 = null;
       try {
         b64 = await fileToBase64(file);
@@ -10877,6 +11473,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         showToast('⚠️ ' + (err.message || 'Error procesando archivo'));
         return;
       }
+      const ext = (b64?.tipoMime === 'application/pdf' || /\.pdf$/i.test(b64?.nombreArchivo || ''))
+        ? 'pdf'
+        : (file.name.split('.').pop() || 'pdf').toLowerCase();
+      const nuevoNombre = normalizarNombreArchivoDrive(s.id, prevTipo, ext);
 
       s.adjuntos[adjuntoIndex] = {
         tipo: prevTipo,
@@ -10946,10 +11546,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       const now = new Date();
       const nowStr = now.toISOString().slice(0, 16).replace('T', ' ');
-      const extension = (file.name.split('.').pop() || 'pdf').toLowerCase();
-      const generatedName = normalizarNombreArchivoDrive(s.id, tipo, extension);
 
-      mostrarCargando('Subiendo archivo al servidor central...', 'Transfiriendo ' + generatedName);
+      mostrarCargando('Normalizando y subiendo archivo...', 'Preparando documento PDF A4 para el Legajo Digital');
       let b64Data = null;
       try {
         b64Data = await fileToBase64(file);
@@ -10959,6 +11557,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         showToast('⚠️ ' + (err.message || 'Error codificando archivo'));
         return;
       }
+      const extension = (b64Data?.tipoMime === 'application/pdf' || /\.pdf$/i.test(b64Data?.nombreArchivo || ''))
+        ? 'pdf'
+        : (file.name.split('.').pop() || 'pdf').toLowerCase();
+      const generatedName = normalizarNombreArchivoDrive(s.id, tipo, extension);
 
       await callApi({
         action: 'subirAdjuntoAdicional',
@@ -12372,31 +12974,34 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       renderListaArchivosAuditoriaPills();
     }
 
-    function procesarArchivosAuditoria(files) {
+    async function procesarArchivosAuditoria(files) {
       if (!files || files.length === 0) return;
       const arr = Array.from(files);
       let procesados = 0;
 
-      arr.forEach(file => {
+      for (const file of arr) {
         if (file.size > 15 * 1024 * 1024) {
           showToast('El archivo "' + file.name + '" supera el límite de 15 MB.');
-          return;
+          continue;
         }
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          archivosAuditoriaCola.push({
-            nombre: file.name,
-            mimeType: file.type || (file.name.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
-            base64: e.target.result
-          });
-          procesados++;
-          if (procesados === arr.length) {
-            renderListaArchivosAuditoriaPills();
-            showToast('Se cargaron ' + arr.length + ' documento(s) para auditar.');
+        try {
+          const norm = await normalizarArchivoAPDF(file);
+          if (norm) {
+            archivosAuditoriaCola.push({
+              nombre: norm.nombreArchivo || file.name,
+              mimeType: norm.mimeType || 'application/pdf',
+              base64: norm.dataUrl || norm.base64
+            });
+            procesados++;
           }
-        };
-        reader.readAsDataURL(file);
-      });
+        } catch (err) {
+          showToast('⚠️ ' + (err.message || 'Error procesando "' + file.name + '"'));
+        }
+      }
+      if (procesados > 0) {
+        renderListaArchivosAuditoriaPills();
+        showToast('Se cargaron ' + procesados + ' documento(s) normalizados en PDF A4 para auditar.');
+      }
     }
 
     function actualizarSelectorExpedientesAuditoria() {
@@ -13475,6 +14080,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.recalcularValidacionesEdadYCuotas = recalcularValidacionesEdadYCuotas;
     window.sincronizarEstadoBotonSubmitAlta = sincronizarEstadoBotonSubmitAlta;
     window.esUsuarioMutualConAccesoDrive = esUsuarioMutualConAccesoDrive;
+    window.normalizarArchivoAPDF = normalizarArchivoAPDF;
+    window.fusionarFrenteYDorsoEnPDF = fusionarFrenteYDorsoEnPDF;
+    window.abrirAsistenteFrenteDorso = abrirAsistenteFrenteDorso;
+    window.cerrarAsistenteFrenteDorso = cerrarAsistenteFrenteDorso;
+    window.confirmarFusionFrenteDorso = confirmarFusionFrenteDorso;
+    window.handleAsistenteFotoChange = handleAsistenteFotoChange;
     window.estadoApp = window.estadoApp;
 
     window.addEventListener('DOMContentLoaded', () => {

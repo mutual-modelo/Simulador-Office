@@ -924,16 +924,23 @@
        WIKI & FAQ MODAL: ARQUITECTURA MODERNA, VENTILADA Y DE ALTA FIDELIDAD
        ======================================================================== */
     .wiki-modal-container {
-      max-width: 64rem;
-      width: 94vw;
-      max-height: 90vh;
+      width: 96vw;
+      max-width: 72rem;
+      max-height: 92vh;
       display: flex;
       flex-direction: column;
       background: #ffffff;
-      border-radius: 20px;
-      box-shadow: 0 25px 50px -12px rgba(15, 45, 74, 0.25), 0 0 1px rgba(15, 45, 74, 0.12);
+      border-radius: 16px;
+      border: 1px solid rgba(226, 232, 240, 0.85);
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25), 0 0 1px rgba(15, 45, 74, 0.12);
       overflow: hidden;
+      transition: all 0.2s ease;
       animation: modalFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @media (min-width: 768px) {
+      .wiki-modal-container {
+        max-width: 80rem;
+      }
     }
     @keyframes modalFadeIn {
       from { opacity: 0; transform: scale(0.97) translateY(8px); }
@@ -1074,55 +1081,89 @@
       font-size: 0.72rem;
       color: #94a3b8;
     }
-    .wiki-pills-bar {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.75rem 1.6rem;
+    .wiki-pills-wrap {
+      padding: 0.5rem 1.5rem 0.75rem;
       background: #ffffff;
       border-bottom: 1px solid #f1f5f9;
+      flex-shrink: 0;
+    }
+    .wiki-pills-bar,
+    #contenedor-categorias-faq {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.375rem;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
-      flex-shrink: 0;
+      padding-bottom: 0.25rem;
     }
-    .wiki-pills-bar::-webkit-scrollbar {
+    @media (min-width: 640px) and (max-width: 767px) {
+      .wiki-pills-bar,
+      #contenedor-categorias-faq {
+        flex-wrap: nowrap;
+      }
+    }
+    @media (min-width: 768px) {
+      .wiki-pills-bar,
+      #contenedor-categorias-faq {
+        flex-wrap: wrap;
+        overflow-x: visible;
+        padding-bottom: 0;
+      }
+    }
+    .wiki-pills-bar::-webkit-scrollbar,
+    #contenedor-categorias-faq::-webkit-scrollbar {
       display: none;
     }
-    .wiki-pill-btn {
+    .wiki-pill-btn,
+    .btn-categoria-faq {
       white-space: nowrap;
-      padding: 0.42rem 0.85rem;
-      border-radius: 9999px;
+      padding: 0.3125rem 0.625rem;
+      border-radius: 8px;
       font-size: 0.75rem;
-      font-weight: 600;
-      border: 1px solid #e2e8f0;
-      background: #f1f5f9;
-      color: #475569;
+      font-weight: 500;
+      border: 1px solid rgba(226, 232, 240, 0.85);
+      background: #f8fafc;
+      color: #334155;
       cursor: pointer;
-      transition: all 0.18s ease;
+      transition: all 0.15s ease;
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.375rem;
       user-select: none;
+      line-height: 1.35;
+      font-family: inherit;
     }
-    .wiki-pill-btn:hover {
-      background: #e2e8f0;
+    .wiki-pill-btn:hover,
+    .btn-categoria-faq:hover {
+      background: #f1f5f9;
       color: #0f172a;
       border-color: #cbd5e1;
     }
-    .wiki-pill-btn.active {
+    .wiki-pill-btn.active,
+    .btn-categoria-faq.active {
+      padding: 0.3125rem 0.75rem;
       background: #135596;
       color: #ffffff;
+      font-weight: 600;
       border-color: #135596;
-      box-shadow: 0 2px 6px rgba(19, 85, 150, 0.28);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+    }
+    .wiki-pill-btn.active:hover,
+    .btn-categoria-faq.active:hover {
+      background: #0f4477;
+      border-color: #0f4477;
+      color: #ffffff;
     }
     .wiki-body {
-      padding: 1.5rem 1.85rem;
+      padding: 1.4rem 1.75rem;
       overflow-y: auto;
-      max-height: calc(90vh - 205px);
+      max-height: calc(92vh - 195px);
+      flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 1.85rem;
+      gap: 1.75rem;
       background: #f8fafc;
     }
     .faq-category-block {
@@ -1346,11 +1387,6 @@
     .btn-toggle-eye{position:absolute;right:.6rem;background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:.9rem}
     .btn-primary-action{width:100%;padding:.65rem 1rem;background:var(--color-brand-blue);color:#fff;font-size:.82rem;font-weight:700;border:none;border-radius:8px;cursor:pointer;box-shadow:0 4px 10px rgba(19,85,150,.25);transition:all .15s}
     .btn-primary-action:hover{background:var(--color-brand-blue-dark)}
-    .demo-users-box{margin-top:1.25rem;padding-top:1rem;border-top:1px dashed var(--border-color)}
-    .demo-users-title{font-size:.68rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:.5rem;text-align:center}
-    .demo-users-grid{display:grid;gap:.4rem}
-    .btn-demo-user{padding:.45rem .65rem;background:#f8fafc;border:1px solid var(--border-color);border-radius:6px;font-size:.7rem;color:var(--text-main);cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:inherit}
-    .btn-demo-user:hover{background:#eff6ff;border-color:#93c5fd;color:var(--color-brand-blue)}
 
     /* DASHBOARD GRID & PANELS (ORIGINAL SIMULADOR) */
     .dashboard-grid{margin-top:1rem;display:grid;grid-template-columns:1fr;gap:1.25rem}
@@ -1814,9 +1850,84 @@
     .btn-derivar-caso{display:inline-flex;align-items:center;gap:0.32rem;padding:0.3rem 0.72rem;border-radius:8px;background:#fff;border:1px solid #6366f1;color:#4338ca;font-size:0.72rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all 0.15s ease;box-shadow:0 1px 2px rgba(79,70,229,0.08)}
     .btn-derivar-caso:hover{background:#eef2ff;border-color:#4338ca;transform:translateY(-1px)}
     .modal-window.modal-large{max-width:960px}
-    .modal-header-bar{padding:.85rem 1.25rem;border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between;background:#f8fafc}
-    .modal-header-title{font-size:.95rem;font-weight:800;color:var(--color-primary);display:flex;align-items:center;gap:.4rem}
-    .btn-close-modal{background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text-muted);line-height:1}
+    .modal-window.modal-form-wide{
+      width:94vw;
+      max-width:60rem;
+      max-height:90vh;
+      border-radius:16px;
+      background:#ffffff;
+      border:1px solid rgba(226,232,240,.85);
+      box-shadow:0 25px 50px -12px rgba(15,23,42,.25);
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+    .modal-form-shell{
+      display:flex;
+      flex-direction:column;
+      flex:1;
+      min-height:0;
+      overflow:hidden;
+    }
+    .modal-form-shell .modal-body-scroll{
+      padding:1.35rem 1.65rem;
+      overflow-y:auto;
+      flex:1;
+      background:#f8fafc;
+      scrollbar-width:thin;
+      scrollbar-color:#cbd5e1 transparent;
+    }
+    .modal-form-shell .modal-body-scroll::-webkit-scrollbar{width:7px}
+    .modal-form-shell .modal-body-scroll::-webkit-scrollbar-track{background:transparent}
+    .modal-form-shell .modal-body-scroll::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:9999px}
+    .modal-form-footer{
+      padding:.95rem 1.65rem;
+      border-top:1px solid #f1f5f9;
+      background:#ffffff;
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:.75rem;
+      flex-shrink:0;
+    }
+    .btn-modal-cancel{
+      padding:.55rem 1.15rem;
+      font-size:.78rem;
+      font-weight:600;
+      color:#475569;
+      background:#f1f5f9;
+      border:1px solid #e2e8f0;
+      border-radius:12px;
+      cursor:pointer;
+      transition:all .15s ease;
+      font-family:inherit;
+    }
+    .btn-modal-cancel:hover{background:#e2e8f0;color:#0f172a}
+    .btn-modal-confirm{
+      padding:.625rem 1.5rem;
+      font-size:.8rem;
+      font-weight:700;
+      color:#ffffff;
+      background:#135596;
+      border:1px solid #135596;
+      border-radius:12px;
+      cursor:pointer;
+      box-shadow:0 2px 6px rgba(19,85,150,.22);
+      transition:all .15s ease;
+      display:inline-flex;
+      align-items:center;
+      gap:.5rem;
+      font-family:inherit;
+    }
+    .btn-modal-confirm:hover{
+      background:#0f4477;
+      border-color:#0f4477;
+      box-shadow:0 4px 10px rgba(19,85,150,.3);
+    }
+    .modal-header-bar{padding:.95rem 1.5rem;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;background:#f8fafc;flex-shrink:0}
+    .modal-header-title{font-size:.98rem;font-weight:800;color:var(--color-primary);display:flex;align-items:center;gap:.5rem}
+    .btn-close-modal{background:none;border:none;font-size:1.35rem;cursor:pointer;color:var(--text-muted);line-height:1;width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;transition:background .15s}
+    .btn-close-modal:hover{background:#e2e8f0;color:#0f172a}
     .modal-body-scroll{padding:1rem 1.25rem;overflow-y:auto;flex:1}
     .modal-footer-bar{padding:.75rem 1.25rem;border-top:1px solid var(--border-color);background:#f8fafc;display:flex;justify-content:flex-end;gap:.5rem}
     .section-title-divider{font-size:.75rem;font-weight:700;color:var(--color-primary);text-transform:uppercase;letter-spacing:.03em;border-bottom:1px solid var(--border-color);padding-bottom:.3rem;margin:.85rem 0 .5rem}
@@ -1825,14 +1936,112 @@
     @media (min-width:768px){.grid.grid-cols-1.md\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}}
     .col-span-1{grid-column:span 1 / span 1}
     @media (min-width:768px){.md\:col-span-2{grid-column:1 / -1}}
-    .antiguedad-reactive-label{display:block;font-size:.75rem;font-weight:600;color:#334155;margin-bottom:.25rem}
-    .antiguedad-reactive-input{width:100%;height:38px;padding:.5rem .75rem;border:1px solid #cbd5e1;border-radius:.75rem;font-size:.875rem;font-family:var(--font-sans);color:var(--text-main);background:#fff;outline:none;transition:border-color .15s,box-shadow .15s}
-    .antiguedad-reactive-input:focus{border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,.22)}
-    .antiguedad-reactive-badge{width:100%;height:38px;padding:0 .75rem;background:rgba(239,246,255,.75);border:1px solid #bfdbfe;border-radius:.75rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.75rem;font-weight:600;color:#135596}
-    .antiguedad-auto-pill{font-size:.625rem;color:#2563eb;background:#ffffff;padding:.125rem .5rem;border-radius:.375rem;border:1px solid #dbeafe;box-shadow:0 1px 2px rgba(15,23,42,.04);white-space:nowrap}
-    .edad-reactive-badge{width:100%;height:38px;padding:0 .75rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:.75rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.75rem;font-weight:700;color:#334155}
-    .edad-auto-pill{font-size:.625rem;color:#64748b;background:#ffffff;padding:.125rem .5rem;border-radius:.375rem;border:1px solid #e2e8f0;white-space:nowrap}
-    .alert-policy-box{display:flex;align-items:flex-start;gap:.5rem;padding:.6rem .85rem;border-radius:.65rem;font-size:.75rem;font-weight:600;line-height:1.35;margin-top:.5rem}
+
+    /* SISTEMA DE DISEÑO DE FORMULARIOS (GRID 12 COLUMNAS + INPUTS 42PX) */
+    .form-grid-12,.grid-cols-12{
+      display:grid;
+      grid-template-columns:repeat(12,minmax(0,1fr));
+      gap:1rem;
+      width:100%;
+      align-items:start;
+    }
+    .col-12,.col-span-12{grid-column:span 12 / span 12;min-width:0}
+    .col-sm-4,.col-sm-6,.col-sm-8{grid-column:span 12 / span 12;min-width:0}
+    @media (min-width:640px){
+      .col-sm-4,.sm\:col-span-4{grid-column:span 4 / span 4}
+      .col-sm-6,.sm\:col-span-6{grid-column:span 6 / span 6}
+      .col-sm-8,.sm\:col-span-8{grid-column:span 8 / span 8}
+    }
+    .ds-field{
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+      margin-bottom:0;
+    }
+    .ds-label{
+      font-size:.75rem;
+      font-weight:600;
+      color:#475569;
+      margin-bottom:.375rem;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:.5rem;
+      min-height:18px;
+      line-height:1.2;
+    }
+    .ds-input{
+      width:100%;
+      height:42px;
+      padding:0 .875rem;
+      font-size:.875rem;
+      font-family:var(--font-sans);
+      color:#1e293b;
+      background:#ffffff;
+      border:1px solid #cbd5e1;
+      border-radius:12px;
+      outline:none;
+      transition:border-color .16s ease,box-shadow .16s ease,background-color .16s ease;
+    }
+    .ds-input:focus{
+      border-color:#135596;
+      box-shadow:0 0 0 3px rgba(19,85,150,.14);
+    }
+    .ds-input::placeholder{color:#94a3b8;font-size:.82rem}
+    .ds-helper{
+      font-size:.7rem;
+      color:#64748b;
+      margin-top:.32rem;
+      line-height:1.35;
+    }
+    .ds-calc-box{
+      width:100%;
+      height:42px;
+      padding:0 .875rem;
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:.5rem;
+      transition:all .16s ease;
+    }
+    .ds-calc-box--slate{
+      background:#f8fafc;
+      border:1px solid #e2e8f0;
+      color:#1e293b;
+      font-size:.875rem;
+      font-weight:700;
+    }
+    .ds-calc-box--blue{
+      background:rgba(239,246,255,.72);
+      border:1px solid #bfdbfe;
+      color:#135596;
+      font-size:.8125rem;
+      font-weight:700;
+    }
+    .ds-auto-pill{
+      font-size:.65rem;
+      font-weight:700;
+      padding:2px 8px;
+      border-radius:9999px;
+      background:#ffffff;
+      border:1px solid #e2e8f0;
+      color:#64748b;
+      white-space:nowrap;
+      flex-shrink:0;
+    }
+    .ds-calc-box--blue .ds-auto-pill{
+      border-color:#dbeafe;
+      color:#2563eb;
+    }
+    .antiguedad-reactive-label{display:flex;align-items:center;justify-content:space-between;font-size:.75rem;font-weight:600;color:#475569;margin-bottom:.375rem;min-height:18px}
+    .antiguedad-reactive-input{width:100%;height:42px;padding:0 .875rem;border:1px solid #cbd5e1;border-radius:12px;font-size:.875rem;font-family:var(--font-sans);color:#1e293b;background:#fff;outline:none;transition:border-color .16s,box-shadow .16s}
+    .antiguedad-reactive-input:focus{border-color:#135596;box-shadow:0 0 0 3px rgba(19,85,150,.14)}
+    .antiguedad-reactive-badge{width:100%;height:42px;padding:0 .875rem;background:rgba(239,246,255,.72);border:1px solid #bfdbfe;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.8125rem;font-weight:700;color:#135596}
+    .antiguedad-auto-pill{font-size:.65rem;font-weight:700;color:#2563eb;background:#ffffff;padding:2px 8px;border-radius:9999px;border:1px solid #dbeafe;white-space:nowrap}
+    .edad-reactive-badge{width:100%;height:42px;padding:0 .875rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.875rem;font-weight:700;color:#1e293b}
+    .edad-auto-pill{font-size:.65rem;font-weight:700;color:#64748b;background:#ffffff;padding:2px 8px;border-radius:9999px;border:1px solid #e2e8f0;white-space:nowrap}
+    .alert-policy-box{display:flex;align-items:flex-start;gap:.5rem;padding:.65rem .9rem;border-radius:12px;font-size:.75rem;font-weight:600;line-height:1.4;margin-top:.65rem;transition:all .2s ease}
     .alert-policy-red{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
     .alert-policy-amber{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
     .alert-policy-green{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
@@ -1845,22 +2054,40 @@
     .modal-card-section {
       background: #ffffff;
       border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 1.1rem 1.25rem;
+      border-radius: 16px;
+      padding: 1.25rem 1.4rem;
       margin-bottom: 1.15rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      box-shadow: 0 1px 3px rgba(15,23,42,0.03);
       transition: border-color 0.15s ease;
+    }
+    .modal-card-section:last-child {
+      margin-bottom: 0.25rem;
     }
     .modal-card-section:hover {
       border-color: #cbd5e1;
     }
-    .modal-card-header {
+    .modal-card-header,
+    .section-banner-header {
       display: flex;
       align-items: center;
-      gap: 0.65rem;
-      margin-bottom: 0.9rem;
-      padding-bottom: 0.6rem;
+      gap: 0.75rem;
+      margin-bottom: 1.05rem;
+      padding-bottom: 0.7rem;
       border-bottom: 1px solid #f1f5f9;
+    }
+    .section-step-badge {
+      width: 26px;
+      height: 26px;
+      border-radius: 9999px;
+      background: #eff6ff;
+      color: #135596;
+      border: 1px solid #dbeafe;
+      font-size: 0.75rem;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
     .modal-card-icon {
       width: 32px;
@@ -1874,63 +2101,94 @@
       flex-shrink: 0;
     }
     .modal-card-title-group h4 {
-      font-size: 0.8125rem;
+      font-size: 0.875rem;
       font-weight: 700;
       color: #0f172a;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
+      letter-spacing: -0.01em;
       margin: 0;
     }
     .modal-card-title-group p {
-      font-size: 0.6875rem;
+      font-size: 0.72rem;
       color: #64748b;
-      margin: 1px 0 0 0;
+      margin: 2px 0 0 0;
+    }
+    .credit-params-highlight {
+      background: rgba(248, 250, 252, 0.75);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: 14px;
+      padding: 1.1rem;
     }
 
     /* PREVISUALIZACIÓN EN VIVO DE CUOTA ESTIMADA (CARD 3) */
     .live-cuota-preview-card {
-      background: #f0f9ff;
-      border: 1px solid #bae6fd;
-      border-radius: 10px;
-      padding: 0.75rem 1rem;
-      margin-top: 0.85rem;
+      background: #ffffff;
+      border: 1.5px solid #93c5fd;
+      border-radius: 12px;
+      min-height: 42px;
+      padding: 0.45rem 0.9rem;
+      margin-top: 0;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 1rem;
+      gap: 0.75rem;
       flex-wrap: wrap;
+      box-shadow: 0 1px 3px rgba(19, 85, 150, 0.06);
     }
     .live-cuota-preview-left {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 1px;
+      min-width: 0;
     }
     .live-cuota-preview-label {
-      font-size: 0.6875rem;
+      font-size: 0.65rem;
       font-weight: 700;
       color: #0369a1;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.03em;
     }
     .live-cuota-preview-sub {
-      font-size: 0.72rem;
-      color: #0c4a6e;
+      font-size: 0.7rem;
+      color: #475569;
+      line-height: 1.25;
     }
     .live-cuota-preview-right {
       display: flex;
       align-items: baseline;
       gap: 4px;
+      margin-left: auto;
     }
     .live-cuota-preview-value {
-      font-size: 1.25rem;
+      font-size: 1.12rem;
       font-weight: 800;
-      color: #0284c7;
+      color: #135596;
       letter-spacing: -0.02em;
+      font-family: var(--font-mono);
     }
     .live-cuota-preview-unit {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       color: #0369a1;
       font-weight: 600;
+    }
+    .btn-hero-action {
+      height: 42px;
+      padding: 0 1rem;
+      background: #135596;
+      color: #ffffff;
+      border: 1px solid #135596;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .btn-hero-action:hover {
+      background: #0f4477;
+      border-color: #0f4477;
     }
 
     /* ZONA DE ARRASTRE COMPACTA (DROPZONE) */
@@ -2202,6 +2460,33 @@
       color: #0c3966;
       border-color: #135596;
     }
+    #modalAltaSolicitud .btn-doc-attach,
+    #modalAltaAsociado .btn-doc-attach {
+      background: #135596;
+      color: #ffffff;
+      border-color: #0f4477;
+      border-radius: 10px;
+      padding: 0.42rem 0.85rem;
+      font-weight: 600;
+    }
+    #modalAltaSolicitud .btn-doc-attach:hover,
+    #modalAltaAsociado .btn-doc-attach:hover {
+      background: #0f4477;
+      border-color: #0c3966;
+      color: #ffffff;
+    }
+    #modalAltaSolicitud .document-row-card.is-loaded .btn-doc-attach,
+    #modalAltaAsociado .document-row-card.is-loaded .btn-doc-attach {
+      background: #eff6ff;
+      color: #135596;
+      border-color: #bfdbfe;
+    }
+    #modalAltaSolicitud .document-row-card.is-loaded .btn-doc-attach:hover,
+    #modalAltaAsociado .document-row-card.is-loaded .btn-doc-attach:hover {
+      background: #dbeafe;
+      color: #0c3966;
+      border-color: #135596;
+    }
     .doc-complementaria-card {
       background: #f8fafc;
       border: 1px solid #dbeafe;
@@ -2457,7 +2742,7 @@
   </style>
 </head>
 <body>
-  <!-- INDICADOR FLOTANTE DE COMUNICACIÓN CON APPS SCRIPT -->
+  <!-- INDICADOR FLOTANTE DE COMUNICACIÓN CON SERVIDOR CENTRAL -->
   <div id="apiLoadingOverlay" class="api-loading-overlay">
     <div class="api-loading-box">
       <div class="api-spinner"></div>
@@ -3345,8 +3630,6 @@
               </div>
             </div>
             <div style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">
-              <button type="button" class="btn-restore" onclick="cargarDemoAuditoria('iafas_aprobado')">📄 Demo Recibo IAFAS (Apto)</button>
-              <button type="button" class="btn-restore" onclick="cargarDemoAuditoria('muni_observado')">📄 Demo Municipal (Observado)</button>
               <button type="button" class="btn-restore" onclick="limpiarPanelAuditoria()">🧹 Limpiar</button>
             </div>
           </div>
@@ -3409,8 +3692,8 @@
 
   <!-- MODAL 1: ALTA SOLICITUD -->
     <!-- MODAL: ALTA DE ASOCIADO AL PADRÓN INSTITUCIONAL (EXCLUSIVO ANALISTAS Y ADMIN) -->
-  <div id="modalAltaAsociado" class="modal-backdrop">
-    <div class="modal-window modal-large">
+  <div id="modalAltaAsociado" class="modal-backdrop" data-alias="modal-nuevo-asociado">
+    <div class="modal-window modal-form-wide">
       <div class="modal-header-bar">
         <div class="modal-header-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -3421,36 +3704,60 @@
           </svg>
           <span>Alta de Nuevo Asociado al Padrón Institucional</span>
         </div>
-        <button class="btn-close-modal" onclick="cerrarModal('modalAltaAsociado')">&times;</button>
+        <button type="button" class="btn-close-modal" onclick="cerrarModal('modalAltaAsociado')">&times;</button>
       </div>
-      <div class="modal-body-scroll">
-        <form id="formAltaAsociado" onsubmit="guardarNuevoAsociado(event)">
-          
-          <!-- CARD 1: DATOS PERSONALES Y DE FILIACIÓN -->
+      <form id="formAltaAsociado" class="modal-form-shell" onsubmit="guardarNuevoAsociado(event)">
+        <div class="modal-body-scroll">
+
+          <!-- SECCIÓN 1: DATOS PERSONALES Y DE FILIACIÓN -->
           <div class="modal-card-section">
-            <div class="modal-card-header">
-              <div class="modal-card-icon">👤</div>
+            <div class="section-banner-header">
+              <span class="section-step-badge">1</span>
               <div class="modal-card-title-group">
-                <h4>1. Datos Personales y de Filiación</h4>
-                <p>Información de identidad y contacto oficial del asociado para el padrón AMMER</p>
+                <h4>Datos Personales y de Filiación</h4>
+                <p>Identidad, contacto y domicilio oficial del asociado para el padrón AMMER</p>
               </div>
             </div>
-            <div class="grid-3-cols">
-              <div class="form-group"><label class="form-label">DNI *</label><input type="text" id="asocDni" class="input-text" required placeholder="Sin puntos"/></div>
-              <div class="form-group"><label class="form-label">Apellido y Nombres *</label><input type="text" id="asocNombre" class="input-text" required placeholder="Ej: Juan Carlos Pérez"/></div>
-              <div class="form-group"><label class="form-label">CUIL (Opcional)</label><input type="text" id="asocCuil" class="input-text" placeholder="Ej: 20-31890452-9"/></div>
-              <div class="form-group"><label class="form-label">Fecha de Nacimiento *</label><input type="date" id="asocFechaNac" class="input-text" required/></div>
-              <div class="form-group">
-                <label class="form-label">Sexo</label>
-                <select id="asocSexo" class="input-text">
+            <div class="form-grid-12">
+              <!-- Fila 1: Identidad -->
+              <div class="ds-field col-12 col-sm-4">
+                <label class="ds-label" for="asocDni"><span>DNI *</span></label>
+                <input type="text" id="asocDni" class="ds-input" required placeholder="Sin puntos"/>
+              </div>
+              <div class="ds-field col-12 col-sm-8">
+                <label class="ds-label" for="asocNombre"><span>Apellido y Nombres *</span></label>
+                <input type="text" id="asocNombre" class="ds-input" required placeholder="Ej: Juan Carlos Pérez"/>
+              </div>
+
+              <!-- Fila 2: Nacimiento y Edad Reactiva -->
+              <div class="ds-field col-12 col-sm-6">
+                <label class="ds-label" for="asocFechaNac"><span>Fecha de Nacimiento *</span></label>
+                <input type="date" id="asocFechaNac" class="ds-input" required onchange="calcularEdadAsociadoReactiva(this.value)" oninput="calcularEdadAsociadoReactiva(this.value)"/>
+              </div>
+              <div class="ds-field col-12 col-sm-6">
+                <label class="ds-label"><span>Edad Actual Calculada</span></label>
+                <div id="asocBadgeEdadActual" class="ds-calc-box ds-calc-box--slate">
+                  <span id="asocTextoEdadActual">-- AÑOS</span>
+                  <span class="ds-auto-pill">Automático</span>
+                </div>
+              </div>
+
+              <!-- Fila 3: Filiación -->
+              <div class="ds-field col-12 col-sm-4">
+                <label class="ds-label" for="asocCuil"><span>CUIL (Opcional)</span></label>
+                <input type="text" id="asocCuil" class="ds-input" placeholder="Ej: 20-31890452-9"/>
+              </div>
+              <div class="ds-field col-12 col-sm-4">
+                <label class="ds-label" for="asocSexo"><span>Sexo</span></label>
+                <select id="asocSexo" class="ds-input">
                   <option value="Masculino">Masculino</option>
                   <option value="Femenino">Femenino</option>
                   <option value="Otro">Otro</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label class="form-label">Estado Civil</label>
-                <select id="asocEstadoCivil" class="input-text">
+              <div class="ds-field col-12 col-sm-4">
+                <label class="ds-label" for="asocEstadoCivil"><span>Estado Civil</span></label>
+                <select id="asocEstadoCivil" class="ds-input">
                   <option value="Soltero/a">Soltero/a</option>
                   <option value="Casado/a">Casado/a</option>
                   <option value="Divorciado/a">Divorciado/a</option>
@@ -3458,54 +3765,63 @@
                   <option value="Unión Convivencial">Unión Convivencial</option>
                 </select>
               </div>
-              <div class="form-group"><label class="form-label">Celular / WhatsApp *</label><input type="tel" id="asocCelular" class="input-text" required placeholder="Ej: 3434123456"/></div>
-              <div class="form-group"><label class="form-label">Email</label><input type="email" id="asocEmail" class="input-text" placeholder="socio@email.com"/></div>
-              <div class="form-group"><label class="form-label">Localidad / Ciudad</label><input type="text" id="asocLocalidad" class="input-text" placeholder="Ej: Paraná"/></div>
-            </div>
-            <div class="form-group" style="margin-top:0.65rem;">
-              <label class="form-label">Domicilio Actual / Calle y Número *</label>
-              <input type="text" id="asocDomicilio" class="input-text" required placeholder="Ej: Urquiza 840, Paraná, Entre Ríos"/>
+
+              <!-- Fila 4: Medios de Contacto -->
+              <div class="ds-field col-12 col-sm-6">
+                <label class="ds-label" for="asocCelular"><span>Celular / WhatsApp *</span></label>
+                <input type="tel" id="asocCelular" class="ds-input" required placeholder="Ej: 3434123456"/>
+              </div>
+              <div class="ds-field col-12 col-sm-6">
+                <label class="ds-label" for="asocEmail"><span>Email</span></label>
+                <input type="email" id="asocEmail" class="ds-input" placeholder="socio@email.com"/>
+              </div>
+
+              <!-- Fila 5: Domicilio -->
+              <div class="ds-field col-12 col-sm-8">
+                <label class="ds-label" for="asocDomicilio"><span>Domicilio Actual (Calle y Número) *</span></label>
+                <input type="text" id="asocDomicilio" class="ds-input" required placeholder="Ej: Urquiza 840, Paraná"/>
+              </div>
+              <div class="ds-field col-12 col-sm-4">
+                <label class="ds-label" for="asocLocalidad"><span>Localidad / Ciudad</span></label>
+                <input type="text" id="asocLocalidad" class="ds-input" placeholder="Ej: Paraná"/>
+              </div>
             </div>
           </div>
 
-          <!-- CARD 2: DATOS LABORALES Y EMPLEADOR -->
+          <!-- SECCIÓN 2: DATOS LABORALES Y EMPLEADOR -->
           <div class="modal-card-section">
-            <div class="modal-card-header">
-              <div class="modal-card-icon">💼</div>
+            <div class="section-banner-header">
+              <span class="section-step-badge">2</span>
               <div class="modal-card-title-group">
-                <h4>2. Datos Laborales y Empleador</h4>
-                <p>Repartición pagadora, situación de revista y estabilidad funcional</p>
+                <h4>Datos Laborales y Empleador</h4>
+                <p>Repartición pagadora, cargo y antigüedad en el organismo</p>
               </div>
             </div>
-            <div class="grid-3-cols">
-              <div class="form-group">
-                <label class="form-label">Organismo *</label>
-                <select id="asocOrganismo" class="input-text" required onchange="handleOrganismoChange(this.value, 'asocLegajo'); evaluarDocumentacionRequeridaAsociado();">
+            <div class="form-grid-12">
+              <!-- Fila 1: Organismo, Condición y Cargo -->
+              <div class="ds-field col-12 col-sm-4">
+                <label class="ds-label" for="asocOrganismo"><span>Organismo Empleador *</span></label>
+                <select id="asocOrganismo" class="ds-input" required onchange="handleOrganismoChange(this.value, 'asocLegajo'); evaluarDocumentacionRequeridaAsociado();">
                   <option value="Provincial" selected>Provincial</option>
                   <option value="Municipal">Municipal</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label class="form-label">Condición *</label>
-                <select id="asocCondicion" class="input-text" required onchange="evaluarDocumentacionRequeridaAsociado()">
+              <div class="ds-field col-12 col-sm-4">
+                <label class="ds-label" for="asocCondicion"><span>Condición *</span></label>
+                <select id="asocCondicion" class="ds-input" required onchange="evaluarDocumentacionRequeridaAsociado()">
                   <option value="Activo">Activo</option>
                   <option value="Jubilado">Jubilado</option>
                   <option value="Pensionado">Pensionado</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label class="form-label">Legajo Municipal (Opcional)</label>
-                <input type="text" id="asocLegajo" class="input-text" placeholder="Ej: 14209" disabled style="opacity:0.5;background:#f1f5f9;cursor:not-allowed;"/>
-              </div>
-              <div class="form-group"><label class="form-label">Dependencia / Lugar *</label><input type="text" id="asocDependencia" class="input-text" required placeholder="Ej: Hospital San Martín" oninput="evaluarDocumentacionRequeridaAsociado()"/></div>
-              <div class="form-group">
-                <label class="block text-xs font-semibold text-slate-700 mb-1 antiguedad-reactive-label" for="asocCargo">
-                  Cargo <span class="text-red-500" style="color:#ef4444;">*</span>
+              <div class="ds-field col-12 col-sm-4">
+                <label class="ds-label" for="asocCargo">
+                  <span>Cargo <span style="color:#ef4444;">*</span></span>
                 </label>
                 <select
                   id="asocCargo"
                   name="Cargo"
-                  class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all antiguedad-reactive-input"
+                  class="ds-input"
                   required
                   onchange="evaluarDocumentacionRequeridaAsociado()"
                 >
@@ -3514,42 +3830,46 @@
                   <option value="Suplente">Suplente</option>
                 </select>
               </div>
-              <div class="form-group" style="grid-column:1 / -1;">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label class="antiguedad-reactive-label" for="asocFechaIngreso">
-                      Fecha de Ingreso Laboral
-                    </label>
-                    <input
-                      type="date"
-                      id="asocFechaIngreso"
-                      name="Fecha_Ingreso_Laboral"
-                      class="antiguedad-reactive-input"
-                      onchange="calcularAntiguedadReactiva(this.value, 'asocTextoAntiguedad', 'asocAntiguedad')"
-                      oninput="calcularAntiguedadReactiva(this.value, 'asocTextoAntiguedad', 'asocAntiguedad')"
-                    />
-                  </div>
-                  <div>
-                    <label class="antiguedad-reactive-label">
-                      Antigüedad Calculada (AÑOS - MESES)
-                    </label>
-                    <div id="asocBadgeAntiguedad" class="antiguedad-reactive-badge">
-                      <span id="asocTextoAntiguedad">-- AÑOS - -- MESES</span>
-                      <span class="antiguedad-auto-pill">Automático</span>
-                    </div>
-                    <input type="hidden" id="asocAntiguedad" value=""/>
-                  </div>
+
+              <!-- Fila 2: Dependencia y Legajo Municipal -->
+              <div class="ds-field col-12 col-sm-8">
+                <label class="ds-label" for="asocDependencia"><span>Dependencia / Lugar de Trabajo *</span></label>
+                <input type="text" id="asocDependencia" class="ds-input" required placeholder="Indicar Escuela/CGE, Hospital/Centro de Salud, Facultad, etc." oninput="evaluarDocumentacionRequeridaAsociado()"/>
+              </div>
+              <div class="ds-field col-12 col-sm-4">
+                <label class="ds-label" for="asocLegajo"><span>Legajo Municipal (Opcional)</span></label>
+                <input type="text" id="asocLegajo" class="ds-input" placeholder="Ej: 14209" disabled style="opacity:0.5;background:#f1f5f9;cursor:not-allowed;"/>
+              </div>
+
+              <!-- Fila 3: Ingreso y Antigüedad Reactiva -->
+              <div class="ds-field col-12 col-sm-6">
+                <label class="ds-label" for="asocFechaIngreso"><span>Fecha de Ingreso Laboral</span></label>
+                <input
+                  type="date"
+                  id="asocFechaIngreso"
+                  name="Fecha_Ingreso_Laboral"
+                  class="ds-input"
+                  onchange="calcularAntiguedadReactiva(this.value, 'asocTextoAntiguedad', 'asocAntiguedad')"
+                  oninput="calcularAntiguedadReactiva(this.value, 'asocTextoAntiguedad', 'asocAntiguedad')"
+                />
+              </div>
+              <div class="ds-field col-12 col-sm-6">
+                <label class="ds-label"><span>Antigüedad Calculada (AÑOS - MESES)</span></label>
+                <div id="asocBadgeAntiguedad" class="ds-calc-box ds-calc-box--blue">
+                  <span id="asocTextoAntiguedad">-- AÑOS - -- MESES</span>
+                  <span class="ds-auto-pill">Automático</span>
                 </div>
+                <input type="hidden" id="asocAntiguedad" value=""/>
               </div>
             </div>
           </div>
 
-          <!-- CARD 3: DOCUMENTACIÓN DIGITAL DEL ASOCIADO (LEGAJO DIGITAL) -->
+          <!-- SECCIÓN 3: DOCUMENTACIÓN DIGITAL DEL ASOCIADO -->
           <div class="modal-card-section">
-            <div class="modal-card-header">
-              <div class="modal-card-icon">📁</div>
+            <div class="section-banner-header">
+              <span class="section-step-badge">3</span>
               <div class="modal-card-title-group">
-                <h4>3. Documentación Digital del Asociado</h4>
+                <h4>Documentación Digital del Asociado</h4>
                 <p>Digitalización de constancias oficiales archivadas en el Legajo Digital</p>
               </div>
             </div>
@@ -3864,7 +4184,7 @@
                 <span>Agregar otro tipo de documento voluntariamente al legajo:</span>
               </div>
               <div class="add-doc-input-group">
-                <select id="cboAgregarDocManualAsoc" class="input-text">
+                <select id="cboAgregarDocManualAsoc" class="ds-input">
                   <option value="">-- Seleccionar tipo de documento a incorporar --</option>
                   <option value="row-asocFileMovimientos">Comprobante de Movimientos Bancarios (Último Depósito)</option>
                   <option value="row-asocFileSage">Certificado SAGE (Situación de Revista CGE)</option>
@@ -3874,24 +4194,25 @@
                   <option value="row-asocFileCbu">Constancia de CBU Bancario</option>
                   <option value="row-asocFileOtros">Otros Documentos Complementarios</option>
                 </select>
-                <button type="button" class="btn-hero-action" style="padding:0.45rem 0.95rem;font-size:0.75rem;white-space:nowrap;" onclick="agregarDocumentoManualAsociado()">+ Agregar Fila</button>
+                <button type="button" class="btn-hero-action" onclick="agregarDocumentoManualAsociado()">+ Agregar Fila</button>
               </div>
-            </div>
             </div>
           </div>
 
-          <!-- FOOTER DE ACCIONES -->
-          <div class="modal-footer-bar" style="margin-top:1.25rem;padding:0.85rem 0 0 0;background:none;border-top:1px solid #e2e8f0;">
-            <button type="button" class="btn-restore" onclick="cerrarModal('modalAltaAsociado')">Cancelar</button>
-            <button type="submit" id="btnSubmitAltaAsociado" class="btn-primary-action" style="width:auto;padding:0.55rem 1.35rem;">Guardar Asociado en Padrón 👤</button>
-          </div>
-        </form>
-      </div>
+        </div>
+        <!-- FOOTER FIJO DE ACCIONES -->
+        <div class="modal-form-footer">
+          <button type="button" class="btn-modal-cancel" onclick="cerrarModal('modalAltaAsociado')">Cancelar</button>
+          <button type="submit" id="btnSubmitAltaAsociado" class="btn-modal-confirm">
+            <span>Confirmar y Guardar Asociado</span>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 
-  <div id="modalAltaSolicitud" class="modal-backdrop">
-    <div class="modal-window modal-large">
+  <div id="modalAltaSolicitud" class="modal-backdrop" data-alias="modal-nueva-solicitud">
+    <div class="modal-window modal-form-wide">
       <div class="modal-header-bar">
         <div class="modal-header-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -3903,85 +4224,93 @@
           </svg>
           <span id="lblAltaModalTitle">📝 Nueva Solicitud de Ayuda Económica</span>
         </div>
-        <button class="btn-close-modal" onclick="cerrarModal('modalAltaSolicitud')">&times;</button>
+        <button type="button" class="btn-close-modal" onclick="cerrarModal('modalAltaSolicitud')">&times;</button>
       </div>
-      <div class="modal-body-scroll">
-        <form id="formAltaSolicitud" onsubmit="guardarNuevaSolicitud(event)">
+      <form id="formAltaSolicitud" class="modal-form-shell" onsubmit="guardarNuevaSolicitud(event)">
+        <div class="modal-body-scroll">
           <input type="text" name="website_trap" id="form-trap-field-alta" style="display:none !important;" tabindex="-1" autocomplete="off"/>
-          
+
           <!-- SELECTOR DE CANAL PARA GESTIONES PROPIAS DE SEDE CENTRAL -->
-          <div id="groupCanalIngresoModal" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;padding:0.75rem 1rem;border-radius:10px;margin-bottom:1.15rem;">
-            <label class="form-label" style="font-weight:700;color:#166534;margin-bottom:0.35rem;display:flex;align-items:center;gap:4px;">
-              🏛️ Canal de Ingreso Oficial Sede Social Mutual *
+          <div id="groupCanalIngresoModal" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;padding:0.9rem 1.15rem;border-radius:14px;margin-bottom:1.15rem;">
+            <label class="ds-label" style="font-weight:700;color:#166534;margin-bottom:0.45rem;">
+              <span>🏛️ Canal de Ingreso Oficial Sede Social Mutual *</span>
             </label>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0.5rem;align-items:center;">
-              <select id="solCanalIngreso" class="input-text" style="font-weight:700;border-color:#86efac;background:#fff;">
-                <option value="Presencial Sede Central" selected>🏛️ Presencial Sede Social (Mostrador / Mesa de Entradas)</option>
-                <option value="WhatsApp Oficial">💬 Canal Oficial WhatsApp Mutual</option>
-                <option value="Telefónico">📞 Canal Oficial Telefónico</option>
-              </select>
-              <span style="font-size:0.72rem;color:#166534;">El trámite será imputado directamente a la cartera institucional de la Mutual con supervisión directa.</span>
+            <div class="form-grid-12" style="align-items:center;">
+              <div class="col-12 col-sm-6">
+                <select id="solCanalIngreso" class="ds-input" style="font-weight:700;border-color:#86efac;background:#fff;">
+                  <option value="Presencial Sede Central" selected>🏛️ Presencial Sede Social (Mostrador / Mesa de Entradas)</option>
+                  <option value="WhatsApp Oficial">💬 Canal Oficial WhatsApp Mutual</option>
+                  <option value="Telefónico">📞 Canal Oficial Telefónico</option>
+                </select>
+              </div>
+              <div class="col-12 col-sm-6">
+                <span style="font-size:0.74rem;color:#166534;line-height:1.35;display:block;">El trámite será imputado directamente a la cartera institucional de la Mutual con supervisión directa.</span>
+              </div>
             </div>
           </div>
 
-          <!-- CARD 1: IDENTIFICACIÓN Y DATOS PERSONALES DEL SOLICITANTE -->
+          <!-- SECCIÓN 1: IDENTIFICACIÓN Y DATOS PERSONALES DEL SOLICITANTE -->
           <div class="modal-card-section">
-            <div class="modal-card-header">
-              <div class="modal-card-icon">👤</div>
+            <div class="section-banner-header">
+              <span class="section-step-badge">1</span>
               <div class="modal-card-title-group">
-                <h4>1. Identificación y Datos Personales del Solicitante</h4>
-                <p>Búsqueda en padrón institucional y verificación de identidad</p>
+                <h4>Identificación y Datos Personales del Solicitante</h4>
+                <p>Búsqueda automática en padrón institucional y verificación de identidad</p>
               </div>
             </div>
-            <div class="grid-3-cols">
-              <div class="form-group">
-                <label class="form-label">
+            <div class="form-grid-12">
+              <!-- Fila 1: Identidad -->
+              <div class="ds-field col-12 col-sm-4">
+                <label class="ds-label" for="solDni">
                   <span>DNI *</span>
-                  <span id="badgePadronDni" style="display:none;font-size:0.68rem;color:#166534;background:#dcfce7;padding:1px 6px;border-radius:4px;border:1px solid #86efac;font-weight:700;">✓ Asociado encontrado en Padrón</span>
+                  <span id="badgePadronDni" style="display:none;font-size:0.65rem;color:#166534;background:#dcfce7;padding:1px 7px;border-radius:9999px;border:1px solid #86efac;font-weight:700;">✓ Padrón</span>
                 </label>
-                <input type="text" id="solDni" class="input-text" required placeholder="Sin puntos" oninput="handleDniInputDebounced(this.value)"/>
+                <input type="text" id="solDni" class="ds-input" required placeholder="Sin puntos" oninput="handleDniInputDebounced(this.value)"/>
               </div>
-              <div class="form-group">
-                <label class="form-label">CUIL (Opcional)</label>
-                <input type="text" id="solCuil" class="input-text" placeholder="Ej: 20-32111222-9"/>
+              <div class="ds-field col-12 col-sm-8">
+                <label class="ds-label" for="solNombre"><span>Apellido y Nombres *</span></label>
+                <input type="text" id="solNombre" class="ds-input" required placeholder="Ej: Juan Carlos Pérez"/>
               </div>
-              <div class="form-group"><label class="form-label">Apellido y Nombres *</label><input type="text" id="solNombre" class="input-text" required placeholder="Ej: Juan Carlos Pérez"/></div>
-              <div class="form-group" style="grid-column:1 / -1;">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label class="antiguedad-reactive-label" for="solicitud-fecha-nacimiento">
-                      Fecha de Nacimiento <span style="color:#ef4444;">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      id="solicitud-fecha-nacimiento"
-                      class="antiguedad-reactive-input"
-                      onchange="recalcularValidacionesEdadYCuotas()"
-                      oninput="recalcularValidacionesEdadYCuotas()"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label class="antiguedad-reactive-label">Edad Actual</label>
-                    <div id="badge-edad-actual" class="edad-reactive-badge">
-                      <span id="texto-edad-actual">-- AÑOS</span>
-                      <span class="edad-auto-pill">Automático</span>
-                    </div>
-                  </div>
+
+              <!-- Fila 2: Nacimiento y Edad Reactiva -->
+              <div class="ds-field col-12 col-sm-6">
+                <label class="ds-label" for="solicitud-fecha-nacimiento">
+                  <span>Fecha de Nacimiento <span style="color:#ef4444;">*</span></span>
+                </label>
+                <input
+                  type="date"
+                  id="solicitud-fecha-nacimiento"
+                  class="ds-input"
+                  onchange="recalcularValidacionesEdadYCuotas()"
+                  oninput="recalcularValidacionesEdadYCuotas()"
+                  required
+                />
+              </div>
+              <div class="ds-field col-12 col-sm-6">
+                <label class="ds-label"><span>Edad Actual Calculada</span></label>
+                <div id="badge-edad-actual" class="ds-calc-box ds-calc-box--slate">
+                  <span id="texto-edad-actual">-- AÑOS</span>
+                  <span class="ds-auto-pill">Automático</span>
                 </div>
               </div>
-              <div class="form-group">
-                <label class="form-label">Sexo</label>
-                <select id="solSexo" class="input-text">
+
+              <!-- Fila 3: Filiación -->
+              <div class="ds-field col-12 col-sm-4">
+                <label class="ds-label" for="solCuil"><span>CUIL (Opcional)</span></label>
+                <input type="text" id="solCuil" class="ds-input" placeholder="Ej: 20-32111222-9"/>
+              </div>
+              <div class="ds-field col-12 col-sm-4">
+                <label class="ds-label" for="solSexo"><span>Sexo</span></label>
+                <select id="solSexo" class="ds-input">
                   <option value="">Seleccionar...</option>
                   <option value="Masculino">Masculino</option>
                   <option value="Femenino">Femenino</option>
                   <option value="Otro">Otro</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label class="form-label">Estado Civil</label>
-                <select id="solEstadoCivil" class="input-text">
+              <div class="ds-field col-12 col-sm-4">
+                <label class="ds-label" for="solEstadoCivil"><span>Estado Civil</span></label>
+                <select id="solEstadoCivil" class="ds-input">
                   <option value="">Seleccionar...</option>
                   <option value="Soltero/a">Soltero/a</option>
                   <option value="Casado/a">Casado/a</option>
@@ -3990,50 +4319,63 @@
                   <option value="Unión Convivencial">Unión Convivencial</option>
                 </select>
               </div>
-              <div class="form-group"><label class="form-label">Email</label><input type="email" id="solEmail" class="input-text" placeholder="socio@email.com"/></div>
-              <div class="form-group"><label class="form-label">Celular / WhatsApp *</label><input type="tel" id="solCelular" class="input-text" required placeholder="Ej: 3434123456"/></div>
-              <div class="form-group"><label class="form-label">Localidad</label><input type="text" id="solLocalidad" class="input-text" placeholder="Ej: Paraná, Entre Ríos"/></div>
-            </div>
-            <div class="form-group" style="margin-top:0.65rem;">
-              <label class="form-label">Domicilio Actual / Calle y Número *</label>
-              <input type="text" id="solDomicilio" class="input-text" required placeholder="Ej: Urquiza 840, Paraná, Entre Ríos"/>
+
+              <!-- Fila 4: Contacto -->
+              <div class="ds-field col-12 col-sm-6">
+                <label class="ds-label" for="solCelular"><span>Teléfono / Celular *</span></label>
+                <input type="tel" id="solCelular" class="ds-input" required placeholder="Ej: 3434123456"/>
+              </div>
+              <div class="ds-field col-12 col-sm-6">
+                <label class="ds-label" for="solEmail"><span>Email</span></label>
+                <input type="email" id="solEmail" class="ds-input" placeholder="socio@email.com"/>
+              </div>
+
+              <!-- Fila 5: Domicilio -->
+              <div class="ds-field col-12 col-sm-8">
+                <label class="ds-label" for="solDomicilio"><span>Domicilio Actual (Calle y Número) *</span></label>
+                <input type="text" id="solDomicilio" class="ds-input" required placeholder="Ej: Urquiza 840, Paraná"/>
+              </div>
+              <div class="ds-field col-12 col-sm-4">
+                <label class="ds-label" for="solLocalidad"><span>Localidad</span></label>
+                <input type="text" id="solLocalidad" class="ds-input" placeholder="Ej: Paraná, Entre Ríos"/>
+              </div>
             </div>
           </div>
 
-          <!-- CARD 2: DATOS LABORALES Y REPARTICIÓN -->
+          <!-- SECCIÓN 2: DATOS LABORALES Y REPARTICIÓN -->
           <div class="modal-card-section">
-            <div class="modal-card-header">
-              <div class="modal-card-icon">💼</div>
+            <div class="section-banner-header">
+              <span class="section-step-badge">2</span>
               <div class="modal-card-title-group">
-                <h4>2. Datos Laborales y Repartición</h4>
-                <p>Organismo empleador pagador y situación de revista de haberes</p>
+                <h4>Datos Laborales y Repartición</h4>
+                <p>Organismo empleador pagador, cargo y antigüedad en servicio</p>
               </div>
             </div>
-            <div class="grid-3-cols">
-              <div class="form-group">
-                <label class="form-label">Condición *</label>
-                <select id="solCondicion" class="input-text" required onchange="evaluarDocumentacionRequerida()">
+            <div class="form-grid-12">
+              <!-- Fila 1: Organismo, Condición y Cargo -->
+              <div class="ds-field col-12 col-sm-4">
+                <label class="ds-label" for="solOrganismo"><span>Organismo Empleador *</span></label>
+                <select id="solOrganismo" class="ds-input" required onchange="handleOrganismoChange(this.value, 'solLegajo'); evaluarDocumentacionRequerida(); recalcularValidacionesEdadYCuotas();">
+                  <option value="Provincial" selected>Provincial</option>
+                  <option value="Municipal">Municipal</option>
+                </select>
+              </div>
+              <div class="ds-field col-12 col-sm-4">
+                <label class="ds-label" for="solCondicion"><span>Condición *</span></label>
+                <select id="solCondicion" class="ds-input" required onchange="evaluarDocumentacionRequerida()">
                   <option value="Activo">Activo</option>
                   <option value="Jubilado">Jubilado</option>
                   <option value="Pensionado">Pensionado</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label class="form-label">Organismo *</label>
-                <select id="solOrganismo" class="input-text" required onchange="handleOrganismoChange(this.value, 'solLegajo'); evaluarDocumentacionRequerida(); recalcularValidacionesEdadYCuotas();">
-                  <option value="Provincial" selected>Provincial</option>
-                  <option value="Municipal">Municipal</option>
-                </select>
-              </div>
-              <div class="form-group"><label class="form-label">Dependencia / Lugar *</label><input type="text" id="solDependencia" class="input-text" required placeholder="Ej: Hospital San Martín" oninput="evaluarDocumentacionRequerida()"/></div>
-              <div class="form-group">
-                <label class="block text-xs font-semibold text-slate-700 mb-1 antiguedad-reactive-label" for="solicitud-cargo">
-                  Cargo <span class="text-red-500" style="color:#ef4444;">*</span>
+              <div class="ds-field col-12 col-sm-4">
+                <label class="ds-label" for="solicitud-cargo">
+                  <span>Cargo <span style="color:#ef4444;">*</span></span>
                 </label>
                 <select
                   id="solicitud-cargo"
                   name="Cargo"
-                  class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all antiguedad-reactive-input"
+                  class="ds-input"
                   required
                   onchange="evaluarDocumentacionRequerida()"
                 >
@@ -4042,30 +4384,32 @@
                   <option value="Suplente">Suplente</option>
                 </select>
               </div>
-              <div id="grupo-campos-municipales" class="form-group" style="grid-column:1 / -1;display:none;">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label class="antiguedad-reactive-label" for="solLegajo">
-                      Legajo Municipal <span style="color:#ef4444;">*</span>
+
+              <!-- Fila 2: Campos Condicionales Municipales -->
+              <div id="grupo-campos-municipales" class="col-12" style="display:none;">
+                <div class="form-grid-12">
+                  <div class="ds-field col-12 col-sm-6">
+                    <label class="ds-label" for="solLegajo">
+                      <span>Legajo Municipal <span style="color:#ef4444;">*</span></span>
                     </label>
                     <input
                       type="text"
                       id="solLegajo"
                       name="Legajo_Municipal"
-                      class="antiguedad-reactive-input"
+                      class="ds-input"
                       placeholder="Ej: 14209"
                       disabled
                     />
                   </div>
-                  <div>
-                    <label class="antiguedad-reactive-label" for="solicitud-categoria-municipal">
-                      Categoría Municipal <span style="color:#ef4444;">*</span>
+                  <div class="ds-field col-12 col-sm-6">
+                    <label class="ds-label" for="solicitud-categoria-municipal">
+                      <span>Categoría Municipal <span style="color:#ef4444;">*</span></span>
                     </label>
                     <input
                       type="number"
                       id="solicitud-categoria-municipal"
                       name="Categoria_Municipal"
-                      class="antiguedad-reactive-input"
+                      class="ds-input"
                       min="1"
                       max="99"
                       placeholder="Ej: 20 o 25"
@@ -4076,101 +4420,118 @@
                   </div>
                 </div>
               </div>
-              <div class="form-group" style="grid-column:1 / -1;">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <!-- 1. Input Fecha de Ingreso -->
-                  <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1 antiguedad-reactive-label" for="solicitud-fecha-ingreso">
-                      Fecha de Ingreso Laboral <span class="text-red-500" style="color:#ef4444;">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      id="solicitud-fecha-ingreso"
-                      name="Fecha_Ingreso_Laboral"
-                      class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all antiguedad-reactive-input"
-                      onchange="calcularAntiguedadReactiva(this.value)"
-                      oninput="calcularAntiguedadReactiva(this.value)"
-                    />
-                  </div>
 
-                  <!-- 2. Recuadro Informativo de Antigüedad Calculada -->
-                  <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1 antiguedad-reactive-label">
-                      Antigüedad Calculada (AÑOS - MESES)
-                    </label>
-                    <div
-                      id="badge-antiguedad-calculada"
-                      class="w-full h-[38px] px-3 bg-blue-50/70 border border-blue-200 rounded-xl flex items-center justify-between text-xs font-semibold text-[#135596] antiguedad-reactive-badge"
-                    >
-                      <span id="texto-antiguedad">-- AÑOS - -- MESES</span>
-                      <span class="text-[10px] text-blue-600 bg-white px-2 py-0.5 rounded-md border border-blue-100 shadow-2xs antiguedad-auto-pill">Automático</span>
-                    </div>
-                    <input type="hidden" id="solicitud-antiguedad-formateada" value=""/>
-                  </div>
-                </div>
-                <div id="alerta-antiguedad-minima" style="display:none;"></div>
+              <!-- Fila 3: Dependencia y Lugar -->
+              <div class="ds-field col-12">
+                <label class="ds-label" for="solDependencia">
+                  <span>Dependencia / Lugar de Trabajo *</span>
+                </label>
+                <input
+                  type="text"
+                  id="solDependencia"
+                  class="ds-input"
+                  required
+                  placeholder="Indicar Escuela/CGE, Hospital/Centro de Salud, Facultad, etc."
+                  oninput="evaluarDocumentacionRequerida()"
+                />
+                <span class="ds-helper">La detección documental ajusta automáticamente Certificado SAGE (CGE) o Nota de Servicio Oficial (Universidades/Facultades).</span>
               </div>
+
+              <!-- Fila 4: Ingreso y Antigüedad Reactiva -->
+              <div class="ds-field col-12 col-sm-6">
+                <label class="ds-label" for="solicitud-fecha-ingreso">
+                  <span>Fecha de Ingreso Laboral <span style="color:#ef4444;">*</span></span>
+                </label>
+                <input
+                  type="date"
+                  id="solicitud-fecha-ingreso"
+                  name="Fecha_Ingreso_Laboral"
+                  class="ds-input"
+                  onchange="calcularAntiguedadReactiva(this.value)"
+                  oninput="calcularAntiguedadReactiva(this.value)"
+                />
+              </div>
+              <div class="ds-field col-12 col-sm-6">
+                <label class="ds-label">
+                  <span>Antigüedad Calculada (AÑOS - MESES)</span>
+                </label>
+                <div id="badge-antiguedad-calculada" class="ds-calc-box ds-calc-box--blue">
+                  <span id="texto-antiguedad">-- AÑOS - -- MESES</span>
+                  <span class="ds-auto-pill">Automático</span>
+                </div>
+                <input type="hidden" id="solicitud-antiguedad-formateada" value=""/>
+              </div>
+
+              <!-- Alertas de Antigüedad -->
+              <div id="alerta-antiguedad-minima" class="col-12" style="display:none;"></div>
             </div>
           </div>
 
-          <!-- CARD 3: PARÁMETROS DEL CRÉDITO SOLICITADO -->
+          <!-- SECCIÓN 3: DATOS DE LA AYUDA ECONÓMICA DESEADA -->
           <div class="modal-card-section">
-            <div class="modal-card-header">
-              <div class="modal-card-icon">📊</div>
+            <div class="section-banner-header">
+              <span class="section-step-badge">3</span>
               <div class="modal-card-title-group">
-                <h4>3. Datos de la Ayuda Economica deseada por el Solicitante</h4>
-                <p>Línea crediticia, capital requerido y simulación financiera en tiempo real</p>
+                <h4>Datos de la Ayuda Económica Deseada</h4>
+                <p>Línea crediticia, capital solicitado y proyección de cuota oficial</p>
               </div>
             </div>
-            <div class="grid-3-cols">
-              <div class="form-group">
-                <label class="form-label">Línea de Ayuda *</label>
-                <select id="solLinea" class="input-text" required onchange="ajustarPlazosModalAlta(this.value); recalcularValidacionesEdadYCuotas(); actualizarResumenCuotaAlta(); evaluarDocumentacionRequerida();">
-                  <option value="fedem">FEDEM Provincial</option>
-                  <option value="muni">Convenio Municipal VIKINGO / QUAD</option>
-                  <option value="sidecreer">Tarjeta Sidecreer</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Monto Solicitado (Neto) *</label>
-                <input type="number" id="solMonto" class="input-text" required min="10000" step="1000" value="100000" oninput="this.dataset.lastValid=this.value; actualizarResumenCuotaAlta();"/>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Plazo de Cuotas *</label>
-                <select id="solPlazo" class="input-text" required onchange="actualizarResumenCuotaAlta();">
-                  <option value="6">6 cuotas</option>
-                  <option value="12" selected>12 cuotas</option>
-                  <option value="18">18 cuotas</option>
-                  <option value="24">24 cuotas</option>
-                  <option value="36">36 cuotas</option>
-                  <option value="48">48 cuotas</option>
-                </select>
+            <div class="credit-params-highlight">
+              <div class="form-grid-12">
+                <!-- Fila 1: Línea y Monto -->
+                <div class="ds-field col-12 col-sm-6">
+                  <label class="ds-label" for="solLinea"><span>Línea de Ayuda *</span></label>
+                  <select id="solLinea" class="ds-input" required onchange="ajustarPlazosModalAlta(this.value); recalcularValidacionesEdadYCuotas(); actualizarResumenCuotaAlta(); evaluarDocumentacionRequerida();">
+                    <option value="fedem">FEDEM Provincial</option>
+                    <option value="muni">Convenio Municipal VIKINGO / QUAD</option>
+                    <option value="sidecreer">Tarjeta Sidecreer</option>
+                  </select>
+                </div>
+                <div class="ds-field col-12 col-sm-6">
+                  <label class="ds-label" for="solMonto"><span>Monto Solicitado (Neto) *</span></label>
+                  <input type="number" id="solMonto" class="ds-input" required min="10000" step="1000" value="100000" oninput="this.dataset.lastValid=this.value; actualizarResumenCuotaAlta();"/>
+                </div>
+
+                <!-- Fila 2: Plazo y Cuota Estimada -->
+                <div class="ds-field col-12 col-sm-6">
+                  <label class="ds-label" for="solPlazo"><span>Plazo de Cuotas *</span></label>
+                  <select id="solPlazo" class="ds-input" required onchange="actualizarResumenCuotaAlta();">
+                    <option value="6">6 cuotas</option>
+                    <option value="12" selected>12 cuotas</option>
+                    <option value="18">18 cuotas</option>
+                    <option value="24">24 cuotas</option>
+                    <option value="36">36 cuotas</option>
+                    <option value="48">48 cuotas</option>
+                  </select>
+                </div>
+                <div class="ds-field col-12 col-sm-6">
+                  <label class="ds-label"><span>Cuota Mensual Estimada</span></label>
+                  <div class="live-cuota-preview-card" id="boxResumenCuotaAlta">
+                    <div class="live-cuota-preview-left">
+                      <span class="live-cuota-preview-label">FEDEM Provincial · 12 cuotas</span>
+                      <span class="live-cuota-preview-sub">Total a devolver: $ 188.380,80</span>
+                    </div>
+                    <div class="live-cuota-preview-right">
+                      <span class="live-cuota-preview-value" id="valPreviewCuotaAlta">$ 15.698,40</span>
+                      <span class="live-cuota-preview-unit">/ mes</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="alerta-politica-cuotas" class="col-12" style="display:none;"></div>
               </div>
             </div>
             <input type="hidden" id="solCuotaEstimada" value="0"/>
             <input type="hidden" id="solTotalDevolver" value="0"/>
-
-            <!-- CUADRO RESUMEN DE CUOTA CALCULADA (AZUL INSTITUCIONAL) -->
-            <div class="live-cuota-preview-card" id="boxResumenCuotaAlta">
-              <div class="live-cuota-preview-left">
-                <span class="live-cuota-preview-label">Cuota Estimada Oficial (FEDEM Provincial)</span>
-                <span class="live-cuota-preview-sub">Plan 12 cuotas fijas | Capital neto: $ 100.000 | Amortización Francesa</span>
-              </div>
-              <div class="live-cuota-preview-right">
-                <span class="live-cuota-preview-value" id="valPreviewCuotaAlta">$ 15.698,40</span>
-                <span class="live-cuota-preview-unit">/ mes</span>
-              </div>
-            </div>
-            <div id="alerta-politica-cuotas" style="display:none;"></div>
           </div>
 
-          <!-- CARD 4: CARGA DE DOCUMENTACIÓN DEL EXPEDIENTE -->
+          <!-- SECCIÓN 4: CARGA Y GESTIÓN DE DOCUMENTACIÓN DEL EXPEDIENTE -->
           <div class="modal-card-section">
-            <div class="modal-card-header">
-              <div class="modal-card-icon">📁</div>
+            <div class="section-banner-header">
+              <span class="section-step-badge">4</span>
               <div class="modal-card-title-group">
-                <h4>4. Carga y Gestión de Documentación del Expediente</h4>
-                <p>Los archivos se registrarán y nombrarán automáticamente en el Legajo Digital con formato institucional</p>
+                <h4>Carga y Gestión de Documentación del Expediente</h4>
+                <p>Los archivos se registrarán y nombrarán automáticamente en el Legajo Digital</p>
               </div>
             </div>
 
@@ -4517,7 +4878,7 @@
                 <span>Agregar otro tipo de documento voluntariamente al legajo:</span>
               </div>
               <div class="add-doc-input-group">
-                <select id="cboAgregarDocManual" class="input-text">
+                <select id="cboAgregarDocManual" class="ds-input">
                   <option value="">-- Seleccionar tipo de documento a incorporar --</option>
                   <option value="row-fileMovimientos">Comprobante de Movimientos Bancarios (Último Depósito)</option>
                   <option value="row-fileSage">Certificado SAGE (Situación de Revista CGE)</option>
@@ -4528,7 +4889,7 @@
                   <option value="row-fileSidecreer">Tarjeta Sidecreer (Frente y Dorso)</option>
                   <option value="row-fileOtros">Otros Documentos Complementarios</option>
                 </select>
-                <button type="button" class="btn-hero-action" style="padding:0.45rem 0.95rem;font-size:0.75rem;white-space:nowrap;" onclick="agregarDocumentoManualSolicitud()">+ Agregar Fila</button>
+                <button type="button" class="btn-hero-action" onclick="agregarDocumentoManualSolicitud()">+ Agregar Fila</button>
               </div>
             </div>
 
@@ -4634,17 +4995,19 @@
 
             </div>
           </div>
-        </div>
+          </div>
 
-        <!-- FOOTER DE ACCIONES -->
-        <div class="modal-footer-bar" style="margin-top:1.25rem;padding:0.85rem 0 0 0;background:none;border-top:1px solid #e2e8f0;">
-          <button type="button" class="btn-restore" onclick="cerrarModal('modalAltaSolicitud')">Cancelar</button>
-          <button type="submit" id="btnSubmitAlta" class="btn-primary-action" style="width:auto;padding:0.55rem 1.35rem;">Registrar Solicitud en Servidor 🚀</button>
+        </div>
+        <!-- FOOTER FIJO DE ACCIONES -->
+        <div class="modal-form-footer">
+          <button type="button" class="btn-modal-cancel" onclick="cerrarModal('modalAltaSolicitud')">Cancelar</button>
+          <button type="submit" id="btnSubmitAlta" class="btn-modal-confirm">
+            <span>Confirmar y Guardar Solicitud</span>
+          </button>
         </div>
       </form>
     </div>
   </div>
-</div>
 
   <!-- MODAL 2: VER FICHA COMPLETA (EDICIÓN INTEGRAL, OFERTAS, DOCUMENTAL Y CHAT) -->
   <div id="modalFichaCompleta" class="modal-backdrop">
@@ -4684,7 +5047,10 @@
       <form onsubmit="event.preventDefault(); confirmarReasignacionCaso();">
         <div class="modal-body-scroll">
           <input type="hidden" id="derivarCasoIdSolicitud" value="" />
-          <div id="derivarCasoMetaInfo" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:0.65rem 0.85rem;margin-bottom:0.85rem;font-size:0.74rem;color:#334155;"></div>
+          <div id="derivarCasoMetaInfo" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:0.65rem 0.85rem;margin-bottom:0.85rem;font-size:0.74rem;color:#334155;">
+            <div id="derivar-expediente-info" style="font-weight:700;color:#0f172a;">Expediente: ---</div>
+            <div style="margin-top:3px;"><strong>Analista Actual:</strong> <span id="derivar-analista-actual" style="color:#166534;font-weight:700;">Sin Asignar</span></div>
+          </div>
           <div class="form-group">
             <label class="form-label" for="select-analista-destino">Analista Destino (Sede Central Mutual) *</label>
             <select id="select-analista-destino" class="input-text" required></select>
@@ -4754,7 +5120,7 @@
 
   <!-- MODAL 5: BASE DE CONOCIMIENTO & PREGUNTAS FRECUENTES (FAQ / WIKI) -->
   <div id="modalFaqWiki" class="modal-backdrop" data-alias="modal-faq">
-    <div class="wiki-modal-container" id="modal-faq">
+    <div class="wiki-modal-container w-[96vw] max-w-6xl md:max-w-7xl max-h-[92vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200/80 transition-all" id="modal-faq">
       <div class="wiki-header">
         <div>
           <h3>
@@ -4781,15 +5147,90 @@
         </div>
       </div>
 
-      <!-- SELECTOR RÁPIDO DE CATEGORÍAS (PILLS) -->
-      <div class="wiki-pills-bar" id="faqPillsBar">
-        <button type="button" class="wiki-pill-btn active" data-cat="todas" onclick="filtrarCategoriaFaq('todas', this)">⭐ Todas las Guías</button>
-        <button type="button" class="wiki-pill-btn" data-cat="requisitos" onclick="filtrarCategoriaFaq('requisitos', this)">📋 1. Requisitos y Haberes</button>
-        <button type="button" class="wiki-pill-btn" data-cat="fedem" onclick="filtrarCategoriaFaq('fedem', this)">🏛️ 2. Sistema FEDEM</button>
-        <button type="button" class="wiki-pill-btn" data-cat="pasivos" onclick="filtrarCategoriaFaq('pasivos', this)">👴 3. Jubilados y Pensionados</button>
-        <button type="button" class="wiki-pill-btn" data-cat="salud_cge" onclick="filtrarCategoriaFaq('salud_cge', this)">🏥 4. Salud y Educación (CGE)</button>
-        <button type="button" class="wiki-pill-btn" data-cat="cuota_social" onclick="filtrarCategoriaFaq('cuota_social', this)">💳 5. Cuota Social y Descuentos</button>
-        <button type="button" class="wiki-pill-btn" data-cat="legajo_pagos" onclick="filtrarCategoriaFaq('legajo_pagos', this)">📁 6. Legajo, Estados y Pagos</button>
+      <!-- SELECTOR COMPACTO Y RESPONSIVO DE CATEGORÍAS -->
+      <div class="wiki-pills-wrap px-6 pt-2 pb-3 bg-white border-b border-slate-100">
+        <!-- Contenedor adaptativo: flex-wrap compacto en PC, scroll fluido en mobile -->
+        <div
+          id="contenedor-categorias-faq"
+          class="wiki-pills-bar flex flex-wrap sm:flex-nowrap md:flex-wrap items-center gap-1.5 overflow-x-auto md:overflow-x-visible pb-1 md:pb-0 scrollbar-none"
+        >
+          <!-- 1. Todas las Guías (Botón Activo por defecto) -->
+          <button
+            type="button"
+            onclick="filtrarFAQPorCategoria('todas', this)"
+            class="btn-categoria-faq active inline-flex items-center space-x-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-[#135596] text-white shadow-2xs hover:bg-[#0f4477] transition-all whitespace-nowrap"
+            data-cat="todas"
+          >
+            <span>⭐</span>
+            <span>Todas las Guías</span>
+          </button>
+
+          <!-- 2. Requisitos y Haberes -->
+          <button
+            type="button"
+            onclick="filtrarFAQPorCategoria('requisitos', this)"
+            class="btn-categoria-faq inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/80 transition-all whitespace-nowrap"
+            data-cat="requisitos"
+          >
+            <span>📋</span>
+            <span>1. Requisitos y Haberes</span>
+          </button>
+
+          <!-- 3. Sistema FEDEM -->
+          <button
+            type="button"
+            onclick="filtrarFAQPorCategoria('fedem', this)"
+            class="btn-categoria-faq inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/80 transition-all whitespace-nowrap"
+            data-cat="fedem"
+          >
+            <span>🏛️</span>
+            <span>2. Sistema FEDEM</span>
+          </button>
+
+          <!-- 4. Jubilados y Pensionados -->
+          <button
+            type="button"
+            onclick="filtrarFAQPorCategoria('pasivos', this)"
+            class="btn-categoria-faq inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/80 transition-all whitespace-nowrap"
+            data-cat="pasivos"
+          >
+            <span>👴</span>
+            <span>3. Jubilados y Pensionados</span>
+          </button>
+
+          <!-- 5. Salud y Educación (CGE) -->
+          <button
+            type="button"
+            onclick="filtrarFAQPorCategoria('salud_educacion', this)"
+            class="btn-categoria-faq inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/80 transition-all whitespace-nowrap"
+            data-cat="salud_educacion"
+          >
+            <span>🏥</span>
+            <span>4. Salud y Educación (CGE)</span>
+          </button>
+
+          <!-- 6. Cuota Social y Códigos -->
+          <button
+            type="button"
+            onclick="filtrarFAQPorCategoria('cuota_social', this)"
+            class="btn-categoria-faq inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/80 transition-all whitespace-nowrap"
+            data-cat="cuota_social"
+          >
+            <span>💳</span>
+            <span>5. Cuota Social &amp; Descuentos</span>
+          </button>
+
+          <!-- 7. Circuito, Legajos y Liquidación -->
+          <button
+            type="button"
+            onclick="filtrarFAQPorCategoria('circuitos', this)"
+            class="btn-categoria-faq inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/80 transition-all whitespace-nowrap"
+            data-cat="circuitos"
+          >
+            <span>📑</span>
+            <span>6. Legajos, Estados &amp; Pagos</span>
+          </button>
+        </div>
       </div>
 
       <!-- CUERPO DE LA WIKI: 6 CATEGORÍAS EN GRILLA DE 2 COLUMNAS -->
@@ -4922,13 +5363,13 @@
         </div>
 
         <!-- CATEGORÍA 4: CASOS ESPECIALES DE SALUD Y EDUCACIÓN (CGE) -->
-        <div class="faq-category-block grid grid-cols-1 lg:grid-cols-2 gap-4" data-category="salud_cge">
+        <div class="faq-category-block grid grid-cols-1 lg:grid-cols-2 gap-4" data-category="salud_educacion">
           <div class="faq-category-header">
             <span>🏥</span>
             <span>4. Casos Especiales de Salud y Educación (CGE)</span>
           </div>
 
-          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="salud_cge">
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="salud_educacion">
             <summary>
               <span><span class="faq-badge faq-badge-prov">CRONOGRAMA SALUD</span> 10. ¿Cuál es el cronograma de cobro y qué recibo se analiza para el personal del Ministerio de Salud?</span>
             </summary>
@@ -4938,7 +5379,7 @@
             </div>
           </details>
 
-          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="salud_cge">
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="salud_educacion">
             <summary>
               <span><span class="faq-badge faq-badge-prov">CLASIFICACIÓN SALUD</span> 11. ¿Cómo se clasifica al personal de Salud en la plataforma?</span>
             </summary>
@@ -4948,7 +5389,7 @@
             </div>
           </details>
 
-          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="salud_cge">
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="salud_educacion">
             <summary>
               <span><span class="faq-badge faq-badge-prov">DOCENTES CGE / SAGE</span> 12. ¿Qué requisitos documentales aplican a los agentes del Consejo General de Educación (CGE)?</span>
             </summary>
@@ -5014,15 +5455,15 @@
         </div>
 
         <!-- CATEGORÍA 6: CARGA DE LEGAJO, OBSERVACIONES Y CIRCUITO DE PAGO -->
-        <div class="faq-category-block grid grid-cols-1 lg:grid-cols-2 gap-4" data-category="legajo_pagos">
+        <div class="faq-category-block grid grid-cols-1 lg:grid-cols-2 gap-4" data-category="circuitos">
           <div class="faq-category-header">
-            <span>📁</span>
+            <span>📑</span>
             <span>6. Carga de Legajo, Observaciones y Circuito de Pago</span>
           </div>
 
-          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="legajo_pagos">
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="circuitos">
             <summary>
-              <span><span class="faq-badge faq-badge-vik">NOMENCLATURA DRIVE</span> 17. ¿Cuál es la regla de nomenclatura para subir los archivos a Google Drive?</span>
+              <span><span class="faq-badge faq-badge-vik">NOMENCLATURA DIGITAL</span> 17. ¿Cuál es la regla de nomenclatura para subir los archivos al Legajo Digital?</span>
             </summary>
             <div class="faq-answer">
               <p>Los archivos deben ser legibles y en <strong>formato PDF</strong>. Cada documento debe nombrarse con <strong>letras mayúsculas</strong> anteponiendo el número de trámite o expediente formal:</p>
@@ -5030,7 +5471,7 @@
             </div>
           </details>
 
-          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="legajo_pagos">
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="circuitos">
             <summary>
               <span><span class="faq-badge faq-badge-vik">OBSERVADOS</span> 18. ¿Qué sucede si un legajo presenta errores en la documentación o formato?</span>
             </summary>
@@ -5039,7 +5480,7 @@
             </div>
           </details>
 
-          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="legajo_pagos">
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="circuitos">
             <summary>
               <span><span class="faq-badge faq-badge-ai">BIOMETRÍA &amp; ESTADOS</span> 19. ¿Cómo funciona el circuito de validación biométrica y cambio de estados?</span>
             </summary>
@@ -5049,7 +5490,7 @@
             </div>
           </details>
 
-          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="legajo_pagos">
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="circuitos">
             <summary>
               <span><span class="faq-badge faq-badge-ai">LEGAJO DE CIERRE</span> 20. ¿Qué documentación compone el legajo de cierre definitivo en Sede Central?</span>
             </summary>
@@ -5185,7 +5626,7 @@
         if (parsed && parsed.rawText && String(parsed.rawText).trim().startsWith('<')) {
           return {
             ok: false,
-            error: 'El servidor Apps Script devolvió una respuesta HTML inesperada.',
+            error: '⚠️ Error de conexión con el Servidor Central de la Mutual. Verifique su conexión.',
             data: parsed
           };
         }
@@ -5198,8 +5639,8 @@
         }
         return { ok: true, data: parsed };
       } catch (err) {
-        console.error('Error llamando a Google Apps Script:', err);
-        return { ok: false, error: err.message || 'Error de red o comunicación', data: null };
+        console.error('Error de conexión con el Servidor Central de la Mutual:', err);
+        return { ok: false, error: '⚠️ Error de conexión con el Servidor Central de la Mutual. Verifique su conexión.', data: null };
       } finally {
         if (loadingMsg) {
           ocultarCargando();
@@ -5650,7 +6091,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     /* ========================================================================
-       2. MODELO DE USUARIOS, SESIÓN Y LOGIN EN GOOGLE APPS SCRIPT
+       2. MODELO DE USUARIOS, SESIÓN Y LOGIN EN SERVIDOR CENTRAL
        ======================================================================== */
 
     function getSession() {
@@ -5764,8 +6205,15 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       if (loggedUser) {
         localStorage.removeItem(STORAGE_SOLICITUDES_KEY);
-        window.estadoApp = window.estadoApp || { solicitudes: [] };
+        window.estadoApp = window.estadoApp || { solicitudes: [], usuarios: [] };
         window.estadoApp.solicitudes = [];
+        if (Array.isArray(res.data?.usuarios)) {
+          window.estadoApp.usuarios = res.data.usuarios;
+        } else if (Array.isArray(res.data?.analistas)) {
+          window.estadoApp.usuarios = res.data.analistas;
+        } else if (!Array.isArray(window.estadoApp.usuarios)) {
+          window.estadoApp.usuarios = [];
+        }
         window._cloudSyncInicialEjecutado = false;
         setSession(loggedUser);
         checkAuthAndInit();
@@ -5963,9 +6411,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           html += '<button type="button" class="sidebar-nav-item" data-view="view-mutual" data-tooltip="Gestiones de Comercializadores" onclick="cambiarPestana(\'view-mutual\')">' +
             '<span class="sidebar-nav-icon">' + iconUsers + '</span>' +
             '<span class="sidebar-nav-label ' + textCls + '">Gestiones de Comercializadores</span></button>';
-          html += '<a href="https://drive.google.com/drive/folders/12s8ghbsMvjk7PL01oYettPWt-gflGL3g" target="_blank" rel="noopener noreferrer" class="sidebar-nav-item" style="text-decoration:none;" data-tooltip="Carpeta Drive 3en1" onclick="toggleMobileSidebar(false)">' +
+          html += '<a href="https://drive.google.com/drive/folders/12s8ghbsMvjk7PL01oYettPWt-gflGL3g" target="_blank" rel="noopener noreferrer" class="sidebar-nav-item" style="text-decoration:none;" data-tooltip="Bóveda Documental Central" onclick="toggleMobileSidebar(false)">' +
             '<span class="sidebar-nav-icon" style="color:#38bdf8;">' + iconDrive3en1 + '</span>' +
-            '<span class="sidebar-nav-label ' + textCls + '">Carpeta Drive 3en1</span></a>';
+            '<span class="sidebar-nav-label ' + textCls + '">📁 Bóveda Documental Central</span></a>';
         } else if (session.rol === 'Analista' || session.rol === 'Asesor Mutual') {
           html += '<button type="button" class="sidebar-nav-item active" data-view="view-simulador" data-tooltip="Simulador Oficial" onclick="cambiarPestana(\'view-simulador\')">' +
             '<span class="sidebar-nav-icon">' + iconSimulador + '</span>' +
@@ -5976,9 +6424,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           html += '<button type="button" class="sidebar-nav-item" data-view="view-mutual" data-tooltip="Gestiones de Comercializadores" onclick="cambiarPestana(\'view-mutual\')">' +
             '<span class="sidebar-nav-icon">' + iconUsers + '</span>' +
             '<span class="sidebar-nav-label ' + textCls + '">Gestiones de Comercializadores</span></button>';
-          html += '<a href="https://drive.google.com/drive/folders/12s8ghbsMvjk7PL01oYettPWt-gflGL3g" target="_blank" rel="noopener noreferrer" class="sidebar-nav-item" style="text-decoration:none;" data-tooltip="Carpeta Drive 3en1" onclick="toggleMobileSidebar(false)">' +
+          html += '<a href="https://drive.google.com/drive/folders/12s8ghbsMvjk7PL01oYettPWt-gflGL3g" target="_blank" rel="noopener noreferrer" class="sidebar-nav-item" style="text-decoration:none;" data-tooltip="Bóveda Documental Central" onclick="toggleMobileSidebar(false)">' +
             '<span class="sidebar-nav-icon" style="color:#38bdf8;">' + iconDrive3en1 + '</span>' +
-            '<span class="sidebar-nav-label ' + textCls + '">Carpeta Drive 3en1</span></a>';
+            '<span class="sidebar-nav-label ' + textCls + '">📁 Bóveda Documental Central</span></a>';
         } else {
           const tabName = session.es_titular_organizacion ? 'Gestiones Organización' : 'Mis Gestiones';
           html += '<button type="button" class="sidebar-nav-item active" data-view="view-simulador" data-tooltip="Simulador Oficial" onclick="cambiarPestana(\'view-simulador\')">' +
@@ -6004,7 +6452,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const currentOwner = String(session.id || session.email || '');
         if (prevOwner !== currentOwner) {
           localStorage.removeItem(STORAGE_SOLICITUDES_KEY);
-          window.estadoApp = { solicitudes: [] };
+          window.estadoApp = { solicitudes: [], usuarios: [] };
           localStorage.setItem('AMMER_CACHE_OWNER_ID', currentOwner);
         }
       } catch (_) {}
@@ -6038,7 +6486,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     const INITIAL_SOLICITUDES = [];
 
         /* ========================================================================
-       PADRÓN DE ASOCIADOS, REGLA DE ORGANISMO Y NOMENCLATURA DE ARCHIVOS DRIVE
+       PADRÓN DE ASOCIADOS, REGLA DE ORGANISMO Y NOMENCLATURA DE LEGAJO DIGITAL
        ======================================================================== */
     function normalizarNombreArchivoDrive(idExpediente, tipoDoc, extension, indice = 0) {
       const ext = (extension || 'PDF').toUpperCase().replace(/^\./, '');
@@ -6263,7 +6711,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         row.classList.add('is-loaded');
         badge.className = 'doc-row-badge badge-cargado';
         badge.textContent = '✓ Cargado';
-        if (btnLbl) btnLbl.textContent = 'Cambiar';
+        if (btnLbl) btnLbl.textContent = 'Reemplazar';
         if (prevBtn) prevBtn.style.display = 'inline-flex';
         if (delBtn) delBtn.style.display = 'inline-flex';
 
@@ -6572,6 +7020,17 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         .trim();
     }
 
+    function normalizarCategoriaFaq(cat) {
+      const c = String(cat || 'todas').trim();
+      if (c === 'salud_cge') return 'salud_educacion';
+      if (c === 'legajo_pagos') return 'circuitos';
+      return c || 'todas';
+    }
+
+    function obtenerBotonesCategoriaFaq() {
+      return document.querySelectorAll('#contenedor-categorias-faq .btn-categoria-faq, #faqPillsBar .wiki-pill-btn');
+    }
+
     function abrirModalFaqWiki() {
       const modal = document.getElementById('modalFaqWiki') || document.getElementById('modal-faq');
       if (modal) {
@@ -6580,7 +7039,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         if (inp) {
           inp.value = '';
         }
-        filtrarCategoriaFaq('todas', document.querySelector('#faqPillsBar .wiki-pill-btn[data-cat="todas"]'));
+        const btnTodas = document.querySelector('#contenedor-categorias-faq .btn-categoria-faq[data-cat="todas"], #faqPillsBar .wiki-pill-btn[data-cat="todas"]');
+        filtrarFAQPorCategoria('todas', btnTodas);
         if (inp) setTimeout(() => inp.focus(), 150);
       }
     }
@@ -6599,26 +7059,30 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
     }
 
-    function filtrarCategoriaFaq(cat, btnEl) {
-      _activeFaqCategory = cat || 'todas';
-      const pills = document.querySelectorAll('#faqPillsBar .wiki-pill-btn');
+    function filtrarFAQPorCategoria(cat, btnEl) {
+      _activeFaqCategory = normalizarCategoriaFaq(cat || 'todas');
+      const pills = obtenerBotonesCategoriaFaq();
       pills.forEach(p => {
         if (btnEl) {
           p.classList.remove('active');
         } else {
-          p.classList.toggle('active', (p.getAttribute('data-cat') || '') === _activeFaqCategory);
+          p.classList.toggle('active', normalizarCategoriaFaq(p.getAttribute('data-cat') || '') === _activeFaqCategory);
         }
       });
       if (btnEl) btnEl.classList.add('active');
       filtrarFAQ(_activeFaqCategory);
     }
 
+    function filtrarCategoriaFaq(cat, btnEl) {
+      filtrarFAQPorCategoria(cat, btnEl);
+    }
+
     function filtrarFAQ(categoria = 'todas') {
-      const cat = categoria || 'todas';
+      const cat = normalizarCategoriaFaq(categoria || 'todas');
       _activeFaqCategory = cat;
 
-      const pills = document.querySelectorAll('#faqPillsBar .wiki-pill-btn');
-      pills.forEach(p => p.classList.toggle('active', (p.getAttribute('data-cat') || '') === cat));
+      const pills = obtenerBotonesCategoriaFaq();
+      pills.forEach(p => p.classList.toggle('active', normalizarCategoriaFaq(p.getAttribute('data-cat') || '') === cat));
 
       const inp = document.getElementById('input-buscar-faq') || document.getElementById('faq-search-input') || document.getElementById('inpFaqSearch');
       const rawQuery = inp ? inp.value : '';
@@ -6631,7 +7095,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       let totalVisible = 0;
 
       tarjetas.forEach(card => {
-        const cardCat = (card.dataset && card.dataset.categoria) || card.getAttribute('data-categoria') || '';
+        const cardCat = normalizarCategoriaFaq((card.dataset && card.dataset.categoria) || card.getAttribute('data-categoria') || '');
         const texto = normalizarTextoFaq(card.textContent || '');
 
         const coincideCat = (cat === 'todas' || cardCat === cat);
@@ -6651,7 +7115,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       const blocks = document.querySelectorAll('#modalFaqWiki .faq-category-block');
       blocks.forEach(block => {
-        const blockCat = block.getAttribute('data-category') || '';
+        const blockCat = normalizarCategoriaFaq(block.getAttribute('data-category') || '');
         const matchesCat = (cat === 'todas' || blockCat === cat);
         if (!matchesCat) {
           block.style.display = 'none';
@@ -6932,7 +7396,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         if (hidTotal) hidTotal.value = '0';
         if (box) {
           box.innerHTML = '<div class="live-cuota-preview-left">' +
-            '<span class="live-cuota-preview-label">Estimación de Cuota Mensual</span>' +
+            '<span class="live-cuota-preview-label">Cuota Mensual Estimada</span>' +
             '<span class="live-cuota-preview-sub">Ingrese un monto válido para proyectar</span>' +
           '</div>' +
           '<div class="live-cuota-preview-right"><span class="live-cuota-preview-value">$ —</span></div>';
@@ -6953,8 +7417,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             box.dataset.cuota = String(cuotaNum);
             box.dataset.total = String(totalNum);
             box.innerHTML = '<div class="live-cuota-preview-left">' +
-              '<span class="live-cuota-preview-label">Cuota Estimada Oficial (' + lineaNombre + ')</span>' +
-              '<span class="live-cuota-preview-sub">Plan ' + cuotas + ' cuotas fijas | Capital neto: ' + formatMoney(monto) + ' | Total a devolver: ' + formatMoney(totalNum) + '</span>' +
+              '<span class="live-cuota-preview-label">' + lineaNombre + ' · ' + cuotas + ' cuotas</span>' +
+              '<span class="live-cuota-preview-sub">Total a devolver: ' + formatMoney(totalNum) + '</span>' +
             '</div>' +
             '<div class="live-cuota-preview-right">' +
               '<span class="live-cuota-preview-value" id="valPreviewCuotaAlta">' + formatMoney(cuotaNum) + '</span>' +
@@ -6966,7 +7430,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           if (hidTotal) hidTotal.value = '0';
           if (box) {
             box.innerHTML = '<div class="live-cuota-preview-left">' +
-              '<span class="live-cuota-preview-label">Estimación de Cuota</span>' +
+              '<span class="live-cuota-preview-label">Cuota Mensual</span>' +
               '<span class="live-cuota-preview-sub">Plazo no habilitado para la línea</span>' +
             '</div>' +
             '<div class="live-cuota-preview-right"><span class="live-cuota-preview-value">$ —</span></div>';
@@ -7066,9 +7530,35 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
     }
 
+    function calcularEdadAsociadoReactiva(fechaNacStr) {
+      const edad = calcularEdadDesdeFecha(fechaNacStr);
+      const txtEl = document.getElementById('asocTextoEdadActual');
+      const badgeEl = document.getElementById('asocBadgeEdadActual');
+      if (txtEl) {
+        txtEl.textContent = (edad !== null) ? (edad + ' AÑOS') : '-- AÑOS';
+      }
+      if (badgeEl) {
+        if (edad !== null && edad >= 80) {
+          badgeEl.style.borderColor = '#fecaca';
+          badgeEl.style.background = '#fef2f2';
+          badgeEl.style.color = '#991b1b';
+        } else if (edad !== null && edad >= 75) {
+          badgeEl.style.borderColor = '#fde68a';
+          badgeEl.style.background = '#fffbeb';
+          badgeEl.style.color = '#92400e';
+        } else {
+          badgeEl.style.borderColor = '#e2e8f0';
+          badgeEl.style.background = '#f8fafc';
+          badgeEl.style.color = '#1e293b';
+        }
+      }
+      return edad;
+    }
+
     function abrirModalAltaAsociado() {
       const f = document.getElementById('formAltaAsociado');
       if (f) f.reset();
+      calcularEdadAsociadoReactiva('');
       calcularAntiguedadReactiva('', 'asocTextoAntiguedad', 'asocAntiguedad');
       handleOrganismoChange('Provincial', 'asocLegajo');
       resetDocumentRows('formAltaAsociado');
@@ -7244,7 +7734,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
     }
 
-    window.estadoApp = window.estadoApp || { solicitudes: [] };
+    window.estadoApp = window.estadoApp || { solicitudes: [], usuarios: [] };
+    if (!Array.isArray(window.estadoApp.solicitudes)) window.estadoApp.solicitudes = [];
+    if (!Array.isArray(window.estadoApp.usuarios)) window.estadoApp.usuarios = [];
 
     function parseJSONCampoSeguro(val, fallback) {
       if (val === null || val === undefined || val === '') return fallback;
@@ -7286,7 +7778,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           const isUrl = /^https?:\/\//i.test(a);
           return {
             tipo: 'DOCUMENTO',
-            nombre: isUrl ? ('Archivo Drive #' + (idx + 1)) : a,
+            nombre: isUrl ? ('Archivo Legajo #' + (idx + 1)) : a,
             urlDrive: isUrl ? a : '',
             previewUrl: isUrl ? normalizarUrlVisorDrive(a) : '',
             fecha: obj.fecha || '',
@@ -7365,7 +7857,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     function normalizarSolicitud(s) {
       if (!s || typeof s !== 'object') return s;
 
-      // Mapeo tolerante desde columnas planas de Google Sheets hacia estructura CRM
+      // Mapeo tolerante desde columnas planas del Servidor Central hacia estructura CRM
       const rawIdNorm = s.id || s.idSolicitud || s.ID_Solicitud || s.id_solicitud || s.ID_OPERACION;
       if (rawIdNorm !== undefined && rawIdNorm !== null && String(rawIdNorm).trim() !== '' && String(rawIdNorm).trim() !== 'undefined' && String(rawIdNorm).trim() !== 'null') {
         s.id = String(rawIdNorm).trim();
@@ -7407,12 +7899,30 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         s.Fecha_Ingreso_Laboral || s.fechaIngresoLaboral || s.fechaIngreso || ''
       ).trim();
 
+      const nombreRealNorm = String(
+        (s.solicitante && s.solicitante.nombre && s.solicitante.nombre !== 'Socio' ? s.solicitante.nombre : '') ||
+        s.apellidoNombre ||
+        s.Apellido_Nombre ||
+        s.nombreAsociado ||
+        s.Nombre_Asociado ||
+        s.nombreSolicitante ||
+        s.Nombre_Solicitante ||
+        s.nombre ||
+        contacto.nombre ||
+        contacto.apellidoNombre ||
+        ''
+      ).trim();
+      if (nombreRealNorm) {
+        s.apellidoNombre = s.apellidoNombre || nombreRealNorm;
+        s.Apellido_Nombre = s.Apellido_Nombre || nombreRealNorm;
+      }
+
       if (!s.solicitante || typeof s.solicitante !== 'object') {
         s.solicitante = {
           dni: String(s.DNI_Asociado || s.dni || ''),
           cuil: String(contacto.cuil || s.cuil || ''),
           legajo: String(s.Legajo_Municipal || laborales.legajo || ''),
-          nombre: String(s.Apellido_Nombre || s.nombre || 'Socio'),
+          nombre: nombreRealNorm,
           fechaNac: contacto.fechaNac || contacto.fechaNacimiento || s.fechaNacimiento || '',
           fechaNacimiento: contacto.fechaNacimiento || contacto.fechaNac || s.fechaNacimiento || '',
           sexo: contacto.sexo || s.sexo || '',
@@ -7433,6 +7943,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           antiguedad: laborales.antiguedad || s.antiguedad || ''
         };
       } else {
+        if ((!s.solicitante.nombre || s.solicitante.nombre === 'Socio') && nombreRealNorm) {
+          s.solicitante.nombre = nombreRealNorm;
+        }
         if (!s.solicitante.cuil && (contacto.cuil || s.cuil)) s.solicitante.cuil = contacto.cuil || s.cuil;
         if (!s.solicitante.localidad && (contacto.localidad || s.localidad)) s.solicitante.localidad = contacto.localidad || s.localidad;
         if (!s.solicitante.fechaNac && (s.solicitante.fechaNacimiento || contacto.fechaNac || contacto.fechaNacimiento)) s.solicitante.fechaNac = s.solicitante.fechaNacimiento || contacto.fechaNac || contacto.fechaNacimiento;
@@ -7643,7 +8156,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
     function saveStoredSolicitudes(list) {
       const normalized = Array.isArray(list) ? list.map(normalizarSolicitud) : [];
-      window.estadoApp = window.estadoApp || { solicitudes: [] };
+      window.estadoApp = window.estadoApp || { solicitudes: [], usuarios: [] };
       window.estadoApp.solicitudes = normalized;
       localStorage.setItem(STORAGE_SOLICITUDES_KEY, JSON.stringify(normalized));
     }
@@ -7656,7 +8169,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       _cloudSyncPromise = (async () => {
         if (!silencioso) {
-          mostrarCargando('Actualizando expedientes desde el servidor central...', 'Consultando Google Sheets y Legajos Digitales en tiempo real');
+          mostrarCargando('🔄 Actualizando expedientes desde la base central...', 'Consultando expedientes y Legajos Digitales en tiempo real');
         }
         try {
           const respuesta = await fetch(APPS_SCRIPT_URL, {
@@ -7685,6 +8198,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           else if (resJSON && resJSON.ok !== false && Array.isArray(resJSON.solicitudes)) lista = resJSON.solicitudes;
           else if (resJSON && resJSON.ok !== false && Array.isArray(resJSON.data)) lista = resJSON.data;
 
+          if (resJSON && !Array.isArray(resJSON)) {
+            const usuariosNube = resJSON.usuarios || resJSON.analistas;
+            if (Array.isArray(usuariosNube)) {
+              window.estadoApp = window.estadoApp || { solicitudes: [], usuarios: [] };
+              window.estadoApp.usuarios = usuariosNube;
+            }
+          }
+
           if (lista !== null) {
             const normalizadas = lista.map(normalizarSolicitud);
             saveStoredSolicitudes(normalizadas);
@@ -7700,9 +8221,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
           throw new Error((resJSON && (resJSON.error || resJSON.message)) || 'Respuesta inválida de servidor');
         } catch (err) {
-          console.error('Error al sincronizar desde la nube:', err);
+          console.error('Error al sincronizar desde el servidor central:', err);
           if (!silencioso) {
-            showToast('Error al conectar con la base de datos central.');
+            showToast('⚠️ Error de conexión con el Servidor Central de la Mutual. Verifique su conexión.');
           }
           return null;
         } finally {
@@ -7980,7 +8501,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const session = getSession();
       const tbody = document.getElementById('tablaComercializadorBody'); if (!tbody) return;
       if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="' + (showAsesorCol ? 11 : 10) + '" style="text-align:center;padding:1.5rem;color:var(--text-muted);">No se encontraron solicitudes registradas con estos filtros.</td></tr>';
+        const msgVacio = (getStoredSolicitudes().length === 0)
+          ? 'No se registran solicitudes en el período seleccionado. Presione "+ Nueva Solicitud" para iniciar un trámite.'
+          : 'No se registran solicitudes en el período seleccionado.';
+        tbody.innerHTML = '<tr><td colspan="' + (showAsesorCol ? 11 : 10) + '" style="text-align:center;padding:1.5rem;color:var(--text-muted);">' + msgVacio + '</td></tr>';
         return;
       }
 
@@ -8008,7 +8532,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const puedeVerDrive = esUsuarioMutualConAccesoDrive(session);
         const driveLinkHtml = puedeVerDrive
           ? (s.carpetaDriveUrl
-              ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="badge-drive-mini" title="Abrir carpeta del expediente en Google Drive" onclick="event.stopPropagation()">📁 Drive (' + (s.adjuntos ? s.adjuntos.length : 0) + ')</a>'
+              ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="badge-drive-mini" title="Abrir legajo del expediente en Bóveda Documental" onclick="event.stopPropagation()">📂 Bóveda Digital (' + (s.adjuntos ? s.adjuntos.length : 0) + ')</a>'
               : '<span style="font-size:0.66rem;color:var(--text-muted);">📎 ' + (s.adjuntos ? s.adjuntos.length : 0) + ' docs</span>')
           : '';
 
@@ -8519,7 +9043,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         ]
       };
 
-      // 5. Payload alineado exactamente a las 27 columnas de Google Sheets + objeto completo
+      // 5. Payload alineado exactamente a las 27 columnas de la Base Central + objeto completo
       const payloadParaBackend = {
         action: 'crearSolicitud',
         usuarioActivo: session,
@@ -8553,7 +9077,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         Analista_Asignado: analistaAsig,
         Ultima_Actualizacion: nowStr,
 
-        // Alias de compatibilidad y archivos Base64 para Google Drive y Padron_Asociados
+        // Alias de compatibilidad y archivos Base64 para Bóveda Documental y Padron_Asociados
         ID_OPERACION: rawRand,
         id: rawRand,
         id_provisorio: provId,
@@ -8645,12 +9169,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       const res = await callApi(payloadParaBackend, {
         title: 'Guardando en Base de Datos Central...',
-        sub: 'Registrando expediente ' + provId + ' y archivando ' + adjuntosBase64.length + ' documentos en Google Drive'
+        sub: '🔒 Almacenando documentación del expediente ' + provId + ' en el Legajo Digital Seguro (' + adjuntosBase64.length + ' archivos)...'
       });
 
       // Validación estricta Cloud-First: si falla el guardado en el servidor, NO cerrar el modal ni simular guardado local
       if (!res || !res.ok || !res.data || res.data.ok === false) {
-        showToast('⚠️ Error al guardar en el servidor. Verifique su conexión.');
+        showToast('⚠️ Error de conexión con el Servidor Central de la Mutual. Verifique su conexión.');
         return;
       }
 
@@ -8662,7 +9186,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       cerrarModal('modalAltaSolicitud');
 
-      // Sincronización inmediata en vivo desde Google Sheets para reflejar Carpeta Drive y estado oficial
+      // Sincronización inmediata en vivo desde la base central para reflejar Bóveda Documental y estado oficial
       await sincronizarGestionesDesdeNube(true);
 
       // Disparo automático e inteligente de Auditoría IA en segundo plano
@@ -8674,7 +9198,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         cambiarPestana('view-comercializador');
       }
       actualizarCentroNotificaciones();
-      showToast('Expediente ' + idConfirmado + ' registrado en la base de datos central y Google Drive ✓');
+      showToast('Expediente ' + idConfirmado + ' registrado en el Servidor Central y Legajo Digital Seguro ✓');
     }
 
     /* ========================================================================
@@ -9210,7 +9734,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             '</div>' +
             '<div class="doc-row-actions" style="flex-wrap:wrap;justify-content:flex-end;">' +
               '<button type="button" class="btn-doc-attach" onclick="abrirVisorOnline(\'' + s.id + '\', ' + idx + ')">👁️ Ver Online</button>' +
-              (linkDriveDirecto ? '<a href="' + sanitizeHTML(linkDriveDirecto) + '" target="_blank" rel="noopener noreferrer" class="btn-doc-attach" title="Abrir archivo directamente en Google Drive">🔗 Drive</a>' : '') +
+              (linkDriveDirecto ? '<a href="' + sanitizeHTML(linkDriveDirecto) + '" target="_blank" rel="noopener noreferrer" class="btn-doc-attach" title="Abrir archivo en Bóveda Documental">📂 Ver Legajo Digital</a>' : '') +
               '<button type="button" class="btn-doc-attach" onclick="descargarDocumentoOnline(\'' + s.id + '\', ' + idx + ')">📥 Descargar</button>' +
               '<label class="' + replaceLabelCls + '" style="cursor:pointer;margin:0;" title="Reemplazar o subsanar archivo">' +
                 replaceBtnText + ' <input type="file" accept="image/*,application/pdf" style="display:none;" onchange="reemplazarDocumentoExistente(\'' + s.id + '\', ' + idx + ', this)"/>' +
@@ -9232,7 +9756,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             '<span>Documentación Complementaria del Legajo</span>' +
           '</div>' +
           (s.carpetaDriveUrl && esUsuarioMutualConAccesoDrive(session) ?
-            '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="btn-doc-attach">📁 Abrir Carpeta Drive</a>' : '') +
+            '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="btn-doc-attach">📂 Abrir Bóveda Documental</a>' : '') +
         '</div>' +
         '<div style="display:grid;grid-template-columns:minmax(200px,1fr) minmax(240px,1.5fr);gap:0.65rem;align-items:center;">' +
           '<select id="cboFichaDocTipo" class="doc-complementaria-select">' +
@@ -9258,7 +9782,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             '<span id="lblBtnDocComplementaria">📎 Adjuntar Documentación Complementaria al Legajo</span>' +
           '</button>' +
         '</div>' +
-        '<p id="lblArchivoComplementarioEstado" style="font-size:0.68rem;color:#475569;margin-top:0.5rem;margin-bottom:0;">Seleccione el tipo de comprobante y pulse el botón superior para archivarlo automáticamente en Drive con formato <code>[' + s.id + '] [TIPO].[ext]</code>.</p>' +
+        '<p id="lblArchivoComplementarioEstado" style="font-size:0.68rem;color:#475569;margin-top:0.5rem;margin-bottom:0;">Seleccione el tipo de comprobante y pulse el botón superior para archivarlo automáticamente en el Legajo Digital Seguro con formato <code>[' + s.id + '] [TIPO].[ext]</code>.</p>' +
       '</div>';
 
       // 6. SECCIÓN 4: CHAT DE AUDITORÍA Y LÍNEA DE TIEMPO (TÍTULO EXACTO)
@@ -9499,7 +10023,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         };
         const res = await callApi(payload, {
           title: 'Asignando número definitivo de expediente...',
-          sub: 'Registrando código ' + val + ' en Google Sheets'
+          sub: 'Registrando código ' + val + ' en la Base Central de la Mutual'
         });
 
         if (res && res.ok && (!res.data || res.data.ok !== false)) {
@@ -9529,7 +10053,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           const inpModal = document.getElementById('inpNumDefinitivoModal');
           if (inpModal) inpModal.value = nroFinal;
 
-          showToast('N° Definitivo asignado en Sheets: ' + nroFinal);
+          showToast('N° Definitivo asignado en Base Central: ' + nroFinal);
           await sincronizarGestionesDesdeNube(true);
           const postSync = getStoredSolicitudes();
           const itemPost = postSync.find(x =>
@@ -9811,7 +10335,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       });
     }
 
-    /* VISOR DOCUMENTAL ONLINE IN-APP (SIN SALIR A GOOGLE DRIVE) */
+    /* VISOR DOCUMENTAL ONLINE IN-APP (SIN SALIR DEL LEGAJO DIGITAL) */
     let visorZoom = 1.0;
     let visorRotation = 0;
 
@@ -9960,7 +10484,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         }
       }
 
-      // 3. URL de Google Drive validada y normalizada a /preview
+      // 3. URL de Bóveda Documental validada y normalizada a /preview
       const previewUrl = normalizarUrlVisorDrive(rawUrlDrive);
       if (previewUrl) {
         if (toolbar) toolbar.style.display = 'none';
@@ -10351,8 +10875,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         autor: session.nombre,
         rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor')
       }, {
-        title: 'Almacenando en Legajo Digital...',
-        sub: 'Guardando en la carpeta del expediente #' + s.id
+        title: '🔒 Almacenando en Legajo Digital Seguro...',
+        sub: 'Guardando en la bóveda del expediente #' + s.id
       });
 
       if (!s.adjuntos) s.adjuntos = [];
@@ -10472,73 +10996,102 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     /* ========================================================================
        6.B DERIVACIÓN, REASIGNACIÓN Y COLABORACIÓN ENTRE ANALISTAS MUTUAL
        ======================================================================== */
-    const ANALISTAS_MUTUAL_CACHE_KEY = 'AMMER_ANALISTAS_MUTUAL_V1';
-    const ANALISTAS_MUTUAL_DEFAULT = [
-      'Mariana López',
-      'Carlos Méndez',
-      'Lucía Fernández',
-      'Martín Gómez'
-    ];
+    const ANALISTAS_MUTUAL_CACHE_KEY = 'AMMER_ANALISTAS_MUTUAL_PROD_V2';
+    try { localStorage.removeItem('AMMER_ANALISTAS_MUTUAL_V1'); } catch (_) {}
 
     function obtenerAnalistasMutualLocal() {
       const mapaUnico = new Map();
-      const registrar = (nombreRaw) => {
+      const registrar = (nombreRaw, rolRaw) => {
         const clean = String(nombreRaw || '').replace(/\s*\(sede central\)\s*/gi, '').trim();
         if (!clean) return;
         const lower = clean.toLowerCase();
-        if (lower === 'sin asignar' || lower === 'analista mutual' || lower === 'usuario') return;
-        if (!mapaUnico.has(lower)) mapaUnico.set(lower, clean);
+        if (lower === 'sin asignar' || lower === 'analista mutual' || lower === 'usuario' || lower === 'analista sede central') return;
+        const rolClean = String(rolRaw || 'Sede Central').trim() || 'Sede Central';
+        if (!mapaUnico.has(lower)) {
+          mapaUnico.set(lower, { nombre: clean, rol: rolClean });
+        }
       };
 
-      // 1. Analistas cacheados desde servidor
-      try {
-        const cached = JSON.parse(localStorage.getItem(ANALISTAS_MUTUAL_CACHE_KEY) || '[]');
-        if (Array.isArray(cached)) cached.forEach(a => registrar(typeof a === 'string' ? a : (a?.nombre || a?.usuario)));
-      } catch (_) {}
-
-      // 2. Usuario de sesión actual si pertenece a Sede Central / Mutual
-      const session = getSession();
-      if (session && (session.rol === 'Analista' || session.rol === 'Admin' || session.rol === 'Asesor Mutual')) {
-        registrar(session.nombre);
+      // 1. Usuarios reales registrados en estadoApp.usuarios (Analista / Admin)
+      if (Array.isArray(window.estadoApp?.usuarios)) {
+        window.estadoApp.usuarios.forEach(u => {
+          if (!u) return;
+          if (typeof u === 'string') {
+            registrar(u, 'Sede Central');
+            return;
+          }
+          const rol = String(u.rol || '').toLowerCase();
+          if (rol.includes('analista') || rol.includes('admin') || rol.includes('mutual')) {
+            registrar(u.nombre || u.usuario, u.rol || 'Sede Central');
+          }
+        });
       }
 
-      // 3. Analistas observados en expedientes almacenados
+      // 2. Analistas reales cacheados desde servidor
+      try {
+        const cached = JSON.parse(localStorage.getItem(ANALISTAS_MUTUAL_CACHE_KEY) || '[]');
+        if (Array.isArray(cached)) {
+          cached.forEach(a => {
+            if (typeof a === 'string') registrar(a, 'Sede Central');
+            else if (a && typeof a === 'object') registrar(a.nombre || a.usuario, a.rol || 'Sede Central');
+          });
+        }
+      } catch (_) {}
+
+      // 3. Usuario en sesión actual si pertenece a Sede Central / Mutual
+      const session = getSession();
+      if (session && (session.rol === 'Analista' || session.rol === 'Admin' || session.rol === 'Asesor Mutual')) {
+        registrar(session.nombre, session.rol);
+      }
+
+      // 4. Analistas reales observados en expedientes cargados desde servidor
       getStoredSolicitudes().forEach(s => {
-        if (s.analistaAsignado) registrar(s.analistaAsignado);
-        if (s.Analista_Asignado) registrar(s.Analista_Asignado);
+        if (s.analistaAsignado) registrar(s.analistaAsignado, 'Analista');
+        if (s.Analista_Asignado) registrar(s.Analista_Asignado, 'Analista');
         if (s.organizacion_id === 'org_sede_central' && s.comercializador) {
-          registrar(s.comercializador);
+          registrar(s.comercializador, 'Sede Central');
         }
       });
-
-      // 4. Plantilla base activa de Sede Central
-      ANALISTAS_MUTUAL_DEFAULT.forEach(registrar);
 
       return Array.from(mapaUnico.values());
     }
 
-    function poblarSelectAnalistasDestino(analistaActual, selectEl) {
+    function poblarSelectAnalistasDestino(analistaActualNombre, selectEl) {
       const select = selectEl || document.getElementById('select-analista-destino');
       if (!select) return;
-      const lista = obtenerAnalistasMutualLocal();
-      const actualLower = String(analistaActual || '').toLowerCase().trim();
-      const prevSelected = select.value;
 
-      let optionsHtml = '<option value="">-- Seleccionar analista de destino --</option>';
-      let defaultPick = '';
-      lista.forEach(nombre => {
-        const esActual = Boolean(actualLower && nombre.toLowerCase().trim() === actualLower);
-        if (!esActual && !defaultPick) defaultPick = nombre;
-        optionsHtml += '<option value="' + sanitizeHTML(nombre) + '">' +
-          sanitizeHTML(nombre) + (esActual ? ' (Asignado actualmente)' : '') +
-        '</option>';
-      });
+      select.innerHTML = '<option value="" disabled selected>— Seleccionar analista de destino —</option>';
 
-      select.innerHTML = optionsHtml;
-      if (prevSelected && lista.includes(prevSelected)) {
-        select.value = prevSelected;
-      } else if (defaultPick) {
-        select.value = defaultPick;
+      const actualLower = String(analistaActualNombre || '').toLowerCase().trim();
+      let listaAnalistas = [];
+
+      if (Array.isArray(window.estadoApp?.usuarios) && window.estadoApp.usuarios.length > 0) {
+        listaAnalistas = window.estadoApp.usuarios
+          .filter(u => {
+            if (!u) return false;
+            const nombre = typeof u === 'string' ? u : (u.nombre || u.usuario || '');
+            const rol = typeof u === 'string' ? 'analista' : String(u.rol || '').toLowerCase();
+            return nombre && (rol.includes('analista') || rol.includes('admin') || rol.includes('mutual')) && nombre.toLowerCase().trim() !== actualLower;
+          })
+          .map(u => typeof u === 'string' ? { nombre: u, rol: 'Sede Central' } : { nombre: u.nombre || u.usuario, rol: u.rol || 'Sede Central' });
+      }
+
+      if (listaAnalistas.length === 0) {
+        listaAnalistas = obtenerAnalistasMutualLocal().filter(u => u.nombre.toLowerCase().trim() !== actualLower);
+      }
+
+      if (listaAnalistas.length > 0) {
+        listaAnalistas.forEach(u => {
+          const opt = document.createElement('option');
+          opt.value = u.nombre;
+          opt.textContent = u.nombre + ' (' + (u.rol || 'Sede Central') + ')';
+          select.appendChild(opt);
+        });
+      } else {
+        const opt = document.createElement('option');
+        opt.value = 'Mesa de Entradas Sede Central';
+        opt.textContent = 'Mesa de Entradas / Auditoría General';
+        select.appendChild(opt);
       }
     }
 
@@ -10551,21 +11104,26 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           if (res?.ok && Array.isArray(rawList) && rawList.length > 0) {
             const filtrados = rawList
               .filter(u => {
-                if (typeof u === 'string') return true;
+                if (typeof u === 'string') return Boolean(u.trim());
                 const r = String(u?.rol || '').toLowerCase();
-                return !r || r.includes('analista') || r.includes('admin') || r.includes('mutual');
+                return Boolean(u?.nombre || u?.usuario) && (!r || r.includes('analista') || r.includes('admin') || r.includes('mutual'));
               })
-              .map(u => typeof u === 'string' ? u : (u?.nombre || u?.usuario || ''))
-              .filter(Boolean);
+              .map(u => typeof u === 'string'
+                ? { nombre: u.trim(), rol: 'Sede Central' }
+                : { nombre: String(u.nombre || u.usuario).trim(), rol: u.rol || 'Sede Central' }
+              );
             if (filtrados.length > 0) {
+              window.estadoApp = window.estadoApp || { solicitudes: [], usuarios: [] };
+              window.estadoApp.usuarios = filtrados;
               localStorage.setItem(ANALISTAS_MUTUAL_CACHE_KEY, JSON.stringify(filtrados));
             }
           }
         } catch (err) {
-          console.warn('No se pudo refrescar padrón de analistas desde servidor:', err);
+          console.warn('No se pudo refrescar padrón de analistas desde Servidor Central:', err);
         }
       }
-      return obtenerAnalistasMutualLocal().length ? obtenerAnalistasMutualLocal() : locales;
+      const actualizados = obtenerAnalistasMutualLocal();
+      return actualizados.length ? actualizados : locales;
     }
 
     function abrirModalDerivarCaso(id) {
@@ -10577,28 +11135,38 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
 
       const all = getStoredSolicitudes();
-      const s = all.find(x => String(x.id) === String(id));
-      if (!s) return;
+      const sol = all.find(x => String(x.id) === String(id));
+      if (!sol) return;
 
       const hidId = document.getElementById('derivarCasoIdSolicitud');
-      const metaEl = document.getElementById('derivarCasoMetaInfo');
       const txtMotivo = document.getElementById('txtMotivoDerivacion');
       const selectEl = document.getElementById('select-analista-destino');
 
-      if (hidId) hidId.value = String(s.id);
+      if (hidId) hidId.value = String(sol.id);
       if (txtMotivo) txtMotivo.value = '';
 
-      const idDisplay = s.id_definitivo || s.id_provisorio || ('#' + s.id);
-      const analistaActual = s.analistaAsignado || s.Analista_Asignado || 'Sin Asignar';
-      if (metaEl) {
-        metaEl.innerHTML = '<div><strong>Expediente:</strong> ' + sanitizeHTML(idDisplay) + ' — ' + sanitizeHTML(s.solicitante?.nombre || 'Socio') + '</div>' +
-          '<div style="margin-top:3px;"><strong>Analista Actual:</strong> <span style="color:#166534;font-weight:700;">' + sanitizeHTML(analistaActual) + '</span></div>';
+      const nroExp = sol.id_definitivo || sol.idDefinitivoExpediente || sol.ID_Definitivo_Expediente || sol.id_provisorio || sol.idSolicitud || sol.ID_Solicitud || sol.id || '---';
+      const nombreRaw = sol.solicitante?.nombre || sol.apellidoNombre || sol.Apellido_Nombre || '';
+      const nombreTitular = (nombreRaw && nombreRaw !== 'Socio') ? nombreRaw : 'Sin nombre registrado';
+      const analistaActual = sol.analistaAsignado || sol.Analista_Asignado || 'Sin Asignar';
+
+      const expInfoEl = document.getElementById('derivar-expediente-info');
+      const analistaInfoEl = document.getElementById('derivar-analista-actual');
+      if (expInfoEl && analistaInfoEl) {
+        expInfoEl.textContent = 'Expediente: ' + nroExp + ' — ' + nombreTitular;
+        analistaInfoEl.textContent = analistaActual;
+      } else {
+        const metaEl = document.getElementById('derivarCasoMetaInfo');
+        if (metaEl) {
+          metaEl.innerHTML = '<div id="derivar-expediente-info" style="font-weight:700;color:#0f172a;">Expediente: ' + sanitizeHTML(nroExp) + ' — ' + sanitizeHTML(nombreTitular) + '</div>' +
+            '<div style="margin-top:3px;"><strong>Analista Actual:</strong> <span id="derivar-analista-actual" style="color:#166534;font-weight:700;">' + sanitizeHTML(analistaActual) + '</span></div>';
+        }
       }
 
       poblarSelectAnalistasDestino(analistaActual, selectEl);
       abrirModal('modal-derivar-caso');
 
-      // Sincronización no bloqueante con Google Apps Script por si hay nuevos analistas activos
+      // Sincronización no bloqueante con Servidor Central por si hay nuevos analistas activos
       obtenerAnalistasMutual(true).then(() => {
         const modalEl = document.getElementById('modal-derivar-caso');
         if (modalEl && modalEl.classList.contains('open')) {
@@ -10666,7 +11234,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       saveStoredSolicitudes(all);
 
-      // 3. Enviar petición de reasignación a Google Apps Script
+      // 3. Enviar petición de reasignación al Servidor Central
       const idDisplay = s.id_definitivo || s.id_provisorio || ('#' + s.id);
       const res = await callApi({
         action: 'reasignarAnalista',
@@ -10764,7 +11332,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     function renderTablaMutualPropias(filtered) {
       const tbody = document.getElementById('tablaMutualPropiasBody'); if (!tbody) return;
       if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:1.5rem;color:var(--text-muted);">No hay solicitudes propias de la mutual coincidentes con los filtros.</td></tr>';
+        const msgVacio = (getStoredSolicitudes().length === 0)
+          ? 'No se registran solicitudes en el período seleccionado. Presione "+ Nueva Solicitud" para iniciar un trámite.'
+          : 'No se registran solicitudes en el período seleccionado.';
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:1.5rem;color:var(--text-muted);">' + msgVacio + '</td></tr>';
         return;
       }
 
@@ -10791,7 +11362,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           ? '<div style="font-size:0.65rem;color:#b45309;font-weight:700;margin-top:2px;">⚠️ ' + cantObsDocs + ' alerta doc.</div>'
           : '';
         const driveLinkHtml = (s.carpetaDriveUrl && esUsuarioMutualConAccesoDrive())
-          ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="badge-drive-mini" title="Abrir carpeta del expediente en Google Drive" onclick="event.stopPropagation()">📁 Drive (' + (s.adjuntos ? s.adjuntos.length : 0) + ')</a>'
+          ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="badge-drive-mini" title="Abrir legajo del expediente en Bóveda Documental" onclick="event.stopPropagation()">📂 Bóveda Digital (' + (s.adjuntos ? s.adjuntos.length : 0) + ')</a>'
           : '<span style="font-size:0.66rem;color:var(--text-muted);">📎 ' + (s.adjuntos ? s.adjuntos.length : 0) + ' docs</span>';
 
         return '<tr>' +
@@ -10893,7 +11464,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     function renderTablaMutual(filtered) {
       const tbody = document.getElementById('tablaMutualBody'); if (!tbody) return;
       if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:1.5rem;color:var(--text-muted);">No hay solicitudes coincidentes con los filtros seleccionados.</td></tr>';
+        const msgVacio = (getStoredSolicitudes().length === 0)
+          ? 'No se registran solicitudes en el período seleccionado. Presione "+ Nueva Solicitud" para iniciar un trámite.'
+          : 'No se registran solicitudes en el período seleccionado.';
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:1.5rem;color:var(--text-muted);">' + msgVacio + '</td></tr>';
         return;
       }
 
@@ -10915,7 +11489,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           ? '<div style="font-size:0.65rem;color:#b45309;font-weight:700;margin-top:2px;">⚠️ ' + cantObsDocs + ' alerta doc.</div>'
           : '';
         const driveLinkHtml = (s.carpetaDriveUrl && esUsuarioMutualConAccesoDrive())
-          ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="badge-drive-mini" title="Abrir carpeta del expediente en Google Drive" onclick="event.stopPropagation()">📁 Drive (' + (s.adjuntos ? s.adjuntos.length : 0) + ')</a>'
+          ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="badge-drive-mini" title="Abrir legajo del expediente en Bóveda Documental" onclick="event.stopPropagation()">📂 Bóveda Digital (' + (s.adjuntos ? s.adjuntos.length : 0) + ')</a>'
           : '<span style="font-size:0.66rem;color:var(--text-muted);">📎 ' + (s.adjuntos ? s.adjuntos.length : 0) + ' docs</span>';
 
         return '<tr>' +
@@ -10946,7 +11520,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const session = getSession();
       s.estado = nuevo;
       if (!s.analistaAsignado || s.analistaAsignado === 'Sin Asignar') {
-        s.analistaAsignado = session?.nombre || 'Mariana López';
+        s.analistaAsignado = session?.nombre || 'Analista Sede Central';
         s.Analista_Asignado = s.analistaAsignado;
       }
       const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
@@ -11049,7 +11623,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           const cantObsDocs = (s.adjuntos || []).filter(a => a && a.observado).length +
             (s.requerimientosDocumentales || []).filter(r => r && !r.resuelto).length;
           const driveBtn = (s.carpetaDriveUrl && esUsuarioMutualConAccesoDrive())
-            ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="badge-drive-mini" onclick="event.stopPropagation()">📁 Drive (' + (s.adjuntos ? s.adjuntos.length : 0) + ')</a>'
+            ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="badge-drive-mini" onclick="event.stopPropagation()">📂 Bóveda Digital (' + (s.adjuntos ? s.adjuntos.length : 0) + ')</a>'
             : '<span style="font-size:0.64rem;color:var(--text-muted);">📎 ' + (s.adjuntos ? s.adjuntos.length : 0) + ' docs</span>';
 
           return '<div class="kanban-card" onclick="verFichaCompleta(\'' + s.id + '\')">' +
@@ -11057,7 +11631,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
               idBadge +
               subBadge +
             '</div>' +
-            '<div class="kanban-card-title">' + sanitizeHTML(s.solicitante?.nombre || 'Socio') + ' <span style="font-size:0.65rem;font-weight:500;color:var(--text-muted);">DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + '</span></div>' +
+            '<div class="kanban-card-title">' + sanitizeHTML(s.solicitante?.nombre || 'Sin nombre registrado') + ' <span style="font-size:0.65rem;font-weight:500;color:var(--text-muted);">DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + '</span></div>' +
             '<div class="kanban-card-meta">' + sanitizeHTML(lineaNombre) + '</div>' +
             '<div class="cell-domicilio-hist" style="max-width:100%;" title="' + domHistTxt + '">📍 ' + domHistTxt + '</div>' +
             '<div style="font-size:0.65rem;color:var(--text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + sanitizeHTML(asesorOrg) + '">' +
@@ -11122,7 +11696,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         if (!isNaN(d.getTime())) return d;
       }
 
-      // Caso 3: Formato ISO con Z/offset o Date.toString() devuelto por Google Sheets
+      // Caso 3: Formato ISO con Z/offset o Date.toString() devuelto por el Servidor Central
       const dIso = new Date(str);
       if (!isNaN(dIso.getTime())) return dIso;
 
@@ -11321,7 +11895,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         });
 
         if (!resp.ok) {
-          throw new Error('Servidor Apps Script respondió ' + resp.status);
+          throw new Error('Servidor Central respondió ' + resp.status);
         }
 
         const data = await resp.json();
@@ -11365,7 +11939,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           renderModuloMutual();
         }
       } catch (err) {
-        console.warn('Auditoría automática Apps Script (contingencia local activa):', err.message || err);
+        console.warn('Auditoría automática Servidor Central (contingencia local activa):', err.message || err);
         const frescas = getStoredSolicitudes();
         const sFresca = frescas.find(x => String(x.id) === String(solicitudId));
         if (sFresca) {
@@ -11807,169 +12381,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       showToast('Panel de auditoría reiniciado.');
     }
 
-    // Demos precalibrados según reglamentación AMMER
-    function cargarDemoAuditoria(tipo) {
-      if (tipo === 'iafas_aprobado') {
-        const demoAuditResult = {
-          scoringCrediticio: {
-            puntajeTotal: 94,
-            dictamen: "APTO_OTORGAMIENTO",
-            nivelConfianza: "ALTO",
-            pilares: {
-              calidadDocumental: {
-                puntaje: 19,
-                maximo: 20,
-                detalle: "Recibo de haberes PDF oficial digital de Entre Ríos (IAFAS) y DNI tarjeta en óptima legibilidad."
-              },
-              vigenciaYFormalidad: {
-                puntaje: 20,
-                maximo: 20,
-                detalle: "Recibo del período actual liquidado sin vencimiento. DNI tarjeta con vigencia hasta 2032."
-              },
-              coincidenciaIdentidad: {
-                puntaje: 30,
-                maximo: 30,
-                detalle: "Coincidencia plena (100%) en DNI (31.890.452), CUIL (20-31890452-4) y nombres en todas las fuentes."
-              },
-              capacidadFinanciera: {
-                puntaje: 25,
-                maximo: 30,
-                detalle: "Afectación de haberes holgada: la cuota solicitada de $68.500 representa sólo el 7.4% del sueldo de bolsillo."
-              }
-            }
-          },
-          reciboSueldo: {
-            titular: "GONZALEZ, MARCOS ARIEL",
-            dni: "31890452",
-            cuil: "20-31890452-4",
-            legajo: "44892",
-            organismo: "IAFAS Entre Ríos",
-            dependencia: "Gerencia Comercial - Sede Paraná",
-            cargo: "Oficial Superior Administrativo",
-            situacionRevista: "Planta Permanente",
-            antiguedadAnios: 12,
-            periodo: "03/2026",
-            sueldoBruto: 1180400,
-            descuentosLey: 188864,
-            descuentosPrestamosYMutuales: 48500,
-            sueldoNeto: 943036,
-            topeLegal50Porciento: 471518,
-            margenDisponibleCuota: 423018,
-            diasAntiguedadRecibo: 12,
-            reciboVencido: false
-          },
-          dni: {
-            numero: "31890452",
-            nombreCompleto: "GONZALEZ, MARCOS ARIEL",
-            fechaNacimiento: "1985-06-14",
-            domicilio: "CARBÓ 482, PARANÁ, ENTRE RÍOS",
-            fechaVencimiento: "2032-09-18",
-            dniVigente: true
-          },
-          cruceIdentidad: {
-            coincideDni: true,
-            coincideNombre: true,
-            coincideCuil: true,
-            discrepanciasDetectadas: []
-          },
-          alertasCriticas: [],
-          observacionesAuditor: [
-            "Titular de Planta Permanente con 12 años de estabilidad en IAFAS.",
-            "Descuentos de terceros mínimos ($48.500). Margen disponible para absorber la cuota: $423.018.",
-            "Legajo 100% formalizado y verificado según Calificación Crediticia AMMER."
-          ],
-          informeEjecutivo: "El legajo perteneciente al asociado Marcos Ariel Gonzalez presenta solvencia acreditada, estabilidad en planta permanente del IAFAS (12 años) y un ratio de afectación muy conservador (7.4% sobre líquido). Cumple holgadamente la Cláusula 18 inc. e. Se recomienda dictamen APTO OTORGAMIENTO — CRÉDITO VIABLE sin reparos."
-        };
-
-        ultimoResultadoAuditoria = demoAuditResult;
-        renderResultadosAuditoria(demoAuditResult);
-        showToast('Caso Demo "IAFAS Apto Otorgamiento" cargado exitosamente.');
-      } else if (tipo === 'muni_observado') {
-        const demoAuditResult = {
-          scoringCrediticio: {
-            puntajeTotal: 64,
-            dictamen: "OBSERVADO",
-            nivelConfianza: "MEDIO",
-            pilares: {
-              calidadDocumental: {
-                puntaje: 15,
-                maximo: 20,
-                detalle: "Fotografía de recibo de sueldo municipal con resolución ajustada pero legible."
-              },
-              vigenciaYFormalidad: {
-                puntaje: 10,
-                maximo: 20,
-                detalle: "Alerta de vigencia: Recibo con más de 65 días de emitido (>60 días según Reglamentación Crediticia AMMER)."
-              },
-              coincidenciaIdentidad: {
-                puntaje: 24,
-                maximo: 30,
-                detalle: "DNI concordante pero omitió segundo nombre en la originación digital."
-              },
-              capacidadFinanciera: {
-                puntaje: 15,
-                maximo: 30,
-                detalle: "Retenciones previas elevadas ($175.000). Margen para nueva cuota ajustado cerca del tope del 50%."
-              }
-            }
-          },
-          reciboSueldo: {
-            titular: "RAMIREZ, LAURA BEATRIZ",
-            dni: "28445129",
-            cuil: "27-28445129-2",
-            legajo: "19830",
-            organismo: "Municipalidad de Paraná",
-            dependencia: "Dirección de Obras Sanitarias",
-            cargo: "Auxiliar Operativa",
-            situacionRevista: "Suplente / Contratada",
-            antiguedadAnios: 2,
-            periodo: "01/2026",
-            sueldoBruto: 560000,
-            descuentosLey: 100800,
-            descuentosPrestamosYMutuales: 175000,
-            sueldoNeto: 284200,
-            topeLegal50Porciento: 142100,
-            margenDisponibleCuota: 0,
-            diasAntiguedadRecibo: 72,
-            reciboVencido: true
-          },
-          dni: {
-            numero: "28445129",
-            nombreCompleto: "RAMIREZ, LAURA BEATRIZ",
-            fechaNacimiento: "1981-11-20",
-            domicilio: "CHURRUARÍN 1290, PARANÁ",
-            fechaVencimiento: "2029-03-10",
-            dniVigente: true
-          },
-          cruceIdentidad: {
-            coincideDni: true,
-            coincideNombre: true,
-            coincideCuil: true,
-            discrepanciasDetectadas: [
-              "Nombre declarado: 'LAURA RAMIREZ' vs DNI: 'LAURA BEATRIZ RAMIREZ'."
-            ]
-          },
-          alertasCriticas: [
-            "⚠️ RECIBO VENCIDO: El comprobante de haberes data de Enero 2026 (> 60 días de antigüedad). Se exige último recibo emitido.",
-            "⚠️ TOPE 50% AFECTACIÓN AGOTADO: Las retenciones por préstamos y mutuales existentes ($175.000) superan el 50% del neto ($142.100). Requiere absorción/cancelación de pasivos para habilitar margen."
-          ],
-          observacionesAuditor: [
-            "Situación de revista Suplente con 2 años de servicio.",
-            "Para otorgamiento es indispensable estructurar como REFINANCIACIÓN cancelando al menos $80.000 de cuotas previas.",
-            "Actualizar recibo de sueldo reciente para cumplir los criterios de Calificación Crediticia AMMER."
-          ],
-          informeEjecutivo: "Expediente OBSERVADO en Calificación Crediticia AMMER. El recibo adjunto supera los 60 días de vigencia y el sueldo se encuentra altamente afectado por descuentos de código mutual bancario ($175.000 frente a un tope legal de $142.100). Subsanación obligatoria: Solicitar recibo actualizado y reestructurar la propuesta con refinanciación de deuda previa."
-        };
-
-        ultimoResultadoAuditoria = demoAuditResult;
-        renderResultadosAuditoria(demoAuditResult);
-        showToast('Caso Demo "Municipal Observado" cargado para análisis.');
-      }
-    }
-
     async function ejecutarAuditoriaDocumentalIA() {
       if (archivosAuditoriaCola.length === 0) {
-        showToast('⚠️ Cargá al menos un archivo (Recibo de Sueldo o DNI) o seleccioná un caso Demo.');
+        showToast('⚠️ Cargá al menos un archivo (Recibo de Sueldo o DNI) para iniciar la auditoría.');
         return;
       }
 
@@ -12026,7 +12440,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         clearInterval(stepTimer);
 
         if (!resp.ok) {
-          throw new Error('Apps Script respondió ' + resp.status);
+          throw new Error('Servidor Central respondió ' + resp.status);
         }
 
         const data = await resp.json();
@@ -12048,7 +12462,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         showToast('✅ Auditoría completada: Dictamen ' + (auditRes.scoringCrediticio?.dictamen || 'APTO_OTORGAMIENTO'));
       } catch (err) {
         clearInterval(stepTimer);
-        console.warn('Evaluación vía Apps Script no disponible o en contingencia local:', err.message || err);
+        console.warn('Evaluación vía Servidor Central no disponible o en contingencia local:', err.message || err);
         const fallbackAudit = generarResultadoContingencia(sAsociada || {
           estado: 'En Análisis',
           solicitante: {
@@ -12807,7 +13221,6 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.asociarExpedienteAuditoria = asociarExpedienteAuditoria;
     window.abrirAuditoriaModalExpediente = abrirAuditoriaModalExpediente;
     window.limpiarPanelAuditoria = limpiarPanelAuditoria;
-    window.cargarDemoAuditoria = cargarDemoAuditoria;
     window.ejecutarAuditoriaDocumentalIA = ejecutarAuditoriaDocumentalIA;
     window.aplicarDatosExtraidosAlExpediente = aplicarDatosExtraidosAlExpediente;
     window.registrarDictamenEnChatAuditoria = registrarDictamenEnChatAuditoria;
@@ -12834,6 +13247,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.filtrarFAQ = filtrarFAQ;
     window.filtrarFaqWiki = filtrarFaqWiki;
     window.limpiarBusquedaFaq = limpiarBusquedaFaq;
+    window.filtrarFAQPorCategoria = filtrarFAQPorCategoria;
     window.filtrarCategoriaFaq = filtrarCategoriaFaq;
     window.evaluarDocumentacionRequerida = evaluarDocumentacionRequerida;
     window.evaluarDocumentacionRequeridaAsociado = evaluarDocumentacionRequeridaAsociado;

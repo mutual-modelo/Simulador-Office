@@ -1830,6 +1830,13 @@
     .antiguedad-reactive-input:focus{border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,.22)}
     .antiguedad-reactive-badge{width:100%;height:38px;padding:0 .75rem;background:rgba(239,246,255,.75);border:1px solid #bfdbfe;border-radius:.75rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.75rem;font-weight:600;color:#135596}
     .antiguedad-auto-pill{font-size:.625rem;color:#2563eb;background:#ffffff;padding:.125rem .5rem;border-radius:.375rem;border:1px solid #dbeafe;box-shadow:0 1px 2px rgba(15,23,42,.04);white-space:nowrap}
+    .edad-reactive-badge{width:100%;height:38px;padding:0 .75rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:.75rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.75rem;font-weight:700;color:#334155}
+    .edad-auto-pill{font-size:.625rem;color:#64748b;background:#ffffff;padding:.125rem .5rem;border-radius:.375rem;border:1px solid #e2e8f0;white-space:nowrap}
+    .alert-policy-box{display:flex;align-items:flex-start;gap:.5rem;padding:.6rem .85rem;border-radius:.65rem;font-size:.75rem;font-weight:600;line-height:1.35;margin-top:.5rem}
+    .alert-policy-red{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+    .alert-policy-amber{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+    .alert-policy-green{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
+    .alert-policy-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
     .file-input-box{border:1px dashed var(--border-color);padding:.6rem;border-radius:8px;background:#f8fafc;font-size:.72rem}
 
     /* =====================================================================
@@ -3938,12 +3945,31 @@
                 <label class="form-label">CUIL (Opcional)</label>
                 <input type="text" id="solCuil" class="input-text" placeholder="Ej: 20-32111222-9"/>
               </div>
-              <div class="form-group">
-                <label class="form-label">Legajo Municipal (Opcional)</label>
-                <input type="text" id="solLegajo" class="input-text" placeholder="Ej: 14209" disabled style="opacity:0.5;background:#f1f5f9;cursor:not-allowed;"/>
-              </div>
               <div class="form-group"><label class="form-label">Apellido y Nombres *</label><input type="text" id="solNombre" class="input-text" required placeholder="Ej: Juan Carlos Pérez"/></div>
-              <div class="form-group"><label class="form-label">Fecha de Nacimiento *</label><input type="date" id="solFechaNac" class="input-text" required/></div>
+              <div class="form-group" style="grid-column:1 / -1;">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="antiguedad-reactive-label" for="solicitud-fecha-nacimiento">
+                      Fecha de Nacimiento <span style="color:#ef4444;">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      id="solicitud-fecha-nacimiento"
+                      class="antiguedad-reactive-input"
+                      onchange="recalcularValidacionesEdadYCuotas()"
+                      oninput="recalcularValidacionesEdadYCuotas()"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label class="antiguedad-reactive-label">Edad Actual</label>
+                    <div id="badge-edad-actual" class="edad-reactive-badge">
+                      <span id="texto-edad-actual">-- AÑOS</span>
+                      <span class="edad-auto-pill">Automático</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div class="form-group">
                 <label class="form-label">Sexo</label>
                 <select id="solSexo" class="input-text">
@@ -3994,7 +4020,7 @@
               </div>
               <div class="form-group">
                 <label class="form-label">Organismo *</label>
-                <select id="solOrganismo" class="input-text" required onchange="handleOrganismoChange(this.value, 'solLegajo'); evaluarDocumentacionRequerida();">
+                <select id="solOrganismo" class="input-text" required onchange="handleOrganismoChange(this.value, 'solLegajo'); evaluarDocumentacionRequerida(); recalcularValidacionesEdadYCuotas();">
                   <option value="Provincial" selected>Provincial</option>
                   <option value="Municipal">Municipal</option>
                 </select>
@@ -4015,6 +4041,40 @@
                   <option value="Titular">Titular</option>
                   <option value="Suplente">Suplente</option>
                 </select>
+              </div>
+              <div id="grupo-campos-municipales" class="form-group" style="grid-column:1 / -1;display:none;">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="antiguedad-reactive-label" for="solLegajo">
+                      Legajo Municipal <span style="color:#ef4444;">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="solLegajo"
+                      name="Legajo_Municipal"
+                      class="antiguedad-reactive-input"
+                      placeholder="Ej: 14209"
+                      disabled
+                    />
+                  </div>
+                  <div>
+                    <label class="antiguedad-reactive-label" for="solicitud-categoria-municipal">
+                      Categoría Municipal <span style="color:#ef4444;">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      id="solicitud-categoria-municipal"
+                      name="Categoria_Municipal"
+                      class="antiguedad-reactive-input"
+                      min="1"
+                      max="99"
+                      placeholder="Ej: 20 o 25"
+                      oninput="recalcularValidacionesEdadYCuotas()"
+                      onchange="recalcularValidacionesEdadYCuotas()"
+                      disabled
+                    />
+                  </div>
+                </div>
               </div>
               <div class="form-group" style="grid-column:1 / -1;">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -4048,6 +4108,7 @@
                     <input type="hidden" id="solicitud-antiguedad-formateada" value=""/>
                   </div>
                 </div>
+                <div id="alerta-antiguedad-minima" style="display:none;"></div>
               </div>
             </div>
           </div>
@@ -4064,7 +4125,7 @@
             <div class="grid-3-cols">
               <div class="form-group">
                 <label class="form-label">Línea de Ayuda *</label>
-                <select id="solLinea" class="input-text" required onchange="ajustarPlazosModalAlta(this.value); actualizarResumenCuotaAlta(); evaluarDocumentacionRequerida();">
+                <select id="solLinea" class="input-text" required onchange="ajustarPlazosModalAlta(this.value); recalcularValidacionesEdadYCuotas(); actualizarResumenCuotaAlta(); evaluarDocumentacionRequerida();">
                   <option value="fedem">FEDEM Provincial</option>
                   <option value="muni">Convenio Municipal VIKINGO / QUAD</option>
                   <option value="sidecreer">Tarjeta Sidecreer</option>
@@ -4100,6 +4161,7 @@
                 <span class="live-cuota-preview-unit">/ mes</span>
               </div>
             </div>
+            <div id="alerta-politica-cuotas" style="display:none;"></div>
           </div>
 
           <!-- CARD 4: CARGA DE DOCUMENTACIÓN DEL EXPEDIENTE -->
@@ -4699,7 +4761,7 @@
             <span>📘</span>
             <span>Centro de Ayuda &amp; Guía Operativa</span>
           </h3>
-          <p>Respuestas rápidas sobre simulación, requisitos y circuitos de crédito</p>
+          <p>Base de conocimiento oficial FEDEM, requisitos documentales y circuitos de crédito AMMER</p>
         </div>
         <button class="wiki-btn-close" onclick="cerrarModalFaqWiki()" title="Cerrar">&times;</button>
       </div>
@@ -4710,562 +4772,296 @@
           <svg class="wiki-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
-          <input type="text" id="faq-search-input" class="wiki-search-input" placeholder="Buscar por tema, palabra o trámite (ej: FEDEM, Sidecreer, SAGE, recibo)..." oninput="filtrarFaqWiki(this.value)"/>
+          <input type="text" id="input-buscar-faq" class="wiki-search-input" placeholder="Buscar por tema, código o trámite (ej: QR, SAGE, 366, 80 años, biometría, CBU)..." oninput="filtrarFAQ(_activeFaqCategory)"/>
           <button type="button" id="btnFaqClearSearch" class="wiki-search-clear-btn" style="display:none;" onclick="limpiarBusquedaFaq()" title="Limpiar búsqueda">&times;</button>
         </div>
         <div class="wiki-search-meta-row">
-          <span id="faqResultsCount" class="faq-results-counter">Mostrando 34 resultados</span>
-          <span class="faq-search-hint">Mutual Modelo • AMMER</span>
+          <span id="faqResultsCount" class="faq-results-counter">Mostrando 20 resultados</span>
+          <span class="faq-search-hint">Mutual Modelo • AMMER · Guía Operativa Oficial</span>
         </div>
       </div>
 
       <!-- SELECTOR RÁPIDO DE CATEGORÍAS (PILLS) -->
       <div class="wiki-pills-bar" id="faqPillsBar">
-        <button type="button" class="wiki-pill-btn active" data-cat="todas" onclick="filtrarCategoriaFaq('todas', this)">⭐ Todas</button>
-        <button type="button" class="wiki-pill-btn" data-cat="simulador" onclick="filtrarCategoriaFaq('simulador', this)">📊 Simulador</button>
-        <button type="button" class="wiki-pill-btn" data-cat="padron" onclick="filtrarCategoriaFaq('padron', this)">👥 Gestiones</button>
-        <button type="button" class="wiki-pill-btn" data-cat="fedem" onclick="filtrarCategoriaFaq('fedem', this)">🏛️ FEDEM</button>
-        <button type="button" class="wiki-pill-btn" data-cat="sidecreer" onclick="filtrarCategoriaFaq('sidecreer', this)">💳 Sidecreer</button>
-        <button type="button" class="wiki-pill-btn" data-cat="vikingo" onclick="filtrarCategoriaFaq('vikingo', this)">⚔️ Vikingo</button>
-        <button type="button" class="wiki-pill-btn" data-cat="auditoria" onclick="filtrarCategoriaFaq('auditoria', this)">🤖 Auditoría IA</button>
+        <button type="button" class="wiki-pill-btn active" data-cat="todas" onclick="filtrarCategoriaFaq('todas', this)">⭐ Todas las Guías</button>
+        <button type="button" class="wiki-pill-btn" data-cat="requisitos" onclick="filtrarCategoriaFaq('requisitos', this)">📋 1. Requisitos y Haberes</button>
+        <button type="button" class="wiki-pill-btn" data-cat="fedem" onclick="filtrarCategoriaFaq('fedem', this)">🏛️ 2. Sistema FEDEM</button>
+        <button type="button" class="wiki-pill-btn" data-cat="pasivos" onclick="filtrarCategoriaFaq('pasivos', this)">👴 3. Jubilados y Pensionados</button>
+        <button type="button" class="wiki-pill-btn" data-cat="salud_cge" onclick="filtrarCategoriaFaq('salud_cge', this)">🏥 4. Salud y Educación (CGE)</button>
+        <button type="button" class="wiki-pill-btn" data-cat="cuota_social" onclick="filtrarCategoriaFaq('cuota_social', this)">💳 5. Cuota Social y Descuentos</button>
+        <button type="button" class="wiki-pill-btn" data-cat="legajo_pagos" onclick="filtrarCategoriaFaq('legajo_pagos', this)">📁 6. Legajo, Estados y Pagos</button>
       </div>
 
-      <!-- CUERPO DE LA WIKI: 6 CATEGORÍAS EN ACORDEONES OFICIALES -->
+      <!-- CUERPO DE LA WIKI: 6 CATEGORÍAS EN GRILLA DE 2 COLUMNAS -->
       <div class="wiki-body" id="wikiBody">
 
         <!-- MENSAJE DE ESTADO VACÍO (SIN RESULTADOS) -->
         <div id="faqNoResults" class="wiki-empty-search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           <h4>No se encontraron respuestas</h4>
-          <p id="faqNoResultsMsg">No encontramos ninguna coincidencia para tu búsqueda. Intenta con otra palabra clave o selecciona "Todas".</p>
+          <p id="faqNoResultsMsg">No encontramos ninguna coincidencia para tu búsqueda. Intenta con otra palabra clave o selecciona "Todas las Guías".</p>
         </div>
 
-        <!-- CATEGORÍA 1: SIMULADOR FINANCIERO Y COTIZACIÓN COMERCIAL -->
-        <div class="faq-category-block" data-category="simulador">
+        <!-- CATEGORÍA 1: REQUISITOS INICIALES Y VALIDACIÓN DEL RECIBO DE SUELDO -->
+        <div class="faq-category-block grid grid-cols-1 lg:grid-cols-2 gap-4" data-category="requisitos">
           <div class="faq-category-header">
-            <span>📊</span>
-            <span>1. Simulador Financiero y Cotización Comercial</span>
+            <span>📋</span>
+            <span>1. Requisitos Iniciales y Validación del Recibo de Sueldo</span>
           </div>
 
-          <details class="faq-item">
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="requisitos">
             <summary>
-              <span><span class="faq-badge faq-badge-sim">LÍNEAS &amp; PLAZOS</span> ¿Cuáles son las líneas de ayuda económica disponibles en el simulador y qué plazos admite cada una?</span>
+              <span><span class="faq-badge faq-badge-pad">ANTIGÜEDAD</span> 1. ¿Cuál es la antigüedad laboral mínima para solicitar una ayuda económica?</span>
             </summary>
             <div class="faq-answer">
-              <p>El simulador oficial de la Mutual cuenta con las siguientes líneas crediticias habilitadas:</p>
-              <ul>
-                <li><strong>FEDEM Provincial:</strong> Admite 6, 12, 18, 24, 36 y 48 meses de amortización fija con débito sobre haberes provinciales.</li>
-                <li><strong>QUAD (Municipalidad y Organismos Adheridos):</strong> Admite 6, 12, 18, 24, 36 y 48 meses calculados con matriz analítica QUAD.</li>
-                <li><strong>Convenio Sidecreer:</strong> Admite 6, 12, 18, 24, 36 y 48 meses debitados mensualmente en el resumen de tarjeta plástica.</li>
-                <li><strong>Convenio Municipal (Paraná y Municipios Adheridos):</strong> Opera exclusivamente en <strong>12 y 24 cuotas fijas</strong>, según la normativa comunal vigente.</li>
-              </ul>
+              <p>La persona solicitante debe contar con una <strong>antigüedad laboral mínima de un (1) año comprobable</strong> en su recibo de haberes.</p>
+              <p>Para antigüedades entre <strong>10 y 11 meses</strong> se requiere análisis especial de riesgo por Sede Central, quedando <strong>inhabilitados</strong> los casos con menos de 10 meses.</p>
             </div>
           </details>
 
-          <details class="faq-item">
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="requisitos">
             <summary>
-              <span><span class="faq-badge faq-badge-sim">MODALIDAD DE CÁLCULO</span> ¿Cuál es la diferencia entre simular por Neto a Entregar y por Cuota Objetivo?</span>
+              <span><span class="faq-badge faq-badge-pad">RECIBO &amp; QR</span> 2. ¿Cómo se verifica el recibo de haberes según tenga o no código QR?</span>
             </summary>
             <div class="faq-answer">
-              <p>El sistema ofrece dos modalidades complementarias según la necesidad del asociado:</p>
-              <ul>
-                <li><strong>Neto a Entregar:</strong> El usuario define el capital líquido en mano que desea percibir el asociado (con atajos rápidos configurados de $50.000 a $1.000.000) y el motor calcula con precisión la cuota mensual resultante.</li>
-                <li><strong>Cuota Objetivo:</strong> El usuario ingresa la cuota mensual máxima que el solicitante puede pagar (de acuerdo a su margen disponible y tope del 50% de afectación) y el motor calcula el neto máximo disponible a desembolsar.</li>
-              </ul>
+              <p>Si el recibo cuenta con <strong>código QR</strong>, es obligatorio escanearlo para verificar que los datos obtenidos coincidan plenamente con el documento presentado.</p>
+              <p>Si el recibo <strong>no posee código QR</strong>, se deben solicitar obligatoriamente los movimientos de la cuenta bancaria donde conste la acreditación de haberes del mes corriente para constatar que el ingreso neto coincida exactamente con el recibo.</p>
             </div>
           </details>
 
-          <details class="faq-item">
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="requisitos">
             <summary>
-              <span><span class="faq-badge faq-badge-sim">CONCEPTOS FINANCIEROS</span> ¿Qué conceptos componen el resultado financiero de la simulación?</span>
+              <span><span class="faq-badge faq-badge-pad">MESA VIRTUAL</span> 3. ¿Cómo se efectúa la búsqueda judicial en Mesa Virtual de Entre Ríos?</span>
             </summary>
             <div class="faq-answer">
-              <p>El desglose financiero transparente muestra los siguientes conceptos clave:</p>
-              <ul>
-                <li><strong>Monto de la Cuota:</strong> Cuota periódica fija mensual bajo Sistema Francés de Amortización.</li>
-                <li><strong>Monto a Entregar Neto:</strong> Importe líquido exacto a transferir a la cuenta bancaria del asociado o acreditar en tarjeta.</li>
-                <li><strong>Total de la Ayuda Económica:</strong> Sumatoria integral de todas las cuotas fijas pactadas durante la vida del crédito.</li>
-                <li><strong>Capital Computable:</strong> Base formal de cálculo sujeta a amortización y análisis reglamentario.</li>
-              </ul>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span><span class="faq-badge faq-badge-sim">VALIDEZ LEGAL</span> ¿El resultado arrojado por el simulador constituye una oferta vinculante?</span>
-            </summary>
-            <div class="faq-answer">
-              <p><strong>No.</strong> El resultado del simulador es meramente informativo y orientativo para el asesor y el asociado.</p>
-              <p>El otorgamiento formal de la ayuda económica queda estrictamente sujeto a la verificación biométrica de identidad, capacidad de pago (respetando el tope legal del 50% de haberes netos disponibles), antigüedad societaria comprobada, cumplimiento del reglamento interno de crédito del INAES y la aplicación de los tributos de ley (Sellos de la Provincia de Entre Ríos, IVA cuando corresponda y demás cargos reglamentarios vigentes a la fecha de liquidación).</p>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span><span class="faq-badge faq-badge-sim">WHATSAPP</span> ¿Cómo funciona el Gestor de Mensajes de WhatsApp y qué plantillas incluye?</span>
-            </summary>
-            <div class="faq-answer">
-              <p>El gestor integrado permite transformar los cálculos de la simulación en un mensaje directo y profesional para el socio, incluyendo 5 plantillas institucionales preconfiguradas:</p>
-              <ul>
-                <li><strong>1. Estándar:</strong> Detalla el capital neto y los planes de cuotas en formato ordenado y amigable.</li>
-                <li><strong>2. Plan Único:</strong> Foco exclusivo en un plazo específico acordado con el solicitante.</li>
-                <li><strong>3. Institucional Formal:</strong> Redacción protocolar con detalles de reglamentación y advertencias legales.</li>
-                <li><strong>4. Promo Express:</strong> Texto ágil y comercial destacando liquidación inmediata y requisitos básicos.</li>
-                <li><strong>5. Formato Guardado:</strong> Configuración personalizada por el usuario con firma del asesor.</li>
-              </ul>
-              <p>Permite además filtrar qué cuotas exhibir (6 a 48 cuotas con botones interactivos), editar el texto en tiempo real antes de copiarlo o disparar el envío directo a WhatsApp Web/App.</p>
+              <p>Se debe consultar a la persona su localidad y buscarla por Apellido y Nombre en el sistema de <strong>Mesa Virtual del Poder Judicial de Entre Ríos</strong>.</p>
+              <p>La consulta se realiza en el fuero <strong>Civil y Comercial</strong>, verificando siempre en el <strong>último juzgado de dicha localidad</strong> (por ejemplo, si la localidad cuenta con 6 juzgados, se consulta en el Juzgado N° 6).</p>
             </div>
           </details>
         </div>
 
-        <!-- CATEGORÍA 2: PADRÓN INSTITUCIONAL Y CIRCUITO DE SOLICITUDES EN PLATAFORMA -->
-        <div class="faq-category-block" data-category="padron">
-          <div class="faq-category-header">
-            <span>👥</span>
-            <span>2. Padrón Institucional y Circuito de Solicitudes en Plataforma</span>
-          </div>
-
-          <details class="faq-item">
-            <summary>
-              <span><span class="faq-badge faq-badge-pad">BANDEJAS</span> ¿Cuáles son las bandejas de seguimiento que ofrece el sistema y qué función cumple cada una?</span>
-            </summary>
-            <div class="faq-answer">
-              <p>El sistema cuenta con tres bandejas segmentadas por rol y canal de originación:</p>
-              <ul>
-                <li><strong>Mis Gestiones de Ayudas Económicas:</strong> Bandeja personal del asesor o comercializador externo para dar seguimiento a sus propias solicitudes en curso, propuestas recibidas y estados de liquidación.</li>
-                <li><strong>Mis Gestiones Mutual:</strong> Centraliza los trámites originados por los canales oficiales directos de la entidad (atención presencial en mostrador de Sede Central Urquiza 840, canal oficial telefónico o WhatsApp oficial de la Mutual).</li>
-                <li><strong>Gestiones de Comercializadores &amp; Auditoría:</strong> Vista ejecutiva exclusiva para el equipo de créditos, analistas y auditores de Sede Central, permitiendo revisar legajos, calibrar scoring IA, emitir dictámenes y formalizar propuestas.</li>
-              </ul>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span><span class="faq-badge faq-badge-pad">VISTAS</span> ¿Qué modalidades de visualización están disponibles en las bandejas operativas?</span>
-            </summary>
-            <div class="faq-answer">
-              <p>Cada bandeja operativa permite alternar dinámicamente entre tres vistas:</p>
-              <ul>
-                <li><strong>Vista de Tabla:</strong> Listado analítico detallado con ordenamiento de columnas, filtros combinados y accesos directos de gestión rápida.</li>
-                <li><strong>Vista Kanban:</strong> Tablero ágil con tarjetas distribuidas por columnas de estado operativo (Pendiente, En Análisis, Observado, Aprobado, Liquidado y Rechazado) con arrastre visual y contadores de volumen.</li>
-                <li><strong>Vista Calendario:</strong> Distribución temporal interactiva de las solicitudes según su fecha de ingreso, facilitando el control de vencimientos y plazos de resolución.</li>
-              </ul>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span><span class="faq-badge faq-badge-pad">ESTADOS</span> ¿Cuáles son los estados oficiales por los que transita un expediente?</span>
-            </summary>
-            <div class="faq-answer">
-              <p>El ciclo de vida del trámite se divide en seis estados estandarizados:</p>
-              <ul>
-                <li><strong>🟡 Pendiente:</strong> Solicitud ingresada al sistema a la espera de ser asignada y tomada por la mesa de análisis crediticio.</li>
-                <li><strong>🔵 En Gestión / Análisis:</strong> El analista evalúa la documentación, calcula el scoring de riesgo y valida el margen de afectación de haberes.</li>
-                <li><strong>🟠 Observado:</strong> El expediente presenta inconsistencias documentales, recibo ilegible o faltantes. Requiere subsanación para continuar el circuito.</li>
-                <li><strong>🟢 Aprobado:</strong> Ayuda económica validada y autorizada por el comité de créditos, lista para firma o confección de orden de pago.</li>
-                <li><strong>🟣 Liquidado:</strong> Fondos efectivamente transferidos a la CBU declarada del titular o acreditados en la pasarela Sidecreer.</li>
-                <li><strong>🔴 Rechazado:</strong> Operación denegada por afectación superior al 50%, antecedentes desfavorables o causales normativas insalvables.</li>
-              </ul>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span><span class="faq-badge faq-badge-pad">ALTA ASOCIADO</span> ¿Qué datos y comprobantes se solicitan para incorporar a un nuevo asociado en el padrón?</span>
-            </summary>
-            <div class="faq-answer">
-              <p>El alta societaria requiere la carga completa de tres bloques de información:</p>
-              <ul>
-                <li><strong>1. Datos de Filiación:</strong> DNI, Apellido y Nombres completos, CUIL, Fecha de Nacimiento, Sexo, Estado Civil, Celular/WhatsApp, Correo Electrónico y Domicilio Legal declarado.</li>
-                <li><strong>2. Datos Laborales:</strong> Organismo empleador (Provincial, Municipal o Universitario), Condición laboral (Planta Permanente, Interino, Suplente o Contratado), Repartición/Dependencia, Cargo y Legajo Municipal si corresponde.</li>
-                <li><strong>3. Legajo Digital Obligatorio:</strong> DNI frente y dorso nítido, Recibo de sueldo reciente, Constancia de domicilio (servicio o impuesto), Constancia oficial de CBU bancaria y Certificado SAGE en caso de agentes docentes del CGE.</li>
-              </ul>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span><span class="faq-badge faq-badge-pad">SEDE CENTRAL</span> ¿Qué documentación interna de carácter obligatorio debe incorporar Sede Central?</span>
-            </summary>
-            <div class="faq-answer">
-              <p>Para la culminación del legajo, calificación crediticia y resguardo institucional, el equipo de Sede Central debe anexar los siguientes tres instrumentos:</p>
-              <ul>
-                <li><strong>1. Transferencia Bancaria Oficial:</strong> Comprobante bancario que acredita la liquidación efectiva y acreditación del dinero en la cuenta del titular.</li>
-                <li><strong>2. Solicitud de Ayuda Económica:</strong> Formulario formal firmado de puño y letra o digitalmente por el solicitante.</li>
-                <li><strong>3. Autorización para Descuento de Haberes:</strong> Instrumento irrevocable de mandato y afectación salarial bajo código de retención mutual.</li>
-              </ul>
-            </div>
-          </details>
-        </div>
-
-        <!-- CATEGORÍA 3: NORMATIVA Y OPERATORIA EN SISTEMA FEDEM -->
-        <div class="faq-category-block" data-category="fedem">
+        <!-- CATEGORÍA 2: EVALUACIÓN CREDITICIA EN EL SISTEMA FEDEM -->
+        <div class="faq-category-block grid grid-cols-1 lg:grid-cols-2 gap-4" data-category="fedem">
           <div class="faq-category-header">
             <span>🏛️</span>
-            <span>3. Normativa y Operatoria en Sistema FEDEM</span>
+            <span>2. Evaluación Crediticia en el Sistema FEDEM</span>
           </div>
 
-          <details class="faq-item">
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="fedem">
             <summary>
-              <span><span class="faq-badge faq-badge-fedem">CONFIDENCIALIDAD</span> ¿Qué regla de confidencialidad rige de manera obligatoria sobre el sistema FEDEM?</span>
+              <span><span class="faq-badge faq-badge-fedem">MUTUALES</span> 4. ¿Qué condiciones de asociación a mutuales permiten avanzar con el trámite?</span>
             </summary>
             <div class="faq-answer">
-              <p><strong>Prohibición Terminante:</strong> Está estrictamente prohibido realizar capturas de pantalla de la plataforma FEDEM o remitir imágenes directas del calculador del sistema al solicitante.</p>
-              <p>Toda comunicación comercial o propuesta económica debe transmitirse al socio utilizando exclusivamente las plantillas oficiales del sistema o los canales autorizados de la Mutual, resguardando la confidencialidad de las pantallas institucionales.</p>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span><span class="faq-badge faq-badge-fedem">CONSULTA DNI</span> ¿Cómo se consulta el historial crediticio de una persona en la plataforma FEDEM?</span>
-            </summary>
-            <div class="faq-answer">
-              <p>Para auditar el comportamiento crediticio en FEDEM se sigue la siguiente ruta:</p>
-              <p><code>Administración de Mutuales &gt; Lanzador de Consultas &gt; PRESTAMOS SOLICITADOS DETALLE POR DNI</code></p>
-              <p>Este informe detalla las ayudas activas en todas las mutuales federadas, cuotas canceladas, saldo adeudado, mutuales otorgantes y fechas de vencimiento.</p>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span><span class="faq-badge faq-badge-fedem">BLOQUEOS &amp; RECHAZOS</span> ¿Cuáles causales provocan el bloqueo o rechazo inmediato de una solicitud en FEDEM?</span>
-            </summary>
-            <div class="faq-answer">
-              <p>Una solicitud en FEDEM queda automáticamente bloqueada o rechazada en las siguientes circunstancias:</p>
+              <p>En el <strong>Lanzador de Consultas de FEDEM</strong> se corrobora la situación de la persona. El trámite es viable si el solicitante:</p>
               <ul>
-                <li><strong>Operar con dos mutuales ajenas:</strong> Si el solicitante ya posee ayudas vigentes en dos entidades mutuales distintas a Mutual Modelo.</li>
-                <li><strong>Estado de Quiebra:</strong> Figurar en estado concursal o de quiebra decretada en los registros oficiales.</li>
-                <li><strong>Tope de 5 ayudas vigentes:</strong> Haber alcanzado el límite máximo de 5 créditos en el sistema. En este caso, solo cabe refinanciación de las operaciones pertenecientes a AMMER.</li>
-                <li><strong>Cuotas impagas:</strong> Registrar atrasos o cuotas impagas en la mutual sin previa regularización.</li>
-                <li><strong>Observación de Legales FEDEM:</strong> Presencia de leyenda expresa emitida por el departamento legal de FEDEM denegando el crédito.</li>
+                <li><strong>(a)</strong> No tiene mutuales asociadas vigentes.</li>
+                <li><strong>(b)</strong> Cuenta con una sola mutual asociada.</li>
+                <li><strong>(c)</strong> Ya es asociado directo de la Mutual Modelo.</li>
               </ul>
             </div>
           </details>
 
-          <details class="faq-item">
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="fedem">
             <summary>
-              <span><span class="faq-badge faq-badge-fedem">CONSUMO FEDEM</span> ¿Cómo se debe controlar la cuota informada en FEDEM contra el recibo de haberes?</span>
+              <span><span class="faq-badge faq-badge-fedem">BLOQUEOS LEGALES</span> 5. ¿Qué procedimiento corresponde ante bloqueos o notificaciones especiales en el sistema?</span>
             </summary>
             <div class="faq-answer">
-              <p>El importe de la cuota notificada en el reporte de FEDEM debe coincidir de forma <strong>milimétrica y exacta</strong> con el importe descontado en el recibo de haberes bajo el concepto <strong>CONSUMO FEDEM</strong>.</p>
-              <p>Cualquier discrepancia numérica entre el informe y el recibo debe ser clarificada antes de avanzar con la liquidación.</p>
+              <p>Si el sistema FEDEM emite avisos especiales o bloqueos originados por el <strong>área legal de la federación</strong>, el asesor comercial debe consultar de inmediato a <strong>Sede Central de la Mutual</strong> para conocer el motivo del bloqueo y determinar los pasos a seguir.</p>
             </div>
           </details>
 
-          <details class="faq-item">
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="fedem">
             <summary>
-              <span><span class="faq-badge faq-badge-fedem">VALIDACIÓN OCR</span> ¿Cómo se subsana el error de validación por ítems sin código al subir un recibo de sueldo?</span>
+              <span><span class="faq-badge faq-badge-fedem">MORA &amp; IMPAGOS</span> 6. ¿Cómo se procede frente a solicitantes con cuotas impagas?</span>
             </summary>
             <div class="faq-answer">
-              <p>Si durante la carga el sistema arroja la alerta <em>'Validación IA: Hay ITEMS sin CODIGO ASIGNADO'</em>:</p>
-              <ol style="margin:0.35rem 0 0.35rem 1.1rem;padding:0;">
-                <li>Hacer clic sobre la celda resaltada en color rojo en la grilla de conceptos.</li>
-                <li>Tipear el código numérico correspondiente tal cual figura en el recibo de sueldo impreso o digital.</li>
-                <li>Pulsar <strong>Aceptar</strong> y luego presionar el botón <strong>Reprocesar</strong> para que el motor revalide la afectación.</li>
-              </ol>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span><span class="faq-badge faq-badge-fedem">ESTRUCTURACIÓN DOMICILIO</span> ¿Qué procedimiento debe seguirse para cargar correctamente el domicilio en la ficha de FEDEM?</span>
-            </summary>
-            <div class="faq-answer">
-              <p>En el apartado <em>Domicilios Teléfonos Emails</em>:</p>
-              <ul>
-                <li>Seleccionar la calle preagendada en el nomenclador del sistema.</li>
-                <li>Consignar la numeración catastral exacta y la localidad correspondiente.</li>
-                <li>Hacer clic sobre el <strong>icono de flechas circulares (Refresco)</strong> para estructurar y normalizar formalmente el domicilio en la base de datos de FEDEM.</li>
-              </ul>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span><span class="faq-badge faq-badge-fedem">CLASIFICACIÓN FUNCIONAL</span> ¿Cuáles son las opciones válidas para la clasificación funcional de los agentes en FEDEM?</span>
-            </summary>
-            <div class="faq-answer">
-              <p>Las únicas categorías funcionales admitidas en FEDEM son:</p>
-              <ul>
-                <li><strong>AGENTE ACTIVO:</strong> Planta permanente de Policía de Entre Ríos, Ministerio de Salud, CGE o Dirección Provincial de Vialidad.</li>
-                <li><strong>AGENTE ACTIVO – SUPLENTES SALUD:</strong> Personal suplente con continuidad en efectores de salud pública hospitalaria.</li>
-                <li><strong>AGENTE ACTIVO – OMNIBUS CGE:</strong> Personal docente y escolar con liquidación bajo modalidad ómnibus del Consejo de Educación.</li>
-                <li><strong>AGENTE PASIVO – JUBILADO / PENSIONADO:</strong> Beneficiarios de la Caja de Jubilaciones y Pensiones de Entre Ríos.</li>
-              </ul>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span><span class="faq-badge faq-badge-fedem">FONDOS AUTORIZADOS</span> ¿Cuáles orígenes de fondos están autorizados y cuáles prohibidos en FEDEM?</span>
-            </summary>
-            <div class="faq-answer">
-              <p><strong>Fondos Autorizados Únicamente:</strong></p>
-              <ul>
-                <li><code>Fondos PROPIOS ACTIVOS</code></li>
-                <li><code>Fondos PROPIOS PASIVOS</code></li>
-              </ul>
-              <p><strong>Fondos Estrictamente Prohibidos:</strong></p>
-              <ul>
-                <li>Fondos ADM ACTIVOS / PASIVOS</li>
-                <li>Línea Farmacia</li>
-                <li>Servicio SALUD</li>
-              </ul>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span><span class="faq-badge faq-badge-fedem">NOMENCLATURA</span> ¿Qué nomenclatura de archivos y formato de notificación deben respetarse en FEDEM?</span>
-            </summary>
-            <div class="faq-answer">
-              <p>Para la subida y comunicación interna rigen las siguientes directivas:</p>
-              <ul>
-                <li><strong>Subida de Archivos:</strong> Subir comprobantes en formato PDF bajo el estándar <code>ID – NOMBRE DEL ARCHIVO</code> (ejemplo: <code>32454-RECIBO.pdf</code>, <code>32454-DNI-FRENTE.pdf</code>).</li>
-                <li><strong>Notificación Interna:</strong> Notificar las operaciones al canal de control utilizando la estructura <code>APELLIDO NOMBRE – ID</code>.</li>
-              </ul>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span><span class="faq-badge faq-badge-fedem">CBU &amp; SERVICIOS</span> ¿Qué condiciones deben reunir la constancia de CBU y los comprobantes de servicios?</span>
-            </summary>
-            <div class="faq-answer">
-              <p><strong>Constancia de CBU:</strong> Debe ser un comprobante oficial en formato PDF emitido por entidad bancaria tradicional de primer orden regulada por el BCRA (Banco de Entre Ríos, Nación, Galicia, Macro, etc.). <em>No se admiten billeteras virtuales (Mercado Pago, Ualá, etc.), bancos puramente digitales ni cuentas a nombre de terceros.</em></p>
-              <p><strong>Factura de Servicio:</strong> Impuesto o servicio (luz, gas, agua, inmobiliario) a nombre del titular o que coincida de forma idéntica con el domicilio del DNI.</p>
+              <p>Cuando el solicitante registre <strong>cuotas impagas</strong> en el sistema, se debe corroborar fehacientemente el motivo por el cual ingresó en mora y definir con auditoría si corresponde regularizar la deuda previa como condición previa de otorgamiento.</p>
             </div>
           </details>
         </div>
 
-        <!-- CATEGORÍA 4: CONVENIO SIDECREER: OPERATORIA NO PRESENCIAL Y PASARELA DE PAGOS -->
-        <div class="faq-category-block" data-category="sidecreer">
+        <!-- CATEGORÍA 3: PAUTAS OPERATIVAS PARA PASIVOS (JUBILADOS Y PENSIONADOS) -->
+        <div class="faq-category-block grid grid-cols-1 lg:grid-cols-2 gap-4" data-category="pasivos">
+          <div class="faq-category-header">
+            <span>👴</span>
+            <span>3. Pautas Operativas para Pasivos (Jubilados y Pensionados)</span>
+          </div>
+
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="pasivos">
+            <summary>
+              <span><span class="faq-badge faq-badge-sim">TOPE DE EDAD</span> 7. ¿Cuál es la edad máxima permitida para jubilados y pensionados?</span>
+            </summary>
+            <div class="faq-answer">
+              <p>El solicitante pasivo debe finalizar el plan de ayuda económica <strong>antes de cumplir los 80 años de edad</strong>.</p>
+              <p>Por ejemplo, si al momento de la solicitud tiene <strong>78 años</strong>, el plazo máximo a otorgar es de hasta <strong>24 cuotas</strong>; si tiene <strong>79 años</strong>, únicamente se puede otorgar en <strong>6 o 12 cuotas</strong>.</p>
+            </div>
+          </details>
+
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="pasivos">
+            <summary>
+              <span><span class="faq-badge faq-badge-mun">EXCLUSIONES</span> 8. ¿Qué beneficios previsionales están estrictamente excluidos de la operatoria?</span>
+            </summary>
+            <div class="faq-answer">
+              <p><strong>No se otorgan ayudas económicas</strong> a personas que perciban:</p>
+              <ul>
+                <li><strong>Jubilaciones por Invalidez</strong></li>
+                <li><strong>Pensiones por Discapacidad</strong></li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="pasivos">
+            <summary>
+              <span><span class="faq-badge faq-badge-sim">CAJA PREVISIONAL</span> 9. ¿Cómo se corrobora el estado previsional en la Caja de Jubilaciones de Entre Ríos?</span>
+            </summary>
+            <div class="faq-answer">
+              <p>Se debe consultar el expediente en el portal oficial de la <strong>Caja de Jubilaciones y Pensiones de Entre Ríos</strong> para verificar el beneficio.</p>
+              <p>Asimismo, si un agente activo cuenta con los años de aporte y edad requerida, o si ya inició su trámite jubilatorio, se debe corroborar dicho estado previsional para evaluar la viabilidad del otorgamiento.</p>
+            </div>
+          </details>
+        </div>
+
+        <!-- CATEGORÍA 4: CASOS ESPECIALES DE SALUD Y EDUCACIÓN (CGE) -->
+        <div class="faq-category-block grid grid-cols-1 lg:grid-cols-2 gap-4" data-category="salud_cge">
+          <div class="faq-category-header">
+            <span>🏥</span>
+            <span>4. Casos Especiales de Salud y Educación (CGE)</span>
+          </div>
+
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="salud_cge">
+            <summary>
+              <span><span class="faq-badge faq-badge-prov">CRONOGRAMA SALUD</span> 10. ¿Cuál es el cronograma de cobro y qué recibo se analiza para el personal del Ministerio de Salud?</span>
+            </summary>
+            <div class="faq-answer">
+              <p>Los agentes <strong>titulares de Salud</strong> cobran el primer día hábil del mes.</p>
+              <p>Los agentes <strong>suplentes</strong> cobran el <strong>día 19 de cada mes</strong>; por lo tanto, hasta el día 19 se toma el recibo del mes anterior, y a partir del <strong>día 20</strong> se debe analizar obligatoriamente el recibo del mes en curso.</p>
+            </div>
+          </details>
+
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="salud_cge">
+            <summary>
+              <span><span class="faq-badge faq-badge-prov">CLASIFICACIÓN SALUD</span> 11. ¿Cómo se clasifica al personal de Salud en la plataforma?</span>
+            </summary>
+            <div class="faq-answer">
+              <p>Para identificar si el agente es titular o suplente, se le consulta directamente, se solicitan los movimientos de cuenta con la fecha de acreditación o se verifica el día de pago.</p>
+              <p>En el sistema, los suplentes se registran como <code>AGENTE ACTIVO - SUPLENTES SALUD</code>, mientras que los titulares se registran como <code>AGENTE ACTIVO</code>.</p>
+            </div>
+          </details>
+
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="salud_cge">
+            <summary>
+              <span><span class="faq-badge faq-badge-prov">DOCENTES CGE / SAGE</span> 12. ¿Qué requisitos documentales aplican a los agentes del Consejo General de Educación (CGE)?</span>
+            </summary>
+            <div class="faq-answer">
+              <p>Es obligatorio solicitar la <strong>Situación de Revista oficial emitida por SAGE</strong>. Si allí se constata que desempeña funciones en más de una institución escolar, se debe exigir la totalidad de los recibos de sueldo correspondientes.</p>
+              <p>Si es suplente, se debe indagar sobre el tipo de suplencia que cubre. <em>(Nota: En personal docente de facultades o universidades se requiere Nota de Servicio Oficial).</em></p>
+            </div>
+          </details>
+        </div>
+
+        <!-- CATEGORÍA 5: ANÁLISIS WEB, DOCUMENTACIÓN Y CUOTA SOCIAL FEDEM -->
+        <div class="faq-category-block grid grid-cols-1 lg:grid-cols-2 gap-4" data-category="cuota_social">
           <div class="faq-category-header">
             <span>💳</span>
-            <span>4. Convenio SIDECREER: Operatoria No Presencial y Pasarela de Pagos</span>
+            <span>5. Análisis Web, Documentación y Cuota Social FEDEM</span>
           </div>
 
-          <details class="faq-item">
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="cuota_social">
             <summary>
-              <span><span class="faq-badge faq-badge-side">ALBA / CONTACTO</span> ¿Cómo se inicia el circuito de atención no presencial por convenio Sidecreer?</span>
+              <span><span class="faq-badge faq-badge-side">MARGEN NEGATIVO</span> 13. ¿Qué se informa al solicitante si el análisis arroja cupo o margen negativo?</span>
             </summary>
             <div class="faq-answer">
-              <p>El circuito comercial inicia a través del contacto con el asistente virtual <strong>Alba</strong> de Mutual Modelo.</p>
-              <p>Se realiza la validación inicial del solicitante como socio activo y se constata la titularidad del plástico Sidecreer solicitando los 16 dígitos de la tarjeta de crédito para verificar su vigencia en la red.</p>
+              <p>Se le notifica formalmente que <strong>no cuenta con cupo disponible por el mes en curso</strong> y se le solicita comunicarse el mes siguiente para reevaluar su situación con la nueva liquidación de haberes actualizada.</p>
             </div>
           </details>
 
-          <details class="faq-item">
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="cuota_social">
             <summary>
-              <span><span class="faq-badge faq-badge-side">DISPONIBLE EN CUOTAS</span> ¿Cómo debe consultar el comercial el disponible de la tarjeta en cuotas?</span>
+              <span><span class="faq-badge faq-badge-side">MARGEN POSITIVO</span> 14. ¿Cuál es la documentación completa a exigir cuando el margen es positivo?</span>
             </summary>
             <div class="faq-answer">
-              <p>El comercializador debe consultar el margen de compra enviando un mensaje de WhatsApp a la línea oficial de Sidecreer:</p>
               <ul>
-                <li><strong>Número oficial Sidecreer:</strong> <code>3435 30-9272</code></li>
-                <li><strong>Opción de menú:</strong> Seleccionar <code>Opción 1: Conocer Disponible</code>.</li>
-                <li><strong>Ingreso de datos:</strong> Digitar los 16 dígitos del plástico en un solo bloque, sin espacios ni guiones.</li>
+                <li>Recibo de sueldo en formato <strong>PDF original</strong>.</li>
+                <li>Fotografía nítida de <strong>DNI frente y dorso</strong>.</li>
+                <li>Número de <strong>celular propio y alternativo</strong>.</li>
+                <li>Constancia de <strong>CUIL</strong> y correo electrónico en uso.</li>
+                <li>Constancia oficial de <strong>CBU bancario</strong>.</li>
+                <li>Factura de servicio a su nombre o Certificado de Vecindad con fecha de emisión no mayor a <strong>2 meses</strong>.</li>
               </ul>
             </div>
           </details>
 
-          <details class="faq-item">
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="cuota_social">
             <summary>
-              <span><span class="faq-badge faq-badge-side">DOCUMENTACIÓN REQUERIDA</span> ¿Qué documentación debe solicitarse al cliente bajo la operatoria Sidecreer?</span>
+              <span><span class="faq-badge faq-badge-side">CUOTA SOCIAL 2%</span> 15. ¿Cómo funciona la Cuota Social FEDEM para solicitantes no asociados?</span>
             </summary>
             <div class="faq-answer">
-              <p>Para conformar el legajo no presencial de Sidecreer se requiere:</p>
-              <ul>
-                <li>Foto nítida de frente y dorso de la tarjeta Sidecreer plástica.</li>
-                <li>Foto de frente y dorso de DNI y constancia de CUIL.</li>
-                <li>Casilla de correo electrónico activa y teléfono celular de contacto.</li>
-                <li>Último recibo de haberes percibido.</li>
-                <li>Constancia de CBU bancaria emitida por banco tradicional.</li>
-                <li>Factura de servicio o Certificado de Vecindad expedido por Policía de Entre Ríos.</li>
-              </ul>
+              <p>Si la persona no está asociada a ninguna mutual por FEDEM, además del descuento por la cuota de la ayuda económica, se le aplicará un descuento mensual por <strong>Cuota Social FEDEM equivalente al 2% del total de sus haberes brutos</strong>.</p>
             </div>
           </details>
 
-          <details class="faq-item">
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="cuota_social">
             <summary>
-              <span><span class="faq-badge faq-badge-side">LINK DE PAGO</span> ¿Cómo se completa el formulario de Envío de Link de Pago en el portal web de Sidecreer?</span>
+              <span><span class="faq-badge faq-badge-side">CÓDIGOS DE DESCUENTO</span> 16. ¿Cuáles son los códigos oficiales de descuento en el recibo de haberes?</span>
             </summary>
             <div class="faq-answer">
-              <p>En la plataforma de comercios de Sidecreer se completan los campos con los siguientes datos mandatorios:</p>
               <ul>
-                <li><strong>Referencia:</strong> <code>AYUDA ECONOMICA</code></li>
-                <li><strong>Código:</strong> <code>SIDECREER</code></li>
-                <li><strong>Nombre:</strong> Cantidad de cuotas pactadas (ej: <code>12 CUOTAS</code>).</li>
-                <li><strong>Importe:</strong> Monto total a debitar resultante de multiplicar la Cuota pactada por el Plazo (<code>Cuota × Plazo</code>).</li>
-                <li><strong>Vigencia:</strong> <code>24 hs</code>.</li>
-                <li><strong>Correo Electrónico:</strong> Casilla oficial del asesor comercial para controlar la recepción.</li>
-              </ul>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span><span class="faq-badge faq-badge-side">PAGO &amp; REENVÍO</span> ¿Qué selección debe realizarse al abonar el link y qué hacer si el enlace no llega por correo?</span>
-            </summary>
-            <div class="faq-answer">
-              <p>Al procesar el cobro:</p>
-              <ul>
-                <li>Se debe seleccionar estrictamente la opción <strong>CUOTA 3</strong> y marcar el plan de cuotas correspondiente convenido con el socio.</li>
-                <li>Si el enlace de pago no arriba a la casilla de correo del cliente, el comercial debe ingresar a la sección <strong>LINKS ENVIADOS</strong> en el portal web de Sidecreer, copiar directamente la URL del enlace activo y remitirla por WhatsApp al solicitante para gestionar el pago.</li>
-              </ul>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span><span class="faq-badge faq-badge-side">CONTROL DE COBRO</span> ¿Cómo se corrobora la efectividad del cobro y cómo proceder ante un resultado de rechazo?</span>
-            </summary>
-            <div class="faq-answer">
-              <p><strong>Corroboración:</strong> Acceder a la pestaña <em>MIS OPERACIONES</em> en la plataforma Sidecreer y constatar que la transacción figure en estado <strong>AUTORIZADO</strong>.</p>
-              <p><strong>En caso de RECHAZADO:</strong></p>
-              <ol style="margin:0.35rem 0 0.35rem 1.1rem;padding:0;">
-                <li>Revisar los datos del plástico (fecha de caducidad y código de seguridad).</li>
-                <li>Verificar que se haya seleccionado exactamente el Plan 3 con la cantidad de cuotas correcta.</li>
-                <li>Revalidar el límite disponible en cuotas de la tarjeta Sidecreer vía WhatsApp con la entidad emisora.</li>
-              </ol>
-            </div>
-          </details>
-        </div>
-
-        <!-- CATEGORÍA 5: SISTEMA VIKINGO: ALTAS SOCIETARIAS, CUOTAS SOCIALES Y PRÉSTAMOS -->
-        <div class="faq-category-block" data-category="vikingo">
-          <div class="faq-category-header">
-            <span>⚔️</span>
-            <span>5. Sistema Vikingo: Altas Societarias, Cuotas Sociales y Préstamos</span>
-          </div>
-
-          <details class="faq-item">
-            <summary>
-              <span><span class="faq-badge faq-badge-vik">ALTA DE AFILIADO</span> ¿Cómo se procede para dar de alta a un solicitante que no está registrado en el Sistema Vikingo?</span>
-            </summary>
-            <div class="faq-answer">
-              <p>Ruta en Sistema Vikingo:</p>
-              <p><code>Gestión &gt; Socios &gt; Administrador de Afiliados &gt; Hoja Blanca</code></p>
-              <ul>
-                <li>Se selecciona el sexo, se tipea el DNI y se presiona la tecla <strong>ENTER</strong> (el sistema calcula y completa automáticamente el CUIL).</li>
-                <li>Los Apellidos y Nombres deben cargarse <strong>estrictamente en letras MAYÚSCULAS</strong>.</li>
-                <li>La localidad debe seleccionarse obligatoriamente pulsando el botón de los tres puntos (...) para asociar el código postal oficial.</li>
-              </ul>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span><span class="faq-badge faq-badge-vik">CONTACTO &amp; DOMICILIOS</span> ¿Cómo deben registrarse los domicilios, teléfonos y correos en Sistema Vikingo?</span>
-            </summary>
-            <div class="faq-answer">
-              <p>Para evitar errores de liquidación:</p>
-              <ul>
-                <li><strong>Domicilio:</strong> Calle y número sin puntos ni comas (colocar <code>0</code> si el inmueble carece de numeración oficial), seleccionar tipo <code>PARTICULAR</code> y tildar la casilla <code>PREDETERMINADO</code>.</li>
-                <li><strong>Teléfono:</strong> Cargar el número telefónico sin prefijo 0 ni discado 15.</li>
-                <li><strong>Correo Electrónico:</strong> Cargar la casilla de email <strong>estrictamente en letras minúsculas</strong>.</li>
-              </ul>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span><span class="faq-badge faq-badge-vik">CONVENIOS &amp; SERVICIOS</span> ¿Qué parámetros se configuran en Afiliado, Convenios y Servicios en Vikingo?</span>
-            </summary>
-            <div class="faq-answer">
-              <p>En la ficha del afiliado se configuran los siguientes parámetros:</p>
-              <ul>
-                <li><strong>Categoría:</strong> <code>ADH. SIDECREER</code></li>
-                <li><strong>Convenio:</strong> <code>CONVENIO SIDECREER</code> (en el formulario Hoja Blanca se asocian los 16 dígitos del plástico en el campo Valor).</li>
-                <li><strong>Servicios:</strong> Se asigna el servicio <code>CUOTA SOCIAL</code>, tildando obligatoriamente la casilla <code>FUNCIÓN EXTERNA</code> con el valor reglamentario de <strong>$ 9.200,00</strong>.</li>
-              </ul>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span><span class="faq-badge faq-badge-vik">PERCEPCIÓN CUOTA</span> ¿Cuáles son las tres alternativas de percepción de cuota social para asociados preexistentes?</span>
-            </summary>
-            <div class="faq-answer">
-              <p>Para socios preexistentes aplican tres modalidades de cobro:</p>
-              <ul>
-                <li><strong>Alternativa 1:</strong> Consumo y Cuota Social percibidos conjuntamente a través de Tarjeta Sidecreer.</li>
-                <li><strong>Alternativa 2:</strong> Consumo percibido por Tarjeta Sidecreer y Cuota Social retenida por código FEDEM Provincial.</li>
-                <li><strong>Alternativa 3:</strong> Consumo por Tarjeta Sidecreer y Cuota Social retenida por código de Municipalidad de Paraná o San Benito.</li>
-              </ul>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span><span class="faq-badge faq-badge-vik">LIQUIDACIÓN &amp; METAMAP</span> ¿Cómo se liquida el préstamo en Vikingo y cómo se activa la validación de identidad MetaMap?</span>
-            </summary>
-            <div class="faq-answer">
-              <p>Ruta en Sistema Vikingo:</p>
-              <p><code>Créditos &gt; Préstamos Ordinarios &gt; Convenio SIDECREER</code></p>
-              <ul>
-                <li>Se selecciona Canal <code>Legajo Digital</code>, fecha de vencimiento fija los <strong>días 19 de cada mes</strong>, Línea <code>SIDECREER</code>, capital neto pactado y tasa analítica.</li>
-                <li>Al ingresar en el <em>Administrador de Aprobaciones</em> y pulsar el botón <strong>Aprobar</strong>, el sistema despacha automáticamente el enlace seguro para la verificación biométrica de identidad a través de <strong>MetaMap</strong>.</li>
+                <li><strong>Agentes Activos:</strong> <strong>Código 366</strong> (F.E.D.E.M. Cuota Social) y <strong>Código 368</strong> (CONSUMOS F.E.D.E.M. Cuota de Ayuda Económica).</li>
+                <li><strong>Agentes Pasivos:</strong> <strong>Código 1115</strong> (CUOTA SOCIAL FEDEM) y <strong>Código 1117</strong> (CONSUMO FEDEM Cuota de Ayuda Económica).</li>
               </ul>
             </div>
           </details>
         </div>
 
-        <!-- CATEGORÍA 6: AUDITORÍA DOCUMENTAL INTELIGENTE Y SCORING CON INTELIGENCIA ARTIFICIAL -->
-        <div class="faq-category-block" data-category="auditoria">
+        <!-- CATEGORÍA 6: CARGA DE LEGAJO, OBSERVACIONES Y CIRCUITO DE PAGO -->
+        <div class="faq-category-block grid grid-cols-1 lg:grid-cols-2 gap-4" data-category="legajo_pagos">
           <div class="faq-category-header">
-            <span>🤖</span>
-            <span>6. Auditoría Documental Inteligente y Scoring con Inteligencia Artificial</span>
+            <span>📁</span>
+            <span>6. Carga de Legajo, Observaciones y Circuito de Pago</span>
           </div>
 
-          <details class="faq-item">
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="legajo_pagos">
             <summary>
-              <span><span class="faq-badge faq-badge-ai">CONTROLES AUTOMÁTICOS</span> ¿Qué controles automatizados efectúa el motor de Auditoría IA sobre la documentación?</span>
+              <span><span class="faq-badge faq-badge-vik">NOMENCLATURA DRIVE</span> 17. ¿Cuál es la regla de nomenclatura para subir los archivos a Google Drive?</span>
             </summary>
             <div class="faq-answer">
-              <p>El motor de Inteligencia Artificial realiza cuatro verificaciones sistemáticas en segundo plano:</p>
-              <ul>
-                <li><strong>1. Extracción Multimodal OCR:</strong> Reconocimiento de datos filiatorios de DNI frente/dorso, emisor, legajo y períodos en recibos de sueldo provinciales y municipales.</li>
-                <li><strong>2. Control de Afectación Legal (Tope 50%):</strong> Cálculo matemático estricto sobre haberes líquidos disponibles para constatar que el total de descuentos y la nueva cuota no superen el 50% legal (Cláusula 18 inc. e).</li>
-                <li><strong>3. Calificación Crediticia AMMER (0-100):</strong> Asignación de puntaje técnico ponderado con dictámenes de:
-                  <ul>
-                    <li><code>🟢 APTO OTORGAMIENTO / CRÉDITO VIABLE</code> (Puntaje ≥ 80).</li>
-                    <li><code>🟠 OBSERVADO / SUBSANACIÓN</code> (Puntaje entre 60 y 79).</li>
-                    <li><code>🔴 RECHAZADO</code> (Puntaje &lt; 60).</li>
-                  </ul>
-                </li>
-                <li><strong>4. Cruce Filiatorio de Identidad:</strong> Cotejo cruzado de CUIT, CUIL, DNI y concordancia ortográfica de nombres entre base institucional, recibo de haberes y DNI.</li>
-              </ul>
+              <p>Los archivos deben ser legibles y en <strong>formato PDF</strong>. Cada documento debe nombrarse con <strong>letras mayúsculas</strong> anteponiendo el número de trámite o expediente formal:</p>
+              <p><code>[ID] RECIBO DE SUELDO.PDF</code>, <code>[ID] DNI.PDF</code>, <code>[ID] CBU.PDF</code>, etc.</p>
             </div>
           </details>
 
-          <details class="faq-item">
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="legajo_pagos">
             <summary>
-              <span><span class="faq-badge faq-badge-ai">MODALIDADES DE EVALUACIÓN</span> ¿Qué tipos de evaluación o modalidades de destino pueden seleccionarse en el módulo de IA?</span>
+              <span><span class="faq-badge faq-badge-vik">OBSERVADOS</span> 18. ¿Qué sucede si un legajo presenta errores en la documentación o formato?</span>
             </summary>
             <div class="faq-answer">
-              <p>El analista puede calibrar la auditoría según tres finalidades operativas:</p>
-              <ul>
-                <li><strong>1. Calificación Crediticia AMMER (Apto Otorgamiento):</strong> Evaluación rigurosa de elegibilidad, capacidad de repago y formalidad documental bajo normativa institucional AMMER.</li>
-                <li><strong>2. Originación y Otorgamiento Nuevo:</strong> Análisis preventivo para liquidación y desembolso por primera vez.</li>
-                <li><strong>3. Refinanciación con Cancelación Previa:</strong> Evaluación de operaciones existentes de AMMER para reestructuración de pasivos con entrega de saldo remanente.</li>
-              </ul>
+              <p>El analista pasa la solicitud a estado <strong>OBSERVADO</strong>. El motivo de la observación se asienta en la bitácora interna y notifica al comercializador para que adjunte o reemplace el comprobante requerido.</p>
             </div>
           </details>
 
-          <details class="faq-item">
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="legajo_pagos">
             <summary>
-              <span><span class="faq-badge faq-badge-ai">VISOR DE EXPEDIENTES</span> ¿Qué herramientas de examen documental ofrece el Visor Integrado de expedientes?</span>
+              <span><span class="faq-badge faq-badge-ai">BIOMETRÍA &amp; ESTADOS</span> 19. ¿Cómo funciona el circuito de validación biométrica y cambio de estados?</span>
             </summary>
             <div class="faq-answer">
-              <p>El visor de documentos integrado in-app permite examinar legajos sin salir de la plataforma con las siguientes herramientas:</p>
+              <p>Cuando el legajo está conforme, se remite un enlace por correo al titular para la <strong>validación biométrica de identidad</strong>, pasando el trámite a estado <strong>ENVIADO</strong>.</p>
+              <p>Una vez validado y confirmado por la Mutual, pasa a estado <strong>AUTORIZADO</strong> para liquidación. Una vez transferidos los fondos, el estado definitivo pasa a <strong>ENTREGADO</strong> o <strong>LIQUIDADO</strong>.</p>
+            </div>
+          </details>
+
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="legajo_pagos">
+            <summary>
+              <span><span class="faq-badge faq-badge-ai">LEGAJO DE CIERRE</span> 20. ¿Qué documentación compone el legajo de cierre definitivo en Sede Central?</span>
+            </summary>
+            <div class="faq-answer">
+              <p>La Mutual descarga e incorpora al legajo:</p>
               <ul>
-                <li><strong>Zoom Interactivo (+ / -):</strong> Aumento y reducción del tamaño del comprobante para inspección de firmas y sellos pequeños.</li>
-                <li><strong>Rotación en 90°:</strong> Giro ortogonal de imágenes para facilitar la lectura de recibos o DNI capturados en orientación apaisada.</li>
-                <li><strong>Restablecimiento al 100%:</strong> Vuelta inmediata a la escala y orientación original del archivo.</li>
-                <li><strong>Descarga Local:</strong> Botón directo para guardar el documento en el equipo local con el nombre estandarizado de legajo.</li>
+                <li><strong>Autorización de Descuento de Haberes</strong></li>
+                <li><strong>Solicitud de Ayuda Económica</strong></li>
+                <li><strong>Solicitud de Afiliación formal</strong></li>
+                <li><strong>Declaración Jurada UIF Resolución 192 (PEP)</strong></li>
               </ul>
+              <p>Al cierre, se adjunta el <strong>comprobante de transferencia bancaria oficial</strong>.</p>
             </div>
           </details>
         </div>
@@ -6167,7 +5963,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           html += '<button type="button" class="sidebar-nav-item" data-view="view-mutual" data-tooltip="Gestiones de Comercializadores" onclick="cambiarPestana(\'view-mutual\')">' +
             '<span class="sidebar-nav-icon">' + iconUsers + '</span>' +
             '<span class="sidebar-nav-label ' + textCls + '">Gestiones de Comercializadores</span></button>';
-          html += '<a href="https://drive.google.com/drive/folders/1WmeLwWDLc_D-Cb2b6WEe1zkhViLADHVT?usp=sharing" target="_blank" rel="noopener noreferrer" class="sidebar-nav-item" style="text-decoration:none;" data-tooltip="Carpeta Drive 3en1" onclick="toggleMobileSidebar(false)">' +
+          html += '<a href="https://drive.google.com/drive/folders/12s8ghbsMvjk7PL01oYettPWt-gflGL3g" target="_blank" rel="noopener noreferrer" class="sidebar-nav-item" style="text-decoration:none;" data-tooltip="Carpeta Drive 3en1" onclick="toggleMobileSidebar(false)">' +
             '<span class="sidebar-nav-icon" style="color:#38bdf8;">' + iconDrive3en1 + '</span>' +
             '<span class="sidebar-nav-label ' + textCls + '">Carpeta Drive 3en1</span></a>';
         } else if (session.rol === 'Analista' || session.rol === 'Asesor Mutual') {
@@ -6180,7 +5976,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           html += '<button type="button" class="sidebar-nav-item" data-view="view-mutual" data-tooltip="Gestiones de Comercializadores" onclick="cambiarPestana(\'view-mutual\')">' +
             '<span class="sidebar-nav-icon">' + iconUsers + '</span>' +
             '<span class="sidebar-nav-label ' + textCls + '">Gestiones de Comercializadores</span></button>';
-          html += '<a href="https://drive.google.com/drive/folders/1WmeLwWDLc_D-Cb2b6WEe1zkhViLADHVT?usp=sharing" target="_blank" rel="noopener noreferrer" class="sidebar-nav-item" style="text-decoration:none;" data-tooltip="Carpeta Drive 3en1" onclick="toggleMobileSidebar(false)">' +
+          html += '<a href="https://drive.google.com/drive/folders/12s8ghbsMvjk7PL01oYettPWt-gflGL3g" target="_blank" rel="noopener noreferrer" class="sidebar-nav-item" style="text-decoration:none;" data-tooltip="Carpeta Drive 3en1" onclick="toggleMobileSidebar(false)">' +
             '<span class="sidebar-nav-icon" style="color:#38bdf8;">' + iconDrive3en1 + '</span>' +
             '<span class="sidebar-nav-label ' + textCls + '">Carpeta Drive 3en1</span></a>';
         } else {
@@ -6263,20 +6059,52 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       return `${idExpediente} ${tipoUpper}${sufijo}.${ext}`;
     }
 
+    function esUsuarioMutualConAccesoDrive(session) {
+      const s = session || getSession();
+      if (!s) return false;
+      const rol = String(s.rol || '').toLowerCase().trim();
+      if (rol.includes('comercial') || rol.includes('asesor comercial') || rol.includes('titular')) {
+        return false;
+      }
+      return rol === 'admin' || rol === 'administrador' || rol === 'analista' || rol.includes('analista') || rol.includes('asesor mutual');
+    }
+
     function handleOrganismoChange(organismoVal, legajoInputId) {
+      const esMunicipal = String(organismoVal || '').toLowerCase().includes('municipal');
       const inp = document.getElementById(legajoInputId);
-      if (!inp) return;
-      if (organismoVal === 'Provincial') {
-        inp.value = '';
-        inp.disabled = true;
-        inp.style.opacity = '0.5';
-        inp.style.background = '#f1f5f9';
-        inp.style.cursor = 'not-allowed';
-      } else {
-        inp.disabled = false;
-        inp.style.opacity = '1';
-        inp.style.background = '#fff';
-        inp.style.cursor = 'text';
+      const grupoMuni = (legajoInputId === 'solLegajo') ? document.getElementById('grupo-campos-municipales') : null;
+      const catMuniInp = (legajoInputId === 'solLegajo') ? document.getElementById('solicitud-categoria-municipal') : null;
+
+      if (grupoMuni) {
+        grupoMuni.style.display = esMunicipal ? 'block' : 'none';
+      }
+
+      if (inp) {
+        if (!esMunicipal) {
+          inp.value = '';
+          inp.disabled = true;
+          inp.required = false;
+          inp.style.opacity = '0.5';
+          inp.style.background = '#f1f5f9';
+          inp.style.cursor = 'not-allowed';
+        } else {
+          inp.disabled = false;
+          inp.required = (legajoInputId === 'solLegajo');
+          inp.style.opacity = '1';
+          inp.style.background = '#fff';
+          inp.style.cursor = 'text';
+        }
+      }
+
+      if (catMuniInp) {
+        if (!esMunicipal) {
+          catMuniInp.value = '';
+          catMuniInp.disabled = true;
+          catMuniInp.required = false;
+        } else {
+          catMuniInp.disabled = false;
+          catMuniInp.required = true;
+        }
       }
     }
 
@@ -6305,8 +6133,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
                 if (el) el.value = asoc.cuil;
               }
               if (asoc.fechaNac || asoc.fechaNacimiento) {
-                const el = document.getElementById('solFechaNac');
-                if (el) el.value = String(asoc.fechaNac || asoc.fechaNacimiento).slice(0, 10);
+                const el = document.getElementById('solicitud-fecha-nacimiento') || document.getElementById('solFechaNac');
+                if (el) {
+                  el.value = String(asoc.fechaNac || asoc.fechaNacimiento).slice(0, 10);
+                  recalcularValidacionesEdadYCuotas();
+                }
               }
               if (asoc.sexo) {
                 const el = document.getElementById('solSexo');
@@ -6343,10 +6174,15 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
                   handleOrganismoChange(asoc.organismo, 'solLegajo');
                 }
               }
-              if (asoc.legajo && asoc.organismo === 'Municipal') {
+              if (asoc.legajo && String(asoc.organismo || '').toLowerCase().includes('municipal')) {
                 const el = document.getElementById('solLegajo');
                 if (el) el.value = asoc.legajo;
               }
+              if ((asoc.categoriaMunicipal || asoc.Categoria_Municipal) && String(asoc.organismo || '').toLowerCase().includes('municipal')) {
+                const elCat = document.getElementById('solicitud-categoria-municipal');
+                if (elCat) elCat.value = asoc.categoriaMunicipal || asoc.Categoria_Municipal;
+              }
+              recalcularValidacionesEdadYCuotas();
               if (asoc.dependencia) {
                 const el = document.getElementById('solDependencia');
                 if (el) el.value = asoc.dependencia;
@@ -6356,8 +6192,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
               if (cargoSelectVal) {
                 const elCargo = document.getElementById('solicitud-cargo') || document.getElementById('solCargo');
                 if (elCargo) elCargo.value = cargoSelectVal;
-                if (typeof evaluarDocumentacionRequerida === 'function') evaluarDocumentacionRequerida();
               }
+              if (typeof evaluarDocumentacionRequerida === 'function') evaluarDocumentacionRequerida();
               const fechaIng = asoc.fechaIngresoLaboral || asoc.Fecha_Ingreso_Laboral || asoc.fechaIngreso || '';
               if (fechaIng) {
                 const elFI = document.getElementById('solicitud-fecha-ingreso');
@@ -6556,12 +6392,37 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     /* ========================================================================
        REGLAS DINÁMICAS Y REACTIVAS DE CARGA DOCUMENTAL (ESTILO ALBA / DARWIN)
        ======================================================================== */
+    function normalizarTextoAgenteDoc(txt) {
+      return String(txt || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function actualizarEstadoFilaDocumental(rowId, badgeId, requerido) {
+      const row = document.getElementById(rowId);
+      const badge = document.getElementById(badgeId);
+      if (!row) return;
+      if (!row.dataset.manuallyAdded) {
+        row.style.display = requerido ? 'flex' : 'none';
+      }
+      if (badge && !row.classList.contains('is-loaded')) {
+        if (requerido) {
+          badge.className = 'doc-row-badge badge-obligatorio';
+          badge.textContent = 'Requerido *';
+        } else {
+          badge.className = 'doc-row-badge badge-pendiente';
+          badge.textContent = 'Pendiente';
+        }
+      }
+    }
+
     function evaluarDocumentacionRequerida() {
       const qrChecked = document.getElementById('chkReciboTieneQR')?.checked ?? true;
-      const condicion = (document.getElementById('solCondicion')?.value || '').toLowerCase();
-      const dependencia = (document.getElementById('solDependencia')?.value || '').toLowerCase();
-      const cargo = (document.getElementById('solicitud-cargo')?.value || document.getElementById('solCargo')?.value || '').toLowerCase();
-      const linea = (document.getElementById('solLinea')?.value || '').toLowerCase();
+      const condicion = normalizarTextoAgenteDoc(document.getElementById('solCondicion')?.value || '');
+      const dependencia = normalizarTextoAgenteDoc(document.getElementById('solDependencia')?.value || '');
+      const cargo = normalizarTextoAgenteDoc(document.getElementById('solicitud-cargo')?.value || document.getElementById('solCargo')?.value || '');
+      const linea = normalizarTextoAgenteDoc(document.getElementById('solLinea')?.value || '');
 
       // 1. Comprobante de Movimientos Bancarios: si NO tiene QR o es Suplente en Salud/Hospital
       const esSaludOHospital = dependencia.includes('salud') || dependencia.includes('hospital') || dependencia.includes('san martin');
@@ -6572,28 +6433,43 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         rowMov.style.display = necesitaMovBancarios ? 'flex' : 'none';
       }
 
-      // 2. Certificado SAGE: Docentes / Consejo General de Educación (CGE)
-      const esDocenteOCge = dependencia.includes('cge') || dependencia.includes('educaci') || cargo.includes('docente') || dependencia.includes('escuela');
-      const rowSage = document.getElementById('row-fileSage');
-      if (rowSage && !rowSage.dataset.manuallyAdded) {
-        rowSage.style.display = esDocenteOCge ? 'flex' : 'none';
-      }
+      // 2. Excepción Universitaria / Facultades / Terciarios (tiene precedencia sobre CGE/Educación)
+      const esUniversidad =
+        dependencia.includes('facultad') ||
+        dependencia.includes('universidad') ||
+        dependencia.includes('uner') ||
+        dependencia.includes('uader') ||
+        dependencia.includes('utn') ||
+        dependencia.includes('terciario') ||
+        dependencia.includes('instituto superior') ||
+        dependencia.includes('ucp') ||
+        dependencia.includes('uca');
 
-      // 3. Contrato de Servicio: Personal contratado
+      // 3. Certificado SAGE: CGE / Educación / Docente / Profesor / Escuela / Colegio (EXCEPTO universitarios/terciarios)
+      const esDocenteOCge = !esUniversidad && (
+        dependencia.includes('cge') ||
+        dependencia.includes('educacion') ||
+        dependencia.includes('educac') ||
+        dependencia.includes('docente') ||
+        dependencia.includes('profesor') ||
+        dependencia.includes('escuela') ||
+        dependencia.includes('colegio') ||
+        dependencia.includes('primaria') ||
+        dependencia.includes('secundaria') ||
+        cargo.includes('docente')
+      );
+
+      actualizarEstadoFilaDocumental('row-fileSage', 'badge-fileSage', esDocenteOCge);
+      actualizarEstadoFilaDocumental('row-fileNotaUniversidad', 'badge-fileNotaUniversidad', esUniversidad);
+
+      // 4. Contrato de Servicio: Personal contratado
       const esContratado = condicion.includes('contrat') || cargo.includes('contrat');
       const rowContrato = document.getElementById('row-fileContrato');
       if (rowContrato && !rowContrato.dataset.manuallyAdded) {
         rowContrato.style.display = esContratado ? 'flex' : 'none';
       }
 
-      // 4. Nota de Servicio Oficial: Universidad / Facultad (UNER, UADER, UTN)
-      const esUniversidad = dependencia.includes('uner') || dependencia.includes('uader') || dependencia.includes('universidad') || dependencia.includes('facultad') || dependencia.includes('utn');
-      const rowNotaUni = document.getElementById('row-fileNotaUniversidad');
-      if (rowNotaUni && !rowNotaUni.dataset.manuallyAdded) {
-        rowNotaUni.style.display = esUniversidad ? 'flex' : 'none';
-      }
-
-      // 5. Tarjeta Sidecreer:
+      // 5. Tarjeta Sidecreer
       const esSidecreer = linea.includes('sidecreer');
       const rowSidecreer = document.getElementById('row-fileSidecreer');
       if (rowSidecreer && !rowSidecreer.dataset.manuallyAdded) {
@@ -6620,9 +6496,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
     function evaluarDocumentacionRequeridaAsociado() {
       const qrChecked = document.getElementById('chkAsocReciboTieneQR')?.checked ?? true;
-      const condicion = (document.getElementById('asocCondicion')?.value || '').toLowerCase();
-      const dependencia = (document.getElementById('asocDependencia')?.value || '').toLowerCase();
-      const cargo = (document.getElementById('asocCargo')?.value || '').toLowerCase();
+      const condicion = normalizarTextoAgenteDoc(document.getElementById('asocCondicion')?.value || '');
+      const dependencia = normalizarTextoAgenteDoc(document.getElementById('asocDependencia')?.value || '');
+      const cargo = normalizarTextoAgenteDoc(document.getElementById('asocCargo')?.value || '');
 
       const esSaludOHospital = dependencia.includes('salud') || dependencia.includes('hospital') || dependencia.includes('san martin');
       const esSuplente = cargo.includes('suplente');
@@ -6632,22 +6508,37 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         rowMov.style.display = necesitaMovBancarios ? 'flex' : 'none';
       }
 
-      const esDocenteOCge = dependencia.includes('cge') || dependencia.includes('educaci') || cargo.includes('docente') || dependencia.includes('escuela');
-      const rowSage = document.getElementById('row-asocFileSage');
-      if (rowSage && !rowSage.dataset.manuallyAdded) {
-        rowSage.style.display = esDocenteOCge ? 'flex' : 'none';
-      }
+      const esUniversidad =
+        dependencia.includes('facultad') ||
+        dependencia.includes('universidad') ||
+        dependencia.includes('uner') ||
+        dependencia.includes('uader') ||
+        dependencia.includes('utn') ||
+        dependencia.includes('terciario') ||
+        dependencia.includes('instituto superior') ||
+        dependencia.includes('ucp') ||
+        dependencia.includes('uca');
+
+      const esDocenteOCge = !esUniversidad && (
+        dependencia.includes('cge') ||
+        dependencia.includes('educacion') ||
+        dependencia.includes('educac') ||
+        dependencia.includes('docente') ||
+        dependencia.includes('profesor') ||
+        dependencia.includes('escuela') ||
+        dependencia.includes('colegio') ||
+        dependencia.includes('primaria') ||
+        dependencia.includes('secundaria') ||
+        cargo.includes('docente')
+      );
+
+      actualizarEstadoFilaDocumental('row-asocFileSage', 'badge-asocFileSage', esDocenteOCge);
+      actualizarEstadoFilaDocumental('row-asocFileNotaUniversidad', 'badge-asocFileNotaUniversidad', esUniversidad);
 
       const esContratado = condicion.includes('contrat') || cargo.includes('contrat');
       const rowContrato = document.getElementById('row-asocFileContrato');
       if (rowContrato && !rowContrato.dataset.manuallyAdded) {
         rowContrato.style.display = esContratado ? 'flex' : 'none';
-      }
-
-      const esUniversidad = dependencia.includes('uner') || dependencia.includes('uader') || dependencia.includes('universidad') || dependencia.includes('facultad') || dependencia.includes('utn');
-      const rowNotaUni = document.getElementById('row-asocFileNotaUniversidad');
-      if (rowNotaUni && !rowNotaUni.dataset.manuallyAdded) {
-        rowNotaUni.style.display = esUniversidad ? 'flex' : 'none';
       }
     }
 
@@ -6673,16 +6564,24 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
        ======================================================================== */
     let _activeFaqCategory = 'todas';
 
+    function normalizarTextoFaq(txt) {
+      return String(txt || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+    }
+
     function abrirModalFaqWiki() {
       const modal = document.getElementById('modalFaqWiki') || document.getElementById('modal-faq');
       if (modal) {
         modal.classList.add('open');
-        const inp = document.getElementById('faq-search-input') || document.getElementById('inpFaqSearch');
+        const inp = document.getElementById('input-buscar-faq') || document.getElementById('faq-search-input') || document.getElementById('inpFaqSearch');
         if (inp) {
           inp.value = '';
-          filtrarFaqWiki('');
-          setTimeout(() => inp.focus(), 150);
         }
+        filtrarCategoriaFaq('todas', document.querySelector('#faqPillsBar .wiki-pill-btn[data-cat="todas"]'));
+        if (inp) setTimeout(() => inp.focus(), 150);
       }
     }
 
@@ -6692,72 +6591,85 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     function limpiarBusquedaFaq() {
-      const inp = document.getElementById('faq-search-input') || document.getElementById('inpFaqSearch');
+      const inp = document.getElementById('input-buscar-faq') || document.getElementById('faq-search-input') || document.getElementById('inpFaqSearch');
       if (inp) {
         inp.value = '';
-        filtrarFaqWiki('');
+        filtrarFAQ(_activeFaqCategory);
         inp.focus();
       }
     }
 
     function filtrarCategoriaFaq(cat, btnEl) {
-      _activeFaqCategory = cat;
+      _activeFaqCategory = cat || 'todas';
       const pills = document.querySelectorAll('#faqPillsBar .wiki-pill-btn');
-      pills.forEach(p => p.classList.remove('active'));
+      pills.forEach(p => {
+        if (btnEl) {
+          p.classList.remove('active');
+        } else {
+          p.classList.toggle('active', (p.getAttribute('data-cat') || '') === _activeFaqCategory);
+        }
+      });
       if (btnEl) btnEl.classList.add('active');
-
-      const inp = document.getElementById('faq-search-input') || document.getElementById('inpFaqSearch');
-      const term = inp ? inp.value : '';
-      filtrarFaqWiki(term);
+      filtrarFAQ(_activeFaqCategory);
     }
 
-    function filtrarFaqWiki(keyword) {
-      const term = (keyword || '').toLowerCase().trim();
-      const clearBtn = document.getElementById('btnFaqClearSearch');
-      if (clearBtn) clearBtn.style.display = term ? 'inline-block' : 'none';
+    function filtrarFAQ(categoria = 'todas') {
+      const cat = categoria || 'todas';
+      _activeFaqCategory = cat;
 
-      const blocks = document.querySelectorAll('#modalFaqWiki .faq-category-block');
-      const emptyState = document.getElementById('faqNoResults');
-      const emptyMsg = document.getElementById('faqNoResultsMsg');
+      const pills = document.querySelectorAll('#faqPillsBar .wiki-pill-btn');
+      pills.forEach(p => p.classList.toggle('active', (p.getAttribute('data-cat') || '') === cat));
+
+      const inp = document.getElementById('input-buscar-faq') || document.getElementById('faq-search-input') || document.getElementById('inpFaqSearch');
+      const rawQuery = inp ? inp.value : '';
+      const query = normalizarTextoFaq(rawQuery);
+
+      const clearBtn = document.getElementById('btnFaqClearSearch');
+      if (clearBtn) clearBtn.style.display = query ? 'inline-block' : 'none';
+
+      const tarjetas = document.querySelectorAll('.faq-item');
       let totalVisible = 0;
 
-      blocks.forEach(block => {
-        const cat = block.getAttribute('data-category');
-        const matchesCategory = (_activeFaqCategory === 'todas' || _activeFaqCategory === cat);
+      tarjetas.forEach(card => {
+        const cardCat = (card.dataset && card.dataset.categoria) || card.getAttribute('data-categoria') || '';
+        const texto = normalizarTextoFaq(card.textContent || '');
 
-        if (!matchesCategory) {
+        const coincideCat = (cat === 'todas' || cardCat === cat);
+        const coincideTexto = (!query || texto.includes(query));
+
+        if (coincideCat && coincideTexto) {
+          card.classList.remove('hidden');
+          card.style.display = 'block';
+          card.open = Boolean(query);
+          totalVisible++;
+        } else {
+          card.classList.add('hidden');
+          card.style.display = 'none';
+          card.open = false;
+        }
+      });
+
+      const blocks = document.querySelectorAll('#modalFaqWiki .faq-category-block');
+      blocks.forEach(block => {
+        const blockCat = block.getAttribute('data-category') || '';
+        const matchesCat = (cat === 'todas' || blockCat === cat);
+        if (!matchesCat) {
           block.style.display = 'none';
           return;
         }
-
-        const items = block.querySelectorAll('.faq-item');
-        let blockMatches = 0;
-
-        items.forEach(item => {
-          const text = item.textContent.toLowerCase();
-          const matchesTerm = !term || text.includes(term);
-
-          if (matchesTerm) {
-            item.style.display = 'block';
-            blockMatches++;
-            totalVisible++;
-            item.open = Boolean(term);
-          } else {
-            item.style.display = 'none';
-            item.open = false;
-          }
-        });
-
-        block.style.display = (blockMatches > 0) ? '' : 'none';
+        const visibleInBlock = Array.from(block.querySelectorAll('.faq-item')).some(c => !c.classList.contains('hidden'));
+        block.style.display = visibleInBlock ? '' : 'none';
       });
 
+      const emptyState = document.getElementById('faqNoResults');
+      const emptyMsg = document.getElementById('faqNoResultsMsg');
       if (emptyState) {
         if (totalVisible === 0) {
           emptyState.style.display = 'flex';
           if (emptyMsg) {
-            emptyMsg.textContent = term ?
-              'No encontramos ninguna coincidencia para "' + keyword + '". Intenta con otra palabra clave o selecciona "Todas".' :
-              'No hay preguntas en esta categoría.';
+            emptyMsg.textContent = query
+              ? 'No encontramos ninguna coincidencia para "' + rawQuery + '". Intenta con otra palabra clave o selecciona "Todas las Guías".'
+              : 'No hay guías registradas en esta categoría.';
           }
         } else {
           emptyState.style.display = 'none';
@@ -6766,50 +6678,244 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       const countEl = document.getElementById('faqResultsCount');
       if (countEl) {
-        if (term) {
-          countEl.textContent = 'Mostrando ' + totalVisible + (totalVisible === 1 ? ' resultado' : ' resultados');
-        } else if (_activeFaqCategory !== 'todas') {
-          countEl.textContent = 'Mostrando ' + totalVisible + (totalVisible === 1 ? ' resultado' : ' resultados');
+        countEl.textContent = 'Mostrando ' + totalVisible + (totalVisible === 1 ? ' resultado' : ' resultados');
+      }
+    }
+
+    function filtrarFaqWiki(keyword) {
+      const inp = document.getElementById('input-buscar-faq') || document.getElementById('faq-search-input');
+      if (inp && typeof keyword === 'string' && inp.value !== keyword) {
+        inp.value = keyword;
+      }
+      filtrarFAQ(_activeFaqCategory);
+    }
+
+    window._bloqueoAntiguedadMinima = false;
+    window._bloqueoEdadMaxima = false;
+    window._antiguedadMesesActual = null;
+    window._edadActualSolicitante = null;
+
+    function sincronizarEstadoBotonSubmitAlta() {
+      const btn = document.getElementById('btnSubmitAlta');
+      if (!btn) return;
+      const bloqueado = Boolean(window._bloqueoAntiguedadMinima || window._bloqueoEdadMaxima);
+      btn.disabled = bloqueado;
+      if (bloqueado) {
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+      } else {
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+      }
+    }
+
+    function calcularEdadDesdeFecha(fechaNacStr) {
+      const clean = String(fechaNacStr || '').trim().slice(0, 10);
+      if (!clean || !/^\d{4}-\d{2}-\d{2}$/.test(clean)) return null;
+      const parts = clean.split('-').map(n => parseInt(n, 10));
+      const nac = new Date(parts[0], parts[1] - 1, parts[2]);
+      const hoy = new Date();
+      if (isNaN(nac.getTime()) || nac.getFullYear() !== parts[0] || (nac.getMonth() + 1) !== parts[1] || nac.getDate() !== parts[2] || nac > hoy) {
+        return null;
+      }
+      let edad = hoy.getFullYear() - nac.getFullYear();
+      const diffMes = hoy.getMonth() - nac.getMonth();
+      if (diffMes < 0 || (diffMes === 0 && hoy.getDate() < nac.getDate())) {
+        edad -= 1;
+      }
+      return Math.max(0, edad);
+    }
+
+    function recalcularValidacionesEdadYCuotas() {
+      const inpNac = document.getElementById('solicitud-fecha-nacimiento') || document.getElementById('solFechaNac');
+      const edadActual = calcularEdadDesdeFecha(inpNac ? inpNac.value : '');
+      window._edadActualSolicitante = edadActual;
+
+      const txtEdad = document.getElementById('texto-edad-actual');
+      const badgeEdad = document.getElementById('badge-edad-actual');
+      if (txtEdad) {
+        txtEdad.textContent = (edadActual !== null) ? (edadActual + ' AÑOS') : '-- AÑOS';
+      }
+      if (badgeEdad) {
+        if (edadActual !== null && edadActual >= 80) {
+          badgeEdad.style.borderColor = '#fecaca';
+          badgeEdad.style.background = '#fef2f2';
+          badgeEdad.style.color = '#991b1b';
+        } else if (edadActual !== null && edadActual >= 75) {
+          badgeEdad.style.borderColor = '#fde68a';
+          badgeEdad.style.background = '#fffbeb';
+          badgeEdad.style.color = '#92400e';
         } else {
-          countEl.textContent = 'Mostrando 34 resultados';
+          badgeEdad.style.borderColor = '#e2e8f0';
+          badgeEdad.style.background = '#f8fafc';
+          badgeEdad.style.color = '#334155';
         }
       }
+
+      const organismoVal = String(document.getElementById('solOrganismo')?.value || '').toLowerCase();
+      const esMunicipal = organismoVal.includes('municipal');
+      const catRaw = document.getElementById('solicitud-categoria-municipal')?.value;
+      const catNum = (esMunicipal && catRaw !== undefined && catRaw !== null && String(catRaw).trim() !== '')
+        ? parseInt(catRaw, 10)
+        : NaN;
+      const tieneCatValida = !isNaN(catNum) && catNum > 0;
+
+      const cboPlazo = document.getElementById('solPlazo');
+      let limitadoPorEdad = false;
+      let limitadoPorCat25 = false;
+      let opcionesHabilitadas = 0;
+
+      if (cboPlazo) {
+        const opts = Array.from(cboPlazo.options || []);
+        opts.forEach(opt => {
+          const n = parseInt(opt.value, 10);
+          if (isNaN(n)) return;
+          if (!opt.dataset.baseLabel) opt.dataset.baseLabel = opt.textContent;
+
+          let okEdad = true;
+          if (edadActual !== null) {
+            okEdad = (edadActual + (n / 12)) <= 80;
+            if (!okEdad) limitadoPorEdad = true;
+          }
+
+          let okCat = true;
+          if (tieneCatValida) {
+            if (catNum >= 25) {
+              okCat = (n === 12);
+              if (!okCat) limitadoPorCat25 = true;
+            } else {
+              okCat = (n === 12 || n === 24);
+            }
+          }
+
+          const habilitada = okEdad && okCat;
+          opt.disabled = !habilitada;
+          if (habilitada) {
+            opt.textContent = opt.dataset.baseLabel;
+            opcionesHabilitadas += 1;
+          } else {
+            opt.textContent = opt.dataset.baseLabel + ' (No habilitado)';
+          }
+        });
+
+        const selectedOpt = cboPlazo.options[cboPlazo.selectedIndex];
+        if (!selectedOpt || selectedOpt.disabled) {
+          const enabledOpts = Array.from(cboPlazo.options).filter(o => !o.disabled);
+          if (enabledOpts.length > 0) {
+            const pref12 = enabledOpts.find(o => o.value === '12');
+            cboPlazo.value = pref12 ? pref12.value : enabledOpts[enabledOpts.length - 1].value;
+          }
+        }
+      }
+
+      window._bloqueoEdadMaxima = Boolean(edadActual !== null && cboPlazo && opcionesHabilitadas === 0);
+
+      const alertaCuotasEl = document.getElementById('alerta-politica-cuotas');
+      if (alertaCuotasEl) {
+        const mensajes = [];
+        if (window._bloqueoEdadMaxima) {
+          mensajes.push('<div class="alert-policy-box alert-policy-red">⛔ La edad actual del solicitante (' + edadActual + ' años) supera el límite de política crediticia (80 años al finalizar el plan) para todos los plazos disponibles.</div>');
+        } else if (limitadoPorEdad) {
+          mensajes.push('<div class="alert-policy-box alert-policy-info">ℹ️ Plazo máximo acotado por política de edad (límite 80 años al finalizar el plan).</div>');
+        }
+        if (tieneCatValida && catNum >= 25) {
+          mensajes.push('<div class="alert-policy-box alert-policy-amber">ℹ️ Por Categoría Municipal 25 o superior, el plazo máximo autorizado es de hasta 12 cuotas.</div>');
+        } else if (tieneCatValida && catNum <= 24 && !limitadoPorCat25) {
+          mensajes.push('<div class="alert-policy-box alert-policy-info">ℹ️ Por Categoría Municipal ' + catNum + ' (≤ 24), se habilitan planes de 12 y 24 cuotas (sujeto a límite de edad).</div>');
+        }
+        if (mensajes.length > 0) {
+          alertaCuotasEl.innerHTML = mensajes.join('');
+          alertaCuotasEl.style.display = 'block';
+        } else {
+          alertaCuotasEl.innerHTML = '';
+          alertaCuotasEl.style.display = 'none';
+        }
+      }
+
+      actualizarResumenCuotaAlta();
+      sincronizarEstadoBotonSubmitAlta();
     }
 
     function calcularAntiguedadReactiva(fechaStr, targetTextId = 'texto-antiguedad', targetHiddenId = 'solicitud-antiguedad-formateada') {
       const txtEl = document.getElementById(targetTextId);
       const hidEl = document.getElementById(targetHiddenId);
+      const esSolicitudModal = (targetTextId === 'texto-antiguedad');
+      const alertaEl = esSolicitudModal ? document.getElementById('alerta-antiguedad-minima') : null;
       const clean = String(fechaStr || '').trim().slice(0, 10);
+
       if (!clean || !/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
         if (txtEl) txtEl.textContent = '-- AÑOS - -- MESES';
         if (hidEl) hidEl.value = '';
+        if (esSolicitudModal) {
+          window._antiguedadMesesActual = null;
+          window._bloqueoAntiguedadMinima = false;
+          if (alertaEl) { alertaEl.style.display = 'none'; alertaEl.innerHTML = ''; }
+          sincronizarEstadoBotonSubmitAlta();
+        }
         return '';
       }
       const parts = clean.split('-').map(n => parseInt(n, 10));
       const ingreso = new Date(parts[0], parts[1] - 1, parts[2]);
       const hoy = new Date();
-      if (isNaN(ingreso.getTime()) || ingreso > hoy) {
-        const ceroTxt = '0 AÑOS - 0 MESES';
-        if (txtEl) txtEl.textContent = (ingreso > hoy) ? ceroTxt : '-- AÑOS - -- MESES';
-        if (hidEl) hidEl.value = (ingreso > hoy) ? ceroTxt : '';
-        return (ingreso > hoy) ? ceroTxt : '';
+      if (isNaN(ingreso.getTime())) {
+        if (txtEl) txtEl.textContent = '-- AÑOS - -- MESES';
+        if (hidEl) hidEl.value = '';
+        if (esSolicitudModal) {
+          window._antiguedadMesesActual = null;
+          window._bloqueoAntiguedadMinima = false;
+          if (alertaEl) { alertaEl.style.display = 'none'; alertaEl.innerHTML = ''; }
+          sincronizarEstadoBotonSubmitAlta();
+        }
+        return '';
       }
-      let anios = hoy.getFullYear() - ingreso.getFullYear();
-      let meses = hoy.getMonth() - ingreso.getMonth();
-      if (hoy.getDate() < ingreso.getDate()) {
-        meses -= 1;
+
+      let anios = 0;
+      let meses = 0;
+      if (ingreso <= hoy) {
+        anios = hoy.getFullYear() - ingreso.getFullYear();
+        meses = hoy.getMonth() - ingreso.getMonth();
+        if (hoy.getDate() < ingreso.getDate()) {
+          meses -= 1;
+        }
+        if (meses < 0) {
+          anios -= 1;
+          meses += 12;
+        }
+        if (anios < 0) {
+          anios = 0;
+          meses = 0;
+        }
       }
-      if (meses < 0) {
-        anios -= 1;
-        meses += 12;
-      }
-      if (anios < 0) {
-        anios = 0;
-        meses = 0;
-      }
+
       const formateado = anios + ' AÑOS - ' + meses + ' MESES';
       if (txtEl) txtEl.textContent = formateado;
       if (hidEl) hidEl.value = formateado;
+
+      if (esSolicitudModal) {
+        const totalMeses = (anios * 12) + meses;
+        window._antiguedadMesesActual = totalMeses;
+        if (totalMeses < 10) {
+          window._bloqueoAntiguedadMinima = true;
+          if (alertaEl) {
+            alertaEl.innerHTML = '<div class="alert-policy-box alert-policy-red">⛔ El solicitante no cumple con la antigüedad laboral mínima requerida (mínimo 10 meses). No está habilitado para solicitar una ayuda económica.</div>';
+            alertaEl.style.display = 'block';
+          }
+        } else if (totalMeses <= 11) {
+          window._bloqueoAntiguedadMinima = false;
+          if (alertaEl) {
+            alertaEl.innerHTML = '<div class="alert-policy-box alert-policy-amber">⚠️ Antigüedad entre 10 y 11 meses: Requiere análisis especial de riesgo crediticio por Sede Central.</div>';
+            alertaEl.style.display = 'block';
+          }
+        } else {
+          window._bloqueoAntiguedadMinima = false;
+          if (alertaEl) {
+            alertaEl.innerHTML = '<div class="alert-policy-box alert-policy-green">✓ Cumple con el requisito de antigüedad mínima.</div>';
+            alertaEl.style.display = 'block';
+          }
+        }
+        sincronizarEstadoBotonSubmitAlta();
+      }
+
       return formateado;
     }
 
@@ -7320,6 +7426,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           organismo: laborales.organismo || s.organismo || 'Provincial',
           dependencia: laborales.dependencia || s.dependencia || '',
           cargo: laborales.cargo || s.cargo || '',
+          categoriaMunicipal: String(laborales.categoriaMunicipal || laborales.Categoria_Municipal || s.categoriaMunicipal || s.Categoria_Municipal || ''),
           situacionRevista: (laborales.situacionRevista !== undefined ? laborales.situacionRevista : (s.situacionRevista !== undefined ? s.situacionRevista : '')),
           fechaIngresoLaboral: fechaIngresoLabNorm,
           Fecha_Ingreso_Laboral: fechaIngresoLabNorm,
@@ -7333,6 +7440,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         if (!s.solicitante.sexo && (contacto.sexo || s.sexo)) s.solicitante.sexo = contacto.sexo || s.sexo;
         if (!s.solicitante.estadoCivil && (contacto.estadoCivil || s.estadoCivil)) s.solicitante.estadoCivil = contacto.estadoCivil || s.estadoCivil;
         if (!s.solicitante.cargo && (laborales.cargo || s.cargo)) s.solicitante.cargo = laborales.cargo || s.cargo;
+        if (!s.solicitante.categoriaMunicipal && (laborales.categoriaMunicipal || laborales.Categoria_Municipal || s.categoriaMunicipal || s.Categoria_Municipal)) {
+          s.solicitante.categoriaMunicipal = String(laborales.categoriaMunicipal || laborales.Categoria_Municipal || s.categoriaMunicipal || s.Categoria_Municipal);
+        }
         if (s.solicitante.situacionRevista === undefined) s.solicitante.situacionRevista = (laborales.situacionRevista !== undefined ? laborales.situacionRevista : (s.situacionRevista !== undefined ? s.situacionRevista : ''));
         if (!s.solicitante.fechaIngresoLaboral && fechaIngresoLabNorm) s.solicitante.fechaIngresoLaboral = fechaIngresoLabNorm;
         if (!s.solicitante.Fecha_Ingreso_Laboral && (s.solicitante.fechaIngresoLaboral || fechaIngresoLabNorm)) s.solicitante.Fecha_Ingreso_Laboral = s.solicitante.fechaIngresoLaboral || fechaIngresoLabNorm;
@@ -7355,6 +7465,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         dependencia: s.solicitante.dependencia || '',
         cargo: s.solicitante.cargo || '',
         legajo: s.solicitante.legajo || '',
+        categoriaMunicipal: s.solicitante.categoriaMunicipal || '',
         situacionRevista: s.solicitante.situacionRevista !== undefined ? s.solicitante.situacionRevista : '',
         fechaIngresoLaboral: s.solicitante.fechaIngresoLaboral || fechaIngresoLabNorm || '',
         Fecha_Ingreso_Laboral: s.solicitante.fechaIngresoLaboral || fechaIngresoLabNorm || '',
@@ -7894,9 +8005,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const alertaDocHtml = cantObsDocs > 0
           ? '<div style="font-size:0.65rem;color:#b45309;font-weight:700;margin-top:2px;">⚠️ ' + cantObsDocs + ' alerta doc.</div>'
           : '';
-        const driveLinkHtml = s.carpetaDriveUrl
-          ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="badge-drive-mini" title="Abrir carpeta del expediente en Google Drive" onclick="event.stopPropagation()">📁 Drive (' + (s.adjuntos ? s.adjuntos.length : 0) + ')</a>'
-          : '<span style="font-size:0.66rem;color:var(--text-muted);">📎 ' + (s.adjuntos ? s.adjuntos.length : 0) + ' docs</span>';
+        const puedeVerDrive = esUsuarioMutualConAccesoDrive(session);
+        const driveLinkHtml = puedeVerDrive
+          ? (s.carpetaDriveUrl
+              ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="badge-drive-mini" title="Abrir carpeta del expediente en Google Drive" onclick="event.stopPropagation()">📁 Drive (' + (s.adjuntos ? s.adjuntos.length : 0) + ')</a>'
+              : '<span style="font-size:0.66rem;color:var(--text-muted);">📎 ' + (s.adjuntos ? s.adjuntos.length : 0) + ' docs</span>')
+          : '';
 
         return '<tr>' +
           '<td>' + idBadge + '</td>' +
@@ -7920,6 +8034,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     function abrirModalAltaSolicitud(origen = 'comercializador') {
       window._origenModalAlta = origen;
       document.getElementById('formAltaSolicitud')?.reset();
+      window._bloqueoAntiguedadMinima = false;
+      window._bloqueoEdadMaxima = false;
       calcularAntiguedadReactiva('');
 
       // Sincronizar con el simulador activo para no perder el Plan Deseado ni el Monto simulado
@@ -7950,7 +8066,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       handleOrganismoChange('Provincial', 'solLegajo');
       resetDocumentRows('formAltaSolicitud');
-      actualizarResumenCuotaAlta();
+      recalcularValidacionesEdadYCuotas();
       const b = document.getElementById('badgePadronDni'); if (b) b.style.display = 'none';
       const session = getSession();
       const isAnalistaOAdmin = (session && (session.rol === 'Analista' || session.rol === 'Admin'));
@@ -7972,6 +8088,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const cbo = document.getElementById('solPlazo'); if (!cbo) return;
       cbo.innerHTML = (linea === 'muni') ? '<option value="12" selected>12 cuotas</option><option value="24">24 cuotas</option>' :
         '<option value="6">6 cuotas</option><option value="12" selected>12 cuotas</option><option value="18">18 cuotas</option><option value="24">24 cuotas</option><option value="36">36 cuotas</option><option value="48">48 cuotas</option>';
+      if (typeof recalcularValidacionesEdadYCuotas === 'function') {
+        recalcularValidacionesEdadYCuotas();
+      }
     }
 
     function obtenerValorInput(listaIds, valorDefault = '') {
@@ -8048,11 +8167,22 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const cuilVal = obtenerValorInput(['solCuil', 'solicitud-cuil', 'solicitud_cuil', 'cuil'], '');
 
       const legajoVal = obtenerValorInput(['solLegajo', 'solicitud-legajo', 'solicitud_legajo', 'legajo'], '');
-      const fechaNacVal = obtenerValorInput(['solFechaNac', 'solicitud-fecha-nacimiento', 'fecha_nacimiento', 'solicitud-fecha-nac', 'fecha_nac'], '');
+      const categoriaMunicipalVal = obtenerValorInput(['solicitud-categoria-municipal', 'solCategoriaMunicipal', 'categoriaMunicipal'], '');
+      const fechaNacVal = obtenerValorInput(['solicitud-fecha-nacimiento', 'solFechaNac', 'fecha_nacimiento', 'solicitud-fecha-nac', 'fecha_nac'], '');
       const sexoVal = obtenerValorInput(['solSexo', 'solicitud-sexo', 'sexo'], '');
       const estadoCivilVal = obtenerValorInput(['solEstadoCivil', 'solicitud-estado-civil', 'estado_civil', 'estadoCivil'], '');
       const condicionVal = obtenerValorInput(['solCondicion', 'solicitud-condicion', 'condicion'], 'Activo');
       const organismoVal = obtenerValorInput(['solOrganismo', 'solicitud-organismo', 'organismo'], 'Provincial');
+      if (String(organismoVal).toLowerCase().includes('municipal')) {
+        if (!legajoVal) {
+          showToast('⚠️ Error: Ingrese el Legajo Municipal del solicitante.');
+          return;
+        }
+        if (!categoriaMunicipalVal) {
+          showToast('⚠️ Error: Ingrese la Categoría Municipal del solicitante.');
+          return;
+        }
+      }
       const dependenciaVal = obtenerValorInput(['solDependencia', 'solicitud-dependencia', 'dependencia'], '');
       const cargoVal = obtenerValorInput(['solicitud-cargo', 'solCargo', 'cargo'], '');
       if (!cargoVal) {
@@ -8065,6 +8195,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         ? calcularAntiguedadReactiva(fechaIngresoVal)
         : obtenerValorInput(['solicitud-antiguedad-formateada', 'solAntiguedad', 'solicitud-antiguedad', 'antiguedad'], '');
 
+      if (window._bloqueoAntiguedadMinima) {
+        showToast('⛔ El solicitante no cumple con la antigüedad laboral mínima requerida (10 meses).');
+        return;
+      }
+
       const lineaRaw = obtenerValorInput(['solLinea', 'solicitud-linea', 'linea_ayuda', 'simulador-linea', 'linea'], (typeof state !== 'undefined' && state.linea) ? state.linea : 'fedem');
       const lineaLow = lineaRaw.toLowerCase();
       const lineaKey = (lineaLow.includes('muni') || lineaLow.includes('quad') || lineaLow.includes('vikingo')) ? 'muni' :
@@ -8072,6 +8207,23 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const lineaNombre = (FINANCIAL_DATA[lineaKey] && FINANCIAL_DATA[lineaKey].name) || 'FEDEM Provincial';
 
       const cuotas = parseInt(obtenerValorInput(['solPlazo', 'solicitud-cuotas', 'cuotas', 'sim-cuotas', 'termSelect'], String((typeof state !== 'undefined' && state.plazo) ? state.plazo : 12)), 10) || 12;
+
+      const edadSubmit = calcularEdadDesdeFecha(fechaNacVal);
+      if (edadSubmit !== null && (edadSubmit + (cuotas / 12)) > 80) {
+        showToast('⛔ La edad del solicitante (' + edadSubmit + ' años) más el plazo (' + cuotas + ' cuotas) supera el límite de 80 años al finalizar el plan.');
+        return;
+      }
+      if (String(organismoVal).toLowerCase().includes('municipal') && categoriaMunicipalVal) {
+        const catNumSubmit = parseInt(categoriaMunicipalVal, 10);
+        if (!isNaN(catNumSubmit) && catNumSubmit >= 25 && cuotas > 12) {
+          showToast('⛔ Por Categoría Municipal ' + catNumSubmit + ' (≥ 25), el plazo máximo autorizado es de 12 cuotas.');
+          return;
+        }
+        if (!isNaN(catNumSubmit) && catNumSubmit <= 24 && cuotas > 24) {
+          showToast('⛔ Por Categoría Municipal ' + catNumSubmit + ' (≤ 24), el plazo máximo autorizado es de 24 cuotas.');
+          return;
+        }
+      }
 
       let monto = parsearNumeroTolerante(obtenerValorInput(['solMonto', 'solicitud-monto', 'monto_solicitado', 'sim-monto-neto'], '0'), 0);
       if (monto <= 0) {
@@ -8259,7 +8411,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         fechaIngresoLaboral: sanitizeHTML(fechaIngresoVal),
         Fecha_Ingreso_Laboral: sanitizeHTML(fechaIngresoVal),
         antiguedad: sanitizeHTML(antiguedadVal),
-        legajo: sanitizeHTML(legajoVal)
+        legajo: sanitizeHTML(legajoVal),
+        categoriaMunicipal: sanitizeHTML(categoriaMunicipalVal)
       };
 
       const nueva = {
@@ -8300,6 +8453,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         Fecha_Ingreso_Laboral: sanitizeHTML(fechaIngresoVal),
         antiguedad: sanitizeHTML(antiguedadVal),
         legajo: sanitizeHTML(legajoVal),
+        categoriaMunicipal: sanitizeHTML(categoriaMunicipalVal),
         cuil: sanitizeHTML(cuilVal),
         fechaNac: sanitizeHTML(fechaNacVal),
         fechaNacimiento: sanitizeHTML(fechaNacVal),
@@ -8313,6 +8467,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           dni: sanitizeHTML(dniVal),
           cuil: sanitizeHTML(cuilVal),
           legajo: sanitizeHTML(legajoVal),
+          categoriaMunicipal: sanitizeHTML(categoriaMunicipalVal),
           nombre: finalNombre,
           fechaNac: sanitizeHTML(fechaNacVal),
           fechaNacimiento: sanitizeHTML(fechaNacVal),
@@ -8426,6 +8581,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         cuil: cuilVal,
         Legajo: legajoVal,
         legajo: legajoVal,
+        Categoria_Municipal: categoriaMunicipalVal,
+        categoriaMunicipal: categoriaMunicipalVal,
         Fecha_Nac: fechaNacVal,
         Fecha_Nacimiento: fechaNacVal,
         fechaNac: fechaNacVal,
@@ -9074,7 +9231,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#135596" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>' +
             '<span>Documentación Complementaria del Legajo</span>' +
           '</div>' +
-          (s.carpetaDriveUrl ?
+          (s.carpetaDriveUrl && esUsuarioMutualConAccesoDrive(session) ?
             '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="btn-doc-attach">📁 Abrir Carpeta Drive</a>' : '') +
         '</div>' +
         '<div style="display:grid;grid-template-columns:minmax(200px,1fr) minmax(240px,1.5fr);gap:0.65rem;align-items:center;">' +
@@ -10633,7 +10790,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const alertaDocHtml = cantObsDocs > 0
           ? '<div style="font-size:0.65rem;color:#b45309;font-weight:700;margin-top:2px;">⚠️ ' + cantObsDocs + ' alerta doc.</div>'
           : '';
-        const driveLinkHtml = s.carpetaDriveUrl
+        const driveLinkHtml = (s.carpetaDriveUrl && esUsuarioMutualConAccesoDrive())
           ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="badge-drive-mini" title="Abrir carpeta del expediente en Google Drive" onclick="event.stopPropagation()">📁 Drive (' + (s.adjuntos ? s.adjuntos.length : 0) + ')</a>'
           : '<span style="font-size:0.66rem;color:var(--text-muted);">📎 ' + (s.adjuntos ? s.adjuntos.length : 0) + ' docs</span>';
 
@@ -10757,7 +10914,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const alertaDocHtml = cantObsDocs > 0
           ? '<div style="font-size:0.65rem;color:#b45309;font-weight:700;margin-top:2px;">⚠️ ' + cantObsDocs + ' alerta doc.</div>'
           : '';
-        const driveLinkHtml = s.carpetaDriveUrl
+        const driveLinkHtml = (s.carpetaDriveUrl && esUsuarioMutualConAccesoDrive())
           ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="badge-drive-mini" title="Abrir carpeta del expediente en Google Drive" onclick="event.stopPropagation()">📁 Drive (' + (s.adjuntos ? s.adjuntos.length : 0) + ')</a>'
           : '<span style="font-size:0.66rem;color:var(--text-muted);">📎 ' + (s.adjuntos ? s.adjuntos.length : 0) + ' docs</span>';
 
@@ -10891,7 +11048,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           const domHistTxt = sanitizeHTML(s.domicilio_historico || s.solicitante?.domicilio || 'Sin domicilio declarado');
           const cantObsDocs = (s.adjuntos || []).filter(a => a && a.observado).length +
             (s.requerimientosDocumentales || []).filter(r => r && !r.resuelto).length;
-          const driveBtn = s.carpetaDriveUrl
+          const driveBtn = (s.carpetaDriveUrl && esUsuarioMutualConAccesoDrive())
             ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="badge-drive-mini" onclick="event.stopPropagation()">📁 Drive (' + (s.adjuntos ? s.adjuntos.length : 0) + ')</a>'
             : '<span style="font-size:0.64rem;color:var(--text-muted);">📎 ' + (s.adjuntos ? s.adjuntos.length : 0) + ' docs</span>';
 
@@ -12674,6 +12831,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.cerrarModalFaqWiki = cerrarModalFaqWiki;
     window.abrirModalFaq = abrirModalFaqWiki;
     window.cerrarModalFaq = cerrarModalFaqWiki;
+    window.filtrarFAQ = filtrarFAQ;
     window.filtrarFaqWiki = filtrarFaqWiki;
     window.limpiarBusquedaFaq = limpiarBusquedaFaq;
     window.filtrarCategoriaFaq = filtrarCategoriaFaq;
@@ -12708,6 +12866,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.actualizarVistaDetalleExpediente = actualizarVistaDetalleExpediente;
     window.handleArchivoComplementarioSeleccionado = handleArchivoComplementarioSeleccionado;
     window.calcularAntiguedadReactiva = calcularAntiguedadReactiva;
+    window.calcularEdadDesdeFecha = calcularEdadDesdeFecha;
+    window.recalcularValidacionesEdadYCuotas = recalcularValidacionesEdadYCuotas;
+    window.sincronizarEstadoBotonSubmitAlta = sincronizarEstadoBotonSubmitAlta;
+    window.esUsuarioMutualConAccesoDrive = esUsuarioMutualConAccesoDrive;
     window.estadoApp = window.estadoApp;
 
     window.addEventListener('DOMContentLoaded', () => {

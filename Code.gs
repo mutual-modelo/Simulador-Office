@@ -1717,13 +1717,11 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
   const sueldoLiquido = toNumOrNull(sal.sueldoLiquido);
 
   const lecturaSalarialPrincipalOk = (sueldoBruto !== null || sueldoLiquido !== null || totalDescuentosRecibo !== null);
-  if (lecturaSalarialPrincipalOk) {
-    if (consumosBersa === null) consumosBersa = 0;
-    if (consumosSidecreer === null) consumosSidecreer = 0;
-    if (otrasMutuales === null) otrasMutuales = 0;
-    if (codigosFedemMonto === null) codigosFedemMonto = 0;
-    if (embargoMonto === null) embargoMonto = 0;
-  }
+  if (consumosBersa === null) consumosBersa = 0;
+  if (consumosSidecreer === null) consumosSidecreer = 0;
+  if (otrasMutuales === null) otrasMutuales = 0;
+  if (codigosFedemMonto === null) codigosFedemMonto = 0;
+  if (embargoMonto === null) embargoMonto = 0;
 
   if (totalDescuentosRecibo === null && sueldoBruto !== null && sueldoLiquido !== null && sueldoBruto >= sueldoLiquido) {
     totalDescuentosRecibo = round2Audit_(sueldoBruto - sueldoLiquido);
@@ -2020,20 +2018,24 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
 }
 
 function limpiarYParsearJSONAuditoria_(rawText) {
+  if (!rawText) return null;
   if (typeof rawText === 'object' && rawText !== null) return rawText;
+  let str = String(rawText).replace(/```json/gi, '').replace(/```/g, '').trim();
+  const primerBrk = str.indexOf('{');
+  const ultimoBrk = str.lastIndexOf('}');
+  if (primerBrk !== -1 && ultimoBrk !== -1 && ultimoBrk >= primerBrk) {
+    str = str.substring(primerBrk, ultimoBrk + 1);
+  }
   try {
-    return JSON.parse(rawText);
+    return JSON.parse(str);
   } catch (e1) {
     try {
-      const texto = String(rawText || '').replace(/```json/gi, '').replace(/```/g, '').trim();
-      const primerBrk = texto.indexOf('{');
-      const ultimoBrk = texto.lastIndexOf('}');
-      if (primerBrk !== -1 && ultimoBrk !== -1 && ultimoBrk >= primerBrk) {
-        return JSON.parse(texto.substring(primerBrk, ultimoBrk + 1));
-      }
-    } catch (_) {}
+      const sanitizado = str.replace(/[\r\n\t]/g, ' ');
+      return JSON.parse(sanitizado);
+    } catch (_) {
+      return null;
+    }
   }
-  throw new Error('No se pudo interpretar la respuesta JSON del motor documental.');
 }
 
 function auditarLegajoConIA(payload) {
@@ -2042,8 +2044,10 @@ function auditarLegajoConIA(payload) {
 
   if (resultadoEntrante) {
     const parsedEntrante = (typeof resultadoEntrante === 'string') ? limpiarYParsearJSONAuditoria_(resultadoEntrante) : resultadoEntrante;
-    persistirDictamenAuditoriaEnHoja_(dataIn.idSolicitud, parsedEntrante);
-    return { ok: true, success: true, auditoria: parsedEntrante, resultado: parsedEntrante };
+    if (parsedEntrante) {
+      persistirDictamenAuditoriaEnHoja_(dataIn.idSolicitud, parsedEntrante);
+      return { ok: true, success: true, auditoria: parsedEntrante, resultado: parsedEntrante };
+    }
   }
 
   let archivos = Array.isArray(dataIn.archivos) ? dataIn.archivos.filter(function(a) { return a && a.base64; }) : [];

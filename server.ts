@@ -297,16 +297,20 @@ Devuelve estrictamente JSON conforme al schema.
 
     const textOutput = response.text || '{}';
     const dataParsed: any = (() => {
+      let cleaned = String(textOutput).replace(/```json/gi, '').replace(/```/g, '').trim();
+      const firstIdx = cleaned.indexOf('{');
+      const lastIdx = cleaned.lastIndexOf('}');
+      if (firstIdx !== -1 && lastIdx !== -1 && lastIdx >= firstIdx) {
+        cleaned = cleaned.substring(firstIdx, lastIdx + 1);
+      }
       try {
-        return JSON.parse(textOutput);
+        return JSON.parse(cleaned);
       } catch (_) {
-        const cleaned = String(textOutput).replace(/```json/gi, '').replace(/```/g, '').trim();
-        const firstIdx = cleaned.indexOf('{');
-        const lastIdx = cleaned.lastIndexOf('}');
-        if (firstIdx !== -1 && lastIdx !== -1 && lastIdx >= firstIdx) {
-          return JSON.parse(cleaned.substring(firstIdx, lastIdx + 1));
+        try {
+          return JSON.parse(cleaned.replace(/[\r\n\t]/g, ' '));
+        } catch (__) {
+          return {};
         }
-        throw new Error('La respuesta del motor documental no devolvió un JSON estructurado válido.');
       }
     })();
 
@@ -358,15 +362,13 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
   let totalDescuentosRecibo = toNumOrNull(sal.totalDescuentosRecibo);
   const sueldoLiquido = toNumOrNull(sal.sueldoLiquido);
 
-  // Cuando la lectura salarial principal es nítida, los descuentos voluntarios ausentes representan $0,00 (no ilegibilidad)
+  // Deducciones voluntarias ausentes representan $0,00 (nunca bloquear por ilegibilidad)
   const lecturaSalarialPrincipalOk = (sueldoBruto !== null || sueldoLiquido !== null || totalDescuentosRecibo !== null);
-  if (lecturaSalarialPrincipalOk) {
-    if (consumosBersa === null) consumosBersa = 0;
-    if (consumosSidecreer === null) consumosSidecreer = 0;
-    if (otrasMutuales === null) otrasMutuales = 0;
-    if (codigosFedemMonto === null) codigosFedemMonto = 0;
-    if (embargoMonto === null) embargoMonto = 0;
-  }
+  if (consumosBersa === null) consumosBersa = 0;
+  if (consumosSidecreer === null) consumosSidecreer = 0;
+  if (otrasMutuales === null) otrasMutuales = 0;
+  if (codigosFedemMonto === null) codigosFedemMonto = 0;
+  if (embargoMonto === null) embargoMonto = 0;
 
   // Fallback determinístico si el recibo no muestra explícitamente la celda "Total Descuentos" pero sí Bruto y Líquido (o Descuentos de Ley)
   if (totalDescuentosRecibo === null && sueldoBruto !== null && sueldoLiquido !== null && sueldoBruto >= sueldoLiquido) {

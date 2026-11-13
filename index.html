@@ -2505,6 +2505,75 @@
       color: #0c3966;
       border-color: #135596;
     }
+    .doc-frente-dorso-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      width: 100%;
+      margin-top: 0.55rem;
+      padding: 0.72rem 0.95rem;
+      background: linear-gradient(135deg, #0f2744 0%, #1d4ed8 58%, #0284c7 100%);
+      color: #ffffff;
+      border: 1px solid #1e40af;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 14px rgba(29, 78, 216, 0.22);
+      cursor: pointer;
+      text-align: left;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+    }
+    .doc-frente-dorso-banner:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 7px 18px rgba(29, 78, 216, 0.32);
+      filter: brightness(1.04);
+    }
+    .doc-frente-dorso-banner-left {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      min-width: 0;
+      flex: 1 1 220px;
+    }
+    .doc-frente-dorso-banner-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      font-size: 1.05rem;
+      flex-shrink: 0;
+    }
+    .doc-frente-dorso-banner-title {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.25;
+      letter-spacing: 0.01em;
+    }
+    .doc-frente-dorso-banner-sub {
+      font-size: 0.68rem;
+      color: #dbeafe;
+      line-height: 1.25;
+      margin-top: 2px;
+    }
+    .doc-frente-dorso-banner-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.42rem 0.85rem;
+      background: #ffffff;
+      color: #1e3a8a;
+      border-radius: 8px;
+      font-size: 0.73rem;
+      font-weight: 800;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.14);
+      flex-shrink: 0;
+    }
     .doc-complementaria-card {
       background: #f8fafc;
       border: 1px solid #dbeafe;
@@ -3907,37 +3976,46 @@
             <!-- FILAS DOCUMENTALES DINÁMICAS -->
             <div class="document-rows-container">
               <!-- DNI - INICIALMENTE VISIBLE -->
-              <div class="document-row-card" id="row-asocFileDni">
-                <div class="doc-row-left">
-                  <div class="doc-row-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="10" r="2"/><line x1="15" y1="9" x2="19" y2="9"/><line x1="15" y1="13" x2="19" y2="13"/>
-                    </svg>
-                  </div>
-                  <div class="doc-row-info">
-                    <div class="doc-row-header-line">
-                      <span class="doc-row-title">DNI (FRENTE Y DORSO)</span>
-                      <span class="doc-row-badge badge-pendiente" id="badge-asocFileDni">Pendiente</span>
+              <div class="document-row-card" id="row-asocFileDni" style="flex-direction:column;align-items:stretch;">
+                <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:0.75rem;flex-wrap:wrap;">
+                  <div class="doc-row-left">
+                    <div class="doc-row-icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="10" r="2"/><line x1="15" y1="9" x2="19" y2="9"/><line x1="15" y1="13" x2="19" y2="13"/>
+                      </svg>
                     </div>
-                    <div class="doc-row-subtitle" id="sub-asocFileDni">Formatos admitidos: PDF, JPG, PNG, WEBP</div>
+                    <div class="doc-row-info">
+                      <div class="doc-row-header-line">
+                        <span class="doc-row-title">DNI (FRENTE Y DORSO)</span>
+                        <span class="doc-row-badge badge-pendiente" id="badge-asocFileDni">Pendiente</span>
+                      </div>
+                      <div class="doc-row-subtitle" id="sub-asocFileDni">Formatos admitidos: PDF, JPG, PNG, WEBP</div>
+                    </div>
+                  </div>
+                  <div class="doc-row-actions">
+                    <input type="file" id="asocFileDni" class="doc-row-native-input" accept="image/*,application/pdf" multiple onchange="handleDocRowFileChange(this, 'asocFileDni', 'opcional')"/>
+                    <button type="button" class="btn-doc-attach" onclick="document.getElementById('asocFileDni').click()">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                      <span id="btnLbl-asocFileDni">Adjuntar</span>
+                    </button>
+                    <button type="button" class="btn-doc-action btn-doc-preview" id="prev-asocFileDni" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('asocFileDni')">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <button type="button" class="btn-doc-action btn-doc-delete" id="del-asocFileDni" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('asocFileDni', 'opcional')">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
                   </div>
                 </div>
-                <div class="doc-row-actions">
-                  <input type="file" id="asocFileDni" class="doc-row-native-input" accept="image/*,application/pdf" multiple onchange="handleDocRowFileChange(this, 'asocFileDni', 'opcional')"/>
-                  <button type="button" class="btn-doc-attach" style="background:#eff6ff;border-color:#93c5fd;" onclick="abrirAsistenteFrenteDorso('asocFileDni', 'DNI COMPLETO', 'row')" title="Unificar 2 fotos (Frente y Dorso) en un único PDF A4">
-                    🪪 Unificar 2 Fotos
-                  </button>
-                  <button type="button" class="btn-doc-attach" onclick="document.getElementById('asocFileDni').click()">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                    <span id="btnLbl-asocFileDni">Adjuntar</span>
-                  </button>
-                  <button type="button" class="btn-doc-action btn-doc-preview" id="prev-asocFileDni" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('asocFileDni')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  </button>
-                  <button type="button" class="btn-doc-action btn-doc-delete" id="del-asocFileDni" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('asocFileDni', 'opcional')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                  </button>
-                </div>
+                <button type="button" class="doc-frente-dorso-banner" onclick="abrirAsistenteFrenteDorso('asocFileDni', 'DNI COMPLETO', 'row')" title="Unificar 2 fotos (Frente y Dorso) en un único PDF A4">
+                  <span class="doc-frente-dorso-banner-left">
+                    <span class="doc-frente-dorso-banner-icon">🪪</span>
+                    <span>
+                      <div class="doc-frente-dorso-banner-title">Unificar Frente y Dorso de DNI en 1 PDF A4</div>
+                      <div class="doc-frente-dorso-banner-sub">¿Tenés las dos fotos por separado? Combinalas automáticamente en una sola hoja A4 oficial.</div>
+                    </span>
+                  </span>
+                  <span class="doc-frente-dorso-banner-cta">✨ Unificar 2 Fotos →</span>
+                </button>
               </div>
 
               <!-- RECIBO DE SUELDO - INICIALMENTE VISIBLE (CON TOGGLE QR) -->
@@ -4572,37 +4650,46 @@
             <div class="document-rows-container">
               
               <!-- 1. DNI (FRENTE Y DORSO) - INICIALMENTE VISIBLE -->
-              <div class="document-row-card" id="row-fileDni">
-                <div class="doc-row-left">
-                  <div class="doc-row-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="10" r="2"/><line x1="15" y1="9" x2="19" y2="9"/><line x1="15" y1="13" x2="19" y2="13"/>
-                    </svg>
-                  </div>
-                  <div class="doc-row-info">
-                    <div class="doc-row-header-line">
-                      <span class="doc-row-title">DNI (FRENTE Y DORSO)</span>
-                      <span class="doc-row-badge badge-pendiente" id="badge-fileDni">Pendiente</span>
+              <div class="document-row-card" id="row-fileDni" style="flex-direction:column;align-items:stretch;">
+                <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:0.75rem;flex-wrap:wrap;">
+                  <div class="doc-row-left">
+                    <div class="doc-row-icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="10" r="2"/><line x1="15" y1="9" x2="19" y2="9"/><line x1="15" y1="13" x2="19" y2="13"/>
+                      </svg>
                     </div>
-                    <div class="doc-row-subtitle" id="sub-fileDni">Formatos admitidos: PDF, JPG, PNG, WEBP</div>
+                    <div class="doc-row-info">
+                      <div class="doc-row-header-line">
+                        <span class="doc-row-title">DNI (FRENTE Y DORSO)</span>
+                        <span class="doc-row-badge badge-pendiente" id="badge-fileDni">Pendiente</span>
+                      </div>
+                      <div class="doc-row-subtitle" id="sub-fileDni">Formatos admitidos: PDF, JPG, PNG, WEBP</div>
+                    </div>
+                  </div>
+                  <div class="doc-row-actions">
+                    <input type="file" id="fileDni" class="doc-row-native-input" accept="image/*,application/pdf" multiple onchange="handleDocRowFileChange(this, 'fileDni', 'opcional')"/>
+                    <button type="button" class="btn-doc-attach" onclick="document.getElementById('fileDni').click()">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                      <span id="btnLbl-fileDni">Adjuntar</span>
+                    </button>
+                    <button type="button" class="btn-doc-action btn-doc-preview" id="prev-fileDni" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('fileDni')">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <button type="button" class="btn-doc-action btn-doc-delete" id="del-fileDni" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('fileDni', 'opcional')">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
                   </div>
                 </div>
-                <div class="doc-row-actions">
-                  <input type="file" id="fileDni" class="doc-row-native-input" accept="image/*,application/pdf" multiple onchange="handleDocRowFileChange(this, 'fileDni', 'opcional')"/>
-                  <button type="button" class="btn-doc-attach" style="background:#eff6ff;border-color:#93c5fd;" onclick="abrirAsistenteFrenteDorso('fileDni', 'DNI COMPLETO', 'row')" title="Unificar 2 fotos (Frente y Dorso) en un único PDF A4">
-                    🪪 Unificar 2 Fotos
-                  </button>
-                  <button type="button" class="btn-doc-attach" onclick="document.getElementById('fileDni').click()">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                    <span id="btnLbl-fileDni">Adjuntar</span>
-                  </button>
-                  <button type="button" class="btn-doc-action btn-doc-preview" id="prev-fileDni" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('fileDni')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  </button>
-                  <button type="button" class="btn-doc-action btn-doc-delete" id="del-fileDni" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('fileDni', 'opcional')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                  </button>
-                </div>
+                <button type="button" class="doc-frente-dorso-banner" onclick="abrirAsistenteFrenteDorso('fileDni', 'DNI COMPLETO', 'row')" title="Unificar 2 fotos (Frente y Dorso) en un único PDF A4">
+                  <span class="doc-frente-dorso-banner-left">
+                    <span class="doc-frente-dorso-banner-icon">🪪</span>
+                    <span>
+                      <div class="doc-frente-dorso-banner-title">Unificar Frente y Dorso de DNI en 1 PDF A4</div>
+                      <div class="doc-frente-dorso-banner-sub">¿Tenés las dos fotos por separado? Combinalas automáticamente en una sola hoja A4 oficial.</div>
+                    </span>
+                  </span>
+                  <span class="doc-frente-dorso-banner-cta">✨ Unificar 2 Fotos →</span>
+                </button>
               </div>
 
               <!-- 2. RECIBO DE SUELDO - INICIALMENTE VISIBLE (CON TOGGLE QR) -->
@@ -4833,37 +4920,46 @@
               </div>
 
               <!-- 9. TARJETA SIDECREER -->
-              <div class="document-row-card" id="row-fileSidecreer" style="display:none;">
-                <div class="doc-row-left">
-                  <div class="doc-row-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
-                    </svg>
-                  </div>
-                  <div class="doc-row-info">
-                    <div class="doc-row-header-line">
-                      <span class="doc-row-title">TARJETA SIDECREER (FRENTE Y DORSO)</span>
-                      <span class="doc-row-badge badge-pendiente" id="badge-fileSidecreer">Pendiente</span>
+              <div class="document-row-card" id="row-fileSidecreer" style="display:none;flex-direction:column;align-items:stretch;">
+                <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:0.75rem;flex-wrap:wrap;">
+                  <div class="doc-row-left">
+                    <div class="doc-row-icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+                      </svg>
                     </div>
-                    <div class="doc-row-subtitle" id="sub-fileSidecreer">Formatos admitidos: PDF, JPG, PNG, WEBP (Frente y Dorso)</div>
+                    <div class="doc-row-info">
+                      <div class="doc-row-header-line">
+                        <span class="doc-row-title">TARJETA SIDECREER (FRENTE Y DORSO)</span>
+                        <span class="doc-row-badge badge-pendiente" id="badge-fileSidecreer">Pendiente</span>
+                      </div>
+                      <div class="doc-row-subtitle" id="sub-fileSidecreer">Formatos admitidos: PDF, JPG, PNG, WEBP (Frente y Dorso)</div>
+                    </div>
+                  </div>
+                  <div class="doc-row-actions">
+                    <input type="file" id="fileSidecreer" class="doc-row-native-input" accept="image/*,application/pdf" multiple onchange="handleDocRowFileChange(this, 'fileSidecreer', 'opcional')"/>
+                    <button type="button" class="btn-doc-attach" onclick="document.getElementById('fileSidecreer').click()">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                      <span id="btnLbl-fileSidecreer">Adjuntar</span>
+                    </button>
+                    <button type="button" class="btn-doc-action btn-doc-preview" id="prev-fileSidecreer" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('fileSidecreer')">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                    <button type="button" class="btn-doc-action btn-doc-delete" id="del-fileSidecreer" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('fileSidecreer', 'opcional')">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
                   </div>
                 </div>
-                <div class="doc-row-actions">
-                  <input type="file" id="fileSidecreer" class="doc-row-native-input" accept="image/*,application/pdf" multiple onchange="handleDocRowFileChange(this, 'fileSidecreer', 'opcional')"/>
-                  <button type="button" class="btn-doc-attach" style="background:#eff6ff;border-color:#93c5fd;" onclick="abrirAsistenteFrenteDorso('fileSidecreer', 'TARJETA SIDECREER', 'row')" title="Unificar 2 fotos (Frente y Dorso) en un único PDF A4">
-                    🪪 Unificar 2 Fotos
-                  </button>
-                  <button type="button" class="btn-doc-attach" onclick="document.getElementById('fileSidecreer').click()">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                    <span id="btnLbl-fileSidecreer">Adjuntar</span>
-                  </button>
-                  <button type="button" class="btn-doc-action btn-doc-preview" id="prev-fileSidecreer" style="display:none;" title="Previsualizar" onclick="previsualizarDocRow('fileSidecreer')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  </button>
-                  <button type="button" class="btn-doc-action btn-doc-delete" id="del-fileSidecreer" style="display:none;" title="Eliminar archivo" onclick="eliminarDocRow('fileSidecreer', 'opcional')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                  </button>
-                </div>
+                <button type="button" class="doc-frente-dorso-banner" onclick="abrirAsistenteFrenteDorso('fileSidecreer', 'TARJETA SIDECREER', 'row')" title="Unificar 2 fotos (Frente y Dorso) en un único PDF A4">
+                  <span class="doc-frente-dorso-banner-left">
+                    <span class="doc-frente-dorso-banner-icon">💳</span>
+                    <span>
+                      <div class="doc-frente-dorso-banner-title">Unificar Frente y Dorso de Tarjeta Sidecreer en 1 PDF A4</div>
+                      <div class="doc-frente-dorso-banner-sub">¿Tenés las dos fotos por separado? Combinalas automáticamente en una sola hoja A4 oficial.</div>
+                    </span>
+                  </span>
+                  <span class="doc-frente-dorso-banner-cta">✨ Unificar 2 Fotos →</span>
+                </button>
               </div>
 
               <!-- 10. OTROS DOCUMENTOS -->
@@ -6879,7 +6975,53 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         /* ========================================================================
        PADRÓN DE ASOCIADOS, REGLA DE ORGANISMO Y NOMENCLATURA DE LEGAJO DIGITAL
        ======================================================================== */
-    function normalizarNombreArchivoDrive(idExpediente, tipoDoc, extension, indice = 0) {
+    function obtenerPrefijoOficialExpediente(solicitudActual) {
+      if (!solicitudActual) return '';
+      if (typeof solicitudActual === 'string') return solicitudActual.trim();
+      const candidatosDef = [
+        solicitudActual.idDefinitivoExpediente,
+        solicitudActual.ID_Definitivo_Expediente,
+        solicitudActual.id_definitivo,
+        solicitudActual.Nro_Definitivo,
+        solicitudActual.nroDefinitivo,
+        solicitudActual.ID_Definitivo
+      ];
+      let expDefinitivo = '';
+      for (let i = 0; i < candidatosDef.length; i++) {
+        const val = (candidatosDef[i] !== undefined && candidatosDef[i] !== null) ? String(candidatosDef[i]).trim() : '';
+        if (val !== '' && val !== 'undefined' && val !== 'null' && val !== 'Pendiente' && val !== 'S/N') {
+          expDefinitivo = val;
+          break;
+        }
+      }
+      const expProvisorio = String(
+        solicitudActual.idSolicitud || solicitudActual.ID_Solicitud || solicitudActual.id_provisorio || solicitudActual.id || ''
+      ).trim();
+      return (expDefinitivo !== '' && expDefinitivo !== 'undefined' && expDefinitivo !== 'null') ? expDefinitivo : expProvisorio;
+    }
+
+    function normalizarNombreArchivoDrive(idExpedienteOrSolicitud, tipoDoc, extension, indice = 0) {
+      let prefijoOficial = '';
+      if (idExpedienteOrSolicitud && typeof idExpedienteOrSolicitud === 'object') {
+        prefijoOficial = obtenerPrefijoOficialExpediente(idExpedienteOrSolicitud);
+      } else {
+        prefijoOficial = String(idExpedienteOrSolicitud || '').trim();
+        if (prefijoOficial && typeof getStoredSolicitudes === 'function') {
+          try {
+            const lista = getStoredSolicitudes();
+            const matchSol = Array.isArray(lista) ? lista.find(x =>
+              String(x.id || '') === prefijoOficial ||
+              String(x.id_provisorio || '') === prefijoOficial ||
+              String(x.idSolicitud || '') === prefijoOficial ||
+              String(x.ID_Solicitud || '') === prefijoOficial
+            ) : null;
+            if (matchSol) {
+              prefijoOficial = obtenerPrefijoOficialExpediente(matchSol) || prefijoOficial;
+            }
+          } catch (_) {}
+        }
+      }
+
       const ext = (extension || 'PDF').toUpperCase().replace(/^\./, '');
       let tipoUpper = String(tipoDoc).toUpperCase().trim();
       if (tipoUpper.includes('DNI')) tipoUpper = 'DNI';
@@ -6895,7 +7037,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       else if (tipoUpper.includes('OTRO')) tipoUpper = 'OTROS DOCUMENTOS';
 
       const sufijo = (indice > 0) ? `_${indice + 1}` : '';
-      return `${idExpediente} ${tipoUpper}${sufijo}.${ext}`;
+      return `${prefijoOficial} ${tipoUpper}${sufijo}.${ext}`;
     }
 
     function esUsuarioMutualConAccesoDrive(session) {
@@ -7283,11 +7425,16 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       if (!s) return;
       const tipo = document.getElementById('cboFichaDocTipo')?.value || 'DNI (FRENTE Y DORSO)';
       const nowStr = new Date().toISOString().slice(0, 16).replace('T', ' ');
-      const generatedName = normalizarNombreArchivoDrive(s.id, tipo, 'pdf');
+      const prefijoOficial = obtenerPrefijoOficialExpediente(s);
+      const expDefinitivo = (s.idDefinitivoExpediente || s.ID_Definitivo_Expediente || s.id_definitivo || s.Nro_Definitivo || '').toString().trim();
+      const generatedName = normalizarNombreArchivoDrive(prefijoOficial, tipo, 'PDF');
 
-      await callApi({
+      const resApi = await callApi({
         action: 'subirAdjuntoAdicional',
         id: s.id,
+        idSolicitud: s.id,
+        idDefinitivoExpediente: expDefinitivo,
+        ID_Definitivo_Expediente: expDefinitivo,
         tipo: tipo,
         nombre: generatedName,
         base64: pdfRes.base64,
@@ -7299,20 +7446,23 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         sub: 'Archivando ' + generatedName
       });
 
+      const guardado = resApi && resApi.data && Array.isArray(resApi.data.archivos) && resApi.data.archivos[0] ? resApi.data.archivos[0] : null;
       if (!s.adjuntos) s.adjuntos = [];
       s.adjuntos.push({
         tipo,
-        nombre: generatedName,
+        nombre: (guardado && guardado.nombre) || generatedName,
         fecha: nowStr,
         autor: session.nombre,
         dataUrl: pdfRes.dataUrl,
         tipoMime: 'application/pdf',
+        urlDrive: (guardado && guardado.urlDrive) || '',
+        previewUrl: (guardado && guardado.previewUrl) || '',
         observado: false
       });
       verificarSalidaEstadoObservado(s);
       saveStoredSolicitudes(all);
       verFichaCompleta(solicitudId);
-      showToast('✅ PDF unificado adjuntado al legajo');
+      showToast('✅ PDF unificado adjuntado al legajo como ' + ((guardado && guardado.nombre) || generatedName));
     }
 
     async function handleDocRowFileChange(inputEl, idKey, defaultBadgeType) {
@@ -8744,6 +8894,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
       if (!s.auditoriaIA && s.Dictamen_IA_JSON) {
         s.auditoriaIA = parseJSONCampoSeguro(s.Dictamen_IA_JSON, null);
+      }
+      if (s.auditoriaIA && s.auditoriaIA.estado === 'procesando' && !s.auditoriaIA.resultado) {
+        const enVuelo = (typeof window !== 'undefined' && window._auditoriasEnVuelo && window._auditoriasEnVuelo[String(s.id)]);
+        if (!enVuelo) {
+          s.auditoriaIA = null;
+        }
       }
 
       s.analistaAsignado = s.analistaAsignado || s.Analista_Asignado || '';
@@ -10447,15 +10603,23 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       html += '</div>';
 
-      // Subir nuevo documento (Rediseño Corporativo Azul Institucional)
+      // Subir nuevo documento (Rediseño Corporativo Azul Institucional + Banner Destacado Frente y Dorso)
+      const prefijoOficialFicha = obtenerPrefijoOficialExpediente(s);
       html += '<div class="doc-complementaria-card">' +
-        '<div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.65rem;">' +
-          '<div style="font-size:0.8rem;font-weight:700;color:#135596;display:flex;align-items:center;gap:6px;">' +
-            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#135596" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>' +
-            '<span>Documentación Complementaria del Legajo</span>' +
-          '</div>' +
-          '<button type="button" class="btn-doc-attach" style="background:#ffffff;border-color:#93c5fd;" onclick="abrirAsistenteFrenteDorso(\'fileFichaAdicional\', null, \'ficha\', \'' + s.id + '\')" title="Combinar 2 fotos (Frente y Dorso) en un único PDF A4">🪪 Unificar Frente y Dorso en PDF</button>' +
+        '<div style="font-size:0.8rem;font-weight:700;color:#135596;display:flex;align-items:center;gap:6px;margin-bottom:0.55rem;">' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#135596" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>' +
+          '<span>Documentación Complementaria del Legajo</span>' +
         '</div>' +
+        '<button type="button" class="doc-frente-dorso-banner" style="margin-top:0;margin-bottom:0.75rem;" onclick="abrirAsistenteFrenteDorso(\'fileFichaAdicional\', null, \'ficha\', \'' + s.id + '\')" title="Combinar 2 fotos (Frente y Dorso) en un único PDF A4">' +
+          '<span class="doc-frente-dorso-banner-left">' +
+            '<span class="doc-frente-dorso-banner-icon">🪪</span>' +
+            '<span>' +
+              '<div class="doc-frente-dorso-banner-title">Unificar Frente y Dorso en PDF A4</div>' +
+              '<div class="doc-frente-dorso-banner-sub">Fusioná dos fotos (DNI o Tarjeta) en un solo PDF A4 listo para archivar en el expediente #' + sanitizeHTML(prefijoOficialFicha) + '.</div>' +
+            '</span>' +
+          '</span>' +
+          '<span class="doc-frente-dorso-banner-cta">✨ Abrir Asistente →</span>' +
+        '</button>' +
         '<div style="display:grid;grid-template-columns:minmax(200px,1fr) minmax(240px,1.5fr);gap:0.65rem;align-items:center;">' +
           '<select id="cboFichaDocTipo" class="doc-complementaria-select">' +
             '<option value="DNI (FRENTE Y DORSO)">DNI (FRENTE Y DORSO)</option>' +
@@ -10480,7 +10644,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             '<span id="lblBtnDocComplementaria">Adjuntar Documentación Complementaria al Legajo</span>' +
           '</button>' +
         '</div>' +
-        '<p id="lblArchivoComplementarioEstado" style="font-size:0.68rem;color:#475569;margin-top:0.5rem;margin-bottom:0;">Seleccione el tipo de comprobante y pulse el botón superior para archivarlo automáticamente en el Legajo Digital Seguro con formato <code>[' + s.id + '] [TIPO].[ext]</code>.</p>' +
+        '<p id="lblArchivoComplementarioEstado" style="font-size:0.68rem;color:#475569;margin-top:0.5rem;margin-bottom:0;">Seleccione el tipo de comprobante y pulse el botón superior para archivarlo automáticamente en el Legajo Digital Seguro con formato <code>' + sanitizeHTML(prefijoOficialFicha) + ' [TIPO].PDF</code>.</p>' +
       '</div>';
 
       // 6. SECCIÓN 4: CHAT DE AUDITORÍA Y LÍNEA DE TIEMPO (TÍTULO EXACTO)
@@ -11398,9 +11562,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         return;
       }
       const ext = (b64Data?.tipoMime === 'application/pdf' || /\.pdf$/i.test(b64Data?.nombreArchivo || ''))
-        ? 'pdf'
-        : (file.name.split('.').pop() || 'pdf').toLowerCase();
-      const generatedName = normalizarNombreArchivoDrive(s.id, tipo, ext);
+        ? 'PDF'
+        : (file.name.split('.').pop() || 'PDF').toUpperCase();
+      const prefijoOficial = obtenerPrefijoOficialExpediente(s);
+      const expDefinitivo = (s.idDefinitivoExpediente || s.ID_Definitivo_Expediente || s.id_definitivo || s.Nro_Definitivo || '').toString().trim();
+      const generatedName = normalizarNombreArchivoDrive(prefijoOficial, tipo, ext);
 
       if (!s.adjuntos) s.adjuntos = [];
       s.adjuntos.push({
@@ -11434,6 +11600,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       callApi({
         action: 'subirAdjuntoAdicional',
         id: s.id,
+        idSolicitud: s.id,
+        idDefinitivoExpediente: expDefinitivo,
+        ID_Definitivo_Expediente: expDefinitivo,
         tipo: tipo,
         nombre: generatedName,
         base64: b64Data ? b64Data.base64 : '',
@@ -11480,9 +11649,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         return;
       }
       const ext = (b64?.tipoMime === 'application/pdf' || /\.pdf$/i.test(b64?.nombreArchivo || ''))
-        ? 'pdf'
-        : (file.name.split('.').pop() || 'pdf').toLowerCase();
-      const nuevoNombre = normalizarNombreArchivoDrive(s.id, prevTipo, ext);
+        ? 'PDF'
+        : (file.name.split('.').pop() || 'PDF').toUpperCase();
+      const prefijoOficial = obtenerPrefijoOficialExpediente(s);
+      const expDefinitivo = (s.idDefinitivoExpediente || s.ID_Definitivo_Expediente || s.id_definitivo || s.Nro_Definitivo || '').toString().trim();
+      const nuevoNombre = normalizarNombreArchivoDrive(prefijoOficial, prevTipo, ext);
 
       s.adjuntos[adjuntoIndex] = {
         tipo: prevTipo,
@@ -11490,7 +11661,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         fecha: nowStr,
         autor: session?.nombre || 'Usuario',
         dataUrl: b64 ? b64.dataUrl : '',
-        tipoMime: b64 ? b64.tipoMime : file.type,
+        tipoMime: b64 ? b64.tipoMime : 'application/pdf',
         urlDrive: '',
         observado: false,
         motivoObservacion: ''
@@ -11519,9 +11690,28 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       callApi({
         action: 'subirAdjuntoAdicional',
         id: s.id,
+        idSolicitud: s.id,
+        idDefinitivoExpediente: expDefinitivo,
+        ID_Definitivo_Expediente: expDefinitivo,
+        reemplazaIndice: adjuntoIndex,
         tipo: prevTipo,
         nombre: nuevoNombre,
-        base64: b64 ? b64.base64 : ''
+        tipoMime: b64 ? b64.tipoMime : 'application/pdf',
+        base64: b64 ? b64.base64 : '',
+        autor: session?.nombre || 'Usuario',
+        rol: session?.rol || 'Comercializador'
+      }).then(resApi => {
+        const g = resApi && resApi.data && Array.isArray(resApi.data.archivos) && resApi.data.archivos[0] ? resApi.data.archivos[0] : null;
+        if (g) {
+          const allAct = getStoredSolicitudes();
+          const sAct = allAct.find(x => String(x.id) === String(solicitudId));
+          if (sAct && Array.isArray(sAct.adjuntos) && sAct.adjuntos[adjuntoIndex]) {
+            sAct.adjuntos[adjuntoIndex].nombre = g.nombre || nuevoNombre;
+            if (g.urlDrive) sAct.adjuntos[adjuntoIndex].urlDrive = g.urlDrive;
+            if (g.previewUrl) sAct.adjuntos[adjuntoIndex].previewUrl = g.previewUrl;
+            saveStoredSolicitudes(allAct);
+          }
+        }
       }).catch(console.warn);
 
       actualizarCentroNotificaciones();
@@ -11564,13 +11754,18 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         return;
       }
       const extension = (b64Data?.tipoMime === 'application/pdf' || /\.pdf$/i.test(b64Data?.nombreArchivo || ''))
-        ? 'pdf'
-        : (file.name.split('.').pop() || 'pdf').toLowerCase();
-      const generatedName = normalizarNombreArchivoDrive(s.id, tipo, extension);
+        ? 'PDF'
+        : (file.name.split('.').pop() || 'PDF').toUpperCase();
+      const prefijoOficial = obtenerPrefijoOficialExpediente(s);
+      const expDefinitivo = (s.idDefinitivoExpediente || s.ID_Definitivo_Expediente || s.id_definitivo || s.Nro_Definitivo || '').toString().trim();
+      const generatedName = normalizarNombreArchivoDrive(prefijoOficial, tipo, extension);
 
-      await callApi({
+      const resApi = await callApi({
         action: 'subirAdjuntoAdicional',
         id: s.id,
+        idSolicitud: s.id,
+        idDefinitivoExpediente: expDefinitivo,
+        ID_Definitivo_Expediente: expDefinitivo,
         tipo: tipo,
         nombre: generatedName,
         base64: b64Data ? b64Data.base64 : '',
@@ -11579,17 +11774,21 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor')
       }, {
         title: '🔒 Almacenando en Legajo Digital Seguro...',
-        sub: 'Guardando en la bóveda del expediente #' + s.id
+        sub: 'Guardando en la bóveda del expediente #' + prefijoOficial
       });
 
+      const guardado = resApi && resApi.data && Array.isArray(resApi.data.archivos) && resApi.data.archivos[0] ? resApi.data.archivos[0] : null;
+      const nombreFinalGuardado = (guardado && guardado.nombre) || generatedName;
       if (!s.adjuntos) s.adjuntos = [];
       s.adjuntos.push({
         tipo,
-        nombre: generatedName,
+        nombre: nombreFinalGuardado,
         fecha: nowStr,
         autor: session.nombre,
         dataUrl: b64Data ? b64Data.dataUrl : '',
-        tipoMime: b64Data ? b64Data.tipoMime : file.type,
+        tipoMime: b64Data ? b64Data.tipoMime : 'application/pdf',
+        urlDrive: (guardado && guardado.urlDrive) || '',
+        previewUrl: (guardado && guardado.previewUrl) || '',
         observado: false
       });
 
@@ -11603,18 +11802,18 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       if (!s.observaciones) s.observaciones = [];
       s.observaciones.push({
         autor: session.nombre, rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor'),
-        fecha: nowStr, texto: 'Documentación adicional adjuntada: ' + tipo + ' (' + generatedName + ')'
+        fecha: nowStr, texto: 'Documentación adicional adjuntada: ' + tipo + ' (' + nombreFinalGuardado + ')'
       });
 
       saveStoredSolicitudes(all);
       // Disparo automático reactivo de Auditoría IA en segundo plano
-      ejecutarAuditoriaAutomaticaExpediente(s.id, b64Data ? [{ nombre: generatedName, mimeType: b64Data.tipoMime, base64: b64Data.base64 }] : null);
+      ejecutarAuditoriaAutomaticaExpediente(s.id, b64Data ? [{ nombre: nombreFinalGuardado, mimeType: b64Data.tipoMime, base64: b64Data.base64 }] : null);
 
       actualizarCentroNotificaciones();
       renderModuloComercializador();
       renderModuloMutual();
       verFichaCompleta(id);
-      showToast('Documento archivado exitosamente en el Legajo Digital 📄');
+      showToast('Documento archivado exitosamente como ' + nombreFinalGuardado + ' 📄');
     }
 
     async function enviarComentarioComercializador(id) {
@@ -12645,28 +12844,53 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
     }
 
+    window._auditoriasEnVuelo = window._auditoriasEnVuelo || {};
+
     async function ejecutarAuditoriaAutomaticaExpediente(solicitudId, archivosParam) {
       if (!solicitudId) return;
+      const keySol = String(solicitudId);
       const all = getStoredSolicitudes();
-      const s = all.find(x => String(x.id) === String(solicitudId));
+      const s = all.find(x => String(x.id) === keySol);
       if (!s) return;
 
-      // 1. Marcar estado como procesando en segundo plano de forma no bloqueante
-      if (!s.auditoriaIA) s.auditoriaIA = {};
-      s.auditoriaIA.estado = 'procesando';
-      s.auditoriaIA.fechaInicio = new Date().toISOString();
+      window._auditoriasEnVuelo[keySol] = Date.now();
+      let finalizado = false;
+      const resolverContingenciaInmediata = () => {
+        if (finalizado) return;
+        finalizado = true;
+        delete window._auditoriasEnVuelo[keySol];
+        const frescas = getStoredSolicitudes();
+        const sFresca = frescas.find(x => String(x.id) === keySol);
+        if (sFresca && (!sFresca.auditoriaIA || sFresca.auditoriaIA.estado === 'procesando')) {
+          sFresca.auditoriaIA = {
+            estado: 'completado',
+            fechaFin: new Date().toISOString(),
+            resultado: generarResultadoContingencia(sFresca)
+          };
+          saveStoredSolicitudes(frescas);
+          const modalActivo = document.getElementById('modalVerFichaCompleta');
+          if (modalActivo && modalActivo.classList.contains('open')) {
+            const titActivo = document.getElementById('fichaModalTitle');
+            const prefDef = obtenerPrefijoOficialExpediente(sFresca);
+            if (titActivo && (titActivo.innerHTML.includes(prefDef) || titActivo.innerHTML.includes(sFresca.id_provisorio || '') || titActivo.innerHTML.includes(sFresca.id))) {
+              verFichaCompleta(sFresca.id);
+            }
+          }
+          renderModuloMutual();
+        }
+      };
+      const watchdogTimer = setTimeout(resolverContingenciaInmediata, 8500);
+
+      // Marcar estado en segundo plano sin bloquear el dictamen visible
+      const resultadoPrevio = s.auditoriaIA && s.auditoriaIA.resultado ? s.auditoriaIA.resultado : null;
+      s.auditoriaIA = {
+        estado: 'procesando',
+        fechaInicio: new Date().toISOString(),
+        resultado: resultadoPrevio
+      };
       saveStoredSolicitudes(all);
 
-      // Si la ficha está abierta actualmente para esta solicitud, refrescar el indicador sutil
-      const modal = document.getElementById('modalVerFichaCompleta');
-      if (modal && modal.classList.contains('open')) {
-        const tit = document.getElementById('fichaModalTitle');
-        if (tit && (tit.innerHTML.includes(s.id_definitivo || s.id_provisorio) || tit.innerHTML.includes(s.id))) {
-          verFichaCompleta(s.id);
-        }
-      }
-
-      // 2. Preparar payload de documentos
+      // Preparar payload de documentos
       let archivosAEnviar = [];
       if (archivosParam && Array.isArray(archivosParam) && archivosParam.length > 0) {
         archivosAEnviar = archivosParam.filter(a => a.base64);
@@ -12705,8 +12929,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           preservarLoadingBar: true
         });
 
+        finalizado = true;
+        clearTimeout(watchdogTimer);
+        delete window._auditoriasEnVuelo[keySol];
+
         const frescas = getStoredSolicitudes();
-        const sFresca = frescas.find(x => String(x.id) === String(solicitudId));
+        const sFresca = frescas.find(x => String(x.id) === keySol);
         if (!sFresca) return;
 
         if (auditRes) {
@@ -12732,27 +12960,19 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const modalActivo = document.getElementById('modalVerFichaCompleta');
         if (modalActivo && modalActivo.classList.contains('open')) {
           const titActivo = document.getElementById('fichaModalTitle');
-          if (titActivo && (titActivo.innerHTML.includes(sFresca.id_definitivo || sFresca.id_provisorio) || titActivo.innerHTML.includes(sFresca.id))) {
+          const prefDef = obtenerPrefijoOficialExpediente(sFresca);
+          if (titActivo && (titActivo.innerHTML.includes(prefDef) || titActivo.innerHTML.includes(sFresca.id_provisorio || '') || titActivo.innerHTML.includes(sFresca.id))) {
             verFichaCompleta(sFresca.id);
           }
         }
         renderModuloMutual();
       } catch (err) {
         console.warn('Auditoría automática Servidor Central (contingencia local activa):', err.message || err);
-        const frescas = getStoredSolicitudes();
-        const sFresca = frescas.find(x => String(x.id) === String(solicitudId));
-        if (sFresca) {
-          sFresca.auditoriaIA = {
-            estado: 'completado',
-            fechaFin: new Date().toISOString(),
-            resultado: generarResultadoContingencia(sFresca)
-          };
-          saveStoredSolicitudes(frescas);
-          const modalActivo = document.getElementById('modalVerFichaCompleta');
-          if (modalActivo && modalActivo.classList.contains('open')) {
-            verFichaCompleta(sFresca.id);
-          }
-        }
+        finalizado = false;
+        resolverContingenciaInmediata();
+      } finally {
+        clearTimeout(watchdogTimer);
+        delete window._auditoriasEnVuelo[keySol];
       }
     }
 
@@ -12821,23 +13041,6 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     /* --- RENDERIZADO DEL APARTADO EJECUTIVO EN FICHA (EXCLUSIVO ANALISTAS) --- */
     function renderApartadoEjecutivoAuditoriaFicha(s) {
       const aud = s.auditoriaIA;
-      const inicioMs = aud && aud.fechaInicio ? Date.parse(aud.fechaInicio) : 0;
-      const procesandoVigente = Boolean(aud && aud.estado === 'procesando' && inicioMs && (Date.now() - inicioMs) < 12000);
-      if (procesandoVigente) {
-        return '<div class="ai-executive-audit-card" style="background:#f8fafc;border:1px solid #bae6fd;">' +
-          '<div class="ai-executive-header" style="border:none;margin-bottom:0;padding-bottom:0;">' +
-            '<div style="display:flex;align-items:center;gap:10px;">' +
-              '<div class="api-spinner-inline" style="width:20px;height:20px;border:3px solid #e2e8f0;border-top-color:#0284c7;border-radius:50%;animation:spin .75s linear infinite;"></div>' +
-              '<div>' +
-                '<h4 style="font-size:0.82rem;font-weight:800;color:#0369a1;margin:0;">🤖 Auditoría IA en proceso...</h4>' +
-                '<span style="font-size:0.68rem;color:var(--text-muted);">Extrayendo OCR, analizando afectación del 50% y ponderando Calificación Crediticia AMMER en segundo plano.</span>' +
-              '</div>' +
-            '</div>' +
-            '<span class="ai-processing-chip">Background Job Activo ⚡</span>' +
-          '</div>' +
-        '</div>';
-      }
-
       const res = (aud && aud.resultado) ? aud.resultado : generarResultadoContingencia(s);
       const sc = res.scoringCrediticio || {};
       const rec = res.reciboSueldo || {};
@@ -14189,6 +14392,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.cerrarAsistenteFrenteDorso = cerrarAsistenteFrenteDorso;
     window.confirmarFusionFrenteDorso = confirmarFusionFrenteDorso;
     window.handleAsistenteFotoChange = handleAsistenteFotoChange;
+    window.obtenerPrefijoOficialExpediente = obtenerPrefijoOficialExpediente;
     window.procesarAuditoriaConTimeout = procesarAuditoriaConTimeout;
     window.realizarAuditoriaOCR = realizarAuditoriaOCR;
     window.estadoApp = window.estadoApp;

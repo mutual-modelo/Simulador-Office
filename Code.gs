@@ -261,24 +261,92 @@ function obtenerOCrearCarpetaRaiz_() {
   return folder;
 }
 
-function obtenerOCrearCarpetaExpediente_(idSolicitud, apellidoNombre, dni) {
+function obtenerOCrearCarpetaExpediente_(idSolicitud, apellidoNombre, dni, idAlternativo) {
   const root = obtenerOCrearCarpetaRaiz_();
   const nombreSeguro = String(apellidoNombre || 'Socio').replace(/[\\/:*?"<>|]/g, '').trim();
   const prefijo = String(idSolicitud || '').trim();
+  const alt = String(idAlternativo || '').trim();
   const nombreCarpeta = prefijo + ' - ' + nombreSeguro + (dni ? (' (' + dni + ')') : '');
 
+  const coincidePrefijo = (fname, p) => {
+    if (!p) return false;
+    return fname === p || fname.indexOf(p + ' -') === 0 || fname.indexOf(p + ' ') === 0;
+  };
+
+  let folderAlt = null;
   const iter = root.getFolders();
   while (iter.hasNext()) {
     const f = iter.next();
-    if (f.getName().indexOf(prefijo) === 0 || f.getName() === nombreCarpeta) {
+    const fname = f.getName();
+    if (fname === nombreCarpeta || coincidePrefijo(fname, prefijo)) {
       return f;
     }
+    if (!folderAlt && alt && alt !== prefijo && coincidePrefijo(fname, alt)) {
+      folderAlt = f;
+    }
+  }
+  if (folderAlt) {
+    try {
+      folderAlt.setName(nombreCarpeta);
+    } catch (_) {}
+    return folderAlt;
   }
   const nueva = root.createFolder(nombreCarpeta);
   try {
     nueva.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   } catch (_) {}
   return nueva;
+}
+
+function resolverNumeroDefinitivoFila_(sheet, rowNum, map, payload) {
+  const leerCol = (col) => (map[col] !== undefined ? String(sheet.getRange(rowNum, map[col] + 1).getValue() || '').trim() : '');
+  const rawMeta = map['Metadata_Extra_JSON'] !== undefined
+    ? parseJSONSafe_(sheet.getRange(rowNum, map['Metadata_Extra_JSON'] + 1).getValue(), {})
+    : {};
+  const candidatos = [
+    leerCol('ID_Definitivo_Expediente'),
+    leerCol('Nro_Definitivo'),
+    leerCol('ID_Definitivo'),
+    rawMeta && rawMeta.id_definitivo ? String(rawMeta.id_definitivo).trim() : '',
+    payload && payload.idDefinitivoExpediente ? String(payload.idDefinitivoExpediente).trim() : '',
+    payload && payload.ID_Definitivo_Expediente ? String(payload.ID_Definitivo_Expediente).trim() : '',
+    payload && payload.id_definitivo ? String(payload.id_definitivo).trim() : '',
+    payload && payload.Nro_Definitivo ? String(payload.Nro_Definitivo).trim() : '',
+    payload && payload.nroDefinitivo ? String(payload.nroDefinitivo).trim() : ''
+  ];
+  for (let i = 0; i < candidatos.length; i++) {
+    const v = candidatos[i];
+    if (v && v !== 'undefined' && v !== 'null' && v !== 'Pendiente' && v !== 'S/N') {
+      return v;
+    }
+  }
+  return '';
+}
+
+function normalizarNombreArchivoConPrefijo_(nombreRaw, tipoDoc, prefijoOficial, idProvisorio) {
+  const prefijo = String(prefijoOficial || '').trim();
+  const base = String(nombreRaw || '').trim();
+  let tipoUpper = String(tipoDoc || 'OTROS DOCUMENTOS').toUpperCase().trim();
+  if (tipoUpper.indexOf('DNI') !== -1) tipoUpper = 'DNI';
+  else if (tipoUpper.indexOf('RECIBO') !== -1) tipoUpper = 'RECIBO DE SUELDO';
+  else if (tipoUpper.indexOf('SERVICIO') !== -1 || tipoUpper.indexOf('DOMICILIO') !== -1) tipoUpper = 'SERVICIO';
+  else if (tipoUpper.indexOf('CBU') !== -1) tipoUpper = 'CONSTANCIA DE CBU';
+  else if (tipoUpper.indexOf('SAGE') !== -1) tipoUpper = 'CERTIFICADO SAGE';
+  else if (tipoUpper.indexOf('MOVIMIENTO') !== -1 || tipoUpper.indexOf('BANCARIO') !== -1) tipoUpper = 'COMPROBANTE DE MOVIMIENTOS BANCARIOS';
+  else if (tipoUpper.indexOf('SIDECREER') !== -1) tipoUpper = 'TARJETA SIDECREER';
+  else if (tipoUpper.indexOf('TRANSFERENCIA') !== -1) tipoUpper = 'TRANSFERENCIA';
+  else if (tipoUpper.indexOf('SOLICITUD') !== -1 || tipoUpper.indexOf('AYUDA') !== -1) tipoUpper = 'SOLICITUD DE AYUDA ECONOMICA';
+  else if (tipoUpper.indexOf('DESCUENTO') !== -1 || tipoUpper.indexOf('HABERES') !== -1) tipoUpper = 'AUTORIZACION PARA DESCUENTO DE HABERES';
+  else if (tipoUpper.indexOf('OTRO') !== -1) tipoUpper = 'OTROS DOCUMENTOS';
+
+  const extMatch = base.match(/\.([A-Za-z0-9]{2,5})$/);
+  const ext = extMatch ? extMatch[1].toUpperCase() : 'PDF';
+  if (!prefijo) return base || (tipoUpper + '.' + ext);
+
+  if (base && base.indexOf(prefijo + ' ') === 0) {
+    return base.toUpperCase();
+  }
+  return prefijo + ' ' + tipoUpper + '.' + ext;
 }
 
 function guardarArchivosEnDrive_(folder, archivosRaw, idExpediente, autor) {
@@ -737,13 +805,14 @@ function registrarNuevaSolicitud(payload) {
     const analistaAsignado = String(sol.analistaAsignado || sol.Analista_Asignado || payload.Analista_Asignado || payload.analistaAsignado || 'Sin Asignar').trim();
 
     // Gestión de carpeta y archivos reales en Google Drive
-    const folder = obtenerOCrearCarpetaExpediente_(idSolicitud, apellidoNombre, dni);
+    const prefijoInicial = (idDefinitivo && idDefinitivo !== 'undefined' && idDefinitivo !== 'null') ? idDefinitivo : idSolicitud;
+    const folder = obtenerOCrearCarpetaExpediente_(prefijoInicial, apellidoNombre, dni, idSolicitud);
     const carpetaDriveUrl = folder.getUrl();
 
     const archivosEntrada = parseJSONSafe_(payload.Archivos_Adjuntos_JSON, null) ||
       payload.archivosBase64 || payload.adjuntosBase64 || sol.archivosBase64 || sol.adjuntosBase64 ||
       payload.archivos || payload.adjuntos || sol.archivos || sol.adjuntos || [];
-    const adjuntosDrive = guardarArchivosEnDrive_(folder, archivosEntrada, idSolicitud, asesorNombre);
+    const adjuntosDrive = guardarArchivosEnDrive_(folder, archivosEntrada, prefijoInicial, asesorNombre);
 
     const historialComentarios = Array.isArray(sol.observaciones)
       ? sol.observaciones
@@ -1201,21 +1270,26 @@ function subirAdjuntoAdicionalBackend(payload) {
   try {
     const sheet = obtenerOInicializarHoja_(CONFIG_AMMER.SHEET_SOLICITUDES, HEADERS_SOLICITUDES);
     const { map } = obtenerHeaderMap_(sheet);
-    const idTarget = payload.idSolicitud || payload.id;
+    const idTarget = String(payload.idSolicitud || payload.id || '').trim();
     const rowNum = encontrarFilaPorId_(sheet, map, idTarget);
     if (rowNum === -1) return { ok: false, error: 'Expediente no encontrado: ' + idTarget };
 
     const nombreSoc = map['Apellido_Nombre'] !== undefined ? String(sheet.getRange(rowNum, map['Apellido_Nombre'] + 1).getValue()) : 'Socio';
     const dni = map['DNI_Asociado'] !== undefined ? String(sheet.getRange(rowNum, map['DNI_Asociado'] + 1).getValue()) : '';
-    const folder = obtenerOCrearCarpetaExpediente_(idTarget, nombreSoc, dni);
+    const expDef = resolverNumeroDefinitivoFila_(sheet, rowNum, map, payload);
+    const prefijoOficial = expDef || idTarget;
+    const folder = obtenerOCrearCarpetaExpediente_(prefijoOficial, nombreSoc, dni, idTarget);
+
+    const tipoDoc = String(payload.tipo || 'OTROS DOCUMENTOS');
+    const nombreNormalizado = normalizarNombreArchivoConPrefijo_(payload.nombre, tipoDoc, prefijoOficial, idTarget);
 
     const guardados = guardarArchivosEnDrive_(folder, [{
-      tipo: payload.tipo || 'OTROS DOCUMENTOS',
-      nombre: payload.nombre || ('ADJUNTO_' + idTarget + '.pdf'),
+      tipo: tipoDoc,
+      nombre: nombreNormalizado,
       tipoMime: payload.tipoMime || 'application/pdf',
       base64: payload.base64 || '',
       autor: payload.autor || 'Usuario'
-    }], idTarget, payload.autor || 'Usuario');
+    }], prefijoOficial, payload.autor || 'Usuario');
 
     if (map['Carpeta_Drive_URL'] !== undefined) {
       sheet.getRange(rowNum, map['Carpeta_Drive_URL'] + 1).setValue(folder.getUrl());
@@ -1237,7 +1311,14 @@ function subirAdjuntoAdicionalBackend(payload) {
     }
 
     SpreadsheetApp.flush();
-    return { ok: true, id: idTarget, archivos: guardados, carpetaDriveUrl: folder.getUrl() };
+    return {
+      ok: true,
+      id: idTarget,
+      id_definitivo: expDef,
+      prefijoOficial: prefijoOficial,
+      archivos: guardados,
+      carpetaDriveUrl: folder.getUrl()
+    };
   } finally {
     lock.releaseLock();
   }
@@ -1320,6 +1401,15 @@ function asignarNumeroDefinitivoBackend(payload) {
     if (map['Ultima_Actualizacion'] !== undefined) {
       sheet.getRange(rowNum, map['Ultima_Actualizacion'] + 1).setValue(nowStr);
     }
+
+    try {
+      const nombreSoc = map['Apellido_Nombre'] !== undefined ? String(sheet.getRange(rowNum, map['Apellido_Nombre'] + 1).getValue()) : 'Socio';
+      const dni = map['DNI_Asociado'] !== undefined ? String(sheet.getRange(rowNum, map['DNI_Asociado'] + 1).getValue()) : '';
+      const folder = obtenerOCrearCarpetaExpediente_(nroFinal, nombreSoc, dni, idTarget);
+      if (map['Carpeta_Drive_URL'] !== undefined) {
+        sheet.getRange(rowNum, map['Carpeta_Drive_URL'] + 1).setValue(folder.getUrl());
+      }
+    } catch (_) {}
 
     SpreadsheetApp.flush();
     return {

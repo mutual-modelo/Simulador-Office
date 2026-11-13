@@ -296,17 +296,19 @@ Devuelve estrictamente JSON conforme al schema.
     });
 
     const textOutput = response.text || '{}';
-    let dataParsed: any = null;
-    try {
-      dataParsed = JSON.parse(textOutput);
-    } catch (_) {
-      const match = textOutput.match(/\{[\s\S]*\}/);
-      if (match) {
-        dataParsed = JSON.parse(match[0]);
-      } else {
+    const dataParsed: any = (() => {
+      try {
+        return JSON.parse(textOutput);
+      } catch (_) {
+        const cleaned = String(textOutput).replace(/```json/gi, '').replace(/```/g, '').trim();
+        const firstIdx = cleaned.indexOf('{');
+        const lastIdx = cleaned.lastIndexOf('}');
+        if (firstIdx !== -1 && lastIdx !== -1 && lastIdx >= firstIdx) {
+          return JSON.parse(cleaned.substring(firstIdx, lastIdx + 1));
+        }
         throw new Error('La respuesta del motor documental no devolvió un JSON estructurado válido.');
       }
-    }
+    })();
 
     const auditModelOutput = mapearEstructuraAuditoria(dataParsed, datosDeclarados);
 

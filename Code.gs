@@ -2019,13 +2019,31 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
   };
 }
 
+function limpiarYParsearJSONAuditoria_(rawText) {
+  if (typeof rawText === 'object' && rawText !== null) return rawText;
+  try {
+    return JSON.parse(rawText);
+  } catch (e1) {
+    try {
+      const texto = String(rawText || '').replace(/```json/gi, '').replace(/```/g, '').trim();
+      const primerBrk = texto.indexOf('{');
+      const ultimoBrk = texto.lastIndexOf('}');
+      if (primerBrk !== -1 && ultimoBrk !== -1 && ultimoBrk >= primerBrk) {
+        return JSON.parse(texto.substring(primerBrk, ultimoBrk + 1));
+      }
+    } catch (_) {}
+  }
+  throw new Error('No se pudo interpretar la respuesta JSON del motor documental.');
+}
+
 function auditarLegajoConIA(payload) {
   const dataIn = payload || {};
   const resultadoEntrante = (dataIn.resultado || dataIn.auditoria) ? (dataIn.resultado || dataIn.auditoria) : null;
 
   if (resultadoEntrante) {
-    persistirDictamenAuditoriaEnHoja_(dataIn.idSolicitud, resultadoEntrante);
-    return { ok: true, success: true, auditoria: resultadoEntrante, resultado: resultadoEntrante };
+    const parsedEntrante = (typeof resultadoEntrante === 'string') ? limpiarYParsearJSONAuditoria_(resultadoEntrante) : resultadoEntrante;
+    persistirDictamenAuditoriaEnHoja_(dataIn.idSolicitud, parsedEntrante);
+    return { ok: true, success: true, auditoria: parsedEntrante, resultado: parsedEntrante };
   }
 
   let archivos = Array.isArray(dataIn.archivos) ? dataIn.archivos.filter(function(a) { return a && a.base64; }) : [];
@@ -2081,20 +2099,20 @@ function auditarLegajoConIA(payload) {
   const fechaActualStr = String(fechaActual.getDate()).padStart(2, '0') + '/' + String(mesActual).padStart(2, '0') + '/' + anioActual;
 
   const promptAuditor = [
-    'Actúa como Auditor Crediticio Senior y Especialista en Verificación Documental Forense de la Asociación Mutual Modelo de Entre Ríos (AMMER).',
+    'Actúa como Auditor Crediticio Senior y Especialista en Verificación Documental y Cesión de Cartera de la Asociación Mutual Modelo de Entre Ríos (AMMER).',
     'FECHA DE AUDITORÍA: ' + fechaActualStr + ' (Mes ' + mesActual + '/' + anioActual + ')',
     '',
     'REGLAS DE CALIBRACIÓN EQUILIBRADA (LECTURA COMPLETA SIN INVENTAR NI BLOQUEAR):',
-    '1. EXTRAE SIEMPRE TODOS LOS DATOS VISIBLES: Lee proactivamente haberes brutos, descuentos de ley, descuentos voluntarios (BERSA, SIDECREER, Otras Mutuales), Códigos FEDEM (366, 368, 1115, 1117), embargos, total descuentos, sueldo líquido, titular, DNI, CUIL, período e institución empleadora.',
-    '2. CERO ALUCINACIÓN SIN FALSOS POSITIVOS: Prohibido inventar cifras no impresas. Sin embargo, si un concepto de descuento opcional (BERSA, SIDECREER, otras mutuales, códigos FEDEM o embargo) NO figura descontado en el recibo, devuelve 0 (y embargoDetectado: false). NO lo marques como "ILEGIBLE".',
-    '3. SOLO MARCA COMO "ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO" (o null en monto) un campo OBLIGATORIO del recibo (Bruto, Total Descuentos, Líquido, Período, Titular) que esté realmente borroso, tapado o cortado.',
+    '1. EXTRAE SIEMPRE TODOS LOS DATOS VISIBLES: Lee proactivamente Datos Personales (Titular, DNI, CUIL), Empleador, Antigüedad (mínimo 1 año), Período liquidado, Sueldo Bruto Total, Descuentos de Ley, BERSA, Sidecreer, Mutuales, Códigos FEDEM (366/368 o 1115/1117), Embargos y Sueldo Líquido.',
+    '2. CERO ALUCINACIÓN SIN FALSOS POSITIVOS: Prohibido inventar cifras no impresas. Si un concepto opcional (ej. BERSA, Sidecreer, otras mutuales, códigos FEDEM o embargos) NO está presente en el recibo, consignar exactamente 0.00 (y embargoDetectado: false), SIN arrojar error ni alertar "documento ilegible".',
+    '3. SOLO MARCA COMO "ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO" (o null en monto) un campo OBLIGATORIO del recibo (Bruto, Total Descuentos, Líquido, Período o Titular) si está físicamente borroso, tapado o cortado.',
     '4. SI UN DATO NO APLICA AL COMPROBANTE (ej. fechaVencimientoDni cuando solo se subió recibo de sueldo), escribe "No consta en este comprobante" sin penalizar el scoring.',
     '',
     datosDeclarados
       ? ('CARÁTULA DECLARADA: Nombre="' + (datosDeclarados.nombre || 'NO INFORMADO') + '", DNI="' + (datosDeclarados.dni || 'NO INFORMADO') + '", Organismo="' + (datosDeclarados.organismo || 'NO INFORMADO') + '", Cuota=' + (datosDeclarados.cuota || 0) + ', Plazo=' + (datosDeclarados.plazoCuotas || 0))
       : 'NO SE ENVIÓ CARÁTULA PREVIA. Indica estadoCotejoCaratula: "VERIFICADO EN DOCUMENTO (SIN CARÁTULA PREVIA)" y extrae los datos literales del comprobante.',
     '',
-    'Devuelve exclusivamente JSON con la estructura: { identidad: { titularDetectado, dni, cuil, fechaNacimiento, domicilio, fechaVencimientoDni, dniVigente, estadoCotejoCaratula, detalleDiscrepancias }, datosLaborales: { organismoEmpleador, dependencia, legajo, situacionRevista, fechaIngreso, antiguedadDetalle, antiguedadAnios, cumpleAntiguedadMinima, esSaludSuplenteDia19, requiereSituacionSage, esInvalidezODiscapacidad, cumpleTopeEdad80, observacionesEspeciales }, vigenciaRecibo: { periodoLiquidado, estadoVigencia, esVigente }, radiografiaSalarial: { sueldoBrutoTotal, descuentosLey, consumosBersa, consumosSidecreer, otrasMutuales, codigosFedemMonto, codigosFedemDetectados, embargoDetectado, embargoMonto, embargoConcepto, totalDescuentosRecibo, sueldoLiquido }, scoringAmmer: { puntajeTotal, calificacionLetra, dictamen, nivelConfianza, dictamenAuditor, alertasCriticas, camposIlegibles } }.'
+    'Devuelve exclusivamente JSON puro (sin ```json ni texto extra) con la estructura: { identidad: { titularDetectado, dni, cuil, fechaNacimiento, domicilio, fechaVencimientoDni, dniVigente, estadoCotejoCaratula, detalleDiscrepancias }, datosLaborales: { organismoEmpleador, dependencia, legajo, situacionRevista, fechaIngreso, antiguedadDetalle, antiguedadAnios, cumpleAntiguedadMinima, esSaludSuplenteDia19, requiereSituacionSage, esInvalidezODiscapacidad, cumpleTopeEdad80, observacionesEspeciales }, vigenciaRecibo: { periodoLiquidado, estadoVigencia, esVigente }, radiografiaSalarial: { sueldoBrutoTotal, descuentosLey, consumosBersa, consumosSidecreer, otrasMutuales, codigosFedemMonto, codigosFedemDetectados, embargoDetectado, embargoMonto, embargoConcepto, totalDescuentosRecibo, sueldoLiquido }, scoringAmmer: { puntajeTotal, calificacionLetra, dictamen, nivelConfianza, dictamenAuditor, alertasCriticas, camposIlegibles } }.'
   ].join('\n');
 
   parts.push({ text: promptAuditor });
@@ -2123,7 +2141,7 @@ function auditarLegajoConIA(payload) {
       };
     }
 
-    const geminiJson = JSON.parse(rawRespText);
+    const geminiJson = limpiarYParsearJSONAuditoria_(rawRespText);
     const candidateText = geminiJson && geminiJson.candidates && geminiJson.candidates[0] &&
       geminiJson.candidates[0].content && geminiJson.candidates[0].content.parts &&
       geminiJson.candidates[0].content.parts[0] && geminiJson.candidates[0].content.parts[0].text;
@@ -2136,21 +2154,7 @@ function auditarLegajoConIA(payload) {
       };
     }
 
-    let dataParsed = null;
-    try {
-      dataParsed = JSON.parse(candidateText);
-    } catch (_) {
-      const m = String(candidateText).match(/\{[\s\S]*\}/);
-      if (m) dataParsed = JSON.parse(m[0]);
-    }
-    if (!dataParsed) {
-      return {
-        ok: false,
-        success: false,
-        error: 'La respuesta del motor documental no contenía JSON válido.'
-      };
-    }
-
+    const dataParsed = limpiarYParsearJSONAuditoria_(candidateText);
     const mapped = mapearAuditoriaEnAppsScript_(dataParsed, datosDeclarados);
     persistirDictamenAuditoriaEnHoja_(dataIn.idSolicitud, mapped);
 

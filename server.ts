@@ -83,15 +83,26 @@ app.get('/api/health', (req, res) => {
 });
 
 // Endpoint principal: Auditoría Documental Forense y Crediticia AMMER (Multimodal)
-app.post('/api/auditar-documentos', async (req, res) => {
+const handlerAuditoriaDocumental = async (req: any, res: any) => {
   try {
-    const { archivos, datosDeclarados, textoExtraido } = req.body || {};
+    const { archivos, datosDeclarados, textoExtraido, fileBase64, base64Archivo, base64, fileName, nombreArchivo, mimeType } = req.body || {};
 
     let listaArchivos: any[] = Array.isArray(archivos) ? archivos : [];
+    const directB64 = String(fileBase64 || base64Archivo || base64 || '').trim();
+    if (listaArchivos.length === 0 && directB64) {
+      listaArchivos = [{
+        nombre: fileName || nombreArchivo || 'recibo_sueldo.pdf',
+        fileName: fileName || nombreArchivo || 'recibo_sueldo.pdf',
+        mimeType: mimeType || 'application/pdf',
+        base64: directB64,
+        fileBase64: directB64
+      }];
+    }
     if (listaArchivos.length === 0 && textoExtraido && String(textoExtraido).trim().length >= 50) {
       listaArchivos = [{
-        nombre: 'recibo_markitdown.pdf',
-        mimeType: 'application/pdf',
+        nombre: fileName || nombreArchivo || 'recibo_markitdown.pdf',
+        fileName: fileName || nombreArchivo || 'recibo_markitdown.pdf',
+        mimeType: mimeType || 'application/pdf',
         textoExtraido: String(textoExtraido).trim()
       }];
     }
@@ -99,7 +110,8 @@ app.post('/api/auditar-documentos', async (req, res) => {
     if (listaArchivos.length === 0) {
       return res.status(400).json({
         ok: false,
-        error: 'Debe enviar al menos un archivo (Recibo de Haberes, DNI o Constancia) en formato Base64 o con capa de texto extraída.'
+        success: false,
+        error: 'No se recibió el archivo en Base64 (fileBase64) para ejecutar la auditoría OCR.'
       });
     }
 
@@ -117,14 +129,14 @@ app.post('/api/auditar-documentos', async (req, res) => {
     for (const arch of listaArchivos) {
       if (!arch) continue;
 
-      if (arch.base64) {
-        let mimeType = String(arch.mimeType || 'application/pdf').toLowerCase();
+      const rawB64 = String(arch.fileBase64 || arch.base64Archivo || arch.base64 || '');
+      if (rawB64) {
+        let mimeType = String(arch.mimeType || arch.tipoMime || 'application/pdf').toLowerCase();
         if (mimeType.includes('pdf')) mimeType = 'application/pdf';
         else if (mimeType.includes('png')) mimeType = 'image/png';
         else if (mimeType.includes('webp')) mimeType = 'image/webp';
         else mimeType = 'image/jpeg';
 
-        const rawB64 = String(arch.base64 || '');
         const base64Pure = (rawB64.includes(',') ? rawB64.split(',').pop() || '' : rawB64).trim();
         if (base64Pure) {
           parts.push({
@@ -354,7 +366,10 @@ Devuelve estrictamente JSON conforme al schema.
       error: error?.message || 'No fue posible auditar los documentos adjuntos. Verifique la nitidez de los archivos o intente nuevamente.'
     });
   }
-});
+};
+
+app.post('/api/auditar-documentos', handlerAuditoriaDocumental);
+app.post('/api/analizar-recibo', handlerAuditoriaDocumental);
 
 function formatCurrencyAuditAr_(val: number | null | undefined): string {
   if (val === null || val === undefined || !Number.isFinite(Number(val))) {

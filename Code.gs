@@ -157,6 +157,7 @@ function doPost(e) {
 
       case 'auditarConIA':
       case 'auditarReciboIA':
+      case 'analizarRecibo':
         return crearRespuestaJSON(auditarLegajoConIA(payload));
 
       default:
@@ -2513,14 +2514,20 @@ function auditarLegajoConIA(payload) {
     }
   }
 
+  const b64Directo = String(dataIn.fileBase64 || dataIn.base64Archivo || dataIn.base64 || '').trim();
+  const nombreDirecto = dataIn.fileName || dataIn.nombreArchivo || 'documento_auditoria.pdf';
+  const mimeDirecto = dataIn.mimeType || dataIn.tipoMime || 'application/pdf';
+
   let archivos = Array.isArray(dataIn.archivos)
-    ? dataIn.archivos.filter(function(a) { return a && (a.base64 || (a.textoExtraido && String(a.textoExtraido).trim().length >= 50)); })
+    ? dataIn.archivos.filter(function(a) { return a && (a.fileBase64 || a.base64Archivo || a.base64 || (a.textoExtraido && String(a.textoExtraido).trim().length >= 50)); })
     : [];
-  if (archivos.length === 0 && (dataIn.base64Archivo || (dataIn.textoExtraido && String(dataIn.textoExtraido).trim().length >= 50))) {
+  if (archivos.length === 0 && (b64Directo || (dataIn.textoExtraido && String(dataIn.textoExtraido).trim().length >= 50))) {
     archivos = [{
-      nombre: dataIn.nombreArchivo || 'documento_auditoria.pdf',
-      mimeType: dataIn.mimeType || dataIn.tipoMime || 'application/pdf',
-      base64: dataIn.base64Archivo || '',
+      nombre: nombreDirecto,
+      fileName: nombreDirecto,
+      mimeType: mimeDirecto,
+      base64: b64Directo,
+      fileBase64: b64Directo,
       textoExtraido: dataIn.textoExtraido || ''
     }];
   }
@@ -2529,7 +2536,7 @@ function auditarLegajoConIA(payload) {
     return {
       ok: false,
       success: false,
-      error: 'No se recibió ningún archivo digitalizado o texto extraído válido para auditar.'
+      error: 'No se recibió el archivo en Base64 (fileBase64) para ejecutar la auditoría OCR.'
     };
   }
 

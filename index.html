@@ -13655,14 +13655,20 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       return base64Limpio.trim();
     }
 
-    // Conversor nativo universal a Base64 puro (sin pdf.js ni workers externos)
-    function archivoABase64Puro(file) {
-      if (!file) return Promise.resolve('');
+    // 1. Obtener el Base64 limpio sin el prefijo data:...;base64,
+    async function obtenerBase64Limpio(file) {
+      if (!file) return '';
       if (typeof file === 'string') {
-        return Promise.resolve(limpiarBase64ParaAPI(file));
+        return limpiarBase64ParaAPI(file);
+      }
+      if (typeof file === 'object' && typeof file.fileBase64 === 'string' && file.fileBase64.trim()) {
+        return limpiarBase64ParaAPI(file.fileBase64);
       }
       if (typeof file === 'object' && typeof file.base64 === 'string' && file.base64.trim()) {
-        return Promise.resolve(limpiarBase64ParaAPI(file.base64));
+        return limpiarBase64ParaAPI(file.base64);
+      }
+      if (typeof file === 'object' && typeof file.base64Archivo === 'string' && file.base64Archivo.trim()) {
+        return limpiarBase64ParaAPI(file.base64Archivo);
       }
       if (typeof FileReader !== 'undefined') {
         return new Promise((resolve, reject) => {
@@ -13677,16 +13683,20 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         });
       }
       if (typeof file === 'object' && typeof file.arrayBuffer === 'function' && typeof btoa === 'function') {
-        return file.arrayBuffer().then((ab) => {
-          const bytes = new Uint8Array(ab);
-          let binary = '';
-          for (let i = 0; i < bytes.length; i++) {
-            binary += String.fromCharCode(bytes[i]);
-          }
-          return btoa(binary);
-        });
+        const ab = await file.arrayBuffer();
+        const bytes = new Uint8Array(ab);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
       }
-      return Promise.resolve('');
+      return '';
+    }
+
+    // Conversor nativo universal a Base64 puro (sin pdf.js ni workers externos)
+    function archivoABase64Puro(file) {
+      return obtenerBase64Limpio(file);
     }
 
     function limpiarNumero(val) {
@@ -14300,21 +14310,53 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const ejecutarPeticionAuditoria = async (urlDestino) => {
         const esAppsScript = urlDestino === APPS_SCRIPT_URL || urlDestino.includes('script.google.com');
         const primerArchivo = archivos[0] || {};
+        const b64Limpio = limpiarBase64ParaAPI(primerArchivo.fileBase64 || primerArchivo.base64Archivo || primerArchivo.base64 || '');
+        const nombreArchivo = primerArchivo.fileName || primerArchivo.nombreArchivo || primerArchivo.nombre || 'recibo_sueldo.pdf';
+        const mimeTypeArchivo = primerArchivo.mimeType || primerArchivo.tipoMime || 'application/pdf';
         const datosDecl = (contexto && contexto.datosDeclarados) || null;
+
+        const archivosMapeados = archivos.map(a => {
+          const b64Item = limpiarBase64ParaAPI(a.fileBase64 || a.base64Archivo || a.base64 || '');
+          const nomItem = a.fileName || a.nombreArchivo || a.nombre || 'archivo.pdf';
+          const mimeItem = a.mimeType || a.tipoMime || 'application/pdf';
+          return {
+            nombre: nomItem,
+            fileName: nomItem,
+            nombreArchivo: nomItem,
+            mimeType: mimeItem,
+            tipoMime: mimeItem,
+            base64: b64Item,
+            fileBase64: b64Item,
+            base64Archivo: b64Item,
+            textoExtraido: a.textoExtraido || ''
+          };
+        });
+
         const bodyPayload = esAppsScript
           ? {
-              action: 'auditarReciboIA',
+              action: 'analizarRecibo',
               idSolicitud: (contexto && contexto.idSolicitud) || 'DOCUMENTOS_SUELTOS',
-              archivos: archivos,
-              base64Archivo: limpiarBase64ParaAPI(primerArchivo.base64 || ''),
+              archivos: archivosMapeados,
+              fileBase64: b64Limpio,
+              base64Archivo: b64Limpio,
+              base64: b64Limpio,
+              fileName: nombreArchivo,
+              nombreArchivo: nombreArchivo,
+              mimeType: mimeTypeArchivo,
+              tipoMime: mimeTypeArchivo,
               textoExtraido: primerArchivo.textoExtraido || '',
-              mimeType: primerArchivo.mimeType || 'application/pdf',
-              nombreArchivo: primerArchivo.nombre || 'documento_auditoria.pdf',
               datosDeclarados: datosDecl,
               datosContexto: datosDecl
             }
           : {
-              archivos: archivos,
+              archivos: archivosMapeados,
+              fileBase64: b64Limpio,
+              base64Archivo: b64Limpio,
+              base64: b64Limpio,
+              fileName: nombreArchivo,
+              nombreArchivo: nombreArchivo,
+              mimeType: mimeTypeArchivo,
+              tipoMime: mimeTypeArchivo,
               textoExtraido: primerArchivo.textoExtraido || '',
               datosDeclarados: datosDecl
             };
@@ -15649,10 +15691,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       return renderizarAuditoriaYSimulador(audit);
     }
 
-    async function auditarReciboUniversal(file) {
+    // 2. Enviar comprobante al backend (Apps Script o servidor institucional)
+    async function enviarReciboABackend(file) {
       if (!file) {
         mostrarBannerErrorAuditoria('Seleccione o arrastre un Recibo de Sueldo en formato PDF, PNG o JPG.');
-        mostrarNotificacionToast('Seleccione un archivo válido para auditar.', 'error');
+        mostrarNotificacionToast('Seleccione un comprobante válido para auditar.', 'error');
         return null;
       }
 
@@ -15687,7 +15730,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       );
 
       try {
-        const nombreArchivo = (typeof file === 'object' && (file.name || file.nombre))
+        const fileName = (typeof file === 'object' && (file.name || file.nombre))
           ? String(file.name || file.nombre)
           : 'recibo_haberes.pdf';
         const mimeEntrada = (typeof file === 'object' && (file.type || file.mimeType))
@@ -15695,20 +15738,26 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           : '';
         const esPdf = mimeEntrada === 'application/pdf' ||
           mimeEntrada.includes('pdf') ||
-          nombreArchivo.toLowerCase().endsWith('.pdf');
+          fileName.toLowerCase().endsWith('.pdf');
         const mimeFinal = esPdf
           ? 'application/pdf'
           : (mimeEntrada.includes('png') ? 'image/png' : (mimeEntrada.includes('webp') ? 'image/webp' : 'image/jpeg'));
 
-        const base64Data = await archivoABase64Puro(file);
-        if (!base64Data) {
-          throw new Error('No se pudo leer el contenido binario del comprobante. Intente con un PDF o imagen PNG/JPG nítida.');
+        // 1. Obtener el Base64 limpio sin el prefijo data:...;base64,
+        const base64Data = await obtenerBase64Limpio(file);
+        if (!base64Data || base64Data.trim().length === 0) {
+          throw new Error('No se recibió el archivo en Base64 (fileBase64) para ejecutar la auditoría OCR.');
         }
 
         const archivoPayload = {
-          nombre: nombreArchivo,
+          nombre: fileName,
+          fileName: fileName,
+          nombreArchivo: fileName,
           mimeType: mimeFinal,
+          tipoMime: mimeFinal,
           base64: base64Data,
+          fileBase64: base64Data,
+          base64Archivo: base64Data,
           textoExtraido: ''
         };
 
@@ -15723,7 +15772,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         });
 
         if (!auditoria) {
-          throw new Error(window._ultimaErrorAuditoriaIA || 'El motor documental no pudo procesar el comprobante enviado.');
+          throw new Error(window._ultimaErrorAuditoriaIA || 'El motor documental no devolvió un dictamen legible.');
         }
 
         const okRendered = renderizarAuditoriaExitosa(auditoria);
@@ -15743,12 +15792,16 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
     }
 
+    async function auditarReciboUniversal(file) {
+      return enviarReciboABackend(file);
+    }
+
     async function procesarReciboUnico(file) {
-      return auditarReciboUniversal(file);
+      return enviarReciboABackend(file);
     }
 
     async function auditarReciboDocumental(file) {
-      return auditarReciboUniversal(file);
+      return enviarReciboABackend(file);
     }
 
     async function ejecutarAuditoriaDocumental(base64Data, tipoMime = 'application/pdf') {
@@ -16572,11 +16625,13 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.limpiarYParsearJSONAuditoria = limpiarYParsearJSONAuditoria;
     window.extraerJSONResiliente = extraerJSONResiliente;
     window.limpiarBase64ParaAPI = limpiarBase64ParaAPI;
+    window.obtenerBase64Limpio = obtenerBase64Limpio;
     window.archivoABase64Puro = archivoABase64Puro;
     window.limpiarNumero = limpiarNumero;
     window.mostrarBannerErrorAuditoria = mostrarBannerErrorAuditoria;
     window.ocultarBannerErrorAuditoria = ocultarBannerErrorAuditoria;
     window.mostrarNotificacionToast = mostrarNotificacionToast;
+    window.enviarReciboABackend = enviarReciboABackend;
     window.auditarReciboUniversal = auditarReciboUniversal;
     window.auditarReciboDirectoGemini = auditarReciboDirectoGemini;
     window.auditarReciboConIA = auditarReciboConIA;

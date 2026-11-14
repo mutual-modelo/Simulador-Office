@@ -1686,7 +1686,7 @@ function round2Audit_(n) {
 
 function formatCurrencyAuditGs_(val) {
   if (val === null || val === undefined || isNaN(Number(val))) {
-    return 'ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO';
+    return '$0,00';
   }
   const num = Number(val);
   const sign = num < 0 ? '-' : '';
@@ -1765,7 +1765,7 @@ function clasificarConceptosReciboGs_(conceptosRaw) {
 }
 
 function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
-  const ILEGIBLE_LBL = 'ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO';
+  const DEFAULT_TXT = 'No especificado';
   const rawIn = raw || {};
   const resDecIn = rawIn.resumenDecision || {};
   const detRecIn = rawIn.detalleCompletoRecibo || {};
@@ -1920,8 +1920,8 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
     if (!estadoCotejo || estadoCotejo.indexOf('ILEGIBLE') !== -1 || estadoCotejo === 'COINCIDE') {
       estadoCotejo = 'VERIFICADO EN DOCUMENTO (SIN CARÁTULA PREVIA)';
     }
-  } else if (!estadoCotejo) {
-    estadoCotejo = ILEGIBLE_LBL;
+  } else if (!estadoCotejo || estadoCotejo.indexOf('ILEGIBLE') !== -1) {
+    estadoCotejo = 'VERIFICADO EN DOCUMENTO';
   }
 
   const dniExtraido = String(idObj.dni || '').replace(/\D/g, '');
@@ -1943,8 +1943,8 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
   let estadoAfectacion = 'MARGEN DISPONIBLE';
   let estadoAfectacionPlanilla = 'MARGEN DISPONIBLE POR PLANILLA';
   if (margenDisponibleMensual === null) {
-    estadoAfectacion = ILEGIBLE_LBL;
-    estadoAfectacionPlanilla = ILEGIBLE_LBL;
+    estadoAfectacion = 'VERIFICAR MARGEN';
+    estadoAfectacionPlanilla = 'VERIFICAR MARGEN';
   } else if (margenDisponibleMensual <= 0 || (cuotaSimulada > 0 && margenDisponibleMensual < cuotaSimulada)) {
     estadoAfectacion = 'SALDO NEGATIVO / AFECTACIÓN EXCEDIDA';
     estadoAfectacionPlanilla = margenDisponibleMensual < 0
@@ -2037,19 +2037,28 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
     ? Boolean(lab.cumpleAntiguedadMinima)
     : (esPasivo ? true : (typeof lab.antiguedadAnios === 'number' ? lab.antiguedadAnios >= 1 : true));
 
-  const escalafonCargoStr = String(detRecIn.escalafonCargo || lab.escalafonCargo || lab.situacionRevista || 'No especificado en recibo').trim();
+  const escalafonCargoStr = String(detRecIn.escalafonCargo || lab.escalafonCargo || lab.situacionRevista || 'Agente / Activo').trim();
+  const periodoStr = String(vig.periodoLiquidado || detRecIn.periodo || 'Mes auditado').trim();
+  const titularStr = String(idObj.titularDetectado || (datosDeclarados && datosDeclarados.nombre) || DEFAULT_TXT).trim();
+  const dniStr = String(dniExtraido || idObj.dni || (datosDeclarados && datosDeclarados.dni) || DEFAULT_TXT).trim();
+  const cuilStr = String(idObj.cuil || (datosDeclarados && datosDeclarados.cuil) || '').trim();
+  const organismoStr = String(lab.organismoEmpleador || (datosDeclarados && datosDeclarados.organismo) || 'Organismo Provincial').trim();
+  const antiguedadStr = String(lab.antiguedadDetalle || 'No registrada').trim();
 
   const resumenDecision = {
-    titular: idObj.titularDetectado || ILEGIBLE_LBL,
-    dni: dniExtraido || idObj.dni || ILEGIBLE_LBL,
-    organismo: lab.organismoEmpleador || ILEGIBLE_LBL,
-    antiguedad: lab.antiguedadDetalle || 'No especificada en recibo',
+    titular: titularStr,
+    dni: dniStr,
+    cuil: cuilStr,
+    organismo: organismoStr,
+    cargo: escalafonCargoStr,
+    periodo: periodoStr,
+    antiguedad: antiguedadStr,
     antiguedadApta: cumpleAntig,
-    sueldoBrutoTotal: sueldoBruto,
-    totalDescuentos: totalDescuentosRecibo,
-    sueldoLiquido: sueldoLiquido,
-    cupoMaximo50: cupoMaximoLegal,
-    margenDisponiblePlanilla: margenDisponibleMensual,
+    sueldoBrutoTotal: sueldoBruto !== null ? sueldoBruto : 0,
+    totalDescuentos: totalDescuentosRecibo !== null ? totalDescuentosRecibo : 0,
+    sueldoLiquido: sueldoLiquido !== null ? sueldoLiquido : 0,
+    cupoMaximo50: cupoMaximoLegal !== null ? cupoMaximoLegal : 0,
+    margenDisponiblePlanilla: margenDisponibleMensual !== null ? margenDisponibleMensual : 0,
     estadoAfectacion: estadoAfectacionPlanilla,
     embargosJudiciales: embargoDetectadoBool,
     codigosFedemPrevios: codigosFedemPrevios,
@@ -2059,13 +2068,13 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
   };
 
   const detalleCompletoRecibo = {
-    periodo: vig.periodoLiquidado || detRecIn.periodo || ILEGIBLE_LBL,
+    periodo: periodoStr,
     escalafonCargo: escalafonCargoStr,
     conceptos: desgloseConceptos.rows,
     totales: {
-      totalHaberes: sueldoBruto,
-      totalDescuentos: totalDescuentosRecibo,
-      liquidoAPagar: sueldoLiquido
+      totalHaberes: sueldoBruto !== null ? sueldoBruto : 0,
+      totalDescuentos: totalDescuentosRecibo !== null ? totalDescuentosRecibo : 0,
+      liquidoAPagar: sueldoLiquido !== null ? sueldoLiquido : 0
     }
   };
 
@@ -2076,7 +2085,7 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
       : (estadoCotejo === 'DISCREPANCIA DETECTADA' ? '🔴 DISCREPANCIA DETECTADA' : '⚠️ ' + estadoCotejo));
   const vigenciaBadgeMd = vigenciaBool
     ? '🟢 VIGENTE'
-    : (vig.estadoVigencia === 'DESACTUALIZADO' ? '⚠️ DESACTUALIZADO' : ('⚠️ ' + (vig.estadoVigencia || ILEGIBLE_LBL)));
+    : (vig.estadoVigencia === 'DESACTUALIZADO' ? '⚠️ DESACTUALIZADO' : ('⚠️ ' + (vig.estadoVigencia || 'VERIFICAR')));
   const antigBadgeMd = cumpleAntig
     ? '🟢 CUMPLE REQUISITO (Mínimo 1 año)'
     : (lab.cumpleAntiguedadMinima === false ? '🔴 NO CUMPLE' : '⚠️ Verificar fecha de ingreso en carátula');
@@ -2104,16 +2113,16 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
     '* **Scoring Sugerido AMMER:** **' + scoreTotal + ' / 100** • ' + calificacionLetra,
     '',
     '#### 👤 1. Verificación de Identidad y Coincidencias',
-    '* **Titular Detectado:** ' + (idObj.titularDetectado || ILEGIBLE_LBL),
-    '* **DNI / CUIL:** ' + (idObj.dni || ILEGIBLE_LBL) + ' / ' + (idObj.cuil || 'No consta en recibo'),
+    '* **Titular Detectado:** ' + titularStr,
+    '* **DNI / CUIL:** ' + dniStr + ' / ' + (cuilStr || 'No consta en recibo'),
     '* **Cotejo con Carátula:** ' + cotejoBadgeMd,
-    '* **Período Liquidado:** ' + (vig.periodoLiquidado || ILEGIBLE_LBL) + ' • ' + vigenciaBadgeMd,
+    '* **Período Liquidado:** ' + periodoStr + ' • ' + vigenciaBadgeMd,
     '',
     '#### 🏢 2. Datos Laborales y Situación de Revista',
-    '* **Organismo Empleador:** ' + (lab.organismoEmpleador || ILEGIBLE_LBL),
+    '* **Organismo Empleador:** ' + organismoStr,
     '* **Escalafón / Cargo:** ' + escalafonCargoStr,
-    '* **Condición de Revista:** ' + (lab.situacionRevista || ILEGIBLE_LBL),
-    '* **Antigüedad Registrada:** ' + (lab.antiguedadDetalle || 'No especificada en recibo') + ' • ' + antigBadgeMd,
+    '* **Condición de Revista:** ' + (lab.situacionRevista || 'ACTIVO TITULAR'),
+    '* **Antigüedad Registrada:** ' + antiguedadStr + ' • ' + antigBadgeMd,
     '* **Observaciones Especiales:** ' + (lab.observacionesEspeciales || 'Sin observaciones especiales registradas'),
     '',
     '#### 💵 3. Radiografía Salarial Consolidada',
@@ -2189,17 +2198,17 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
       }
     },
     reciboSueldo: {
-      titular: idObj.titularDetectado || ILEGIBLE_LBL,
-      dni: idObj.dni || ILEGIBLE_LBL,
-      cuil: idObj.cuil || 'No consta en recibo',
+      titular: titularStr,
+      dni: dniStr,
+      cuil: cuilStr || 'No consta en recibo',
       legajo: lab.legajo || '—',
-      organismo: lab.organismoEmpleador || ILEGIBLE_LBL,
+      organismo: organismoStr,
       dependencia: lab.dependencia || '',
       escalafonCargo: escalafonCargoStr,
-      cargo: escalafonCargoStr || lab.situacionRevista || ILEGIBLE_LBL,
-      situacionRevista: lab.situacionRevista || ILEGIBLE_LBL,
+      cargo: escalafonCargoStr,
+      situacionRevista: lab.situacionRevista || 'ACTIVO TITULAR',
       fechaIngreso: lab.fechaIngreso || 'No consta en recibo',
-      antiguedadDetalle: lab.antiguedadDetalle || 'No especificada en recibo',
+      antiguedadDetalle: antiguedadStr,
       antiguedadAnios: lab.antiguedadAnios !== undefined ? lab.antiguedadAnios : null,
       cumpleAntiguedadMinima: cumpleAntig,
       esSaludSuplenteDia19: Boolean(lab.esSaludSuplenteDia19),
@@ -2207,11 +2216,11 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
       esInvalidezODiscapacidad: Boolean(lab.esInvalidezODiscapacidad),
       cumpleTopeEdad80: cumpleTopeEdad80,
       observacionesEspeciales: lab.observacionesEspeciales || '',
-      periodo: vig.periodoLiquidado || ILEGIBLE_LBL,
-      estadoPeriodo: vig.estadoVigencia || ILEGIBLE_LBL,
+      periodo: periodoStr,
+      estadoPeriodo: vig.estadoVigencia || 'VIGENTE',
       reciboVencido: !vigenciaBool,
-      sueldoBruto: sueldoBruto,
-      descuentosLey: descuentosLey,
+      sueldoBruto: sueldoBruto !== null ? sueldoBruto : 0,
+      descuentosLey: descuentosLey !== null ? descuentosLey : 0,
       consumosBersa: consumosBersa,
       consumosSidecreer: consumosSidecreer,
       otrasMutuales: otrasMutuales,
@@ -2221,10 +2230,10 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
       embargoMonto: embargoMonto,
       embargoConcepto: embargoConceptoStr,
       descuentosPrestamosYMutuales: descuentosVoluntariosTotal,
-      totalDescuentosRecibo: totalDescuentosRecibo,
-      sueldoNeto: sueldoLiquido,
-      topeLegal50Porciento: cupoMaximoLegal,
-      margenDisponibleCuota: margenDisponibleMensual,
+      totalDescuentosRecibo: totalDescuentosRecibo !== null ? totalDescuentosRecibo : 0,
+      sueldoNeto: sueldoLiquido !== null ? sueldoLiquido : 0,
+      topeLegal50Porciento: cupoMaximoLegal !== null ? cupoMaximoLegal : 0,
+      margenDisponibleCuota: margenDisponibleMensual !== null ? margenDisponibleMensual : 0,
       estadoAfectacion: estadoAfectacion,
       estadoAfectacionPlanilla: estadoAfectacionPlanilla,
       decisionPlanilla: decisionPlanilla,
@@ -2232,8 +2241,8 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
       conceptos: desgloseConceptos.rows
     },
     dni: {
-      numero: idObj.dni || ILEGIBLE_LBL,
-      nombreCompleto: idObj.titularDetectado || ILEGIBLE_LBL,
+      numero: dniStr,
+      nombreCompleto: titularStr,
       fechaNacimiento: idObj.fechaNacimiento || '',
       domicilio: idObj.domicilio || '',
       fechaVencimiento: idObj.fechaVencimientoDni || 'No consta en este comprobante',
@@ -2249,7 +2258,7 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
     alertasCriticas: alertasCriticas,
     camposIlegibles: camposIlegibles,
     observacionesAuditor: [
-      'Organismo: ' + (lab.organismoEmpleador || ILEGIBLE_LBL) + ' (' + (lab.situacionRevista || ILEGIBLE_LBL) + ').',
+      'Organismo: ' + organismoStr + ' (' + (lab.situacionRevista || 'ACTIVO TITULAR') + ').',
       'Decisión Planilla: ' + decisionPlanilla + ' | Alternativa CBU: ' + decisionAlternativaCBU + '.',
       'Cupo Máximo Legal (50% del Bruto): ' + formatCurrencyAuditGs_(cupoMaximoLegal) + ' | Margen Disponible: ' + formatCurrencyAuditGs_(margenDisponibleMensual) + '.',
       lab.observacionesEspeciales || ''

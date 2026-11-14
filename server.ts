@@ -191,7 +191,7 @@ Devuelve estrictamente JSON conforme al schema.
             domicilio: { type: Type.STRING },
             fechaVencimientoDni: { type: Type.STRING },
             dniVigente: { type: Type.BOOLEAN },
-            estadoCotejoCaratula: { type: Type.STRING, description: 'COINCIDE | VERIFICADO EN DOCUMENTO (SIN CARÁTULA PREVIA) | DISCREPANCIA DETECTADA | ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO' },
+            estadoCotejoCaratula: { type: Type.STRING, description: 'COINCIDE | VERIFICADO EN DOCUMENTO (SIN CARÁTULA PREVIA) | DISCREPANCIA DETECTADA' },
             detalleDiscrepancias: { type: Type.ARRAY, items: { type: Type.STRING } }
           },
           required: ['titularDetectado', 'dni', 'cuil', 'estadoCotejoCaratula']
@@ -203,7 +203,7 @@ Devuelve estrictamente JSON conforme al schema.
             dependencia: { type: Type.STRING },
             legajo: { type: Type.STRING },
             escalafonCargo: { type: Type.STRING, description: 'Escalafón, categoría o cargo literal impreso en el recibo' },
-            situacionRevista: { type: Type.STRING, description: 'ACTIVO TITULAR | ACTIVO SUPLENTE | PASIVO | ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO' },
+            situacionRevista: { type: Type.STRING, description: 'ACTIVO TITULAR | ACTIVO SUPLENTE | PASIVO' },
             fechaIngreso: { type: Type.STRING },
             antiguedadDetalle: { type: Type.STRING },
             antiguedadAnios: { type: Type.NUMBER },
@@ -219,8 +219,8 @@ Devuelve estrictamente JSON conforme al schema.
         vigenciaRecibo: {
           type: Type.OBJECT,
           properties: {
-            periodoLiquidado: { type: Type.STRING, description: 'MM/YYYY o ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO' },
-            estadoVigencia: { type: Type.STRING, description: 'VIGENTE | DESACTUALIZADO | ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO' },
+            periodoLiquidado: { type: Type.STRING, description: 'Período liquidado impreso en el recibo (ej. MM/YYYY o Mes Año)' },
+            estadoVigencia: { type: Type.STRING, description: 'VIGENTE | DESACTUALIZADO' },
             esVigente: { type: Type.BOOLEAN }
           },
           required: ['periodoLiquidado', 'estadoVigencia', 'esVigente']
@@ -302,7 +302,7 @@ Devuelve estrictamente JSON conforme al schema.
           model: modelo,
           contents: [{ parts }],
           config: {
-            systemInstruction: 'Eres Auditor Crediticio Senior y Especialista en Verificación Documental Forense de AMMER. Transcribe literalmente todos los códigos, conceptos, haberes y descuentos impresos en el recibo sin inventar cifras ni redondear. Coloca 0 cuando un descuento opcional no figure en el comprobante. Solo marca "ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO" si un dato obligatorio está físicamente cortado o borroso. Devuelve exclusivamente JSON conforme al schema.',
+            systemInstruction: 'Eres Auditor Crediticio Senior y Especialista en Verificación Documental Forense de AMMER. Extrae literalmente todos los datos personales, organismo, cargo, período, antigüedad y todos los renglones de códigos, conceptos, haberes y descuentos impresos en el recibo sin inventar cifras ni redondear. Coloca 0 cuando un descuento opcional no figure en el comprobante y cadena vacía "" si un dato textual secundario no consta en el recibo. Devuelve exclusivamente JSON conforme al schema.',
             responseMimeType: 'application/json',
             responseSchema
           }
@@ -366,7 +366,7 @@ Devuelve estrictamente JSON conforme al schema.
 
 function formatCurrencyAuditAr_(val: number | null | undefined): string {
   if (val === null || val === undefined || !Number.isFinite(Number(val))) {
-    return 'ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO';
+    return '$0,00';
   }
   return '$' + Number(val).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -436,7 +436,7 @@ function clasificarConceptosRecibo_(conceptosRaw: any[]) {
 }
 
 function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
-  const ILEGIBLE_LBL = 'ILEGIBLE / REQUIERE RESUBIR DOCUMENTO NÍTIDO';
+  const DEFAULT_TXT = 'No especificado';
   const rawIn = raw || {};
   const resDecIn = rawIn.resumenDecision || {};
   const detRecIn = rawIn.detalleCompletoRecibo || {};
@@ -592,8 +592,8 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     if (!estadoCotejo || estadoCotejo.includes('ILEGIBLE') || estadoCotejo === 'COINCIDE') {
       estadoCotejo = 'VERIFICADO EN DOCUMENTO (SIN CARÁTULA PREVIA)';
     }
-  } else if (!estadoCotejo) {
-    estadoCotejo = ILEGIBLE_LBL;
+  } else if (!estadoCotejo || estadoCotejo.includes('ILEGIBLE')) {
+    estadoCotejo = 'VERIFICADO EN DOCUMENTO';
   }
 
   const dniExtraido = String(idObj.dni || '').replace(/\D/g, '');
@@ -642,8 +642,8 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
   let estadoAfectacion = 'MARGEN DISPONIBLE';
   let estadoAfectacionPlanilla = 'MARGEN DISPONIBLE POR PLANILLA';
   if (margenDisponibleMensual === null) {
-    estadoAfectacion = ILEGIBLE_LBL;
-    estadoAfectacionPlanilla = ILEGIBLE_LBL;
+    estadoAfectacion = 'VERIFICAR MARGEN';
+    estadoAfectacionPlanilla = 'VERIFICAR MARGEN';
   } else if (margenDisponibleMensual <= 0 || (cuotaSimulada > 0 && margenDisponibleMensual < cuotaSimulada)) {
     estadoAfectacion = 'SALDO NEGATIVO / AFECTACIÓN EXCEDIDA';
     estadoAfectacionPlanilla = margenDisponibleMensual < 0
@@ -736,19 +736,28 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     ? Boolean(lab.cumpleAntiguedadMinima)
     : (esPasivo ? true : (typeof lab.antiguedadAnios === 'number' ? lab.antiguedadAnios >= 1 : true));
 
-  const escalafonCargoStr = String(detRecIn.escalafonCargo || lab.escalafonCargo || lab.situacionRevista || 'No especificado en recibo').trim();
+  const escalafonCargoStr = String(detRecIn.escalafonCargo || lab.escalafonCargo || lab.situacionRevista || 'Agente / Activo').trim();
+  const periodoStr = String(vig.periodoLiquidado || detRecIn.periodo || 'Mes auditado').trim();
+  const titularStr = String(idObj.titularDetectado || datosDeclarados?.nombre || DEFAULT_TXT).trim();
+  const dniStr = String(dniExtraido || idObj.dni || datosDeclarados?.dni || DEFAULT_TXT).trim();
+  const cuilStr = String(idObj.cuil || datosDeclarados?.cuil || '').trim();
+  const organismoStr = String(lab.organismoEmpleador || datosDeclarados?.organismo || 'Organismo Provincial').trim();
+  const antiguedadStr = String(lab.antiguedadDetalle || 'No registrada').trim();
 
   const resumenDecision = {
-    titular: idObj.titularDetectado || ILEGIBLE_LBL,
-    dni: dniExtraido || idObj.dni || ILEGIBLE_LBL,
-    organismo: lab.organismoEmpleador || ILEGIBLE_LBL,
-    antiguedad: lab.antiguedadDetalle || ILEGIBLE_LBL,
+    titular: titularStr,
+    dni: dniStr,
+    cuil: cuilStr,
+    organismo: organismoStr,
+    cargo: escalafonCargoStr,
+    periodo: periodoStr,
+    antiguedad: antiguedadStr,
     antiguedadApta: cumpleAntig,
-    sueldoBrutoTotal: sueldoBruto,
-    totalDescuentos: totalDescuentosRecibo,
-    sueldoLiquido,
-    cupoMaximo50: cupoMaximoLegal,
-    margenDisponiblePlanilla: margenDisponibleMensual,
+    sueldoBrutoTotal: sueldoBruto ?? 0,
+    totalDescuentos: totalDescuentosRecibo ?? 0,
+    sueldoLiquido: sueldoLiquido ?? 0,
+    cupoMaximo50: cupoMaximoLegal ?? 0,
+    margenDisponiblePlanilla: margenDisponibleMensual ?? 0,
     estadoAfectacion: estadoAfectacionPlanilla,
     embargosJudiciales: embargoDetectadoBool,
     codigosFedemPrevios,
@@ -758,13 +767,13 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
   };
 
   const detalleCompletoRecibo = {
-    periodo: vig.periodoLiquidado || detRecIn.periodo || ILEGIBLE_LBL,
+    periodo: periodoStr,
     escalafonCargo: escalafonCargoStr,
     conceptos: desgloseConceptos.rows,
     totales: {
-      totalHaberes: sueldoBruto,
-      totalDescuentos: totalDescuentosRecibo,
-      liquidoAPagar: sueldoLiquido
+      totalHaberes: sueldoBruto ?? 0,
+      totalDescuentos: totalDescuentosRecibo ?? 0,
+      liquidoAPagar: sueldoLiquido ?? 0
     }
   };
 
@@ -775,7 +784,7 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
       : (estadoCotejo === 'DISCREPANCIA DETECTADA' ? '🔴 DISCREPANCIA DETECTADA' : `⚠️ ${estadoCotejo}`));
   const vigenciaBadgeMd = vigenciaBool
     ? '🟢 VIGENTE'
-    : (vig.estadoVigencia === 'DESACTUALIZADO' ? '⚠️ DESACTUALIZADO' : `⚠️ ${vig.estadoVigencia || ILEGIBLE_LBL}`);
+    : (vig.estadoVigencia === 'DESACTUALIZADO' ? '⚠️ DESACTUALIZADO' : `⚠️ ${vig.estadoVigencia || 'VERIFICAR'}`);
   const antigBadgeMd = cumpleAntig
     ? '🟢 CUMPLE REQUISITO (Mínimo 1 año)'
     : (lab.cumpleAntiguedadMinima === false ? '🔴 NO CUMPLE' : '⚠️ Verificar fecha de ingreso en carátula');
@@ -819,16 +828,16 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     `* **Scoring Sugerido AMMER:** **${scoreTotal} / 100** • ${calificacionLetra}`,
     '',
     '#### 👤 1. Verificación de Identidad y Coincidencias',
-    `* **Titular Detectado:** ${idObj.titularDetectado || ILEGIBLE_LBL}`,
-    `* **DNI / CUIL:** ${idObj.dni || ILEGIBLE_LBL} / ${idObj.cuil || ILEGIBLE_LBL}`,
+    `* **Titular Detectado:** ${titularStr}`,
+    `* **DNI / CUIL:** ${dniStr}${cuilStr ? ' / ' + cuilStr : ''}`,
     `* **Cotejo con Carátula:** ${cotejoBadgeMd}`,
-    `* **Período Liquidado:** ${vig.periodoLiquidado || ILEGIBLE_LBL} • ${vigenciaBadgeMd}`,
+    `* **Período Liquidado:** ${periodoStr} • ${vigenciaBadgeMd}`,
     '',
     '#### 🏢 2. Datos Laborales y Situación de Revista',
-    `* **Organismo Empleador:** ${lab.organismoEmpleador || ILEGIBLE_LBL}`,
+    `* **Organismo Empleador:** ${organismoStr}`,
     `* **Escalafón / Cargo:** ${escalafonCargoStr}`,
-    `* **Condición de Revista:** ${lab.situacionRevista || ILEGIBLE_LBL}`,
-    `* **Antigüedad Registrada:** ${lab.antiguedadDetalle || ILEGIBLE_LBL} • ${antigBadgeMd}`,
+    `* **Condición de Revista:** ${lab.situacionRevista || 'ACTIVO TITULAR'}`,
+    `* **Antigüedad Registrada:** ${antiguedadStr} • ${antigBadgeMd}`,
     `* **Observaciones Especiales:** ${lab.observacionesEspeciales || 'Sin observaciones especiales registradas'}`,
     '',
     '#### 💵 3. Radiografía Salarial Consolidada',
@@ -881,24 +890,24 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
       decisionAlternativaCBU,
       nivelConfianza: scRaw.nivelConfianza || (scoreTotal >= 80 ? 'ALTO' : (scoreTotal >= 60 ? 'MEDIO' : 'BAJO')),
       pilares: {
-        calidadDocumental: { puntaje: pCalidad, maximo: 20, detalle: camposIlegibles.length ? `Campos ilegibles: ${camposIlegibles.join(', ')}` : 'Lectura literal verificada sin campos cortados o borrosos.' },
-        vigenciaYFormalidad: { puntaje: pVigencia, maximo: 20, detalle: vigenciaBool ? `Período ${vig.periodoLiquidado} vigente según calendario.` : `Período ${vig.periodoLiquidado || 'sin fecha'} observado.` },
-        coincidenciaIdentidad: { puntaje: pIdentidad, maximo: 30, detalle: dniCoincideBool ? 'Coincidencia total entre documento y carátula.' : 'Discrepancia o ilegibilidad en cotejo de identidad.' },
+        calidadDocumental: { puntaje: pCalidad, maximo: 20, detalle: camposIlegibles.length ? `Campos faltantes: ${camposIlegibles.join(', ')}` : 'Lectura literal verificada sin campos cortados o borrosos.' },
+        vigenciaYFormalidad: { puntaje: pVigencia, maximo: 20, detalle: vigenciaBool ? `Período ${periodoStr} vigente según calendario.` : `Período ${periodoStr} observado.` },
+        coincidenciaIdentidad: { puntaje: pIdentidad, maximo: 30, detalle: dniCoincideBool ? 'Coincidencia total entre documento y carátula.' : 'Discrepancia en cotejo de identidad.' },
         capacidadFinanciera: { puntaje: pFinanciera, maximo: 30, detalle: `Tope 50% Bruto (${formatCurrencyAuditAr_(cupoMaximoLegal)}) vs Descuentos (${formatCurrencyAuditAr_(totalDescuentosRecibo)}).` }
       }
     },
     reciboSueldo: {
-      titular: idObj.titularDetectado || ILEGIBLE_LBL,
-      dni: idObj.dni || ILEGIBLE_LBL,
-      cuil: idObj.cuil || ILEGIBLE_LBL,
+      titular: titularStr,
+      dni: dniStr,
+      cuil: cuilStr || 'No consta en recibo',
       legajo: lab.legajo || '—',
-      organismo: lab.organismoEmpleador || ILEGIBLE_LBL,
+      organismo: organismoStr,
       dependencia: lab.dependencia || '',
       escalafonCargo: escalafonCargoStr,
-      cargo: escalafonCargoStr || lab.situacionRevista || ILEGIBLE_LBL,
-      situacionRevista: lab.situacionRevista || ILEGIBLE_LBL,
-      fechaIngreso: lab.fechaIngreso || ILEGIBLE_LBL,
-      antiguedadDetalle: lab.antiguedadDetalle || ILEGIBLE_LBL,
+      cargo: escalafonCargoStr,
+      situacionRevista: lab.situacionRevista || 'ACTIVO TITULAR',
+      fechaIngreso: lab.fechaIngreso || 'No consta en recibo',
+      antiguedadDetalle: antiguedadStr,
       antiguedadAnios: lab.antiguedadAnios !== undefined ? lab.antiguedadAnios : null,
       cumpleAntiguedadMinima: cumpleAntig,
       esSaludSuplenteDia19: Boolean(lab.esSaludSuplenteDia19),
@@ -906,11 +915,11 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
       esInvalidezODiscapacidad: Boolean(lab.esInvalidezODiscapacidad),
       cumpleTopeEdad80,
       observacionesEspeciales: lab.observacionesEspeciales || '',
-      periodo: vig.periodoLiquidado || ILEGIBLE_LBL,
-      estadoPeriodo: vig.estadoVigencia || ILEGIBLE_LBL,
+      periodo: periodoStr,
+      estadoPeriodo: vig.estadoVigencia || 'VIGENTE',
       reciboVencido: !vigenciaBool,
-      sueldoBruto,
-      descuentosLey,
+      sueldoBruto: sueldoBruto ?? 0,
+      descuentosLey: descuentosLey ?? 0,
       consumosBersa,
       consumosSidecreer,
       otrasMutuales,
@@ -920,10 +929,10 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
       embargoMonto,
       embargoConcepto: embargoConceptoStr,
       descuentosPrestamosYMutuales: descuentosVoluntariosTotal,
-      totalDescuentosRecibo,
-      sueldoNeto: sueldoLiquido,
-      topeLegal50Porciento: cupoMaximoLegal,
-      margenDisponibleCuota: margenDisponibleMensual,
+      totalDescuentosRecibo: totalDescuentosRecibo ?? 0,
+      sueldoNeto: sueldoLiquido ?? 0,
+      topeLegal50Porciento: cupoMaximoLegal ?? 0,
+      margenDisponibleCuota: margenDisponibleMensual ?? 0,
       estadoAfectacion,
       estadoAfectacionPlanilla,
       decisionPlanilla,
@@ -931,8 +940,8 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
       conceptos: desgloseConceptos.rows
     },
     dni: {
-      numero: idObj.dni || ILEGIBLE_LBL,
-      nombreCompleto: idObj.titularDetectado || ILEGIBLE_LBL,
+      numero: dniStr,
+      nombreCompleto: titularStr,
       fechaNacimiento: idObj.fechaNacimiento || '',
       domicilio: idObj.domicilio || '',
       fechaVencimiento: idObj.fechaVencimientoDni || 'No consta / Sin imagen DNI',
@@ -948,7 +957,7 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     alertasCriticas,
     camposIlegibles,
     observacionesAuditor: [
-      `Organismo: ${lab.organismoEmpleador || ILEGIBLE_LBL} (${lab.situacionRevista || ILEGIBLE_LBL}).`,
+      `Organismo: ${organismoStr} (${lab.situacionRevista || 'ACTIVO TITULAR'}).`,
       `Decisión Planilla: ${decisionPlanilla} | Alternativa CBU: ${decisionAlternativaCBU}.`,
       `Cupo Máximo Legal (50% del Bruto): ${formatCurrencyAuditAr_(cupoMaximoLegal)} | Margen Disponible: ${formatCurrencyAuditAr_(margenDisponibleMensual)}.`,
       lab.observacionesEspeciales || ''

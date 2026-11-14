@@ -2617,23 +2617,49 @@ function auditarLegajoConIA(payload) {
   parts.push({ text: promptAuditor });
 
   try {
-    const modelosGemini = ['gemini-4-hydrogen', 'gemini-2.5-flash', 'gemini-3.1-flash-lite'];
+    const intentosEndpoints = [
+      {
+        nombre: 'gemini-2.5-flash (v1beta)',
+        url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(apiKey)
+      },
+      {
+        nombre: 'gemini-4-hydrogen (v1beta)',
+        url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-4-hydrogen:generateContent?key=' + encodeURIComponent(apiKey)
+      },
+      {
+        nombre: 'gemini-3.1-flash-lite (v1beta)',
+        url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=' + encodeURIComponent(apiKey)
+      },
+      {
+        nombre: 'gemini-2.5-pro (v1beta)',
+        url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=' + encodeURIComponent(apiKey)
+      },
+      {
+        nombre: 'gemini-2.5-flash (v1)',
+        url: 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(apiKey)
+      }
+    ];
+
+    const payloadGemini = {
+      contents: [{
+        parts: parts
+      }],
+      generationConfig: {
+        temperature: 0.1,
+        responseMimeType: 'application/json'
+      }
+    };
+
     let mapped = null;
     let ultimoErrorHttp = '';
 
-    for (let idxMod = 0; idxMod < modelosGemini.length; idxMod++) {
-      const modeloActual = modelosGemini[idxMod];
-      const endpointGemini = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(modeloActual) + ':generateContent?key=' + encodeURIComponent(apiKey);
-      const resp = UrlFetchApp.fetch(endpointGemini, {
+    for (let idxMod = 0; idxMod < intentosEndpoints.length; idxMod++) {
+      const intento = intentosEndpoints[idxMod];
+      const resp = UrlFetchApp.fetch(intento.url, {
         method: 'post',
         contentType: 'application/json',
         muteHttpExceptions: true,
-        payload: JSON.stringify({
-          contents: [{ parts: parts }],
-          generationConfig: {
-            responseMimeType: 'application/json'
-          }
-        })
+        payload: JSON.stringify(payloadGemini)
       });
 
       const code = resp.getResponseCode();
@@ -2647,13 +2673,13 @@ function auditarLegajoConIA(payload) {
           : '';
 
         if (!candidateText) {
-          ultimoErrorHttp = 'Modelo ' + modeloActual + ' devolvió respuesta vacía.';
+          ultimoErrorHttp = 'Modelo ' + intento.nombre + ' devolvió respuesta vacía.';
           continue;
         }
 
         const dataParsed = limpiarYParsearJSONAuditoria_(candidateText);
         if (!dataParsed) {
-          ultimoErrorHttp = 'Modelo ' + modeloActual + ' devolvió JSON incompleto.';
+          ultimoErrorHttp = 'Modelo ' + intento.nombre + ' devolvió JSON incompleto.';
           continue;
         }
 
@@ -2675,9 +2701,9 @@ function auditarLegajoConIA(payload) {
           mapped = candidatoMapped;
           break;
         }
-        ultimoErrorHttp = 'No se detectaron importes salariales ni conceptos legibles en el comprobante enviado.';
+        ultimoErrorHttp = 'No se detectaron importes salariales ni conceptos legibles en el comprobante enviado (' + intento.nombre + ').';
       } else {
-        ultimoErrorHttp = 'Motor documental (' + modeloActual + ') respondió HTTP ' + code + ': ' + rawRespText.slice(0, 220);
+        ultimoErrorHttp = 'Modelo ' + intento.nombre + ' devolvió HTTP ' + code + ': ' + rawRespText.slice(0, 220);
       }
     }
 
@@ -2694,6 +2720,7 @@ function auditarLegajoConIA(payload) {
     return {
       ok: true,
       success: true,
+      data: mapped,
       auditoria: mapped,
       resultado: mapped,
       resumenDecision: mapped.resumenDecision,

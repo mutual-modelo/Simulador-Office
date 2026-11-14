@@ -360,13 +360,13 @@ function normalizarNombreArchivoConPrefijo_(nombreRaw, tipoDoc, prefijoOficial, 
 
 function obtenerFechaHora24Argentina_(fechaObj) {
   const d = (fechaObj instanceof Date && !isNaN(fechaObj.getTime())) ? fechaObj : new Date();
-  return Utilities.formatDate(d, 'GMT-3', "dd/MM/yyyy, HH:mm 'hs'");
+  return Utilities.formatDate(d, 'GMT-3', "dd/MM/yyyy · HH:mm 'hs'");
 }
 
 function formatearFecha24Backend_(val) {
   if (val === null || val === undefined || val === '') return '';
   if (val instanceof Date && !isNaN(val.getTime())) {
-    return Utilities.formatDate(val, 'GMT-3', "dd/MM/yyyy, HH:mm 'hs'");
+    return Utilities.formatDate(val, 'GMT-3', "dd/MM/yyyy · HH:mm 'hs'");
   }
   return String(val);
 }

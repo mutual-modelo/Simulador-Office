@@ -136,6 +136,14 @@ function doPost(e) {
       case 'agregarComentario':
         return crearRespuestaJSON(agregarComentarioBackend(payload));
 
+      case 'editarComentario':
+      case 'editarComentarioBitacora':
+        return crearRespuestaJSON(editarComentarioBitacoraBackend(payload));
+
+      case 'eliminarComentario':
+      case 'eliminarComentarioBitacora':
+        return crearRespuestaJSON(eliminarComentarioBitacoraBackend(payload));
+
       case 'guardarAuditoriaEnHistorial':
         return crearRespuestaJSON(guardarAuditoriaEnHistorialBackend(payload));
 
@@ -1281,26 +1289,208 @@ function agregarComentarioBackend(payload) {
     if (rowNum === -1) return { ok: false, error: 'Expediente no encontrado: ' + idTarget };
 
     const nowStr = obtenerFechaHora24Argentina_();
+    const nowTime = new Date().getTime();
+    const commentId = String(payload.idComentario || payload.idMsg || payload.id || ('msg_' + nowTime + '_' + Math.floor(Math.random() * 10000)));
+    const textoMsg = String(payload.texto || payload.contenido || '');
+
+    const nuevoNodo = {
+      id: commentId,
+      autor: payload.autor || 'Usuario',
+      rol: payload.rol || 'Analista',
+      fecha: nowStr,
+      timestamp: payload.timestamp ? Number(payload.timestamp) : nowTime,
+      texto: textoMsg,
+      contenido: textoMsg,
+      editado: false,
+      eliminado: false
+    };
+
+    let histActualizado = [];
     if (map['Historial_Comentarios_JSON'] !== undefined) {
       const cell = sheet.getRange(rowNum, map['Historial_Comentarios_JSON'] + 1);
       const hist = parseJSONSafe_(cell.getValue(), []);
-      hist.push({
-        autor: payload.autor || 'Usuario',
-        rol: payload.rol || 'Analista',
-        fecha: nowStr,
-        texto: String(payload.texto || '')
-      });
-      cell.setValue(JSON.stringify(hist));
+      histActualizado = Array.isArray(hist) ? hist.slice() : [];
+      histActualizado.push(nuevoNodo);
+      cell.setValue(JSON.stringify(histActualizado));
     }
     if (map['Ultima_Actualizacion'] !== undefined) {
       sheet.getRange(rowNum, map['Ultima_Actualizacion'] + 1).setValue(nowStr);
     }
 
     SpreadsheetApp.flush();
-    return { ok: true, id: idTarget };
+    return { ok: true, id: idTarget, idComentario: commentId, comentario: nuevoNodo, comentarios: histActualizado };
   } finally {
     lock.releaseLock();
   }
+}
+
+function editarComentarioBitacoraBackend(payload) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const sheet = obtenerOInicializarHoja_(CONFIG_AMMER.SHEET_SOLICITUDES, HEADERS_SOLICITUDES);
+    const { map } = obtenerHeaderMap_(sheet);
+    const idTarget = String(payload.idSolicitud || payload.id || '').trim();
+    if (!idTarget) return { ok: false, error: 'ID de expediente no especificado.' };
+
+    const rowNum = encontrarFilaPorId_(sheet, map, idTarget);
+    if (rowNum === -1) return { ok: false, error: 'Expediente no encontrado: ' + idTarget };
+
+    const colHistorialIdx = (map['Historial_Comentarios_JSON'] !== undefined) ? map['Historial_Comentarios_JSON'] : 21;
+    const cellHistorial = sheet.getRange(rowNum, colHistorialIdx + 1);
+    const hist = parseJSONSafe_(cellHistorial.getValue(), []);
+    if (!Array.isArray(hist) || hist.length === 0) {
+      return { ok: false, error: 'El expediente no posee comentarios registrados.' };
+    }
+
+    const idComentario = String(payload.idComentario || payload.idMsg || '').trim();
+    const reqTimestamp = payload.timestamp ? Number(payload.timestamp) : 0;
+    const nuevoTexto = String(payload.nuevoContenido || payload.texto || payload.contenido || '').trim();
+    if (!nuevoTexto) return { ok: false, error: 'El contenido del comentario no puede estar vacío.' };
+
+    let msgIndex = -1;
+    if (idComentario) {
+      msgIndex = hist.findIndex(m => m && (String(m.id || '').trim() === idComentario));
+    }
+    if (msgIndex === -1 && reqTimestamp) {
+      msgIndex = hist.findIndex(m => m && (Number(m.timestamp || 0) === reqTimestamp));
+    }
+    if (msgIndex === -1 && payload.textoAnterior) {
+      msgIndex = hist.findIndex(m => m && (m.texto === payload.textoAnterior || m.contenido === payload.textoAnterior));
+    }
+
+    if (msgIndex === -1) {
+      return { ok: false, error: 'No se encontró el mensaje especificado en la bitácora.' };
+    }
+
+    const msg = hist[msgIndex];
+
+    if (msg.tipo === 'AUDITORIA_INICIAL' || msg.tipo === 'AUDITORIA_IA_DOCUMENTAL' || (msg.autor && String(msg.autor).includes('[Auditoría IA]'))) {
+      return { ok: false, error: 'Los dictámenes oficiales de auditoría documental no son editables.' };
+    }
+
+    const nowTime = new Date().getTime();
+    let msgTime = Number(msg.timestamp || 0);
+    if (!msgTime && msg.fecha) {
+      msgTime = parsearFechaATimestampBackend_(msg.fecha);
+    }
+    if (msgTime && (nowTime - msgTime > 300000)) {
+      return { ok: false, error: 'La ventana de 5 minutos para editar este mensaje ha expirado.' };
+    }
+
+    const nowStr = obtenerFechaHora24Argentina_();
+    msg.texto = nuevoTexto;
+    msg.contenido = nuevoTexto;
+    msg.editado = true;
+    msg.fechaEdicion = nowStr;
+
+    cellHistorial.setValue(JSON.stringify(hist));
+
+    const colUltimaActIdx = (map['Ultima_Actualizacion'] !== undefined) ? map['Ultima_Actualizacion'] : 23;
+    sheet.getRange(rowNum, colUltimaActIdx + 1).setValue(nowStr);
+
+    SpreadsheetApp.flush();
+    return {
+      ok: true,
+      success: true,
+      idSolicitud: idTarget,
+      idComentario: msg.id || idComentario,
+      mensajeActualizado: msg,
+      comentarios: hist
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function eliminarComentarioBitacoraBackend(payload) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const sheet = obtenerOInicializarHoja_(CONFIG_AMMER.SHEET_SOLICITUDES, HEADERS_SOLICITUDES);
+    const { map } = obtenerHeaderMap_(sheet);
+    const idTarget = String(payload.idSolicitud || payload.id || '').trim();
+    if (!idTarget) return { ok: false, error: 'ID de expediente no especificado.' };
+
+    const rowNum = encontrarFilaPorId_(sheet, map, idTarget);
+    if (rowNum === -1) return { ok: false, error: 'Expediente no encontrado: ' + idTarget };
+
+    const colHistorialIdx = (map['Historial_Comentarios_JSON'] !== undefined) ? map['Historial_Comentarios_JSON'] : 21;
+    const cellHistorial = sheet.getRange(rowNum, colHistorialIdx + 1);
+    const hist = parseJSONSafe_(cellHistorial.getValue(), []);
+    if (!Array.isArray(hist) || hist.length === 0) {
+      return { ok: false, error: 'El expediente no posee comentarios registrados.' };
+    }
+
+    const idComentario = String(payload.idComentario || payload.idMsg || '').trim();
+    const reqTimestamp = payload.timestamp ? Number(payload.timestamp) : 0;
+
+    let msgIndex = -1;
+    if (idComentario) {
+      msgIndex = hist.findIndex(m => m && (String(m.id || '').trim() === idComentario));
+    }
+    if (msgIndex === -1 && reqTimestamp) {
+      msgIndex = hist.findIndex(m => m && (Number(m.timestamp || 0) === reqTimestamp));
+    }
+    if (msgIndex === -1 && payload.textoAnterior) {
+      msgIndex = hist.findIndex(m => m && (m.texto === payload.textoAnterior || m.contenido === payload.textoAnterior));
+    }
+
+    if (msgIndex === -1) {
+      return { ok: false, error: 'No se encontró el mensaje a eliminar en la bitácora.' };
+    }
+
+    const msg = hist[msgIndex];
+
+    if (msg.tipo === 'AUDITORIA_INICIAL' || msg.tipo === 'AUDITORIA_IA_DOCUMENTAL' || (msg.autor && String(msg.autor).includes('[Auditoría IA]'))) {
+      return { ok: false, error: 'Los dictámenes oficiales de auditoría documental no se pueden eliminar.' };
+    }
+
+    const nowTime = new Date().getTime();
+    let msgTime = Number(msg.timestamp || 0);
+    if (!msgTime && msg.fecha) {
+      msgTime = parsearFechaATimestampBackend_(msg.fecha);
+    }
+    if (msgTime && (nowTime - msgTime > 300000)) {
+      return { ok: false, error: 'La ventana de 5 minutos para eliminar este mensaje ha expirado.' };
+    }
+
+    const nowStr = obtenerFechaHora24Argentina_();
+    msg.eliminado = true;
+    msg.texto = '🚫 Este mensaje fue eliminado';
+    msg.contenido = '🚫 Este mensaje fue eliminado';
+    msg.fechaEliminacion = nowStr;
+
+    cellHistorial.setValue(JSON.stringify(hist));
+
+    const colUltimaActIdx = (map['Ultima_Actualizacion'] !== undefined) ? map['Ultima_Actualizacion'] : 23;
+    sheet.getRange(rowNum, colUltimaActIdx + 1).setValue(nowStr);
+
+    SpreadsheetApp.flush();
+    return {
+      ok: true,
+      success: true,
+      idSolicitud: idTarget,
+      idComentario: msg.id || idComentario,
+      mensajeActualizado: msg,
+      comentarios: hist
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function parsearFechaATimestampBackend_(str) {
+  if (!str) return 0;
+  if (typeof str === 'number') return str;
+  const s = String(str).trim();
+  if (/^\d{12,14}$/.test(s)) return parseInt(s, 10);
+  const m = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})[^\d]*(\d{1,2}):(\d{1,2})/);
+  if (m) {
+    return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10), parseInt(m[4], 10), parseInt(m[5], 10)).getTime();
+  }
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? 0 : d.getTime();
 }
 
 function guardarAuditoriaEnHistorialBackend(payload) {

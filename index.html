@@ -2915,17 +2915,22 @@
     .switch-label-wrap:hover{background:#f1f5f9}
     .switch-label-wrap input[type="checkbox"]{width:16px;height:16px;accent-color:var(--color-brand-blue);cursor:pointer}
 
-    /* CHAT MODERNO BI-DIRECCIONAL Y ACCESIBLE */
-    .chat-container{display:flex;flex-direction:column;gap:.6rem;max-height:300px;overflow-y:auto;padding:.75rem;background:#f1f5f9;border-radius:8px;border:1px solid var(--border-color)}
-    .chat-bubble{max-width:82%;padding:.6rem .85rem;border-radius:10px;font-size:.76rem;line-height:1.45;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+    /* CHAT MODERNO BI-DIRECCIONAL Y ACCESIBLE ESTILO WHATSAPP */
+    .chat-container{display:flex;flex-direction:column;gap:.6rem;max-height:320px;overflow-y:auto;padding:.75rem;background:#f1f5f9;border-radius:8px;border:1px solid var(--border-color)}
+    .chat-bubble{max-width:84%;padding:.6rem .85rem;border-radius:10px;font-size:.76rem;line-height:1.45;box-shadow:0 1px 2px rgba(0,0,0,.06);position:relative;transition:background .15s ease}
     .chat-bubble-comercializador{align-self:flex-start;background:#ffffff;border:1px solid #cbd5e1;border-bottom-left-radius:2px;color:#0f172a}
-    .chat-bubble-mutual{align-self:flex-end;background:#2563eb;color:#ffffff;border-bottom-right-radius:2px;box-shadow:0 2px 6px rgba(37,99,235,0.25)}
+    .chat-bubble-mutual{align-self:flex-end;background:#1e40af;color:#ffffff;border-bottom-right-radius:2px;box-shadow:0 2px 6px rgba(30,64,175,0.22)}
     .chat-meta{font-size:.64rem;margin-bottom:3px;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:.75rem}
     .chat-bubble-comercializador .chat-meta{color:var(--color-brand-blue)}
     .chat-bubble-mutual .chat-meta{color:#e0f2fe}
     .chat-tag{padding:1px 5px;border-radius:4px;font-size:.58rem;text-transform:uppercase;font-weight:800}
     .chat-tag-comercializador{background:#e0f2fe;color:#0369a1}
     .chat-tag-mutual{background:#1d4ed8;color:#eff6ff;border:1px solid rgba(255,255,255,0.25)}
+    .chat-actions-hover-bar{position:absolute;top:-11px;right:8px;display:none;align-items:center;gap:3px;background:#0f172a;padding:2px 6px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.2);z-index:10;border:1px solid rgba(255,255,255,0.18)}
+    .chat-bubble:hover .chat-actions-hover-bar{display:inline-flex !important}
+    .btn-chat-bubble-action{background:transparent;border:none;cursor:pointer;font-size:.72rem;padding:2px 4px;border-radius:4px;transition:all .15s ease;line-height:1}
+    .btn-chat-bubble-action:hover{background:rgba(255,255,255,0.25);transform:scale(1.1)}
+    .chat-editado-tag{font-size:.62rem;opacity:.8;font-style:italic}
 
     /* VISOR DOCUMENTAL ONLINE IN-APP */
     .doc-viewer-modal-window{max-width:980px;width:95%;height:92vh}
@@ -5469,7 +5474,7 @@
   <div id="modalFichaCompleta" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
     <div class="modal-window modal-large">
       <div class="modal-header-bar">
-        <div class="modal-header-title"><span id="fichaModalTitle">Ficha de Expediente</span></div>
+        <div class="modal-header-title"><span id="modalFichaTitulo"><span id="fichaModalTitle">Ficha de Expediente</span></span></div>
         <button type="button" class="btn-close-modal" onclick="cerrarModal('modalFichaCompleta')" aria-label="Cerrar">&times;</button>
       </div>
       <div class="modal-body-scroll" id="fichaModalBody"></div>
@@ -5650,6 +5655,70 @@
           <button type="button" id="btnConfirmarEliminarDoc" onclick="confirmarEliminarDocumento()" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.48rem 0.95rem;border-radius:0.55rem;border:1px solid #be123c;background:#e11d48;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             <span>Sí, Eliminar Documento</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4C: EDITAR MENSAJE DE BITÁCORA / CHAT (VENTANA DE 5 MINUTOS) -->
+  <div id="modalEditarComentario" class="modal-backdrop modal-backdrop-elevated" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
+    <div class="modal-window" style="max-width:480px;">
+      <div class="modal-header-bar">
+        <div class="modal-header-title" style="display:flex;align-items:center;gap:0.5rem;color:var(--color-brand-blue);">
+          <span>✏️ Editar Mensaje de Bitácora</span>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="cerrarModal('modalEditarComentario')" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="modal-body-scroll" style="padding:1rem 1.25rem;">
+        <input type="hidden" id="editComentarioIdSolicitud" value="" />
+        <input type="hidden" id="editComentarioIdMsg" value="" />
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:0.65rem 0.85rem;margin-bottom:0.85rem;font-size:0.73rem;color:#1e40af;display:flex;align-items:center;gap:6px;">
+          <span>⏱️</span>
+          <span>Podés modificar el texto dentro de los <strong>5 minutos</strong> de emitido. Al guardar, quedará registrado como <em>(editado)</em>.</span>
+        </div>
+        <div class="form-group" style="margin-bottom:0.75rem;">
+          <label class="form-label" for="txtEditarComentarioContenido">Nuevo contenido del mensaje:</label>
+          <textarea id="txtEditarComentarioContenido" class="input-text" rows="4" style="font-size:0.8rem;line-height:1.45;resize:vertical;" placeholder="Escriba la rectificación o aclaración..."></textarea>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:0.55rem;margin-top:1rem;">
+          <button type="button" class="btn-restore" onclick="cerrarModal('modalEditarComentario')">Cancelar</button>
+          <button type="button" id="btnGuardarEdicionComentario" class="btn-action-primary" style="padding:0.5rem 1.1rem;font-size:0.78rem;font-weight:700;border-radius:6px;" onclick="guardarEdicionComentario()">
+            💾 Guardar Cambios
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4D: CONFIRMAR ELIMINACIÓN DE MENSAJE (VENTANA DE 5 MINUTOS) -->
+  <div id="modalEliminarComentario" class="modal-backdrop modal-backdrop-elevated" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
+    <div class="modal-window" style="max-width:440px;">
+      <div class="modal-header-bar" style="border-bottom:1px solid #fee2e2;background:#fff1f2;">
+        <div class="modal-header-title" style="color:#be123c;display:flex;align-items:center;gap:0.5rem;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span>Eliminar Mensaje</span>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="cerrarModal('modalEliminarComentario')" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="modal-body-scroll" style="padding:1rem 1.15rem;">
+        <input type="hidden" id="eliminarComentarioIdSolicitud" value="" />
+        <input type="hidden" id="eliminarComentarioIdMsg" value="" />
+        <p style="font-size:0.8rem;color:#334155;line-height:1.5;margin-bottom:0.75rem;">
+          ¿Deseas eliminar este mensaje para todos los operadores y analistas?
+        </p>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:0.65rem;padding:0.7rem 0.85rem;margin-bottom:0.85rem;">
+          <div style="font-size:0.68rem;font-weight:700;color:#64748b;text-transform:uppercase;">Vista previa del mensaje a eliminar</div>
+          <div id="lblEliminarComentarioPreview" style="font-size:0.78rem;color:#0f172a;margin-top:3px;font-style:italic;">...</div>
+        </div>
+        <p style="font-size:0.72rem;color:#64748b;line-height:1.45;margin-bottom:1rem;">
+          El texto será reemplazado por <em>"🚫 Este mensaje fue eliminado"</em> en la bitácora y se mantendrá la auditoría en la Columna 21 de Google Sheets.
+        </p>
+        <div style="display:flex;justify-content:flex-end;gap:0.55rem;">
+          <button type="button" class="btn-restore" onclick="cerrarModal('modalEliminarComentario')">Cancelar</button>
+          <button type="button" id="btnConfirmarEliminarComentario" onclick="ejecutarEliminacionComentario()" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.48rem 0.95rem;border-radius:0.55rem;border:1px solid #be123c;background:#e11d48;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span>Sí, Eliminar para Todos</span>
           </button>
         </div>
       </div>
@@ -9346,6 +9415,20 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       return nuevaLista;
     }
 
+    function parsearFechaATimestampCliente(str) {
+      if (!str) return 0;
+      if (typeof str === 'number') return str;
+      if (str instanceof Date) return str.getTime();
+      const s = String(str).trim();
+      if (/^\d{12,14}$/.test(s)) return parseInt(s, 10);
+      const m = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})[^\d]*(\d{1,2}):(\d{1,2})/);
+      if (m) {
+        return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10), parseInt(m[4], 10), parseInt(m[5], 10)).getTime();
+      }
+      const d = new Date(s);
+      return isNaN(d.getTime()) ? 0 : d.getTime();
+    }
+
     function normalizarBitacoraComentarios(obj) {
       if (!obj || typeof obj !== 'object') return [];
       const candidatos = [
@@ -9365,15 +9448,34 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           break;
         }
       }
-      return lista.filter(Boolean).map(c => {
+      return lista.filter(Boolean).map((c, idx) => {
+        const nowFallback = Date.now();
         if (typeof c === 'string') {
-          return { autor: 'Auditoría', rol: 'Sistema', fecha: obj.fecha || '', texto: c };
+          return {
+            id: 'msg_' + nowFallback + '_' + idx,
+            autor: 'Auditoría',
+            rol: 'Sistema',
+            fecha: obj.fecha || '',
+            timestamp: parsearFechaATimestampCliente(obj.fecha) || nowFallback,
+            texto: c,
+            contenido: c,
+            editado: false,
+            eliminado: false
+          };
         }
+        const msgTimestamp = c.timestamp ? Number(c.timestamp) : (parsearFechaATimestampCliente(c.fecha || c.fechaHora || c.createdAt) || nowFallback);
+        const textoReal = c.texto || c.mensaje || c.comentario || c.detalle || c.descripcion || c.note || c.contenido || '';
         const entrada = {
+          id: c.id ? String(c.id) : ('msg_' + msgTimestamp + '_' + idx),
           autor: c.autor || c.author || c.usuario || c.nombre || c.user || 'Usuario',
           rol: c.rol || c.perfil || c.role || 'Auditoría',
           fecha: c.fecha || c.timestamp || c.fechaHora || c.createdAt || c.date || obj.fecha || '',
-          texto: c.texto || c.mensaje || c.comentario || c.detalle || c.descripcion || c.note || ''
+          timestamp: msgTimestamp,
+          texto: textoReal,
+          contenido: c.contenido || textoReal,
+          editado: Boolean(c.editado),
+          eliminado: Boolean(c.eliminado),
+          fechaEdicion: c.fechaEdicion || ''
         };
         if (c.tipo) entrada.tipo = c.tipo;
         if (c.usuarioOperador) entrada.usuarioOperador = c.usuarioOperador;
@@ -10804,12 +10906,35 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const rolLow = String(session?.rol || '').toLowerCase();
       const isAnalistaOAdmin = Boolean(session && (rolLow.includes('analista') || rolLow.includes('admin') || rolLow.includes('mutual') || rolLow.includes('supervisor')));
 
-      const tit = document.getElementById('fichaModalTitle');
-      if (tit) {
-        const numLabel = s.id_definitivo ?
-          '<span class="badge-definitivo">' + sanitizeHTML(s.id_definitivo) + '</span>' :
-          '<span class="badge-provisorio">' + sanitizeHTML(s.id_provisorio || ('#' + idActivo)) + '</span>';
-        tit.innerHTML = 'Expediente ' + numLabel + ' — ' + sanitizeHTML(s.solicitante?.nombre || '') + '<span id="detalle-id-solicitud" data-id="' + sanitizeHTML(idActivo) + '" style="display:none;">' + sanitizeHTML(idActivo) + '</span>';
+      const idDef = String(
+        s.id_definitivo ||
+        s.ID_Definitivo_Expediente ||
+        s.idDefinitivoExpediente ||
+        s.Nro_Definitivo ||
+        s.nroDefinitivo ||
+        s.ID_Definitivo ||
+        (s.Metadata_Extra_JSON && parseJSONCampoSeguro(s.Metadata_Extra_JSON, {}).id_definitivo) ||
+        ''
+      ).trim();
+      const idProv = String(s.id_provisorio || s.ID_Solicitud || s.idSolicitud || s.id || idActivo).trim();
+      const nombreSocio = String(s.solicitante?.nombre || s.Apellido_Nombre || s.nombre || 'Socio').trim();
+
+      if (idDef) {
+        s.id_definitivo = idDef;
+        s.ID_Definitivo_Expediente = idDef;
+        s.Nro_Definitivo = idDef;
+      }
+
+      const tituloExpediente = idDef ? ('Expediente ' + idDef) : ('Expediente ' + idProv + ' (Provisorio)');
+      const textoTituloCompleto = tituloExpediente + ' — ' + nombreSocio;
+
+      const elModalTit = document.getElementById('modalFichaTitulo');
+      if (elModalTit) {
+        elModalTit.innerHTML = sanitizeHTML(textoTituloCompleto) + '<span id="detalle-id-solicitud" data-id="' + sanitizeHTML(idActivo) + '" style="display:none;">' + sanitizeHTML(idActivo) + '</span>';
+      }
+      const elFichaTit = document.getElementById('fichaModalTitle');
+      if (elFichaTit && elFichaTit !== elModalTit) {
+        elFichaTit.innerHTML = sanitizeHTML(textoTituloCompleto);
       }
 
       const body = document.getElementById('fichaModalBody'); if (!body) return;
@@ -10848,24 +10973,62 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         '</div>' +
       '</div>';
 
-      // 2. NÚMERO DEFINITIVO DE EXPEDIENTE (EDITABLE POR ANALISTA / SOLO LECTURA COMERCIAL)
-      html += '<div style="background:#fffbeb;border:1px solid #fef3c7;padding:.7rem .9rem;border-radius:10px;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;">' +
-        '<div>' +
-          '<span style="font-size:0.7rem;color:#92400e;font-weight:700;text-transform:uppercase;">Identificación Oficial del Expediente</span>' +
-          '<div style="font-size:0.78rem;margin-top:2px;">' +
-            (s.id_definitivo
-              ? 'N° Definitivo de Expediente: <span id="lblNroDefinitivoActual"><strong style="color:#166534;">' + sanitizeHTML(s.id_definitivo) + '</strong></span>'
-              : '<span id="lblNroProvisorioWrap">N° Provisorio: <strong>' + sanitizeHTML(s.id_provisorio) + '</strong> &nbsp;|&nbsp; </span>N° Definitivo de Expediente: <span id="lblNroDefinitivoActual"><em style="color:var(--text-muted);">Sin Asignar aún</em></span>') +
-          '</div>' +
-        '</div>';
+      // 2. IDENTIFICACIÓN OFICIAL DEL EXPEDIENTE (DISEÑO PREMIUM MUTUAL MODELO)
+      let idBoxHtml = '';
+      if (idDef) {
+        idBoxHtml = '<div style="background:#f8fafc;border:1px solid #e2e8f0;padding:0.85rem 1.15rem;border-radius:10px;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;box-shadow:0 1px 3px rgba(0,0,0,0.03);">' +
+          '<div style="display:flex;align-items:center;gap:0.85rem;flex-wrap:wrap;">' +
+            '<div style="width:36px;height:36px;border-radius:8px;background:#0f2744;color:#38bdf8;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+              '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>' +
+            '</div>' +
+            '<div>' +
+              '<span style="font-size:0.67rem;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Identificación Oficial del Expediente</span>' +
+              '<div style="display:flex;align-items:center;gap:0.5rem;margin-top:2px;flex-wrap:wrap;">' +
+                '<span style="font-size:0.82rem;font-weight:700;color:#0f172a;">N° Definitivo:</span>' +
+                '<span id="lblNroDefinitivoActual" class="font-mono font-bold" style="background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;padding:2px 8px;border-radius:6px;font-size:0.85rem;letter-spacing:0.02em;">' + sanitizeHTML(idDef) + '</span>' +
+                '<span style="font-size:0.72rem;color:#94a3b8;">·</span>' +
+                '<span style="font-size:0.74rem;color:#64748b;">N° Provisorio original: <strong class="font-mono" style="color:#475569;">' + sanitizeHTML(idProv) + '</strong></span>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
 
-      if (isAnalistaOAdmin) {
-        html += '<div style="display:flex;gap:0.45rem;align-items:center;flex-wrap:wrap;">' +
-          '<input type="text" id="inpNumDefinitivoModal" name="ID_Definitivo_Expediente" class="input-text" style="width:185px;font-size:0.75rem;font-weight:700;background:#ffffff;border-color:#93c5fd;" placeholder="Ej: EXP-' + sanitizeHTML(idActivo) + '" value="' + sanitizeHTML(s.id_definitivo || '') + '" onkeydown="if(event.key===\'Enter\'){event.preventDefault();guardarNumeroDefinitivo(\'' + sanitizeHTML(idActivo) + '\');}"/>' +
-          '<button type="button" id="btnAsignarNroDefinitivoFicha" data-solicitud-id="' + sanitizeHTML(idActivo) + '" class="btn-asignar-nro-definitivo" onclick="guardarNumeroDefinitivo(\'' + sanitizeHTML(idActivo) + '\')">🏷️ Asignar N° Definitivo</button>' +
-        '</div>';
+        if (isAnalistaOAdmin) {
+          idBoxHtml += '<div style="display:flex;gap:0.45rem;align-items:center;flex-wrap:wrap;">' +
+            '<button type="button" class="btn-table-action" style="padding:6px 14px;font-size:0.75rem;font-weight:700;display:inline-flex;align-items:center;gap:5px;border-color:#cbd5e1;color:#0f2744;border-radius:6px;" onclick="abrirModalAsignarNroDefinitivo(\'' + sanitizeHTML(idActivo) + '\')">' +
+              '✏️ Modificar N° Definitivo' +
+            '</button>' +
+          '</div>';
+        }
+        idBoxHtml += '</div>';
+      } else {
+        idBoxHtml = '<div style="background:#f8fafc;border:1px solid #e2e8f0;padding:0.85rem 1.15rem;border-radius:10px;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;box-shadow:0 1px 3px rgba(0,0,0,0.03);">' +
+          '<div style="display:flex;align-items:center;gap:0.85rem;flex-wrap:wrap;">' +
+            '<div style="width:36px;height:36px;border-radius:8px;background:#f1f5f9;color:#64748b;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+              '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+            '</div>' +
+            '<div>' +
+              '<span style="font-size:0.67rem;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Identificación Oficial del Expediente</span>' +
+              '<div style="display:flex;align-items:center;gap:0.5rem;margin-top:2px;flex-wrap:wrap;">' +
+                '<span style="font-size:0.82rem;font-weight:700;color:#0f172a;">N° Provisorio:</span>' +
+                '<span class="font-mono font-bold" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;padding:2px 7px;border-radius:5px;font-size:0.8rem;">' + sanitizeHTML(idProv) + '</span>' +
+                '<span class="font-mono text-xs font-bold" style="background:#f8fafc;color:#64748b;border:1px solid #e2e8f0;padding:2px 6px;border-radius:4px;font-size:0.65rem;letter-spacing:0.04em;">PROVISORIO</span>' +
+                '<span style="font-size:0.72rem;color:#94a3b8;">·</span>' +
+                '<span id="lblNroDefinitivoActual" style="font-size:0.75rem;color:#b45309;font-weight:600;">Sin N° formal definitivo aún</span>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+
+        if (isAnalistaOAdmin) {
+          idBoxHtml += '<div style="display:flex;gap:0.45rem;align-items:center;flex-wrap:wrap;">' +
+            '<input type="text" id="inpNumDefinitivoModal" name="ID_Definitivo_Expediente" class="input-text font-mono" style="width:170px;font-size:0.75rem;font-weight:700;background:#ffffff;border:1.5px solid #cbd5e1;border-radius:6px;padding:4px 8px;" placeholder="Ej: EXP-' + sanitizeHTML(idActivo) + '" value="" onkeydown="if(event.key===\'Enter\'){event.preventDefault();guardarNumeroDefinitivo(\'' + sanitizeHTML(idActivo) + '\');}"/>' +
+            '<button type="button" id="btnAsignarNroDefinitivoFicha" data-solicitud-id="' + sanitizeHTML(idActivo) + '" class="btn-action-primary" style="padding:5px 12px;font-size:0.74rem;font-weight:700;border-radius:6px;display:inline-flex;align-items:center;gap:4px;box-shadow:0 2px 5px rgba(19,85,150,0.2);" onclick="guardarNumeroDefinitivo(\'' + sanitizeHTML(idActivo) + '\')">' +
+              '🏷️ Asignar N° Definitivo' +
+            '</button>' +
+          '</div>';
+        }
+        idBoxHtml += '</div>';
       }
-      html += '</div>';
+      html += idBoxHtml;
 
       // 3. SECCIÓN 1: FORMULARIO DE EDICIÓN INTEGRAL DE DATOS DEL ASOCIADO
       html += '<div class="section-title-divider">1. Datos Personales y Laborales del Asociado (Modificables)</div>' +
@@ -11365,25 +11528,73 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       // 6. SECCIÓN 4: CHAT DE AUDITORÍA Y LÍNEA DE TIEMPO (TÍTULO EXACTO)
       const listaBitacora = normalizarBitacoraComentarios(s);
       s.observaciones = listaBitacora;
+      s.historialComentarios = listaBitacora;
+      s.comentarios = listaBitacora;
 
       html += '<div class="section-title-divider">Chat de Auditoría y Línea de Tiempo (' + listaBitacora.length + ')</div>' +
         '<div class="chat-container" id="fichaChatContainer">';
 
       if (listaBitacora.length === 0) {
-        html += '<div style="font-size:0.74rem;color:var(--text-muted);text-align:center;padding:1rem;">Sin movimientos ni observaciones registradas aún en la bitácora de auditoría.</div>';
+        html += '<div style="font-size:0.74rem;color:var(--text-muted);text-align:center;padding:1.5rem 1rem;">Sin movimientos ni observaciones registradas aún en la bitácora de auditoría.</div>';
       } else {
+        const ahoraMs = Date.now();
         listaBitacora.forEach(o => {
           const esMutual = (o.rol && (o.rol.includes('Analista') || o.rol.includes('Mutual') || o.rol.includes('Admin') || o.rol.includes('Automático')));
           const bubbleClass = esMutual ? 'chat-bubble-mutual' : 'chat-bubble-comercializador';
           const tagClass = esMutual ? 'chat-tag-mutual' : 'chat-tag-comercializador';
           const tagText = esMutual ? 'Mutual Créditos' : 'Comercializador';
 
-          html += '<div class="chat-bubble ' + bubbleClass + '">' +
+          const msgTs = Number(o.timestamp || 0) || (o.fecha ? parsearFechaATimestampCliente(o.fecha) : 0);
+          const transcurridoMs = msgTs ? (ahoraMs - msgTs) : Infinity;
+          const dentroDe5Min = transcurridoMs >= 0 && transcurridoMs <= 300000;
+          const esMio = Boolean(session && (
+            o.autor === session.nombre ||
+            o.usuarioOperador === session.nombre ||
+            (session.nombre && o.autor && String(o.autor).includes(session.nombre))
+          ));
+          const esAuditoriaInmutable = (
+            o.tipo === 'AUDITORIA_INICIAL' ||
+            o.tipo === 'AUDITORIA_IA_DOCUMENTAL' ||
+            (o.autor && String(o.autor).includes('[Auditoría IA]'))
+          );
+
+          const puedeAccionar = esMio && dentroDe5Min && !o.eliminado && !esAuditoriaInmutable;
+
+          let contenidoHtml = '';
+          if (o.eliminado) {
+            contenidoHtml = '<div style="display:flex;align-items:center;gap:5px;font-style:italic;color:#94a3b8;font-size:0.73rem;">' +
+              '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>' +
+              '<span>Este mensaje fue eliminado</span>' +
+            '</div>';
+          } else {
+            contenidoHtml = '<div style="margin-top:2px;word-break:break-word;">' + sanitizeHTML(o.texto || o.contenido || '') + '</div>';
+          }
+
+          let estampaEditado = '';
+          if (o.editado && !o.eliminado) {
+            estampaEditado = ' <span class="chat-editado-tag" style="font-size:0.62rem;opacity:0.8;font-style:italic;margin-left:4px;">(editado)</span>';
+          }
+
+          let accionesBarHtml = '';
+          if (puedeAccionar) {
+            const minutosRestantes = Math.max(1, Math.ceil((300000 - transcurridoMs) / 60000));
+            accionesBarHtml = '<div class="chat-actions-hover-bar">' +
+              '<button type="button" class="btn-chat-bubble-action" title="Editar mensaje (' + minutosRestantes + 'm restantes)" onclick="iniciarEdicionComentario(\'' + sanitizeHTML(s.id) + '\', \'' + sanitizeHTML(o.id) + '\')">' +
+                '✏️' +
+              '</button>' +
+              '<button type="button" class="btn-chat-bubble-action" title="Eliminar mensaje para todos" onclick="confirmarEliminarComentario(\'' + sanitizeHTML(s.id) + '\', \'' + sanitizeHTML(o.id) + '\')">' +
+                '🗑️' +
+              '</button>' +
+            '</div>';
+          }
+
+          html += '<div class="chat-bubble ' + bubbleClass + '" data-msg-id="' + sanitizeHTML(o.id) + '">' +
+            accionesBarHtml +
             '<div class="chat-meta">' +
               '<span><strong>' + sanitizeHTML(o.autor || 'Sistema') + '</strong> <span class="chat-tag ' + tagClass + '">' + tagText + '</span></span>' +
-              '<span class="chat-timestamp">' + formatearFechaHoraChat(o.fecha) + '</span>' +
+              '<span class="chat-timestamp">' + formatearFechaHoraChat(o.fecha) + estampaEditado + '</span>' +
             '</div>' +
-            '<div style="margin-top:2px;">' + sanitizeHTML(o.texto || '') + '</div>' +
+            contenidoHtml +
           '</div>';
         });
       }
@@ -11612,6 +11823,13 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             }
           };
           aplicarNumeroLocal();
+
+          const nomSocioTit = (solicitudSeleccionada?.solicitante?.nombre || solicitudSeleccionada?.Apellido_Nombre || '').trim();
+          const tituloExpedienteVivo = 'Expediente ' + nroFinal + (nomSocioTit ? (' — ' + nomSocioTit) : '');
+          const elModalTit = document.getElementById('modalFichaTitulo');
+          if (elModalTit) elModalTit.innerHTML = sanitizeHTML(tituloExpedienteVivo) + '<span id="detalle-id-solicitud" data-id="' + sanitizeHTML(idSolicitudSeleccionada) + '" style="display:none;">' + sanitizeHTML(idSolicitudSeleccionada) + '</span>';
+          const elFichaTit = document.getElementById('fichaModalTitle');
+          if (elFichaTit && elFichaTit !== elModalTit) elFichaTit.innerHTML = sanitizeHTML(tituloExpedienteVivo);
 
           const lblProvWrap = document.getElementById('lblNroProvisorioWrap');
           if (lblProvWrap) lblProvWrap.style.display = 'none';
@@ -12675,16 +12893,44 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     async function enviarComentarioComercializador(id) {
       const session = getSession(); if (!session) return;
       if (!checkSubmitCooldown('btnEnviarComentario', 2000)) return;
-      const rawTxt = document.getElementById('txtFichaComentario')?.value?.trim();
+      const inpTxt = document.getElementById('txtFichaComentario');
+      const rawTxt = inpTxt?.value?.trim();
       if (!rawTxt) { showToast('Por favor escribe un mensaje o aclaración'); return; }
       const txt = sanitizeHTML(rawTxt);
       const all = getStoredSolicitudes(); const s = all.find(x => String(x.id) === String(id)); if (!s) return;
-      const now = obtenerFechaHora24hs();
+      const nowStr = obtenerFechaHora24hs();
+      const nowTs = Date.now();
+      const msgId = 'msg_' + nowTs + '_' + Math.floor(Math.random() * 10000);
+
+      const nuevoComentario = {
+        id: msgId,
+        autor: session.nombre,
+        rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor'),
+        fecha: nowStr,
+        timestamp: nowTs,
+        texto: txt,
+        contenido: txt,
+        editado: false,
+        eliminado: false
+      };
+
+      if (!s.observaciones) s.observaciones = [];
+      s.observaciones.push(nuevoComentario);
+      s.historialComentarios = s.observaciones;
+      s.comentarios = s.observaciones;
+
+      saveStoredSolicitudes(all);
+      if (inpTxt) inpTxt.value = '';
+      verFichaCompleta(id);
 
       const res = await callApi({
         action: 'agregarComentario',
         id: s.id,
+        idSolicitud: s.id,
+        idComentario: msgId,
+        timestamp: nowTs,
         texto: txt,
+        contenido: txt,
         autor: session.nombre,
         rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor')
       }, {
@@ -12692,20 +12938,199 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         sub: 'Actualizando historial en Servidor Central'
       });
 
-      if (!s.observaciones) s.observaciones = [];
-      s.observaciones.push({
-        autor: session.nombre, rol: session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor'),
-        fecha: now, texto: txt
-      });
-
-      saveStoredSolicitudes(all);
       renderModuloComercializador();
       renderModuloMutualPropias();
       renderModuloMutual();
       actualizarCentroNotificaciones();
       actualizarContadorBoveda(s.id);
-      verFichaCompleta(id);
       showToast('Aclaración enviada y registrada en el expediente 💬');
+    }
+
+    /* EDICIÓN Y ELIMINACIÓN DE COMENTARIOS EN VENTANA DE 5 MINUTOS (WHATSAPP STYLE) */
+    function iniciarEdicionComentario(solicitudId, comentarioId) {
+      const all = getStoredSolicitudes();
+      const s = all.find(x => String(x.id) === String(solicitudId));
+      if (!s) { showToast('⚠️ No se encontró el expediente'); return; }
+      const bitacora = normalizarBitacoraComentarios(s);
+      const msg = bitacora.find(m => String(m.id) === String(comentarioId));
+      if (!msg) { showToast('⚠️ No se encontró el mensaje seleccionado'); return; }
+
+      const session = getSession();
+      const esMio = Boolean(session && (
+        msg.autor === session.nombre ||
+        msg.usuarioOperador === session.nombre ||
+        (session.nombre && msg.autor && String(msg.autor).includes(session.nombre))
+      ));
+      if (!esMio) {
+        showToast('⚠️ Solo podés editar mensajes emitidos por tu usuario');
+        return;
+      }
+
+      const ahoraMs = Date.now();
+      const msgTs = Number(msg.timestamp || 0) || (msg.fecha ? parsearFechaATimestampCliente(msg.fecha) : 0);
+      const transcurridoMs = msgTs ? (ahoraMs - msgTs) : Infinity;
+      if (transcurridoMs > 300000) {
+        showToast('⚠️ La ventana de 5 minutos para editar este mensaje ha expirado');
+        return;
+      }
+
+      document.getElementById('editComentarioIdSolicitud').value = solicitudId;
+      document.getElementById('editComentarioIdMsg').value = comentarioId;
+      const txtArea = document.getElementById('txtEditarComentarioContenido');
+      if (txtArea) {
+        txtArea.value = msg.texto || msg.contenido || '';
+      }
+      abrirModal('modalEditarComentario');
+      setTimeout(() => { if (txtArea) txtArea.focus(); }, 60);
+    }
+
+    async function guardarEdicionComentario() {
+      const solicitudId = document.getElementById('editComentarioIdSolicitud')?.value;
+      const comentarioId = document.getElementById('editComentarioIdMsg')?.value;
+      const nuevoTextoRaw = document.getElementById('txtEditarComentarioContenido')?.value?.trim();
+      if (!nuevoTextoRaw) {
+        showToast('⚠️ El mensaje no puede quedar vacío');
+        return;
+      }
+      const nuevoTexto = sanitizeHTML(nuevoTextoRaw);
+
+      const all = getStoredSolicitudes();
+      const s = all.find(x => String(x.id) === String(solicitudId));
+      if (!s) { showToast('⚠️ Error: Expediente no encontrado'); return; }
+
+      const bitacora = normalizarBitacoraComentarios(s);
+      const msg = bitacora.find(m => String(m.id) === String(comentarioId));
+      if (!msg) { showToast('⚠️ Error: Mensaje no encontrado'); return; }
+
+      const ahoraMs = Date.now();
+      const msgTs = Number(msg.timestamp || 0) || (msg.fecha ? parsearFechaATimestampCliente(msg.fecha) : 0);
+      if (msgTs && (ahoraMs - msgTs > 300000)) {
+        cerrarModal('modalEditarComentario');
+        showToast('⚠️ La ventana de 5 minutos ha expirado');
+        return;
+      }
+
+      // Optimistic update
+      const nowStr = obtenerFechaHora24hs();
+      msg.texto = nuevoTexto;
+      msg.contenido = nuevoTexto;
+      msg.editado = true;
+      msg.fechaEdicion = nowStr;
+
+      s.observaciones = bitacora;
+      s.historialComentarios = bitacora;
+      s.comentarios = bitacora;
+      saveStoredSolicitudes(all);
+
+      cerrarModal('modalEditarComentario');
+      verFichaCompleta(solicitudId);
+      showToast('Mensaje editado correctamente ✓');
+
+      // Persistir en servidor central
+      const session = getSession();
+      try {
+        await callApi({
+          action: 'editarComentarioBitacora',
+          idSolicitud: solicitudId,
+          idComentario: comentarioId,
+          nuevoContenido: nuevoTexto,
+          usuarioActivo: session
+        }, {
+          title: 'Guardando edición...',
+          sub: 'Actualizando historial en Google Sheets Columna 21'
+        });
+      } catch (err) {
+        console.warn('Error sincronizando edición en backend:', err);
+      }
+    }
+
+    function confirmarEliminarComentario(solicitudId, comentarioId) {
+      const all = getStoredSolicitudes();
+      const s = all.find(x => String(x.id) === String(solicitudId));
+      if (!s) { showToast('⚠️ No se encontró el expediente'); return; }
+      const bitacora = normalizarBitacoraComentarios(s);
+      const msg = bitacora.find(m => String(m.id) === String(comentarioId));
+      if (!msg) { showToast('⚠️ No se encontró el mensaje seleccionado'); return; }
+
+      const session = getSession();
+      const esMio = Boolean(session && (
+        msg.autor === session.nombre ||
+        msg.usuarioOperador === session.nombre ||
+        (session.nombre && msg.autor && String(msg.autor).includes(session.nombre))
+      ));
+      if (!esMio) {
+        showToast('⚠️ Solo podés eliminar mensajes propios');
+        return;
+      }
+
+      const ahoraMs = Date.now();
+      const msgTs = Number(msg.timestamp || 0) || (msg.fecha ? parsearFechaATimestampCliente(msg.fecha) : 0);
+      const transcurridoMs = msgTs ? (ahoraMs - msgTs) : Infinity;
+      if (transcurridoMs > 300000) {
+        showToast('⚠️ La ventana de 5 minutos para eliminar este mensaje ha expirado');
+        return;
+      }
+
+      document.getElementById('eliminarComentarioIdSolicitud').value = solicitudId;
+      document.getElementById('eliminarComentarioIdMsg').value = comentarioId;
+      const prevEl = document.getElementById('lblEliminarComentarioPreview');
+      if (prevEl) {
+        prevEl.textContent = '"' + (msg.texto || msg.contenido || '').slice(0, 100) + '..."';
+      }
+      abrirModal('modalEliminarComentario');
+    }
+
+    async function ejecutarEliminacionComentario() {
+      const solicitudId = document.getElementById('eliminarComentarioIdSolicitud')?.value;
+      const comentarioId = document.getElementById('eliminarComentarioIdMsg')?.value;
+
+      const all = getStoredSolicitudes();
+      const s = all.find(x => String(x.id) === String(solicitudId));
+      if (!s) { showToast('⚠️ Expediente no encontrado'); return; }
+
+      const bitacora = normalizarBitacoraComentarios(s);
+      const msg = bitacora.find(m => String(m.id) === String(comentarioId));
+      if (!msg) { showToast('⚠️ Mensaje no encontrado'); return; }
+
+      const ahoraMs = Date.now();
+      const msgTs = Number(msg.timestamp || 0) || (msg.fecha ? parsearFechaATimestampCliente(msg.fecha) : 0);
+      if (msgTs && (ahoraMs - msgTs > 300000)) {
+        cerrarModal('modalEliminarComentario');
+        showToast('⚠️ La ventana de 5 minutos ha expirado');
+        return;
+      }
+
+      // Optimistic update
+      const nowStr = obtenerFechaHora24hs();
+      msg.eliminado = true;
+      msg.texto = '🚫 Este mensaje fue eliminado';
+      msg.contenido = '🚫 Este mensaje fue eliminado';
+      msg.fechaEliminacion = nowStr;
+
+      s.observaciones = bitacora;
+      s.historialComentarios = bitacora;
+      s.comentarios = bitacora;
+      saveStoredSolicitudes(all);
+
+      cerrarModal('modalEliminarComentario');
+      verFichaCompleta(solicitudId);
+      showToast('Mensaje eliminado para todos ✓');
+
+      // Persistir en servidor central
+      const session = getSession();
+      try {
+        await callApi({
+          action: 'eliminarComentarioBitacora',
+          idSolicitud: solicitudId,
+          idComentario: comentarioId,
+          usuarioActivo: session
+        }, {
+          title: 'Eliminando mensaje...',
+          sub: 'Registrando estado eliminado en Google Sheets Columna 21'
+        });
+      } catch (err) {
+        console.warn('Error sincronizando eliminación en backend:', err);
+      }
     }
 
     /* CAMBIO DIRECTO DE ESTADO (EXCLUSIVO ANALISTA / ADMIN) */
@@ -16896,6 +17321,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.confirmarEliminarDocumento = confirmarEliminarDocumento;
     window.cerrarConfirmarEliminarDoc = cerrarConfirmarEliminarDoc;
     window.enviarComentarioComercializador = enviarComentarioComercializador;
+    window.iniciarEdicionComentario = iniciarEdicionComentario;
+    window.guardarEdicionComentario = guardarEdicionComentario;
+    window.confirmarEliminarComentario = confirmarEliminarComentario;
+    window.ejecutarEliminacionComentario = ejecutarEliminacionComentario;
     window.filtrarGestionesMutual = filtrarGestionesMutual;
     window.gestionarSolicitudMutual = gestionarSolicitudMutual;
     window.actualizarEstadoSolicitud = actualizarEstadoSolicitud;

@@ -76,12 +76,21 @@ app.get('/api/health', (req, res) => {
 // Endpoint principal: Auditoría Documental Forense y Crediticia AMMER (Multimodal)
 app.post('/api/auditar-documentos', async (req, res) => {
   try {
-    const { archivos, datosDeclarados } = req.body;
+    const { archivos, datosDeclarados, textoExtraido } = req.body || {};
 
-    if (!archivos || !Array.isArray(archivos) || archivos.length === 0) {
+    let listaArchivos: any[] = Array.isArray(archivos) ? archivos : [];
+    if (listaArchivos.length === 0 && textoExtraido && String(textoExtraido).trim().length >= 50) {
+      listaArchivos = [{
+        nombre: 'recibo_markitdown.pdf',
+        mimeType: 'application/pdf',
+        textoExtraido: String(textoExtraido).trim()
+      }];
+    }
+
+    if (listaArchivos.length === 0) {
       return res.status(400).json({
         ok: false,
-        error: 'Debe enviar al menos un archivo (Recibo de Haberes, DNI o Constancia) en formato Base64.'
+        error: 'Debe enviar al menos un archivo (Recibo de Haberes, DNI o Constancia) en formato Base64 o con capa de texto extraída.'
       });
     }
 
@@ -93,11 +102,20 @@ app.post('/api/auditar-documentos', async (req, res) => {
       });
     }
 
-    // Preparar las partes multimodales para Gemini
+    // Preparar las partes (texto MarkItDown para PDFs digitales o multimodal inlineData para imágenes/escaneos)
     const parts: any[] = [];
 
-    for (const arch of archivos) {
-      if (!arch || !arch.base64) continue;
+    for (const arch of listaArchivos) {
+      if (!arch) continue;
+      const txtMarkItDown = arch.textoExtraido ? String(arch.textoExtraido).trim() : '';
+      if (txtMarkItDown.length >= 50) {
+        parts.push({
+          text: `TEXTO EXTRAÍDO LITERALMENTE DEL RECIBO DE SUELDO OFICIAL DE ENTRE RÍOS (${arch.nombre || 'recibo.pdf'}) CON TECNOLOGÍA MARKITDOWN:\n"""\n${txtMarkItDown}\n"""`
+        });
+        continue;
+      }
+
+      if (!arch.base64) continue;
       let mimeType = String(arch.mimeType || 'application/pdf').toLowerCase();
       if (mimeType.includes('pdf')) mimeType = 'application/pdf';
       else if (mimeType.includes('png')) mimeType = 'image/png';
@@ -106,6 +124,7 @@ app.post('/api/auditar-documentos', async (req, res) => {
 
       const rawB64 = String(arch.base64 || '');
       const base64Pure = (rawB64.includes(',') ? rawB64.split(',').pop() || '' : rawB64).trim();
+      if (!base64Pure) continue;
 
       parts.push({
         inlineData: {
@@ -118,7 +137,7 @@ app.post('/api/auditar-documentos', async (req, res) => {
     if (parts.length === 0) {
       return res.status(400).json({
         ok: false,
-        error: 'No se encontraron contenidos binarios válidos en los archivos enviados.'
+        error: 'No se encontraron capas de texto ni contenidos binarios válidos en los archivos enviados.'
       });
     }
 
@@ -128,17 +147,18 @@ app.post('/api/auditar-documentos', async (req, res) => {
     const fechaActualStr = `${String(fechaActual.getDate()).padStart(2, '0')}/${String(mesActual).padStart(2, '0')}/${anioActual}`;
 
     const promptAuditor = `
-Actúa como Auditor Crediticio Senior y Especialista en Verificación Documental Forense de la Asociación Mutual Modelo de Entre Ríos (AMMER).
+Actúa como Auditor Crediticio Forense y Especialista en Verificación Documental de la Asociación Mutual Modelo de Entre Ríos (AMMER).
 FECHA DE AUDITORÍA: ${fechaActualStr} (Mes ${mesActual}/${anioActual})
 
 OBJETIVO DE EXTRACCIÓN DUAL:
-Analiza el comprobante adjunto (recibo de haberes oficial de Entre Ríos, DNI y/o constancias) y extrae con fidelidad literal toda la información necesaria para construir DOS BLOQUES ESTRUCTURADOS:
-1. "resumenDecision": Datos ejecutivos para definir en 5 segundos si se aprueba por planilla, se rechaza o aplica alternativa condicionada por CBU (Titular, DNI, Organismo, Antigüedad, Bruto, Descuentos, Líquido, Cupo 50%, Margen Planilla, Estado de Afectación, Embargos, Códigos FEDEM previos, Decisión Planilla, Decisión Alternativa CBU y Scoring).
-2. "detalleCompletoRecibo": Transcripción literal renglón por renglón de CADA código, concepto/descripción e importe impreso en el recibo (columnas Haberes y Descuentos), junto con el período, escalafón/cargo y subtotales/líquido exactos.
+Analiza el recibo de haberes oficial de la Provincia de Entre Ríos (texto literal extraído y/o imagen adjunta) y extrae con rigor matemático estricto toda la información para construir DOS BLOQUES ESTRUCTURADOS:
+1. "resumenDecision": Datos ejecutivos para definir en 5 segundos si se aprueba por planilla, se rechaza o aplica alternativa condicionada por CBU (Titular, DNI, CUIL, Organismo, Cargo, Período, Antigüedad, Bruto, Descuentos de Ley, BERSA, Sidecreer, Mutuales/Proveeduría, FEDEM, Total Descuentos, Líquido, Cupo 50%, Margen Planilla, Estado de Afectación, Embargos, Decisión Planilla, Decisión Alternativa CBU y Scoring).
+2. "detalleCompletoRecibo": Transcripción literal renglón por renglón de CADA código, concepto/descripción e importe impreso en el recibo (columnas Haberes y Descuentos), sin omitir ningún código ni fila, junto con el período, escalafón/cargo y subtotales/líquido exactos.
 
 REGLAS INVIOLABLES DE CALIBRACIÓN EQUILIBRADA Y CERO ALUCINACIÓN:
-1. EXTRACCIÓN LITERAL COMPLETA:
-   - Transcribe en "detalleCompletoRecibo.conceptos" TODOS los renglones impresos en el recibo en su orden exacto: cada fila con su "codigo" (ej. "001", "502", "491", o "" si no tiene código numérico), "descripcion" literal impresa, "haberes" (monto numérico o 0 si corresponde a descuento) y "descuentos" (monto numérico o 0 si corresponde a haber).
+1. ANCLAS EXACTAS DE TOTALES Y LISTA COMPLETA DE CONCEPTOS:
+   - Busca explícitamente las etiquetas impresas 'TOTAL HABERES' (asígnalo exactamente a sueldoBrutoTotal y detalleCompletoRecibo.totales.totalHaberes), 'TOTAL DESCUENTOS' (asígnalo exactamente a totalDescuentosRecibo y detalleCompletoRecibo.totales.totalDescuentos) y 'LÍQUIDO A PAGAR' o 'NETO A COBRAR' (asígnalo exactamente a sueldoLiquido y detalleCompletoRecibo.totales.liquidoAPagar).
+   - Transcribe en "detalleCompletoRecibo.conceptos" la lista COMPLETA de todos los renglones impresos en el recibo en su orden exacto, sin omitir ninguno: cada fila con su "codigo" (ej. "001", "502", "491", o "" si no tiene código numérico), "descripcion" literal impresa, "haberes" (monto numérico o 0 si corresponde a descuento) y "descuentos" (monto numérico o 0 si corresponde a haber).
    - Prohibido inventar, redondear o estimar importes, códigos, fechas o nombres.
 2. SIN BLOQUEOS NI FALSOS POSITIVOS:
    - Si un descuento opcional (consumos BERSA, SIDECREER, otras mutuales/proveedurías, códigos FEDEM 366/368/1115/1117 o embargos) NO figura en el recibo, consigna 0 (y embargoDetectado: false). NUNCA lo marques como "ILEGIBLE".
@@ -160,7 +180,7 @@ ${datosDeclarados && (datosDeclarados.nombre || datosDeclarados.dni) ? `
 ` : 'NO SE ENVIÓ CARÁTULA PREVIA (AUDITORÍA DIRECTA DE DOCUMENTO). Marca estadoCotejoCaratula como "VERIFICADO EN DOCUMENTO (SIN CARÁTULA PREVIA)" y extrae todos los datos visibles del comprobante.'}
 
 DIRECTIVAS DE CLASIFICACIÓN CONTABLE (ENTRE RÍOS):
-- sueldoBrutoTotal: Suma total de Haberes (remunerativos + no remunerativos impresos en el recibo).
+- sueldoBrutoTotal: Valor exacto de 'TOTAL HABERES' (remunerativos + no remunerativos impresos en el recibo).
 - descuentosLey: Jubilación (ej. Cód. 502), Obra Social IOSPER/OSER (Cód. 505), Seguros obligatorios (Códs. 510, 524, 327) y Ley 4035.
 - consumosBersa: Retenciones Banco Entre Ríos / BERSA (0 si no figura).
 - consumosSidecreer: Tarjeta Sidecreer (0 si no figura).
@@ -461,9 +481,9 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     fechaIngreso: rawIn.datosAgente.fechaIngreso || 'No consta en recibo',
     antiguedadDetalle: rawIn.datosAgente.antiguedad || 'Verificar en carátula',
     cumpleAntiguedadMinima: rawIn.datosAgente.cumpleAntiguedadMinima
-  } : (resDecIn.organismo || resDecIn.antiguedad ? {
+  } : (resDecIn.organismo || resDecIn.antiguedad || resDecIn.cargo ? {
     organismoEmpleador: resDecIn.organismo,
-    escalafonCargo: detRecIn.escalafonCargo || '',
+    escalafonCargo: resDecIn.cargo || detRecIn.escalafonCargo || '',
     situacionRevista: resDecIn.situacionRevista || 'ACTIVO TITULAR',
     fechaIngreso: resDecIn.fechaIngreso || 'No consta en recibo',
     antiguedadDetalle: resDecIn.antiguedad || 'Verificar en carátula',
@@ -474,8 +494,8 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     periodoLiquidado: rawIn.liquidacion.periodo || rawIn.liquidacion.periodoLiquidado || rawIn.datosAgente?.periodoLiquidado,
     estadoVigencia: rawIn.liquidacion.estadoVigencia || 'VIGENTE',
     esVigente: rawIn.liquidacion.esVigente !== false
-  } : (detRecIn.periodo ? {
-    periodoLiquidado: detRecIn.periodo,
+  } : (resDecIn.periodo || detRecIn.periodo ? {
+    periodoLiquidado: resDecIn.periodo || detRecIn.periodo,
     estadoVigencia: 'VIGENTE',
     esVigente: true
   } : {}));
@@ -494,14 +514,14 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     sueldoLiquido: rawIn.liquidacion.sueldoLiquidoBolsillo ?? rawIn.liquidacion.sueldoLiquido ?? rawIn.liquidacion.sueldoNetoBolsillo ?? rawIn.liquidacion.sueldoNeto
   } : (resDecIn.sueldoBrutoTotal !== undefined || detRecIn.totales ? {
     sueldoBrutoTotal: resDecIn.sueldoBrutoTotal ?? detRecIn.totales?.totalHaberes,
-    descuentosLey: desgloseConceptos.calcLey,
-    consumosBersa: desgloseConceptos.calcBersa,
-    consumosSidecreer: desgloseConceptos.calcSidecreer,
-    otrasMutuales: desgloseConceptos.calcMutuales,
-    codigosFedemMonto: desgloseConceptos.calcFedem,
+    descuentosLey: resDecIn.descuentosLey ?? desgloseConceptos.calcLey,
+    consumosBersa: resDecIn.consumosBersa ?? desgloseConceptos.calcBersa,
+    consumosSidecreer: resDecIn.consumosSidecreer ?? desgloseConceptos.calcSidecreer,
+    otrasMutuales: resDecIn.otrasMutualesOProveeduria ?? resDecIn.otrasMutuales ?? desgloseConceptos.calcMutuales,
+    codigosFedemMonto: resDecIn.consumosFedem ?? resDecIn.codigosFedemMonto ?? desgloseConceptos.calcFedem,
     codigosFedemDetectados: desgloseConceptos.fedemCodes,
     embargoDetectado: Boolean(resDecIn.embargosJudiciales) || desgloseConceptos.calcEmbargo > 0,
-    embargoMonto: desgloseConceptos.calcEmbargo,
+    embargoMonto: typeof resDecIn.embargosJudiciales === 'number' ? resDecIn.embargosJudiciales : desgloseConceptos.calcEmbargo,
     embargoConcepto: desgloseConceptos.embargoConcepto,
     totalDescuentosRecibo: resDecIn.totalDescuentos ?? detRecIn.totales?.totalDescuentos,
     sueldoLiquido: resDecIn.sueldoLiquido ?? detRecIn.totales?.liquidoAPagar
@@ -754,6 +774,11 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     antiguedad: antiguedadStr,
     antiguedadApta: cumpleAntig,
     sueldoBrutoTotal: sueldoBruto ?? 0,
+    descuentosLey: descuentosLey ?? 0,
+    consumosBersa: consumosBersa ?? 0,
+    consumosSidecreer: consumosSidecreer ?? 0,
+    otrasMutualesOProveeduria: otrasMutuales ?? 0,
+    consumosFedem: codigosFedemMonto ?? 0,
     totalDescuentos: totalDescuentosRecibo ?? 0,
     sueldoLiquido: sueldoLiquido ?? 0,
     cupoMaximo50: cupoMaximoLegal ?? 0,

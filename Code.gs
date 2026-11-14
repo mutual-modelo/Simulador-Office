@@ -1794,9 +1794,9 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
       ? rawIn.datosAgente.cumpleAntiguedadMinima
       : (rawIn.scoring && rawIn.scoring.cumpleAntiguedad1Anio !== undefined ? rawIn.scoring.cumpleAntiguedad1Anio : (rawIn.datosAgente.antiguedadAnios !== undefined ? Number(rawIn.datosAgente.antiguedadAnios) >= 1 : undefined)),
     cumpleTopeEdad80: rawIn.scoring && rawIn.scoring.cumpleEdadMax80 !== undefined ? rawIn.scoring.cumpleEdadMax80 : undefined
-  } : (resDecIn.organismo || resDecIn.antiguedad ? {
+  } : (resDecIn.organismo || resDecIn.antiguedad || resDecIn.cargo ? {
     organismoEmpleador: resDecIn.organismo,
-    escalafonCargo: detRecIn.escalafonCargo || '',
+    escalafonCargo: resDecIn.cargo || detRecIn.escalafonCargo || '',
     situacionRevista: resDecIn.situacionRevista || 'ACTIVO TITULAR',
     fechaIngreso: resDecIn.fechaIngreso || 'No consta en recibo',
     antiguedadDetalle: resDecIn.antiguedad || 'Verificar en carátula',
@@ -1807,8 +1807,8 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
     periodoLiquidado: rawIn.liquidacion.periodo || rawIn.liquidacion.periodoLiquidado || (rawIn.datosAgente && rawIn.datosAgente.periodoLiquidado),
     estadoVigencia: rawIn.liquidacion.estadoVigencia || 'VIGENTE',
     esVigente: rawIn.liquidacion.esVigente !== false
-  } : (detRecIn.periodo ? {
-    periodoLiquidado: detRecIn.periodo,
+  } : (resDecIn.periodo || detRecIn.periodo ? {
+    periodoLiquidado: resDecIn.periodo || detRecIn.periodo,
     estadoVigencia: 'VIGENTE',
     esVigente: true
   } : {}));
@@ -1828,14 +1828,14 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
     sueldoLiquido: rawIn.liquidacion.sueldoLiquidoBolsillo ?? rawIn.liquidacion.sueldoLiquido ?? rawIn.liquidacion.sueldoNetoBolsillo ?? rawIn.liquidacion.sueldoNeto
   } : (resDecIn.sueldoBrutoTotal !== undefined || detRecIn.totales ? {
     sueldoBrutoTotal: resDecIn.sueldoBrutoTotal ?? totalesDet.totalHaberes,
-    descuentosLey: desgloseConceptos.calcLey,
-    consumosBersa: desgloseConceptos.calcBersa,
-    consumosSidecreer: desgloseConceptos.calcSidecreer,
-    otrasMutuales: desgloseConceptos.calcMutuales,
-    codigosFedemMonto: desgloseConceptos.calcFedem,
+    descuentosLey: resDecIn.descuentosLey ?? desgloseConceptos.calcLey,
+    consumosBersa: resDecIn.consumosBersa ?? desgloseConceptos.calcBersa,
+    consumosSidecreer: resDecIn.consumosSidecreer ?? desgloseConceptos.calcSidecreer,
+    otrasMutuales: resDecIn.otrasMutualesOProveeduria ?? resDecIn.otrasMutuales ?? desgloseConceptos.calcMutuales,
+    codigosFedemMonto: resDecIn.consumosFedem ?? resDecIn.codigosFedemMonto ?? desgloseConceptos.calcFedem,
     codigosFedemDetectados: desgloseConceptos.fedemCodes,
     embargoDetectado: Boolean(resDecIn.embargosJudiciales) || desgloseConceptos.calcEmbargo > 0,
-    embargoMonto: desgloseConceptos.calcEmbargo,
+    embargoMonto: typeof resDecIn.embargosJudiciales === 'number' ? resDecIn.embargosJudiciales : desgloseConceptos.calcEmbargo,
     embargoConcepto: desgloseConceptos.embargoConcepto,
     totalDescuentosRecibo: resDecIn.totalDescuentos ?? totalesDet.totalDescuentos,
     sueldoLiquido: resDecIn.sueldoLiquido ?? totalesDet.liquidoAPagar
@@ -2055,6 +2055,11 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
     antiguedad: antiguedadStr,
     antiguedadApta: cumpleAntig,
     sueldoBrutoTotal: sueldoBruto !== null ? sueldoBruto : 0,
+    descuentosLey: descuentosLey !== null ? descuentosLey : 0,
+    consumosBersa: consumosBersa || 0,
+    consumosSidecreer: consumosSidecreer || 0,
+    otrasMutualesOProveeduria: otrasMutuales || 0,
+    consumosFedem: codigosFedemMonto || 0,
     totalDescuentos: totalDescuentosRecibo !== null ? totalDescuentosRecibo : 0,
     sueldoLiquido: sueldoLiquido !== null ? sueldoLiquido : 0,
     cupoMaximo50: cupoMaximoLegal !== null ? cupoMaximoLegal : 0,
@@ -2302,12 +2307,15 @@ function auditarLegajoConIA(payload) {
     }
   }
 
-  let archivos = Array.isArray(dataIn.archivos) ? dataIn.archivos.filter(function(a) { return a && a.base64; }) : [];
-  if (archivos.length === 0 && dataIn.base64Archivo) {
+  let archivos = Array.isArray(dataIn.archivos)
+    ? dataIn.archivos.filter(function(a) { return a && (a.base64 || (a.textoExtraido && String(a.textoExtraido).trim().length >= 50)); })
+    : [];
+  if (archivos.length === 0 && (dataIn.base64Archivo || (dataIn.textoExtraido && String(dataIn.textoExtraido).trim().length >= 50))) {
     archivos = [{
       nombre: dataIn.nombreArchivo || 'documento_auditoria.pdf',
       mimeType: dataIn.mimeType || dataIn.tipoMime || 'application/pdf',
-      base64: dataIn.base64Archivo
+      base64: dataIn.base64Archivo || '',
+      textoExtraido: dataIn.textoExtraido || ''
     }];
   }
 
@@ -2315,7 +2323,7 @@ function auditarLegajoConIA(payload) {
     return {
       ok: false,
       success: false,
-      error: 'No se recibió ningún archivo digitalizado válido para auditar.'
+      error: 'No se recibió ningún archivo digitalizado o texto extraído válido para auditar.'
     };
   }
 
@@ -2331,6 +2339,15 @@ function auditarLegajoConIA(payload) {
   const datosDeclarados = dataIn.datosDeclarados || dataIn.datosContexto || null;
   const parts = [];
   archivos.forEach(function(arch) {
+    const txtMarkItDown = arch && arch.textoExtraido ? String(arch.textoExtraido).trim() : '';
+    if (txtMarkItDown.length >= 50) {
+      parts.push({
+        text: 'TEXTO EXTRAÍDO LITERALMENTE DEL RECIBO DE SUELDO OFICIAL DE ENTRE RÍOS (' + (arch.nombre || 'recibo.pdf') + ') CON TECNOLOGÍA MARKITDOWN:\n"""\n' + txtMarkItDown + '\n"""'
+      });
+      return;
+    }
+
+    if (!arch || !arch.base64) return;
     let mimeType = String(arch.mimeType || 'application/pdf').toLowerCase();
     if (mimeType.indexOf('pdf') !== -1) mimeType = 'application/pdf';
     else if (mimeType.indexOf('png') !== -1) mimeType = 'image/png';
@@ -2339,6 +2356,7 @@ function auditarLegajoConIA(payload) {
 
     const rawB64 = String(arch.base64 || '');
     const base64Pure = (rawB64.indexOf(',') !== -1 ? rawB64.split(',').pop() : rawB64).trim();
+    if (!base64Pure) return;
 
     parts.push({
       inline_data: {
@@ -2348,21 +2366,30 @@ function auditarLegajoConIA(payload) {
     });
   });
 
+  if (parts.length === 0) {
+    return {
+      ok: false,
+      success: false,
+      error: 'No se encontraron capas de texto ni contenidos binarios válidos para auditar.'
+    };
+  }
+
   const fechaActual = new Date();
   const mesActual = fechaActual.getMonth() + 1;
   const anioActual = fechaActual.getFullYear();
   const fechaActualStr = String(fechaActual.getDate()).padStart(2, '0') + '/' + String(mesActual).padStart(2, '0') + '/' + anioActual;
 
   const promptAuditor = dataIn.promptInstruccion ? String(dataIn.promptInstruccion) : [
-    'Actúa como Auditor Crediticio Senior de la Asociación Mutual Modelo de Entre Ríos (AMMER).',
+    'Actúa como Auditor Crediticio Forense de la Asociación Mutual Modelo de Entre Ríos (AMMER).',
     'FECHA DE AUDITORÍA: ' + fechaActualStr + ' (Mes ' + mesActual + '/' + anioActual + ')',
     '',
-    'Analiza el recibo de haberes oficial de Entre Ríos adjunto y genera la extracción completa para los dos bloques operativos:',
-    '1. "resumenDecision": Datos clave para definir en 5 segundos si se aprueba por planilla, se rechaza o aplica alternativa condicionada por CBU (titular, dni, organismo, antiguedad, antiguedadApta, sueldoBrutoTotal, totalDescuentos, sueldoLiquido, cupoMaximo50, margenDisponiblePlanilla, estadoAfectacion, embargosJudiciales, codigosFedemPrevios, decisionPlanilla, decisionAlternativaCBU, scoringSugerido).',
-    '2. "detalleCompletoRecibo": Transcripción literal de CADA código, concepto/descripción e importe impreso en el recibo en el arreglo conceptos: [{ codigo, descripcion, haberes, descuentos }], más periodo, escalafonCargo y totales: { totalHaberes, totalDescuentos, liquidoAPagar }.',
+    'Analiza el recibo de haberes oficial de Entre Ríos (texto literal extraído y/o imagen adjunta) y genera la extracción completa con rigor matemático estricto para los dos bloques operativos:',
+    '1. "resumenDecision": Datos clave para definir en 5 segundos si se aprueba por planilla, se rechaza o aplica alternativa condicionada por CBU (titular, dni, cuil, organismo, cargo, periodo, antiguedad, antiguedadApta, sueldoBrutoTotal, descuentosLey, consumosBersa, consumosSidecreer, otrasMutualesOProveeduria, consumosFedem, totalDescuentos, sueldoLiquido, cupoMaximo50, margenDisponiblePlanilla, estadoAfectacion, embargosJudiciales, codigosFedemPrevios, decisionPlanilla, decisionAlternativaCBU, scoringSugerido).',
+    '2. "detalleCompletoRecibo": Transcripción literal de CADA código, concepto/descripción e importe impreso en el recibo en el arreglo conceptos: [{ codigo, descripcion, haberes, descuentos }] sin omitir ningún renglón, más periodo, escalafonCargo y totales: { totalHaberes, totalDescuentos, liquidoAPagar }.',
     '',
-    'CALIBRACIÓN ESPECÍFICA RECIBOS OFICIALES DE ENTRE RÍOS (Policía, CGE, Salud, Administración Central, Municipios, Caja de Jubilaciones):',
-    '- Haberes Brutos (sueldoBrutoTotal): Totalizar asignación, adicionales y plus remunerativos/no remunerativos.',
+    'ANCLAS EXACTAS Y CALIBRACIÓN RECIBOS OFICIALES DE ENTRE RÍOS (Policía, CGE, Salud, Administración Central, Municipios, Caja de Jubilaciones):',
+    '- Busca explícitamente las etiquetas "TOTAL HABERES" (asígnalo a sueldoBrutoTotal y totales.totalHaberes), "TOTAL DESCUENTOS" (asígnalo a totalDescuentosRecibo y totales.totalDescuentos) y "LÍQUIDO A PAGAR" / "NETO A COBRAR" (asígnalo a sueldoLiquido y totales.liquidoAPagar).',
+    '- Extrae la lista COMPLETA de conceptos en detalleCompletoRecibo.conceptos sin omitir ni resumir ningún código.',
     '- Descuentos de Ley (descuentosLey): Jubilación (Cód. 502), Obra Social IOSPER/OSER (Cód. 505), Seguros obligatorios (Códs. 510, 524, 327) y Ley 4035.',
     '- Consumos / Proveeduría / Mutuales: MUPER (Cód. 491) u otras mutuales en otrasMutuales; códigos oficiales FEDEM (366/368 Activos o 1115/1117 Pasivos) en codigosFedemMonto; BERSA en consumosBersa; SIDECREER en consumosSidecreer.',
     '- CERO ALUCINACIÓN SIN FALSOS POSITIVOS: Prohibido inventar o redondear cifras. Si un concepto opcional no figura en el recibo, consigna 0.00 (y embargoDetectado: false).',

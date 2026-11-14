@@ -6,12 +6,13 @@
   <title>Simulador de Ayudas Económicas — Mutual Modelo</title>
   <link rel="icon" type="image/jpeg" href="favicon.png"/>
   <meta name="description" content="Simulador oficial de ayudas económicas de Mutual Modelo. Líneas FEDEM Provincial, Municipales Convenio VIKINGO / QUAD y Tarjeta Sidecreer."/>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://script.google.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data: blob:; frame-src 'self' https://drive.google.com https://docs.google.com https://*.googleusercontent.com data: blob:;"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://script.google.com https://cdn.jsdelivr.net; worker-src 'self' blob: https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data: blob:; frame-src 'self' https://drive.google.com https://docs.google.com https://*.googleusercontent.com data: blob:;"/>
   <meta name="referrer" content="strict-origin-when-cross-origin"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
@@ -13533,6 +13534,114 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       return base64Limpio.trim();
     }
 
+    function convertirArchivoABase64(file) {
+      if (!file) return Promise.resolve('');
+      if (typeof file === 'string') return Promise.resolve(file);
+      if (typeof file === 'object' && typeof file.base64 === 'string') return Promise.resolve(file.base64);
+      if (typeof FileReader === 'undefined') return Promise.resolve('');
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = (err) => reject(err || new Error('No se pudo convertir el archivo a Base64.'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function extraerTextoDePDF(fileOrBase64) {
+      try {
+        if (!fileOrBase64) return '';
+        if (typeof fileOrBase64 === 'object' && typeof fileOrBase64.textoExtraido === 'string' && fileOrBase64.textoExtraido.trim().length >= 50) {
+          return fileOrBase64.textoExtraido.trim();
+        }
+
+        const pdfjsLib = (typeof window !== 'undefined') && (window.pdfjsLib || window['pdfjs-dist/build/pdf']);
+        if (!pdfjsLib || typeof pdfjsLib.getDocument !== 'function') {
+          return '';
+        }
+        if (pdfjsLib.GlobalWorkerOptions && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+        }
+
+        let typedArray = null;
+        if (typeof fileOrBase64 === 'string') {
+          const pureB64 = limpiarBase64ParaAPI(fileOrBase64);
+          if (!pureB64 || typeof atob !== 'function') return '';
+          const binStr = atob(pureB64);
+          typedArray = new Uint8Array(binStr.length);
+          for (let i = 0; i < binStr.length; i++) {
+            typedArray[i] = binStr.charCodeAt(i);
+          }
+        } else if (typeof fileOrBase64.arrayBuffer === 'function') {
+          const ab = await fileOrBase64.arrayBuffer();
+          typedArray = new Uint8Array(ab);
+        } else if (fileOrBase64 instanceof Uint8Array) {
+          typedArray = fileOrBase64;
+        } else if (typeof fileOrBase64 === 'object' && typeof fileOrBase64.base64 === 'string') {
+          return extraerTextoDePDF(fileOrBase64.base64);
+        }
+
+        if (!typedArray || typedArray.length === 0) return '';
+
+        const loadingTask = pdfjsLib.getDocument({ data: typedArray });
+        const pdf = await loadingTask.promise;
+        const paginasMd = [];
+
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const textContent = await page.getTextContent();
+          const items = Array.isArray(textContent && textContent.items) ? textContent.items : [];
+          const buckets = new Map();
+
+          items.forEach(item => {
+            const str = item && typeof item.str === 'string' ? item.str.trim() : '';
+            if (!str) return;
+            const tr = Array.isArray(item.transform) ? item.transform : [1, 0, 0, 1, 0, 0];
+            const x = Number(tr[4]) || 0;
+            const y = Number(tr[5]) || 0;
+            const yKey = Math.round(y / 3) * 3;
+            let bucketKey = yKey;
+            if (!buckets.has(bucketKey)) {
+              if (buckets.has(yKey + 3)) bucketKey = yKey + 3;
+              else if (buckets.has(yKey - 3)) bucketKey = yKey - 3;
+              else buckets.set(bucketKey, []);
+            }
+            buckets.get(bucketKey).push({
+              x,
+              width: Number(item.width) || (str.length * 4.5),
+              str
+            });
+          });
+
+          const sortedY = Array.from(buckets.keys()).sort((a, b) => b - a);
+          const filasTexto = sortedY.map(yKey => {
+            const rowItems = buckets.get(yKey).sort((a, b) => a.x - b.x);
+            let linea = '';
+            let prevEnd = null;
+            rowItems.forEach(tok => {
+              if (!linea) {
+                linea = tok.str;
+              } else if (prevEnd !== null && (tok.x - prevEnd) > 14) {
+                linea += ' | ' + tok.str;
+              } else {
+                linea += ' ' + tok.str;
+              }
+              prevEnd = tok.x + tok.width;
+            });
+            return linea.trim();
+          }).filter(Boolean);
+
+          if (filasTexto.length > 0) {
+            paginasMd.push((pdf.numPages > 1 ? ('--- PÁGINA ' + pageNum + ' ---\n') : '') + filasTexto.join('\n'));
+          }
+        }
+
+        return paginasMd.join('\n\n').trim();
+      } catch (errPdf) {
+        console.warn('Extracción local de capa de texto PDF omitida (se usará visión multimodal):', errPdf && errPdf.message ? errPdf.message : errPdf);
+        return '';
+      }
+    }
+
     function clasificarConceptosReciboLocal(conceptosRaw) {
       const round2L = (n) => Math.round(n * 100) / 100;
       const rows = Array.isArray(conceptosRaw) ? conceptosRaw.map(c => {
@@ -13787,13 +13896,13 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         obj.liquido
       ]);
 
-      const descLey = toNumZeroLocal(salIn.descuentosLey ?? recIn.descuentosLey ?? liqIn.descuentosLey ?? obj.descuentosLey) || desgloseLocal.calcLey;
-      const bersa = toNumZeroLocal(salIn.consumosBersa ?? recIn.consumosBersa ?? liqIn.consumosBancariosBersa ?? liqIn.consumosBersa ?? obj.consumosBersa) || desgloseLocal.calcBersa;
-      const sidecreer = toNumZeroLocal(salIn.consumosSidecreer ?? recIn.consumosSidecreer ?? liqIn.consumosSidecreer ?? obj.consumosSidecreer) || desgloseLocal.calcSidecreer;
-      const mutuales = toNumZeroLocal(salIn.otrasMutuales ?? recIn.otrasMutuales ?? liqIn.otrasMutualesOProveeduria ?? liqIn.otrasMutuales ?? liqIn.consumosProveeduria ?? obj.otrasMutuales) || desgloseLocal.calcMutuales;
-      const fedem = toNumZeroLocal(salIn.codigosFedemMonto ?? recIn.codigosFedemMonto ?? liqIn.consumosFedem ?? liqIn.codigosFedemMonto ?? obj.codigosFedemMonto) || desgloseLocal.calcFedem;
+      const descLey = toNumZeroLocal(resDecIn.descuentosLey ?? salIn.descuentosLey ?? recIn.descuentosLey ?? liqIn.descuentosLey ?? obj.descuentosLey) || desgloseLocal.calcLey;
+      const bersa = toNumZeroLocal(resDecIn.consumosBersa ?? salIn.consumosBersa ?? recIn.consumosBersa ?? liqIn.consumosBancariosBersa ?? liqIn.consumosBersa ?? obj.consumosBersa) || desgloseLocal.calcBersa;
+      const sidecreer = toNumZeroLocal(resDecIn.consumosSidecreer ?? salIn.consumosSidecreer ?? recIn.consumosSidecreer ?? liqIn.consumosSidecreer ?? obj.consumosSidecreer) || desgloseLocal.calcSidecreer;
+      const mutuales = toNumZeroLocal(resDecIn.otrasMutualesOProveeduria ?? resDecIn.otrasMutuales ?? salIn.otrasMutuales ?? recIn.otrasMutuales ?? liqIn.otrasMutualesOProveeduria ?? liqIn.otrasMutuales ?? liqIn.consumosProveeduria ?? obj.otrasMutuales) || desgloseLocal.calcMutuales;
+      const fedem = toNumZeroLocal(resDecIn.consumosFedem ?? resDecIn.codigosFedemMonto ?? salIn.codigosFedemMonto ?? recIn.codigosFedemMonto ?? liqIn.consumosFedem ?? liqIn.codigosFedemMonto ?? obj.codigosFedemMonto) || desgloseLocal.calcFedem;
       const embargo = toNumZeroLocal(
-        typeof salIn.embargosJudiciales === 'number' ? salIn.embargosJudiciales : (salIn.embargoMonto ?? recIn.embargoMonto ?? liqIn.embargoMonto ?? obj.embargoMonto)
+        typeof resDecIn.embargosJudiciales === 'number' ? resDecIn.embargosJudiciales : (typeof salIn.embargosJudiciales === 'number' ? salIn.embargosJudiciales : (salIn.embargoMonto ?? recIn.embargoMonto ?? liqIn.embargoMonto ?? obj.embargoMonto))
       ) || desgloseLocal.calcEmbargo;
 
       if (totalDesc === null && bruto > 0 && liquido !== null && bruto >= liquido) {
@@ -13909,6 +14018,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         antiguedad: antiguedadFinal,
         antiguedadApta: cumpleAntigBool,
         sueldoBrutoTotal: bruto,
+        descuentosLey: descLey,
+        consumosBersa: bersa,
+        consumosSidecreer: sidecreer,
+        otrasMutualesOProveeduria: mutuales,
+        consumosFedem: fedem,
         totalDescuentos: totalDesc,
         sueldoLiquido: liquido,
         cupoMaximo50: cupo50,
@@ -13993,25 +14107,37 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     async function realizarAuditoriaOCR(base64OArchivos, contexto = {}) {
+      const tieneContenidoAuditable = (a) => Boolean(
+        a && (a.base64 || (a.textoExtraido && String(a.textoExtraido).trim().length >= 50))
+      );
       let archivos = [];
       if (Array.isArray(base64OArchivos) && base64OArchivos.length > 0) {
-        archivos = base64OArchivos.filter(a => a && a.base64);
+        archivos = base64OArchivos.filter(tieneContenidoAuditable);
       } else if (Array.isArray(contexto && contexto.archivos) && contexto.archivos.length > 0) {
-        archivos = contexto.archivos.filter(a => a && a.base64);
+        archivos = contexto.archivos.filter(tieneContenidoAuditable);
       } else if (typeof base64OArchivos === 'string' && base64OArchivos.trim()) {
         archivos = [{
           nombre: (contexto && contexto.nombre) || 'documento_auditoria.pdf',
           mimeType: (contexto && contexto.mimeType) || 'application/pdf',
-          base64: base64OArchivos
+          base64: base64OArchivos,
+          textoExtraido: (contexto && contexto.textoExtraido) ? String(contexto.textoExtraido) : ''
+        }];
+      } else if (contexto && contexto.textoExtraido && String(contexto.textoExtraido).trim().length >= 50) {
+        archivos = [{
+          nombre: (contexto && contexto.nombre) || 'recibo_markitdown.pdf',
+          mimeType: 'application/pdf',
+          base64: '',
+          textoExtraido: String(contexto.textoExtraido).trim()
         }];
       }
 
       archivos = archivos.map(a => Object.assign({}, a, {
-        base64: limpiarBase64ParaAPI(a.base64)
-      })).filter(a => Boolean(a.base64));
+        base64: a.base64 ? limpiarBase64ParaAPI(a.base64) : '',
+        textoExtraido: a.textoExtraido ? String(a.textoExtraido).trim() : ''
+      })).filter(a => Boolean(a.base64 || a.textoExtraido.length >= 50));
 
       if (archivos.length === 0) {
-        window._ultimaErrorAuditoriaIA = 'No se encontró contenido binario Base64 válido para auditar.';
+        window._ultimaErrorAuditoriaIA = 'No se encontró capa de texto ni contenido binario Base64 válido para auditar.';
         return null;
       }
 
@@ -14036,6 +14162,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
               idSolicitud: (contexto && contexto.idSolicitud) || 'DOCUMENTOS_SUELTOS',
               archivos: archivos,
               base64Archivo: limpiarBase64ParaAPI(primerArchivo.base64 || ''),
+              textoExtraido: primerArchivo.textoExtraido || '',
               mimeType: primerArchivo.mimeType || 'application/pdf',
               nombreArchivo: primerArchivo.nombre || 'documento_auditoria.pdf',
               datosDeclarados: datosDecl,
@@ -14043,6 +14170,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             }
           : {
               archivos: archivos,
+              textoExtraido: primerArchivo.textoExtraido || '',
               datosDeclarados: datosDecl
             };
 
@@ -14244,6 +14372,17 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       };
 
       try {
+        for (let i = 0; i < archivosAEnviar.length; i++) {
+          const itemAuto = archivosAEnviar[i];
+          const esPdfAuto = itemAuto && (
+            String(itemAuto.mimeType || '').toLowerCase().includes('pdf') ||
+            String(itemAuto.nombre || '').toLowerCase().endsWith('.pdf')
+          );
+          if (esPdfAuto && (!itemAuto.textoExtraido || itemAuto.textoExtraido.length < 50) && itemAuto.base64) {
+            itemAuto.textoExtraido = await extraerTextoDePDF(itemAuto.base64);
+          }
+        }
+
         const auditRes = await procesarAuditoriaConTimeout(archivosAEnviar, {
           idSolicitud: solicitudId,
           datosDeclarados: datosDeclarados,
@@ -14664,9 +14803,13 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       container.innerHTML = archivosAuditoriaCola.map((arch, idx) => {
         const isPdf = arch.mimeType && arch.mimeType.includes('pdf');
         const icon = isPdf ? '📄' : '🖼️';
-        const kb = Math.round((arch.base64.length * 0.75) / 1024);
+        const rawLen = arch.base64 ? arch.base64.length : (arch.textoExtraido ? arch.textoExtraido.length : 0);
+        const kb = Math.max(1, Math.round((rawLen * 0.75) / 1024));
+        const markBadge = (arch.textoExtraido && arch.textoExtraido.length >= 50)
+          ? ' <span style="font-size:0.62rem;padding:1px 6px;border-radius:4px;background:#dcfce7;color:#166534;font-weight:700;">⚡ MarkItDown</span>'
+          : '';
         return '<span class="ai-file-pill">' +
-          '<span>' + icon + ' <strong>' + sanitizeHTML(arch.nombre) + '</strong> (' + kb + ' KB)</span>' +
+          '<span>' + icon + ' <strong>' + sanitizeHTML(arch.nombre) + '</strong> (' + kb + ' KB)' + markBadge + '</span>' +
           '<button type="button" class="ai-file-pill-del" onclick="removerArchivoAuditoria(' + idx + ')" title="Quitar">&times;</button>' +
         '</span>';
       }).join(' ');
@@ -14688,12 +14831,32 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           continue;
         }
         try {
-          const norm = await normalizarArchivoAPDF(file);
-          if (norm) {
+          const nombreArchivo = file.name || 'documento_auditoria';
+          const mimeReal = String(file.type || '').toLowerCase();
+          const esPdf = mimeReal === 'application/pdf' || nombreArchivo.toLowerCase().endsWith('.pdf');
+
+          if (esPdf) {
+            const [dataUrl, textoExtraido] = await Promise.all([
+              convertirArchivoABase64(file),
+              extraerTextoDePDF(file)
+            ]);
             archivosAuditoriaCola.push({
-              nombre: norm.nombreArchivo || file.name,
-              mimeType: norm.mimeType || 'application/pdf',
-              base64: norm.dataUrl || norm.base64
+              nombre: nombreArchivo,
+              mimeType: 'application/pdf',
+              base64: dataUrl,
+              textoExtraido: textoExtraido || ''
+            });
+            procesados++;
+          } else {
+            const dataUrl = await convertirArchivoABase64(file);
+            const mimeImg = mimeReal.includes('png')
+              ? 'image/png'
+              : (mimeReal.includes('webp') ? 'image/webp' : 'image/jpeg');
+            archivosAuditoriaCola.push({
+              nombre: nombreArchivo,
+              mimeType: mimeImg,
+              base64: dataUrl,
+              textoExtraido: ''
             });
             procesados++;
           }
@@ -14703,7 +14866,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
       if (procesados > 0) {
         renderListaArchivosAuditoriaPills();
-        showToast('Se cargaron ' + procesados + ' documento(s) normalizados en PDF A4 para auditar.');
+        showToast('Se cargaron ' + procesados + ' documento(s) listos para auditar.');
       }
     }
 
@@ -14803,10 +14966,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       if (btnEjecutar) btnEjecutar.disabled = true;
 
       const etapas = [
-        '1/4. Leyendo textualmente recibo de haberes, DNI y constancias...',
+        '1/4. Extrayendo texto del recibo con tecnología MarkItDown...',
         '2/4. Verificando organismo, situación de revista, antigüedad y período...',
-        '3/4. Auditando Bruto Total, Descuentos de Ley, BERSA, SIDECREER, FEDEM y Embargos...',
-        '4/4. Calculando Cupo Máximo Legal (50% Bruto) y Calificación AMMER...'
+        '3/4. Auditando TOTAL HABERES, Descuentos de Ley, BERSA, SIDECREER, FEDEM y Embargos...',
+        '4/4. Calculando Cupo Máximo Legal (50% Bruto) y Dictamen Crediticio AMMER...'
       ];
       let step = 0;
       if (stageText) stageText.textContent = etapas[0];
@@ -14835,6 +14998,18 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
 
       try {
+        for (let i = 0; i < archivosAuditoriaCola.length; i++) {
+          const itemCola = archivosAuditoriaCola[i];
+          const esPdfCola = itemCola && (
+            String(itemCola.mimeType || '').toLowerCase().includes('pdf') ||
+            String(itemCola.nombre || '').toLowerCase().endsWith('.pdf')
+          );
+          if (esPdfCola && (!itemCola.textoExtraido || itemCola.textoExtraido.length < 50) && itemCola.base64) {
+            itemCola.textoExtraido = await extraerTextoDePDF(itemCola.base64);
+          }
+        }
+        renderListaArchivosAuditoriaPills();
+
         const auditRes = await procesarAuditoriaConTimeout(archivosAuditoriaCola, {
           idSolicitud: idExpedienteAuditadoActivo || 'DOCUMENTOS_SUELTOS',
           datosDeclarados: datosDeclarados,
@@ -14928,11 +15103,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const conceptosClasif = clasificarConceptosReciboLocal(rawConceptos);
       const conceptos = conceptosClasif.rows;
 
-      const descLey = parseNumeroSeguroAuditoria(rec.descuentosLey) ?? conceptosClasif.calcLey ?? 0;
-      const descBersa = parseNumeroSeguroAuditoria(rec.consumosBersa) ?? conceptosClasif.calcBersa ?? 0;
-      const descSidecreer = parseNumeroSeguroAuditoria(rec.consumosSidecreer) ?? conceptosClasif.calcSidecreer ?? 0;
-      const descMutuales = parseNumeroSeguroAuditoria(rec.otrasMutuales) ?? conceptosClasif.calcMutuales ?? 0;
-      const descFedem = parseNumeroSeguroAuditoria(rec.codigosFedemMonto) ?? conceptosClasif.calcFedem ?? 0;
+      const descLey = parseNumeroSeguroAuditoria(r.descuentosLey ?? rec.descuentosLey) ?? conceptosClasif.calcLey ?? 0;
+      const descBersa = parseNumeroSeguroAuditoria(r.consumosBersa ?? rec.consumosBersa) ?? conceptosClasif.calcBersa ?? 0;
+      const descSidecreer = parseNumeroSeguroAuditoria(r.consumosSidecreer ?? rec.consumosSidecreer) ?? conceptosClasif.calcSidecreer ?? 0;
+      const descMutuales = parseNumeroSeguroAuditoria(r.otrasMutualesOProveeduria ?? r.otrasMutuales ?? rec.otrasMutuales) ?? conceptosClasif.calcMutuales ?? 0;
+      const descFedem = parseNumeroSeguroAuditoria(r.consumosFedem ?? rec.codigosFedemMonto) ?? conceptosClasif.calcFedem ?? 0;
       const fedemDetectados = Array.isArray(rec.codigosFedemDetectados) && rec.codigosFedemDetectados.length > 0
         ? rec.codigosFedemDetectados
         : conceptosClasif.fedemCodes;
@@ -15157,14 +15332,72 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       return renderResultadosAuditoria(audit);
     }
 
-    async function ejecutarAuditoriaDocumental(base64Data, tipoMime = 'application/pdf') {
-      return auditarReciboDirectoGemini(base64Data, tipoMime);
-    }
+    async function auditarReciboDocumental(file) {
+      if (!file) {
+        mostrarErrorAuditoria('Seleccione un archivo PDF o imagen de recibo válido para auditar.');
+        mostrarNotificacionToast('Seleccione un recibo válido para auditar.', 'error');
+        return null;
+      }
 
-    async function auditarReciboDirectoGemini(base64Data, mimeType = 'application/pdf') {
-      mostrarLoaderAuditoria('Analizando recibo de haberes con IA...');
-      const base64Limpio = limpiarBase64ParaAPI(base64Data);
+      mostrarLoaderAuditoria('Extrayendo texto del recibo con tecnología MarkItDown...');
+
       try {
+        const nombreArchivo = (typeof file === 'object' && (file.name || file.nombre))
+          ? String(file.name || file.nombre)
+          : 'recibo_haberes.pdf';
+        const mimeEntrada = (typeof file === 'object' && (file.type || file.mimeType))
+          ? String(file.type || file.mimeType).toLowerCase()
+          : 'application/pdf';
+        const esPdf = mimeEntrada === 'application/pdf' ||
+          mimeEntrada.includes('pdf') ||
+          nombreArchivo.toLowerCase().endsWith('.pdf');
+
+        let archivoPayload = null;
+
+        if (esPdf) {
+          const [textoExtraido, base64Data] = await Promise.all([
+            extraerTextoDePDF(file),
+            convertirArchivoABase64(file)
+          ]);
+          const base64Limpio = limpiarBase64ParaAPI(base64Data);
+
+          if (textoExtraido && textoExtraido.trim().length >= 50) {
+            mostrarLoaderAuditoria('Analizando capa textual MarkItDown con motor de auditoría IA de AMMER...');
+            archivoPayload = {
+              nombre: nombreArchivo,
+              mimeType: 'application/pdf',
+              base64: base64Limpio,
+              textoExtraido: textoExtraido.trim()
+            };
+          } else if (base64Limpio) {
+            mostrarLoaderAuditoria('PDF escaneado sin capa textual: analizando con visión multimodal IA...');
+            archivoPayload = {
+              nombre: nombreArchivo,
+              mimeType: 'application/pdf',
+              base64: base64Limpio,
+              textoExtraido: ''
+            };
+          } else {
+            throw new Error('El PDF no contiene capa de texto ni imagen legible. Intente con una imagen o PDF nítido.');
+          }
+        } else {
+          const base64Data = await convertirArchivoABase64(file);
+          const base64Limpio = limpiarBase64ParaAPI(base64Data);
+          if (!base64Limpio) {
+            throw new Error('No se pudo leer la imagen del recibo. Intente con un archivo JPG, PNG o WEBP válido.');
+          }
+          const mimeImg = mimeEntrada.includes('png')
+            ? 'image/png'
+            : (mimeEntrada.includes('webp') ? 'image/webp' : 'image/jpeg');
+          mostrarLoaderAuditoria('Analizando imagen del recibo con motor multimodal IA de AMMER...');
+          archivoPayload = {
+            nombre: nombreArchivo,
+            mimeType: mimeImg,
+            base64: base64Limpio,
+            textoExtraido: ''
+          };
+        }
+
         let datosContexto = null;
         if (idExpedienteAuditadoActivo) {
           const all = getStoredSolicitudes();
@@ -15182,35 +15415,49 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           }
         }
 
-        const auditRes = await procesarAuditoriaConTimeout(base64Limpio, {
+        const auditoriaJSON = await procesarAuditoriaConTimeout([archivoPayload], {
           idSolicitud: idExpedienteAuditadoActivo || 'DOCUMENTOS_SUELTOS',
-          mimeType: mimeType || 'application/pdf',
           datosDeclarados: datosContexto,
           preservarLoadingBar: true,
           timeoutMs: 55000
         });
 
-        if (auditRes) {
-          ultimoResultadoAuditoria = auditRes;
-          renderizarInformeAuditoriaIA(auditRes);
-          mostrarNotificacionToast('Auditoría documental completada exitosamente.', 'success');
-          return auditRes;
+        if (!auditoriaJSON) {
+          throw new Error(window._ultimaErrorAuditoriaIA || 'No se pudo extraer un JSON válido de la respuesta del servidor documental.');
         }
 
-        const detalleError = window._ultimaErrorAuditoriaIA || 'Respuesta no válida del servicio de auditoría documental.';
-        console.error('Aviso de Auditoría (sin resultado):', detalleError);
-        mostrarErrorAuditoria(detalleError);
-        mostrarNotificacionToast('No se pudo procesar el recibo: ' + detalleError, 'error');
-        return null;
-      } catch (err) {
-        const msgErr = err && err.message ? err.message : String(err);
-        console.error('Fallo de comunicación en auditoría documental:', err);
+        ultimoResultadoAuditoria = auditoriaJSON;
+        renderizarInformeAuditoriaIA(auditoriaJSON);
+        mostrarNotificacionToast('Auditoría completada exitosamente.', 'success');
+        return auditoriaJSON;
+      } catch (error) {
+        const msgErr = error && error.message ? error.message : String(error);
+        console.error('Error en auditoría:', error);
         mostrarErrorAuditoria(msgErr);
-        mostrarNotificacionToast('Error en auditoría documental: ' + msgErr, 'error');
+        mostrarNotificacionToast('Error en auditoría: ' + msgErr, 'error');
         return null;
       } finally {
         ocultarLoaderAuditoria();
       }
+    }
+
+    async function ejecutarAuditoriaDocumental(base64Data, tipoMime = 'application/pdf') {
+      if (base64Data && typeof base64Data === 'object' && (typeof base64Data.arrayBuffer === 'function' || base64Data.base64 || base64Data.textoExtraido)) {
+        return auditarReciboDocumental(base64Data);
+      }
+      return auditarReciboDirectoGemini(base64Data, tipoMime);
+    }
+
+    async function auditarReciboDirectoGemini(base64Data, mimeType = 'application/pdf') {
+      if (base64Data && typeof base64Data === 'object' && (typeof base64Data.arrayBuffer === 'function' || base64Data.base64 || base64Data.textoExtraido)) {
+        return auditarReciboDocumental(base64Data);
+      }
+      const esPdfStr = String(mimeType || 'application/pdf').toLowerCase().includes('pdf');
+      return auditarReciboDocumental({
+        nombre: esPdfStr ? 'recibo_haberes.pdf' : 'recibo_haberes.jpg',
+        mimeType: mimeType || 'application/pdf',
+        base64: String(base64Data || '')
+      });
     }
 
     async function auditarReciboConIA(archivoBase64, tipoMime = 'application/pdf') {
@@ -15838,6 +16085,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.mostrarNotificacionToast = mostrarNotificacionToast;
     window.auditarReciboDirectoGemini = auditarReciboDirectoGemini;
     window.auditarReciboConIA = auditarReciboConIA;
+    window.auditarReciboDocumental = auditarReciboDocumental;
+    window.extraerTextoDePDF = extraerTextoDePDF;
+    window.convertirArchivoABase64 = convertirArchivoABase64;
     window.CONFIG = CONFIG;
     window.estadoApp = window.estadoApp;
 

@@ -2477,38 +2477,38 @@ function auditarLegajoConIA(payload) {
   const datosDeclarados = dataIn.datosDeclarados || dataIn.datosContexto || null;
   const parts = [];
   archivos.forEach(function(arch) {
-    const txtMarkItDown = arch && arch.textoExtraido ? String(arch.textoExtraido).trim() : '';
-    if (txtMarkItDown.length >= 40) {
-      parts.push({
-        text: 'TEXTO EXTRAÍDO LITERALMENTE DEL RECIBO DE SUELDO OFICIAL DE ENTRE RÍOS (' + (arch.nombre || 'recibo.pdf') + '):\n"""\n' + txtMarkItDown + '\n"""'
-      });
-      return;
-    }
-
-    if (!arch || !arch.base64) return;
-    let mimeType = String(arch.mimeType || 'application/pdf').toLowerCase();
-    if (mimeType.indexOf('pdf') !== -1) mimeType = 'application/pdf';
-    else if (mimeType.indexOf('png') !== -1) mimeType = 'image/png';
-    else if (mimeType.indexOf('webp') !== -1) mimeType = 'image/webp';
-    else mimeType = 'image/jpeg';
-
+    if (!arch) return;
     const rawB64 = String(arch.base64 || '');
     const base64Pure = (rawB64.indexOf(',') !== -1 ? rawB64.split(',').pop() : rawB64).trim();
-    if (!base64Pure) return;
+    if (base64Pure) {
+      let mimeType = String(arch.mimeType || 'application/pdf').toLowerCase();
+      if (mimeType.indexOf('pdf') !== -1) mimeType = 'application/pdf';
+      else if (mimeType.indexOf('png') !== -1) mimeType = 'image/png';
+      else if (mimeType.indexOf('webp') !== -1) mimeType = 'image/webp';
+      else mimeType = 'image/jpeg';
 
-    parts.push({
-      inline_data: {
-        mime_type: mimeType,
-        data: base64Pure
-      }
-    });
+      // Esquema oficial Gemini REST API en camelCase estricto
+      parts.push({
+        inlineData: {
+          mimeType: mimeType,
+          data: base64Pure
+        }
+      });
+    }
+
+    const txtExtra = arch.textoExtraido ? String(arch.textoExtraido).trim() : '';
+    if (txtExtra.length >= 40) {
+      parts.push({
+        text: 'TEXTO COMPLEMENTARIO EXTRAÍDO (' + (arch.nombre || 'recibo.pdf') + '):\n"""\n' + txtExtra + '\n"""'
+      });
+    }
   });
 
   if (parts.length === 0) {
     return {
       ok: false,
       success: false,
-      error: 'No se encontraron capas de texto ni contenidos binarios válidos para auditar.'
+      error: 'No se encontraron archivos binarios Base64 válidos para auditar.'
     };
   }
 
@@ -2521,7 +2521,7 @@ function auditarLegajoConIA(payload) {
     'Actúa como Auditor Crediticio Forense de la Asociación Mutual Modelo de Entre Ríos (AMMER).',
     'FECHA DE AUDITORÍA: ' + fechaActualStr + ' (Mes ' + mesActual + '/' + anioActual + ')',
     '',
-    'Analiza el recibo de haberes oficial de Entre Ríos (texto literal extraído y/o imagen adjunta) y genera la extracción completa con rigor matemático estricto para los dos bloques operativos:',
+    'Analiza el recibo de haberes oficial de Entre Ríos adjunto (PDF o imagen) y genera la extracción completa con rigor matemático estricto para los dos bloques operativos:',
     '1. "resumenDecision": Datos clave para definir en 5 segundos si se aprueba por planilla, se rechaza o aplica alternativa condicionada por CBU (titular, dni, cuil, organismo, cargo, periodo, antiguedad, antiguedadApta, sueldoBrutoTotal, descuentosLey, consumosBersa, consumosSidecreer, otrasMutualesOProveeduria, consumosFedem, totalDescuentos, sueldoLiquido, cupoMaximo50, margenDisponiblePlanilla, estadoAfectacion, embargosJudiciales, codigosFedemPrevios, decisionPlanilla, decisionAlternativaCBU, scoringSugerido).',
     '2. "detalleCompletoRecibo": Transcripción literal de CADA código, concepto/descripción e importe impreso en el recibo en el arreglo conceptos: [{ codigo, descripcion, haberes, descuentos }] sin omitir ningún renglón, más periodo, escalafonCargo y totales: { totalHaberes, totalDescuentos, liquidoAPagar }.',
     '',
@@ -2542,7 +2542,7 @@ function auditarLegajoConIA(payload) {
   parts.push({ text: promptAuditor });
 
   try {
-    const modelosGemini = ['gemini-2.5-flash', 'gemini-3-flash-preview'];
+    const modelosGemini = ['gemini-2.5-flash', 'gemini-4-hydrogen', 'gemini-3.1-flash-lite'];
     let candidateText = '';
     let ultimoErrorHttp = '';
 
@@ -2587,6 +2587,19 @@ function auditarLegajoConIA(payload) {
 
     const dataParsed = limpiarYParsearJSONAuditoria_(candidateText);
     const mapped = mapearAuditoriaEnAppsScript_(dataParsed, datosDeclarados);
+    const sinDatosSalariales = (!mapped || !mapped.resumenDecision ||
+      (Number(mapped.resumenDecision.sueldoBrutoTotal || 0) <= 0 &&
+       Number(mapped.resumenDecision.sueldoLiquido || 0) <= 0 &&
+       (!mapped.detalleCompletoRecibo || !Array.isArray(mapped.detalleCompletoRecibo.conceptos) || mapped.detalleCompletoRecibo.conceptos.length === 0)));
+
+    if (sinDatosSalariales) {
+      return {
+        ok: false,
+        success: false,
+        error: 'No se detectaron importes salariales ni conceptos legibles en el comprobante enviado. Verifique que sea un recibo de sueldo nítido.'
+      };
+    }
+
     persistirDictamenAuditoriaEnHoja_(dataIn.idSolicitud, mapped);
 
     return {

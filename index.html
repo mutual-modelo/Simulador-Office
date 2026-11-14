@@ -12,14 +12,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js"></script>
-  <script>
-    // Desactivar worker externo para evitar bloqueos por CORS en navegadores (usa pdfjsWorker embebido en hilo principal)
-    if (typeof window !== 'undefined' && window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc = '';
-    }
-  </script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
@@ -3225,14 +3217,15 @@
           </span>
           <span class="sidebar-nav-label sidebar-text">Simulador</span>
         </button>
-        <button type="button" id="btnNavAuditoriaIA" class="sidebar-nav-item" data-view="vistaAuditoriaIA" data-tooltip="Auditoría IA (Recibos)" onclick="cambiarVistaPrincipal('auditoria-ia')">
-          <span class="sidebar-nav-icon">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button type="button" id="btnNavAuditoriaIA" class="sidebar-nav-item" data-view="vistaAuditoriaIA" data-tooltip="Auditoría IA" onclick="cambiarVistaPrincipal('auditoria-ia')">
+          <span class="sidebar-nav-icon" style="color:#818cf8;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              <path d="M13 10V3L21 11H13z" opacity="0.3"></path>
             </svg>
           </span>
-          <span class="sidebar-nav-label sidebar-text">Auditoría IA (Recibos)</span>
-          <span class="sidebar-text" style="margin-left:auto;background:#1e3a8a;color:#93c5fd;border:1px solid #2563eb;font-size:10px;font-weight:800;padding:1px 6px;border-radius:4px;letter-spacing:0.04em;">PRO</span>
+          <span class="sidebar-nav-label sidebar-text">Auditoría IA</span>
+          <span class="sidebar-text" style="margin-left:auto;background:rgba(99,102,241,0.2);color:#a5b4fc;border:1px solid rgba(99,102,241,0.35);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:0.03em;flex-shrink:0;">RECIBOS</span>
         </button>
       </nav>
 
@@ -4074,7 +4067,25 @@
               <p style="font-size:.71rem;color:var(--text-muted);margin-top:3px;">Verificando Haberes Brutos, Descuentos de Ley, BERSA, Sidecreer, Mutuales, Códigos FEDEM, Embargos y Planes Sugeridos.</p>
             </div>
 
-            <!-- Pantalla de Resultados en 3 Bloques (Oculto hasta procesar) -->
+            <!-- Banner Rojo Visible de Error Estricto (Prohibido renderizar $ 0,00 si hay falla) -->
+            <div id="bannerErrorAuditoriaIA" class="hidden" role="alert" aria-live="assertive" style="background:#fef2f2;border:2px solid #fca5a5;color:#7f1d1d;border-radius:12px;padding:1rem 1.15rem;margin-top:.85rem;margin-bottom:.75rem;">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;">
+                <div style="display:flex;align-items:flex-start;gap:.65rem;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                  <div>
+                    <div style="font-weight:800;font-size:.86rem;color:#991b1b;margin-bottom:3px;">No se pudo procesar el comprobante</div>
+                    <div id="bannerErrorAuditoriaTexto" style="font-size:.78rem;line-height:1.45;color:#7f1d1d;"></div>
+                  </div>
+                </div>
+                <button type="button" onclick="ocultarBannerErrorAuditoria()" style="background:transparent;border:none;color:#991b1b;font-size:1.15rem;font-weight:800;cursor:pointer;line-height:1;" title="Cerrar aviso">&times;</button>
+              </div>
+            </div>
+
+            <!-- Pantalla de Resultados en 3 Bloques (Oculto hasta procesar exitosamente) -->
             <div id="aiAuditResultadosContainer" style="display:none;"></div>
           </div>
         </div>
@@ -7293,16 +7304,16 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const navBody = document.getElementById('sidebarNavBody');
       if (navBody) {
         const iconSimulador = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>';
-        const iconAuditoriaIA = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
+        const iconAuditoriaIA = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path><path d="M13 10V3L21 11H13z" opacity="0.3"></path></svg>';
         const iconGestiones = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>';
         const iconRedComercial = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>';
         const iconBoveda = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>';
         const iconAyuda = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
 
-        const itemAuditoriaIA = '<button type="button" id="btnNavAuditoriaIA" class="sidebar-nav-item" data-view="vistaAuditoriaIA" data-tooltip="Auditoría IA (Recibos)" onclick="cambiarVistaPrincipal(\'auditoria-ia\')">' +
-          '<span class="sidebar-nav-icon">' + iconAuditoriaIA + '</span>' +
-          '<span class="sidebar-nav-label ' + textCls + '">Auditoría IA (Recibos)</span>' +
-          '<span class="' + textCls + '" style="margin-left:auto;background:#1e3a8a;color:#93c5fd;border:1px solid #2563eb;font-size:10px;font-weight:800;padding:1px 6px;border-radius:4px;letter-spacing:0.04em;">PRO</span></button>';
+        const itemAuditoriaIA = '<button type="button" id="btnNavAuditoriaIA" class="sidebar-nav-item" data-view="vistaAuditoriaIA" data-tooltip="Auditoría IA" onclick="cambiarVistaPrincipal(\'auditoria-ia\')">' +
+          '<span class="sidebar-nav-icon" style="color:#818cf8;">' + iconAuditoriaIA + '</span>' +
+          '<span class="sidebar-nav-label ' + textCls + '">Auditoría IA</span>' +
+          '<span class="' + textCls + '" style="margin-left:auto;background:rgba(99,102,241,0.2);color:#a5b4fc;border:1px solid rgba(99,102,241,0.35);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:0.03em;flex-shrink:0;">RECIBOS</span></button>';
 
         let html = '<div class="sidebar-nav-section-title ' + textCls + '">Módulos Operativos</div>';
 
@@ -13578,191 +13589,82 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       return base64Limpio.trim();
     }
 
-    function convertirArchivoABase64(file) {
+    // Conversor nativo universal a Base64 puro (sin pdf.js ni workers externos)
+    function archivoABase64Puro(file) {
       if (!file) return Promise.resolve('');
-      if (typeof file === 'string') return Promise.resolve(file);
-      if (typeof file === 'object' && typeof file.base64 === 'string') return Promise.resolve(file.base64);
-      if (typeof FileReader === 'undefined') return Promise.resolve('');
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result || ''));
-        reader.onerror = (err) => reject(err || new Error('No se pudo convertir el archivo a Base64.'));
-        reader.readAsDataURL(file);
-      });
+      if (typeof file === 'string') {
+        return Promise.resolve(limpiarBase64ParaAPI(file));
+      }
+      if (typeof file === 'object' && typeof file.base64 === 'string' && file.base64.trim()) {
+        return Promise.resolve(limpiarBase64ParaAPI(file.base64));
+      }
+      if (typeof FileReader !== 'undefined') {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const res = String(reader.result || '');
+            const b64 = res.includes(',') ? (res.split(',').pop() || '') : res;
+            resolve(b64.trim());
+          };
+          reader.onerror = (e) => reject(e || new Error('No se pudo leer el archivo seleccionado con FileReader.'));
+          reader.readAsDataURL(file);
+        });
+      }
+      if (typeof file === 'object' && typeof file.arrayBuffer === 'function' && typeof btoa === 'function') {
+        return file.arrayBuffer().then((ab) => {
+          const bytes = new Uint8Array(ab);
+          let binary = '';
+          for (let i = 0; i < bytes.length; i++) {
+            binary += String.fromCharCode(bytes[i]);
+          }
+          return btoa(binary);
+        });
+      }
+      return Promise.resolve('');
+    }
+
+    function limpiarNumero(val) {
+      if (typeof val === 'number') return Number.isFinite(val) ? val : 0;
+      if (!val) return 0;
+      let s = String(val).replace(/[^0-9,.-]/g, '').trim();
+      if (s.includes('.') && s.includes(',')) {
+        if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
+          s = s.replace(/\./g, '').replace(',', '.');
+        } else {
+          s = s.replace(/,/g, '');
+        }
+      } else if (s.includes(',')) {
+        s = s.replace(',', '.');
+      } else if ((s.match(/\./g) || []).length > 1) {
+        s = s.replace(/\./g, '');
+      }
+      const n = parseFloat(s);
+      return Number.isNaN(n) ? 0 : n;
+    }
+
+    async function convertirArchivoABase64(file) {
+      const pure = await archivoABase64Puro(file);
+      if (!pure) return '';
+      const mime = (typeof file === 'object' && file && file.type)
+        ? String(file.type)
+        : ((typeof file === 'object' && file && String(file.name || '').toLowerCase().endsWith('.pdf')) ? 'application/pdf' : 'image/jpeg');
+      return 'data:' + mime + ';base64,' + pure;
     }
 
     async function convertirArchivoABase64Limpio(file) {
-      const rawDataUrl = await convertirArchivoABase64(file);
-      return limpiarBase64ParaAPI(rawDataUrl);
+      return archivoABase64Puro(file);
     }
 
-    async function obtenerBytesPdfSeguro_(fileOrBase64) {
-      if (!fileOrBase64) return null;
-      if (typeof fileOrBase64 === 'string') {
-        const pureB64 = limpiarBase64ParaAPI(fileOrBase64);
-        if (!pureB64) return null;
-        if (typeof atob === 'function') {
-          const binStr = atob(pureB64);
-          const bytes = new Uint8Array(binStr.length);
-          for (let i = 0; i < binStr.length; i++) {
-            bytes[i] = binStr.charCodeAt(i);
-          }
-          return bytes;
-        }
-        return null;
-      }
-      if (typeof fileOrBase64.arrayBuffer === 'function') {
-        const ab = await fileOrBase64.arrayBuffer();
-        return new Uint8Array(ab);
-      }
-      if (fileOrBase64 instanceof Uint8Array) {
-        return fileOrBase64;
-      }
-      if (typeof fileOrBase64 === 'object' && typeof fileOrBase64.base64 === 'string') {
-        return obtenerBytesPdfSeguro_(fileOrBase64.base64);
-      }
-      return null;
+    async function extraerTextoDigital() {
+      return '';
     }
 
-    // 1. Extrae texto digital si el PDF es vectorial (sin worker externo para evitar bloqueos CORS)
-    async function extraerTextoDigital(fileOrBase64) {
-      try {
-        if (!fileOrBase64) return '';
-        if (typeof fileOrBase64 === 'object' && typeof fileOrBase64.textoExtraido === 'string' && fileOrBase64.textoExtraido.trim().length >= 40) {
-          return fileOrBase64.textoExtraido.trim();
-        }
-
-        const pdfjsLib = (typeof window !== 'undefined') && (window.pdfjsLib || window['pdfjs-dist/build/pdf']);
-        if (!pdfjsLib || typeof pdfjsLib.getDocument !== 'function') {
-          return '';
-        }
-
-        const typedArray = await obtenerBytesPdfSeguro_(fileOrBase64);
-        if (!typedArray || typedArray.length === 0) return '';
-
-        const loadingTask = pdfjsLib.getDocument({ data: typedArray, disableWorker: true });
-        const pdf = await loadingTask.promise;
-        const paginasMd = [];
-
-        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-          const page = await pdf.getPage(pageNum);
-          const textContent = await page.getTextContent();
-          const items = Array.isArray(textContent && textContent.items) ? textContent.items : [];
-          const buckets = new Map();
-
-          items.forEach(item => {
-            const str = item && typeof item.str === 'string' ? item.str.trim() : '';
-            if (!str) return;
-            const tr = Array.isArray(item.transform) ? item.transform : [1, 0, 0, 1, 0, 0];
-            const x = Number(tr[4]) || 0;
-            const y = Number(tr[5]) || 0;
-            const yKey = Math.round(y / 3) * 3;
-            let bucketKey = yKey;
-            if (!buckets.has(bucketKey)) {
-              if (buckets.has(yKey + 3)) bucketKey = yKey + 3;
-              else if (buckets.has(yKey - 3)) bucketKey = yKey - 3;
-              else buckets.set(bucketKey, []);
-            }
-            buckets.get(bucketKey).push({
-              x,
-              width: Number(item.width) || (str.length * 4.5),
-              str
-            });
-          });
-
-          const sortedY = Array.from(buckets.keys()).sort((a, b) => b - a);
-          const filasTexto = sortedY.map(yKey => {
-            const rowItems = buckets.get(yKey).sort((a, b) => a.x - b.x);
-            let linea = '';
-            let prevEnd = null;
-            rowItems.forEach(tok => {
-              if (!linea) {
-                linea = tok.str;
-              } else if (prevEnd !== null && (tok.x - prevEnd) > 14) {
-                linea += ' | ' + tok.str;
-              } else {
-                linea += ' ' + tok.str;
-              }
-              prevEnd = tok.x + tok.width;
-            });
-            return linea.trim();
-          }).filter(Boolean);
-
-          if (filasTexto.length > 0) {
-            paginasMd.push((pdf.numPages > 1 ? ('--- PÁGINA ' + pageNum + ' ---\n') : '') + filasTexto.join('\n'));
-          }
-        }
-
-        return paginasMd.join('\n\n').trim();
-      } catch (errPdf) {
-        console.warn('Extracción local de capa de texto PDF omitida (se usará renderizado Canvas JPEG 2x):', errPdf && errPdf.message ? errPdf.message : errPdf);
-        return '';
-      }
+    async function extraerTextoDePDF() {
+      return '';
     }
 
-    async function extraerTextoDePDF(fileOrBase64) {
-      return extraerTextoDigital(fileOrBase64);
-    }
-
-    // 2. Renderiza las páginas del PDF a JPEG nítido (escala 2.0x sobre fondo blanco) si el PDF es escaneo o imagen
-    async function renderizarPdfAJpegBase64(fileOrBase64) {
-      try {
-        const pdfjsLib = (typeof window !== 'undefined') && (window.pdfjsLib || window['pdfjs-dist/build/pdf']);
-        if (!pdfjsLib || typeof pdfjsLib.getDocument !== 'function' || typeof document === 'undefined') {
-          return '';
-        }
-
-        const typedArray = await obtenerBytesPdfSeguro_(fileOrBase64);
-        if (!typedArray || typedArray.length === 0) return '';
-
-        const pdf = await pdfjsLib.getDocument({ data: typedArray, disableWorker: true }).promise;
-        const maxPages = Math.min(pdf.numPages || 1, 2);
-        const pageCanvases = [];
-        let totalHeight = 0;
-        let maxWidth = 0;
-
-        for (let p = 1; p <= maxPages; p++) {
-          const page = await pdf.getPage(p);
-          const viewport = page.getViewport({ scale: 2.0 });
-          const canvas = document.createElement('canvas');
-          const context = canvas && typeof canvas.getContext === 'function' ? canvas.getContext('2d') : null;
-          if (!context || typeof canvas.toDataURL !== 'function') {
-            return '';
-          }
-          canvas.width = Math.ceil(viewport.width);
-          canvas.height = Math.ceil(viewport.height);
-          context.fillStyle = '#ffffff';
-          context.fillRect(0, 0, canvas.width, canvas.height);
-          await page.render({ canvasContext: context, viewport }).promise;
-          pageCanvases.push(canvas);
-          totalHeight += canvas.height;
-          if (canvas.width > maxWidth) maxWidth = canvas.width;
-        }
-
-        if (pageCanvases.length === 0) return '';
-        if (pageCanvases.length === 1) {
-          return limpiarBase64ParaAPI(pageCanvases[0].toDataURL('image/jpeg', 0.90));
-        }
-
-        const mergedCanvas = document.createElement('canvas');
-        const mergedCtx = mergedCanvas.getContext('2d');
-        if (!mergedCtx) {
-          return limpiarBase64ParaAPI(pageCanvases[0].toDataURL('image/jpeg', 0.90));
-        }
-        mergedCanvas.width = maxWidth;
-        mergedCanvas.height = totalHeight;
-        mergedCtx.fillStyle = '#ffffff';
-        mergedCtx.fillRect(0, 0, maxWidth, totalHeight);
-        let yOffset = 0;
-        pageCanvases.forEach(c => {
-          mergedCtx.drawImage(c, 0, yOffset);
-          yOffset += c.height;
-        });
-        return limpiarBase64ParaAPI(mergedCanvas.toDataURL('image/jpeg', 0.88));
-      } catch (errCanvas) {
-        console.warn('No se pudo renderizar PDF escaneado a Canvas JPEG:', errCanvas && errCanvas.message ? errCanvas.message : errCanvas);
-        return '';
-      }
+    async function renderizarPdfAJpegBase64() {
+      return '';
     }
 
     function clasificarConceptosReciboLocal(conceptosRaw) {
@@ -14502,19 +14404,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       try {
         for (let i = 0; i < archivosAEnviar.length; i++) {
           const itemAuto = archivosAEnviar[i];
-          const esPdfAuto = itemAuto && (
-            String(itemAuto.mimeType || '').toLowerCase().includes('pdf') ||
-            String(itemAuto.nombre || '').toLowerCase().endsWith('.pdf')
-          );
-          if (esPdfAuto && (!itemAuto.textoExtraido || itemAuto.textoExtraido.length < 40) && itemAuto.base64) {
-            itemAuto.textoExtraido = await extraerTextoDigital(itemAuto.base64);
-            if (!itemAuto.textoExtraido || itemAuto.textoExtraido.length < 40) {
-              const jpegScanAuto = await renderizarPdfAJpegBase64(itemAuto.base64);
-              if (jpegScanAuto) {
-                itemAuto.mimeType = 'image/jpeg';
-                itemAuto.base64 = jpegScanAuto;
-                itemAuto.renderizadoDesdePdfEscaneado = true;
-              }
+          if (itemAuto && itemAuto.base64) {
+            itemAuto.base64 = limpiarBase64ParaAPI(itemAuto.base64);
+            const esPdfAuto = String(itemAuto.mimeType || '').toLowerCase().includes('pdf') ||
+              String(itemAuto.nombre || '').toLowerCase().endsWith('.pdf');
+            if (esPdfAuto) {
+              itemAuto.mimeType = 'application/pdf';
             }
           }
         }
@@ -14970,65 +14865,39 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       for (const file of arr) {
         if (typeof file.size === 'number' && file.size < 5120) {
           const msgDanado = '⚠️ El archivo seleccionado parece estar vacío o dañado (pesa menos de 5 KB). Por favor, suba un comprobante válido.';
-          mostrarErrorAuditoria(msgDanado);
+          mostrarBannerErrorAuditoria(msgDanado);
           mostrarNotificacionToast(msgDanado, 'error');
           continue;
         }
         if (file.size > 15 * 1024 * 1024) {
-          showToast('El archivo "' + file.name + '" supera el límite de 15 MB.');
+          const msgMax = 'El archivo "' + file.name + '" supera el límite permitido de 15 MB.';
+          mostrarBannerErrorAuditoria(msgMax);
+          showToast(msgMax);
           continue;
         }
         try {
           const nombreArchivo = file.name || 'documento_auditoria';
           const mimeReal = String(file.type || '').toLowerCase();
-          const esPdf = mimeReal === 'application/pdf' || nombreArchivo.toLowerCase().endsWith('.pdf');
+          const esPdf = mimeReal === 'application/pdf' || mimeReal.includes('pdf') || nombreArchivo.toLowerCase().endsWith('.pdf');
+          const mimeFinal = esPdf
+            ? 'application/pdf'
+            : (mimeReal.includes('png') ? 'image/png' : (mimeReal.includes('webp') ? 'image/webp' : 'image/jpeg'));
 
-          if (esPdf) {
-            const textoExtraido = await extraerTextoDigital(file);
-            if (textoExtraido && textoExtraido.trim().length >= 40) {
-              const dataUrl = await convertirArchivoABase64(file);
-              archivosAuditoriaCola.push({
-                nombre: nombreArchivo,
-                mimeType: 'application/pdf',
-                base64: dataUrl,
-                textoExtraido: textoExtraido.trim()
-              });
-            } else {
-              const jpegScan = await renderizarPdfAJpegBase64(file);
-              if (jpegScan) {
-                archivosAuditoriaCola.push({
-                  nombre: nombreArchivo,
-                  mimeType: 'image/jpeg',
-                  base64: jpegScan,
-                  textoExtraido: '',
-                  renderizadoDesdePdfEscaneado: true
-                });
-              } else {
-                const dataUrl = await convertirArchivoABase64(file);
-                archivosAuditoriaCola.push({
-                  nombre: nombreArchivo,
-                  mimeType: 'application/pdf',
-                  base64: dataUrl,
-                  textoExtraido: ''
-                });
-              }
-            }
-            procesados++;
-          } else {
-            const dataUrl = await convertirArchivoABase64(file);
-            const mimeImg = mimeReal.includes('png')
-              ? 'image/png'
-              : (mimeReal.includes('webp') ? 'image/webp' : 'image/jpeg');
-            archivosAuditoriaCola.push({
-              nombre: nombreArchivo,
-              mimeType: mimeImg,
-              base64: dataUrl,
-              textoExtraido: ''
-            });
-            procesados++;
+          const b64Puro = await archivoABase64Puro(file);
+          if (!b64Puro) {
+            throw new Error('No se pudo convertir "' + nombreArchivo + '" a Base64.');
           }
+          archivosAuditoriaCola.push({
+            nombre: nombreArchivo,
+            mimeType: mimeFinal,
+            base64: b64Puro,
+            textoExtraido: ''
+          });
+          procesados++;
         } catch (err) {
-          showToast('⚠️ ' + (err.message || 'Error procesando "' + file.name + '"'));
+          const msgProc = err && err.message ? err.message : ('Error procesando "' + file.name + '"');
+          mostrarBannerErrorAuditoria(msgProc);
+          showToast('⚠️ ' + msgProc);
         }
       }
       if (procesados > 0) {
@@ -15059,7 +14928,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           archivosAuditoriaCola = conBase.map(a => ({
             nombre: a.nombre,
             mimeType: a.mimeType || a.tipoMime || (String(a.nombre || '').toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
-            base64: a.base64 || a.dataUrl,
+            base64: limpiarBase64ParaAPI(a.base64 || a.dataUrl),
             textoExtraido: ''
           }));
           renderListaArchivosAuditoriaPills();
@@ -15082,6 +14951,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const inp = document.getElementById('fileInputAuditoriaIA');
       if (inp) inp.value = '';
       renderListaArchivosAuditoriaPills();
+      ocultarBannerErrorAuditoria();
       const resCont = document.getElementById('aiAuditResultadosContainer');
       if (resCont) {
         resCont.style.display = 'none';
@@ -15105,11 +14975,15 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const stageText = document.getElementById('aiAuditStageText');
       const resCont = document.getElementById('aiAuditResultadosContainer');
 
+      ocultarBannerErrorAuditoria();
       if (loadBar) loadBar.style.display = 'block';
-      if (resCont) resCont.style.display = 'none';
+      if (resCont) {
+        resCont.style.display = 'none';
+        resCont.innerHTML = '';
+      }
 
       const etapas = [
-        '1/4. Extrayendo capa textual del recibo oficial de Entre Ríos...',
+        '1/4. Procesando documento nativo (PDF / Imagen) con motor multimodal...',
         '2/4. Verificando titular, organismo, antigüedad y período liquidado...',
         '3/4. Auditando TOTAL HABERES, Descuentos de Ley, BERSA, Sidecreer, FEDEM y Embargos...',
         '4/4. Calculando Margen Legal 50% y Simulación de Ayuda Económica Sugerida...'
@@ -15141,24 +15015,6 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
 
       try {
-        for (let i = 0; i < archivosAuditoriaCola.length; i++) {
-          const itemCola = archivosAuditoriaCola[i];
-          const esPdfCola = itemCola && (
-            String(itemCola.mimeType || '').toLowerCase().includes('pdf') ||
-            String(itemCola.nombre || '').toLowerCase().endsWith('.pdf')
-          );
-          if (esPdfCola && (!itemCola.textoExtraido || itemCola.textoExtraido.length < 40) && itemCola.base64) {
-            itemCola.textoExtraido = await extraerTextoDigital(itemCola.base64);
-            if (!itemCola.textoExtraido || itemCola.textoExtraido.length < 40) {
-              const jpegCola = await renderizarPdfAJpegBase64(itemCola.base64);
-              if (jpegCola) {
-                itemCola.mimeType = 'image/jpeg';
-                itemCola.base64 = jpegCola;
-                itemCola.renderizadoDesdePdfEscaneado = true;
-              }
-            }
-          }
-        }
         renderListaArchivosAuditoriaPills();
 
         const auditRes = await procesarAuditoriaConTimeout(archivosAuditoriaCola, {
@@ -15172,6 +15028,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         clearInterval(stepTimer);
 
         if (auditRes) {
+          const okRendered = renderizarAuditoriaYSimulador(auditRes);
+          if (!okRendered) {
+            return null;
+          }
           ultimoResultadoAuditoria = auditRes;
           if (sAsociada) {
             const all = getStoredSolicitudes();
@@ -15185,16 +15045,17 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
               saveStoredSolicitudes(all);
             }
           }
-          renderizarAuditoriaYSimulador(auditRes);
           showToast('Auditoría y simulación completadas.');
           return auditRes;
         } else {
-          renderErrorAuditoria(window._ultimaErrorAuditoriaIA || 'No se recibió respuesta del motor de análisis documental. Reintente en unos segundos.');
-          showToast('⚠️ No se obtuvo respuesta del motor de análisis. Reintente.');
+          const msgFalla = window._ultimaErrorAuditoriaIA || 'No se recibió respuesta válida del motor de análisis documental.';
+          mostrarBannerErrorAuditoria(msgFalla);
+          showToast('⚠️ ' + msgFalla);
           return null;
         }
       } catch (err) {
-        renderErrorAuditoria(err && err.message ? err.message : 'Error de comunicación con el motor documental.');
+        const msgErr = err && err.message ? err.message : 'Error de comunicación con el motor documental.';
+        mostrarBannerErrorAuditoria(msgErr);
         showToast('⚠️ Error de comunicación en auditoría documental.');
         return null;
       } finally {
@@ -15204,15 +15065,34 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
     }
 
+    function mostrarBannerErrorAuditoria(mensajeError) {
+      const msg = String(mensajeError || 'No se pudo completar el análisis documental del comprobante.');
+      const resCont = document.getElementById('aiAuditResultadosContainer');
+      if (resCont) {
+        resCont.style.display = 'none';
+        resCont.innerHTML = '';
+      }
+      const banner = document.getElementById('bannerErrorAuditoriaIA');
+      const txtEl = document.getElementById('bannerErrorAuditoriaTexto');
+      if (txtEl) {
+        txtEl.textContent = msg;
+      }
+      if (banner) {
+        banner.classList.remove('hidden');
+        banner.style.display = 'block';
+      }
+    }
+
+    function ocultarBannerErrorAuditoria() {
+      const banner = document.getElementById('bannerErrorAuditoriaIA');
+      if (banner) {
+        banner.classList.add('hidden');
+        banner.style.display = 'none';
+      }
+    }
+
     function renderErrorAuditoria(mensajeError) {
-      const container = document.getElementById('aiAuditResultadosContainer');
-      if (!container) return;
-      container.innerHTML = '<div class="alert-box-critica" style="margin-top:1rem;">' +
-        '<div style="font-weight:800;margin-bottom:4px;">⚠️ No se pudo completar la consulta al motor documental</div>' +
-        '<p style="margin:0 0 8px 0;font-size:0.76rem;line-height:1.45;">' + sanitizeHTML(mensajeError) + '</p>' +
-        '<div style="font-size:0.7rem;color:#7f1d1d;">Verifique la conectividad del servidor y que el archivo adjunto sea un PDF o imagen nítida.</div>' +
-      '</div>';
-      container.style.display = 'block';
+      mostrarBannerErrorAuditoria(mensajeError);
     }
 
     function calcularPlanesSugeridosAuditoria(cuotaMaximaObjetivo, canalKey = 'fedem') {
@@ -15261,12 +15141,15 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
     function renderizarAuditoriaYSimulador(rawJSON) {
       const container = document.getElementById('aiAuditResultadosContainer');
-      if (!container) return;
+      if (!container) return null;
 
-      const audit = normalizarResultadoAuditoriaIA(rawJSON) || {};
-      ultimoResultadoAuditoria = audit;
+      const audit = normalizarResultadoAuditoriaIA(rawJSON);
+      if (!audit) {
+        mostrarBannerErrorAuditoria('La respuesta recibida no contiene datos salariales ni estructura válida de recibo.');
+        return null;
+      }
       const payload = (rawJSON && typeof rawJSON === 'object')
-        ? (rawJSON.auditoria || rawJSON.resultado || rawJSON)
+        ? (rawJSON.auditoria || rawJSON.resultado || rawJSON.data || rawJSON)
         : {};
       const r = audit.resumenDecision || payload.resumenDecision || payload.reciboSueldo || payload.liquidacion || payload || {};
       const d = audit.detalleCompletoRecibo || payload.detalleCompletoRecibo || payload.reciboSueldo || payload || {};
@@ -15299,6 +15182,15 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         r.sueldoLiquido ?? r.sueldoNeto ?? payload.sueldoLiquido ?? d.totales?.liquidoAPagar ?? rec.sueldoNeto
       );
       const liquido = liqNum !== null ? liqNum : Math.round((bruto - descuentos) * 100) / 100;
+
+      // PROHIBIDO renderizar resultados en $ 0,00 si falló la extracción salarial
+      if (bruto <= 0 && liquido <= 0 && conceptos.length === 0) {
+        mostrarBannerErrorAuditoria('El motor documental no devolvió haberes ni conceptos legibles del archivo adjunto. Verifique que el PDF o imagen corresponda a un recibo de sueldo nítido.');
+        return null;
+      }
+
+      ocultarBannerErrorAuditoria();
+      ultimoResultadoAuditoria = audit;
 
       const cupo50 = Math.round(bruto * 0.50 * 100) / 100;
       const margen = Math.round((cupo50 - descuentos) * 100) / 100;
@@ -15579,6 +15471,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       if (typeof container.scrollIntoView === 'function') {
         container.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
+      return audit;
+    }
+
+    function renderizarAuditoriaExitosa(rawJSON) {
+      return renderizarAuditoriaYSimulador(rawJSON);
     }
 
     function renderResultadosAuditoria(rawJSON) {
@@ -15602,30 +15499,49 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     function mostrarErrorAuditoria(msg) {
-      renderErrorAuditoria(msg || 'No se pudo completar la lectura documental.');
+      mostrarBannerErrorAuditoria(msg || 'No se pudo completar la lectura documental.');
     }
 
     function renderizarInformeAuditoriaIA(audit) {
       return renderizarAuditoriaYSimulador(audit);
     }
 
-    async function procesarReciboUnico(file) {
+    async function auditarReciboUniversal(file) {
       if (!file) {
-        mostrarErrorAuditoria('Seleccione o arrastre un Recibo de Sueldo en formato PDF o Imagen.');
+        mostrarBannerErrorAuditoria('Seleccione o arrastre un Recibo de Sueldo en formato PDF, PNG o JPG.');
         mostrarNotificacionToast('Seleccione un archivo válido para auditar.', 'error');
         return null;
       }
 
       if (typeof file === 'object' && typeof file.size === 'number' && file.size < 5120) {
         const msgDanado = '⚠️ El archivo seleccionado parece estar vacío o dañado (pesa menos de 5 KB). Por favor, suba un comprobante válido.';
-        mostrarErrorAuditoria(msgDanado);
+        mostrarBannerErrorAuditoria(msgDanado);
         mostrarNotificacionToast(msgDanado, 'error');
         return null;
       }
 
+      if (typeof file === 'object' && typeof file.size === 'number' && file.size > 15 * 1024 * 1024) {
+        const msgMax = 'El archivo seleccionado supera el tamaño máximo permitido de 15 MB.';
+        mostrarBannerErrorAuditoria(msgMax);
+        mostrarNotificacionToast(msgMax, 'error');
+        return null;
+      }
+
       const resCont = document.getElementById('aiAuditResultadosContainer');
-      if (resCont) resCont.style.display = 'none';
-      mostrarLoaderAuditoria('Escaneando recibo con motor híbrido AMMER...');
+      if (resCont) {
+        resCont.style.display = 'none';
+        resCont.innerHTML = '';
+      }
+      ocultarBannerErrorAuditoria();
+
+      const sizeKb = (typeof file === 'object' && typeof file.size === 'number')
+        ? Math.max(1, Math.round(file.size / 1024))
+        : 0;
+      mostrarLoaderAuditoria(
+        sizeKb > 0
+          ? ('Analizando comprobante (' + sizeKb + ' KB) en el motor documental AMMER...')
+          : 'Analizando comprobante en el motor documental AMMER...'
+      );
 
       try {
         const nombreArchivo = (typeof file === 'object' && (file.name || file.nombre))
@@ -15633,63 +15549,28 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           : 'recibo_haberes.pdf';
         const mimeEntrada = (typeof file === 'object' && (file.type || file.mimeType))
           ? String(file.type || file.mimeType).toLowerCase()
-          : 'application/pdf';
+          : '';
         const esPdf = mimeEntrada === 'application/pdf' ||
           mimeEntrada.includes('pdf') ||
           nombreArchivo.toLowerCase().endsWith('.pdf');
+        const mimeFinal = esPdf
+          ? 'application/pdf'
+          : (mimeEntrada.includes('png') ? 'image/png' : (mimeEntrada.includes('webp') ? 'image/webp' : 'image/jpeg'));
 
-        let contenidoTexto = '';
-        let esTextoPlano = false;
-        let base64Limpio = '';
-        let mimeFinal = mimeEntrada.includes('png')
-          ? 'image/png'
-          : (mimeEntrada.includes('webp') ? 'image/webp' : 'image/jpeg');
-        let renderizadoDesdePdfEscaneado = false;
-
-        if (esPdf) {
-          const textoExtraido = await extraerTextoDigital(file);
-          if (textoExtraido && textoExtraido.trim().length >= 40) {
-            esTextoPlano = true;
-            contenidoTexto = textoExtraido.trim();
-            mimeFinal = 'application/pdf';
-          } else {
-            mostrarLoaderAuditoria('Escaneo detectado: renderizando recibo PDF a imagen HD (2x) para visión OCR...');
-            const jpegRenderizado = await renderizarPdfAJpegBase64(file);
-            if (jpegRenderizado) {
-              base64Limpio = jpegRenderizado;
-              mimeFinal = 'image/jpeg';
-              renderizadoDesdePdfEscaneado = true;
-            } else {
-              base64Limpio = await convertirArchivoABase64Limpio(file);
-              mimeFinal = 'application/pdf';
-            }
-          }
-        } else {
-          base64Limpio = await convertirArchivoABase64Limpio(file);
-        }
-
-        if (!esTextoPlano && !base64Limpio) {
-          throw new Error('No se pudo leer el contenido del recibo. Intente con un PDF o imagen JPG/PNG nítida.');
+        const base64Data = await archivoABase64Puro(file);
+        if (!base64Data) {
+          throw new Error('No se pudo leer el contenido binario del comprobante. Intente con un PDF o imagen PNG/JPG nítida.');
         }
 
         const archivoPayload = {
           nombre: nombreArchivo,
           mimeType: mimeFinal,
-          base64: base64Limpio,
-          textoExtraido: esTextoPlano ? contenidoTexto : '',
-          renderizadoDesdePdfEscaneado
+          base64: base64Data,
+          textoExtraido: ''
         };
 
         archivosAuditoriaCola = [archivoPayload];
         renderListaArchivosAuditoriaPills();
-
-        mostrarLoaderAuditoria(
-          esTextoPlano
-            ? 'Procesando capa textual del recibo y calculando simulación oficial AMMER...'
-            : (renderizadoDesdePdfEscaneado
-              ? 'Analizando imagen HD (2x) del recibo escaneado y calculando simulación oficial AMMER...'
-              : 'Analizando imagen del recibo con visión multimodal y calculando simulación...')
-        );
 
         const auditoria = await procesarAuditoriaConTimeout([archivoPayload], {
           idSolicitud: idExpedienteAuditadoActivo || 'DOCUMENTOS_SUELTOS',
@@ -15699,17 +15580,19 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         });
 
         if (!auditoria) {
-          throw new Error(window._ultimaErrorAuditoriaIA || 'No se pudo interpretar la respuesta del motor documental.');
+          throw new Error(window._ultimaErrorAuditoriaIA || 'El motor documental no pudo procesar el comprobante enviado.');
         }
 
-        ultimoResultadoAuditoria = auditoria;
-        renderizarAuditoriaYSimulador(auditoria);
-        mostrarNotificacionToast('Auditoría y simulación completadas.', 'success');
-        return auditoria;
+        const okRendered = renderizarAuditoriaExitosa(auditoria);
+        if (!okRendered) {
+          return null;
+        }
+        mostrarNotificacionToast('Auditoría completada exitosamente.', 'success');
+        return okRendered;
       } catch (err) {
         const msgErr = err && err.message ? err.message : String(err);
-        console.error('Error en proceso de auditoría:', err);
-        mostrarErrorAuditoria(msgErr);
+        console.error('Fallo crítico en auditoría:', err);
+        mostrarBannerErrorAuditoria(msgErr);
         mostrarNotificacionToast('Aviso de Auditoría: ' + msgErr, 'error');
         return null;
       } finally {
@@ -15717,8 +15600,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
     }
 
+    async function procesarReciboUnico(file) {
+      return auditarReciboUniversal(file);
+    }
+
     async function auditarReciboDocumental(file) {
-      return procesarReciboUnico(file);
+      return auditarReciboUniversal(file);
     }
 
     async function ejecutarAuditoriaDocumental(base64Data, tipoMime = 'application/pdf') {
@@ -16542,12 +16429,18 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.limpiarYParsearJSONAuditoria = limpiarYParsearJSONAuditoria;
     window.extraerJSONResiliente = extraerJSONResiliente;
     window.limpiarBase64ParaAPI = limpiarBase64ParaAPI;
+    window.archivoABase64Puro = archivoABase64Puro;
+    window.limpiarNumero = limpiarNumero;
+    window.mostrarBannerErrorAuditoria = mostrarBannerErrorAuditoria;
+    window.ocultarBannerErrorAuditoria = ocultarBannerErrorAuditoria;
     window.mostrarNotificacionToast = mostrarNotificacionToast;
+    window.auditarReciboUniversal = auditarReciboUniversal;
     window.auditarReciboDirectoGemini = auditarReciboDirectoGemini;
     window.auditarReciboConIA = auditarReciboConIA;
     window.auditarReciboDocumental = auditarReciboDocumental;
     window.auditarReciboUnificado = auditarReciboUnificado;
     window.procesarReciboUnico = procesarReciboUnico;
+    window.renderizarAuditoriaExitosa = renderizarAuditoriaExitosa;
     window.renderizarAuditoriaYSimulador = renderizarAuditoriaYSimulador;
     window.guardarDictamenEnBitacoraExpediente = guardarDictamenEnBitacoraExpediente;
     window.confirmarGuardadoDictamenInline = confirmarGuardadoDictamenInline;

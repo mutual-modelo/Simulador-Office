@@ -102,36 +102,37 @@ app.post('/api/auditar-documentos', async (req, res) => {
       });
     }
 
-    // Preparar las partes (texto MarkItDown para PDFs digitales o multimodal inlineData para imágenes/escaneos)
+    // Preparar las partes multimodales nativas con inlineData (camelCase oficial) para PDFs e imágenes
     const parts: any[] = [];
 
     for (const arch of listaArchivos) {
       if (!arch) continue;
-      const txtMarkItDown = arch.textoExtraido ? String(arch.textoExtraido).trim() : '';
-      if (txtMarkItDown.length >= 40) {
-        parts.push({
-          text: `TEXTO EXTRAÍDO LITERALMENTE DEL RECIBO DE SUELDO OFICIAL DE ENTRE RÍOS (${arch.nombre || 'recibo.pdf'}):\n"""\n${txtMarkItDown}\n"""`
-        });
-        continue;
+
+      if (arch.base64) {
+        let mimeType = String(arch.mimeType || 'application/pdf').toLowerCase();
+        if (mimeType.includes('pdf')) mimeType = 'application/pdf';
+        else if (mimeType.includes('png')) mimeType = 'image/png';
+        else if (mimeType.includes('webp')) mimeType = 'image/webp';
+        else mimeType = 'image/jpeg';
+
+        const rawB64 = String(arch.base64 || '');
+        const base64Pure = (rawB64.includes(',') ? rawB64.split(',').pop() || '' : rawB64).trim();
+        if (base64Pure) {
+          parts.push({
+            inlineData: {
+              mimeType,
+              data: base64Pure
+            }
+          });
+        }
       }
 
-      if (!arch.base64) continue;
-      let mimeType = String(arch.mimeType || 'application/pdf').toLowerCase();
-      if (mimeType.includes('pdf')) mimeType = 'application/pdf';
-      else if (mimeType.includes('png')) mimeType = 'image/png';
-      else if (mimeType.includes('webp')) mimeType = 'image/webp';
-      else mimeType = 'image/jpeg';
-
-      const rawB64 = String(arch.base64 || '');
-      const base64Pure = (rawB64.includes(',') ? rawB64.split(',').pop() || '' : rawB64).trim();
-      if (!base64Pure) continue;
-
-      parts.push({
-        inlineData: {
-          mimeType,
-          data: base64Pure
-        }
-      });
+      const txtExtra = arch.textoExtraido ? String(arch.textoExtraido).trim() : '';
+      if (txtExtra.length >= 40) {
+        parts.push({
+          text: `TEXTO COMPLEMENTARIO EXTRAÍDO (${arch.nombre || 'recibo.pdf'}):\n"""\n${txtExtra}\n"""`
+        });
+      }
     }
 
     if (parts.length === 0) {
@@ -363,6 +364,21 @@ Devuelve estrictamente JSON conforme al schema.
     })();
 
     const auditModelOutput = mapearEstructuraAuditoria(dataParsed, datosDeclarados);
+    const resDecOut = auditModelOutput?.resumenDecision;
+    const detConceptsOut = auditModelOutput?.detalleCompletoRecibo?.conceptos || [];
+
+    if (
+      !resDecOut ||
+      (Number(resDecOut.sueldoBrutoTotal || 0) <= 0 &&
+        Number(resDecOut.sueldoLiquido || 0) <= 0 &&
+        detConceptsOut.length === 0)
+    ) {
+      return res.status(422).json({
+        ok: false,
+        success: false,
+        error: 'No se pudieron extraer haberes ni conceptos legibles del comprobante adjunto. Verifique que el archivo corresponda a un recibo de sueldo nítido en PDF, PNG o JPG.'
+      });
+    }
 
     return res.json({
       ok: true,

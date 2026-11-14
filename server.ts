@@ -13,9 +13,18 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = 3000;
 
-// Soporte para payloads con documentos e imágenes en Base64
+// Soporte para payloads con documentos e imágenes en Base64 + CORS institucional para despliegues estáticos
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use('/api', (req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  next();
+});
 
 // Inicialización diferida de cliente Gemini API según estándares recomendados
 // Telemetría oficial aistudio-build e inyección dinámica desde variables de entorno
@@ -202,119 +211,65 @@ Devuelve estrictamente JSON conforme al schema.
     const responseSchema = {
       type: Type.OBJECT,
       properties: {
-        identidad: {
-          type: Type.OBJECT,
-          properties: {
-            titularDetectado: { type: Type.STRING },
-            dni: { type: Type.STRING },
-            cuil: { type: Type.STRING },
-            fechaNacimiento: { type: Type.STRING },
-            domicilio: { type: Type.STRING },
-            fechaVencimientoDni: { type: Type.STRING },
-            dniVigente: { type: Type.BOOLEAN },
-            estadoCotejoCaratula: { type: Type.STRING, description: 'COINCIDE | VERIFICADO EN DOCUMENTO (SIN CARÁTULA PREVIA) | DISCREPANCIA DETECTADA' },
-            detalleDiscrepancias: { type: Type.ARRAY, items: { type: Type.STRING } }
-          },
-          required: ['titularDetectado', 'dni', 'cuil', 'estadoCotejoCaratula']
-        },
-        datosLaborales: {
-          type: Type.OBJECT,
-          properties: {
-            organismoEmpleador: { type: Type.STRING },
-            dependencia: { type: Type.STRING },
-            legajo: { type: Type.STRING },
-            escalafonCargo: { type: Type.STRING, description: 'Escalafón, categoría o cargo literal impreso en el recibo' },
-            situacionRevista: { type: Type.STRING, description: 'ACTIVO TITULAR | ACTIVO SUPLENTE | PASIVO' },
-            fechaIngreso: { type: Type.STRING },
-            antiguedadDetalle: { type: Type.STRING },
-            antiguedadAnios: { type: Type.NUMBER },
-            cumpleAntiguedadMinima: { type: Type.BOOLEAN },
-            esSaludSuplenteDia19: { type: Type.BOOLEAN },
-            requiereSituacionSage: { type: Type.BOOLEAN },
-            esInvalidezODiscapacidad: { type: Type.BOOLEAN },
-            cumpleTopeEdad80: { type: Type.BOOLEAN },
-            observacionesEspeciales: { type: Type.STRING }
-          },
-          required: ['organismoEmpleador', 'escalafonCargo', 'situacionRevista', 'antiguedadDetalle', 'observacionesEspeciales']
-        },
-        vigenciaRecibo: {
-          type: Type.OBJECT,
-          properties: {
-            periodoLiquidado: { type: Type.STRING, description: 'Período liquidado impreso en el recibo (ej. MM/YYYY o Mes Año)' },
-            estadoVigencia: { type: Type.STRING, description: 'VIGENTE | DESACTUALIZADO' },
-            esVigente: { type: Type.BOOLEAN }
-          },
-          required: ['periodoLiquidado', 'estadoVigencia', 'esVigente']
-        },
-        radiografiaSalarial: {
-          type: Type.OBJECT,
-          properties: {
-            sueldoBrutoTotal: { type: Type.NUMBER },
-            descuentosLey: { type: Type.NUMBER },
-            consumosBersa: { type: Type.NUMBER },
-            consumosSidecreer: { type: Type.NUMBER },
-            otrasMutuales: { type: Type.NUMBER },
-            codigosFedemMonto: { type: Type.NUMBER },
-            codigosFedemDetectados: { type: Type.ARRAY, items: { type: Type.STRING } },
-            embargoDetectado: { type: Type.BOOLEAN },
-            embargoMonto: { type: Type.NUMBER },
-            embargoConcepto: { type: Type.STRING },
-            totalDescuentosRecibo: { type: Type.NUMBER },
-            sueldoLiquido: { type: Type.NUMBER }
-          },
-          required: ['sueldoBrutoTotal', 'descuentosLey', 'totalDescuentosRecibo', 'sueldoLiquido', 'embargoDetectado', 'codigosFedemDetectados']
-        },
-        detalleCompletoRecibo: {
-          type: Type.OBJECT,
-          properties: {
-            periodo: { type: Type.STRING },
-            escalafonCargo: { type: Type.STRING },
-            conceptos: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  codigo: { type: Type.STRING },
-                  descripcion: { type: Type.STRING },
-                  haberes: { type: Type.NUMBER },
-                  descuentos: { type: Type.NUMBER }
-                },
-                required: ['codigo', 'descripcion', 'haberes', 'descuentos']
-              }
+        titular: { type: Type.STRING, description: 'Apellido y Nombres literales impresos en el recibo' },
+        dni: { type: Type.STRING, description: 'DNI numérico extraído (sin puntos) o extraído del CUIL' },
+        cuil: { type: Type.STRING },
+        organismo: { type: Type.STRING, description: 'Organismo o repartición oficial empleadora' },
+        dependencia: { type: Type.STRING },
+        legajo: { type: Type.STRING },
+        cargo: { type: Type.STRING, description: 'Escalafón, categoría o cargo literal impreso en el recibo' },
+        situacionRevista: { type: Type.STRING, description: 'ACTIVO TITULAR | ACTIVO SUPLENTE | PASIVO' },
+        fechaIngreso: { type: Type.STRING },
+        periodo: { type: Type.STRING, description: 'Mes y año liquidado (ej. 08/2026 o Agosto 2026)' },
+        esVigente: { type: Type.BOOLEAN },
+        antiguedad: { type: Type.STRING, description: 'Antigüedad computable impresa (ej. 9 años, 1 mes)' },
+        antiguedadAnios: { type: Type.NUMBER },
+        cumpleAntiguedadMinima: { type: Type.BOOLEAN },
+        esInvalidezODiscapacidad: { type: Type.BOOLEAN },
+        sueldoBrutoTotal: { type: Type.NUMBER, description: 'Valor exacto de TOTAL HABERES' },
+        descuentosLey: { type: Type.NUMBER, description: 'Suma de Jubilación, Obra Social IOSPER/OSER, Seguros obligatorios y Ley 4035' },
+        consumosBersa: { type: Type.NUMBER, description: 'Retenciones Banco Entre Ríos / BERSA (0 si no figura)' },
+        consumosSidecreer: { type: Type.NUMBER, description: 'Tarjeta Sidecreer (0 si no figura)' },
+        otrasMutuales: { type: Type.NUMBER, description: 'Proveedurías, mutuales, cooperativas y sindicatos ej. MUPER Cód. 491 (0 si no figura)' },
+        consumosFedem: { type: Type.NUMBER, description: 'Suma de códigos oficiales FEDEM 366, 368, 1115 o 1117 (0 si no figura)' },
+        codigosFedemDetectados: { type: Type.ARRAY, items: { type: Type.STRING } },
+        embargosJudiciales: { type: Type.BOOLEAN },
+        embargoMonto: { type: Type.NUMBER },
+        embargoConcepto: { type: Type.STRING },
+        totalDescuentos: { type: Type.NUMBER, description: 'Valor exacto de TOTAL DESCUENTOS' },
+        sueldoLiquido: { type: Type.NUMBER, description: 'Valor exacto de LÍQUIDO A PAGAR / NETO A COBRAR' },
+        observacionesEspeciales: { type: Type.STRING },
+        conceptos: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              codigo: { type: Type.STRING },
+              descripcion: { type: Type.STRING },
+              haberes: { type: Type.NUMBER },
+              descuentos: { type: Type.NUMBER }
             },
-            totales: {
-              type: Type.OBJECT,
-              properties: {
-                totalHaberes: { type: Type.NUMBER },
-                totalDescuentos: { type: Type.NUMBER },
-                liquidoAPagar: { type: Type.NUMBER }
-              },
-              required: ['totalHaberes', 'totalDescuentos', 'liquidoAPagar']
-            }
-          },
-          required: ['periodo', 'escalafonCargo', 'conceptos', 'totales']
-        },
-        scoringAmmer: {
-          type: Type.OBJECT,
-          properties: {
-            puntajeTotal: { type: Type.NUMBER },
-            calificacionLetra: { type: Type.STRING, description: 'A (Riesgo Bajo) | B (Riesgo Moderado) | C (Riesgo Crítico / No Viable)' },
-            dictamen: { type: Type.STRING, description: 'APTO_OTORGAMIENTO | OBSERVADO | RECHAZADO' },
-            decisionPlanilla: { type: Type.STRING, description: 'APTO POR PLANILLA | OBSERVADO POR PLANILLA | RECHAZADO / CUPO EXCEDIDO' },
-            decisionAlternativaCBU: { type: Type.STRING },
-            nivelConfianza: { type: Type.STRING, description: 'ALTO | MEDIO | BAJO' },
-            dictamenAuditor: { type: Type.STRING },
-            alertasCriticas: { type: Type.ARRAY, items: { type: Type.STRING } },
-            camposIlegibles: { type: Type.ARRAY, items: { type: Type.STRING } }
-          },
-          required: ['puntajeTotal', 'calificacionLetra', 'dictamen', 'decisionPlanilla', 'decisionAlternativaCBU', 'dictamenAuditor', 'alertasCriticas', 'camposIlegibles']
+            required: ['codigo', 'descripcion', 'haberes', 'descuentos']
+          }
         }
       },
-      required: ['identidad', 'datosLaborales', 'vigenciaRecibo', 'radiografiaSalarial', 'detalleCompletoRecibo', 'scoringAmmer']
+      required: [
+        'titular',
+        'dni',
+        'organismo',
+        'periodo',
+        'antiguedad',
+        'sueldoBrutoTotal',
+        'descuentosLey',
+        'totalDescuentos',
+        'sueldoLiquido',
+        'embargosJudiciales',
+        'conceptos'
+      ]
     };
 
-    const modelosActivos = ['gemini-2.5-flash', 'gemini-4-hydrogen', 'gemini-3.1-flash-lite'];
-    let textOutput = '';
+    const modelosActivos = ['gemini-4-hydrogen', 'gemini-2.5-flash', 'gemini-3.1-flash-lite'];
+    let auditModelOutput: any = null;
     let ultimoErrorModelo: any = null;
 
     for (const modelo of modelosActivos) {
@@ -323,56 +278,57 @@ Devuelve estrictamente JSON conforme al schema.
           model: modelo,
           contents: [{ parts }],
           config: {
-            systemInstruction: 'Eres Auditor Crediticio Senior y Especialista en Verificación Documental Forense de AMMER. Extrae literalmente todos los datos personales, organismo, cargo, período, antigüedad y todos los renglones de códigos, conceptos, haberes y descuentos impresos en el recibo sin inventar cifras ni redondear. Coloca 0 cuando un descuento opcional no figure en el comprobante y cadena vacía "" si un dato textual secundario no consta en el recibo. Devuelve exclusivamente JSON conforme al schema.',
+            systemInstruction: 'Eres Auditor Crediticio Senior y Especialista en Verificación Documental Forense de AMMER. Extrae literalmente todos los datos personales, organismo, cargo, período, antigüedad, TOTAL HABERES (sueldoBrutoTotal), TOTAL DESCUENTOS (totalDescuentos), LÍQUIDO A PAGAR (sueldoLiquido) y todos los renglones de códigos, conceptos, haberes y descuentos impresos en el recibo de Entre Ríos sin inventar cifras ni redondear. Coloca 0 cuando un descuento opcional no figure en el comprobante y cadena vacía "" si un dato secundario no consta en el recibo. Devuelve exclusivamente JSON puro conforme al schema, sin bloques markdown.',
             responseMimeType: 'application/json',
             responseSchema
           }
         });
-        if (response.text && response.text.trim()) {
-          textOutput = response.text;
+
+        const rawCandidate = response.text ? String(response.text).trim() : '';
+        if (!rawCandidate) {
+          ultimoErrorModelo = new Error(`El modelo ${modelo} devolvió respuesta vacía.`);
+          continue;
+        }
+
+        const parsedCandidate = extraerJSONResilienteServidor_(rawCandidate);
+        if (!parsedCandidate || typeof parsedCandidate !== 'object') {
+          console.warn(`[AMMER Audit] Modelo ${modelo} devolvió JSON no parseable, probando siguiente modelo...`);
+          ultimoErrorModelo = new Error(`El modelo ${modelo} devolvió formato JSON incompleto.`);
+          continue;
+        }
+
+        const mappedCandidate = mapearEstructuraAuditoria(parsedCandidate, datosDeclarados);
+        const resDecCand = mappedCandidate?.resumenDecision;
+        const conceptsCand = mappedCandidate?.detalleCompletoRecibo?.conceptos || [];
+        const conceptosConImporte = conceptsCand.filter((c: any) => Number(c?.haberes || 0) > 0 || Number(c?.descuentos || 0) > 0);
+
+        const tieneDatosSalariales = Boolean(
+          resDecCand &&
+          (Number(resDecCand.sueldoBrutoTotal || 0) > 0 ||
+            Number(resDecCand.sueldoLiquido || 0) > 0 ||
+            conceptosConImporte.length > 0)
+        );
+
+        if (tieneDatosSalariales) {
+          auditModelOutput = mappedCandidate;
           break;
         }
+
+        console.warn(`[AMMER Audit] Modelo ${modelo} no extrajo importes > 0, intentando modelo de respaldo...`);
       } catch (errMod: any) {
         console.warn(`[AMMER Audit] Modelo ${modelo} no disponible o con error:`, errMod?.message || errMod);
         ultimoErrorModelo = errMod;
       }
     }
 
-    if (!textOutput) {
-      const statusErr = Number(ultimoErrorModelo?.status) || 502;
-      return res.status(statusErr >= 400 && statusErr < 600 ? statusErr : 502).json({
-        ok: false,
-        error: ultimoErrorModelo?.message || 'No se recibió respuesta válida de los modelos de auditoría documental.'
-      });
-    }
-    const dataParsed: any = (() => {
-      let cleaned = String(textOutput).replace(/```json/gi, '').replace(/```/g, '').trim();
-      const firstIdx = cleaned.indexOf('{');
-      const lastIdx = cleaned.lastIndexOf('}');
-      if (firstIdx !== -1 && lastIdx !== -1 && lastIdx >= firstIdx) {
-        cleaned = cleaned.substring(firstIdx, lastIdx + 1);
+    if (!auditModelOutput) {
+      if (ultimoErrorModelo && ultimoErrorModelo.status && Number(ultimoErrorModelo.status) >= 400 && Number(ultimoErrorModelo.status) < 600) {
+        return res.status(Number(ultimoErrorModelo.status)).json({
+          ok: false,
+          success: false,
+          error: ultimoErrorModelo?.message || 'Error en el servicio de modelos de auditoría documental.'
+        });
       }
-      try {
-        return JSON.parse(cleaned);
-      } catch (_) {
-        try {
-          return JSON.parse(cleaned.replace(/[\r\n\t]/g, ' '));
-        } catch (__) {
-          return {};
-        }
-      }
-    })();
-
-    const auditModelOutput = mapearEstructuraAuditoria(dataParsed, datosDeclarados);
-    const resDecOut = auditModelOutput?.resumenDecision;
-    const detConceptsOut = auditModelOutput?.detalleCompletoRecibo?.conceptos || [];
-
-    if (
-      !resDecOut ||
-      (Number(resDecOut.sueldoBrutoTotal || 0) <= 0 &&
-        Number(resDecOut.sueldoLiquido || 0) <= 0 &&
-        detConceptsOut.length === 0)
-    ) {
       return res.status(422).json({
         ok: false,
         success: false,
@@ -431,11 +387,115 @@ function limpiarMontoServidor_(val: any): number | null {
   return Number.isFinite(n) ? Math.round(n * 100) / 100 : null;
 }
 
+function repararJSONTruncadoServidor_(input: string): string | null {
+  const start = input.indexOf('{');
+  if (start === -1) return null;
+  let s = input.substring(start).trim();
+  const stack: string[] = [];
+  let inString = false;
+  let escaped = false;
+  let lastSafePos = -1;
+
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === '\\') {
+        escaped = true;
+      } else if (ch === '"') {
+        inString = false;
+      }
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+    } else if (ch === '{') {
+      stack.push('}');
+    } else if (ch === '[') {
+      stack.push(']');
+    } else if (ch === '}' || ch === ']') {
+      if (stack.length > 0 && stack[stack.length - 1] === ch) {
+        stack.pop();
+        lastSafePos = i;
+      }
+    }
+  }
+
+  if (stack.length === 0 && !inString) return s;
+  if (lastSafePos > 0) {
+    const cut = s.substring(0, lastSafePos + 1).replace(/,\s*$/, '');
+    const remStack: string[] = [];
+    let strMode = false;
+    let escMode = false;
+    for (let j = 0; j < cut.length; j++) {
+      const c = cut[j];
+      if (strMode) {
+        if (escMode) escMode = false;
+        else if (c === '\\') escMode = true;
+        else if (c === '"') strMode = false;
+        continue;
+      }
+      if (c === '"') strMode = true;
+      else if (c === '{') remStack.push('}');
+      else if (c === '[') remStack.push(']');
+      else if ((c === '}' || c === ']') && remStack[remStack.length - 1] === c) remStack.pop();
+    }
+    return cut + remStack.reverse().join('');
+  }
+  return null;
+}
+
+function extraerJSONResilienteServidor_(str: any): any {
+  if (!str) return null;
+  if (typeof str === 'object') return str;
+  // Capa 1: Limpieza de bloques markdown y parseo directo
+  const limpio = String(str).replace(/```json/gi, '').replace(/```/gi, '').trim();
+  try {
+    return JSON.parse(limpio);
+  } catch (_) {
+    // Capa 2: Substring entre primera '{' y última '}' + limpieza de comas colgantes y saltos
+    const inicio = limpio.indexOf('{');
+    const fin = limpio.lastIndexOf('}');
+    if (inicio !== -1 && fin > inicio) {
+      const candidato = limpio.substring(inicio, fin + 1).replace(/,\s*([}\]])/g, '$1');
+      try {
+        return JSON.parse(candidato);
+      } catch (__) {
+        try {
+          return JSON.parse(candidato.replace(/[\r\n\t]/g, ' '));
+        } catch (___) {
+          // Continúa a Capa 3
+        }
+      }
+    }
+    // Capa 3: Reparación automática de llaves/corchetes si una grilla extensa se truncó
+    const reparado = repararJSONTruncadoServidor_(limpio);
+    if (reparado) {
+      try {
+        return JSON.parse(reparado.replace(/,\s*([}\]])/g, '$1'));
+      } catch (____) {
+        console.error('Fallo parseo secundario/terciario JSON en servidor.');
+      }
+    }
+  }
+  return null;
+}
+
 function clasificarConceptosRecibo_(conceptosRaw: any[]) {
   const round2 = (n: number) => Math.round(n * 100) / 100;
   const rows = Array.isArray(conceptosRaw) ? conceptosRaw.map((c: any) => {
-    const habParsed = limpiarMontoServidor_(c?.haberes ?? c?.montoHaber ?? c?.importeHaber);
-    const descParsed = limpiarMontoServidor_(c?.descuentos ?? c?.retenciones ?? c?.montoDescuento ?? c?.importeDescuento);
+    let habParsed = limpiarMontoServidor_(c?.haberes ?? c?.montoHaber ?? c?.importeHaber);
+    let descParsed = limpiarMontoServidor_(c?.descuentos ?? c?.retenciones ?? c?.montoDescuento ?? c?.importeDescuento);
+    const montoUnico = limpiarMontoServidor_(c?.monto ?? c?.importe);
+    if (habParsed === null && descParsed === null && montoUnico !== null && montoUnico > 0) {
+      const tipoStr = String(c?.tipo ?? c?.columna ?? '').toUpperCase();
+      if (tipoStr.includes('DESC') || tipoStr.includes('RETEN') || tipoStr.includes('DEDU')) {
+        descParsed = montoUnico;
+      } else {
+        habParsed = montoUnico;
+      }
+    }
     return {
       codigo: String(c?.codigo ?? '').trim(),
       descripcion: String(c?.descripcion ?? c?.concepto ?? c?.detalle ?? '').trim(),

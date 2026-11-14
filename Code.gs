@@ -1834,8 +1834,17 @@ function limpiarMontoNullGs_(val) {
 
 function clasificarConceptosReciboGs_(conceptosRaw) {
   const rows = Array.isArray(conceptosRaw) ? conceptosRaw.map(function(c) {
-    const habNum = limpiarMontoNullGs_(c && (c.haberes !== undefined ? c.haberes : (c.montoHaber !== undefined ? c.montoHaber : c.importeHaber)));
-    const descNum = limpiarMontoNullGs_(c && (c.descuentos !== undefined ? c.descuentos : (c.retenciones !== undefined ? c.retenciones : c.montoDescuento)));
+    let habNum = limpiarMontoNullGs_(c && (c.haberes !== undefined ? c.haberes : (c.montoHaber !== undefined ? c.montoHaber : c.importeHaber)));
+    let descNum = limpiarMontoNullGs_(c && (c.descuentos !== undefined ? c.descuentos : (c.retenciones !== undefined ? c.retenciones : c.montoDescuento)));
+    const montoUnico = limpiarMontoNullGs_(c && (c.monto !== undefined ? c.monto : c.importe));
+    if (habNum === null && descNum === null && montoUnico !== null && montoUnico > 0) {
+      const tipoStr = String((c && (c.tipo || c.columna)) || '').toUpperCase();
+      if (tipoStr.indexOf('DESC') !== -1 || tipoStr.indexOf('RETEN') !== -1 || tipoStr.indexOf('DEDU') !== -1) {
+        descNum = montoUnico;
+      } else {
+        habNum = montoUnico;
+      }
+    }
     return {
       codigo: String((c && c.codigo !== undefined && c.codigo !== null) ? c.codigo : '').trim(),
       descripcion: String((c && (c.descripcion || c.concepto || c.detalle)) || '').trim(),
@@ -2412,25 +2421,84 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
   };
 }
 
+function repararJSONTruncadoGs_(input) {
+  const start = input.indexOf('{');
+  if (start === -1) return null;
+  const s = input.substring(start).trim();
+  const stack = [];
+  let inString = false;
+  let escaped = false;
+  let lastSafePos = -1;
+
+  for (let i = 0; i < s.length; i++) {
+    const ch = s.charAt(i);
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (ch === '\\') escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') inString = true;
+    else if (ch === '{') stack.push('}');
+    else if (ch === '[') stack.push(']');
+    else if (ch === '}' || ch === ']') {
+      if (stack.length > 0 && stack[stack.length - 1] === ch) {
+        stack.pop();
+        lastSafePos = i;
+      }
+    }
+  }
+  if (stack.length === 0 && !inString) return s;
+  if (lastSafePos > 0) {
+    const cut = s.substring(0, lastSafePos + 1).replace(/,\s*$/, '');
+    const remStack = [];
+    let strMode = false;
+    let escMode = false;
+    for (let j = 0; j < cut.length; j++) {
+      const c = cut.charAt(j);
+      if (strMode) {
+        if (escMode) escMode = false;
+        else if (c === '\\') escMode = true;
+        else if (c === '"') strMode = false;
+        continue;
+      }
+      if (c === '"') strMode = true;
+      else if (c === '{') remStack.push('}');
+      else if (c === '[') remStack.push(']');
+      else if ((c === '}' || c === ']') && remStack[remStack.length - 1] === c) remStack.pop();
+    }
+    return cut + remStack.reverse().join('');
+  }
+  return null;
+}
+
 function limpiarYParsearJSONAuditoria_(rawText) {
   if (!rawText) return null;
   if (typeof rawText === 'object' && rawText !== null) return rawText;
-  let str = String(rawText).replace(/```json/gi, '').replace(/```/g, '').trim();
-  const primerBrk = str.indexOf('{');
-  const ultimoBrk = str.lastIndexOf('}');
-  if (primerBrk !== -1 && ultimoBrk !== -1 && ultimoBrk >= primerBrk) {
-    str = str.substring(primerBrk, ultimoBrk + 1);
-  }
+  const limpio = String(rawText).replace(/```json/gi, '').replace(/```/gi, '').trim();
   try {
-    return JSON.parse(str);
+    return JSON.parse(limpio);
   } catch (e1) {
-    try {
-      const sanitizado = str.replace(/[\r\n\t]/g, ' ');
-      return JSON.parse(sanitizado);
-    } catch (_) {
-      return null;
+    const primerBrk = limpio.indexOf('{');
+    const ultimoBrk = limpio.lastIndexOf('}');
+    if (primerBrk !== -1 && ultimoBrk > primerBrk) {
+      const candidato = limpio.substring(primerBrk, ultimoBrk + 1).replace(/,\s*([}\]])/g, '$1');
+      try {
+        return JSON.parse(candidato);
+      } catch (e2) {
+        try {
+          return JSON.parse(candidato.replace(/[\r\n\t]/g, ' '));
+        } catch (_) {}
+      }
+    }
+    const reparado = repararJSONTruncadoGs_(limpio);
+    if (reparado) {
+      try {
+        return JSON.parse(reparado.replace(/,\s*([}\]])/g, '$1'));
+      } catch (__) {}
     }
   }
+  return null;
 }
 
 function auditarLegajoConIA(payload) {
@@ -2542,8 +2610,8 @@ function auditarLegajoConIA(payload) {
   parts.push({ text: promptAuditor });
 
   try {
-    const modelosGemini = ['gemini-2.5-flash', 'gemini-4-hydrogen', 'gemini-3.1-flash-lite'];
-    let candidateText = '';
+    const modelosGemini = ['gemini-4-hydrogen', 'gemini-2.5-flash', 'gemini-3.1-flash-lite'];
+    let mapped = null;
     let ultimoErrorHttp = '';
 
     for (let idxMod = 0; idxMod < modelosGemini.length; idxMod++) {
@@ -2567,36 +2635,50 @@ function auditarLegajoConIA(payload) {
         const geminiJson = limpiarYParsearJSONAuditoria_(rawRespText);
         const partsResp = geminiJson && geminiJson.candidates && geminiJson.candidates[0] &&
           geminiJson.candidates[0].content && geminiJson.candidates[0].content.parts;
-        if (Array.isArray(partsResp)) {
-          candidateText = partsResp.map(function(p) { return (p && p.text) ? String(p.text) : ''; }).join('\n').trim();
+        const candidateText = Array.isArray(partsResp)
+          ? partsResp.map(function(p) { return (p && p.text) ? String(p.text) : ''; }).join('\n').trim()
+          : '';
+
+        if (!candidateText) {
+          ultimoErrorHttp = 'Modelo ' + modeloActual + ' devolvió respuesta vacía.';
+          continue;
         }
-        if (candidateText) break;
-        ultimoErrorHttp = 'Modelo ' + modeloActual + ' devolvió respuesta vacía.';
+
+        const dataParsed = limpiarYParsearJSONAuditoria_(candidateText);
+        if (!dataParsed) {
+          ultimoErrorHttp = 'Modelo ' + modeloActual + ' devolvió JSON incompleto.';
+          continue;
+        }
+
+        const candidatoMapped = mapearAuditoriaEnAppsScript_(dataParsed, datosDeclarados);
+        const conceptosCand = (candidatoMapped && candidatoMapped.detalleCompletoRecibo && Array.isArray(candidatoMapped.detalleCompletoRecibo.conceptos))
+          ? candidatoMapped.detalleCompletoRecibo.conceptos
+          : [];
+        const conceptosConImporte = conceptosCand.filter(function(c) {
+          return Number((c && c.haberes) || 0) > 0 || Number((c && c.descuentos) || 0) > 0;
+        });
+        const tieneDatosSalariales = Boolean(
+          candidatoMapped && candidatoMapped.resumenDecision &&
+          (Number(candidatoMapped.resumenDecision.sueldoBrutoTotal || 0) > 0 ||
+           Number(candidatoMapped.resumenDecision.sueldoLiquido || 0) > 0 ||
+           conceptosConImporte.length > 0)
+        );
+
+        if (tieneDatosSalariales) {
+          mapped = candidatoMapped;
+          break;
+        }
+        ultimoErrorHttp = 'No se detectaron importes salariales ni conceptos legibles en el comprobante enviado.';
       } else {
         ultimoErrorHttp = 'Motor documental (' + modeloActual + ') respondió HTTP ' + code + ': ' + rawRespText.slice(0, 220);
       }
     }
 
-    if (!candidateText) {
+    if (!mapped) {
       return {
         ok: false,
         success: false,
-        error: ultimoErrorHttp || 'El motor documental no devolvió contenido legible.'
-      };
-    }
-
-    const dataParsed = limpiarYParsearJSONAuditoria_(candidateText);
-    const mapped = mapearAuditoriaEnAppsScript_(dataParsed, datosDeclarados);
-    const sinDatosSalariales = (!mapped || !mapped.resumenDecision ||
-      (Number(mapped.resumenDecision.sueldoBrutoTotal || 0) <= 0 &&
-       Number(mapped.resumenDecision.sueldoLiquido || 0) <= 0 &&
-       (!mapped.detalleCompletoRecibo || !Array.isArray(mapped.detalleCompletoRecibo.conceptos) || mapped.detalleCompletoRecibo.conceptos.length === 0)));
-
-    if (sinDatosSalariales) {
-      return {
-        ok: false,
-        success: false,
-        error: 'No se detectaron importes salariales ni conceptos legibles en el comprobante enviado. Verifique que sea un recibo de sueldo nítido.'
+        error: ultimoErrorHttp || 'No se detectaron importes salariales ni conceptos legibles en el comprobante enviado. Verifique que sea un recibo de sueldo nítido.'
       };
     }
 

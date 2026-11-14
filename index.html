@@ -13552,29 +13552,95 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       return safe.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
-    function extraerJSONResiliente(raw) {
-      if (!raw) return null;
-      if (typeof raw === 'object') return raw;
+    function repararJSONTruncadoAuditoria(input) {
+      const start = String(input || '').indexOf('{');
+      if (start === -1) return null;
+      const s = String(input).substring(start).trim();
+      const stack = [];
+      let inString = false;
+      let escaped = false;
+      let lastSafePos = -1;
 
-      let str = String(raw).replace(/```json/gi, '').replace(/```/g, '').trim();
-      const inicio = str.indexOf('{');
-      const fin = str.lastIndexOf('}');
-      if (inicio !== -1 && fin !== -1 && fin >= inicio) {
-        str = str.substring(inicio, fin + 1);
-      }
-
-      try {
-        return JSON.parse(str);
-      } catch (err) {
-        console.warn('Intento de parseo directo falló, probando limpieza de saltos...', err);
-        try {
-          const sanitizado = str.replace(/[\r\n\t]/g, ' ');
-          return JSON.parse(sanitizado);
-        } catch (err2) {
-          console.error('Respuesta cruda no parseable:', raw);
-          return null;
+      for (let i = 0; i < s.length; i++) {
+        const ch = s[i];
+        if (inString) {
+          if (escaped) escaped = false;
+          else if (ch === '\\') escaped = true;
+          else if (ch === '"') inString = false;
+          continue;
+        }
+        if (ch === '"') inString = true;
+        else if (ch === '{') stack.push('}');
+        else if (ch === '[') stack.push(']');
+        else if (ch === '}' || ch === ']') {
+          if (stack.length > 0 && stack[stack.length - 1] === ch) {
+            stack.pop();
+            lastSafePos = i;
+          }
         }
       }
+      if (stack.length === 0 && !inString) return s;
+      if (lastSafePos > 0) {
+        const cut = s.substring(0, lastSafePos + 1).replace(/,\s*$/, '');
+        const remStack = [];
+        let strMode = false;
+        let escMode = false;
+        for (let j = 0; j < cut.length; j++) {
+          const c = cut[j];
+          if (strMode) {
+            if (escMode) escMode = false;
+            else if (c === '\\') escMode = true;
+            else if (c === '"') strMode = false;
+            continue;
+          }
+          if (c === '"') strMode = true;
+          else if (c === '{') remStack.push('}');
+          else if (c === '[') remStack.push(']');
+          else if ((c === '}' || c === ']') && remStack[remStack.length - 1] === c) remStack.pop();
+        }
+        return cut + remStack.reverse().join('');
+      }
+      return null;
+    }
+
+    function extraerJSONResiliente(str) {
+      if (!str) return null;
+      if (typeof str === 'object') return str;
+
+      // Capa 1: Limpieza de bloques markdown y parseo directo
+      const limpio = String(str).replace(/```json/gi, '').replace(/```/gi, '').trim();
+      try {
+        return JSON.parse(limpio);
+      } catch (e) {
+        // Capa 2: Extracción entre primera '{' y última '}' + limpieza de comas finales y saltos
+        const inicio = limpio.indexOf('{');
+        const fin = limpio.lastIndexOf('}');
+        if (inicio !== -1 && fin > inicio) {
+          const candidato = limpio.substring(inicio, fin + 1).replace(/,\s*([}\]])/g, '$1');
+          try {
+            return JSON.parse(candidato);
+          } catch (e2) {
+            try {
+              return JSON.parse(candidato.replace(/[\r\n\t]/g, ' '));
+            } catch (e2b) {
+              console.warn('Intento de parseo secundario JSON falló, probando reparación estructural...');
+            }
+          }
+        }
+
+        // Capa 3: Reparación automática de corchetes/llaves truncados en grillas extensas
+        const reparado = repararJSONTruncadoAuditoria(limpio);
+        if (reparado) {
+          try {
+            return JSON.parse(reparado.replace(/,\s*([}\]])/g, '$1'));
+          } catch (e3) {
+            console.error('Fallo parseo secundario/terciario JSON:', limpio.substring(0, 300));
+          }
+        } else {
+          console.error('Fallo parseo JSON:', limpio.substring(0, 300));
+        }
+      }
+      return null;
     }
 
     function limpiarYParsearJSONAuditoria(rawText) {
@@ -13670,8 +13736,17 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     function clasificarConceptosReciboLocal(conceptosRaw) {
       const round2L = (n) => Math.round(n * 100) / 100;
       const rows = Array.isArray(conceptosRaw) ? conceptosRaw.map(c => {
-        const habNum = parseNumeroSeguroAuditoria(c && (c.haberes ?? c.montoHaber ?? c.importeHaber));
-        const descNum = parseNumeroSeguroAuditoria(c && (c.descuentos ?? c.retenciones ?? c.montoDescuento ?? c.importeDescuento));
+        let habNum = parseNumeroSeguroAuditoria(c && (c.haberes ?? c.montoHaber ?? c.importeHaber));
+        let descNum = parseNumeroSeguroAuditoria(c && (c.descuentos ?? c.retenciones ?? c.montoDescuento ?? c.importeDescuento));
+        const montoUnico = parseNumeroSeguroAuditoria(c && (c.monto ?? c.importe));
+        if (habNum === null && descNum === null && montoUnico !== null && montoUnico > 0) {
+          const tipoStr = String((c && (c.tipo || c.columna)) || '').toUpperCase();
+          if (tipoStr.includes('DESC') || tipoStr.includes('RETEN') || tipoStr.includes('DEDU')) {
+            descNum = montoUnico;
+          } else {
+            habNum = montoUnico;
+          }
+        }
         return {
           codigo: String((c && c.codigo !== undefined && c.codigo !== null) ? c.codigo : '').trim(),
           descripcion: String((c && (c.descripcion || c.concepto || c.detalle)) || '').trim(),
@@ -13733,6 +13808,20 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       };
     }
 
+    function esStubBitacoraSinOCR(obj) {
+      if (!obj || typeof obj !== 'object') return false;
+      const inner = (obj.auditoria && typeof obj.auditoria === 'object') ? obj.auditoria : obj;
+      const esStub = inner.estadoAuditoria === 'REGISTRADA' &&
+        inner.sueldoBrutoTotal === undefined &&
+        inner.sueldoBruto === undefined &&
+        !inner.resumenDecision &&
+        !inner.detalleCompletoRecibo &&
+        !inner.radiografiaSalarial &&
+        !inner.reciboSueldo &&
+        !Array.isArray(inner.conceptos);
+      return Boolean(esStub);
+    }
+
     function normalizarResultadoAuditoriaIA(auditRes) {
       let obj = auditRes;
       if (typeof obj === 'string') {
@@ -13742,12 +13831,21 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         return null;
       }
 
+      if (esStubBitacoraSinOCR(obj)) {
+        return null;
+      }
+
       if (obj.auditoria && typeof obj.auditoria === 'object') obj = obj.auditoria;
       else if (obj.resultado && typeof obj.resultado === 'object') obj = obj.resultado;
+      else if (obj.data && typeof obj.data === 'object') obj = obj.data;
+
+      if (esStubBitacoraSinOCR(obj)) {
+        return null;
+      }
 
       const tieneBloquesDuales = Boolean(obj.resumenDecision || obj.detalleCompletoRecibo);
       const tieneFormaNormalizada = Boolean(obj.scoringCrediticio || obj.reciboSueldo || obj.resumenJson);
-      const tieneFormaCompactaER = Boolean(obj.datosAgente || obj.liquidacion || obj.scoring);
+      const tieneFormaCompactaER = Boolean(obj.datosAgente || obj.liquidacion || (obj.scoring && typeof obj.scoring === 'object'));
       const tieneFormaCruda = Boolean(
         tieneBloquesDuales ||
         obj.identidad || obj.datosLaborales || obj.radiografiaSalarial || obj.scoringAmmer ||
@@ -14170,16 +14268,34 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         return null;
       }
 
+      const SERVICIO_AUDITORIA_CLOUD_URL = 'https://ais-pre-6fq62c5ia25ae5ywlq76de-570041018231.us-west2.run.app/api/auditar-documentos';
       const hostName = (typeof window !== 'undefined' && window.location && window.location.hostname)
         ? String(window.location.hostname).toLowerCase()
+        : '';
+      const currentOrigin = (typeof window !== 'undefined' && window.location && window.location.origin)
+        ? String(window.location.origin).toLowerCase()
         : '';
       const esHostEstatico = hostName.includes('script.google') ||
         hostName.includes('github.io') ||
         (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:');
 
-      const endpointPrimario = (contexto && contexto.endpoint)
-        ? String(contexto.endpoint)
-        : (esHostEstatico ? APPS_SCRIPT_URL : '/api/auditar-documentos');
+      const candidatosEndpoints = [];
+      if (contexto && contexto.endpoint) {
+        candidatosEndpoints.push(String(contexto.endpoint));
+      } else if (esHostEstatico) {
+        candidatosEndpoints.push(SERVICIO_AUDITORIA_CLOUD_URL);
+        if (typeof APPS_SCRIPT_URL === 'string' && APPS_SCRIPT_URL.startsWith('http')) {
+          candidatosEndpoints.push(APPS_SCRIPT_URL);
+        }
+      } else {
+        candidatosEndpoints.push('/api/auditar-documentos');
+        if (!SERVICIO_AUDITORIA_CLOUD_URL.toLowerCase().startsWith(currentOrigin)) {
+          candidatosEndpoints.push(SERVICIO_AUDITORIA_CLOUD_URL);
+        }
+        if (typeof APPS_SCRIPT_URL === 'string' && APPS_SCRIPT_URL.startsWith('http')) {
+          candidatosEndpoints.push(APPS_SCRIPT_URL);
+        }
+      }
 
       const ejecutarPeticionAuditoria = async (urlDestino) => {
         const esAppsScript = urlDestino === APPS_SCRIPT_URL || urlDestino.includes('script.google.com');
@@ -14242,40 +14358,67 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         return { resp, data, rawText, esAppsScript, error: null };
       };
 
-      let resultadoRed = await ejecutarPeticionAuditoria(endpointPrimario);
+      let ultimoResultadoRed = null;
+      let detectadoStubAppsScript = false;
 
-      const falloRutaLocalNoDisponible = !resultadoRed.esAppsScript && (
-        !resultadoRed.resp ||
-        resultadoRed.resp.status === 404 ||
-        resultadoRed.resp.status === 405
-      );
-      if (falloRutaLocalNoDisponible && typeof APPS_SCRIPT_URL === 'string' && APPS_SCRIPT_URL.startsWith('http')) {
-        const resBackup = await ejecutarPeticionAuditoria(APPS_SCRIPT_URL);
-        if (resBackup && resBackup.resp) {
-          resultadoRed = resBackup;
+      for (let idxEp = 0; idxEp < candidatosEndpoints.length; idxEp++) {
+        const epUrl = candidatosEndpoints[idxEp];
+        const resCandidato = await ejecutarPeticionAuditoria(epUrl);
+        ultimoResultadoRed = resCandidato;
+
+        const { resp, data } = resCandidato;
+        const esRespuestaHtmlFallback = Boolean(
+          resp && resp.ok && !data && rawStartsWithHtml(resCandidato.rawText)
+        );
+        const rutaNoDisponible = !resp || resp.status === 404 || resp.status === 405 || esRespuestaHtmlFallback;
+
+        if (rutaNoDisponible) {
+          continue;
+        }
+
+        if (data && esStubBitacoraSinOCR(data)) {
+          detectadoStubAppsScript = true;
+          continue;
+        }
+
+        const operacionExitosa = Boolean(resp && resp.ok && data && data.ok !== false && data.success !== false);
+        if (operacionExitosa) {
+          const rawAudit = data.auditoria ||
+            data.resultado ||
+            data.data ||
+            ((data.resumenDecision || data.detalleCompletoRecibo || data.identidad || data.datosAgente || data.liquidacion || data.radiografiaSalarial || data.reciboSueldo || data.scoringCrediticio || data.scoringAmmer || data.sueldoBrutoTotal !== undefined || data.sueldoBruto !== undefined || Array.isArray(data.conceptos)) ? data : null);
+          const normalized = normalizarResultadoAuditoriaIA(rawAudit || data);
+          if (normalized) {
+            return normalized;
+          }
+        }
+
+        // Si el endpoint institucional respondió con un error de validación de documento (ej. HTTP 422 / 400), detener y mostrarlo directamente
+        if (!resCandidato.esAppsScript && resp && (resp.status === 400 || resp.status === 422)) {
+          break;
         }
       }
 
-      const { resp, data, rawText, error: errRed } = resultadoRed;
-      const operacionExitosa = Boolean(resp && resp.ok && data && data.ok !== false && data.success !== false);
-      if (!operacionExitosa) {
-        const statusNum = resp ? resp.status : 0;
-        const msgErr = (data && data.error)
-          ? (statusNum && !String(data.error).includes(String(statusNum)) ? ('Error ' + statusNum + ': ' + data.error) : String(data.error))
-          : (errRed || ('Error ' + (statusNum || 'de red') + ': ' + String(rawText || 'Sin respuesta del servidor documental').substring(0, 160)));
-        console.warn('Servicio de auditoría devolvió error técnico:', msgErr);
-        window._ultimaErrorAuditoriaIA = msgErr;
+      if (detectadoStubAppsScript && (!ultimoResultadoRed || esStubBitacoraSinOCR(ultimoResultadoRed.data))) {
+        const msgStub = 'El Web App de Google Apps Script conectado aún ejecuta una versión anterior sin OCR activo. En Apps Script seleccione Implementar > Administrar implementaciones > Editar > Nueva versión con el Code.gs actualizado.';
+        console.warn('Detectado stub sin OCR en Apps Script:', msgStub);
+        window._ultimaErrorAuditoriaIA = msgStub;
         return null;
       }
 
-      const rawAudit = data && (
-        data.auditoria ||
-        data.resultado ||
-        data.data ||
-        ((data.resumenDecision || data.detalleCompletoRecibo || data.identidad || data.datosAgente || data.liquidacion || data.radiografiaSalarial || data.reciboSueldo || data.scoringCrediticio || data.scoringAmmer || data.sueldoBrutoTotal !== undefined || data.sueldoBruto !== undefined) ? data : null)
-      );
-      const normalized = normalizarResultadoAuditoriaIA(rawAudit || data);
-      return normalized;
+      const { resp, data, rawText, error: errRed } = ultimoResultadoRed || {};
+      const statusNum = resp ? resp.status : 0;
+      const msgErr = (data && data.error)
+        ? (statusNum && !String(data.error).includes(String(statusNum)) ? ('Error ' + statusNum + ': ' + data.error) : String(data.error))
+        : (errRed || ('Error ' + (statusNum || 'de red') + ': ' + String(rawText || 'Sin respuesta del servidor documental').substring(0, 160)));
+      console.warn('Servicio de auditoría devolvió error técnico:', msgErr);
+      window._ultimaErrorAuditoriaIA = msgErr;
+      return null;
+    }
+
+    function rawStartsWithHtml(txt) {
+      const t = String(txt || '').trim().toLowerCase();
+      return t.startsWith('<!doctype') || t.startsWith('<html');
     }
 
     async function procesarAuditoriaConTimeout(base64, contexto = {}) {

@@ -136,6 +136,9 @@ function doPost(e) {
       case 'agregarComentario':
         return crearRespuestaJSON(agregarComentarioBackend(payload));
 
+      case 'guardarAuditoriaEnHistorial':
+        return crearRespuestaJSON(guardarAuditoriaEnHistorialBackend(payload));
+
       case 'subirAdjuntoAdicional':
         return crearRespuestaJSON(subirAdjuntoAdicionalBackend(payload));
 
@@ -1299,6 +1302,115 @@ function agregarComentarioBackend(payload) {
   }
 }
 
+function guardarAuditoriaEnHistorialBackend(payload) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const sheet = obtenerOInicializarHoja_(CONFIG_AMMER.SHEET_SOLICITUDES, HEADERS_SOLICITUDES);
+    const { map } = obtenerHeaderMap_(sheet);
+    const idInput = String(payload.idSolicitud || payload.id || payload.ID_Solicitud || '').trim();
+    let rowNum = (idInput && idInput !== 'DOCUMENTOS_SUELTOS') ? encontrarFilaPorId_(sheet, map, idInput) : -1;
+
+    if (rowNum === -1) {
+      const dniCandidato = String(
+        payload.dniAsociado ||
+        (payload.resumenAuditoria && payload.resumenAuditoria.dni) ||
+        ''
+      ).replace(/\D/g, '');
+      if (dniCandidato && map['DNI_Asociado'] !== undefined) {
+        const values = sheet.getDataRange().getValues();
+        const colDni = map['DNI_Asociado'];
+        for (let r = values.length - 1; r >= 1; r--) {
+          const dniFila = String(values[r][colDni] || '').replace(/\D/g, '');
+          if (dniFila && dniFila === dniCandidato) {
+            rowNum = r + 1;
+            break;
+          }
+        }
+      }
+    }
+
+    if (rowNum === -1) {
+      return {
+        ok: false,
+        error: 'Expediente no encontrado en Solicitudes_Ayudas para registrar el dictamen de auditoría: ' + (idInput || 'sin ID')
+      };
+    }
+
+    const idResuelto = map['ID_Solicitud'] !== undefined
+      ? String(sheet.getRange(rowNum, map['ID_Solicitud'] + 1).getValue() || idInput).trim()
+      : idInput;
+
+    const nowStr = obtenerFechaHora24Argentina_();
+    const operador = String(
+      payload.usuarioOperador ||
+      payload.autor ||
+      (payload.usuarioActivo && payload.usuarioActivo.nombre) ||
+      'Analista Mutual'
+    ).trim() || 'Analista Mutual';
+    const rolOperador = String(
+      payload.rol ||
+      (payload.usuarioActivo && payload.usuarioActivo.rol) ||
+      'Analista'
+    ).trim() || 'Analista';
+
+    const resumenObj = (payload.resumenAuditoria && typeof payload.resumenAuditoria === 'object')
+      ? payload.resumenAuditoria
+      : parseJSONSafe_(payload.resumenAuditoria, null);
+
+    const textoFormateado = String(
+      payload.textoFormateado ||
+      payload.texto ||
+      '[INFORME DE AUDITORÍA DOCUMENTAL IA REGISTRADO]'
+    ).trim();
+
+    // Columna 21 (0-based index 21 -> 'Historial_Comentarios_JSON')
+    const colHistorialIdx = (map['Historial_Comentarios_JSON'] !== undefined) ? map['Historial_Comentarios_JSON'] : 21;
+    const cellHistorial = sheet.getRange(rowNum, colHistorialIdx + 1);
+    const histPrevio = parseJSONSafe_(cellHistorial.getValue(), []);
+    const historial = Array.isArray(histPrevio) ? histPrevio.slice() : [];
+
+    const nodoAuditoria = {
+      tipo: 'AUDITORIA_IA_DOCUMENTAL',
+      autor: operador.indexOf('[Auditoría') !== -1 ? operador : (operador + ' [Auditoría IA]'),
+      usuarioOperador: operador,
+      rol: rolOperador,
+      fecha: nowStr,
+      texto: textoFormateado,
+      resumenAuditoria: resumenObj
+    };
+    historial.push(nodoAuditoria);
+    cellHistorial.setValue(JSON.stringify(historial));
+
+    if (map['Dictamen_IA_JSON'] !== undefined && resumenObj) {
+      const prevDictamen = parseJSONSafe_(sheet.getRange(rowNum, map['Dictamen_IA_JSON'] + 1).getValue(), null);
+      sheet.getRange(rowNum, map['Dictamen_IA_JSON'] + 1).setValue(JSON.stringify({
+        estado: 'completado',
+        fechaFin: nowStr,
+        usuarioOperador: operador,
+        resumenAuditoria: resumenObj,
+        resultado: (prevDictamen && prevDictamen.resultado) ? prevDictamen.resultado : resumenObj
+      }));
+    }
+
+    // Columna Ultima_Actualizacion con estampa 24 hs ('dd/MM/yyyy, HH:mm hs')
+    const colUltimaActIdx = (map['Ultima_Actualizacion'] !== undefined) ? map['Ultima_Actualizacion'] : 23;
+    sheet.getRange(rowNum, colUltimaActIdx + 1).setValue(nowStr);
+
+    SpreadsheetApp.flush();
+    return {
+      ok: true,
+      success: true,
+      idSolicitud: idResuelto,
+      ultimaActualizacion: nowStr,
+      nodoAuditoria: nodoAuditoria,
+      totalComentarios: historial.length
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function subirAdjuntoAdicionalBackend(payload) {
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
@@ -1776,10 +1888,10 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
     dni: rawIn.datosAgente.dni || rawIn.datosAgente.dniCuil,
     cuil: rawIn.datosAgente.cuil || 'No consta en recibo',
     estadoCotejoCaratula: rawIn.datosAgente.estadoCotejoCaratula || ''
-  } : (resDecIn.titular || resDecIn.dni ? {
-    titularDetectado: resDecIn.titular,
-    dni: resDecIn.dni,
-    cuil: resDecIn.cuil || 'No consta en recibo',
+  } : ((resDecIn.titular || resDecIn.dni || rawIn.titular || rawIn.dni) ? {
+    titularDetectado: resDecIn.titular || rawIn.titular,
+    dni: resDecIn.dni || rawIn.dni,
+    cuil: resDecIn.cuil || rawIn.cuil || 'No consta en recibo',
     estadoCotejoCaratula: ''
   } : {}));
 
@@ -1794,21 +1906,21 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
       ? rawIn.datosAgente.cumpleAntiguedadMinima
       : (rawIn.scoring && rawIn.scoring.cumpleAntiguedad1Anio !== undefined ? rawIn.scoring.cumpleAntiguedad1Anio : (rawIn.datosAgente.antiguedadAnios !== undefined ? Number(rawIn.datosAgente.antiguedadAnios) >= 1 : undefined)),
     cumpleTopeEdad80: rawIn.scoring && rawIn.scoring.cumpleEdadMax80 !== undefined ? rawIn.scoring.cumpleEdadMax80 : undefined
-  } : (resDecIn.organismo || resDecIn.antiguedad || resDecIn.cargo ? {
-    organismoEmpleador: resDecIn.organismo,
-    escalafonCargo: resDecIn.cargo || detRecIn.escalafonCargo || '',
-    situacionRevista: resDecIn.situacionRevista || 'ACTIVO TITULAR',
-    fechaIngreso: resDecIn.fechaIngreso || 'No consta en recibo',
-    antiguedadDetalle: resDecIn.antiguedad || 'Verificar en carátula',
-    cumpleAntiguedadMinima: resDecIn.antiguedadApta
+  } : ((resDecIn.organismo || resDecIn.antiguedad || resDecIn.cargo || rawIn.organismo || rawIn.antiguedad || rawIn.cargo) ? {
+    organismoEmpleador: resDecIn.organismo || rawIn.organismo,
+    escalafonCargo: resDecIn.cargo || detRecIn.escalafonCargo || rawIn.cargo || '',
+    situacionRevista: resDecIn.situacionRevista || rawIn.situacionRevista || 'ACTIVO TITULAR',
+    fechaIngreso: resDecIn.fechaIngreso || rawIn.fechaIngreso || 'No consta en recibo',
+    antiguedadDetalle: resDecIn.antiguedad || rawIn.antiguedad || 'Verificar en carátula',
+    cumpleAntiguedadMinima: resDecIn.antiguedadApta !== undefined ? resDecIn.antiguedadApta : rawIn.antiguedadApta
   } : {}));
 
   const vig = rawIn.vigenciaRecibo || (rawIn.liquidacion ? {
     periodoLiquidado: rawIn.liquidacion.periodo || rawIn.liquidacion.periodoLiquidado || (rawIn.datosAgente && rawIn.datosAgente.periodoLiquidado),
     estadoVigencia: rawIn.liquidacion.estadoVigencia || 'VIGENTE',
     esVigente: rawIn.liquidacion.esVigente !== false
-  } : (resDecIn.periodo || detRecIn.periodo ? {
-    periodoLiquidado: resDecIn.periodo || detRecIn.periodo,
+  } : ((resDecIn.periodo || detRecIn.periodo || rawIn.periodo) ? {
+    periodoLiquidado: resDecIn.periodo || detRecIn.periodo || rawIn.periodo,
     estadoVigencia: 'VIGENTE',
     esVigente: true
   } : {}));
@@ -1930,7 +2042,7 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
     alertasCriticas.push('Discrepancia de DNI: carátula ' + dniDeclarado + ' vs documento ' + dniExtraido + '.');
   }
 
-  const embargoDetectadoBool = Boolean(sal.embargoDetectado || resDecIn.embargosJudiciales) || (embargoMonto !== null && embargoMonto > 0);
+  const embargoDetectadoBool = Boolean(sal.embargoDetectado || sal.embargosJudiciales || resDecIn.embargosJudiciales) || (embargoMonto !== null && embargoMonto > 0);
   const embargoConceptoStr = sal.embargoConcepto || desgloseConceptos.embargoConcepto || '';
 
   if (lab.esInvalidezODiscapacidad) {
@@ -2404,7 +2516,7 @@ function auditarLegajoConIA(payload) {
   parts.push({ text: promptAuditor });
 
   try {
-    const modelosGemini = ['gemini-2.5-flash', 'gemini-4-hydrogen', 'gemini-3.1-flash-lite'];
+    const modelosGemini = ['gemini-2.5-flash', 'gemini-3-flash-preview'];
     let candidateText = '';
     let ultimoErrorHttp = '';
 

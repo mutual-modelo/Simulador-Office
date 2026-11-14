@@ -472,7 +472,12 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     dni: resDecIn.dni,
     cuil: resDecIn.cuil || 'No consta en recibo',
     estadoCotejoCaratula: ''
-  } : {}));
+  } : (rawIn.titular || rawIn.dni || rawIn.nombre ? {
+    titularDetectado: rawIn.titular || rawIn.nombre,
+    dni: rawIn.dni,
+    cuil: rawIn.cuil || 'No consta en recibo',
+    estadoCotejoCaratula: ''
+  } : {})));
 
   const lab = rawIn.datosLaborales || (rawIn.datosAgente ? {
     organismoEmpleador: rawIn.datosAgente.organismo,
@@ -488,14 +493,21 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     fechaIngreso: resDecIn.fechaIngreso || 'No consta en recibo',
     antiguedadDetalle: resDecIn.antiguedad || 'Verificar en carátula',
     cumpleAntiguedadMinima: resDecIn.antiguedadApta
-  } : {}));
+  } : (rawIn.organismo || rawIn.antiguedad || rawIn.cargo ? {
+    organismoEmpleador: rawIn.organismo,
+    escalafonCargo: rawIn.cargo || detRecIn.escalafonCargo || '',
+    situacionRevista: rawIn.situacionRevista || 'ACTIVO TITULAR',
+    fechaIngreso: rawIn.fechaIngreso || 'No consta en recibo',
+    antiguedadDetalle: rawIn.antiguedad || 'No registrada',
+    cumpleAntiguedadMinima: rawIn.antiguedadApta
+  } : {})));
 
   const vig = rawIn.vigenciaRecibo || (rawIn.liquidacion ? {
     periodoLiquidado: rawIn.liquidacion.periodo || rawIn.liquidacion.periodoLiquidado || rawIn.datosAgente?.periodoLiquidado,
     estadoVigencia: rawIn.liquidacion.estadoVigencia || 'VIGENTE',
     esVigente: rawIn.liquidacion.esVigente !== false
-  } : (resDecIn.periodo || detRecIn.periodo ? {
-    periodoLiquidado: resDecIn.periodo || detRecIn.periodo,
+  } : (resDecIn.periodo || detRecIn.periodo || rawIn.periodo ? {
+    periodoLiquidado: resDecIn.periodo || detRecIn.periodo || rawIn.periodo,
     estadoVigencia: 'VIGENTE',
     esVigente: true
   } : {}));
@@ -541,31 +553,31 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
   const round2 = (n: number) => Math.round(n * 100) / 100;
   const toNumOrNull = (v: any): number | null => (v === null || v === undefined || v === '' || Number.isNaN(Number(v))) ? null : round2(Number(v));
 
-  let sueldoBruto = toNumOrNull(sal.sueldoBrutoTotal ?? detRecIn.totales?.totalHaberes);
+  let sueldoBruto = toNumOrNull(sal.sueldoBrutoTotal ?? sal.sueldoBruto ?? detRecIn.totales?.totalHaberes);
   if (sueldoBruto === null && desgloseConceptos.sumHaberes !== null) sueldoBruto = desgloseConceptos.sumHaberes;
 
   let descuentosLey = toNumOrNull(sal.descuentosLey);
   if ((descuentosLey === null || descuentosLey === 0) && desgloseConceptos.calcLey > 0) descuentosLey = desgloseConceptos.calcLey;
 
-  let consumosBersa = toNumOrNull(sal.consumosBersa);
+  let consumosBersa = toNumOrNull(sal.consumosBersa ?? sal.consumosBancariosBersa);
   if ((consumosBersa === null || consumosBersa === 0) && desgloseConceptos.calcBersa > 0) consumosBersa = desgloseConceptos.calcBersa;
 
   let consumosSidecreer = toNumOrNull(sal.consumosSidecreer);
   if ((consumosSidecreer === null || consumosSidecreer === 0) && desgloseConceptos.calcSidecreer > 0) consumosSidecreer = desgloseConceptos.calcSidecreer;
 
-  let otrasMutuales = toNumOrNull(sal.otrasMutuales);
+  let otrasMutuales = toNumOrNull(sal.otrasMutuales ?? sal.otrasMutualesOProveeduria);
   if ((otrasMutuales === null || otrasMutuales === 0) && desgloseConceptos.calcMutuales > 0) otrasMutuales = desgloseConceptos.calcMutuales;
 
-  let codigosFedemMonto = toNumOrNull(sal.codigosFedemMonto);
+  let codigosFedemMonto = toNumOrNull(sal.codigosFedemMonto ?? sal.consumosFedem);
   if ((codigosFedemMonto === null || codigosFedemMonto === 0) && desgloseConceptos.calcFedem > 0) codigosFedemMonto = desgloseConceptos.calcFedem;
 
-  let embargoMonto = toNumOrNull(sal.embargoMonto);
+  let embargoMonto = toNumOrNull(sal.embargoMonto ?? (typeof sal.embargosJudiciales === 'number' ? sal.embargosJudiciales : null));
   if ((embargoMonto === null || embargoMonto === 0) && desgloseConceptos.calcEmbargo > 0) embargoMonto = desgloseConceptos.calcEmbargo;
 
-  let totalDescuentosRecibo = toNumOrNull(sal.totalDescuentosRecibo ?? detRecIn.totales?.totalDescuentos);
+  let totalDescuentosRecibo = toNumOrNull(sal.totalDescuentosRecibo ?? sal.totalDescuentos ?? detRecIn.totales?.totalDescuentos);
   if (totalDescuentosRecibo === null && desgloseConceptos.sumDescuentos !== null) totalDescuentosRecibo = desgloseConceptos.sumDescuentos;
 
-  let sueldoLiquido = toNumOrNull(sal.sueldoLiquido ?? detRecIn.totales?.liquidoAPagar);
+  let sueldoLiquido = toNumOrNull(sal.sueldoLiquido ?? sal.sueldoNeto ?? detRecIn.totales?.liquidoAPagar);
   if (sueldoLiquido === null && sueldoBruto !== null && totalDescuentosRecibo !== null && sueldoBruto >= totalDescuentosRecibo) {
     sueldoLiquido = round2(sueldoBruto - totalDescuentosRecibo);
   }

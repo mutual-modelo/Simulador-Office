@@ -3225,6 +3225,15 @@
           </span>
           <span class="sidebar-nav-label sidebar-text">Simulador</span>
         </button>
+        <button type="button" id="btnNavAuditoriaIA" class="sidebar-nav-item" data-view="vistaAuditoriaIA" data-tooltip="Auditoría IA (Recibos)" onclick="cambiarVistaPrincipal('auditoria-ia')">
+          <span class="sidebar-nav-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+          </span>
+          <span class="sidebar-nav-label sidebar-text">Auditoría IA (Recibos)</span>
+          <span class="sidebar-text" style="margin-left:auto;background:#1e3a8a;color:#93c5fd;border:1px solid #2563eb;font-size:10px;font-weight:800;padding:1px 6px;border-radius:4px;letter-spacing:0.04em;">PRO</span>
+        </button>
       </nav>
 
       <div class="sidebar-footer">
@@ -3886,15 +3895,6 @@
             </svg>
             <span>Calendario</span>
           </button>
-          <button type="button" class="view-switcher-btn" id="btnViewMut-auditoria" data-vista="auditoria" onclick="setVistaModulo('mutual', 'auditoria')">
-            <svg class="view-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"></path>
-              <rect x="3" y="11" width="18" height="10" rx="3"></rect>
-              <circle cx="8.5" cy="16" r="1.5"></circle>
-              <circle cx="15.5" cy="16" r="1.5"></circle>
-            </svg>
-            <span>Auditoría IA</span>
-          </button>
         </div>
 
         <!-- LADO DERECHO: ACCIONES -->
@@ -4022,61 +4022,63 @@
         </div>
         <div class="calendar-grid" id="gridMutualCalendario"></div>
       </div>
-
-      <!-- VISTA 4: AUDITORÍA DOCUMENTAL INTELIGENTE (CERO FRICCIÓN) -->
-      <div id="wrapperMutualAuditoria" style="display:none;">
-        <div class="ai-audit-hub">
-          <div class="ai-audit-header">
-            <div>
-              <div class="ai-audit-title">
-                <span>Auditoría Documental y Decisión Crediticia AMMER</span>
-              </div>
-              <div class="ai-audit-desc">
-                Recibos oficiales de Entre Ríos (Policía, CGE, Salud, Administración Central, Municipios y Caja de Jubilaciones) · Verificación literal y tope legal 50% Sueldo Bruto
-              </div>
-            </div>
-            <div style="display:flex;gap:0.4rem;align-items:center;">
-              <button type="button" class="btn-restore" style="white-space:nowrap;" onclick="limpiarPanelAuditoria()">Limpiar</button>
-            </div>
-          </div>
-
-          <!-- Único Componente de Entrada Directa (Auto-inicio al seleccionar o soltar archivo) -->
-          <div id="aiDropzoneDirecta"
-               class="ai-dropzone-box"
-               role="button"
-               tabindex="0"
-               aria-label="Subir o arrastrar Recibo de Sueldo en PDF o Imagen"
-               onclick="document.getElementById('fileInputAuditoriaIA').click()"
-               onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('fileInputAuditoriaIA').click();}"
-               ondragover="manejarDragOverAuditoria(event)"
-               ondragleave="manejarDragLeaveAuditoria(event)"
-               ondrop="manejarDropReciboAuditoria(event)">
-            <input type="file" id="fileInputAuditoriaIA" multiple accept="application/pdf,image/*" style="display:none;" onchange="manejarSeleccionReciboAuditoria(this.files)"/>
-            <div style="font-weight:800;font-size:.94rem;color:var(--color-primary);">
-              📁 Subir o arrastrar Recibo de Sueldo (PDF o Imagen)
-            </div>
-            <div style="font-size:.74rem;color:var(--text-muted);margin-top:4px;">
-              Seleccioná o soltá aquí el recibo (PDF digital, PDF escaneado, JPG o PNG) para iniciar automáticamente la auditoría y simulación de ayuda económica.
-            </div>
-            <div id="listaArchivosAuditoriaPills" style="margin-top:.55rem;min-height:0;"></div>
-          </div>
-
-          <!-- Estado del análisis -->
-          <div id="loader-auditoria-ia" class="hidden" role="status" aria-live="polite" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:.75rem 1rem;margin-top:.85rem;margin-bottom:.5rem;display:flex;align-items:center;justify-content:center;gap:.65rem;">
-            <div class="api-spinner" style="width:18px;height:18px;margin:0;border-top-color:var(--color-brand-blue);"></div>
-            <span style="color:var(--color-primary);font-size:.8rem;font-weight:700;">Analizando recibo oficial de Entre Ríos...</span>
-          </div>
-          <div id="aiAuditLoadingBar" style="display:none;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:1rem;margin-top:.85rem;margin-bottom:.75rem;text-align:center;">
-            <div class="api-spinner" style="margin:0 auto .5rem;border-top-color:var(--color-brand-blue);"></div>
-            <strong style="color:var(--color-primary);font-size:.85rem;" id="aiAuditStageText">Analizando recibo oficial de Entre Ríos...</strong>
-            <p style="font-size:.71rem;color:var(--text-muted);margin-top:3px;">Verificando Haberes Brutos, Descuentos de Ley, BERSA, Sidecreer, Mutuales, Códigos FEDEM, Embargos y Planes Sugeridos.</p>
-          </div>
-
-          <!-- Pantalla de Resultados en 3 Bloques (Oculto hasta procesar) -->
-          <div id="aiAuditResultadosContainer" style="display:none;"></div>
-        </div>
-      </div>
     </section>
+
+      <!-- VISTA PRINCIPAL INDEPENDIENTE: AUDITORÍA DOCUMENTAL Y SALARIAL (RECIBOS) -->
+      <section id="vistaAuditoriaIA" class="app-view">
+        <div id="wrapperMutualAuditoria">
+          <div class="ai-audit-hub">
+            <div class="ai-audit-header">
+              <div>
+                <div class="ai-audit-title">
+                  <span>Auditoría Documental y Decisión Crediticia AMMER</span>
+                </div>
+                <div class="ai-audit-desc">
+                  Recibos oficiales de Entre Ríos (Policía, CGE, Salud, Administración Central, Municipios y Caja de Jubilaciones) · Verificación literal y tope legal 50% Sueldo Bruto
+                </div>
+              </div>
+              <div style="display:flex;gap:0.4rem;align-items:center;">
+                <button type="button" class="btn-restore" style="white-space:nowrap;" onclick="limpiarPanelAuditoria()">Limpiar</button>
+              </div>
+            </div>
+
+            <!-- Único Componente de Entrada Directa (Auto-inicio al seleccionar o soltar archivo) -->
+            <div id="aiDropzoneDirecta"
+                 class="ai-dropzone-box"
+                 role="button"
+                 tabindex="0"
+                 aria-label="Subir o arrastrar Recibo de Sueldo en PDF o Imagen"
+                 onclick="document.getElementById('fileInputAuditoriaIA').click()"
+                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('fileInputAuditoriaIA').click();}"
+                 ondragover="manejarDragOverAuditoria(event)"
+                 ondragleave="manejarDragLeaveAuditoria(event)"
+                 ondrop="manejarDropReciboAuditoria(event)">
+              <input type="file" id="fileInputAuditoriaIA" multiple accept="application/pdf,image/*" style="display:none;" onchange="manejarSeleccionReciboAuditoria(this.files)"/>
+              <div style="font-weight:800;font-size:.94rem;color:var(--color-primary);">
+                📁 Subir o arrastrar Recibo de Sueldo (PDF o Imagen)
+              </div>
+              <div style="font-size:.74rem;color:var(--text-muted);margin-top:4px;">
+                Seleccioná o soltá aquí el recibo (PDF digital, PDF escaneado, JPG o PNG) para iniciar automáticamente la auditoría y simulación de ayuda económica.
+              </div>
+              <div id="listaArchivosAuditoriaPills" style="margin-top:.55rem;min-height:0;"></div>
+            </div>
+
+            <!-- Estado del análisis -->
+            <div id="loader-auditoria-ia" class="hidden" role="status" aria-live="polite" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:.75rem 1rem;margin-top:.85rem;margin-bottom:.5rem;display:flex;align-items:center;justify-content:center;gap:.65rem;">
+              <div class="api-spinner" style="width:18px;height:18px;margin:0;border-top-color:var(--color-brand-blue);"></div>
+              <span style="color:var(--color-primary);font-size:.8rem;font-weight:700;">Analizando recibo oficial de Entre Ríos...</span>
+            </div>
+            <div id="aiAuditLoadingBar" style="display:none;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:1rem;margin-top:.85rem;margin-bottom:.75rem;text-align:center;">
+              <div class="api-spinner" style="margin:0 auto .5rem;border-top-color:var(--color-brand-blue);"></div>
+              <strong style="color:var(--color-primary);font-size:.85rem;" id="aiAuditStageText">Analizando recibo oficial de Entre Ríos...</strong>
+              <p style="font-size:.71rem;color:var(--text-muted);margin-top:3px;">Verificando Haberes Brutos, Descuentos de Ley, BERSA, Sidecreer, Mutuales, Códigos FEDEM, Embargos y Planes Sugeridos.</p>
+            </div>
+
+            <!-- Pantalla de Resultados en 3 Bloques (Oculto hasta procesar) -->
+            <div id="aiAuditResultadosContainer" style="display:none;"></div>
+          </div>
+        </div>
+      </section>
         </div>
       </main>
     </div>
@@ -7155,6 +7157,26 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
     }
 
+    function cambiarVistaPrincipal(vistaKey) {
+      const k = String(vistaKey || '').trim().toLowerCase();
+      const mapaVistas = {
+        'auditoria-ia': 'vistaAuditoriaIA',
+        'vistaauditoriaia': 'vistaAuditoriaIA',
+        'auditoria': 'vistaAuditoriaIA',
+        'simulador': 'view-simulador',
+        'view-simulador': 'view-simulador',
+        'bandeja': 'view-mutual',
+        'mutual': 'view-mutual',
+        'view-mutual': 'view-mutual',
+        'mis-gestiones': 'view-mutual-propias',
+        'view-mutual-propias': 'view-mutual-propias',
+        'comercializador': 'view-comercializador',
+        'view-comercializador': 'view-comercializador'
+      };
+      const targetViewId = mapaVistas[k] || vistaKey;
+      cambiarPestana(targetViewId);
+    }
+
     function cambiarPestana(viewId) {
       const sess = getSession();
       if (!sess && viewId !== 'view-login') {
@@ -7171,7 +7193,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         if (appLayout) appLayout.style.display = 'flex';
       }
 
-      document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.app-view').forEach(v => {
+        v.classList.remove('active');
+        if (v.style && v.style.display === 'none') v.style.display = '';
+      });
       const target = document.getElementById(viewId);
       if (target) target.classList.add('active');
 
@@ -7196,6 +7221,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         if (viewId === 'view-simulador') {
           titleEl.textContent = 'Simulador Oficial';
           subEl.textContent = 'Calculador de Ayudas Económicas · Asociación Mutual Modelo de Entre Ríos';
+        } else if (viewId === 'vistaAuditoriaIA') {
+          titleEl.textContent = 'Auditoría Documental y Salarial (Recibos)';
+          subEl.textContent = 'Evaluación crediticia de haberes oficiales de Entre Ríos · Tope legal 50% y simulación automática';
         } else if (viewId === 'view-comercializador') {
           titleEl.textContent = sess.es_titular_organizacion ? 'Gestiones Organización' : 'Mis Gestiones';
           subEl.textContent = 'Seguimiento operativo y alta de solicitudes de ayuda económica';
@@ -7265,10 +7293,16 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const navBody = document.getElementById('sidebarNavBody');
       if (navBody) {
         const iconSimulador = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>';
+        const iconAuditoriaIA = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
         const iconGestiones = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>';
         const iconRedComercial = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>';
         const iconBoveda = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>';
         const iconAyuda = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+
+        const itemAuditoriaIA = '<button type="button" id="btnNavAuditoriaIA" class="sidebar-nav-item" data-view="vistaAuditoriaIA" data-tooltip="Auditoría IA (Recibos)" onclick="cambiarVistaPrincipal(\'auditoria-ia\')">' +
+          '<span class="sidebar-nav-icon">' + iconAuditoriaIA + '</span>' +
+          '<span class="sidebar-nav-label ' + textCls + '">Auditoría IA (Recibos)</span>' +
+          '<span class="' + textCls + '" style="margin-left:auto;background:#1e3a8a;color:#93c5fd;border:1px solid #2563eb;font-size:10px;font-weight:800;padding:1px 6px;border-radius:4px;letter-spacing:0.04em;">PRO</span></button>';
 
         let html = '<div class="sidebar-nav-section-title ' + textCls + '">Módulos Operativos</div>';
 
@@ -7276,6 +7310,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           html += '<button type="button" class="sidebar-nav-item active" data-view="view-simulador" data-tooltip="Simulador" onclick="cambiarPestana(\'view-simulador\')">' +
             '<span class="sidebar-nav-icon">' + iconSimulador + '</span>' +
             '<span class="sidebar-nav-label ' + textCls + '">Simulador</span></button>';
+          html += itemAuditoriaIA;
           html += '<button type="button" class="sidebar-nav-item" data-view="view-mutual-propias" data-tooltip="Mis Gestiones" onclick="cambiarPestana(\'view-mutual-propias\')">' +
             '<span class="sidebar-nav-icon">' + iconGestiones + '</span>' +
             '<span class="sidebar-nav-label ' + textCls + '">Mis Gestiones</span></button>';
@@ -7290,6 +7325,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           html += '<button type="button" class="sidebar-nav-item active" data-view="view-simulador" data-tooltip="Simulador" onclick="cambiarPestana(\'view-simulador\')">' +
             '<span class="sidebar-nav-icon">' + iconSimulador + '</span>' +
             '<span class="sidebar-nav-label ' + textCls + '">Simulador</span></button>';
+          html += itemAuditoriaIA;
           html += '<button type="button" class="sidebar-nav-item" data-view="view-comercializador" data-tooltip="' + tabName + '" onclick="cambiarPestana(\'view-comercializador\')">' +
             '<span class="sidebar-nav-icon">' + iconGestiones + '</span>' +
             '<span class="sidebar-nav-label ' + textCls + '">' + tabName + '</span></button>';
@@ -9648,6 +9684,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         modo = moduloKey;
         moduloKey = 'mutual';
       }
+      if (modo === 'auditoria' || moduloKey === 'auditoria-ia') {
+        cambiarVistaPrincipal('auditoria-ia');
+        return;
+      }
       vistaModulosState[moduloKey] = modo;
       if (moduloKey === 'comercializador') {
         document.querySelectorAll('#view-comercializador .view-switcher-btn').forEach(b => b.classList.remove('active'));
@@ -9669,8 +9709,6 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         document.getElementById('wrapperMutualTabla').style.display = (modo === 'tabla') ? 'block' : 'none';
         document.getElementById('wrapperMutualKanban').style.display = (modo === 'kanban') ? 'block' : 'none';
         document.getElementById('wrapperMutualCalendario').style.display = (modo === 'calendario') ? 'block' : 'none';
-        const wrapAud = document.getElementById('wrapperMutualAuditoria');
-        if (wrapAud) wrapAud.style.display = (modo === 'auditoria') ? 'block' : 'none';
         renderModuloMutual();
       }
     }
@@ -14331,6 +14369,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const rawAudit = data && (
         data.auditoria ||
         data.resultado ||
+        data.data ||
         ((data.resumenDecision || data.detalleCompletoRecibo || data.identidad || data.datosAgente || data.liquidacion || data.radiografiaSalarial || data.reciboSueldo || data.scoringCrediticio || data.scoringAmmer || data.sueldoBrutoTotal !== undefined || data.sueldoBruto !== undefined) ? data : null)
       );
       const normalized = normalizarResultadoAuditoriaIA(rawAudit || data);
@@ -14929,6 +14968,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       let procesados = 0;
 
       for (const file of arr) {
+        if (typeof file.size === 'number' && file.size < 5120) {
+          const msgDanado = '⚠️ El archivo seleccionado parece estar vacío o dañado (pesa menos de 5 KB). Por favor, suba un comprobante válido.';
+          mostrarErrorAuditoria(msgDanado);
+          mostrarNotificacionToast(msgDanado, 'error');
+          continue;
+        }
         if (file.size > 15 * 1024 * 1024) {
           showToast('El archivo "' + file.name + '" supera el límite de 15 MB.');
           continue;
@@ -15004,7 +15049,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
     function abrirAuditoriaModalExpediente(id) {
       cerrarModal('modalVerFichaCompleta');
-      setVistaModulo('mutual', 'auditoria');
+      cambiarVistaPrincipal('auditoria-ia');
       idExpedienteAuditadoActivo = String(id);
 
       const s = getStoredSolicitudes().find(x => String(x.id) === String(id));
@@ -15024,7 +15069,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         }
       }
 
-      const wrap = document.getElementById('wrapperMutualAuditoria');
+      const wrap = document.getElementById('vistaAuditoriaIA') || document.getElementById('wrapperMutualAuditoria');
       if (wrap && typeof wrap.scrollIntoView === 'function') {
         wrap.scrollIntoView({ behavior: 'smooth' });
       }
@@ -15568,6 +15613,13 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       if (!file) {
         mostrarErrorAuditoria('Seleccione o arrastre un Recibo de Sueldo en formato PDF o Imagen.');
         mostrarNotificacionToast('Seleccione un archivo válido para auditar.', 'error');
+        return null;
+      }
+
+      if (typeof file === 'object' && typeof file.size === 'number' && file.size < 5120) {
+        const msgDanado = '⚠️ El archivo seleccionado parece estar vacío o dañado (pesa menos de 5 KB). Por favor, suba un comprobante válido.';
+        mostrarErrorAuditoria(msgDanado);
+        mostrarNotificacionToast(msgDanado, 'error');
         return null;
       }
 
@@ -16511,6 +16563,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.limpiarMonto = limpiarMonto;
     window.convertirArchivoABase64 = convertirArchivoABase64;
     window.convertirArchivoABase64Limpio = convertirArchivoABase64Limpio;
+    window.cambiarVistaPrincipal = cambiarVistaPrincipal;
+    window.cambiarPestana = cambiarPestana;
     window.CONFIG = CONFIG;
     window.estadoApp = window.estadoApp;
 

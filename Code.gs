@@ -1808,13 +1808,39 @@ function formatCurrencyAuditGs_(val) {
   return sign + '$' + parts[0] + ',' + parts[1];
 }
 
+function limpiarMontoNullGs_(val) {
+  if (val === null || val === undefined || val === '' || typeof val === 'boolean') return null;
+  if (typeof val === 'number') {
+    return isFinite(val) ? round2Audit_(val) : null;
+  }
+  let s = String(val).replace(/[^0-9.,-]/g, '').trim();
+  if (!s || s === '-' || s === '.' || s === ',') return null;
+  const lastComma = s.lastIndexOf(',');
+  const lastDot = s.lastIndexOf('.');
+  if (lastComma !== -1 && lastDot !== -1) {
+    if (lastComma > lastDot) {
+      s = s.replace(/\./g, '').replace(',', '.');
+    } else {
+      s = s.replace(/,/g, '');
+    }
+  } else if (lastComma !== -1) {
+    s = s.replace(',', '.');
+  } else if ((s.match(/\./g) || []).length > 1) {
+    s = s.replace(/\./g, '');
+  }
+  const n = parseFloat(s);
+  return (!isNaN(n) && isFinite(n)) ? round2Audit_(n) : null;
+}
+
 function clasificarConceptosReciboGs_(conceptosRaw) {
   const rows = Array.isArray(conceptosRaw) ? conceptosRaw.map(function(c) {
+    const habNum = limpiarMontoNullGs_(c && (c.haberes !== undefined ? c.haberes : (c.montoHaber !== undefined ? c.montoHaber : c.importeHaber)));
+    const descNum = limpiarMontoNullGs_(c && (c.descuentos !== undefined ? c.descuentos : (c.retenciones !== undefined ? c.retenciones : c.montoDescuento)));
     return {
       codigo: String((c && c.codigo !== undefined && c.codigo !== null) ? c.codigo : '').trim(),
-      descripcion: String((c && (c.descripcion || c.concepto)) || '').trim(),
-      haberes: (c && !isNaN(Number(c.haberes)) && isFinite(Number(c.haberes))) ? round2Audit_(Math.max(0, Number(c.haberes))) : 0,
-      descuentos: (c && !isNaN(Number(c.descuentos)) && isFinite(Number(c.descuentos))) ? round2Audit_(Math.max(0, Number(c.descuentos))) : 0
+      descripcion: String((c && (c.descripcion || c.concepto || c.detalle)) || '').trim(),
+      haberes: habNum !== null ? round2Audit_(Math.max(0, habNum)) : 0,
+      descuentos: descNum !== null ? round2Audit_(Math.max(0, descNum)) : 0
     };
   }).filter(function(r) {
     return Boolean(r.codigo || r.descripcion || r.haberes > 0 || r.descuentos > 0);
@@ -1964,7 +1990,7 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
     decisionAlternativaCBU: resDecIn.decisionAlternativaCBU
   } : {}));
 
-  const toNumOrNull = (v) => (v === null || v === undefined || v === '' || isNaN(Number(v))) ? null : round2Audit_(Number(v));
+  const toNumOrNull = (v) => limpiarMontoNullGs_(v);
 
   let sueldoBruto = toNumOrNull(sal.sueldoBrutoTotal ?? sal.sueldoBruto ?? totalesDet.totalHaberes);
   if (sueldoBruto === null && desgloseConceptos.sumHaberes !== null) sueldoBruto = desgloseConceptos.sumHaberes;
@@ -2452,9 +2478,9 @@ function auditarLegajoConIA(payload) {
   const parts = [];
   archivos.forEach(function(arch) {
     const txtMarkItDown = arch && arch.textoExtraido ? String(arch.textoExtraido).trim() : '';
-    if (txtMarkItDown.length >= 50) {
+    if (txtMarkItDown.length >= 40) {
       parts.push({
-        text: 'TEXTO EXTRAÍDO LITERALMENTE DEL RECIBO DE SUELDO OFICIAL DE ENTRE RÍOS (' + (arch.nombre || 'recibo.pdf') + ') CON TECNOLOGÍA MARKITDOWN:\n"""\n' + txtMarkItDown + '\n"""'
+        text: 'TEXTO EXTRAÍDO LITERALMENTE DEL RECIBO DE SUELDO OFICIAL DE ENTRE RÍOS (' + (arch.nombre || 'recibo.pdf') + '):\n"""\n' + txtMarkItDown + '\n"""'
       });
       return;
     }

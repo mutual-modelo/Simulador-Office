@@ -108,9 +108,9 @@ app.post('/api/auditar-documentos', async (req, res) => {
     for (const arch of listaArchivos) {
       if (!arch) continue;
       const txtMarkItDown = arch.textoExtraido ? String(arch.textoExtraido).trim() : '';
-      if (txtMarkItDown.length >= 50) {
+      if (txtMarkItDown.length >= 40) {
         parts.push({
-          text: `TEXTO EXTRAÍDO LITERALMENTE DEL RECIBO DE SUELDO OFICIAL DE ENTRE RÍOS (${arch.nombre || 'recibo.pdf'}) CON TECNOLOGÍA MARKITDOWN:\n"""\n${txtMarkItDown}\n"""`
+          text: `TEXTO EXTRAÍDO LITERALMENTE DEL RECIBO DE SUELDO OFICIAL DE ENTRE RÍOS (${arch.nombre || 'recibo.pdf'}):\n"""\n${txtMarkItDown}\n"""`
         });
         continue;
       }
@@ -391,14 +391,42 @@ function formatCurrencyAuditAr_(val: number | null | undefined): string {
   return '$' + Number(val).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function limpiarMontoServidor_(val: any): number | null {
+  if (val === null || val === undefined || val === '' || typeof val === 'boolean') return null;
+  if (typeof val === 'number') {
+    return Number.isFinite(val) ? Math.round(val * 100) / 100 : null;
+  }
+  let s = String(val).replace(/[^0-9.,-]/g, '').trim();
+  if (!s || s === '-' || s === '.' || s === ',') return null;
+  const lastComma = s.lastIndexOf(',');
+  const lastDot = s.lastIndexOf('.');
+  if (lastComma !== -1 && lastDot !== -1) {
+    if (lastComma > lastDot) {
+      s = s.replace(/\./g, '').replace(',', '.');
+    } else {
+      s = s.replace(/,/g, '');
+    }
+  } else if (lastComma !== -1) {
+    s = s.replace(',', '.');
+  } else if ((s.match(/\./g) || []).length > 1) {
+    s = s.replace(/\./g, '');
+  }
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? Math.round(n * 100) / 100 : null;
+}
+
 function clasificarConceptosRecibo_(conceptosRaw: any[]) {
   const round2 = (n: number) => Math.round(n * 100) / 100;
-  const rows = Array.isArray(conceptosRaw) ? conceptosRaw.map((c: any) => ({
-    codigo: String(c?.codigo ?? '').trim(),
-    descripcion: String(c?.descripcion ?? c?.concepto ?? '').trim(),
-    haberes: Number.isFinite(Number(c?.haberes)) ? round2(Math.max(0, Number(c.haberes))) : 0,
-    descuentos: Number.isFinite(Number(c?.descuentos)) ? round2(Math.max(0, Number(c.descuentos))) : 0
-  })).filter(r => r.codigo || r.descripcion || r.haberes > 0 || r.descuentos > 0) : [];
+  const rows = Array.isArray(conceptosRaw) ? conceptosRaw.map((c: any) => {
+    const habParsed = limpiarMontoServidor_(c?.haberes ?? c?.montoHaber ?? c?.importeHaber);
+    const descParsed = limpiarMontoServidor_(c?.descuentos ?? c?.retenciones ?? c?.montoDescuento ?? c?.importeDescuento);
+    return {
+      codigo: String(c?.codigo ?? '').trim(),
+      descripcion: String(c?.descripcion ?? c?.concepto ?? c?.detalle ?? '').trim(),
+      haberes: habParsed !== null ? round2(Math.max(0, habParsed)) : 0,
+      descuentos: descParsed !== null ? round2(Math.max(0, descParsed)) : 0
+    };
+  }).filter(r => r.codigo || r.descripcion || r.haberes > 0 || r.descuentos > 0) : [];
 
   let sumHaberes = 0;
   let sumDescuentos = 0;
@@ -551,7 +579,7 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
   } : {}));
 
   const round2 = (n: number) => Math.round(n * 100) / 100;
-  const toNumOrNull = (v: any): number | null => (v === null || v === undefined || v === '' || Number.isNaN(Number(v))) ? null : round2(Number(v));
+  const toNumOrNull = (v: any): number | null => limpiarMontoServidor_(v);
 
   let sueldoBruto = toNumOrNull(sal.sueldoBrutoTotal ?? sal.sueldoBruto ?? detRecIn.totales?.totalHaberes);
   if (sueldoBruto === null && desgloseConceptos.sumHaberes !== null) sueldoBruto = desgloseConceptos.sumHaberes;

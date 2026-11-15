@@ -4662,6 +4662,8 @@
       <form id="formAltaSolicitud" class="modal-form-shell" onsubmit="guardarNuevaSolicitud(event)">
         <div class="modal-body-scroll">
           <input type="text" name="website_trap" id="form-trap-field-alta" style="display:none !important;" tabindex="-1" autocomplete="off"/>
+          <input type="hidden" id="solDictamenIA" name="Dictamen_IA_JSON" value=""/>
+          <input type="hidden" id="solTextoDictamen" name="Dictamen_Texto" value=""/>
 
           <!-- SELECTOR DE CANAL PARA GESTIONES PROPIAS DE SEDE CENTRAL -->
           <div id="groupCanalIngresoModal" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;padding:0.9rem 1.15rem;border-radius:14px;margin-bottom:1.15rem;">
@@ -5468,8 +5470,8 @@
         <!-- FOOTER FIJO DE ACCIONES -->
         <div class="modal-form-footer">
           <button type="button" class="btn-modal-cancel" onclick="cerrarModal('modalAltaSolicitud')">Cancelar</button>
-          <button type="submit" id="btnSubmitAlta" class="btn-modal-confirm">
-            <span>Confirmar y Guardar Solicitud</span>
+          <button type="submit" id="btnGuardarSolicitud" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all flex items-center justify-center gap-2">
+            <span>💾 Confirmar y Guardar Solicitud</span>
           </button>
         </div>
       </form>
@@ -5598,7 +5600,7 @@
           <div id="resumenNuevoExpedienteAuditoria" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:0.75rem;margin-bottom:0.85rem;font-size:0.74rem;color:#166534;">
             <!-- Resumen precargado del nuevo expediente -->
           </div>
-          <button type="button" id="btnCrearNuevoExpedienteAuditoria" class="btn-primary-action" style="width:100%;padding:0.65rem 1rem;font-size:0.8rem;background:#15803d;border-color:#166534;font-weight:700;" onclick="ejecutarCrearNuevoExpedienteDesdeAuditoria()">
+          <button type="button" id="btnCrearNuevoExpedienteAuditoria" class="btn-primary-action" style="width:100%;padding:0.65rem 1rem;font-size:0.8rem;background:#15803d;border-color:#166534;font-weight:700;" onclick="abrirNuevoExpedienteDesdeAuditoria()">
             ➕ Abrir Nuevo Expediente con estos datos
           </button>
         </div>
@@ -8570,7 +8572,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window._edadActualSolicitante = null;
 
     function sincronizarEstadoBotonSubmitAlta() {
-      const btn = document.getElementById('btnSubmitAlta');
+      const btn = document.getElementById('btnGuardarSolicitud') || document.getElementById('btnSubmitAlta');
       if (!btn) return;
       const bloqueado = Boolean(window._bloqueoAntiguedadMinima || window._bloqueoEdadMaxima);
       btn.disabled = bloqueado;
@@ -10283,7 +10285,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
 
       // 2. Cooldown local anti-spam (3 segundos)
-      if (!checkSubmitCooldown('btnSubmitAlta', 3000)) return;
+      if (!checkSubmitCooldown('btnGuardarSolicitud', 3000) && !checkSubmitCooldown('btnSubmitAlta', 3000)) return;
 
       // 3. Extracción tolerante multi-ID de todos los datos del solicitante y simulación
       const dniVal = obtenerValorInput(['solDni', 'solicitud-dni', 'solicitud_dni', 'dni', 'modal-dni'], '').replace(/\D/g, '');
@@ -10676,6 +10678,27 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         ]
       };
 
+      const dictamenAAsentar = window._dictamenAuditoriaParaNuevaSolicitud || (document.getElementById('solDictamenIA')?.value ? parseJSONCampoSeguro(document.getElementById('solDictamenIA').value, null) : null);
+      if (dictamenAAsentar) {
+        const payloadBit = construirPayloadBitacoraAuditoria(dictamenAAsentar);
+        nueva.observaciones.push({
+          tipo: 'AUDITORIA_IA_DOCUMENTAL',
+          autor: operadorActualSol + ' [Auditoría IA]',
+          usuarioOperador: operadorActualSol,
+          rol: isSedeCentral ? 'Analista Mutual (Sede Central)' : 'Auditoría IA',
+          fecha: nowStr,
+          texto: payloadBit.textoFormateado,
+          resumenAuditoria: payloadBit.resumenAuditoria
+        });
+        nueva.auditoriaIA = {
+          estado: 'completado',
+          fechaFin: nowStr,
+          usuarioOperador: operadorActualSol,
+          resumenAuditoria: payloadBit.resumenAuditoria,
+          resultado: dictamenAAsentar
+        };
+      }
+
       // 5. Payload alineado exactamente a las 27 columnas de la Base Central + objeto completo
       const payloadParaBackend = {
         action: 'crearSolicitud',
@@ -10707,7 +10730,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         Historial_Comentarios_JSON: JSON.stringify(nueva.observaciones),
         Nro_Definitivo: '',
         Historial_Ofertas_JSON: JSON.stringify({ propuestaMutual: nueva.propuestaMutual, historialPropuestas: [] }),
-        Dictamen_IA_JSON: '',
+        Dictamen_IA_JSON: dictamenAAsentar ? JSON.stringify(dictamenAAsentar) : '',
+        Dictamen_Texto: window._dictamenAuditoriaTexto || (document.getElementById('solTextoDictamen')?.value || ''),
         Analista_Asignado: analistaAsig,
         Ultima_Actualizacion: nowStr,
 
@@ -10807,12 +10831,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       });
 
       // Validación estricta Cloud-First: si falla el guardado en el servidor, NO cerrar el modal ni simular guardado local
-      if (!res || !res.ok || !res.data || res.data.ok === false) {
+      const esExitoso = Boolean(res && (res.ok || (res.data && res.data.ok !== false) || res.idSolicitud || (res.data && res.data.idSolicitud)));
+      if (!esExitoso) {
         showToast('⚠️ Error de conexión con el Servidor Central de la Mutual. Verifique su conexión.');
         return;
       }
 
-      const idConfirmado = res.data.id_provisorio || res.data.idSolicitud || provId;
+      const resData = (res && res.data) ? res.data : res;
+      const idConfirmado = resData.id_provisorio || resData.idSolicitud || provId;
       window.stateArchivosAdjuntos = {};
       if (window.state && window.state.archivosAdjuntos) {
         window.state.archivosAdjuntos = {};
@@ -10823,8 +10849,17 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       // Sincronización inmediata en vivo desde la base central para reflejar Bóveda Documental y estado oficial
       await sincronizarGestionesDesdeNube(true);
 
-      // Disparo automático e inteligente de Auditoría IA en segundo plano
-      ejecutarAuditoriaAutomaticaExpediente(res.data.id || nueva.id, adjuntosBase64);
+      // Disparo automático e inteligente de Auditoría IA en segundo plano solo si no venía ya auditada
+      if (!dictamenAAsentar) {
+        ejecutarAuditoriaAutomaticaExpediente(resData.id || nueva.id, adjuntosBase64);
+      }
+      window._dictamenAuditoriaParaNuevaSolicitud = null;
+      window._dictamenAuditoriaTexto = null;
+
+      // Refrescar lista de "Mis Gestiones"
+      if (typeof renderModuloComercializador === 'function') renderModuloComercializador();
+      if (typeof renderModuloMutualPropias === 'function') renderModuloMutualPropias();
+      if (typeof renderModuloMutual === 'function') renderModuloMutual();
 
       if (isSedeCentral) {
         cambiarPestana('view-mutual-propias');
@@ -10832,7 +10867,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         cambiarPestana('view-comercializador');
       }
       actualizarCentroNotificaciones();
-      showToast('Expediente ' + idConfirmado + ' registrado en el Servidor Central y Legajo Digital Seguro ✓');
+      mostrarNotificacionToast('Solicitud registrada correctamente', 'success');
+      showToast('Solicitud registrada correctamente');
     }
 
     /* ========================================================================
@@ -15984,6 +16020,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             (idExpedienteAuditadoActivo
               ? '<button type="button" class="btn-primary-action" style="width:auto;padding:7px 14px;font-size:0.74rem;background:#15803d;border-color:#166534;" onclick="aplicarDatosExtraidosAlExpediente()">Aplicar Datos al Expediente</button>'
               : '') +
+            '<button type="button" id="btnAbrirNuevoExpedienteAudit" class="btn-primary-action" style="width:auto;padding:7px 14px;font-size:0.74rem;background:#059669;border-color:#047857;" onclick="abrirNuevoExpedienteDesdeAuditoria()">➕ Abrir Nuevo Expediente</button>' +
             '<button type="button" id="btnGuardarDictamenBitacora" class="btn-primary-action" style="width:auto;padding:7px 14px;font-size:0.74rem;background:#1e3a8a;border-color:#172554;" onclick="guardarDictamenEnBitacoraExpediente()">💾 Guardar Dictamen en Bitácora del Expediente</button>' +
           '</div>' +
           '<div id="selectorExpedienteBitacoraInline" class="hidden mt-3 p-3 rounded-lg border border-slate-200 bg-white"></div>' +
@@ -16603,194 +16640,285 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       return guardarDictamenEnBitacoraExpediente(idSolicitud);
     }
 
-    async function ejecutarCrearNuevoExpedienteDesdeAuditoria() {
-      if (!ultimoResultadoAuditoria) {
-        showToast('No hay auditoría activa para crear expediente.');
+    function abrirNuevoExpedienteDesdeAuditoria(dictamenParam) {
+      const dictamen = dictamenParam || ultimoResultadoAuditoria;
+      if (!dictamen) {
+        showToast('⚠️ No hay auditoría activa para pre-cargar el expediente.');
         return null;
       }
+
       cerrarModal('modalGuardadoAuditoriaInteligente');
 
-      const session = typeof getSession === 'function' ? getSession() : null;
-      const usuarioOperador = (session && session.nombre) ? session.nombre : 'Analista Mutual';
-      const rolOperador = (session && session.rol) ? session.rol : 'Analista';
-      const isAnalistaOAdmin = (session && (session.rol === 'Analista' || session.rol === 'Admin'));
-      const nowStr = obtenerFechaHora24hs();
+      // 1. Inicializar modal de alta en modo Sede Central
+      abrirModalAltaSolicitud('mutual_sede');
 
-      const resDec = ultimoResultadoAuditoria.resumenDecision || {};
-      const ident = ultimoResultadoAuditoria.identidad || {};
-      const datLab = ultimoResultadoAuditoria.datosLaborales || {};
-      const radSal = ultimoResultadoAuditoria.radiografiaSalarial || {};
+      // 2. Extracción tolerante multinivel de datos del dictamen
+      const resDec = dictamen.resumenDecision || {};
+      const ident = dictamen.identidad || {};
+      const datLab = dictamen.datosLaborales || {};
+      const radSal = dictamen.radiografiaSalarial || {};
 
-      const titular = resDec.titular || ident.titularDetectado || 'Titular Auditado';
-      const dni = String(resDec.dni || ident.dni || '').replace(/\D/g, '');
-      const cuil = resDec.cuil || ident.cuil || '';
-      const organismo = resDec.organismo || datLab.organismoEmpleador || 'Provincial';
-      const cargo = resDec.cargo || datLab.escalafonCargo || 'Agente';
-      const sueldoBruto = Number(resDec.sueldoBrutoTotal || radSal.sueldoBrutoTotal || 0);
-      const sueldoLiquido = Number(resDec.sueldoLiquido || radSal.sueldoLiquido || 0);
-      const margen50 = Number(resDec.margenDisponiblePlanilla || radSal.cupoDisponiblePlanilla || 0);
-      const modalidadSugerida = (resDec.decisionPlanilla && String(resDec.decisionPlanilla).toUpperCase().includes('APROBADA')) ? 'Planilla FEDEM' : 'CBU / Sidecreer';
-      const lineaKey = modalidadSugerida.includes('FEDEM') ? 'fedem' : 'sidecreer';
+      const dni = String(dictamen.dni || resDec.dni || ident.dni || '').replace(/\D/g, '');
+      const titular = String(dictamen.titular || resDec.titular || ident.titularDetectado || ident.nombre || '').trim();
+      const cuil = String(dictamen.cuil || resDec.cuil || ident.cuil || '').trim();
+      const domicilio = String(dictamen.domicilio || ident.domicilio || '').trim();
+      const organismoRaw = String(dictamen.organismo || resDec.organismo || datLab.organismoEmpleador || datLab.organismo || '').trim();
+      const cargoRaw = String(dictamen.cargo || resDec.cargo || datLab.escalafonCargo || datLab.cargo || datLab.situacionRevista || '').trim();
+      const condicionRaw = String(dictamen.condicion || datLab.condicion || '').trim();
+      const legajoRaw = String(dictamen.legajo || datLab.legajo || datLab.legajoMunicipal || resDec.legajo || '').trim();
+      const antiguedadRaw = String(dictamen.antiguedad || datLab.antiguedad || datLab.antiguedadCalculada || '').trim();
+      const fechaIngresoRaw = String(dictamen.fechaIngreso || datLab.fechaIngresoLaboral || datLab.fechaIngreso || '').trim();
 
-      const rawRand = Math.floor(100000 + Math.random() * 900000);
-      const provId = 'SOL-' + rawRand;
+      const sueldoLiquido = Number(dictamen.sueldoLiquido || resDec.sueldoLiquido || radSal.sueldoLiquido || 0);
+      const margen50 = Number(dictamen.margen || dictamen.margen50 || resDec.margenDisponiblePlanilla || radSal.cupoDisponiblePlanilla || 0);
 
-      const datosBitacora = construirPayloadBitacoraAuditoria(ultimoResultadoAuditoria);
-      const nodoAuditoria = {
-        tipo: 'AUDITORIA_IA_DOCUMENTAL',
-        autor: usuarioOperador + ' [Auditoría IA]',
-        usuarioOperador: usuarioOperador,
-        rol: rolOperador,
-        fecha: nowStr,
-        texto: datosBitacora.textoFormateado,
-        resumenAuditoria: datosBitacora.resumenAuditoria
-      };
-
-      const cuotasEstimadas = 12;
-      const montoEstimado = margen50 > 0 ? Math.min(Math.round(margen50 * 10), 1000000) : 100000;
-      const cuotaEstimada = margen50 > 0 ? Math.round(margen50 * 0.8) : 0;
-
-      const nuevaSolicitud = {
-        id: rawRand,
-        ID_Solicitud: rawRand,
-        id_provisorio: provId,
-        id_definitivo: '',
-        ID_Definitivo_Expediente: '',
-        Nro_Definitivo: '',
-        fecha: nowStr,
-        Fecha_Registro: nowStr,
-        origen_canal: 'Auditoría IA Sede Central',
-        origen: 'Auditoría IA Sede Central',
-        estado: 'PENDIENTE_AUDITORIA',
-        Estado_Tramite: 'PENDIENTE_AUDITORIA',
-        comercializador: usuarioOperador,
-        ID_Usuario_Asesor: (session && session.id) || 'usr_sede',
-        Nombre_Asesor: usuarioOperador,
-        organizacion_id: (session && session.organizacion_id) || 'org_sede_central',
-        nombre_organizacion: (session && session.nombre_organizacion) || 'Sede Central Mutual',
-        solicitante: {
-          nombre: titular,
-          dni: dni,
-          cuil: cuil,
-          domicilio: ident.domicilio || '',
-          organismo: organismo,
-          cargo: cargo,
-          sueldoBruto: sueldoBruto,
-          sueldoLiquido: sueldoLiquido,
-          margenDisponible: margen50
-        },
-        prestamo: {
-          linea: lineaKey,
-          lineaNombre: modalidadSugerida,
-          monto: montoEstimado,
-          cuotas: cuotasEstimadas,
-          cuotaEstimada: cuotaEstimada,
-          totalADevolver: cuotaEstimada * cuotasEstimadas
-        },
-        propuestaMutual: {
-          activa: false,
-          linea: lineaKey,
-          lineaNombre: modalidadSugerida,
-          monto: montoEstimado,
-          cuotas: cuotasEstimadas,
-          cuotaEstimada: cuotaEstimada,
-          estadoPropuesta: 'En Evaluación',
-          detalle: 'Generado desde Auditoría IA con dictamen pericial asentado'
-        },
-        adjuntos: (archivosAuditoriaCola || []).map(a => ({
-          tipo: 'Recibo de Haberes',
-          nombre: a.nombre || a.fileName || 'recibo_haberes.pdf',
-          fecha: nowStr,
-          cargadoPor: usuarioOperador,
-          tipoMime: a.mimeType || 'application/pdf',
-          observado: false
-        })),
-        observaciones: [nodoAuditoria],
-        historialComentarios: [nodoAuditoria],
-        Historial_Comentarios_JSON: JSON.stringify([nodoAuditoria]),
-        auditoriaIA: {
-          estado: 'completado',
-          fechaFin: nowStr,
-          usuarioOperador: usuarioOperador,
-          resumenAuditoria: datosBitacora.resumenAuditoria,
-          resultado: ultimoResultadoAuditoria
-        },
-        analistaAsignado: isAnalistaOAdmin ? usuarioOperador : 'Sin Asignar',
-        Analista_Asignado: isAnalistaOAdmin ? usuarioOperador : 'Sin Asignar',
-        Ultima_Actualizacion: nowStr
-      };
-
-      const all = getStoredSolicitudes();
-      all.unshift(nuevaSolicitud);
-      saveStoredSolicitudes(all);
-
-      idExpedienteAuditadoActivo = String(rawRand);
-
-      const btnGuardar = document.getElementById('btnGuardarDictamenBitacora');
-      if (btnGuardar) {
-        btnGuardar.textContent = '✅ Dictamen Asentado en Nuevo Expediente (' + provId + ')';
+      // 3. Organismo: si incluye POLICIA, CGE, SALUD, PROVINCIA o GOBIERNO -> Provincial; si incluye MUNICIPAL o MUNICIP -> Municipal
+      const orgUpper = organismoRaw.toUpperCase();
+      let organismoSel = 'Provincial';
+      if (orgUpper.includes('MUNICIPAL') || orgUpper.includes('MUNICIP')) {
+        organismoSel = 'Municipal';
+      } else {
+        organismoSel = 'Provincial';
+      }
+      const selOrganismo = document.getElementById('solOrganismo');
+      if (selOrganismo) {
+        selOrganismo.value = organismoSel;
+        if (typeof handleOrganismoChange === 'function') {
+          handleOrganismoChange(organismoSel, 'solLegajo');
+        }
       }
 
-      const payloadBackend = {
-        action: 'crearSolicitud',
-        usuarioActivo: session,
-        usuarioOperador: usuarioOperador,
-        ID_Solicitud: rawRand,
-        Fecha_Registro: nowStr,
-        ID_Usuario_Asesor: (session && session.id) || 'usr_sede',
-        Nombre_Asesor: usuarioOperador,
-        ID_Organizacion: (session && session.organizacion_id) || 'org_sede_central',
-        Nombre_Organizacion: (session && session.nombre_organizacion) || 'Sede Central Mutual',
-        Origen_Canal: 'Auditoría IA Sede Central',
-        DNI_Asociado: dni,
-        Apellido_Nombre: titular,
-        Domicilio_Historico_Solicitud: ident.domicilio || '',
-        Legajo_Municipal: datLab.legajo || '',
-        Datos_Contacto_JSON: JSON.stringify({ celular: '', email: '', cuil: cuil }),
-        Datos_Laborales_JSON: JSON.stringify({
-          organismo: organismo,
-          cargo: cargo,
-          sueldoBruto: sueldoBruto,
-          sueldoLiquido: sueldoLiquido,
-          margenDisponible: margen50
-        }),
-        Linea_Ayuda: modalidadSugerida,
-        Monto_Solicitado_Neto: montoEstimado,
-        Cantidad_Cuotas: cuotasEstimadas,
-        Monto_Cuota: cuotaEstimada,
-        Total_A_Devolver: cuotaEstimada * cuotasEstimadas,
-        Estado_Tramite: 'PENDIENTE_AUDITORIA',
-        Carpeta_Drive_URL: '',
-        Archivos_Adjuntos_JSON: JSON.stringify(archivosAuditoriaCola || []),
-        Historial_Comentarios_JSON: JSON.stringify([nodoAuditoria]),
-        Nro_Definitivo: '',
-        ID_Definitivo_Expediente: '',
-        Historial_Ofertas_JSON: JSON.stringify({ propuestaMutual: nuevaSolicitud.propuestaMutual, historialPropuestas: [] }),
-        Dictamen_IA_JSON: JSON.stringify(nuevaSolicitud.auditoriaIA),
-        Analista_Asignado: nuevaSolicitud.analistaAsignado,
-        Ultima_Actualizacion: nowStr,
-        id: rawRand,
-        id_provisorio: provId,
-        id_definitivo: '',
-        fecha: nowStr
-      };
-
-      callApi(payloadBackend, {
-        title: 'Creando Nuevo Expediente Mutual...',
-        sub: 'Persistiendo en Columna 21 de Solicitudes_Ayudas (Google Sheets)'
-      }).catch(err => console.warn('Aviso de persistencia remota:', err));
-
-      try {
-        renderModuloComercializador();
-        renderModuloMutualPropias();
-        renderModuloMutual();
-      } catch (e) {
-        console.warn('Actualización visual diferida:', e);
+      // 4. Dependencia / Lugar de Trabajo: dictamen.organismo (ej: "JEFATURA POLICIA E.RIOS")
+      const inpDependencia = document.getElementById('solDependencia');
+      if (inpDependencia) {
+        inpDependencia.value = organismoRaw;
       }
 
-      mostrarNotificacionToast('➕ Nuevo expediente creado exitosamente (' + provId + ') con dictamen pericial registrado.', 'success');
-      verFichaCompleta(rawRand);
-      return nuevaSolicitud;
+      // 5. Cargo / Condición de Revista: si en escalafón, conceptos o dictamen figura "TITULAR" -> Titular; si "SUPLENTE" -> Suplente
+      const conceptosStr = JSON.stringify(dictamen.conceptosHaberes || dictamen.conceptos || []).toUpperCase();
+      const cargoTotalStr = (cargoRaw + ' ' + conceptosStr + ' ' + orgUpper).toUpperCase();
+      let cargoSel = 'Titular';
+      if (cargoTotalStr.includes('SUPLENTE')) {
+        cargoSel = 'Suplente';
+      } else if (cargoTotalStr.includes('TITULAR')) {
+        cargoSel = 'Titular';
+      }
+      const selCargo = document.getElementById('solicitud-cargo') || document.getElementById('solCargo');
+      if (selCargo) {
+        selCargo.value = cargoSel;
+      }
+
+      // 6. Condición laboral: default "Activo" (o "Jubilado" si indica Caja de Jubilaciones / Pasivo)
+      let condicionSel = 'Activo';
+      const checkPasivo = (orgUpper + ' ' + condicionRaw.toUpperCase());
+      if (checkPasivo.includes('JUBILA') || checkPasivo.includes('PASIVO') || checkPasivo.includes('CAJA DE JUBILACION')) {
+        condicionSel = 'Jubilado';
+      } else if (checkPasivo.includes('PENSION')) {
+        condicionSel = 'Pensionado';
+      }
+      const selCondicion = document.getElementById('solCondicion');
+      if (selCondicion) {
+        selCondicion.value = condicionSel;
+      }
+
+      // 7. Legajo: si leyó número de legajo (ej: "211183"), asignarlo a #solLegajo
+      const inpLegajo = document.getElementById('solLegajo');
+      if (inpLegajo && legajoRaw) {
+        const legajoDigits = legajoRaw.replace(/\D/g, '') || legajoRaw;
+        inpLegajo.value = legajoDigits;
+      }
+
+      // 8. DNI, Nombre y Apellido, CUIL, Domicilio
+      const inpDni = document.getElementById('solDni');
+      if (inpDni && dni) {
+        inpDni.value = dni;
+        if (typeof handleDniInputDebounced === 'function') {
+          handleDniInputDebounced(dni);
+        }
+      }
+      const inpNombre = document.getElementById('solNombre');
+      if (inpNombre && titular) {
+        inpNombre.value = titular;
+      }
+      const inpCuil = document.getElementById('solCuil');
+      if (inpCuil && cuil) {
+        inpCuil.value = cuil;
+      }
+      const inpDom = document.getElementById('solDomicilio');
+      if (inpDom && domicilio) {
+        inpDom.value = domicilio;
+      }
+
+      // 9. Antigüedad / Años y Meses: parsear antigüedad ("9 años, 1 mes", "9 - 1", etc.)
+      let anios = 0;
+      let meses = 0;
+      if (antiguedadRaw) {
+        const mAnios = antiguedadRaw.match(/(\d+)\s*(?:año|ano|a)/i);
+        const mMeses = antiguedadRaw.match(/(\d+)\s*(?:mes|m)/i);
+        if (mAnios) anios = parseInt(mAnios[1], 10) || 0;
+        if (mMeses) meses = parseInt(mMeses[1], 10) || 0;
+
+        if (!mAnios && !mMeses) {
+          const parts = antiguedadRaw.split(/[-–—/]/).map(s => parseInt(s.trim(), 10));
+          if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+            anios = parts[0];
+            meses = parts[1];
+          } else if (parts.length === 1 && !isNaN(parts[0])) {
+            anios = parts[0];
+          }
+        }
+      }
+      const totalMeses = (anios * 12) + meses;
+
+      let fechaIngresoFinal = '';
+      if (fechaIngresoRaw && /^\d{4}-\d{2}-\d{2}$/.test(fechaIngresoRaw)) {
+        fechaIngresoFinal = fechaIngresoRaw;
+      } else if (totalMeses > 0) {
+        const d = new Date();
+        d.setFullYear(d.getFullYear() - anios);
+        d.setMonth(d.getMonth() - meses);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(Math.min(d.getDate(), 28)).padStart(2, '0');
+        fechaIngresoFinal = `${yyyy}-${mm}-${dd}`;
+      }
+
+      const inpFechaIngreso = document.getElementById('solicitud-fecha-ingreso');
+      if (inpFechaIngreso && fechaIngresoFinal) {
+        inpFechaIngreso.value = fechaIngresoFinal;
+      }
+      const txtAntiguedad = document.getElementById('texto-antiguedad');
+      if (txtAntiguedad) {
+        txtAntiguedad.textContent = `${anios} AÑOS - ${meses} MESES`;
+      }
+      const hidAntiguedad = document.getElementById('solicitud-antiguedad-formateada');
+      if (hidAntiguedad) {
+        hidAntiguedad.value = `${anios} Años, ${meses} Meses`;
+      }
+      window._antiguedadMesesActual = totalMeses;
+      window._bloqueoAntiguedadMinima = (totalMeses < 10);
+      const alertaAnt = document.getElementById('alerta-antiguedad-minima');
+      if (alertaAnt) {
+        if (totalMeses < 10 && totalMeses > 0) {
+          alertaAnt.style.display = 'block';
+          alertaAnt.innerHTML = '<div style="background:#fee2e2;border:1px solid #f87171;color:#991b1b;padding:8px 12px;border-radius:8px;font-size:0.75rem;font-weight:700;">⚠️ Antigüedad laboral inferior a 10 meses (' + totalMeses + ' meses). Requiere autorización de gerencia.</div>';
+        } else {
+          alertaAnt.style.display = 'none';
+          alertaAnt.innerHTML = '';
+        }
+      }
+
+      // 10. Monto solicitado sugerido y cuotas
+      const lineaKey = (organismoSel === 'Municipal') ? 'muni' :
+        ((resDec.decisionPlanilla && String(resDec.decisionPlanilla).includes('RECHAZ')) ? 'sidecreer' : 'fedem');
+      const selLinea = document.getElementById('solLinea');
+      if (selLinea) {
+        selLinea.value = lineaKey;
+        if (typeof ajustarPlazosModalAlta === 'function') {
+          ajustarPlazosModalAlta(lineaKey);
+        }
+      }
+
+      let cuotasSugeridas = dictamen.cuotas || dictamen.plazo || dictamen.cuotasSugeridas || 12;
+      if (lineaKey === 'muni' && cuotasSugeridas !== 12 && cuotasSugeridas !== 24) {
+        cuotasSugeridas = 12;
+      }
+      const selPlazo = document.getElementById('solPlazo');
+      if (selPlazo) {
+        selPlazo.value = String(cuotasSugeridas);
+      }
+
+      let montoSugerido = 100000;
+      if (dictamen.montoSugerido && dictamen.montoSugerido > 0) {
+        montoSugerido = Math.round(dictamen.montoSugerido);
+      } else if (margen50 > 0) {
+        montoSugerido = Math.min(Math.max(10000, Math.round((margen50 * 8) / 1000) * 1000), 2000000);
+      } else if (sueldoLiquido > 300000) {
+        montoSugerido = Math.min(Math.max(10000, Math.round((sueldoLiquido * 0.3 * 6) / 1000) * 1000), 1000000);
+      }
+
+      const inpMonto = document.getElementById('solMonto');
+      if (inpMonto) {
+        inpMonto.value = String(montoSugerido);
+        inpMonto.dataset.lastValid = String(montoSugerido);
+      }
+
+      // 11. Dictamen JSON y texto resumido asignados a campos ocultos y memoria
+      const payloadBit = (typeof construirPayloadBitacoraAuditoria === 'function')
+        ? construirPayloadBitacoraAuditoria(dictamen)
+        : { textoFormateado: '', resumenAuditoria: {} };
+      const jsonDictamenStr = JSON.stringify(dictamen);
+      const txtDictamen = payloadBit.textoFormateado || '';
+
+      const hidDictamen = document.getElementById('solDictamenIA');
+      if (hidDictamen) hidDictamen.value = jsonDictamenStr;
+
+      const hidTexto = document.getElementById('solTextoDictamen');
+      if (hidTexto) hidTexto.value = txtDictamen;
+
+      window._dictamenAuditoriaParaNuevaSolicitud = dictamen;
+      window._dictamenAuditoriaTexto = txtDictamen;
+
+      // 12. Adjunto de recibo auditado en memoria reactiva y fila documental
+      const reciboEnCola = (archivosAuditoriaCola && archivosAuditoriaCola.length > 0) ? archivosAuditoriaCola[0] : null;
+      if (reciboEnCola && reciboEnCola.base64) {
+        const nombreDoc = reciboEnCola.nombre || 'recibo_sueldo_auditado.pdf';
+        const mimeDoc = reciboEnCola.mimeType || 'application/pdf';
+        const fileObj = {
+          nombre: nombreDoc,
+          name: nombreDoc,
+          nombreOriginal: nombreDoc,
+          nombreArchivo: nombreDoc,
+          base64: reciboEnCola.base64,
+          mimeType: mimeDoc,
+          tipoMime: mimeDoc,
+          type: mimeDoc,
+          tamanio: reciboEnCola.tamanio || 120000,
+          size: reciboEnCola.tamanio || 120000,
+          dataUrl: 'data:' + mimeDoc + ';base64,' + reciboEnCola.base64,
+          tipo: 'RECIBO DE SUELDO'
+        };
+
+        if (!window.stateArchivosAdjuntos) window.stateArchivosAdjuntos = {};
+        window.stateArchivosAdjuntos['fileRecibo'] = [fileObj];
+        if (window.state && window.state.archivosAdjuntos) {
+          window.state.archivosAdjuntos['RECIBO DE SUELDO'] = fileObj;
+        }
+
+        const rowRecibo = document.getElementById('row-fileRecibo');
+        const badgeRecibo = document.getElementById('badge-fileRecibo');
+        const subRecibo = document.getElementById('sub-fileRecibo');
+        const btnLblRecibo = document.getElementById('btnLbl-fileRecibo');
+        const prevRecibo = document.getElementById('prev-fileRecibo');
+        const delRecibo = document.getElementById('del-fileRecibo');
+
+        if (rowRecibo) rowRecibo.classList.add('is-loaded');
+        if (badgeRecibo) {
+          badgeRecibo.className = 'doc-row-badge badge-cargado';
+          badgeRecibo.textContent = '✓ Auditado IA';
+        }
+        if (subRecibo) {
+          subRecibo.textContent = nombreDoc + ' (Comprobante auditado y validado por IA)';
+        }
+        if (btnLblRecibo) btnLblRecibo.textContent = 'Reemplazar';
+        if (prevRecibo) prevRecibo.style.display = 'inline-flex';
+        if (delRecibo) delRecibo.style.display = 'inline-flex';
+      }
+
+      // 13. Recalcular cuotas, documentación y reactivar botones
+      if (typeof evaluarDocumentacionRequerida === 'function') evaluarDocumentacionRequerida();
+      if (typeof actualizarResumenCuotaAlta === 'function') actualizarResumenCuotaAlta();
+      if (typeof recalcularValidacionesEdadYCuotas === 'function') recalcularValidacionesEdadYCuotas();
+      if (typeof sincronizarEstadoBotonSubmitAlta === 'function') sincronizarEstadoBotonSubmitAlta();
+
+      abrirModal('modalAltaSolicitud');
+      mostrarNotificacionToast('Formulario de solicitud precargado con dictamen pericial ✓', 'success');
+      showToast('Formulario de solicitud precargado con dictamen pericial ✓');
+      return true;
+    }
+
+    async function ejecutarCrearNuevoExpedienteDesdeAuditoria() {
+      return abrirNuevoExpedienteDesdeAuditoria();
     }
 
     async function guardarDictamenEnBitacoraExpediente(idSolicitudForzada) {
@@ -17458,6 +17586,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.esEtapaOperativaInicialOIntermedia = esEtapaOperativaInicialOIntermedia;
     window.abrirModalGuardadoAuditoria = abrirModalGuardadoAuditoria;
     window.ejecutarAsociacionAuditoriaAExpediente = ejecutarAsociacionAuditoriaAExpediente;
+    window.abrirNuevoExpedienteDesdeAuditoria = abrirNuevoExpedienteDesdeAuditoria;
     window.ejecutarCrearNuevoExpedienteDesdeAuditoria = ejecutarCrearNuevoExpedienteDesdeAuditoria;
     window.formatearFechaTabla24hs = formatearFechaTabla24hs;
     window.renderBadgeIdentificadorExpediente = renderBadgeIdentificadorExpediente;

@@ -11,8 +11,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/src/index.css"/>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <style>
+    .tab-linea-auditoria {
+      cursor: pointer;
+      user-select: none;
+      outline: none;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
       --font-sans:'Plus Jakarta Sans',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
@@ -4699,9 +4709,6 @@
             </div>
           </div>
 
-          <!-- BANNER RESUMEN EJECUTIVO DE AUDITORÍA (CUANDO SE ABRE DESDE AUDITORÍA) -->
-          <div id="bannerResumenAuditoriaModalAlta" style="display:none;margin-bottom:1.15rem;"></div>
-
           <!-- SECCIÓN 1: IDENTIFICACIÓN Y DATOS PERSONALES DEL SOLICITANTE -->
           <div class="modal-card-section">
             <div class="section-banner-header">
@@ -4929,6 +4936,10 @@
                 <p>Línea crediticia, capital solicitado y proyección de cuota oficial</p>
               </div>
             </div>
+
+            <!-- TARJETA DE AUDITORÍA REUBICADA DENTRO DEL PASO 3 -->
+            <div id="bannerResumenAuditoriaModalAlta" style="display:none;" class="mb-5"></div>
+
             <div class="credit-params-highlight">
               <div class="form-grid-12">
                 <!-- Fila 1: Línea y Monto -->
@@ -6252,7 +6263,7 @@
        ======================================================================== */
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypo5JRygnotB7NbJ3l0mvY7xVM0mSgbUVHFjGrC1Zn52icqOb0kE8duCzwMS7JcVEX/exec";
     const SCRIPT_URL = APPS_SCRIPT_URL;
-    const AUDITOR_API_URL = "https://auditor-recibos-ammer.onrender.com/api/auditar-recibo";
+    const AUDITOR_API_URL = "https://ammer-auditor-api.onrender.com/api/auditar-recibo";
     const CONFIG = { SCRIPT_URL: APPS_SCRIPT_URL, AUDITOR_API_URL: AUDITOR_API_URL };
 
     function mostrarNotificacionToast(msg, tipo = 'info') {
@@ -15173,7 +15184,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       const SERVICIO_AUDITORIA_CLOUD_URL = (typeof AUDITOR_API_URL === 'string' && AUDITOR_API_URL.startsWith('http'))
         ? AUDITOR_API_URL
-        : 'https://auditor-recibos-ammer.onrender.com/api/auditar-recibo';
+        : 'https://ammer-auditor-api.onrender.com/api/auditar-recibo';
       const hostName = (typeof window !== 'undefined' && window.location && window.location.hostname)
         ? String(window.location.hostname).toLowerCase()
         : '';
@@ -16207,44 +16218,64 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }).filter(Boolean);
     }
 
-    function renderizarFilasPlanesAuditoria(cuotaMaxima, lineaKey = 'fedem') {
-      const planes = calcularPlanesSugeridosAuditoria(cuotaMaxima, lineaKey);
+    function renderizarFilasPlanesAuditoria(cuotaMaxima, lineaKey = 'FEDEM') {
+      const normKey = String(lineaKey || 'FEDEM').toUpperCase();
+      const planesKey = (normKey.includes('QUAD') || normKey.includes('MUNI')) ? 'muni' : (normKey.includes('SIDE') ? 'sidecreer' : 'fedem');
+      const planes = calcularPlanesSugeridosAuditoria(cuotaMaxima, planesKey);
       if (!planes || planes.length === 0) {
-        return '<tr><td colspan="4" class="py-4 px-3 text-center text-xs text-slate-500">No hay planes disponibles para el margen calculado con esta línea.</td></tr>';
+        return '<tr><td colspan="4" class="py-4 px-3 text-center text-xs text-slate-500 font-sans">No hay planes disponibles para el margen calculado con esta línea.</td></tr>';
       }
-      return planes.map(p => {
-        return '<tr class="border-b border-slate-100 hover:bg-slate-50/80 transition-colors">' +
-          '<td class="py-3 px-4 text-xs font-bold text-slate-900 whitespace-nowrap">' + p.plazo + ' cuotas fijas</td>' +
-          '<td class="py-3 px-4 font-mono text-xs sm:text-sm text-right font-black text-emerald-700 whitespace-nowrap">$ ' + sanitizeHTML(formatMontoSinSimboloAr(p.neto)) + '</td>' +
-          '<td class="py-3 px-4 font-mono text-xs sm:text-sm text-right font-semibold text-slate-800 whitespace-nowrap">$ ' + sanitizeHTML(formatMontoSinSimboloAr(p.cuotaFinal)) + '</td>' +
+      return planes.map((p, idx) => {
+        const zebraBg = (idx % 2 === 1) ? 'bg-slate-50/40' : 'bg-white';
+        const netoNum = Number(p.neto) || 0;
+        const cuotaNum = Number(p.cuotaFinal) || 0;
+        const netoFormateado = sanitizeHTML(formatMontoSinSimboloAr(netoNum));
+        const cuotaFinalFormateada = sanitizeHTML(formatMontoSinSimboloAr(cuotaNum));
+        return '<tr class="' + zebraBg + ' hover:bg-indigo-50/40 transition-colors border-b border-slate-100 font-sans text-slate-700">' +
+          '<td class="py-3 px-4 text-xs font-semibold text-slate-700 whitespace-nowrap">' + p.plazo + ' cuotas fijas</td>' +
+          '<td class="py-3 px-4 text-sm font-bold text-emerald-600 font-mono whitespace-nowrap text-right">$ ' + netoFormateado + '</td>' +
+          '<td class="py-3 px-4 text-sm font-bold text-slate-900 font-mono whitespace-nowrap text-right">$ ' + cuotaFinalFormateada + '</td>' +
           '<td class="py-2.5 px-4 text-right whitespace-nowrap">' +
-            '<button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-medium rounded-md transition-colors border border-indigo-200/60 cursor-pointer" onclick="trasladarPlanAuditadoAExpediente(' + p.neto + ', ' + p.plazo + ', \'' + p.lineaKey + '\')">' +
-              'Seleccionar' +
+            '<button type="button" onclick="seleccionarPlanAuditoria(' + p.plazo + ', ' + netoNum.toFixed(2) + ', ' + cuotaNum.toFixed(2) + ')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-medium shadow-sm transition-all duration-150 cursor-pointer">' +
+              '<span>Seleccionar</span>' +
+              '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>' +
             '</button>' +
           '</td>' +
         '</tr>';
       }).join('');
     }
 
+    function seleccionarPlanAuditoria(plazo, neto, cuota) {
+      const normKey = String(window._lineaAuditoriaSugerida || 'FEDEM').toUpperCase();
+      const lineaKey = (normKey.includes('QUAD') || normKey.includes('MUNI')) ? 'muni' : (normKey.includes('SIDE') ? 'sidecreer' : 'fedem');
+      trasladarPlanAuditadoAExpediente(neto, plazo, lineaKey);
+    }
+
     function cambiarLineaAuditoria(nuevaLinea) {
-      window._lineaAuditoriaSugerida = nuevaLinea;
+      const normKey = String(nuevaLinea || 'FEDEM').toUpperCase();
+      let selected = 'FEDEM';
+      if (normKey.includes('QUAD') || normKey.includes('MUNI')) {
+        selected = 'QUAD';
+      } else if (normKey.includes('SIDE')) {
+        selected = 'SIDECREER';
+      }
+      window._lineaAuditoriaSugerida = selected;
       const cuota = window._cuotaMaximaAuditoria || 0;
 
-      const lineas = ['fedem', 'muni', 'sidecreer'];
-      lineas.forEach(l => {
-        const btn = document.getElementById('btnLineaAuditoria_' + l);
-        if (btn) {
-          if (l === nuevaLinea) {
-            btn.className = 'bg-white text-indigo-900 shadow-sm rounded-md px-3 py-1.5 font-semibold cursor-pointer transition-all';
-          } else {
-            btn.className = 'hover:text-slate-900 px-3 py-1.5 transition-colors cursor-pointer text-slate-600 font-semibold';
-          }
-        }
-      });
+      const tabActiveCls = 'tab-linea-auditoria px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all duration-150 bg-white text-indigo-950 shadow-sm border border-slate-200/50';
+      const tabInactiveCls = 'tab-linea-auditoria px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all duration-150 text-slate-600 hover:text-slate-900 hover:bg-white/60';
+
+      const tabFedem = document.getElementById('tabLineaFEDEM') || document.getElementById('btnLineaAuditoria_fedem');
+      const tabQuad = document.getElementById('tabLineaQUAD') || document.getElementById('btnLineaAuditoria_muni');
+      const tabSidecreer = document.getElementById('tabLineaSidecreer') || document.getElementById('btnLineaAuditoria_sidecreer');
+
+      if (tabFedem) tabFedem.className = (selected === 'FEDEM') ? tabActiveCls : tabInactiveCls;
+      if (tabQuad) tabQuad.className = (selected === 'QUAD') ? tabActiveCls : tabInactiveCls;
+      if (tabSidecreer) tabSidecreer.className = (selected === 'SIDECREER') ? tabActiveCls : tabInactiveCls;
 
       const tbody = document.getElementById('tbodyPlanesAuditoria');
       if (tbody) {
-        tbody.innerHTML = renderizarFilasPlanesAuditoria(cuota, nuevaLinea);
+        tbody.innerHTML = renderizarFilasPlanesAuditoria(cuota, selected);
       }
     }
 
@@ -16284,41 +16315,47 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       let badgeHtml = '';
       if (planillaViable) {
-        badgeHtml = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">🟢 Habilitado Débito / Retención</span>';
+        badgeHtml = '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">● Habilitado Débito / Retención</span>';
       } else if (cbuCondicionadoViable) {
-        badgeHtml = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">🟡 Habilitado Débito en Cuenta</span>';
+        badgeHtml = '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800 border border-amber-200">● Habilitado Débito en Cuenta</span>';
       } else if (embargoDetectado) {
-        badgeHtml = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300">🔴 Rechazado — Embargo Activo</span>';
+        badgeHtml = '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-800 border border-rose-200">● Rechazado — Embargo Activo</span>';
       } else {
-        badgeHtml = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300">🔴 Margen Insuficiente</span>';
+        badgeHtml = '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-800 border border-rose-200">● Margen Insuficiente</span>';
       }
 
-      return '<div class="bg-slate-50 border border-slate-200/80 rounded-xl p-4 mb-6 shadow-xs">' +
-        '<div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-200/80">' +
+      const haberesFormateado = '$ ' + sanitizeHTML(formatMontoSinSimboloAr(bruto));
+      const descuentosFormateado = '$ ' + sanitizeHTML(formatMontoSinSimboloAr(descuentos));
+      const liquidoFormateado = '$ ' + sanitizeHTML(formatMontoSinSimboloAr(liquido));
+      const margenFormateado = '$ ' + sanitizeHTML(formatMontoSinSimboloAr(margen > 0 ? margen : 0));
+
+      return '<div class="bg-gradient-to-r from-slate-50 to-indigo-50/30 border border-indigo-100 rounded-xl p-4 mb-5 shadow-sm">' +
+        '<div class="flex items-center justify-between pb-3 mb-3 border-b border-indigo-100/60">' +
           '<div class="flex items-center gap-2">' +
-            '<svg class="w-4 h-4 max-w-[18px] max-h-[18px] shrink-0 text-indigo-700 inline-block" width="18" height="18" style="width:18px;height:18px;max-width:18px;max-height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-              '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>' +
-            '</svg>' +
-            '<span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Auditoría Documental y Crediticia AMMER</span>' +
+            '<span class="p-1.5 bg-indigo-100 text-indigo-800 rounded-lg text-sm">🛡️</span>' +
+            '<div>' +
+              '<h4 class="text-xs font-bold uppercase tracking-wider text-slate-800">Evaluación Salarial y Capacidad Crediticia</h4>' +
+              '<p class="text-[11px] text-slate-500">Datos auditados del recibo de sueldo oficial</p>' +
+            '</div>' +
           '</div>' +
-          '<div>' + badgeHtml + '</div>' +
+          badgeHtml +
         '</div>' +
         '<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">' +
-          '<div class="bg-white p-2.5 rounded-lg border border-slate-200/80">' +
-            '<span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Haberes</span>' +
-            '<span class="font-mono text-xs sm:text-sm font-black text-slate-900 mt-0.5 block">$ ' + sanitizeHTML(formatMontoSinSimboloAr(bruto)) + '</span>' +
+          '<div class="bg-white p-2.5 rounded-lg border border-slate-200/60">' +
+            '<span class="text-[10px] uppercase font-bold text-slate-400 block">Total Haberes</span>' +
+            '<span class="font-bold text-slate-800 text-sm font-mono" id="modalAuditoriaHaberes">' + haberesFormateado + '</span>' +
           '</div>' +
-          '<div class="bg-white p-2.5 rounded-lg border border-slate-200/80">' +
-            '<span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Descuentos</span>' +
-            '<span class="font-mono text-xs sm:text-sm font-black text-rose-600 mt-0.5 block">$ ' + sanitizeHTML(formatMontoSinSimboloAr(descuentos)) + '</span>' +
+          '<div class="bg-white p-2.5 rounded-lg border border-slate-200/60">' +
+            '<span class="text-[10px] uppercase font-bold text-slate-400 block">Total Descuentos</span>' +
+            '<span class="font-bold text-rose-600 text-sm font-mono" id="modalAuditoriaDescuentos">' + descuentosFormateado + '</span>' +
           '</div>' +
-          '<div class="bg-white p-2.5 rounded-lg border border-emerald-200/80 bg-emerald-50/40">' +
-            '<span class="block text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Sueldo Líquido</span>' +
-            '<span class="font-mono text-xs sm:text-sm font-black text-emerald-700 mt-0.5 block">$ ' + sanitizeHTML(formatMontoSinSimboloAr(liquido)) + '</span>' +
+          '<div class="bg-white p-2.5 rounded-lg border border-slate-200/60">' +
+            '<span class="text-[10px] uppercase font-bold text-slate-400 block">Sueldo Líquido</span>' +
+            '<span class="font-bold text-emerald-600 text-sm font-mono" id="modalAuditoriaLiquido">' + liquidoFormateado + '</span>' +
           '</div>' +
-          '<div class="bg-white p-2.5 rounded-lg border ' + (margen > 0 ? 'border-emerald-200/80 bg-emerald-50/40' : 'border-rose-200/80 bg-rose-50/40') + '">' +
-            '<span class="block text-[10px] font-bold ' + (margen > 0 ? 'text-emerald-800' : 'text-rose-800') + ' uppercase tracking-wider">Margen Disponible</span>' +
-            '<span class="font-mono text-xs sm:text-sm font-black ' + (margen > 0 ? 'text-emerald-700' : 'text-rose-700') + ' mt-0.5 block">$ ' + sanitizeHTML(formatMontoSinSimboloAr(margen)) + '</span>' +
+          '<div class="bg-white p-2.5 rounded-lg border border-slate-200/60">' +
+            '<span class="text-[10px] uppercase font-bold text-slate-400 block">Margen Cuota Sugerida</span>' +
+            '<span class="font-bold text-indigo-900 text-sm font-mono" id="modalAuditoriaMargen">' + margenFormateado + '</span>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -16669,10 +16706,17 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           : Math.round(liquido * 0.30 * 100) / 100;
 
         const orgUpper = String(organismo || '').toUpperCase();
-        const lineaInicial = orgUpper.includes('MUNICIP') ? 'muni' : 'fedem';
+        const lineaInicial = (orgUpper.includes('MUNICIP') || orgUpper.includes('QUAD')) ? 'QUAD' : 'FEDEM';
 
         window._cuotaMaximaAuditoria = cuotaMaximaBase;
         window._lineaAuditoriaSugerida = lineaInicial;
+
+        const isFedem = lineaInicial === 'FEDEM';
+        const isQuad = lineaInicial === 'QUAD';
+        const isSidecreer = lineaInicial === 'SIDECREER';
+
+        const tabActiveCls = 'tab-linea-auditoria px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all duration-150 bg-white text-indigo-950 shadow-sm border border-slate-200/50';
+        const tabInactiveCls = 'tab-linea-auditoria px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all duration-150 text-slate-600 hover:text-slate-900 hover:bg-white/60';
 
         const filasPlanesHtml = renderizarFilasPlanesAuditoria(cuotaMaximaBase, lineaInicial);
 
@@ -16693,18 +16737,22 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
               '</span>' +
             '</div>' +
 
-            '<!-- Selector de Línea Crediticia -->' +
-            '<div class="mb-4">' +
-              '<div class="inline-flex p-1 bg-slate-100 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 gap-1 mb-2" role="tablist">' +
-                '<button type="button" id="btnLineaAuditoria_fedem" onclick="cambiarLineaAuditoria(\'fedem\')" class="' + (lineaInicial === 'fedem' ? 'bg-white text-indigo-900 shadow-sm rounded-md px-3 py-1.5 font-semibold cursor-pointer transition-all' : 'hover:text-slate-900 px-3 py-1.5 transition-colors cursor-pointer text-slate-600 font-semibold') + '">FEDEM Provincial</button>' +
-                '<button type="button" id="btnLineaAuditoria_muni" onclick="cambiarLineaAuditoria(\'muni\')" class="' + (lineaInicial === 'muni' ? 'bg-white text-indigo-900 shadow-sm rounded-md px-3 py-1.5 font-semibold cursor-pointer transition-all' : 'hover:text-slate-900 px-3 py-1.5 transition-colors cursor-pointer text-slate-600 font-semibold') + '">QUAD Municipales</button>' +
-                '<button type="button" id="btnLineaAuditoria_sidecreer" onclick="cambiarLineaAuditoria(\'sidecreer\')" class="' + (lineaInicial === 'sidecreer' ? 'bg-white text-indigo-900 shadow-sm rounded-md px-3 py-1.5 font-semibold cursor-pointer transition-all' : 'hover:text-slate-900 px-3 py-1.5 transition-colors cursor-pointer text-slate-600 font-semibold') + '">Convenio Sidecreer</button>' +
-              '</div>' +
+            '<!-- Selector de Línea Crediticia (Tabs / Píldoras Modernas) -->' +
+            '<div class="inline-flex p-1 bg-slate-100/90 rounded-xl border border-slate-200/80 gap-1 mb-5 shadow-inner">' +
+              '<button type="button" onclick="cambiarLineaAuditoria(\'FEDEM\')" id="tabLineaFEDEM" class="' + (isFedem ? tabActiveCls : tabInactiveCls) + '">' +
+                '🏛️ FEDEM Provincial' +
+              '</button>' +
+              '<button type="button" onclick="cambiarLineaAuditoria(\'QUAD\')" id="tabLineaQUAD" class="' + (isQuad ? tabActiveCls : tabInactiveCls) + '">' +
+                '🏢 QUAD Municipales' +
+              '</button>' +
+              '<button type="button" onclick="cambiarLineaAuditoria(\'SIDECREER\')" id="tabLineaSidecreer" class="' + (isSidecreer ? tabActiveCls : tabInactiveCls) + '">' +
+                '💳 Convenio Sidecreer' +
+              '</button>' +
             '</div>' +
 
-            '<!-- Tabla Simplificada de 3 Columnas + Acción -->' +
+            '<!-- Tabla de Simulación Sugerida -->' +
             '<div class="overflow-x-auto rounded-lg border border-slate-200">' +
-              '<table class="w-full text-left border-collapse">' +
+              '<table class="w-full text-left border-collapse font-sans text-slate-700">' +
                 '<thead class="bg-slate-50 border-b border-slate-200">' +
                   '<tr>' +
                     '<th class="py-3 px-4 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">Plazo</th>' +
@@ -16713,7 +16761,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
                     '<th class="py-3 px-4 text-[11px] font-bold text-slate-500 uppercase text-right whitespace-nowrap">Acción</th>' +
                   '</tr>' +
                 '</thead>' +
-                '<tbody id="tbodyPlanesAuditoria" class="divide-y divide-slate-100">' +
+                '<tbody id="tbodyPlanesAuditoria" class="divide-y divide-slate-100 font-sans text-slate-700">' +
                   filasPlanesHtml +
                 '</tbody>' +
               '</table>' +
@@ -18169,6 +18217,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.calcularPlanesSugeridosAuditoria = calcularPlanesSugeridosAuditoria;
     window.renderizarFilasPlanesAuditoria = renderizarFilasPlanesAuditoria;
     window.cambiarLineaAuditoria = cambiarLineaAuditoria;
+    window.seleccionarPlanAuditoria = seleccionarPlanAuditoria;
     window.trasladarPlanAuditadoAExpediente = trasladarPlanAuditadoAExpediente;
     window.cargarPlanAuditadoEnSimulador = cargarPlanAuditadoEnSimulador;
     window.manejarSeleccionReciboAuditoria = manejarSeleccionReciboAuditoria;

@@ -2918,14 +2918,20 @@
     /* CHAT MODERNO BI-DIRECCIONAL Y ACCESIBLE ESTILO WHATSAPP */
     .chat-container{display:flex;flex-direction:column;gap:.6rem;max-height:320px;overflow-y:auto;padding:.75rem;background:#f1f5f9;border-radius:8px;border:1px solid var(--border-color)}
     .chat-bubble{max-width:84%;padding:.6rem .85rem;border-radius:10px;font-size:.76rem;line-height:1.45;box-shadow:0 1px 2px rgba(0,0,0,.06);position:relative;transition:background .15s ease}
+    .chat-bubble-mio{align-self:flex-end;background:#1e1b4b;color:#ffffff;border-bottom-right-radius:2px;box-shadow:0 2px 6px rgba(30,27,75,0.25)}
+    .chat-bubble-otro{align-self:flex-start;background:#ffffff;border:1px solid #cbd5e1;border-bottom-left-radius:2px;color:#0f172a}
     .chat-bubble-comercializador{align-self:flex-start;background:#ffffff;border:1px solid #cbd5e1;border-bottom-left-radius:2px;color:#0f172a}
-    .chat-bubble-mutual{align-self:flex-end;background:#1e40af;color:#ffffff;border-bottom-right-radius:2px;box-shadow:0 2px 6px rgba(30,64,175,0.22)}
+    .chat-bubble-mutual{align-self:flex-end;background:#1e1b4b;color:#ffffff;border-bottom-right-radius:2px;box-shadow:0 2px 6px rgba(30,27,75,0.25)}
     .chat-meta{font-size:.64rem;margin-bottom:3px;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+    .chat-bubble-mio .chat-meta{color:#c7d2fe}
+    .chat-bubble-otro .chat-meta{color:#1e3a8a}
     .chat-bubble-comercializador .chat-meta{color:var(--color-brand-blue)}
-    .chat-bubble-mutual .chat-meta{color:#e0f2fe}
+    .chat-bubble-mutual .chat-meta{color:#c7d2fe}
     .chat-tag{padding:1px 5px;border-radius:4px;font-size:.58rem;text-transform:uppercase;font-weight:800}
+    .chat-tag-mio{background:#312e81;color:#e0e7ff;border:1px solid rgba(255,255,255,0.2)}
+    .chat-tag-otro{background:#f1f5f9;color:#475569;border:1px solid #cbd5e1}
     .chat-tag-comercializador{background:#e0f2fe;color:#0369a1}
-    .chat-tag-mutual{background:#1d4ed8;color:#eff6ff;border:1px solid rgba(255,255,255,0.25)}
+    .chat-tag-mutual{background:#312e81;color:#eff6ff;border:1px solid rgba(255,255,255,0.25)}
     .chat-actions-hover-bar{position:absolute;top:-11px;right:8px;display:none;align-items:center;gap:3px;background:#0f172a;padding:2px 6px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.2);z-index:10;border:1px solid rgba(255,255,255,0.18)}
     .chat-bubble:hover .chat-actions-hover-bar{display:inline-flex !important}
     .btn-chat-bubble-action{background:transparent;border:none;cursor:pointer;font-size:.72rem;padding:2px 4px;border-radius:4px;transition:all .15s ease;line-height:1}
@@ -6173,7 +6179,9 @@
        0. CONEXIÓN API EN VIVO & SEGURIDAD FRONTEND BLINDADA
        ======================================================================== */
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypo5JRygnotB7NbJ3l0mvY7xVM0mSgbUVHFjGrC1Zn52icqOb0kE8duCzwMS7JcVEX/exec";
-    const CONFIG = { SCRIPT_URL: APPS_SCRIPT_URL };
+    const SCRIPT_URL = APPS_SCRIPT_URL;
+    const AUDITOR_API_URL = "https://auditor-recibos-ammer.onrender.com/api/auditar-recibo";
+    const CONFIG = { SCRIPT_URL: APPS_SCRIPT_URL, AUDITOR_API_URL: AUDITOR_API_URL };
 
     function mostrarNotificacionToast(msg, tipo = 'info') {
       if (typeof showToast === 'function') {
@@ -11539,11 +11547,6 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       } else {
         const ahoraMs = Date.now();
         listaBitacora.forEach(o => {
-          const esMutual = (o.rol && (o.rol.includes('Analista') || o.rol.includes('Mutual') || o.rol.includes('Admin') || o.rol.includes('Automático')));
-          const bubbleClass = esMutual ? 'chat-bubble-mutual' : 'chat-bubble-comercializador';
-          const tagClass = esMutual ? 'chat-tag-mutual' : 'chat-tag-comercializador';
-          const tagText = esMutual ? 'Mutual Créditos' : 'Comercializador';
-
           const msgTs = Number(o.timestamp || 0) || (o.fecha ? parsearFechaATimestampCliente(o.fecha) : 0);
           const transcurridoMs = msgTs ? (ahoraMs - msgTs) : Infinity;
           const dentroDe5Min = transcurridoMs >= 0 && transcurridoMs <= 300000;
@@ -11552,6 +11555,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             o.usuarioOperador === session.nombre ||
             (session.nombre && o.autor && String(o.autor).includes(session.nombre))
           ));
+          const esMutual = (o.rol && (o.rol.includes('Analista') || o.rol.includes('Mutual') || o.rol.includes('Admin') || o.rol.includes('Automático')));
+          const bubbleClass = esMio ? 'chat-bubble-mio' : 'chat-bubble-otro';
+          const tagClass = esMio ? 'chat-tag-mio' : 'chat-tag-otro';
+          const tagText = esMio ? (session.rol || 'Mi Mensaje') : (esMutual ? 'Mutual Créditos' : 'Comercializador');
+
           const esAuditoriaInmutable = (
             o.tipo === 'AUDITORIA_INICIAL' ||
             o.tipo === 'AUDITORIA_IA_DOCUMENTAL' ||
@@ -14809,7 +14817,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         return null;
       }
 
-      const SERVICIO_AUDITORIA_CLOUD_URL = 'https://ais-pre-6fq62c5ia25ae5ywlq76de-570041018231.us-west2.run.app/api/auditar-documentos';
+      const SERVICIO_AUDITORIA_CLOUD_URL = (typeof AUDITOR_API_URL === 'string' && AUDITOR_API_URL.startsWith('http'))
+        ? AUDITOR_API_URL
+        : 'https://auditor-recibos-ammer.onrender.com/api/auditar-recibo';
       const hostName = (typeof window !== 'undefined' && window.location && window.location.hostname)
         ? String(window.location.hostname).toLowerCase()
         : '';
@@ -14829,10 +14839,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           candidatosEndpoints.push(APPS_SCRIPT_URL);
         }
       } else {
+        // 1. Microservicio de auditoría forense con Gemini Pro en Render (Oficial AMMER)
+        candidatosEndpoints.push(SERVICIO_AUDITORIA_CLOUD_URL);
+        // 2. Proxy local Express Node.js
+        candidatosEndpoints.push('/api/auditar-recibo');
         candidatosEndpoints.push('/api/auditar-documentos');
-        if (!SERVICIO_AUDITORIA_CLOUD_URL.toLowerCase().startsWith(currentOrigin)) {
-          candidatosEndpoints.push(SERVICIO_AUDITORIA_CLOUD_URL);
-        }
+        // 3. Fallback en Google Apps Script
         if (typeof APPS_SCRIPT_URL === 'string' && APPS_SCRIPT_URL.startsWith('http')) {
           candidatosEndpoints.push(APPS_SCRIPT_URL);
         }

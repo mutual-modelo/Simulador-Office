@@ -11,7 +11,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3000;
+
+const cliArgs = process.argv.slice(2);
+const cliPortIdx = cliArgs.indexOf('--port');
+const cliHostIdx = cliArgs.indexOf('--host');
+
+const PORT = (cliPortIdx !== -1 && cliArgs[cliPortIdx + 1])
+  ? parseInt(cliArgs[cliPortIdx + 1], 10)
+  : (Number(process.env.APP_PORT) || 3000);
+
+const HOST = (cliHostIdx !== -1 && cliArgs[cliHostIdx + 1])
+  ? cliArgs[cliHostIdx + 1]
+  : (process.env.APP_HOST || '0.0.0.0');
 
 // Soporte para payloads con documentos e imágenes en Base64 + CORS institucional para despliegues estáticos
 app.use(express.json({ limit: '50mb' }));
@@ -369,6 +380,7 @@ Devuelve estrictamente JSON conforme al schema.
 };
 
 app.post('/api/auditar-documentos', handlerAuditoriaDocumental);
+app.post('/api/auditar-recibo', handlerAuditoriaDocumental);
 app.post('/api/analizar-recibo', handlerAuditoriaDocumental);
 
 function formatCurrencyAuditAr_(val: number | null | undefined): string {
@@ -1129,17 +1141,31 @@ async function startServer() {
   const vite = await createViteServer({
     server: {
       middlewareMode: true,
-      hmr: process.env.DISABLE_HMR !== 'true',
-      watch: process.env.DISABLE_HMR === 'true' ? null : {}
+      hmr: false,
+      watch: null
     },
     appType: 'spa',
   });
 
   app.use(vite.middlewares);
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[AMMER Server] Servidor Full-Stack activo en http://0.0.0.0:${PORT}`);
+  const server = app.listen(PORT, HOST, () => {
+    console.log(`  ➜  Local:   http://localhost:${PORT}/`);
+    console.log(`  ➜  Network: http://${HOST}:${PORT}/`);
+    console.log(`[AMMER Server] Servidor Full-Stack activo en http://${HOST}:${PORT}`);
   });
+
+  const handleShutdown = (signal: string) => {
+    console.log(`[AMMER Server] Señal ${signal} recibida, cerrando servidor limpiamente...`);
+    server.close(() => {
+      vite.close().finally(() => {
+        process.exit(0);
+      });
+    });
+  };
+
+  process.on('SIGTERM', () => handleShutdown('SIGTERM'));
+  process.on('SIGINT', () => handleShutdown('SIGINT'));
 }
 
 startServer().catch(err => {

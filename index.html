@@ -11,7 +11,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="/src/index.css"/>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <style>
     /* ========================================================================
@@ -191,7 +190,16 @@
     .duration-150 { transition-duration: 150ms; }
     .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.5rem; }
     .divide-y > :not([hidden]) ~ :not([hidden]) { border-top: 1px solid #f1f5f9; }
-    button.text-rose-500, button.text-rose-600, button.text-amber-600 { background: transparent; border: none; }
+    button.text-rose-500, button.text-rose-600, button.text-amber-600 { background: transparent; }
+    .bg-indigo-50 { background-color: #eef2ff; }
+    .hover\:bg-indigo-100:hover { background-color: #e0e7ff; }
+    .text-indigo-700 { color: #4338ca; }
+    .hover\:text-indigo-600:hover { color: #4f46e5; }
+    .border-indigo-200\/60 { border-color: rgba(199, 210, 254, 0.6); }
+    .border-rose-200\/50 { border-color: rgba(254, 205, 211, 0.5); }
+    .border-amber-200\/50 { border-color: rgba(253, 230, 138, 0.5); }
+    .hover\:text-rose-700:hover { color: #be123c; }
+    .hover\:text-amber-800:hover { color: #92400e; }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
       --font-sans:'Plus Jakarta Sans',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
@@ -6531,23 +6539,25 @@
     }
 
     // Helper robusto de red con AbortController y timeout explícito para evitar canales colgados
-    async function fetchConTimeout(url, options = {}, timeoutMs = 25000) {
+    async function fetchConTimeout(url, options = {}, timeoutMs = 90000) {
       const controller = (typeof AbortController === 'function') ? new AbortController() : null;
       let timerId = null;
       const externalSignal = options && options.signal ? options.signal : null;
       const onExternalAbort = () => {
-        if (controller && !controller.signal.aborted) controller.abort();
+        if (controller && !controller.signal.aborted) {
+          controller.abort(externalSignal && externalSignal.reason ? externalSignal.reason : 'TIMEOUT_EXCEDIDO');
+        }
       };
       if (controller && externalSignal) {
         if (externalSignal.aborted) {
-          controller.abort();
+          controller.abort(externalSignal.reason || 'TIMEOUT_EXCEDIDO');
         } else if (typeof externalSignal.addEventListener === 'function') {
           externalSignal.addEventListener('abort', onExternalAbort, { once: true });
         }
       }
       if (controller && timeoutMs > 0) {
         timerId = setTimeout(() => {
-          if (!controller.signal.aborted) controller.abort();
+          if (!controller.signal.aborted) controller.abort('TIMEOUT_EXCEDIDO');
         }, timeoutMs);
       }
       try {
@@ -10411,8 +10421,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const docsCount = (s.archivosAdjuntos ? s.archivosAdjuntos.length : (s.adjuntos ? s.adjuntos.length : 0));
         const driveLinkHtml = puedeVerDrive
           ? (s.carpetaDriveUrl
-              ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="badge-drive-mini" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" title="Abrir legajo del expediente en Bóveda Documental" onclick="event.stopPropagation()">📂 Bóveda Digital (' + docsCount + ')</a>'
-              : '<span style="font-size:0.66rem;color:var(--text-muted);" data-boveda-id="' + sanitizeHTML(String(s.id)) + '">📎 ' + docsCount + ' docs</span>')
+              ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 border border-slate-200/60 transition-colors inline-flex items-center gap-1 text-xs" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" title="Abrir Legajo Digital en Drive (' + docsCount + ' docs)" onclick="event.stopPropagation()">' +
+                  '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/></svg>' +
+                  '<span>' + docsCount + '</span>' +
+                '</a>'
+              : '<span class="px-2 py-1 rounded-lg text-[11px] text-slate-400 border border-slate-200/60 bg-slate-50" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" title="Legajo Digital (' + docsCount + ' docs)">📎 ' + docsCount + '</span>')
           : '';
 
         return '<tr>' +
@@ -10426,7 +10439,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           '<td>' + (s.prestamo?.cuotas || '—') + ' c</td>' +
           '<td>' + propHtml + '</td>' +
           '<td><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + sanitizeHTML(s.estado || 'Pendiente') + '</span>' + alertaDocHtml + '</td>' +
-          '<td><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;"><div style="display:flex;align-items:center;gap:4px;"><button class="btn-table-action" onclick="verFichaCompleta(\'' + s.id + '\')">👁️ Ficha / Trámite</button>' + (typeof renderBotonCicloVida === 'function' ? renderBotonCicloVida(s) : '') + '</div>' + driveLinkHtml + '</div></td>' +
+          '<td><div class="flex items-center justify-end gap-1.5 whitespace-nowrap">' +
+            '<button type="button" onclick="verFichaCompleta(\'' + s.id + '\')" title="Ver Expediente Completo" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/60 transition-colors cursor-pointer">' +
+              '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
+              '<span>Expediente</span>' +
+            '</button>' +
+            driveLinkHtml +
+            (typeof renderBotonCicloVida === 'function' ? renderBotonCicloVida(s) : '') +
+          '</div></td>' +
           '</tr>';
       }).join('');
       renderHtmlPorLotes(tbody, rowsHtml);
@@ -11268,7 +11288,6 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         '<div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">' +
           estadoSelectorHtml +
           (isObservado ? '<span style="font-size:0.7rem;color:#b45309;font-weight:700;background:#fffbeb;padding:2px 6px;border-radius:4px;border:1px solid #fef3c7;">⚠️ Observado por Auditoría</span>' : '') +
-          (typeof renderBotonCicloVida === 'function' ? renderBotonCicloVida(s, false) : '') +
         '</div>' +
         '<div style="font-size:.72rem;color:var(--text-muted);">' +
           'Fecha: <strong>' + (s.fecha ? formatearFechaHoraChat(s.fecha) : '') + '</strong> | Asesor: <strong>' + s.comercializador + '</strong> | Org: <strong>' + (s.nombre_organizacion || 'Paraná Centro') + '</strong>' +
@@ -13543,8 +13562,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             '<span>Eliminar Solicitud</span>' +
           '</button>';
         } else {
-          return '<button type="button" class="text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg p-1.5 transition-colors cursor-pointer inline-flex items-center justify-center" title="Eliminar Solicitud Inicial" onclick="event.stopPropagation(); solicitarEliminarSolicitud(\'' + id + '\')">' +
-            '<svg class="w-4 h-4 shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+          return '<button type="button" class="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 border border-rose-200/50 transition-colors cursor-pointer inline-flex items-center justify-center" title="Eliminar solicitud preliminar" onclick="event.stopPropagation(); solicitarEliminarSolicitud(\'' + id + '\')">' +
+            '<svg class="w-3.5 h-3.5 shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
               '<polyline points="3 6 5 6 21 6"></polyline>' +
               '<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>' +
               '<line x1="10" y1="11" x2="10" y2="17"></line>' +
@@ -13562,8 +13581,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             '<span>Desestimar Gestión</span>' +
           '</button>';
         } else {
-          return '<button type="button" class="text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded-lg p-1.5 transition-colors cursor-pointer inline-flex items-center justify-center" title="Desestimar Gestión" onclick="event.stopPropagation(); abrirModalDesestimarGestion(\'' + id + '\')">' +
-            '<svg class="w-4 h-4 shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+          return '<button type="button" class="p-1.5 rounded-lg text-amber-600 hover:text-amber-800 hover:bg-amber-50 border border-amber-200/50 transition-colors cursor-pointer inline-flex items-center justify-center" title="Desestimar gestión" onclick="event.stopPropagation(); abrirModalDesestimarGestion(\'' + id + '\')">' +
+            '<svg class="w-3.5 h-3.5 shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
               '<circle cx="12" cy="12" r="10"></circle>' +
               '<line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>' +
             '</svg>' +
@@ -14094,8 +14113,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           : '';
         const docsCount = (s.archivosAdjuntos ? s.archivosAdjuntos.length : (s.adjuntos ? s.adjuntos.length : 0));
         const driveLinkHtml = (s.carpetaDriveUrl && esUsuarioMutualConAccesoDrive())
-          ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="badge-drive-mini" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" title="Abrir legajo del expediente en Bóveda Documental" onclick="event.stopPropagation()">📂 Bóveda Digital (' + docsCount + ')</a>'
-          : '<span style="font-size:0.66rem;color:var(--text-muted);" data-boveda-id="' + sanitizeHTML(String(s.id)) + '">📎 ' + docsCount + ' docs</span>';
+          ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 border border-slate-200/60 transition-colors inline-flex items-center gap-1 text-xs" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" title="Abrir Legajo Digital en Drive (' + docsCount + ' docs)" onclick="event.stopPropagation()">' +
+              '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/></svg>' +
+              '<span>' + docsCount + '</span>' +
+            '</a>'
+          : '<span class="px-2 py-1 rounded-lg text-[11px] text-slate-400 border border-slate-200/60 bg-slate-50" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" title="Legajo Digital (' + docsCount + ' docs)">📎 ' + docsCount + '</span>';
 
         return '<tr>' +
           '<td>' + idBadge + '</td>' +
@@ -14107,7 +14129,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           '<td>' + propHtml + '</td>' +
           '<td>' + sanitizeHTML(s.analistaAsignado || 'Sin Asignar') + '</td>' +
           '<td><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + sanitizeHTML(s.estado || 'Pendiente') + '</span>' + alertaDocHtml + '</td>' +
-          '<td><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;"><div style="display:flex;align-items:center;gap:4px;"><button class="btn-table-action btn-action-primary" onclick="verFichaCompleta(\'' + s.id + '\')">👁️ Ficha / Trámite</button>' + (typeof renderBotonCicloVida === 'function' ? renderBotonCicloVida(s) : '') + '</div>' + driveLinkHtml + '</div></td>' +
+          '<td><div class="flex items-center justify-end gap-1.5 whitespace-nowrap">' +
+            '<button type="button" onclick="verFichaCompleta(\'' + s.id + '\')" title="Ver Expediente Completo" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/60 transition-colors cursor-pointer">' +
+              '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
+              '<span>Expediente</span>' +
+            '</button>' +
+            driveLinkHtml +
+            (typeof renderBotonCicloVida === 'function' ? renderBotonCicloVida(s) : '') +
+          '</div></td>' +
           '</tr>';
       }).join('');
       renderHtmlPorLotes(tbody, rowsHtml);
@@ -14219,8 +14248,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           : '';
         const docsCount = (s.archivosAdjuntos ? s.archivosAdjuntos.length : (s.adjuntos ? s.adjuntos.length : 0));
         const driveLinkHtml = (s.carpetaDriveUrl && esUsuarioMutualConAccesoDrive())
-          ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="badge-drive-mini" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" title="Abrir legajo del expediente en Bóveda Documental" onclick="event.stopPropagation()">📂 Bóveda Digital (' + docsCount + ')</a>'
-          : '<span style="font-size:0.66rem;color:var(--text-muted);" data-boveda-id="' + sanitizeHTML(String(s.id)) + '">📎 ' + docsCount + ' docs</span>';
+          ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 border border-slate-200/60 transition-colors inline-flex items-center gap-1 text-xs" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" title="Abrir Legajo Digital en Drive (' + docsCount + ' docs)" onclick="event.stopPropagation()">' +
+              '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/></svg>' +
+              '<span>' + docsCount + '</span>' +
+            '</a>'
+          : '<span class="px-2 py-1 rounded-lg text-[11px] text-slate-400 border border-slate-200/60 bg-slate-50" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" title="Legajo Digital (' + docsCount + ' docs)">📎 ' + docsCount + '</span>';
 
         return '<tr>' +
           '<td>' + idBadge + '</td>' +
@@ -14233,7 +14265,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           '<td>' + propHtml + '</td>' +
           '<td>' + sanitizeHTML(s.analistaAsignado || 'Sin Asignar') + '</td>' +
           '<td><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + sanitizeHTML(s.estado || 'Pendiente') + '</span>' + alertaDocHtml + '</td>' +
-          '<td><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;"><div style="display:flex;align-items:center;gap:4px;"><button class="btn-table-action btn-action-primary" onclick="gestionarSolicitudMutual(\'' + s.id + '\')">⚙️ Gestionar</button>' + (typeof renderBotonCicloVida === 'function' ? renderBotonCicloVida(s) : '') + '</div>' + driveLinkHtml + '</div></td>' +
+          '<td><div class="flex items-center justify-end gap-1.5 whitespace-nowrap">' +
+            '<button type="button" onclick="gestionarSolicitudMutual(\'' + s.id + '\')" title="Ver Expediente Completo" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/60 transition-colors cursor-pointer">' +
+              '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
+              '<span>Expediente</span>' +
+            '</button>' +
+            driveLinkHtml +
+            (typeof renderBotonCicloVida === 'function' ? renderBotonCicloVida(s) : '') +
+          '</div></td>' +
           '</tr>';
       }).join('');
       renderHtmlPorLotes(tbody, rowsHtml);
@@ -15452,7 +15491,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           fetchOpts.signal = contexto.signal;
         }
 
-        const timeoutMs = (contexto && Number(contexto.timeoutMs) > 0) ? Number(contexto.timeoutMs) : 55000;
+        const timeoutMs = (contexto && Number(contexto.timeoutMs) > 0) ? Number(contexto.timeoutMs) : 90000;
         let resp = null;
         let data = null;
         let rawText = '';
@@ -15552,11 +15591,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       let timeoutId = null;
       const abortController = (typeof AbortController === 'function') ? new AbortController() : null;
-      const timeoutMs = (contexto && Number(contexto.timeoutMs) > 0) ? Number(contexto.timeoutMs) : 55000;
+      const timeoutMs = (contexto && Number(contexto.timeoutMs) > 0) ? Number(contexto.timeoutMs) : 90000;
       const timeoutPromise = new Promise((_, reject) => {
         timeoutId = setTimeout(() => {
           if (abortController && !abortController.signal.aborted) {
-            abortController.abort();
+            abortController.abort('TIMEOUT_EXCEDIDO');
           }
           reject(new Error('TIMEOUT_EXCEDIDO'));
         }, timeoutMs);
@@ -15683,7 +15722,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           datosDeclarados: datosDeclarados,
           permitirBackendSinKey: true,
           preservarLoadingBar: true,
-          timeoutMs: 35000
+          timeoutMs: 90000
         });
 
         finalizado = true;
@@ -16286,7 +16325,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           datosDeclarados: datosDeclarados,
           permitirBackendSinKey: true,
           preservarLoadingBar: true,
-          timeoutMs: 55000
+          timeoutMs: 90000
         });
 
         clearInterval(stepTimer);
@@ -17131,7 +17170,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           idSolicitud: idExpedienteAuditadoActivo || 'DOCUMENTOS_SUELTOS',
           datosDeclarados: null,
           preservarLoadingBar: true,
-          timeoutMs: 55000
+          timeoutMs: 90000
         });
 
         if (!auditoria) {
@@ -17711,6 +17750,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
     async function ejecutarCrearNuevoExpedienteDesdeAuditoria() {
       return abrirNuevoExpedienteDesdeAuditoria();
+    }
+
+    function confirmarGuardadoDictamenInline(idSolicitud) {
+      if (typeof guardarDictamenEnBitacoraExpediente === 'function') {
+        return guardarDictamenEnBitacoraExpediente(idSolicitud);
+      }
+      console.warn('guardarDictamenEnBitacoraExpediente no disponible.');
+      return null;
     }
 
     async function guardarDictamenEnBitacoraExpediente(idSolicitudForzada) {

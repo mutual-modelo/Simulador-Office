@@ -128,7 +128,12 @@ function doPost(e) {
         return crearRespuestaJSON(listarSolicitudes(payload.usuarioActivo || payload));
 
       case 'actualizarEstado':
+      case 'cambiarEstado':
+      case 'desestimarGestion':
         return crearRespuestaJSON(actualizarEstadoSolicitudBackend(payload));
+
+      case 'eliminarSolicitud':
+        return crearRespuestaJSON(eliminarSolicitudBackend(payload));
 
       case 'reasignarAnalista':
         return crearRespuestaJSON(reasignarAnalistaBackend(payload));
@@ -1192,31 +1197,52 @@ function actualizarEstadoSolicitudBackend(payload) {
     const rowNum = encontrarFilaPorId_(sheet, map, idTarget);
     if (rowNum === -1) return { ok: false, error: 'Expediente no encontrado: ' + idTarget };
 
+    const estadoFinal = payload.nuevoEstado || payload.estado;
     const nowStr = obtenerFechaHora24Argentina_();
-    if (map['Estado_Tramite'] !== undefined && payload.estado) {
-      sheet.getRange(rowNum, map['Estado_Tramite'] + 1).setValue(String(payload.estado));
+    if (map['Estado_Tramite'] !== undefined && estadoFinal) {
+      sheet.getRange(rowNum, map['Estado_Tramite'] + 1).setValue(String(estadoFinal));
     }
-    if (map['Analista_Asignado'] !== undefined && payload.analista) {
-      sheet.getRange(rowNum, map['Analista_Asignado'] + 1).setValue(String(payload.analista));
+    const operador = payload.analista || payload.usuarioOperador || (payload.usuarioActivo && payload.usuarioActivo.nombre) || 'Analista Mutual';
+    if (map['Analista_Asignado'] !== undefined && (payload.analista || payload.usuarioOperador)) {
+      sheet.getRange(rowNum, map['Analista_Asignado'] + 1).setValue(String(operador));
     }
     if (map['Ultima_Actualizacion'] !== undefined) {
       sheet.getRange(rowNum, map['Ultima_Actualizacion'] + 1).setValue(nowStr);
     }
 
-    if (payload.comentario && map['Historial_Comentarios_JSON'] !== undefined) {
+    const comentarioTexto = payload.comentario || (payload.motivo ? ('Gestión Desestimada. Motivo: ' + payload.motivo) : '');
+    if (comentarioTexto && map['Historial_Comentarios_JSON'] !== undefined) {
       const cell = sheet.getRange(rowNum, map['Historial_Comentarios_JSON'] + 1);
       const hist = parseJSONSafe_(cell.getValue(), []);
       hist.push({
-        autor: payload.analista || (payload.usuarioActivo && payload.usuarioActivo.nombre) || 'Analista Mutual',
-        rol: 'Analista Mutual',
+        autor: operador,
+        rol: (payload.usuarioActivo && payload.usuarioActivo.rol) || 'Analista Mutual',
         fecha: nowStr,
-        texto: String(payload.comentario)
+        texto: String(comentarioTexto)
       });
       cell.setValue(JSON.stringify(hist));
     }
 
     SpreadsheetApp.flush();
-    return { ok: true, id: idTarget, estado: payload.estado };
+    return { ok: true, id: idTarget, estado: estadoFinal };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function eliminarSolicitudBackend(payload) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const sheet = obtenerOInicializarHoja_(CONFIG_AMMER.SHEET_SOLICITUDES, HEADERS_SOLICITUDES);
+    const { map } = obtenerHeaderMap_(sheet);
+    const idTarget = payload.idSolicitud || payload.id;
+    const rowNum = encontrarFilaPorId_(sheet, map, idTarget);
+    if (rowNum === -1) return { ok: false, error: 'Expediente no encontrado: ' + idTarget };
+
+    sheet.deleteRow(rowNum);
+    SpreadsheetApp.flush();
+    return { ok: true, id: idTarget, mensaje: 'Solicitud inicial eliminada permanentemente' };
   } finally {
     lock.releaseLock();
   }

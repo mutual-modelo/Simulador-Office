@@ -1805,12 +1805,27 @@
     .badge-Transferencia{background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe}
     .badge-Liquidado{background:#ecfdf5;color:#047857;border:1px solid #6ee7b7}
     .badge-Rechazado{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+    .badge-DESESTIMADO,.badge-Desestimado{background:#fef3c7;color:#78350f;border:1px solid #fcd34d}
     .badge-org-tag{background:#e0f2fe;color:#0369a1;padding:2px 6px;border-radius:4px;font-size:.65rem;font-weight:700;border:1px solid #bae6fd}
     .badge-provisorio{background:#fef3c7;color:#92400e;padding:2px 5px;border-radius:4px;font-size:.65rem;font-weight:700;font-family:var(--font-mono)}
     .badge-definitivo{background:#dcfce7;color:#166534;padding:2px 6px;border-radius:4px;font-size:.65rem;font-weight:800;font-family:var(--font-mono);border:1px solid #86efac}
     .btn-table-action{padding:.3rem .55rem;font-size:.7rem;font-weight:600;border-radius:5px;background:#fff;border:1px solid var(--border-color);color:var(--color-brand-blue);cursor:pointer;transition:all .15s ease}
     .btn-table-action:hover{background:#eff6ff;border-color:#93c5fd}
     .btn-action-primary{background:var(--color-brand-blue);color:#fff;border-color:var(--color-brand-blue)}.btn-action-primary:hover{background:var(--color-brand-blue-dark)}
+
+    /* SALVAGUARDA ESTRICTA DIMENSIONES SVG EN MODALES */
+    .modal-window svg, .modal-backdrop svg, .modal-header-bar svg, .modal-header-title svg {
+      max-width: 24px;
+      max-height: 24px;
+      flex-shrink: 0;
+    }
+    #btnGuardarSolicitud svg {
+      width: 16px !important;
+      height: 16px !important;
+      max-width: 16px !important;
+      max-height: 16px !important;
+      flex-shrink: 0 !important;
+    }
 
     /* CENTRO DE NOTIFICACIONES REACTIVO */
     .notif-wrapper{position:relative;display:inline-block;}
@@ -4648,7 +4663,7 @@
     <div class="modal-window modal-form-wide">
       <div class="modal-header-bar">
         <div class="modal-header-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="w-5 h-5 max-w-[20px] max-h-[20px] shrink-0 inline-block" width="20" height="20" style="width:20px;height:20px;max-width:20px;max-height:20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
             <polyline points="14 2 14 8 20 8"/>
             <line x1="16" y1="13" x2="8" y2="13"/>
@@ -5471,15 +5486,13 @@
 
         </div>
         <!-- FOOTER FIJO DE ACCIONES -->
-        <div class="modal-form-footer">
+        <div class="flex items-center justify-end gap-3 pt-4 pb-2 border-t border-slate-100 mt-6">
           <button type="button" class="btn-modal-cancel" onclick="cerrarModal('modalAltaSolicitud')">Cancelar</button>
-          <button type="submit" id="btnGuardarSolicitud" class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 bg-gradient-to-r from-indigo-950 via-indigo-900 to-blue-900 hover:from-indigo-900 hover:via-indigo-800 hover:to-blue-800 text-white font-bold text-xs uppercase tracking-wide rounded-xl shadow-lg shadow-indigo-950/20 border border-indigo-700/40 hover:border-indigo-500/60 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] cursor-pointer">
-            <svg class="w-4 h-4 text-indigo-200 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-              <polyline points="17 21 17 13 7 13 7 21"/>
-              <polyline points="7 3 7 8 15 8"/>
+          <button type="submit" id="btnGuardarSolicitud" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold text-sm shadow-sm transition-all duration-150 cursor-pointer">
+            <svg class="w-4 h-4 shrink-0 text-white fill-current" viewBox="0 0 20 20">
+              <path d="M17 3H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V5l-2-2zm-5 12H6v-4h6v4zm2-7H5V5h9v3z"/>
             </svg>
-            <span class="tracking-wide">CONFIRMAR Y GUARDAR SOLICITUD</span>
+            <span>Confirmar y Guardar Solicitud</span>
           </button>
         </div>
       </form>
@@ -5494,8 +5507,57 @@
         <button type="button" class="btn-close-modal" onclick="cerrarModal('modalFichaCompleta')" aria-label="Cerrar">&times;</button>
       </div>
       <div class="modal-body-scroll" id="fichaModalBody"></div>
-      <div class="modal-footer-bar">
+      <div class="modal-footer-bar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+        <div id="footerCicloVidaFicha"></div>
         <button type="button" class="btn-restore" onclick="cerrarModal('modalFichaCompleta')">Cerrar Expediente</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DESESTIMAR GESTIÓN -->
+  <div id="modalDesestimarGestion" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
+    <div class="modal-window" style="max-width: 480px;">
+      <div class="modal-header-bar" style="background:#fffbeb;border-bottom:1px solid #fef3c7;">
+        <div class="modal-header-title" style="color:#92400e;display:flex;align-items:center;gap:6px;">
+          <svg class="w-5 h-5 max-w-[20px] max-h-[20px] shrink-0 text-amber-600 inline-block" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+          </svg>
+          <span style="font-weight:700;font-size:0.9rem;">Desestimar Gestión</span>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="cerrarModal('modalDesestimarGestion')">&times;</button>
+      </div>
+      <div class="modal-body-scroll" style="padding:1.25rem;">
+        <input type="hidden" id="desestimarIdSolicitud" value=""/>
+        <p style="font-size:0.8rem;color:#475569;margin-bottom:0.75rem;line-height:1.4;">
+          Indique el motivo por el cual se desestima la gestión del expediente <strong id="lblDesestimarExpediente" class="font-mono text-slate-800"></strong>. Esta acción se asentará formalmente en la bitácora histórica.
+        </p>
+        <div style="margin-bottom:0.75rem;">
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5" for="cboMotivoDesestimacionPredefinido">Motivo Frecuente:</label>
+          <select id="cboMotivoDesestimacionPredefinido" class="ds-input" onchange="if(this.value && this.value !== 'otro') { document.getElementById('txtMotivoDesestimacion').value = this.value; }">
+            <option value="">-- Seleccionar motivo frecuente --</option>
+            <option value="Desistió el cliente">Desistió el cliente</option>
+            <option value="Cupo insuficiente / Margen excedido">Cupo insuficiente / Margen excedido</option>
+            <option value="CBU rechazado / Inconsistencia bancaria">CBU rechazado / Inconsistencia bancaria</option>
+            <option value="Documentación incompleta o ilegible no subsanada">Documentación incompleta o ilegible no subsanada</option>
+            <option value="Embargo judicial no informado">Embargo judicial no informado</option>
+            <option value="otro">Otro motivo (especificar abajo)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5" for="txtMotivoDesestimacion">Detalle del Motivo *:</label>
+          <textarea id="txtMotivoDesestimacion" class="ds-input" rows="3" placeholder="Ej: Desistió el cliente por demora en la documentación..." required style="resize:vertical;"></textarea>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-2 p-3 bg-slate-50 border-t border-slate-200">
+        <button type="button" class="btn-modal-cancel" onclick="cerrarModal('modalDesestimarGestion')">Cancelar</button>
+        <button type="button" id="btnConfirmarDesestimacion" onclick="confirmarDesestimarGestion()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-semibold text-xs shadow-xs transition-colors cursor-pointer">
+          <svg class="w-4 h-4 shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+          </svg>
+          <span>Confirmar Desestimación</span>
+        </button>
       </div>
     </div>
   </div>
@@ -10182,7 +10244,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           '<td>' + (s.prestamo?.cuotas || '—') + ' c</td>' +
           '<td>' + propHtml + '</td>' +
           '<td><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + sanitizeHTML(s.estado || 'Pendiente') + '</span>' + alertaDocHtml + '</td>' +
-          '<td><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;"><button class="btn-table-action" onclick="verFichaCompleta(\'' + s.id + '\')">👁️ Ficha / Trámite</button>' + driveLinkHtml + '</div></td>' +
+          '<td><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;"><div style="display:flex;align-items:center;gap:4px;"><button class="btn-table-action" onclick="verFichaCompleta(\'' + s.id + '\')">👁️ Ficha / Trámite</button>' + (typeof renderBotonCicloVida === 'function' ? renderBotonCicloVida(s) : '') + '</div>' + driveLinkHtml + '</div></td>' +
           '</tr>';
       }).join('');
       renderHtmlPorLotes(tbody, rowsHtml);
@@ -11024,6 +11086,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         '<div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">' +
           estadoSelectorHtml +
           (isObservado ? '<span style="font-size:0.7rem;color:#b45309;font-weight:700;background:#fffbeb;padding:2px 6px;border-radius:4px;border:1px solid #fef3c7;">⚠️ Observado por Auditoría</span>' : '') +
+          (typeof renderBotonCicloVida === 'function' ? renderBotonCicloVida(s, false) : '') +
         '</div>' +
         '<div style="font-size:.72rem;color:var(--text-muted);">' +
           'Fecha: <strong>' + (s.fecha ? formatearFechaHoraChat(s.fecha) : '') + '</strong> | Asesor: <strong>' + s.comercializador + '</strong> | Org: <strong>' + (s.nombre_organizacion || 'Paraná Centro') + '</strong>' +
@@ -11668,6 +11731,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       '</div>';
 
       body.innerHTML = html;
+      const footerCiclo = document.getElementById('footerCicloVidaFicha');
+      if (footerCiclo) {
+        footerCiclo.innerHTML = (typeof renderBotonCicloVida === 'function') ? renderBotonCicloVida(s, true) : '';
+      }
       if (s.solicitante?.fechaIngresoLaboral || s.solicitante?.Fecha_Ingreso_Laboral) {
         calcularAntiguedadReactiva(
           String(s.solicitante.fechaIngresoLaboral || s.solicitante.Fecha_Ingreso_Laboral).slice(0, 10),
@@ -13239,6 +13306,244 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     /* ========================================================================
+       6.A.1 ACCIONES DE CICLO DE VIDA: ELIMINAR VS. DESESTIMAR GESTIONES
+       ======================================================================== */
+    function esEtapaInicialEliminable(estadoRaw) {
+      if (!estadoRaw) return true;
+      const e = String(estadoRaw).trim().toUpperCase().replace(/[\s_-]+/g, '');
+      const iniciales = [
+        'INGRESADO',
+        'INGRESADA',
+        'PENDIENTEAUDITORIA',
+        'SOLICITADO',
+        'SOLICITADA',
+        'PENDIENTE',
+        'DOCUMENTACIONPENDIENTE',
+        'ENCARGA',
+        'BORRADOR',
+        'NUEVASOLICITUD'
+      ];
+      return iniciales.some(i => e === i || e.startsWith('INGRES') || e.startsWith('SOLICIT') || e === 'PENDIENTE');
+    }
+
+    function puedeDesestimarGestion(estadoRaw) {
+      if (!estadoRaw) return false;
+      const e = String(estadoRaw).trim().toUpperCase().replace(/[\s_-]+/g, '');
+      const finales = [
+        'DESESTIMADO',
+        'DESESTIMADA',
+        'CANCELADO',
+        'CANCELADA',
+        'RECHAZADODEFINITIVO',
+        'LIQUIDADO',
+        'COBRADO',
+        'TRANSFERIDO'
+      ];
+      if (finales.includes(e)) return false;
+      return !esEtapaInicialEliminable(estadoRaw);
+    }
+
+    function renderBotonCicloVida(s, enFicha = false) {
+      if (!s) return '';
+      const id = sanitizeHTML(String(s.id || s.idSolicitud || s.ID_Solicitud || ''));
+      if (!id) return '';
+      const estado = s.estado || 'Pendiente';
+
+      if (esEtapaInicialEliminable(estado)) {
+        if (enFicha) {
+          return '<button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold border border-rose-200 transition-colors cursor-pointer shadow-xs" title="Eliminar Solicitud Inicial" onclick="solicitarEliminarSolicitud(\'' + id + '\')">' +
+            '<svg class="w-4 h-4 shrink-0 text-rose-600" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+              '<polyline points="3 6 5 6 21 6"></polyline>' +
+              '<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>' +
+              '<line x1="10" y1="11" x2="10" y2="17"></line>' +
+              '<line x1="14" y1="11" x2="14" y2="17"></line>' +
+            '</svg>' +
+            '<span>Eliminar Solicitud</span>' +
+          '</button>';
+        } else {
+          return '<button type="button" class="text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg p-1.5 transition-colors cursor-pointer inline-flex items-center justify-center" title="Eliminar Solicitud Inicial" onclick="event.stopPropagation(); solicitarEliminarSolicitud(\'' + id + '\')">' +
+            '<svg class="w-4 h-4 shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+              '<polyline points="3 6 5 6 21 6"></polyline>' +
+              '<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>' +
+              '<line x1="10" y1="11" x2="10" y2="17"></line>' +
+              '<line x1="14" y1="11" x2="14" y2="17"></line>' +
+            '</svg>' +
+          '</button>';
+        }
+      } else if (puedeDesestimarGestion(estado)) {
+        if (enFicha) {
+          return '<button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-semibold border border-amber-200 transition-colors cursor-pointer shadow-xs" title="Desestimar Gestión" onclick="abrirModalDesestimarGestion(\'' + id + '\')">' +
+            '<svg class="w-4 h-4 shrink-0 text-amber-600" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+              '<circle cx="12" cy="12" r="10"></circle>' +
+              '<line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>' +
+            '</svg>' +
+            '<span>Desestimar Gestión</span>' +
+          '</button>';
+        } else {
+          return '<button type="button" class="text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded-lg p-1.5 transition-colors cursor-pointer inline-flex items-center justify-center" title="Desestimar Gestión" onclick="event.stopPropagation(); abrirModalDesestimarGestion(\'' + id + '\')">' +
+            '<svg class="w-4 h-4 shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+              '<circle cx="12" cy="12" r="10"></circle>' +
+              '<line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>' +
+            '</svg>' +
+          '</button>';
+        }
+      } else {
+        const esDesestimado = String(estado).toUpperCase().includes('DESESTIMAD');
+        if (enFicha && esDesestimado) {
+          return '<span class="badge-status badge-DESESTIMADO" style="font-size:0.75rem;padding:3px 8px;">🚫 Gestión Desestimada</span>';
+        }
+        return '';
+      }
+    }
+
+    async function solicitarEliminarSolicitud(id) {
+      if (!id) return;
+      const all = getStoredSolicitudes();
+      const s = all.find(x => String(x.id) === String(id) || String(x.idSolicitud) === String(id));
+      if (!s) {
+        showToast('⚠️ No se encontró la solicitud seleccionada.');
+        return;
+      }
+
+      const expNombre = s.solicitante?.nombre || s.Apellido_Nombre || 'el asociado';
+      const idTxt = s.id_definitivo || s.idSolicitud || s.id || id;
+      const confirmar = window.confirm(
+        '¿Estás seguro de que deseas eliminar permanentemente esta solicitud inicial?\n\n' +
+        'Expediente: ' + idTxt + ' (' + expNombre + ')\n' +
+        'Esta acción borrará el registro de la base de datos.'
+      );
+      if (!confirmar) return;
+
+      const session = getSession();
+      const usuarioOperador = (session && session.nombre) ? session.nombre : 'Operador';
+
+      try {
+        callApi({
+          action: 'eliminarSolicitud',
+          idSolicitud: s.idSolicitud || s.id || id,
+          id: s.idSolicitud || s.id || id,
+          usuarioOperador: usuarioOperador
+        }, {
+          title: 'Eliminando solicitud...',
+          sub: 'Borrando expediente de la base central'
+        }).catch(console.warn);
+
+        const filtrados = all.filter(x => String(x.id) !== String(id) && String(x.idSolicitud) !== String(id));
+        saveStoredSolicitudes(filtrados);
+
+        cerrarModal('modalFichaCompleta');
+
+        if (typeof renderModuloComercializador === 'function') renderModuloComercializador();
+        if (typeof renderModuloMutualPropias === 'function') renderModuloMutualPropias();
+        if (typeof renderModuloMutual === 'function') renderModuloMutual();
+        actualizarCentroNotificaciones();
+
+        showToast('Solicitud eliminada exitosamente');
+        mostrarNotificacionToast('Solicitud eliminada exitosamente', 'success');
+      } catch (err) {
+        console.error('Error al eliminar solicitud:', err);
+        showToast('Error al procesar la eliminación de la solicitud');
+      }
+    }
+
+    function abrirModalDesestimarGestion(id) {
+      if (!id) return;
+      const all = getStoredSolicitudes();
+      const s = all.find(x => String(x.id) === String(id) || String(x.idSolicitud) === String(id));
+      if (!s) {
+        showToast('⚠️ No se encontró la gestión solicitada.');
+        return;
+      }
+
+      const idInput = document.getElementById('desestimarIdSolicitud');
+      const lblExp = document.getElementById('lblDesestimarExpediente');
+      const cboMotivo = document.getElementById('cboMotivoDesestimacionPredefinido');
+      const txtMotivo = document.getElementById('txtMotivoDesestimacion');
+
+      const expTexto = (s.id_definitivo ? ('Expediente ' + s.id_definitivo) : ('Expediente ' + (s.idSolicitud || s.id))) + ' — ' + (s.solicitante?.nombre || s.Apellido_Nombre || 'Asociado');
+
+      if (idInput) idInput.value = s.idSolicitud || s.id || id;
+      if (lblExp) lblExp.textContent = expTexto;
+      if (cboMotivo) cboMotivo.value = '';
+      if (txtMotivo) txtMotivo.value = '';
+
+      abrirModal('modalDesestimarGestion');
+    }
+
+    async function confirmarDesestimarGestion() {
+      const idInput = document.getElementById('desestimarIdSolicitud');
+      const txtMotivo = document.getElementById('txtMotivoDesestimacion');
+      const id = idInput ? idInput.value : '';
+      const motivoTexto = txtMotivo ? txtMotivo.value.trim() : '';
+
+      if (!id) {
+        showToast('⚠️ Error: ID de expediente no identificado.');
+        return;
+      }
+      if (!motivoTexto) {
+        showToast('⚠️ Por favor ingrese o seleccione el motivo de la desestimación.');
+        if (txtMotivo) txtMotivo.focus();
+        return;
+      }
+
+      const all = getStoredSolicitudes();
+      const s = all.find(x => String(x.id) === String(id) || String(x.idSolicitud) === String(id));
+      if (!s) {
+        showToast('⚠️ Expediente no encontrado en el sistema.');
+        return;
+      }
+
+      const session = getSession();
+      const usuarioOperador = (session && session.nombre) ? session.nombre : 'Analista Mutual';
+      const now = (typeof obtenerFechaHora24hs === 'function') ? obtenerFechaHora24hs() : new Date().toLocaleString('es-AR');
+
+      s.estado = 'DESESTIMADO';
+
+      if (!s.observaciones) s.observaciones = [];
+      const logComentario = 'Gestión Desestimada. Motivo: ' + motivoTexto;
+      s.observaciones.push({
+        autor: usuarioOperador,
+        rol: (session && session.rol === 'Admin') ? 'Administrador' : 'Analista Mutual',
+        fecha: now,
+        texto: logComentario
+      });
+      s.Historial_Comentarios_JSON = JSON.stringify(s.observaciones);
+
+      saveStoredSolicitudes(all);
+
+      callApi({
+        action: 'cambiarEstado',
+        idSolicitud: s.idSolicitud || s.id || id,
+        id: s.idSolicitud || s.id || id,
+        nuevoEstado: 'DESESTIMADO',
+        estado: 'DESESTIMADO',
+        motivo: motivoTexto,
+        comentario: logComentario,
+        usuarioOperador: usuarioOperador,
+        analista: usuarioOperador,
+        Historial_Comentarios_JSON: s.Historial_Comentarios_JSON
+      }, {
+        title: 'Desestimando gestión...',
+        sub: 'Registrando desestimación en la bitácora central'
+      }).catch(console.warn);
+
+      cerrarModal('modalDesestimarGestion');
+
+      if (typeof renderModuloComercializador === 'function') renderModuloComercializador();
+      if (typeof renderModuloMutualPropias === 'function') renderModuloMutualPropias();
+      if (typeof renderModuloMutual === 'function') renderModuloMutual();
+      actualizarCentroNotificaciones();
+
+      const modalFicha = document.getElementById('modalFichaCompleta');
+      if (modalFicha && modalFicha.classList.contains('active')) {
+        verFichaCompleta(id);
+      }
+
+      showToast('Gestión desestimada correctamente');
+      mostrarNotificacionToast('Gestión desestimada correctamente', 'success');
+    }
+
+    /* ========================================================================
        6.B DERIVACIÓN, REASIGNACIÓN Y COLABORACIÓN ENTRE ANALISTAS MUTUAL
        ======================================================================== */
     const ANALISTAS_MUTUAL_CACHE_KEY = 'AMMER_ANALISTAS_MUTUAL_PROD_V2';
@@ -13620,7 +13925,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           '<td>' + propHtml + '</td>' +
           '<td>' + sanitizeHTML(s.analistaAsignado || 'Sin Asignar') + '</td>' +
           '<td><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + sanitizeHTML(s.estado || 'Pendiente') + '</span>' + alertaDocHtml + '</td>' +
-          '<td><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;"><button class="btn-table-action btn-action-primary" onclick="verFichaCompleta(\'' + s.id + '\')">👁️ Ficha / Trámite</button>' + driveLinkHtml + '</div></td>' +
+          '<td><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;"><div style="display:flex;align-items:center;gap:4px;"><button class="btn-table-action btn-action-primary" onclick="verFichaCompleta(\'' + s.id + '\')">👁️ Ficha / Trámite</button>' + (typeof renderBotonCicloVida === 'function' ? renderBotonCicloVida(s) : '') + '</div>' + driveLinkHtml + '</div></td>' +
           '</tr>';
       }).join('');
       renderHtmlPorLotes(tbody, rowsHtml);
@@ -13746,7 +14051,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           '<td>' + propHtml + '</td>' +
           '<td>' + sanitizeHTML(s.analistaAsignado || 'Sin Asignar') + '</td>' +
           '<td><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + sanitizeHTML(s.estado || 'Pendiente') + '</span>' + alertaDocHtml + '</td>' +
-          '<td><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;"><button class="btn-table-action btn-action-primary" onclick="gestionarSolicitudMutual(\'' + s.id + '\')">⚙️ Gestionar</button>' + driveLinkHtml + '</div></td>' +
+          '<td><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;"><div style="display:flex;align-items:center;gap:4px;"><button class="btn-table-action btn-action-primary" onclick="gestionarSolicitudMutual(\'' + s.id + '\')">⚙️ Gestionar</button>' + (typeof renderBotonCicloVida === 'function' ? renderBotonCicloVida(s) : '') + '</div>' + driveLinkHtml + '</div></td>' +
           '</tr>';
       }).join('');
       renderHtmlPorLotes(tbody, rowsHtml);
@@ -15913,8 +16218,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           '<td class="py-3 px-4 font-mono text-xs sm:text-sm text-right font-black text-emerald-700 whitespace-nowrap">$ ' + sanitizeHTML(formatMontoSinSimboloAr(p.neto)) + '</td>' +
           '<td class="py-3 px-4 font-mono text-xs sm:text-sm text-right font-semibold text-slate-800 whitespace-nowrap">$ ' + sanitizeHTML(formatMontoSinSimboloAr(p.cuotaFinal)) + '</td>' +
           '<td class="py-2.5 px-4 text-right whitespace-nowrap">' +
-            '<button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-900 hover:bg-indigo-800 text-white transition shadow-xs cursor-pointer" onclick="trasladarPlanAuditadoAExpediente(' + p.neto + ', ' + p.plazo + ', \'' + p.lineaKey + '\')">' +
-              '📋 Trasladar a Solicitud' +
+            '<button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-medium rounded-md transition-colors border border-indigo-200/60 cursor-pointer" onclick="trasladarPlanAuditadoAExpediente(' + p.neto + ', ' + p.plazo + ', \'' + p.lineaKey + '\')">' +
+              'Seleccionar' +
             '</button>' +
           '</td>' +
         '</tr>';
@@ -15930,9 +16235,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const btn = document.getElementById('btnLineaAuditoria_' + l);
         if (btn) {
           if (l === nuevaLinea) {
-            btn.className = 'px-3.5 py-2 text-xs font-bold rounded-lg bg-indigo-900 text-white shadow-xs border border-indigo-900 transition-all';
+            btn.className = 'bg-white text-indigo-900 shadow-sm rounded-md px-3 py-1.5 font-semibold cursor-pointer transition-all';
           } else {
-            btn.className = 'px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 transition-all';
+            btn.className = 'hover:text-slate-900 px-3 py-1.5 transition-colors cursor-pointer text-slate-600 font-semibold';
           }
         }
       });
@@ -15941,6 +16246,82 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       if (tbody) {
         tbody.innerHTML = renderizarFilasPlanesAuditoria(cuota, nuevaLinea);
       }
+    }
+
+    /* --- TARJETA DE RESUMEN DE AUDITORÍA CONTENIDA PARA EL MODAL DE NUEVA SOLICITUD --- */
+    function generarTarjetaResumenAuditoriaModal(rawAudit) {
+      if (!rawAudit) return '';
+      const audit = (typeof normalizarResultadoAuditoriaIA === 'function')
+        ? normalizarResultadoAuditoriaIA(rawAudit)
+        : rawAudit;
+      const payload = (rawAudit && typeof rawAudit === 'object')
+        ? (rawAudit.auditoria || rawAudit.resultado || rawAudit.data || rawAudit)
+        : {};
+      const r = audit.resumenDecision || payload.resumenDecision || payload.reciboSueldo || payload.liquidacion || payload || {};
+      const d = audit.detalleCompletoRecibo || payload.detalleCompletoRecibo || payload.reciboSueldo || payload || {};
+      const rec = audit.reciboSueldo || {};
+
+      const brutoNum = parseNumeroSeguroAuditoria(
+        r.sueldoBrutoTotal ?? r.sueldoBruto ?? payload.sueldoBrutoTotal ?? d.totales?.totalHaberes ?? rec.sueldoBruto
+      );
+      const bruto = brutoNum !== null ? brutoNum : 0;
+      const descNum = parseNumeroSeguroAuditoria(
+        r.totalDescuentos ?? r.totalDescuentosRecibo ?? payload.totalDescuentos ?? d.totales?.totalDescuentos ?? rec.totalDescuentosRecibo
+      );
+      const descuentos = descNum !== null ? descNum : 0;
+      const liqNum = parseNumeroSeguroAuditoria(
+        r.sueldoLiquido ?? r.sueldoNeto ?? payload.sueldoLiquido ?? d.totales?.liquidoAPagar ?? rec.sueldoNeto
+      );
+      const liquido = liqNum !== null ? liqNum : Math.round((bruto - descuentos) * 100) / 100;
+      const cupo50 = Math.round(bruto * 0.50 * 100) / 100;
+      const margen = Math.round((cupo50 - descuentos) * 100) / 100;
+
+      const embargoDetectado = Boolean(
+        r.embargosJudiciales || payload.embargosJudiciales || rec.embargoDetectado || (parseNumeroSeguroAuditoria(rec.embargoMonto) || 0) > 0
+      );
+      const planillaViable = margen > 0 && !embargoDetectado;
+      const cbuCondicionadoViable = !planillaViable && !embargoDetectado && liquido > 300000;
+
+      let badgeHtml = '';
+      if (planillaViable) {
+        badgeHtml = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">🟢 Habilitado Débito / Retención</span>';
+      } else if (cbuCondicionadoViable) {
+        badgeHtml = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">🟡 Habilitado Débito en Cuenta</span>';
+      } else if (embargoDetectado) {
+        badgeHtml = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300">🔴 Rechazado — Embargo Activo</span>';
+      } else {
+        badgeHtml = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300">🔴 Margen Insuficiente</span>';
+      }
+
+      return '<div class="bg-slate-50 border border-slate-200/80 rounded-xl p-4 mb-6 shadow-xs">' +
+        '<div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-200/80">' +
+          '<div class="flex items-center gap-2">' +
+            '<svg class="w-4 h-4 max-w-[18px] max-h-[18px] shrink-0 text-indigo-700 inline-block" width="18" height="18" style="width:18px;height:18px;max-width:18px;max-height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+              '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>' +
+            '</svg>' +
+            '<span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Auditoría Documental y Crediticia AMMER</span>' +
+          '</div>' +
+          '<div>' + badgeHtml + '</div>' +
+        '</div>' +
+        '<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">' +
+          '<div class="bg-white p-2.5 rounded-lg border border-slate-200/80">' +
+            '<span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Haberes</span>' +
+            '<span class="font-mono text-xs sm:text-sm font-black text-slate-900 mt-0.5 block">$ ' + sanitizeHTML(formatMontoSinSimboloAr(bruto)) + '</span>' +
+          '</div>' +
+          '<div class="bg-white p-2.5 rounded-lg border border-slate-200/80">' +
+            '<span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Descuentos</span>' +
+            '<span class="font-mono text-xs sm:text-sm font-black text-rose-600 mt-0.5 block">$ ' + sanitizeHTML(formatMontoSinSimboloAr(descuentos)) + '</span>' +
+          '</div>' +
+          '<div class="bg-white p-2.5 rounded-lg border border-emerald-200/80 bg-emerald-50/40">' +
+            '<span class="block text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Sueldo Líquido</span>' +
+            '<span class="font-mono text-xs sm:text-sm font-black text-emerald-700 mt-0.5 block">$ ' + sanitizeHTML(formatMontoSinSimboloAr(liquido)) + '</span>' +
+          '</div>' +
+          '<div class="bg-white p-2.5 rounded-lg border ' + (margen > 0 ? 'border-emerald-200/80 bg-emerald-50/40' : 'border-rose-200/80 bg-rose-50/40') + '">' +
+            '<span class="block text-[10px] font-bold ' + (margen > 0 ? 'text-emerald-800' : 'text-rose-800') + ' uppercase tracking-wider">Margen Disponible</span>' +
+            '<span class="font-mono text-xs sm:text-sm font-black ' + (margen > 0 ? 'text-emerald-700' : 'text-rose-700') + ' mt-0.5 block">$ ' + sanitizeHTML(formatMontoSinSimboloAr(margen)) + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
     }
 
     function trasladarPlanAuditadoAExpediente(monto, plazo, linea = 'fedem') {
@@ -16314,17 +16695,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
             '<!-- Selector de Línea Crediticia -->' +
             '<div class="mb-4">' +
-              '<label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Seleccionar Línea Crediticia:</label>' +
-              '<div class="inline-flex flex-wrap gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200" role="tablist">' +
-                '<button type="button" id="btnLineaAuditoria_fedem" onclick="cambiarLineaAuditoria(\'fedem\')" class="' + (lineaInicial === 'fedem' ? 'px-3.5 py-2 text-xs font-bold rounded-lg bg-indigo-900 text-white shadow-xs border border-indigo-900 transition-all cursor-pointer' : 'px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 transition-all cursor-pointer') + '">' +
-                  '🏛️ FEDEM Provincial <span class="text-[10px] opacity-80 font-normal ml-1">(Retención por Planilla)</span>' +
-                '</button>' +
-                '<button type="button" id="btnLineaAuditoria_muni" onclick="cambiarLineaAuditoria(\'muni\')" class="' + (lineaInicial === 'muni' ? 'px-3.5 py-2 text-xs font-bold rounded-lg bg-indigo-900 text-white shadow-xs border border-indigo-900 transition-all cursor-pointer' : 'px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 transition-all cursor-pointer') + '">' +
-                  '🏢 QUAD Municipales <span class="text-[10px] opacity-80 font-normal ml-1">(Convenio Municipalidades)</span>' +
-                '</button>' +
-                '<button type="button" id="btnLineaAuditoria_sidecreer" onclick="cambiarLineaAuditoria(\'sidecreer\')" class="' + (lineaInicial === 'sidecreer' ? 'px-3.5 py-2 text-xs font-bold rounded-lg bg-indigo-900 text-white shadow-xs border border-indigo-900 transition-all cursor-pointer' : 'px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 transition-all cursor-pointer') + '">' +
-                  '💳 Convenio Sidecreer <span class="text-[10px] opacity-80 font-normal ml-1">(Tarjeta Sidecreer)</span>' +
-                '</button>' +
+              '<div class="inline-flex p-1 bg-slate-100 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 gap-1 mb-2" role="tablist">' +
+                '<button type="button" id="btnLineaAuditoria_fedem" onclick="cambiarLineaAuditoria(\'fedem\')" class="' + (lineaInicial === 'fedem' ? 'bg-white text-indigo-900 shadow-sm rounded-md px-3 py-1.5 font-semibold cursor-pointer transition-all' : 'hover:text-slate-900 px-3 py-1.5 transition-colors cursor-pointer text-slate-600 font-semibold') + '">FEDEM Provincial</button>' +
+                '<button type="button" id="btnLineaAuditoria_muni" onclick="cambiarLineaAuditoria(\'muni\')" class="' + (lineaInicial === 'muni' ? 'bg-white text-indigo-900 shadow-sm rounded-md px-3 py-1.5 font-semibold cursor-pointer transition-all' : 'hover:text-slate-900 px-3 py-1.5 transition-colors cursor-pointer text-slate-600 font-semibold') + '">QUAD Municipales</button>' +
+                '<button type="button" id="btnLineaAuditoria_sidecreer" onclick="cambiarLineaAuditoria(\'sidecreer\')" class="' + (lineaInicial === 'sidecreer' ? 'bg-white text-indigo-900 shadow-sm rounded-md px-3 py-1.5 font-semibold cursor-pointer transition-all' : 'hover:text-slate-900 px-3 py-1.5 transition-colors cursor-pointer text-slate-600 font-semibold') + '">Convenio Sidecreer</button>' +
               '</div>' +
             '</div>' +
 
@@ -16842,10 +17216,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       // 1. Inicializar modal de alta en modo Sede Central
       abrirModalAltaSolicitud('mutual_sede');
 
-      // Restaurar tarjeta de resumen ejecutivo destacada en la cabecera del formulario
+      // Restaurar tarjeta de resumen de auditoría en la cabecera del formulario
       const bannerAud = document.getElementById('bannerResumenAuditoriaModalAlta');
       if (bannerAud) {
-        bannerAud.innerHTML = generarTarjetaResumenEjecutivoAMMER(dictamen);
+        bannerAud.innerHTML = (typeof generarTarjetaResumenAuditoriaModal === 'function')
+          ? generarTarjetaResumenAuditoriaModal(dictamen)
+          : generarTarjetaResumenEjecutivoAMMER(dictamen);
         bannerAud.style.display = 'block';
       }
 
@@ -17807,6 +18183,13 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.convertirArchivoABase64Limpio = convertirArchivoABase64Limpio;
     window.cambiarVistaPrincipal = cambiarVistaPrincipal;
     window.cambiarPestana = cambiarPestana;
+    window.generarTarjetaResumenAuditoriaModal = generarTarjetaResumenAuditoriaModal;
+    window.esEtapaInicialEliminable = esEtapaInicialEliminable;
+    window.puedeDesestimarGestion = puedeDesestimarGestion;
+    window.renderBotonCicloVida = renderBotonCicloVida;
+    window.solicitarEliminarSolicitud = solicitarEliminarSolicitud;
+    window.abrirModalDesestimarGestion = abrirModalDesestimarGestion;
+    window.confirmarDesestimarGestion = confirmarDesestimarGestion;
     window.CONFIG = CONFIG;
     window.estadoApp = window.estadoApp;
 

@@ -5673,14 +5673,14 @@
           </div>
 
         </div>
-        <!-- FOOTER FIJO DE ACCIONES -->
-        <div class="flex items-center justify-end gap-3 pt-4 pb-2 border-t border-slate-200 mt-6 bg-slate-50/50 -mx-6 -mb-6 px-6 py-4 rounded-b-2xl">
-          <button type="button" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-100 text-xs font-semibold cursor-pointer bg-white transition-colors" onclick="cerrarModal('modalAltaSolicitud')">Cancelar</button>
-          <button type="submit" id="btnGuardarSolicitud" class="bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl px-6 py-2.5 shadow-md flex items-center gap-2 cursor-pointer transition-all">
-            <svg class="w-4 h-4 shrink-0" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-              <polyline points="17 21 17 13 7 13 7 21"></polyline>
-              <polyline points="7 3 7 8 15 8"></polyline>
+        <!-- Footer de acciones fijo al pie del modal -->
+        <div class="shrink-0 flex items-center justify-end gap-3 px-6 py-4 bg-slate-50 border-t border-slate-200 rounded-b-2xl">
+          <button type="button" onclick="cerrarModal('modalAltaSolicitud')" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 text-xs font-semibold tracking-wide transition-all duration-150 cursor-pointer bg-white">
+            Cancelar
+          </button>
+          <button type="submit" id="btnGuardarSolicitud" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white text-xs font-bold uppercase tracking-wider shadow-md transition-all duration-150 cursor-pointer">
+            <svg class="w-4 h-4 shrink-0 text-white" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
             </svg>
             <span>Confirmar y Guardar Solicitud</span>
           </button>

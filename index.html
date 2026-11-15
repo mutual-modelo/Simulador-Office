@@ -4035,10 +4035,10 @@
             <div class="ai-audit-header">
               <div>
                 <div class="ai-audit-title">
-                  <span>Auditoría Documental y Decisión Crediticia AMMER</span>
+                  <span>Auditoría Documental y Crediticia AMMER</span>
                 </div>
                 <div class="ai-audit-desc">
-                  Recibos oficiales de Entre Ríos (Policía, CGE, Salud, Administración Central, Municipios y Caja de Jubilaciones) · Verificación literal y tope legal 50% Sueldo Bruto
+                  Recibos oficiales de Entre Ríos (Policía, CGE, Salud, Administración Central, Municipios y Caja de Jubilaciones) · Evaluación Salarial y Capacidad de Ayuda Económica
                 </div>
               </div>
               <div style="display:flex;gap:0.4rem;align-items:center;">
@@ -4683,6 +4683,9 @@
               </div>
             </div>
           </div>
+
+          <!-- BANNER RESUMEN EJECUTIVO DE AUDITORÍA (CUANDO SE ABRE DESDE AUDITORÍA) -->
+          <div id="bannerResumenAuditoriaModalAlta" style="display:none;margin-bottom:1.15rem;"></div>
 
           <!-- SECCIÓN 1: IDENTIFICACIÓN Y DATOS PERSONALES DEL SOLICITANTE -->
           <div class="modal-card-section">
@@ -5470,8 +5473,13 @@
         <!-- FOOTER FIJO DE ACCIONES -->
         <div class="modal-form-footer">
           <button type="button" class="btn-modal-cancel" onclick="cerrarModal('modalAltaSolicitud')">Cancelar</button>
-          <button type="submit" id="btnGuardarSolicitud" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all flex items-center justify-center gap-2">
-            <span>💾 Confirmar y Guardar Solicitud</span>
+          <button type="submit" id="btnGuardarSolicitud" class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 bg-gradient-to-r from-indigo-950 via-indigo-900 to-blue-900 hover:from-indigo-900 hover:via-indigo-800 hover:to-blue-800 text-white font-bold text-xs uppercase tracking-wide rounded-xl shadow-lg shadow-indigo-950/20 border border-indigo-700/40 hover:border-indigo-500/60 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] cursor-pointer">
+            <svg class="w-4 h-4 text-indigo-200 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            <span class="tracking-wide">CONFIRMAR Y GUARDAR SOLICITUD</span>
           </button>
         </div>
       </form>
@@ -10189,6 +10197,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       window._bloqueoAntiguedadMinima = false;
       window._bloqueoEdadMaxima = false;
       calcularAntiguedadReactiva('');
+      const bannerAud = document.getElementById('bannerResumenAuditoriaModalAlta');
+      if (bannerAud) {
+        bannerAud.style.display = 'none';
+        bannerAud.innerHTML = '';
+      }
 
       // Sincronizar con el simulador activo para no perder el Plan Deseado ni el Monto simulado
       const lineaSim = (typeof state !== 'undefined' && state.linea) ? state.linea : 'fedem';
@@ -15259,8 +15272,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         return '<div class="ai-executive-audit-card">' +
           '<div class="ai-executive-header">' +
             '<div>' +
-              '<h4 style="font-size:0.85rem;font-weight:800;color:var(--color-primary);margin:0;">Auditoría Documental y Crediticia AMMER — Cesión de Cartera</h4>' +
-              '<span style="font-size:0.68rem;color:var(--text-muted);">Cero alucinación • Cupo legal 50% sobre Sueldo Bruto Total</span>' +
+              '<h4 style="font-size:0.85rem;font-weight:800;color:var(--color-primary);margin:0;">Auditoría Documental y Crediticia AMMER</h4>' +
+              '<span style="font-size:0.68rem;color:var(--text-muted);">Evaluación Salarial y Capacidad de Ayuda Económica</span>' +
             '</div>' +
             '<span class="dictamen-pill dictamen-observado" style="font-size:0.68rem;padding:3px 10px;margin-top:0;">PENDIENTE DE AUDITORÍA</span>' +
           '</div>' +
@@ -15358,8 +15371,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       return '<div class="ai-executive-audit-card" style="display:flex;flex-direction:column;gap:0.75rem;">' +
         '<div class="ai-executive-header">' +
           '<div>' +
-            '<h4 style="font-size:0.86rem;font-weight:800;color:var(--color-primary);margin:0;">Informe de Auditoría Documental y Crediticia AMMER</h4>' +
-            '<span style="font-size:0.67rem;color:var(--text-muted);">Estándar de Cesión de Cartera • Tope legal 50% Sueldo Bruto Total</span>' +
+            '<h4 style="font-size:0.86rem;font-weight:800;color:var(--color-primary);margin:0;">Auditoría Documental y Crediticia AMMER</h4>' +
+            '<span style="font-size:0.67rem;color:var(--text-muted);">Evaluación Salarial y Capacidad de Ayuda Económica</span>' +
           '</div>' +
           '<div>' + badgeHtml + '</div>' +
         '</div>' +
@@ -15864,25 +15877,109 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       if (!cuotaTope || cuotaTope <= 1000 || typeof MOTOR_FINANCIERO_EXACTO === 'undefined') {
         return [];
       }
-      const plazos = [6, 12, 18, 24, 36, 48];
-      const usarSidecreer = canalKey === 'sidecreer';
+      const key = (canalKey === 'muni' || canalKey === 'municipales' || canalKey === 'quad')
+        ? 'muni'
+        : (canalKey === 'sidecreer' ? 'sidecreer' : 'fedem');
+
+      const plazos = (key === 'muni') ? [12, 24] : [6, 12, 18, 24, 36, 48];
+
       return plazos.map(plazo => {
-        const tablaTasas = usarSidecreer ? MOTOR_FINANCIERO_EXACTO.sidecreer[plazo] : MOTOR_FINANCIERO_EXACTO.fedem[plazo];
-        const calc = usarSidecreer
-          ? MOTOR_FINANCIERO_EXACTO.calcularSidecreerDesdeCuota(cuotaTope, plazo)
-          : MOTOR_FINANCIERO_EXACTO.calcularFEDEMDesdeCuota(cuotaTope, plazo);
+        let calc = null;
+        if (key === 'muni') {
+          calc = MOTOR_FINANCIERO_EXACTO.calcularMunicipalesDesdeCuota(cuotaTope, plazo);
+        } else if (key === 'sidecreer') {
+          calc = MOTOR_FINANCIERO_EXACTO.calcularSidecreerDesdeCuota(cuotaTope, plazo);
+        } else {
+          calc = MOTOR_FINANCIERO_EXACTO.calcularFEDEMDesdeCuota(cuotaTope, plazo);
+        }
         if (!calc || !Number.isFinite(calc.neto) || calc.neto <= 0) return null;
         return {
           plazo,
-          lineaKey: usarSidecreer ? 'sidecreer' : 'fedem',
+          lineaKey: key,
           neto: Math.round(calc.neto * 100) / 100,
-          capitalBruto: Math.round(calc.capitalBruto * 100) / 100,
-          cuotaFinal: Math.round(calc.cuotaFinal * 100) / 100,
-          totalPagar: Math.round(calc.totalPagar * 100) / 100,
-          tnaPct: tablaTasas ? (tablaTasas.tna * 100).toFixed(2) : '0.00',
-          temPct: tablaTasas ? (tablaTasas.tem * 100).toFixed(2) : '0.00'
+          cuotaFinal: Math.round(calc.cuotaFinal * 100) / 100
         };
       }).filter(Boolean);
+    }
+
+    function renderizarFilasPlanesAuditoria(cuotaMaxima, lineaKey = 'fedem') {
+      const planes = calcularPlanesSugeridosAuditoria(cuotaMaxima, lineaKey);
+      if (!planes || planes.length === 0) {
+        return '<tr><td colspan="4" class="py-4 px-3 text-center text-xs text-slate-500">No hay planes disponibles para el margen calculado con esta línea.</td></tr>';
+      }
+      return planes.map(p => {
+        return '<tr class="border-b border-slate-100 hover:bg-slate-50/80 transition-colors">' +
+          '<td class="py-3 px-4 text-xs font-bold text-slate-900 whitespace-nowrap">' + p.plazo + ' cuotas fijas</td>' +
+          '<td class="py-3 px-4 font-mono text-xs sm:text-sm text-right font-black text-emerald-700 whitespace-nowrap">$ ' + sanitizeHTML(formatMontoSinSimboloAr(p.neto)) + '</td>' +
+          '<td class="py-3 px-4 font-mono text-xs sm:text-sm text-right font-semibold text-slate-800 whitespace-nowrap">$ ' + sanitizeHTML(formatMontoSinSimboloAr(p.cuotaFinal)) + '</td>' +
+          '<td class="py-2.5 px-4 text-right whitespace-nowrap">' +
+            '<button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-900 hover:bg-indigo-800 text-white transition shadow-xs cursor-pointer" onclick="trasladarPlanAuditadoAExpediente(' + p.neto + ', ' + p.plazo + ', \'' + p.lineaKey + '\')">' +
+              '📋 Trasladar a Solicitud' +
+            '</button>' +
+          '</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function cambiarLineaAuditoria(nuevaLinea) {
+      window._lineaAuditoriaSugerida = nuevaLinea;
+      const cuota = window._cuotaMaximaAuditoria || 0;
+
+      const lineas = ['fedem', 'muni', 'sidecreer'];
+      lineas.forEach(l => {
+        const btn = document.getElementById('btnLineaAuditoria_' + l);
+        if (btn) {
+          if (l === nuevaLinea) {
+            btn.className = 'px-3.5 py-2 text-xs font-bold rounded-lg bg-indigo-900 text-white shadow-xs border border-indigo-900 transition-all';
+          } else {
+            btn.className = 'px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 transition-all';
+          }
+        }
+      });
+
+      const tbody = document.getElementById('tbodyPlanesAuditoria');
+      if (tbody) {
+        tbody.innerHTML = renderizarFilasPlanesAuditoria(cuota, nuevaLinea);
+      }
+    }
+
+    function trasladarPlanAuditadoAExpediente(monto, plazo, linea = 'fedem') {
+      const dictamen = ultimoResultadoAuditoria || {};
+      const netoLimpio = Math.max(1000, Math.round(Number(monto) || 0));
+      const plazoNum = Number(plazo) || 12;
+      const lineaNormalizada = (linea === 'muni' || linea === 'municipales' || linea === 'quad') ? 'muni' : (linea === 'sidecreer' ? 'sidecreer' : 'fedem');
+
+      dictamen.montoSugerido = netoLimpio;
+      dictamen.cuotas = plazoNum;
+      dictamen.plazo = plazoNum;
+      dictamen.linea = lineaNormalizada;
+
+      abrirNuevoExpedienteDesdeAuditoria(dictamen);
+
+      const selLinea = document.getElementById('solLinea');
+      if (selLinea) {
+        selLinea.value = lineaNormalizada;
+        if (typeof ajustarPlazosModalAlta === 'function') {
+          ajustarPlazosModalAlta(lineaNormalizada);
+        }
+      }
+
+      const selPlazo = document.getElementById('solPlazo');
+      if (selPlazo) {
+        selPlazo.value = String(plazoNum);
+      }
+
+      const inpMonto = document.getElementById('solMonto');
+      if (inpMonto) {
+        inpMonto.value = String(netoLimpio);
+        inpMonto.dataset.lastValid = String(netoLimpio);
+      }
+
+      if (typeof recalcularSimulacionAltaModal === 'function') {
+        recalcularSimulacionAltaModal();
+      }
+
+      showToast('Plan de ' + plazoNum + ' cuotas por $ ' + formatMontoSinSimboloAr(netoLimpio) + ' trasladado a la solicitud.');
     }
 
     function cargarPlanAuditadoEnSimulador(montoNeto, plazo, lineaKey = 'fedem') {
@@ -15901,6 +15998,163 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         cambiarPestana('view-simulador');
       }
       mostrarNotificacionToast('Plan de ' + plazoNum + ' cuotas por $ ' + formatMontoSinSimboloAr(netoLimpio) + ' cargado en el Simulador.', 'success');
+    }
+
+    /* --- TARJETA DE RESUMEN EJECUTIVO: AUDITORÍA DOCUMENTAL Y CREDITICIA AMMER --- */
+    function generarTarjetaResumenEjecutivoAMMER(rawAudit, accionesHtml = '') {
+      if (!rawAudit) return '';
+      const audit = (typeof normalizarResultadoAuditoriaIA === 'function')
+        ? normalizarResultadoAuditoriaIA(rawAudit)
+        : rawAudit;
+      const payload = (rawAudit && typeof rawAudit === 'object')
+        ? (rawAudit.auditoria || rawAudit.resultado || rawAudit.data || rawAudit)
+        : {};
+      const r = audit.resumenDecision || payload.resumenDecision || payload.reciboSueldo || payload.liquidacion || payload || {};
+      const d = audit.detalleCompletoRecibo || payload.detalleCompletoRecibo || payload.reciboSueldo || payload || {};
+      const rec = audit.reciboSueldo || {};
+      const ident = audit.identidad || {};
+      const datLab = audit.datosLaborales || {};
+
+      const titular = limpiarTextoAuditoria(r.titular || r.nombre || ident.titularDetectado || ident.nombre || rec.titular || payload.titular, 'No especificado');
+      const dni = limpiarTextoAuditoria(r.dni || ident.dni || rec.dni || payload.dni, 'No especificado');
+      const cuilClean = limpiarTextoAuditoria(r.cuil || ident.cuil || rec.cuil || payload.cuil, '');
+      const mostrarCuil = cuilClean && cuilClean !== 'No consta en recibo' && cuilClean !== dni;
+      const organismo = limpiarTextoAuditoria(r.organismo || r.empleador || datLab.organismoEmpleador || datLab.organismo || rec.organismo || payload.organismo, 'Organismo Provincial');
+      const cargo = limpiarTextoAuditoria(r.cargo || datLab.escalafonCargo || datLab.cargo || d.escalafonCargo || rec.escalafonCargo || rec.situacionRevista || payload.cargo, 'Agente / Activo');
+
+      const brutoNum = parseNumeroSeguroAuditoria(
+        r.sueldoBrutoTotal ?? r.sueldoBruto ?? payload.sueldoBrutoTotal ?? d.totales?.totalHaberes ?? rec.sueldoBruto
+      );
+      const bruto = brutoNum !== null ? brutoNum : 0;
+      const descNum = parseNumeroSeguroAuditoria(
+        r.totalDescuentos ?? r.totalDescuentosRecibo ?? payload.totalDescuentos ?? d.totales?.totalDescuentos ?? rec.totalDescuentosRecibo
+      );
+      const descuentos = descNum !== null ? descNum : 0;
+      const liqNum = parseNumeroSeguroAuditoria(
+        r.sueldoLiquido ?? r.sueldoNeto ?? payload.sueldoLiquido ?? d.totales?.liquidoAPagar ?? rec.sueldoNeto
+      );
+      const liquido = liqNum !== null ? liqNum : Math.round((bruto - descuentos) * 100) / 100;
+
+      const cupo50 = Math.round(bruto * 0.50 * 100) / 100;
+      const margen = Math.round((cupo50 - descuentos) * 100) / 100;
+      const porcentajeAfectacion = bruto > 0 ? ((descuentos / bruto) * 100).toFixed(1) + '%' : '0.0%';
+
+      const embargoDetectado = Boolean(
+        r.embargosJudiciales || payload.embargosJudiciales || rec.embargoDetectado || (parseNumeroSeguroAuditoria(rec.embargoMonto) || 0) > 0
+      );
+      const embargoMonto = parseNumeroSeguroAuditoria(rec.embargoMonto) || 0;
+      const planillaViable = margen > 0 && !embargoDetectado;
+      const cbuCondicionadoViable = !planillaViable && !embargoDetectado && liquido > 300000;
+
+      let badgeHtml = '';
+      let dictamenText = '';
+      let canalSugerido = '';
+
+      if (planillaViable) {
+        badgeHtml = '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-xs">🟢 Habilitado Débito / Retención</span>';
+        dictamenText = 'APTO POR PLANILLA — Margen positivo de $ ' + sanitizeHTML(formatMontoSinSimboloAr(margen)) + ' para retención en haberes.';
+        canalSugerido = 'Habilitado Débito / Retención (Convenio Oficial AMMER)';
+      } else if (cbuCondicionadoViable) {
+        badgeHtml = '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs">🟡 Habilitado Débito en Cuenta</span>';
+        dictamenText = 'APTO CONDICIONADO — Cobro bancario en cuenta de $ ' + sanitizeHTML(formatMontoSinSimboloAr(liquido)) + ' sin embargos.';
+        canalSugerido = 'Débito Automático en Cuenta CBU / Tarjeta Sidecreer';
+      } else if (embargoDetectado) {
+        badgeHtml = '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-xs">🔴 Rechazado — Embargo Activo</span>';
+        dictamenText = 'NO VIABLE — Se detectó retención judicial o embargo activo ($ ' + sanitizeHTML(formatMontoSinSimboloAr(embargoMonto)) + ').';
+        canalSugerido = 'Canal bloqueado por política de riesgo crediticio institucional';
+      } else {
+        badgeHtml = '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-xs">🔴 Margen Insuficiente</span>';
+        dictamenText = 'NO VIABLE POR PLANILLA — Descuentos superan el margen (Margen de $ ' + sanitizeHTML(formatMontoSinSimboloAr(margen)) + ').';
+        canalSugerido = 'Requiere cancelación de códigos previos o evaluación especial';
+      }
+
+      return '<div class="rounded-xl overflow-hidden border border-slate-300 shadow-md bg-white">' +
+        '<!-- Cabecera Institucional Azul Marino -->' +
+        '<div class="bg-gradient-to-r from-slate-950 via-indigo-950 to-blue-950 text-white p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 border-b border-indigo-900/50">' +
+          '<div class="flex items-center gap-3">' +
+            '<div class="w-10 h-10 rounded-lg bg-indigo-600/30 border border-indigo-400/30 flex items-center justify-center shrink-0 text-indigo-300">' +
+              '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>' +
+              '</svg>' +
+            '</div>' +
+            '<div>' +
+              '<h3 class="text-sm sm:text-base font-extrabold text-white tracking-tight m-0">' +
+                'Auditoría Documental y Crediticia AMMER' +
+              '</h3>' +
+              '<p class="text-[11px] text-indigo-200/80 font-medium mt-0.5 mb-0">' +
+                'Evaluación Salarial y Capacidad de Ayuda Económica' +
+              '</p>' +
+            '</div>' +
+          '</div>' +
+          '<div>' + badgeHtml + '</div>' +
+        '</div>' +
+
+        '<!-- Grilla Limpia de Indicadores Clave Calculados -->' +
+        '<div class="p-4 sm:p-5 space-y-4">' +
+          '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 bg-slate-50/80 rounded-lg p-3.5 border border-slate-200/80">' +
+            '<div>' +
+              '<span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Titular</span>' +
+              '<span class="text-xs sm:text-sm font-bold text-slate-900 break-words block">' + sanitizeHTML(titular) + '</span>' +
+            '</div>' +
+            '<div>' +
+              '<span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">DNI / CUIL</span>' +
+              '<span class="font-mono text-xs text-slate-700 block mt-0.5">' + sanitizeHTML(dni) + (mostrarCuil ? ' · ' + sanitizeHTML(cuilClean) : '') + '</span>' +
+            '</div>' +
+            '<div>' +
+              '<span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Organismo</span>' +
+              '<span class="text-xs sm:text-sm font-bold text-slate-900 break-words block">' + sanitizeHTML(organismo) + '</span>' +
+              '<span class="text-xs text-slate-600 block mt-0.5">' + sanitizeHTML(cargo) + '</span>' +
+            '</div>' +
+            '<div>' +
+              '<span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Afectación de Haberes</span>' +
+              '<div class="flex items-center gap-2 mt-1">' +
+                '<div class="flex-1 bg-slate-200 rounded-full h-2 overflow-hidden">' +
+                  '<div class="h-full ' + (parseFloat(porcentajeAfectacion) > 50 ? 'bg-rose-500' : 'bg-emerald-500') + '" style="width:' + Math.min(100, Math.max(0, parseFloat(porcentajeAfectacion))) + '%"></div>' +
+                '</div>' +
+                '<span class="font-mono text-xs font-bold text-slate-700 whitespace-nowrap">' + sanitizeHTML(porcentajeAfectacion) + '</span>' +
+              '</div>' +
+              '<span class="text-[10px] text-slate-400 mt-1 block">Tope sugerido: 50%</span>' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="grid grid-cols-2 md:grid-cols-4 gap-3">' +
+            '<div class="p-3.5 rounded-lg border border-slate-200 bg-white shadow-xs">' +
+              '<span class="block text-[11px] text-slate-500 font-semibold uppercase tracking-wider">Total Haberes</span>' +
+              '<span class="font-mono text-base sm:text-lg font-black text-slate-900 mt-0.5 block">$ ' + sanitizeHTML(formatMontoSinSimboloAr(bruto)) + '</span>' +
+              '<span class="text-[10px] text-slate-400 mt-0.5 block">100% Haberes liquidados</span>' +
+            '</div>' +
+            '<div class="p-3.5 rounded-lg border border-slate-200 bg-white shadow-xs">' +
+              '<span class="block text-[11px] text-slate-500 font-semibold uppercase tracking-wider">Total Descuentos</span>' +
+              '<span class="font-mono text-base sm:text-lg font-black text-rose-600 mt-0.5 block">$ ' + sanitizeHTML(formatMontoSinSimboloAr(descuentos)) + '</span>' +
+              '<span class="text-[10px] text-rose-700/80 font-semibold mt-0.5 block">Afectación: ' + sanitizeHTML(porcentajeAfectacion) + '</span>' +
+            '</div>' +
+            '<div class="p-3.5 rounded-lg border border-emerald-200 bg-emerald-50/60 shadow-xs">' +
+              '<span class="block text-[11px] text-emerald-800 font-semibold uppercase tracking-wider">Sueldo Líquido</span>' +
+              '<span class="font-mono text-base sm:text-lg font-black text-emerald-700 mt-0.5 block">$ ' + sanitizeHTML(formatMontoSinSimboloAr(liquido)) + '</span>' +
+              '<span class="text-[10px] text-emerald-700 font-medium mt-0.5 block">Neto en cuenta bancaria</span>' +
+            '</div>' +
+            '<div class="p-3.5 rounded-lg border ' + (margen > 0 ? 'border-emerald-200 bg-emerald-50/50' : 'border-rose-200 bg-rose-50/50') + ' shadow-xs">' +
+              '<span class="block text-[11px] ' + (margen > 0 ? 'text-emerald-800' : 'text-rose-800') + ' font-semibold uppercase tracking-wider">Margen Disponible Estimado</span>' +
+              '<span class="font-mono text-base sm:text-lg font-black ' + (margen > 0 ? 'text-emerald-700' : 'text-rose-700') + ' mt-0.5 block">$ ' + sanitizeHTML(formatMontoSinSimboloAr(margen)) + '</span>' +
+              '<span class="font-mono text-[10px] text-slate-500 mt-0.5 block">Cupo: $ ' + sanitizeHTML(formatMontoSinSimboloAr(cupo50)) + '</span>' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="bg-slate-50/90 rounded-xl p-4 border border-slate-200">' +
+            '<div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">' +
+              '<div class="p-3 rounded-lg border ' + (planillaViable ? 'bg-emerald-50/70 border-emerald-200' : 'bg-rose-50/50 border-rose-200') + '">' +
+                '<span class="block text-[11px] font-bold uppercase tracking-wider ' + (planillaViable ? 'text-emerald-900' : 'text-rose-900') + '">Dictamen Crediticio:</span>' +
+                '<p class="text-xs font-bold text-slate-900 mt-1 mb-0">' + sanitizeHTML(dictamenText) + '</p>' +
+              '</div>' +
+              '<div class="p-3 rounded-lg border ' + (planillaViable ? 'bg-indigo-50/70 border-indigo-200' : (!embargoDetectado && liquido > 300000 ? 'bg-amber-50/70 border-amber-200' : 'bg-rose-50/50 border-rose-200')) + '">' +
+                '<span class="block text-[11px] font-bold uppercase tracking-wider ' + (planillaViable ? 'text-indigo-900' : (!embargoDetectado && liquido > 300000 ? 'text-amber-900' : 'text-rose-900')) + '">Canal Sugerido:</span>' +
+                '<p class="text-xs font-bold text-slate-900 mt-1 mb-0">' + sanitizeHTML(canalSugerido) + '</p>' +
+              '</div>' +
+            '</div>' +
+            (accionesHtml ? ('<div class="mt-3">' + accionesHtml + '</div>') : '') +
+          '</div>' +
+        '</div>' +
+      '</div>';
     }
 
     function renderizarAuditoriaYSimulador(rawJSON) {
@@ -16026,141 +16280,77 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           '<div id="selectorExpedienteBitacoraInline" class="hidden mt-3 p-3 rounded-lg border border-slate-200 bg-white"></div>' +
         '</div>';
 
-      // BLOQUE 2 (CONDICIONAL): ⚡ Simulación de Ayuda Económica Sugerida (6, 12, 18, 24, 36, 48 meses)
+      // BLOQUE 2 (CONDICIONAL): ⚡ Simulación de Ayuda Económica Sugerida
       let bloqueSimulacionHtml = '';
       if (planillaViable || cbuCondicionadoViable) {
         const cuotaMaximaBase = planillaViable
           ? margen
           : Math.round(liquido * 0.30 * 100) / 100;
-        const planesSugeridos = calcularPlanesSugeridosAuditoria(cuotaMaximaBase, 'fedem');
 
-        if (planesSugeridos.length > 0) {
-          const subtituloCanal = planillaViable
-            ? ('Calculado con fórmula francesa y coeficientes oficiales FEDEM / AMMER sobre el 100% del Margen Disponible por Planilla ($ ' + sanitizeHTML(formatMontoSinSimboloAr(cuotaMaximaBase)) + ' / mes)')
-            : ('Calculado con fórmula francesa y coeficientes oficiales FEDEM / AMMER sobre afectación prudencial del 30% del Líquido en Cuenta CBU ($ ' + sanitizeHTML(formatMontoSinSimboloAr(cuotaMaximaBase)) + ' / mes)');
+        const orgUpper = String(organismo || '').toUpperCase();
+        const lineaInicial = orgUpper.includes('MUNICIP') ? 'muni' : 'fedem';
 
-          const filasPlanesHtml = planesSugeridos.map(p => {
-            return '<tr class="border-b border-slate-100 hover:bg-slate-50/80">' +
-              '<td class="py-2.5 px-3 text-xs font-bold text-slate-900 whitespace-nowrap">' + p.plazo + ' cuotas fijas</td>' +
-              '<td class="py-2.5 px-3 font-mono text-xs text-right font-black text-emerald-700 whitespace-nowrap">$ ' + sanitizeHTML(formatMontoSinSimboloAr(p.neto)) + '</td>' +
-              '<td class="py-2.5 px-3 font-mono text-xs text-right font-semibold text-slate-800 whitespace-nowrap">$ ' + sanitizeHTML(formatMontoSinSimboloAr(p.cuotaFinal)) + '</td>' +
-              '<td class="py-2.5 px-3 font-mono text-xs text-right text-slate-600 whitespace-nowrap">$ ' + sanitizeHTML(formatMontoSinSimboloAr(p.capitalBruto)) + '</td>' +
-              '<td class="py-2.5 px-3 font-mono text-xs text-right text-slate-500 whitespace-nowrap">' + sanitizeHTML(p.tnaPct) + '% · ' + sanitizeHTML(p.temPct) + '%</td>' +
-              '<td class="py-2.5 px-3 font-mono text-xs text-right font-semibold text-slate-700 whitespace-nowrap">$ ' + sanitizeHTML(formatMontoSinSimboloAr(p.totalPagar)) + '</td>' +
-              '<td class="py-2 px-3 text-right whitespace-nowrap">' +
-                '<button type="button" class="audit-sim-use-btn" onclick="cargarPlanAuditadoEnSimulador(' + p.neto + ', ' + p.plazo + ', \'' + p.lineaKey + '\')">Usar en Simulador</button>' +
-              '</td>' +
-            '</tr>';
-          }).join('');
+        window._cuotaMaximaAuditoria = cuotaMaximaBase;
+        window._lineaAuditoriaSugerida = lineaInicial;
 
-          bloqueSimulacionHtml =
-            '<!-- BLOQUE 2 (CONDICIONAL): SIMULACIÓN DE AYUDA ECONÓMICA SUGERIDA -->' +
-            '<div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">' +
-              '<div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3 mb-4">' +
-                '<div>' +
-                  '<h2 class="text-base font-extrabold text-slate-900">' +
-                    '⚡ Simulación de Ayuda Económica Sugerida' +
-                  '</h2>' +
-                  '<p class="text-xs text-slate-500 mt-1">' + subtituloCanal + '</p>' +
-                '</div>' +
-                '<span class="text-xs font-bold ' + (planillaViable ? 'text-emerald-700' : 'text-amber-700') + '">' +
-                  (planillaViable ? 'Canal Planilla FEDEM Habilitado' : 'Evaluación Alternativa CBU / Sidecreer') +
-                '</span>' +
+        const filasPlanesHtml = renderizarFilasPlanesAuditoria(cuotaMaximaBase, lineaInicial);
+
+        bloqueSimulacionHtml =
+          '<!-- BLOQUE 2 (CONDICIONAL): SIMULACIÓN DE AYUDA ECONÓMICA SUGERIDA -->' +
+          '<div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-6">' +
+            '<div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3 mb-4">' +
+              '<div>' +
+                '<h2 class="text-base font-extrabold text-slate-900 m-0">' +
+                  '⚡ Simulación de Ayuda Económica Sugerida' +
+                '</h2>' +
+                '<p class="text-xs text-slate-500 mt-1 mb-0">' +
+                  'Proyección referencial según margen disponible y plazos reglamentarios vigentes' +
+                '</p>' +
               '</div>' +
-              '<div class="overflow-x-auto rounded-lg border border-slate-200">' +
-                '<table class="w-full text-left">' +
-                  '<thead class="bg-slate-50 border-b border-slate-200">' +
-                    '<tr>' +
-                      '<th class="py-2.5 px-3 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">Plazo</th>' +
-                      '<th class="py-2.5 px-3 text-[11px] font-bold text-emerald-700 uppercase text-right whitespace-nowrap">Neto a Retirar ($)</th>' +
-                      '<th class="py-2.5 px-3 text-[11px] font-bold text-slate-700 uppercase text-right whitespace-nowrap">Cuota Fija ($)</th>' +
-                      '<th class="py-2.5 px-3 text-[11px] font-bold text-slate-500 uppercase text-right whitespace-nowrap">Capital ($)</th>' +
-                      '<th class="py-2.5 px-3 text-[11px] font-bold text-slate-500 uppercase text-right whitespace-nowrap">TNA · TEM</th>' +
-                      '<th class="py-2.5 px-3 text-[11px] font-bold text-slate-500 uppercase text-right whitespace-nowrap">Total a Devolver ($)</th>' +
-                      '<th class="py-2.5 px-3 text-[11px] font-bold text-slate-500 uppercase text-right whitespace-nowrap">Acción</th>' +
-                    '</tr>' +
-                  '</thead>' +
-                  '<tbody class="divide-y divide-slate-100">' +
-                    filasPlanesHtml +
-                  '</tbody>' +
-                '</table>' +
+              '<span class="text-xs font-bold ' + (planillaViable ? 'text-emerald-700' : 'text-amber-700') + '">' +
+                (planillaViable ? '🟢 Margen Disponible: $ ' + sanitizeHTML(formatMontoSinSimboloAr(cuotaMaximaBase)) + ' / mes' : '🟡 Margen Estimado: $ ' + sanitizeHTML(formatMontoSinSimboloAr(cuotaMaximaBase)) + ' / mes') +
+              '</span>' +
+            '</div>' +
+
+            '<!-- Selector de Línea Crediticia -->' +
+            '<div class="mb-4">' +
+              '<label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Seleccionar Línea Crediticia:</label>' +
+              '<div class="inline-flex flex-wrap gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200" role="tablist">' +
+                '<button type="button" id="btnLineaAuditoria_fedem" onclick="cambiarLineaAuditoria(\'fedem\')" class="' + (lineaInicial === 'fedem' ? 'px-3.5 py-2 text-xs font-bold rounded-lg bg-indigo-900 text-white shadow-xs border border-indigo-900 transition-all cursor-pointer' : 'px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 transition-all cursor-pointer') + '">' +
+                  '🏛️ FEDEM Provincial <span class="text-[10px] opacity-80 font-normal ml-1">(Retención por Planilla)</span>' +
+                '</button>' +
+                '<button type="button" id="btnLineaAuditoria_muni" onclick="cambiarLineaAuditoria(\'muni\')" class="' + (lineaInicial === 'muni' ? 'px-3.5 py-2 text-xs font-bold rounded-lg bg-indigo-900 text-white shadow-xs border border-indigo-900 transition-all cursor-pointer' : 'px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 transition-all cursor-pointer') + '">' +
+                  '🏢 QUAD Municipales <span class="text-[10px] opacity-80 font-normal ml-1">(Convenio Municipalidades)</span>' +
+                '</button>' +
+                '<button type="button" id="btnLineaAuditoria_sidecreer" onclick="cambiarLineaAuditoria(\'sidecreer\')" class="' + (lineaInicial === 'sidecreer' ? 'px-3.5 py-2 text-xs font-bold rounded-lg bg-indigo-900 text-white shadow-xs border border-indigo-900 transition-all cursor-pointer' : 'px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 transition-all cursor-pointer') + '">' +
+                  '💳 Convenio Sidecreer <span class="text-[10px] opacity-80 font-normal ml-1">(Tarjeta Sidecreer)</span>' +
+                '</button>' +
               '</div>' +
-            '</div>';
-        }
+            '</div>' +
+
+            '<!-- Tabla Simplificada de 3 Columnas + Acción -->' +
+            '<div class="overflow-x-auto rounded-lg border border-slate-200">' +
+              '<table class="w-full text-left border-collapse">' +
+                '<thead class="bg-slate-50 border-b border-slate-200">' +
+                  '<tr>' +
+                    '<th class="py-3 px-4 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">Plazo</th>' +
+                    '<th class="py-3 px-4 text-[11px] font-bold text-emerald-700 uppercase text-right whitespace-nowrap">Neto a Retirar ($)</th>' +
+                    '<th class="py-3 px-4 text-[11px] font-bold text-slate-700 uppercase text-right whitespace-nowrap">Cuota Fija ($)</th>' +
+                    '<th class="py-3 px-4 text-[11px] font-bold text-slate-500 uppercase text-right whitespace-nowrap">Acción</th>' +
+                  '</tr>' +
+                '</thead>' +
+                '<tbody id="tbodyPlanesAuditoria" class="divide-y divide-slate-100">' +
+                  filasPlanesHtml +
+                '</tbody>' +
+              '</table>' +
+            '</div>' +
+          '</div>';
       }
 
       const html =
         '<div class="space-y-6 text-slate-800">' +
-          '<!-- BLOQUE 1: RESUMEN EJECUTIVO DE DECISIÓN CREDITICIA -->' +
-          '<div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">' +
-            '<div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-5">' +
-              '<h2 class="text-base font-extrabold text-slate-900">' +
-                '1. Resumen Ejecutivo de Decisión Crediticia (Para Aprobación / Rechazo Rápido)' +
-              '</h2>' +
-              '<span class="text-xs font-bold uppercase tracking-wider ' + (planillaViable ? 'text-emerald-700' : 'text-rose-700') + '">' +
-                (planillaViable ? 'APTO POR PLANILLA' : (embargoDetectado ? 'EMBARGO DETECTADO' : 'SALDO NEGATIVO POR PLANILLA')) +
-              '</span>' +
-            '</div>' +
-
-            '<!-- Datos del Agente -->' +
-            '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 rounded-lg p-3.5 border border-slate-100 mb-5">' +
-              '<div>' +
-                '<span class="block text-[11px] font-semibold text-slate-400 uppercase">Titular</span>' +
-                '<span class="text-sm font-bold text-slate-900">' + sanitizeHTML(titular) + '</span>' +
-              '</div>' +
-              '<div>' +
-                '<span class="block text-[11px] font-semibold text-slate-400 uppercase">DNI / CUIL</span>' +
-                '<span class="font-mono text-sm font-bold text-slate-900">' + sanitizeHTML(dni) + (mostrarCuil ? ' · ' + sanitizeHTML(cuilClean) : '') + '</span>' +
-              '</div>' +
-              '<div>' +
-                '<span class="block text-[11px] font-semibold text-slate-400 uppercase">Organismo / Cargo</span>' +
-                '<span class="text-sm font-bold text-slate-900">' + sanitizeHTML(organismo) + ' (' + sanitizeHTML(cargo) + ')</span>' +
-              '</div>' +
-              '<div>' +
-                '<span class="block text-[11px] font-semibold text-slate-400 uppercase">Período / Antigüedad</span>' +
-                '<span class="text-sm font-bold text-slate-900">' + sanitizeHTML(periodo) + ' · ' + sanitizeHTML(antiguedad) + '</span>' +
-              '</div>' +
-            '</div>' +
-
-            '<!-- Cajas Métricas Clave -->' +
-            '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">' +
-              '<div class="p-3.5 rounded-lg border border-slate-200 bg-white">' +
-                '<span class="block text-xs text-slate-500 font-medium">Sueldo Bruto Total</span>' +
-                '<span class="font-mono text-lg font-black text-slate-900">$ ' + sanitizeHTML(formatMontoSinSimboloAr(bruto)) + '</span>' +
-              '</div>' +
-              '<div class="p-3.5 rounded-lg border border-slate-200 bg-white">' +
-                '<span class="block text-xs text-slate-500 font-medium">Total Descuentos</span>' +
-                '<span class="font-mono text-lg font-black text-rose-600">$ ' + sanitizeHTML(formatMontoSinSimboloAr(descuentos)) + '</span>' +
-              '</div>' +
-              '<div class="p-3.5 rounded-lg border border-emerald-200 bg-emerald-50/60">' +
-                '<span class="block text-xs text-emerald-700 font-semibold">Líquido de Bolsillo</span>' +
-                '<span class="font-mono text-lg font-black text-emerald-700">$ ' + sanitizeHTML(formatMontoSinSimboloAr(liquido)) + '</span>' +
-              '</div>' +
-              '<div class="p-3.5 rounded-lg border ' + (margen > 0 ? 'border-emerald-200 bg-emerald-50/40' : 'border-rose-200 bg-rose-50/40') + '">' +
-                '<span class="block text-xs ' + (margen > 0 ? 'text-emerald-700' : 'text-rose-700') + ' font-semibold">Margen Planilla (50%)</span>' +
-                '<span class="font-mono text-lg font-black ' + (margen > 0 ? 'text-emerald-700' : 'text-rose-700') + '">$ ' + sanitizeHTML(formatMontoSinSimboloAr(margen)) + '</span>' +
-                '<span class="block font-mono text-[10px] text-slate-500 mt-0.5">Cupo 50%: $ ' + sanitizeHTML(formatMontoSinSimboloAr(cupo50)) + '</span>' +
-              '</div>' +
-            '</div>' +
-
-            '<!-- Dictamen y Decisión para el Comité / Analista -->' +
-            '<div class="bg-slate-50 rounded-xl p-4 border border-slate-200">' +
-              '<h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-3">' +
-                'Dictamen y Decisión para el Comité / Analista:' +
-              '</h3>' +
-              '<div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">' +
-                '<div class="p-3 rounded-lg border ' + (planillaViable ? 'bg-emerald-50/60 border-emerald-200' : 'bg-rose-50/40 border-rose-200') + '">' +
-                  '<div class="text-xs font-bold text-slate-900">1. Por Descuento en Haberes (Planilla FEDEM):</div>' +
-                  item1PlanillaHtml +
-                '</div>' +
-                '<div class="p-3 rounded-lg border ' + (planillaViable ? 'bg-emerald-50/60 border-emerald-200' : (!embargoDetectado && liquido > 300000 ? 'bg-amber-50/60 border-amber-200' : 'bg-rose-50/40 border-rose-200')) + '">' +
-                  '<div class="text-xs font-bold text-slate-900">2. Alternativa Operativa (Débito en Cuenta CBU):</div>' +
-                  item2AlternativaHtml +
-                '</div>' +
-              '</div>' +
-              accionesExpedienteHtml +
-            '</div>' +
-          '</div>' +
+          '<!-- BLOQUE 1: RESUMEN EJECUTIVO: AUDITORÍA DOCUMENTAL Y CREDITICIA AMMER -->' +
+          generarTarjetaResumenEjecutivoAMMER(audit, accionesExpedienteHtml) +
 
           bloqueSimulacionHtml +
 
@@ -16651,6 +16841,13 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       // 1. Inicializar modal de alta en modo Sede Central
       abrirModalAltaSolicitud('mutual_sede');
+
+      // Restaurar tarjeta de resumen ejecutivo destacada en la cabecera del formulario
+      const bannerAud = document.getElementById('bannerResumenAuditoriaModalAlta');
+      if (bannerAud) {
+        bannerAud.innerHTML = generarTarjetaResumenEjecutivoAMMER(dictamen);
+        bannerAud.style.display = 'block';
+      }
 
       // 2. Extracción tolerante multinivel de datos del dictamen
       const resDec = dictamen.resumenDecision || {};
@@ -17583,6 +17780,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.procesarReciboUnico = procesarReciboUnico;
     window.renderizarAuditoriaExitosa = renderizarAuditoriaExitosa;
     window.renderizarAuditoriaYSimulador = renderizarAuditoriaYSimulador;
+    window.generarTarjetaResumenEjecutivoAMMER = generarTarjetaResumenEjecutivoAMMER;
     window.esEtapaOperativaInicialOIntermedia = esEtapaOperativaInicialOIntermedia;
     window.abrirModalGuardadoAuditoria = abrirModalGuardadoAuditoria;
     window.ejecutarAsociacionAuditoriaAExpediente = ejecutarAsociacionAuditoriaAExpediente;
@@ -17593,6 +17791,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.guardarDictamenEnBitacoraExpediente = guardarDictamenEnBitacoraExpediente;
     window.confirmarGuardadoDictamenInline = confirmarGuardadoDictamenInline;
     window.calcularPlanesSugeridosAuditoria = calcularPlanesSugeridosAuditoria;
+    window.renderizarFilasPlanesAuditoria = renderizarFilasPlanesAuditoria;
+    window.cambiarLineaAuditoria = cambiarLineaAuditoria;
+    window.trasladarPlanAuditadoAExpediente = trasladarPlanAuditadoAExpediente;
     window.cargarPlanAuditadoEnSimulador = cargarPlanAuditadoEnSimulador;
     window.manejarSeleccionReciboAuditoria = manejarSeleccionReciboAuditoria;
     window.manejarDropReciboAuditoria = manejarDropReciboAuditoria;

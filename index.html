@@ -3281,7 +3281,7 @@
     .api-loading-text{display:flex;flex-direction:column}
     .api-loading-text strong{font-size:.875rem;color:var(--color-primary);font-weight:700}
     .api-loading-text span{font-size:.72rem;color:var(--text-muted);margin-top:2px}
-    .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#0f172a;color:#fff;padding:.65rem 1rem;border-radius:8px;font-size:.775rem;font-weight:600;display:flex;align-items:center;gap:.5rem;box-shadow:0 6px 20px rgba(0,0,0,.2);transform:translateY(100px);opacity:0;transition:all .25s cubic-bezier(0.16,1,0.3,1);z-index:100}
+    .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#0f172a;color:#fff;padding:.65rem 1rem;border-radius:8px;font-size:.775rem;font-weight:600;display:flex;align-items:center;gap:.5rem;box-shadow:0 6px 20px rgba(0,0,0,.2);transform:translateY(100px);opacity:0;transition:all .25s cubic-bezier(0.16,1,0.3,1);z-index:99999}
     .toast.show{transform:translateY(0);opacity:1}
 
     /* UTILIDADES SCOPED AUDITOR DE RECIBOS IA (PANTALLA ÚNICA LIMPIA) */
@@ -11380,6 +11380,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
         resData = await resp.json().catch(() => ({}));
         if (!resp.ok) {
+          console.error('Detalle error /api/solicitudes:', resp.status, resData);
           const errMsg = resData.detail || resData.error || ('Error HTTP ' + resp.status);
           showToast('⚠️ Error al guardar solicitud: ' + errMsg);
           mostrarNotificacionToast('Error al guardar solicitud: ' + errMsg, 'error');

@@ -6542,6 +6542,18 @@
       SUPABASE_ANON_KEY: SUPABASE_ANON_KEY
     };
 
+    // Guard contra promesas huérfanas de extensiones del navegador (Chrome runtime.onMessage)
+    // al cerrar/resetear formularios modales tras un guardado asíncrono.
+    window.addEventListener('unhandledrejection', function(event) {
+      const msg = String((event && event.reason && (event.reason.message || event.reason)) || '');
+      if (
+        msg.includes('message channel closed before a response was received') ||
+        msg.includes('A listener indicated an asynchronous response by returning true')
+      ) {
+        event.preventDefault();
+      }
+    }, true);
+
     function mostrarBannerAdminBypass() {
       if (!document.body || document.getElementById('ammerAdminBypassBanner')) return;
       const banner = document.createElement('div');
@@ -7556,6 +7568,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const s = JSON.parse(raw);
         if (!s) return null;
         s.id = s.id || s.idUsuario || s.usuario_id || '';
+        s.idUsuario = s.id;
+        s.usuario_id = s.id;
         s.email = String(s.email || '').toLowerCase();
         s.nombre = s.nombre || 'Usuario';
         s.rol = s.rol || 'Comercializador';
@@ -7563,8 +7577,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         s.nombreOrganizacion = s.nombreOrganizacion || s.nombre_organizacion || 'Mutual Modelo';
         s.organizacion_id = s.idOrganizacion;
         s.nombre_organizacion = s.nombreOrganizacion;
-        s.es_titular_organizacion = !!(s.esTitular !== undefined ? s.esTitular : s.es_titular_organizacion);
-        s.esTitular = s.es_titular_organizacion;
+        const esTit = !!(
+          s.esTitularOrg !== undefined
+            ? s.esTitularOrg
+            : (s.esTitular !== undefined ? s.esTitular : s.es_titular_organizacion)
+        );
+        s.es_titular_organizacion = esTit;
+        s.esTitular = esTit;
+        s.esTitularOrg = esTit;
         if (window.estadoApp) window.estadoApp.usuarioActual = s;
         return s;
       } catch(e) {
@@ -7602,15 +7622,29 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         rolNormalizado = 'Comercializador';
       }
 
+      const idResuelto = user.id || user.idUsuario || user.usuario_id || (typeof user.usuario === 'string' ? user.usuario : '') || 'usr_' + Date.now();
+      const orgIdResuelto = user.idOrganizacion || user.organizacion_id || 'org_parana_centro';
+      const orgNomResuelto = user.nombreOrganizacion || user.nombre_organizacion || 'Mutual Modelo';
+      const esTitResuelto = !!(
+        user.esTitularOrg !== undefined
+          ? user.esTitularOrg
+          : (user.esTitular !== undefined ? user.esTitular : user.es_titular_organizacion)
+      );
+
       const safeUser = {
-        id: user.id || user.idUsuario || user.usuario_id || (typeof user.usuario === 'string' ? user.usuario : '') || 'usr_' + Date.now(),
+        id: idResuelto,
+        idUsuario: idResuelto,
+        usuario_id: idResuelto,
         email: email || (typeof user.usuario === 'string' && user.usuario ? user.usuario + '@mutualmodelo.com.ar' : 'usuario@mutualmodelo.com.ar'),
         nombre: user.nombre || (typeof user.usuario === 'string' ? user.usuario : '') || 'Usuario',
         rol: rolNormalizado,
-        idOrganizacion: user.idOrganizacion || user.organizacion_id || 'org_parana_centro',
-        nombreOrganizacion: user.nombreOrganizacion || user.nombre_organizacion || 'Mutual Modelo',
-        esTitular: !!(user.esTitular !== undefined ? user.esTitular : user.es_titular_organizacion),
-        es_titular_organizacion: !!(user.esTitular !== undefined ? user.esTitular : user.es_titular_organizacion)
+        idOrganizacion: orgIdResuelto,
+        organizacion_id: orgIdResuelto,
+        nombreOrganizacion: orgNomResuelto,
+        nombre_organizacion: orgNomResuelto,
+        esTitular: esTitResuelto,
+        esTitularOrg: esTitResuelto,
+        es_titular_organizacion: esTitResuelto
       };
 
       sessionStorage.setItem('sesion_mutual', JSON.stringify(safeUser));
@@ -7770,7 +7804,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       cambiarPestana(targetViewId);
     }
 
-    function cambiarPestana(viewId) {
+    function cambiarPestana(viewId, options = {}) {
       const sess = getSession();
       if (!sess && viewId !== 'view-login') {
         viewId = 'view-login';
@@ -7829,17 +7863,19 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         }
       }
 
+      const skipSync = Boolean(options && options.skipCloudSync);
+
       if (viewId === 'view-comercializador') {
         renderModuloComercializador();
-        cargarSolicitudesDesdeNube(true);
+        if (!skipSync) cargarSolicitudesDesdeNube(true);
       }
       if (viewId === 'view-mutual-propias') {
         renderModuloMutualPropias();
-        cargarSolicitudesDesdeNube(true);
+        if (!skipSync) cargarSolicitudesDesdeNube(true);
       }
       if (viewId === 'view-mutual') {
         renderModuloMutual();
-        cargarSolicitudesDesdeNube(true);
+        if (!skipSync) cargarSolicitudesDesdeNube(true);
       }
       if (viewId === 'view-simulador') {
         renderApp();
@@ -9998,7 +10034,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     function normalizarSolicitud(s) {
       if (!s || typeof s !== 'object') return s;
 
-      // Mapeo tolerante desde columnas planas del Servidor Central hacia estructura CRM
+      // Mapeo tolerante desde columnas planas y camelCase del Servidor Central hacia estructura CRM
       const rawIdNorm = s.id || s.idSolicitud || s.ID_Solicitud || s.id_solicitud || s.ID_OPERACION;
       if (rawIdNorm !== undefined && rawIdNorm !== null && String(rawIdNorm).trim() !== '' && String(rawIdNorm).trim() !== 'undefined' && String(rawIdNorm).trim() !== 'null') {
         s.id = String(rawIdNorm).trim();
@@ -10008,28 +10044,40 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       if (!s.fecha && (s.Fecha_Registro || s.fechaRegistro || s.Fecha || s.createdAt || s.ultimaActualizacion || s.Ultima_Actualizacion)) {
         s.fecha = String(s.Fecha_Registro || s.fechaRegistro || s.Fecha || s.createdAt || s.ultimaActualizacion || s.Ultima_Actualizacion);
       }
-      if (!s.estado && s.Estado_Tramite) s.estado = String(s.Estado_Tramite);
+      if (!s.estado && (s.Estado_Tramite || s.estadoTramite)) {
+        s.estado = String(s.Estado_Tramite || s.estadoTramite);
+      }
+      if (s.estado === 'Ingresado' || s.estado === 'INGRESADO') {
+        s.estado = 'Pendiente';
+      }
 
+      if (!s.id_provisorio && (s.idProvisorio || s.ID_Provisorio)) {
+        s.id_provisorio = String(s.idProvisorio || s.ID_Provisorio).trim();
+      }
       if (!s.id_provisorio) s.id_provisorio = 'PROV-' + s.id;
+      if (!s.id_definitivo && (s.idDefinitivo || s.idDefinitivoExpediente || s.ID_Definitivo_Expediente || s.Nro_Definitivo || s.nroDefinitivo || s.ID_Definitivo)) {
+        s.id_definitivo = String(s.idDefinitivo || s.idDefinitivoExpediente || s.ID_Definitivo_Expediente || s.Nro_Definitivo || s.nroDefinitivo || s.ID_Definitivo).trim();
+      }
       if (s.id_definitivo === undefined) s.id_definitivo = '';
 
-      if (!s.usuario_id && (s.idAsesor || s.idUsuarioAsesor || s.ID_Usuario_Asesor)) {
-        s.usuario_id = s.idAsesor || s.idUsuarioAsesor || s.ID_Usuario_Asesor;
+      if (!s.usuario_id && (s.idAsesor || s.idUsuarioAsesor || s.ID_Usuario_Asesor || s.asesorId)) {
+        s.usuario_id = s.idAsesor || s.idUsuarioAsesor || s.ID_Usuario_Asesor || s.asesorId;
       }
-      if (!s.comercializador && (s.Nombre_Asesor || s.nombreAsesor || s.Comercializador)) {
-        s.comercializador = s.Nombre_Asesor || s.nombreAsesor || s.Comercializador;
+      if (!s.comercializador && (s.Nombre_Asesor || s.nombreAsesor || s.Comercializador || s.asesorNombre)) {
+        s.comercializador = s.Nombre_Asesor || s.nombreAsesor || s.Comercializador || s.asesorNombre;
       }
-      if (!s.organizacion_id && (s.idOrganizacion || s.ID_Organizacion)) {
-        s.organizacion_id = s.idOrganizacion || s.ID_Organizacion;
+      if (!s.organizacion_id && (s.idOrganizacion || s.ID_Organizacion || s.orgId)) {
+        s.organizacion_id = s.idOrganizacion || s.ID_Organizacion || s.orgId;
       }
-      if (!s.nombre_organizacion && (s.Nombre_Organizacion || s.nombreOrganizacion)) {
-        s.nombre_organizacion = s.Nombre_Organizacion || s.nombreOrganizacion;
+      if (!s.nombre_organizacion && (s.Nombre_Organizacion || s.nombreOrganizacion || s.orgNombre)) {
+        s.nombre_organizacion = s.Nombre_Organizacion || s.nombreOrganizacion || s.orgNombre;
       }
       if (!s.origen_canal && (s.origenCanal || s.Origen_Canal)) {
         s.origen_canal = s.origenCanal || s.Origen_Canal;
       }
       if (!s.origen_canal) {
-        s.origen_canal = (s.organizacion_id === 'org_sede_central') ? 'Presencial Sede Central' : 'Comercializador Externo';
+        const esOrgSede = (s.organizacion_id === 'org_sede_central' || s.organizacion_id === 'MUTUAL-CENTRAL' || s.organizacion_id === 'AMMER-CENTRAL');
+        s.origen_canal = esOrgSede ? 'Presencial Sede Central' : 'Comercializador Externo';
       }
 
       const contacto = Object.assign({}, parseJSONCampoSeguro(s.Datos_Contacto_JSON, {}), (s.datosContacto && typeof s.datosContacto === 'object') ? s.datosContacto : {});
@@ -10058,11 +10106,15 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         s.Apellido_Nombre = s.Apellido_Nombre || nombreRealNorm;
       }
 
+      const domHistNorm = String(
+        s.Domicilio_Historico_Solicitud || s.domicilioHistoricoSolicitud || s.domicilioHistorico || s.domicilio_historico || contacto.domicilio || s.domicilio || ''
+      ).trim();
+
       if (!s.solicitante || typeof s.solicitante !== 'object') {
         s.solicitante = {
           dni: String(s.DNI_Asociado || s.dni || ''),
-          cuil: String(contacto.cuil || s.cuil || ''),
-          legajo: String(s.Legajo_Municipal || laborales.legajo || ''),
+          cuil: String(contacto.cuil || laborales.cuil || s.cuil || ''),
+          legajo: String(s.Legajo_Municipal || s.legajoMunicipal || laborales.legajo || s.legajo || ''),
           nombre: nombreRealNorm,
           fechaNac: contacto.fechaNac || contacto.fechaNacimiento || s.fechaNacimiento || '',
           fechaNacimiento: contacto.fechaNacimiento || contacto.fechaNac || s.fechaNacimiento || '',
@@ -10070,8 +10122,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           estadoCivil: contacto.estadoCivil || s.estadoCivil || '',
           email: contacto.email || s.email || '',
           celular: contacto.celular || contacto.telefono || s.telefono || '',
-          domicilio: String(s.Domicilio_Historico_Solicitud || contacto.domicilio || ''),
-          domicilio_historico: String(s.Domicilio_Historico_Solicitud || contacto.domicilio || ''),
+          domicilio: domHistNorm,
+          domicilio_historico: domHistNorm,
           localidad: String(contacto.localidad || s.localidad || ''),
           condicion: laborales.condicion || 'Activo',
           organismo: laborales.organismo || s.organismo || 'Provincial',
@@ -10087,7 +10139,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         if ((!s.solicitante.nombre || s.solicitante.nombre === 'Socio') && nombreRealNorm) {
           s.solicitante.nombre = nombreRealNorm;
         }
-        if (!s.solicitante.cuil && (contacto.cuil || s.cuil)) s.solicitante.cuil = contacto.cuil || s.cuil;
+        if (!s.solicitante.cuil && (contacto.cuil || laborales.cuil || s.cuil)) s.solicitante.cuil = contacto.cuil || laborales.cuil || s.cuil;
+        if (!s.solicitante.domicilio && domHistNorm) s.solicitante.domicilio = domHistNorm;
+        if (!s.solicitante.domicilio_historico && domHistNorm) s.solicitante.domicilio_historico = domHistNorm;
         if (!s.solicitante.localidad && (contacto.localidad || s.localidad)) s.solicitante.localidad = contacto.localidad || s.localidad;
         if (!s.solicitante.fechaNac && (s.solicitante.fechaNacimiento || contacto.fechaNac || contacto.fechaNacimiento)) s.solicitante.fechaNac = s.solicitante.fechaNacimiento || contacto.fechaNac || contacto.fechaNacimiento;
         if (!s.solicitante.fechaNacimiento && s.solicitante.fechaNac) s.solicitante.fechaNacimiento = s.solicitante.fechaNac;
@@ -10126,19 +10180,22 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         antiguedad: s.solicitante.antiguedad || ''
       }, laborales);
 
-      if (!s.domicilio_historico && (s.Domicilio_Historico_Solicitud || s.solicitante?.domicilio)) {
-        s.domicilio_historico = s.Domicilio_Historico_Solicitud || s.solicitante?.domicilio || '';
+      if (!s.domicilio_historico && (domHistNorm || s.solicitante?.domicilio)) {
+        s.domicilio_historico = domHistNorm || s.solicitante?.domicilio || '';
       }
 
       const prevPrest = (s.prestamo && typeof s.prestamo === 'object') ? s.prestamo : {};
-      const lineaNomNorm = String(prevPrest.lineaNombre || s.Linea_Ayuda || s.lineaAyuda || s.Linea_Nombre || 'FEDEM Provincial').trim() || 'FEDEM Provincial';
+      let lineaNomNorm = String(prevPrest.lineaNombre || s.Linea_Ayuda || s.lineaAyuda || s.Linea_Nombre || 'FEDEM Provincial').trim() || 'FEDEM Provincial';
+      if (lineaNomNorm === 'FEDEM_PROVINCIAL' || lineaNomNorm === 'FEDEM') lineaNomNorm = 'FEDEM Provincial';
+      else if (lineaNomNorm === 'QUAD_MUNICIPALES' || lineaNomNorm === 'QUAD') lineaNomNorm = 'Municipales (QUAD)';
+      else if (lineaNomNorm === 'CONVENIO_SIDECREER' || lineaNomNorm === 'SIDECREER') lineaNomNorm = 'Tarjeta Sidecreer';
       const lineaLowNorm = lineaNomNorm.toLowerCase();
       const lineaKeyNorm = prevPrest.linea || ((lineaLowNorm.includes('muni') || lineaLowNorm.includes('quad') || lineaLowNorm.includes('vikingo')) ? 'muni' :
                            lineaLowNorm.includes('sidecreer') ? 'sidecreer' : 'fedem');
-      const montoNorm = parsearNumeroTolerante(prevPrest.monto || s.Monto_Solicitado_Neto || s.montoNeto || s.Monto || s.monto || 0, 0);
-      const cuotasNorm = parseInt(prevPrest.cuotas || s.Cantidad_Cuotas || s.cuotas || s.Plazo || 12, 10) || 12;
+      const montoNorm = parsearNumeroTolerante(prevPrest.monto || s.Monto_Solicitado_Neto || s.montoSolicitado || s.montoSolicitadoNeto || s.montoNeto || s.Monto || s.monto || 0, 0);
+      const cuotasNorm = parseInt(prevPrest.cuotas || s.Cantidad_Cuotas || s.cantidadCuotas || s.cuotas || s.Plazo || 12, 10) || 12;
       const cuotaNorm = parsearNumeroTolerante(prevPrest.cuotaEstimada || s.Monto_Cuota || s.montoCuota || s.valorCuota || s.Cuota_Estimada || s.cuotaEstimada || 0, 0);
-      const totalNorm = parsearNumeroTolerante(prevPrest.totalADevolver || s.Total_A_Devolver || s.totalDevolver || s.totalADevolver || (cuotaNorm * cuotasNorm), 0);
+      const totalNorm = parsearNumeroTolerante(prevPrest.totalADevolver || s.Total_A_Devolver || s.totalADevolver || s.totalDevolver || (cuotaNorm * cuotasNorm), 0);
       s.prestamo = {
         linea: lineaKeyNorm,
         lineaNombre: lineaNomNorm,
@@ -10183,8 +10240,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           if (Array.isArray(ofertasRaw.historialPropuestas)) s.historialPropuestas = ofertasRaw.historialPropuestas;
         }
       }
-      if (!s.auditoriaIA && s.Dictamen_IA_JSON) {
-        s.auditoriaIA = parseJSONCampoSeguro(s.Dictamen_IA_JSON, null);
+      if (!s.auditoriaIA && (s.Dictamen_IA_JSON || (s.dictamenIA && typeof s.dictamenIA === 'object' && Object.keys(s.dictamenIA).length > 0))) {
+        const parsedDict = s.Dictamen_IA_JSON ? parseJSONCampoSeguro(s.Dictamen_IA_JSON, null) : s.dictamenIA;
+        if (parsedDict && typeof parsedDict === 'object' && Object.keys(parsedDict).length > 0) {
+          s.auditoriaIA = parsedDict.resultado ? parsedDict : { estado: 'completado', resultado: parsedDict };
+        }
       }
       if (s.auditoriaIA && s.auditoriaIA.estado === 'procesando' && !s.auditoriaIA.resultado) {
         const enVuelo = (typeof window !== 'undefined' && window._auditoriasEnVuelo && window._auditoriasEnVuelo[String(s.id)]);
@@ -10250,6 +10310,57 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       localStorage.setItem(STORAGE_SOLICITUDES_KEY, JSON.stringify(normalized));
     }
 
+    function fusionarSolicitudesLocalesYRemotas(locales, remotas) {
+      const listaRemota = Array.isArray(remotas) ? remotas.map(normalizarSolicitud) : [];
+      const listaLocal = Array.isArray(locales) ? locales.map(normalizarSolicitud) : [];
+      if (!listaLocal.length) return listaRemota;
+
+      const ahora = Date.now();
+      const pendientesRecientes = [];
+
+      for (const loc of listaLocal) {
+        if (!loc) continue;
+        const idLoc = String(loc.id || '').trim();
+        const provLoc = String(loc.id_provisorio || loc.idProvisorio || '').trim();
+        const dniLoc = String(loc.solicitante?.dni || loc.dni || '').trim();
+        const montoLoc = Number(loc.prestamo?.monto || loc.montoNeto || 0);
+
+        const idxRemoto = listaRemota.findIndex(r => {
+          const idRem = String(r.id || '').trim();
+          const provRem = String(r.id_provisorio || r.idProvisorio || '').trim();
+          const dniRem = String(r.solicitante?.dni || r.dni || '').trim();
+          const montoRem = Number(r.prestamo?.monto || r.montoNeto || 0);
+          if (idLoc && idRem && (idLoc === idRem || ('PROV-' + idLoc) === provRem || idLoc === provRem)) return true;
+          if (provLoc && provRem && provLoc === provRem) return true;
+          if (loc._localPendingSync && dniLoc && dniRem && dniLoc === dniRem && Math.abs(montoLoc - montoRem) < 1) return true;
+          return false;
+        });
+
+        if (idxRemoto !== -1) {
+          const rem = listaRemota[idxRemoto];
+          if ((!rem.adjuntos || !rem.adjuntos.length) && Array.isArray(loc.adjuntos) && loc.adjuntos.length) {
+            rem.adjuntos = loc.adjuntos;
+            rem.archivosAdjuntos = loc.adjuntos;
+            rem.archivosLegajo = loc.adjuntos;
+            rem.archivos = loc.adjuntos;
+          }
+          if (!rem.auditoriaIA && loc.auditoriaIA) {
+            rem.auditoriaIA = loc.auditoriaIA;
+          }
+          if (loc.supabase_id && !rem.supabase_id) {
+            rem.supabase_id = loc.supabase_id;
+          }
+        } else {
+          const edadMs = loc._createdAtMs ? (ahora - Number(loc._createdAtMs)) : Infinity;
+          if (loc._localPendingSync && edadMs < 180000) {
+            pendientesRecientes.push(loc);
+          }
+        }
+      }
+
+      return [...pendientesRecientes, ...listaRemota];
+    }
+
     let _cloudSyncPromise = null;
     async function cargarSolicitudesDesdeNube(silencioso = false) {
       const session = getSession();
@@ -10261,19 +10372,31 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           mostrarCargando('🔄 Actualizando expedientes desde la base central...', 'Consultando expedientes y Legajos Digitales en tiempo real');
         }
         try {
+          const orgId = session.idOrganizacion || session.organizacion_id || '';
+          const orgNom = session.nombreOrganizacion || session.nombre_organizacion || '';
+          const esTit = Boolean(session.esTitular !== undefined ? session.esTitular : (session.esTitularOrg !== undefined ? session.esTitularOrg : session.es_titular_organizacion));
+          const isComercialWithOrg = String(session.rol || '').toLowerCase().includes('comercial') && Boolean(orgId);
+
           const respuesta = await fetchConTimeout(APPS_SCRIPT_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({
               action: 'obtenerSolicitudes',
               usuarioActivo: session,
+              idUsuario: session.id,
+              id: session.id,
               usuario_id: session.id,
               usuario: session.usuario || session.email,
               nombre: session.nombre,
               rol: session.rol,
-              organizacion_id: session.organizacion_id,
-              nombre_organizacion: session.nombre_organizacion,
-              es_titular: !!session.es_titular_organizacion
+              idOrganizacion: orgId,
+              organizacion_id: orgId,
+              nombreOrganizacion: orgNom,
+              nombre_organizacion: orgNom,
+              esTitularOrg: isComercialWithOrg ? true : esTit,
+              esTitular: esTit,
+              es_titular: esTit,
+              es_titular_organizacion: esTit
             })
           }, 25000);
 
@@ -10296,17 +10419,26 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           }
 
           if (lista !== null) {
-            const normalizadas = lista.map(normalizarSolicitud);
-            saveStoredSolicitudes(normalizadas);
+            const ordenadas = [...lista].sort((a, b) => {
+              const fa = Number(a.filaSheet || 0);
+              const fb = Number(b.filaSheet || 0);
+              if (fa && fb && fa !== fb) return fb - fa;
+              return 0;
+            });
+            const localesPrevias = (window.estadoApp && Array.isArray(window.estadoApp.solicitudes))
+              ? window.estadoApp.solicitudes
+              : [];
+            const fusionadas = fusionarSolicitudesLocalesYRemotas(localesPrevias, ordenadas);
+            saveStoredSolicitudes(fusionadas);
             renderModuloComercializador();
             renderModuloMutualPropias();
             renderModuloMutual();
             actualizarCentroNotificaciones();
             actualizarContadorBoveda();
             if (!silencioso) {
-              showToast('Base de datos central sincronizada (' + normalizadas.length + ' expedientes) ✓');
+              showToast('Base de datos central sincronizada (' + fusionadas.length + ' expedientes) ✓');
             }
-            return normalizadas;
+            return fusionadas;
           }
 
           throw new Error((resJSON && (resJSON.error || resJSON.message)) || 'Respuesta inválida de servidor');
@@ -11035,14 +11167,15 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         );
       }
 
-      const isSedeCentral = (window._origenModalAlta === 'mutual_sede');
+      const isSedeCentral = (window._origenModalAlta === 'mutual_sede') ||
+        session.rol === 'Admin' || session.rol === 'Analista' || session.rol === 'Asesor Mutual';
       const canalIngreso = isSedeCentral ?
         (document.getElementById('solCanalIngreso')?.value || 'Presencial Sede Central') :
         'Comercializador Externo';
 
-      const orgId = isSedeCentral ? 'org_sede_central' : (session.organizacion_id || 'org_parana_centro');
-      const orgNombre = isSedeCentral ? 'Sede Central Mutual' : (session.nombre_organizacion || 'Organización Paraná Centro');
-      const asesorNombre = isSedeCentral ? (session.nombre + ' (Sede Central)') : session.nombre;
+      const orgId = isSedeCentral ? (session.idOrganizacion || session.organizacion_id || 'org_sede_central') : (session.idOrganizacion || session.organizacion_id || 'org_parana_centro');
+      const orgNombre = isSedeCentral ? (session.nombreOrganizacion || session.nombre_organizacion || 'Sede Central Mutual') : (session.nombreOrganizacion || session.nombre_organizacion || 'Organización Paraná Centro');
+      const asesorNombre = (window._origenModalAlta === 'mutual_sede') ? (session.nombre + ' (Sede Central)') : session.nombre;
       const analistaAsig = isSedeCentral ? session.nombre : 'Sin Asignar';
 
       const totalADevolver = totalADevolverCalc;
@@ -11074,10 +11207,13 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const nueva = {
         id: rawRand,
         id_provisorio: provId,
+        idProvisorio: provId,
         id_definitivo: '',
         Nro_Definitivo: '',
         ID_Definitivo_Expediente: '',
         fecha: nowStr,
+        _createdAtMs: Date.now(),
+        _localPendingSync: true,
         usuario_id: session.id,
         idUsuarioAsesor: session.id,
         idAsesor: session.id,
@@ -11325,7 +11461,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const lineaCodigoApi = (lineaKey === 'muni' || lineaKey === 'quad')
         ? 'QUAD'
         : (lineaKey === 'sidecreer' ? 'SIDECREER' : 'FEDEM');
-      const esUuidValido = (v) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(v || '').trim());
+      const idAsesorReal = String((session && (session.id || session.idUsuario || session.usuario_id)) || 'USR-001').trim();
       const renderSolicitudPayload = {
         id_provisorio: provId || `SOL-${Date.now().toString().slice(-6)}`,
         asociado: {
@@ -11340,15 +11476,24 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           situacion_revista: String(situacionRevistaVal || 'TITULAR').trim(),
           antiguedad_anios: parseInt(antiguedadVal, 10) || 0,
           antiguedad_meses: 0,
-          legajo: String(legajoVal || '').trim() || null
+          legajo: String(legajoVal || '').trim() || null,
+          cargo: String(cargoVal || '').trim() || null,
+          condicion: String(condicionVal || 'Activo').trim(),
+          fecha_nacimiento: String(fechaNacVal || '').trim() || null,
+          sexo: String(sexoVal || '').trim() || null,
+          estado_civil: String(estadoCivilVal || '').trim() || null,
+          fecha_ingreso_laboral: String(fechaIngresoVal || '').trim() || null,
+          antiguedad_texto: String(antiguedadVal || '').trim() || null
         },
         linea_ayuda: lineaCodigoApi,
         monto_solicitado: Number(monto) || 0,
         cuotas_pactadas: parseInt(cuotas, 10) || 6,
         valor_cuota_estimada: Number(cuotaEstimada) || 0,
+        total_a_devolver: Number(totalADevolver) || 0,
         tna_aplicada: 0,
         destino_fondos: 'Libre disponibilidad',
-        asesor_id: esUuidValido(session && session.id) ? String(session.id).trim() : null,
+        asesor_id: idAsesorReal,
+        asesor_codigo: idAsesorReal,
         asesor_nombre: asesorNombre,
         analista_asignado: analistaAsig,
         org_id: orgId,
@@ -11435,19 +11580,22 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       window._dictamenAuditoriaParaNuevaSolicitud = null;
       window._dictamenAuditoriaTexto = null;
 
-      // Refrescar lista de "Mis Gestiones"
+      // Cambiar a la pestaña de destino sin disparar la sincronización inmediata en frío (evita pisar localStorage antes de que el BackgroundTask de Render termine en Google Sheets)
+      if (isSedeCentral) {
+        cambiarPestana('view-mutual-propias', { skipCloudSync: true });
+      } else {
+        cambiarPestana('view-comercializador', { skipCloudSync: true });
+      }
+
       if (typeof renderModuloComercializador === 'function') renderModuloComercializador();
       if (typeof renderModuloMutualPropias === 'function') renderModuloMutualPropias();
       if (typeof renderModuloMutual === 'function') renderModuloMutual();
-
-      if (isSedeCentral) {
-        cambiarPestana('view-mutual-propias');
-      } else {
-        cambiarPestana('view-comercializador');
-      }
       actualizarCentroNotificaciones();
-      mostrarNotificacionToast('Solicitud registrada correctamente', 'success');
-      showToast('Solicitud registrada correctamente');
+
+      // Reconciliación diferida con Google Sheets una vez completada la réplica en segundo plano (~5 seg en Render)
+      setTimeout(() => {
+        cargarSolicitudesDesdeNube(true);
+      }, 6500);
     }
 
     /* ========================================================================
@@ -14358,6 +14506,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
       return visibles.filter(s => {
         const esSedeCentral = (s.organizacion_id === 'org_sede_central' ||
+          s.organizacion_id === 'MUTUAL-CENTRAL' ||
+          s.organizacion_id === 'AMMER-CENTRAL' ||
           s.origen_canal === 'Presencial Sede Central' ||
           s.origen_canal === 'WhatsApp Oficial' ||
           s.origen_canal === 'Telefónico' ||
@@ -14485,12 +14635,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       return visibles.filter(s => {
         // En Gestiones de Comercializadores mostramos las operaciones externas de comercializadores
         const esSedeCentral = (s.organizacion_id === 'org_sede_central' ||
+          s.organizacion_id === 'MUTUAL-CENTRAL' ||
+          s.organizacion_id === 'AMMER-CENTRAL' ||
           s.origen_canal === 'Presencial Sede Central' ||
           s.origen_canal === 'WhatsApp Oficial' ||
           s.origen_canal === 'Telefónico' ||
           (s.comercializador && s.comercializador.includes('Sede Central')));
 
-        if (esSedeCentral && org !== 'Sede Central Mutual') {
+        if (esSedeCentral && org !== 'Sede Central Mutual' && org !== 'Mutual Central' && org !== 'AMMER Central') {
           return false;
         }
 
@@ -14653,7 +14805,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         headerBg: '#fef9c3',
         headerColor: '#854d0e',
         border: '#fde047',
-        match: (st) => st === 'Pendiente'
+        match: (st) => st === 'Pendiente' || st === 'Ingresado'
       },
       {
         id: 'en_gestion',

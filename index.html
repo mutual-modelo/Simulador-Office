@@ -11246,7 +11246,7 @@ ${cierreTxt}`;
           '<td>' + propHtml + '</td>' +
           '<td><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + sanitizeHTML(s.estado || 'Pendiente') + '</span>' + alertaDocHtml + '</td>' +
           '<td><div class="flex items-center justify-end gap-1.5 whitespace-nowrap">' +
-            '<button type="button" onclick="verFichaCompleta(\'' + s.id + '\')" title="Ver Expediente Completo" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/60 transition-colors cursor-pointer">' +
+            '<button type="button" class="btn-ver-expediente inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/60 transition-colors cursor-pointer" data-id="' + sanitizeHTML(String(s.id || '')) + '" data-id-provisorio="' + sanitizeHTML(String(s.id_provisorio || s.idProvisorio || s.id || '')) + '" title="Ver Expediente Completo">' +
               '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
               '<span>Expediente</span>' +
             '</button>' +
@@ -12111,9 +12111,14 @@ ${cierreTxt}`;
         String(x.id || '') === targetId ||
         String(x.idSolicitud || '') === targetId ||
         String(x.ID_Solicitud || '') === targetId ||
-        String(x.id_provisorio || '') === targetId
+        String(x.id_provisorio || '') === targetId ||
+        String(x.idProvisorio || '') === targetId ||
+        String(x.supabase_id || '') === targetId
       );
-      if (!s) return;
+      if (!s) {
+        console.warn('verFichaCompleta: No se encontró la solicitud con ID:', targetId);
+        return;
+      }
       normalizarSolicitud(s);
       const idActivo = String(s.idSolicitud || s.ID_Solicitud || s.id || targetId).trim();
       s.id = idActivo;
@@ -12141,7 +12146,7 @@ ${cierreTxt}`;
         (s.Metadata_Extra_JSON && parseJSONCampoSeguro(s.Metadata_Extra_JSON, {}).id_definitivo) ||
         ''
       ).trim();
-      const idProv = String(s.id_provisorio || s.ID_Solicitud || s.idSolicitud || s.id || idActivo).trim();
+      const idProv = String(s.id_provisorio || s.idProvisorio || s.ID_Solicitud || s.idSolicitud || s.id || idActivo).trim();
       const nombreSocio = String(s.solicitante?.nombre || s.Apellido_Nombre || s.nombre || 'Socio').trim();
 
       if (idDef) {
@@ -12150,6 +12155,7 @@ ${cierreTxt}`;
         s.Nro_Definitivo = idDef;
       }
 
+      const tituloExpediente = idDef ? ('Expediente ' + idDef) : ('Expediente ' + idProv);
       const tituloHtml = '<span class="text-lg font-bold font-mono text-slate-900">' + sanitizeHTML(tituloExpediente) + '</span> <span class="text-base font-semibold text-slate-800">— ' + sanitizeHTML(nombreSocio) + '</span>';
 
       const elModalTit = document.getElementById('modalFichaTitulo');
@@ -15192,7 +15198,7 @@ ${cierreTxt}`;
           '<td>' + sanitizeHTML(s.analistaAsignado || 'Sin Asignar') + '</td>' +
           '<td><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + sanitizeHTML(s.estado || 'Pendiente') + '</span>' + alertaDocHtml + '</td>' +
           '<td><div class="flex items-center justify-end gap-1.5 whitespace-nowrap">' +
-            '<button type="button" onclick="gestionarSolicitudMutual(\'' + s.id + '\')" title="Ver Expediente Completo" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/60 transition-colors cursor-pointer">' +
+            '<button type="button" class="btn-ver-expediente inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/60 transition-colors cursor-pointer" data-id="' + sanitizeHTML(String(s.id || '')) + '" data-id-provisorio="' + sanitizeHTML(String(s.id_provisorio || s.idProvisorio || s.id || '')) + '" title="Ver Expediente Completo">' +
               '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
               '<span>Expediente</span>' +
             '</button>' +
@@ -19411,10 +19417,24 @@ ${cierreTxt}`;
     window.abrirModalDesestimarGestion = abrirModalDesestimarGestion;
     window.confirmarDesestimarGestion = confirmarDesestimarGestion;
     window.verificarEstadoSistema = verificarEstadoSistema;
+    window.abrirModalExpediente = verFichaCompleta;
     window.CONFIG = CONFIG;
     window.estadoApp = window.estadoApp;
 
     window.addEventListener('DOMContentLoaded', async () => {
+      const workspaceContenedor = document.getElementById('mainWorkspaceContent') || document;
+      workspaceContenedor.addEventListener('click', (e) => {
+        const btnExpediente = e.target.closest('.btn-ver-expediente');
+        if (!btnExpediente) return;
+        e.preventDefault();
+        const solicitudId = btnExpediente.dataset.id || btnExpediente.dataset.idProvisorio;
+        if (solicitudId) {
+          verFichaCompleta(solicitudId);
+        } else {
+          console.error('No se encontró el ID de la solicitud en el botón de expediente');
+        }
+      });
+
       const sistemaHabilitado = await verificarEstadoSistema();
       if (!sistemaHabilitado) return;
 

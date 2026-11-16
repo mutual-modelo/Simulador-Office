@@ -1708,26 +1708,36 @@
     .matrix-table tr.clickable-row{cursor:pointer;transition:background-color .12s ease}
     .matrix-table tr.clickable-row:hover{background-color:#f1f5f9}
 
-    /* WHATSAPP CARD ORIGINAL */
+    /* WHATSAPP CARD & GESTOR DE PLANTILLAS */
     .wa-card{background:#fff;border:1px solid #cbd5e1;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(18,140,126,.08)}
-    .wa-header{background:var(--wa-header-bg);color:#fff;padding:.65rem 1rem;display:flex;align-items:center;justify-content:space-between}
+    .wa-header{background:var(--wa-header-bg);color:#fff;padding:.65rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap}
     .wa-header-brand{display:flex;align-items:center;gap:.5rem;font-weight:700;font-size:.8125rem}
     .wa-template-selector-bar{display:flex;align-items:center;gap:.5rem;background:#064e43;padding:.5rem 1rem;border-bottom:1px solid rgba(255,255,255,.15);flex-wrap:wrap}
     .wa-template-selector-bar label{font-size:.725rem;font-weight:600;color:#fff;white-space:nowrap}
-    .wa-select-version{background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:.35rem .65rem;font-size:.75rem;font-weight:600;color:var(--text-main);cursor:pointer;outline:none;flex:1;min-width:220px}
+    .wa-select-version{background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:.35rem .65rem;font-size:.75rem;font-weight:600;color:var(--text-main);cursor:pointer;outline:none;flex:1;min-width:180px}
+    .btn-wa-edit-tpl{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:.35rem .65rem;font-size:.72rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem;transition:all .15s ease;white-space:nowrap}
+    .btn-wa-edit-tpl:hover,.btn-wa-edit-tpl.active{background:#fff;color:#064e43;border-color:#fff}
+    .wa-editor-drawer{background:#f8fafc;border-bottom:1px solid #cbd5e1;padding:.85rem 1rem;display:none;flex-direction:column;gap:.65rem}
+    .wa-editor-drawer.open{display:flex}
+    .wa-var-chips{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center}
+    .wa-var-chip{background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;border-radius:999px;padding:.18rem .55rem;font-size:.68rem;font-family:var(--font-mono);font-weight:700;cursor:pointer;transition:all .12s ease}
+    .wa-var-chip:hover{background:#0284c7;color:#fff;border-color:#0284c7}
+    .wa-custom-input{width:100%;border:1px solid #cbd5e1;border-radius:6px;padding:.45rem .6rem;font-size:.75rem;line-height:1.4;color:var(--text-main);background:#fff;outline:none;resize:vertical;font-family:inherit}
+    .wa-custom-input:focus{border-color:#0d9488;box-shadow:0 0 0 2px rgba(13,148,136,.12)}
     .wa-chat-canvas{background-color:#e5ddd5;background-image:radial-gradient(#d4cbbe 1px,transparent 1px);background-size:14px 14px;padding:.875rem 1rem;display:flex;flex-direction:column;align-items:stretch}
     .wa-bubble-msg{background-color:var(--wa-bubble);border-radius:8px 8px 2px 8px;padding:.65rem .75rem;width:100%;box-shadow:0 1px 2px rgba(0,0,0,.14);position:relative}
-    .whatsapp-editor-textarea{width:100%;min-height:200px;max-height:380px;background:transparent;border:1px solid transparent;border-radius:6px;padding:.35rem .4rem;font-family:inherit;font-size:.8125rem;line-height:1.45;color:#111827;resize:vertical;outline:none;box-sizing:border-box;transition:border-color .15s ease,background-color .15s ease;white-space:pre-wrap;word-break:break-word}
+    .whatsapp-editor-textarea{width:100%;min-height:220px;max-height:420px;background:transparent;border:1px solid transparent;border-radius:6px;padding:.35rem .4rem;font-family:inherit;font-size:.8125rem;line-height:1.45;color:#111827;resize:vertical;outline:none;box-sizing:border-box;transition:border-color .15s ease,background-color .15s ease;white-space:pre-wrap;word-break:break-word}
     .whatsapp-editor-textarea:focus{background-color:rgba(255,255,255,.6);border-color:#25d366}
     .wa-bubble-time{display:flex;align-items:center;justify-content:flex-end;gap:4px;font-size:.65rem;color:#667781;margin-top:.25rem;padding-right:.25rem}
     .wa-checks{color:#53bdeb;font-weight:bold}
     .wa-actions-bar{padding:.65rem 1rem;background:#f8fafc;border-top:1px solid var(--border-color);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem}
+    .wa-recipient-inputs{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
     .wa-phone-inline-box{display:flex;align-items:center;gap:.375rem;background:#fff;border:1px solid var(--border-color);padding:.3rem .6rem;border-radius:6px;font-size:.75rem;color:var(--text-muted)}
-    .wa-phone-inline-input{border:none;outline:none;font-size:.75rem;color:var(--text-main);font-weight:600;width:140px;background:transparent}
-    .wa-btn-group{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
-    .btn-save-custom,.btn-restore,.btn-copy{background:#fff;color:var(--text-main);border:1px solid var(--border-color);padding:.45rem .875rem;font-size:.75rem;font-weight:600;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:.375rem;transition:all .15s ease}
-    .btn-save-custom:hover,.btn-restore:hover,.btn-copy:hover{background:#f1f5f9;border-color:#cbd5e1}
-    .btn-whatsapp-send{background:var(--wa-accent);color:#fff;border:none;padding:.45rem 1rem;font-size:.75rem;font-weight:600;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:.375rem;text-decoration:none;box-shadow:0 2px 5px rgba(37,211,102,.3);transition:all .15s ease}
+    .wa-phone-inline-input{border:none;outline:none;font-size:.75rem;color:var(--text-main);font-weight:600;width:135px;background:transparent}
+    .wa-btn-group{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}
+    .btn-save-custom,.btn-restore,.btn-copy,.btn-preview-wa{background:#fff;color:var(--text-main);border:1px solid var(--border-color);padding:.42rem .75rem;font-size:.73rem;font-weight:600;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:.32rem;transition:all .15s ease}
+    .btn-save-custom:hover,.btn-restore:hover,.btn-copy:hover,.btn-preview-wa:hover{background:#f1f5f9;border-color:#cbd5e1}
+    .btn-whatsapp-send{background:var(--wa-accent);color:#fff;border:none;padding:.45rem .95rem;font-size:.75rem;font-weight:600;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:.375rem;text-decoration:none;box-shadow:0 2px 5px rgba(37,211,102,.3);transition:all .15s ease}
     .btn-whatsapp-send:hover{background:#20bd5a;transform:translateY(-1px);box-shadow:0 3px 8px rgba(37,211,102,.4)}
 
     /* ========================================================================
@@ -3717,26 +3727,67 @@
                 </svg>
                 <span>Gestor de Mensajes de WhatsApp</span>
               </div>
-              <span style="font-size:0.7rem;opacity:0.9;">Edición en Tiempo Real</span>
+              <span id="waSimContextBadge" style="font-size:0.7rem;background:rgba(255,255,255,0.16);padding:0.2rem 0.55rem;border-radius:999px;font-weight:600;">FEDEM Provincial • Por Monto Solicitado</span>
             </div>
+
             <div class="wa-template-selector-bar">
-              <label for="sel-version-plantilla">Formato de Plantilla:</label>
+              <label for="sel-version-plantilla">Plantilla:</label>
               <select id="sel-version-plantilla" class="wa-select-version" onchange="handleTemplateVersionChange(this.value)">
-                <option value="estandar">📱 Estándar (Planes con Emojis)</option>
-                <option value="plan_unico">🎯 Plan Único (Plazo Seleccionado)</option>
-                <option value="formal">🏛️ Institucional Formal (Con Requisitos)</option>
-                <option value="express">⚡ Promo Express (24hs)</option>
-                <option value="personalizada">⭐ Mi Formato Guardado</option>
+                <option value="oficial">🏛️ Oficial AMMER</option>
+                <option value="resumida">⚡ Resumida / Directa</option>
+                <option value="personalizada">⭐ Personalizada</option>
               </select>
+              <button type="button" id="btnToggleWaTemplateEditor" class="btn-wa-edit-tpl" onclick="toggleEditorPlantillaWhatsApp()" title="Personalizar texto introductorio, cierre y etiquetas dinámicas">
+                ✏️ Editar Plantilla
+              </button>
             </div>
+
+            <!-- PANEL EDITOR DE PLANTILLA PERSONALIZADA (PERSISTENCIA EN LOCALSTORAGE) -->
+            <div id="waCustomTemplateEditorPanel" class="wa-editor-drawer">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;">
+                <span style="font-size:0.75rem;font-weight:700;color:#0f172a;">⚙️ Editor de Plantilla Personalizada</span>
+                <span style="font-size:0.68rem;color:#64748b;">Haga clic en una variable para insertarla en el cursor:</span>
+              </div>
+              <div class="wa-var-chips">
+                <button type="button" class="wa-var-chip" onclick="insertarVariablePlantillaWA('{nombre_asociado}')" title="Nombre del socio/asociado">{nombre_asociado}</button>
+                <button type="button" class="wa-var-chip" onclick="insertarVariablePlantillaWA('{linea}')" title="Línea de ayuda económica activa">{linea}</button>
+                <button type="button" class="wa-var-chip" onclick="insertarVariablePlantillaWA('{planes}')" title="Encabezado de modalidad + lista de planes cotizados">{planes}</button>
+                <button type="button" class="wa-var-chip" onclick="insertarVariablePlantillaWA('{requisitos}')" title="Lista de requisitos documentales según línea">{requisitos}</button>
+                <button type="button" class="wa-var-chip" onclick="insertarVariablePlantillaWA('{contacto}')" title="Firma / datos del asesor o contacto Mutual">{contacto}</button>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0.5rem;">
+                <div>
+                  <label for="inpWaCustomIntro" style="display:block;font-size:0.68rem;font-weight:700;color:#334155;margin-bottom:2px;">Texto Introductorio:</label>
+                  <textarea id="inpWaCustomIntro" class="wa-custom-input" rows="2" placeholder="¡Hola {nombre_asociado}! 👋 Te compartimos la simulación oficial de la Mutual Modelo ({linea}):" oninput="sincronizarEditorPlantillaPersonalizada('partes')"></textarea>
+                </div>
+                <div>
+                  <label for="inpWaCustomCierre" style="display:block;font-size:0.68rem;font-weight:700;color:#334155;margin-bottom:2px;">Texto de Cierre:</label>
+                  <textarea id="inpWaCustomCierre" class="wa-custom-input" rows="2" placeholder="Aguardo su respuesta. Muchas gracias.&#10;{contacto}" oninput="sincronizarEditorPlantillaPersonalizada('partes')"></textarea>
+                </div>
+              </div>
+              <div>
+                <label for="txtWaCustomTemplateRaw" style="display:block;font-size:0.68rem;font-weight:700;color:#334155;margin-bottom:2px;">Estructura Completa de la Plantilla (con variables dinámicas):</label>
+                <textarea id="txtWaCustomTemplateRaw" class="wa-custom-input" rows="5" placeholder="Escriba su plantilla usando {nombre_asociado}, {linea}, {planes}, {requisitos}, {contacto}..." oninput="sincronizarEditorPlantillaPersonalizada('raw')"></textarea>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:flex-end;gap:0.5rem;flex-wrap:wrap;">
+                <button type="button" class="btn-restore" onclick="restablecerPlantillaPorDefecto()" title="Borrar personalización y volver a la plantilla Oficial AMMER">
+                  ↺ Restablecer plantilla por defecto
+                </button>
+                <button type="button" class="btn-save-custom" style="background:#0f766e;color:#fff;border-color:#0f766e;" onclick="guardarMiFormato()" title="Guardar en localStorage (ammer_custom_wa_template) como predeterminada">
+                  💾 Guardar como mi plantilla predeterminada
+                </button>
+              </div>
+            </div>
+
             <!-- SELECTOR INTERACTIVO DE 6 PLANES EN WHATSAPP -->
             <div class="wa-plan-filter-bar" style="background:#f8fafc;padding:0.45rem 0.75rem;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;flex-wrap:wrap;gap:0.45rem;font-size:0.72rem;">
-              <span style="font-weight:700;color:#334155;white-space:nowrap;">Planes en WhatsApp:</span>
+              <span style="font-weight:700;color:#334155;white-space:nowrap;">Planes incluidos:</span>
               <div id="waPlazosSelectorContainer" style="display:inline-flex;gap:0.35rem;flex-wrap:wrap;align-items:center;"></div>
             </div>
+
             <div class="wa-chat-canvas">
               <div class="wa-bubble-msg">
-                <textarea id="txt-plantilla-whatsapp" class="whatsapp-editor-textarea" rows="7" placeholder="Escriba o personalice aquí el mensaje..."></textarea>
+                <textarea id="txt-plantilla-whatsapp" class="whatsapp-editor-textarea" rows="12" placeholder="Escriba o personalice aquí el mensaje..."></textarea>
                 <div class="wa-bubble-time">
                   <span id="waCustomNotice" style="display:none;font-size:0.65rem;color:#b45309;margin-right:auto;font-weight:600;">✏️ Editado manualmente</span>
                   <span id="waTimeDisplay">10:45</span>
@@ -3744,16 +3795,24 @@
                 </div>
               </div>
             </div>
+
             <div class="wa-actions-bar">
-              <div class="wa-phone-inline-box" title="Teléfono del socio para envío de WhatsApp">
-                <span>Tel:</span>
-                <input type="tel" id="inp-whatsapp-telefono" class="wa-phone-inline-input" placeholder="Ej: 5493434123456"/>
+              <div class="wa-recipient-inputs">
+                <div class="wa-phone-inline-box" title="Nombre del socio/asociado (opcional, reemplaza {nombre_asociado})">
+                  <span>Socio:</span>
+                  <input type="text" id="inp-whatsapp-nombre" class="wa-phone-inline-input" style="width:120px;" placeholder="Opcional (Nombre)" oninput="handleWaRecipientNameInput(this.value)"/>
+                </div>
+                <div class="wa-phone-inline-box" title="Teléfono del socio para envío de WhatsApp">
+                  <span>Tel:</span>
+                  <input type="tel" id="inp-whatsapp-telefono" class="wa-phone-inline-input" placeholder="Ej: 5493434123456"/>
+                </div>
               </div>
               <div class="wa-btn-group">
-                <button type="button" class="btn-save-custom" onclick="guardarMiFormato()" title="Guardar formato actual">💾 Guardar como Mi Formato</button>
-                <button type="button" class="btn-restore" onclick="restoreOriginalTemplate()" title="Restablecer plantilla base">🔄 Restaurar Original</button>
-                <button type="button" class="btn-copy" onclick="copyWhatsAppText()" title="Copiar texto del editor">📋 Copiar</button>
-                <button type="button" class="btn-whatsapp-send" onclick="sendWhatsApp()" title="Enviar mensaje">📲 Enviar WhatsApp</button>
+                <button type="button" class="btn-preview-wa" onclick="previsualizarPlantillaWhatsApp()" title="Actualizar vista previa con los parámetros actuales">👁️ Previsualizar</button>
+                <button type="button" class="btn-save-custom" onclick="guardarMiFormato()" title="Guardar como mi plantilla predeterminada">💾 Guardar Predeterminada</button>
+                <button type="button" class="btn-restore" onclick="restablecerPlantillaPorDefecto()" title="Restablecer plantilla por defecto">🔄 Restablecer por defecto</button>
+                <button type="button" class="btn-copy" onclick="copyWhatsAppText()" title="Copiar texto al portapapeles">📋 Copiar</button>
+                <button type="button" class="btn-whatsapp-send" onclick="sendWhatsApp()" title="Abrir conversación directa en WhatsApp">📲 Enviar WhatsApp</button>
               </div>
             </div>
           </div>
@@ -7242,51 +7301,276 @@
       }
     };
 
+    const WA_CUSTOM_TEMPLATE_STORAGE_KEY = 'ammer_custom_wa_template';
+    const WA_DEFAULT_VERSION_STORAGE_KEY = 'ammer_default_wa_version';
+
+    const PLANTILLA_PERSONALIZADA_DEFAULT = {
+      intro: '¡Hola {nombre_asociado}! 👋 Te compartimos la simulación oficial de la Mutual Modelo ({linea}):',
+      cierre: 'Aguardo su respuesta. Muchas gracias.\n{contacto}',
+      raw: `¡Hola {nombre_asociado}! 👋 Te compartimos la simulación oficial de la Mutual Modelo ({linea}):
+
+{planes}
+
+📌 *Requisitos Generales:* Recibo de haberes, DNI y CBU.
+📲 ¡Consultanos para iniciar tu solicitud en el acto!
+
+En caso de estar interesado y *para poder avanzar con la gestión* online, por favor indique el plan y *envíe* lo que se le solicita a continuación:
+{requisitos}
+
+Aguardo su respuesta. Muchas gracias.
+{contacto}`
+    };
+
+    function normalizarCodigoLineaWA(lineaAyuda) {
+      const raw = String(lineaAyuda || '').trim().toUpperCase();
+      if (raw.includes('SIDE')) return 'CONVENIO_SIDECREER';
+      if (raw.includes('MUNI') || raw.includes('QUAD') || raw.includes('VIKINGO')) return 'QUAD_MUNICIPALES';
+      return 'FEDEM_PROVINCIAL';
+    }
+
+    function obtenerNombreLineaLegibleWA(lineaAyuda) {
+      const cod = normalizarCodigoLineaWA(lineaAyuda);
+      if (cod === 'CONVENIO_SIDECREER') return 'Convenio Sidecreer';
+      if (cod === 'QUAD_MUNICIPALES') return 'QUAD Municipales';
+      return 'FEDEM Provincial';
+    }
+
+    function obtenerRequisitosPorLinea(lineaAyuda) {
+      const cod = normalizarCodigoLineaWA(lineaAyuda);
+      const comunes = [
+        '✅ Recibo de sueldo en formato PDF (último período emitido).',
+        '✅ Foto DNI frente y dorso (legible).',
+        '✅ Número de celular propio y número alternativo de contacto.',
+        '✅ Número de CUIL.',
+        '✅ Correo electrónico activo.',
+        '✅ Constancia de CBU / Certificado de cuenta bancaria.'
+      ];
+      if (cod === 'CONVENIO_SIDECREER') {
+        return [
+          ...comunes,
+          '✅ Foto de frente y dorso de la Tarjeta Sidecreer.',
+          '✅ Último resumen de cuenta de la Tarjeta Sidecreer (se toma directamente como comprobante de servicio/domicilio).'
+        ].join('\n');
+      }
+      return [
+        ...comunes,
+        '✅ Foto o archivo PDF de SERVICIO a su nombre o CERTIFICADO DE VECINDAD (fecha de emisión no mayor a 2 meses de antigüedad).'
+      ].join('\n');
+    }
+
+    function formatearMontoWA(valor) {
+      if (typeof valor === 'string' && valor.trim() !== '' && /[.,]/.test(valor)) {
+        return valor.replace(/^\$\s*/, '').trim();
+      }
+      const num = Number(valor);
+      return formatNumberDecimals(isNaN(num) ? 0 : num);
+    }
+
+    function obtenerContactoAsesorWA() {
+      try {
+        const sess = typeof getSession === 'function' ? getSession() : null;
+        if (sess && sess.nombre) {
+          const org = sess.nombreOrganizacion || sess.nombre_organizacion || 'Mutual Modelo (AMMER)';
+          return `👤 *Asesor/a:* ${sess.nombre} — ${org}`;
+        }
+      } catch (_) {}
+      return '🏛️ *Asociación Mutual Modelo de Entre Ríos (AMMER)*';
+    }
+
+    /**
+     * Función constructora modular del mensaje de WhatsApp del Simulador.
+     * @param {Object} params
+     * @param {'neto'|'monto'|'cuota'} params.modo - Modalidad de simulación ('neto'/'monto' o 'cuota')
+     * @param {number|string} params.monto - Monto solicitado (en modo neto)
+     * @param {number|string} params.cuota - Cuota objetivo (en modo cuota)
+     * @param {Array<Object>|string} params.planes - Lista de planes [{ plazo, monto, cuota }] o texto preformateado
+     * @param {string} params.lineaAyuda - Código o clave de la línea ('fedem', 'muni', 'sidecreer', 'FEDEM_PROVINCIAL', 'QUAD_MUNICIPALES', 'CONVENIO_SIDECREER')
+     * @param {string|Object} [params.customTemplate] - Plantilla personalizada (con etiquetas {nombre_asociado}, {linea}, {planes}, {requisitos}, {contacto})
+     * @param {string} [params.versionPlantilla] - 'oficial' | 'resumida' | 'personalizada'
+     * @param {string} [params.nombreAsociado] - Nombre opcional del socio
+     * @param {string} [params.contacto] - Firma o datos de contacto del asesor
+     */
+    function generarMensajeWhatsApp({
+      modo = 'neto',
+      monto = 0,
+      cuota = 0,
+      planes = [],
+      lineaAyuda = 'FEDEM_PROVINCIAL',
+      customTemplate = null,
+      versionPlantilla = 'oficial',
+      nombreAsociado = '',
+      contacto = ''
+    } = {}) {
+      const esModoCuota = String(modo || '').toLowerCase().includes('cuota');
+      const montoStr = formatearMontoWA(monto);
+      const cuotaStr = formatearMontoWA(cuota);
+
+      const encabezadoModalidad = esModoCuota
+        ? `🎯 *Cuota Objetivo:* $ ${cuotaStr}`
+        : `💰 *Monto Solicitado:* $ ${montoStr}`;
+
+      let listaPlanesTexto = '';
+      if (typeof planes === 'string' && planes.trim() !== '') {
+        listaPlanesTexto = planes.trim();
+      } else if (Array.isArray(planes) && planes.length > 0) {
+        listaPlanesTexto = planes.map(p => {
+          const nCuotas = p.plazo || p.cuotas || p.cantidadCuotas || 12;
+          const mPlan = formatearMontoWA(p.neto !== undefined ? p.neto : (p.montoOtorgable !== undefined ? p.montoOtorgable : (p.monto !== undefined ? p.monto : monto)));
+          const cPlan = formatearMontoWA(p.cuota !== undefined ? p.cuota : (p.valorCuota !== undefined ? p.valorCuota : cuota));
+          return `💰 $ ${mPlan} en ${nCuotas} cuotas fijas de $ ${cPlan}`;
+        }).join('\n');
+      }
+
+      const bloquePlanesConEncabezado = `${encabezadoModalidad}\n\n${listaPlanesTexto}`.trim();
+      const requisitosCondicionales = obtenerRequisitosPorLinea(lineaAyuda);
+      const lineaLegible = obtenerNombreLineaLegibleWA(lineaAyuda);
+      const nombreLimpio = String(nombreAsociado || '').trim();
+      const saludoInicial = nombreLimpio ? `¡Hola ${nombreLimpio}! 👋` : '¡Hola! 👋';
+      const firmaContacto = String(contacto || '').trim() || obtenerContactoAsesorWA();
+
+      const verNorm = (versionPlantilla === 'estandar' || !versionPlantilla) ? 'oficial' : versionPlantilla;
+
+      if (verNorm === 'personalizada' || customTemplate) {
+        let rawTpl = '';
+        const origenTpl = customTemplate || GestorPlantillas.obtenerConfigPersonalizada();
+        if (typeof origenTpl === 'string') {
+          rawTpl = origenTpl;
+        } else if (origenTpl && typeof origenTpl === 'object') {
+          rawTpl = origenTpl.raw || '';
+        }
+        if (!rawTpl || !rawTpl.trim()) {
+          rawTpl = PLANTILLA_PERSONALIZADA_DEFAULT.raw;
+        }
+
+        let interpolado = rawTpl
+          .replace(/\{nombre_asociado\}/gi, nombreLimpio)
+          .replace(/\{linea\}/gi, lineaLegible)
+          .replace(/\{encabezado_modalidad\}/gi, encabezadoModalidad)
+          .replace(/\{lista_planes\}/gi, listaPlanesTexto)
+          .replace(/\{planes\}/gi, bloquePlanesConEncabezado)
+          .replace(/\{requisitos\}/gi, requisitosCondicionales)
+          .replace(/\{contacto\}/gi, firmaContacto);
+
+        // Limpiar espacios sobrantes cuando {nombre_asociado} está vacío (ej. "¡Hola ! " -> "¡Hola! ")
+        interpolado = interpolado
+          .replace(/¡Hola\s+!/g, '¡Hola!')
+          .replace(/Hola\s+,/g, 'Hola,')
+          .replace(/\n{3,}/g, '\n\n')
+          .trim();
+
+        return interpolado;
+      }
+
+      if (verNorm === 'resumida') {
+        return `${saludoInicial} Te compartimos la cotización de *Mutual Modelo* (${lineaLegible}):
+
+${encabezadoModalidad}
+
+${listaPlanesTexto}
+
+📌 *Requisitos para avanzar:*
+${requisitosCondicionales}
+
+📲 ¡Respondé este mensaje indicando el plan elegido para iniciar tu solicitud en el acto!`;
+      }
+
+      // Plantilla Base Oficial AMMER (por defecto)
+      return `${saludoInicial} Te compartimos la simulación oficial de la Mutual Modelo:
+
+${encabezadoModalidad}
+
+${listaPlanesTexto}
+
+📌 *Requisitos Generales:* Recibo de haberes, DNI y CBU.
+📲 ¡Consultanos para iniciar tu solicitud en el acto!
+
+En caso de estar interesado y *para poder avanzar con la gestión* online, por favor indique el plan y *envíe* lo que se le solicita a continuación:
+${requisitosCondicionales}
+
+Aguardo su respuesta. Muchas gracias.`;
+    }
+
     const GestorPlantillas = {
       plantillas: {
-        estandar: (datos) => `¡Hola! 👋 Te compartimos la simulación oficial de la Mutual Modelo:
-
-💰 *Monto Solicitado:* $ ${datos.neto}
-
-${datos.planesTexto}
-
-📌 *Requisitos:* Recibo de haberes, DNI y CBU.
-📲 ¡Consultanos para iniciar tu solicitud en el acto!`,
-
-        plan_unico: (datos) => `¡Hola! 👋 Respecto a tu consulta en Mutual Modelo:
-
-Por un monto en mano de *$ ${datos.neto}* te queda en:
-👉 *${datos.plazoDestacado} cuotas fijas de $ ${datos.cuotaDestacada}*
-(Total a devolver: $ ${datos.totalDestacado})
-
-¿Avanzamos con la documentación?`,
-
-        formal: (datos) => `Estimado/a socio/a,
-Adjuntamos la propuesta financiera solicitada de la Asociación Mutual Modelo de Entre Ríos:
-
-• Capital / Neto: $ ${datos.neto}
-• Alternativas de Pago:
-${datos.planesTexto}
-
-Operación sujeta a verificación crediticia y margen de afectación disponible.`,
-
-        express: (datos) => `🔥 *¡Tu Ayuda Económica en 24hs con Mutual Modelo!* 🔥
-
-Retirás: *$ ${datos.neto}*
-Planes disponibles:
-${datos.planesTexto}
-
-Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditación!`
+        oficial: (datos) => generarMensajeWhatsApp({ ...datos, versionPlantilla: 'oficial' }),
+        estandar: (datos) => generarMensajeWhatsApp({ ...datos, versionPlantilla: 'oficial' }),
+        resumida: (datos) => generarMensajeWhatsApp({ ...datos, versionPlantilla: 'resumida' }),
+        personalizada: (datos) => generarMensajeWhatsApp({ ...datos, versionPlantilla: 'personalizada' })
       },
-      guardarPersonalizada: function(texto) {
-        localStorage.setItem("AMMER_PLANTILLA_CUSTOM", texto);
+      guardarPersonalizada: function(configOTexto) {
+        let objGuardar = null;
+        if (typeof configOTexto === 'string') {
+          objGuardar = {
+            intro: document.getElementById('inpWaCustomIntro')?.value || PLANTILLA_PERSONALIZADA_DEFAULT.intro,
+            cierre: document.getElementById('inpWaCustomCierre')?.value || PLANTILLA_PERSONALIZADA_DEFAULT.cierre,
+            raw: configOTexto,
+            updatedAt: new Date().toISOString()
+          };
+        } else if (configOTexto && typeof configOTexto === 'object') {
+          objGuardar = {
+            intro: configOTexto.intro || PLANTILLA_PERSONALIZADA_DEFAULT.intro,
+            cierre: configOTexto.cierre || PLANTILLA_PERSONALIZADA_DEFAULT.cierre,
+            raw: configOTexto.raw || PLANTILLA_PERSONALIZADA_DEFAULT.raw,
+            updatedAt: new Date().toISOString()
+          };
+        }
+        if (objGuardar) {
+          localStorage.setItem(WA_CUSTOM_TEMPLATE_STORAGE_KEY, JSON.stringify(objGuardar));
+          localStorage.setItem('AMMER_PLANTILLA_CUSTOM', objGuardar.raw);
+          localStorage.setItem(WA_DEFAULT_VERSION_STORAGE_KEY, 'personalizada');
+        }
+      },
+      obtenerConfigPersonalizada: function() {
+        try {
+          const guardado = localStorage.getItem(WA_CUSTOM_TEMPLATE_STORAGE_KEY) || localStorage.getItem('AMMER_PLANTILLA_CUSTOM');
+          if (!guardado) return { ...PLANTILLA_PERSONALIZADA_DEFAULT };
+          if (guardado.trim().startsWith('{')) {
+            const parsed = JSON.parse(guardado);
+            if (parsed && typeof parsed === 'object' && parsed.raw) {
+              return {
+                intro: parsed.intro || PLANTILLA_PERSONALIZADA_DEFAULT.intro,
+                cierre: parsed.cierre || PLANTILLA_PERSONALIZADA_DEFAULT.cierre,
+                raw: parsed.raw
+              };
+            }
+          }
+          return {
+            intro: PLANTILLA_PERSONALIZADA_DEFAULT.intro,
+            cierre: PLANTILLA_PERSONALIZADA_DEFAULT.cierre,
+            raw: guardado
+          };
+        } catch (_) {
+          return { ...PLANTILLA_PERSONALIZADA_DEFAULT };
+        }
       },
       obtenerPersonalizada: function() {
-        return localStorage.getItem("AMMER_PLANTILLA_CUSTOM");
+        return this.obtenerConfigPersonalizada().raw;
+      },
+      restablecerPorDefecto: function() {
+        localStorage.removeItem(WA_CUSTOM_TEMPLATE_STORAGE_KEY);
+        localStorage.removeItem('AMMER_PLANTILLA_CUSTOM');
+        localStorage.setItem(WA_DEFAULT_VERSION_STORAGE_KEY, 'oficial');
       }
     };
 
-    const state = { linea: 'fedem', modo: 'neto', montoInputRaw: 100000, plazo: 12, plantillaVersion: 'estandar', waPlazosSeleccionados: [6, 12, 18, 24, 36, 48] };
+    const versionGuardadaInicial = (() => {
+      try {
+        const pref = localStorage.getItem(WA_DEFAULT_VERSION_STORAGE_KEY);
+        if (pref && ['oficial', 'resumida', 'personalizada'].includes(pref)) return pref;
+        if (localStorage.getItem(WA_CUSTOM_TEMPLATE_STORAGE_KEY)) return 'personalizada';
+      } catch (_) {}
+      return 'oficial';
+    })();
+
+    const state = {
+      linea: 'fedem',
+      modo: 'neto',
+      montoInputRaw: 100000,
+      plazo: 12,
+      plantillaVersion: versionGuardadaInicial,
+      waPlazosSeleccionados: [6, 12, 18, 24, 36, 48],
+      waNombreAsociado: ''
+    };
     const currencyFormatter = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const integerFormatter = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
@@ -7346,6 +7630,18 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const muniNotice = document.getElementById('muniNotice');
       if (muniNotice) muniNotice.style.display = (state.linea === 'muni') ? 'flex' : 'none';
 
+      const ctxBadge = document.getElementById('waSimContextBadge');
+      if (ctxBadge) {
+        const nomLin = obtenerNombreLineaLegibleWA(state.linea);
+        const nomMod = (state.modo === 'cuota') ? '🎯 Por Cuota Objetivo' : '💰 Por Monto Solicitado';
+        ctxBadge.textContent = `${nomLin} • ${nomMod}`;
+      }
+
+      const selTpl = document.getElementById('sel-version-plantilla');
+      if (selTpl && selTpl.value !== state.plantillaVersion) {
+        selTpl.value = ['oficial', 'resumida', 'personalizada'].includes(state.plantillaVersion) ? state.plantillaVersion : 'oficial';
+      }
+
       [6, 12, 18, 24, 36, 48].forEach(p => {
         const btn = document.getElementById('btnPlazo-' + p);
         if (!btn) return;
@@ -7400,6 +7696,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     let isWhatsAppCustomEdited = false;
+    let _ultimoCampoEditorWA = null;
 
     function renderWaPlazosSelector() {
       const container = document.getElementById('waPlazosSelectorContainer');
@@ -7444,12 +7741,33 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       });
       if (plazosAOfrecer.length === 0) plazosAOfrecer = [state.plazo];
 
-      let planesTexto = "";
+      const planesCalculados = [];
+      let planesTexto = '';
       plazosAOfrecer.forEach(p => {
-        const s = calculateSimulation(state.linea, p, 'neto', sim.neto);
-        if (s) planesTexto += "💰 " + formatMoney(s.neto) + " en " + s.plazo + " cuotas fijas de " + formatMoney(s.cuota) + "\n";
+        // Calcula respetando la modalidad activa ('neto' o 'cuota')
+        const s = calculateSimulation(state.linea, p, state.modo, state.montoInputRaw);
+        if (s) {
+          planesCalculados.push({
+            plazo: s.plazo,
+            neto: s.neto,
+            montoOtorgable: s.neto,
+            cuota: s.cuota,
+            totalAyuda: s.totalAyuda
+          });
+          planesTexto += `💰 $ ${formatNumberDecimals(s.neto)} en ${s.plazo} cuotas fijas de $ ${formatNumberDecimals(s.cuota)}\n`;
+        }
       });
+
+      const nombreInput = document.getElementById('inp-whatsapp-nombre')?.value || state.waNombreAsociado || '';
+
       return {
+        modo: state.modo,
+        monto: sim.neto,
+        cuota: sim.cuota,
+        planes: planesCalculados,
+        lineaAyuda: state.linea,
+        nombreAsociado: nombreInput,
+        contacto: obtenerContactoAsesorWA(),
         neto: formatNumberDecimals(sim.neto),
         plazoDestacado: sim.plazo,
         cuotaDestacada: formatNumberDecimals(sim.cuota),
@@ -7459,17 +7777,118 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     function generateCurrentTemplateMessage() {
-      const datos = buildTemplateData(); if (!datos) return '';
-      const version = state.plantillaVersion || 'estandar';
+      const datos = buildTemplateData();
+      if (!datos) return '';
+      const version = (state.plantillaVersion === 'estandar' || !state.plantillaVersion) ? 'oficial' : state.plantillaVersion;
       if (version === 'personalizada') {
-        const guardada = GestorPlantillas.obtenerPersonalizada();
-        return guardada ? guardada : GestorPlantillas.plantillas.estandar(datos);
+        const rawEditor = document.getElementById('txtWaCustomTemplateRaw')?.value;
+        const customTpl = (rawEditor && rawEditor.trim() !== '') ? rawEditor : GestorPlantillas.obtenerPersonalizada();
+        return generarMensajeWhatsApp({
+          ...datos,
+          versionPlantilla: 'personalizada',
+          customTemplate: customTpl
+        });
       }
-      return GestorPlantillas.plantillas[version] ? GestorPlantillas.plantillas[version](datos) : GestorPlantillas.plantillas.estandar(datos);
+      return generarMensajeWhatsApp({
+        ...datos,
+        versionPlantilla: version
+      });
+    }
+
+    function cargarValoresEnEditorPlantillaWA() {
+      const cfg = GestorPlantillas.obtenerConfigPersonalizada();
+      const inpIntro = document.getElementById('inpWaCustomIntro');
+      const inpCierre = document.getElementById('inpWaCustomCierre');
+      const txtRaw = document.getElementById('txtWaCustomTemplateRaw');
+      if (inpIntro) inpIntro.value = cfg.intro || PLANTILLA_PERSONALIZADA_DEFAULT.intro;
+      if (inpCierre) inpCierre.value = cfg.cierre || PLANTILLA_PERSONALIZADA_DEFAULT.cierre;
+      if (txtRaw) txtRaw.value = cfg.raw || PLANTILLA_PERSONALIZADA_DEFAULT.raw;
+
+      [inpIntro, inpCierre, txtRaw].forEach(el => {
+        if (el && !el.dataset.focusBound) {
+          el.dataset.focusBound = '1';
+          el.addEventListener('focus', () => { _ultimoCampoEditorWA = el; });
+        }
+      });
+    }
+
+    function toggleEditorPlantillaWhatsApp(forzarEstado) {
+      const panel = document.getElementById('waCustomTemplateEditorPanel');
+      const btn = document.getElementById('btnToggleWaTemplateEditor');
+      if (!panel) return;
+      const abrir = typeof forzarEstado === 'boolean' ? forzarEstado : !panel.classList.contains('open');
+      if (abrir) {
+        cargarValoresEnEditorPlantillaWA();
+      }
+      panel.classList.toggle('open', abrir);
+      if (btn) btn.classList.toggle('active', abrir);
+    }
+
+    function sincronizarEditorPlantillaPersonalizada(origen) {
+      const inpIntro = document.getElementById('inpWaCustomIntro');
+      const inpCierre = document.getElementById('inpWaCustomCierre');
+      const txtRaw = document.getElementById('txtWaCustomTemplateRaw');
+      if (!txtRaw) return;
+
+      if (origen === 'partes') {
+        const introTxt = (inpIntro?.value || '').trim() || PLANTILLA_PERSONALIZADA_DEFAULT.intro;
+        const cierreTxt = (inpCierre?.value || '').trim() || PLANTILLA_PERSONALIZADA_DEFAULT.cierre;
+        txtRaw.value = `${introTxt}
+
+{planes}
+
+📌 *Requisitos Generales:* Recibo de haberes, DNI y CBU.
+📲 ¡Consultanos para iniciar tu solicitud en el acto!
+
+En caso de estar interesado y *para poder avanzar con la gestión* online, por favor indique el plan y *envíe* lo que se le solicita a continuación:
+{requisitos}
+
+${cierreTxt}`;
+      }
+
+      state.plantillaVersion = 'personalizada';
+      const sel = document.getElementById('sel-version-plantilla');
+      if (sel) sel.value = 'personalizada';
+      isWhatsAppCustomEdited = false;
+      updateWhatsAppPreview(true);
+    }
+
+    function insertarVariablePlantillaWA(tag) {
+      const txtRaw = document.getElementById('txtWaCustomTemplateRaw');
+      const target = (_ultimoCampoEditorWA && document.body.contains(_ultimoCampoEditorWA)) ? _ultimoCampoEditorWA : txtRaw;
+      if (!target) return;
+      const start = target.selectionStart ?? target.value.length;
+      const end = target.selectionEnd ?? target.value.length;
+      const antes = target.value.slice(0, start);
+      const despues = target.value.slice(end);
+      target.value = antes + tag + despues;
+      target.focus();
+      const nuevaPos = start + tag.length;
+      target.setSelectionRange(nuevaPos, nuevaPos);
+      sincronizarEditorPlantillaPersonalizada(target.id === 'txtWaCustomTemplateRaw' ? 'raw' : 'partes');
+    }
+
+    function handleWaRecipientNameInput(val) {
+      state.waNombreAsociado = String(val || '');
+      isWhatsAppCustomEdited = false;
+      updateWhatsAppPreview(true);
     }
 
     function handleTemplateVersionChange(version) {
-      state.plantillaVersion = version; isWhatsAppCustomEdited = false; updateWhatsAppPreview(true); showToast("Formato de plantilla cambiado.");
+      state.plantillaVersion = version;
+      localStorage.setItem(WA_DEFAULT_VERSION_STORAGE_KEY, version);
+      if (version === 'personalizada') {
+        cargarValoresEnEditorPlantillaWA();
+      }
+      isWhatsAppCustomEdited = false;
+      updateWhatsAppPreview(true);
+      showToast("Formato de plantilla actualizado.");
+    }
+
+    function previsualizarPlantillaWhatsApp() {
+      isWhatsAppCustomEdited = false;
+      updateWhatsAppPreview(true);
+      showToast("👁️ Vista previa de WhatsApp actualizada.");
     }
 
     function updateWhatsAppPreview(force = false) {
@@ -7484,30 +7903,57 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     }
 
     function guardarMiFormato() {
+      const panelAbierto = document.getElementById('waCustomTemplateEditorPanel')?.classList.contains('open');
+      const txtRaw = document.getElementById('txtWaCustomTemplateRaw');
       const textarea = document.getElementById('txt-plantilla-whatsapp');
-      const text = textarea ? textarea.value.trim() : '';
-      if (!text) { showToast("El texto de la plantilla está vacío."); return; }
-      GestorPlantillas.guardarPersonalizada(text);
+
+      if (panelAbierto && txtRaw && txtRaw.value.trim()) {
+        GestorPlantillas.guardarPersonalizada({
+          intro: document.getElementById('inpWaCustomIntro')?.value || PLANTILLA_PERSONALIZADA_DEFAULT.intro,
+          cierre: document.getElementById('inpWaCustomCierre')?.value || PLANTILLA_PERSONALIZADA_DEFAULT.cierre,
+          raw: txtRaw.value.trim()
+        });
+      } else {
+        const text = textarea ? textarea.value.trim() : '';
+        if (!text) { showToast("El texto de la plantilla está vacío."); return; }
+        GestorPlantillas.guardarPersonalizada(text);
+        if (txtRaw) txtRaw.value = text;
+      }
+
       state.plantillaVersion = 'personalizada';
       const sel = document.getElementById('sel-version-plantilla'); if (sel) sel.value = 'personalizada';
       isWhatsAppCustomEdited = false;
-      showToast("💾 ¡Plantilla guardada como 'Mi Formato' exitosamente!");
+      updateWhatsAppPreview(true);
+      showToast("💾 ¡Plantilla guardada como predeterminada en este navegador!");
+    }
+
+    function restablecerPlantillaPorDefecto() {
+      GestorPlantillas.restablecerPorDefecto();
+      state.plantillaVersion = 'oficial';
+      const sel = document.getElementById('sel-version-plantilla'); if (sel) sel.value = 'oficial';
+      cargarValoresEnEditorPlantillaWA();
+      isWhatsAppCustomEdited = false;
+      updateWhatsAppPreview(true);
+      showToast("🔄 Plantilla restablecida al formato Oficial AMMER por defecto.");
     }
 
     function restoreOriginalTemplate() {
-      isWhatsAppCustomEdited = false; updateWhatsAppPreview(true); showToast("🔄 Plantilla original restaurada.");
+      restablecerPlantillaPorDefecto();
     }
 
     function copyWhatsAppText() {
       const textarea = document.getElementById('txt-plantilla-whatsapp');
       const text = textarea ? textarea.value : ''; if (!text) return;
-      navigator.clipboard.writeText(text).then(() => showToast("¡Copiado con éxito!")).catch(() => { textarea.select(); document.execCommand('copy'); showToast("¡Copiado con éxito!"); });
+      navigator.clipboard.writeText(text).then(() => showToast("📋 ¡Mensaje de WhatsApp copiado al portapapeles!")).catch(() => { textarea.select(); document.execCommand('copy'); showToast("📋 ¡Mensaje de WhatsApp copiado al portapapeles!"); });
     }
 
     function sendWhatsApp() {
       const text = document.getElementById('txt-plantilla-whatsapp')?.value || '';
       const phoneInput = (document.getElementById('inp-whatsapp-telefono')?.value || '').trim().replace(/[^0-9]/g, '');
-      let url = 'https://api.whatsapp.com/send?' + (phoneInput ? 'phone=' + (phoneInput.startsWith('54') ? phoneInput : '549' + phoneInput) + '&' : '') + 'text=' + encodeURIComponent(text);
+      const phoneClean = phoneInput ? (phoneInput.startsWith('54') ? phoneInput : '549' + phoneInput) : '';
+      const url = phoneClean
+        ? `https://wa.me/${phoneClean}?text=${encodeURIComponent(text)}`
+        : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
       window.open(url, '_blank', 'noopener,noreferrer');
     }
 
@@ -7549,10 +7995,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       renderApp();
     }
     function resetDefaults() {
-      state.linea = 'fedem'; state.modo = 'neto'; state.montoInputRaw = 100000; state.plazo = 12; state.plantillaVersion = 'estandar'; state.waPlazosSeleccionados = [6, 12, 18, 24, 36, 48];
+      state.linea = 'fedem'; state.modo = 'neto'; state.montoInputRaw = 100000; state.plazo = 12; state.plantillaVersion = 'oficial'; state.waPlazosSeleccionados = [6, 12, 18, 24, 36, 48]; state.waNombreAsociado = '';
       const inp = document.getElementById('amountInput'); if (inp) inp.value = '100.000';
       const phoneEl = document.getElementById('inp-whatsapp-telefono'); if (phoneEl) phoneEl.value = '';
-      const selVersion = document.getElementById('sel-version-plantilla'); if (selVersion) selVersion.value = 'estandar';
+      const nameEl = document.getElementById('inp-whatsapp-nombre'); if (nameEl) nameEl.value = '';
+      const selVersion = document.getElementById('sel-version-plantilla'); if (selVersion) selVersion.value = 'oficial';
       isWhatsAppCustomEdited = false;
       renderApp(); updateWhatsAppPreview(true); showToast("Valores restablecidos a predeterminados.");
     }
@@ -18746,6 +19193,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     window.handleAmountInput = handleAmountInput;
     window.resetDefaults = resetDefaults;
     window.handleTemplateVersionChange = handleTemplateVersionChange;
+    window.generarMensajeWhatsApp = generarMensajeWhatsApp;
+    window.obtenerRequisitosPorLinea = obtenerRequisitosPorLinea;
+    window.toggleEditorPlantillaWhatsApp = toggleEditorPlantillaWhatsApp;
+    window.sincronizarEditorPlantillaPersonalizada = sincronizarEditorPlantillaPersonalizada;
+    window.insertarVariablePlantillaWA = insertarVariablePlantillaWA;
+    window.handleWaRecipientNameInput = handleWaRecipientNameInput;
+    window.previsualizarPlantillaWhatsApp = previsualizarPlantillaWhatsApp;
+    window.restablecerPlantillaPorDefecto = restablecerPlantillaPorDefecto;
     window.guardarMiFormato = guardarMiFormato;
     window.restoreOriginalTemplate = restoreOriginalTemplate;
     window.copyWhatsAppText = copyWhatsAppText;

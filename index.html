@@ -16162,25 +16162,37 @@ ${cierreTxt}`;
         labIn.fechaIngresoLaboral,
         recIn.fechaIngreso,
         agIn.fechaIngreso,
-        obj.fechaIngreso
+        obj.fechaIngreso,
+        obj.fecha_ingreso
       ], '');
 
       const categoriaFinal = pickTxt([
         resDecIn.categoria,
+        detRecIn.categoria,
         labIn.categoria,
         recIn.categoria,
         agIn.categoria,
-        obj.categoria
+        obj.categoria,
+        obj.cat,
+        obj.categoriaMunicipal
       ], '');
 
       const legajoFinal = pickTxt([
         resDecIn.legajo,
+        detRecIn.legajo,
         labIn.legajo,
         labIn.legajoMunicipal,
         recIn.legajo,
         agIn.legajo,
-        obj.legajo
+        obj.legajo,
+        obj.legajoMunicipal,
+        obj.nroLegajo,
+        obj.nro_legajo
       ], '');
+
+      if (fechaIngresoFinal) obj.fechaIngreso = fechaIngresoFinal;
+      if (categoriaFinal) obj.categoria = categoriaFinal;
+      if (legajoFinal) obj.legajo = legajoFinal;
 
       obj.reciboSueldo = Object.assign({}, recIn, {
         titular: titularFinal,

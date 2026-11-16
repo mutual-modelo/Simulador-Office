@@ -1730,15 +1730,21 @@
     .whatsapp-editor-textarea:focus{background-color:rgba(255,255,255,.6);border-color:#25d366}
     .wa-bubble-time{display:flex;align-items:center;justify-content:flex-end;gap:4px;font-size:.65rem;color:#667781;margin-top:.25rem;padding-right:.25rem}
     .wa-checks{color:#53bdeb;font-weight:bold}
-    .wa-actions-bar{padding:.65rem 1rem;background:#f8fafc;border-top:1px solid var(--border-color);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem}
-    .wa-recipient-inputs{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
-    .wa-phone-inline-box{display:flex;align-items:center;gap:.375rem;background:#fff;border:1px solid var(--border-color);padding:.3rem .6rem;border-radius:6px;font-size:.75rem;color:var(--text-muted)}
-    .wa-phone-inline-input{border:none;outline:none;font-size:.75rem;color:var(--text-main);font-weight:600;width:135px;background:transparent}
-    .wa-btn-group{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}
-    .btn-save-custom,.btn-restore,.btn-copy,.btn-preview-wa{background:#fff;color:var(--text-main);border:1px solid var(--border-color);padding:.42rem .75rem;font-size:.73rem;font-weight:600;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:.32rem;transition:all .15s ease}
-    .btn-save-custom:hover,.btn-restore:hover,.btn-copy:hover,.btn-preview-wa:hover{background:#f1f5f9;border-color:#cbd5e1}
-    .btn-whatsapp-send{background:var(--wa-accent);color:#fff;border:none;padding:.45rem .95rem;font-size:.75rem;font-weight:600;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:.375rem;text-decoration:none;box-shadow:0 2px 5px rgba(37,211,102,.3);transition:all .15s ease}
+    .wa-actions-bar{padding:.6rem .85rem;background:#f8fafc;border-top:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:nowrap}
+    .wa-recipient-inputs{display:flex;align-items:center;gap:.4rem;flex:1 1 auto;min-width:0}
+    .wa-phone-inline-box{display:flex;align-items:center;gap:.3rem;background:#fff;border:1px solid #cbd5e1;padding:.34rem .55rem;border-radius:7px;font-size:.73rem;color:var(--text-muted);min-width:0;flex:1 1 110px;max-width:165px;transition:border-color .15s ease,box-shadow .15s ease}
+    .wa-phone-inline-box:focus-within{border-color:#0d9488;box-shadow:0 0 0 2px rgba(13,148,136,.12)}
+    .wa-phone-inline-box span{font-weight:600;color:#475569;white-space:nowrap}
+    .wa-phone-inline-input{border:none;outline:none;font-size:.73rem;color:var(--text-main);font-weight:600;width:100%;min-width:0;background:transparent}
+    .wa-btn-group{display:flex;align-items:center;gap:.35rem;flex-shrink:0}
+    .btn-wa-icon{width:32px;height:32px;padding:0;background:#fff;color:#334155;border:1px solid #cbd5e1;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:.88rem;line-height:1;transition:all .15s ease;box-shadow:0 1px 2px rgba(15,23,42,.04);flex-shrink:0}
+    .btn-wa-icon:hover{background:#f1f5f9;border-color:#94a3b8;color:#0f172a;transform:translateY(-1px)}
+    .wa-actions-divider{width:1px;height:22px;background:#cbd5e1;margin:0 .1rem;flex-shrink:0}
+    .btn-save-custom,.btn-restore,.btn-copy,.btn-preview-wa{background:#fff;color:var(--text-main);border:1px solid #cbd5e1;padding:.38rem .7rem;font-size:.73rem;font-weight:600;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem;white-space:nowrap;transition:all .15s ease;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+    .btn-save-custom:hover,.btn-restore:hover,.btn-copy:hover,.btn-preview-wa:hover{background:#f1f5f9;border-color:#94a3b8;transform:translateY(-1px)}
+    .btn-whatsapp-send{background:var(--wa-accent);color:#fff;border:none;padding:.4rem .85rem;font-size:.74rem;font-weight:700;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem;text-decoration:none;white-space:nowrap;box-shadow:0 2px 5px rgba(37,211,102,.3);transition:all .15s ease}
     .btn-whatsapp-send:hover{background:#20bd5a;transform:translateY(-1px);box-shadow:0 3px 8px rgba(37,211,102,.4)}
+    @media (max-width:768px){.wa-actions-bar{flex-wrap:wrap}.wa-recipient-inputs{width:100%}.wa-phone-inline-box{max-width:none}.wa-btn-group{width:100%;justify-content:flex-end}}
 
     /* ========================================================================
        BARRA DE HERRAMIENTAS Y FILTROS REDISEÑADA (2 NIVELES JERÁRQUICOS)
@@ -3797,29 +3803,23 @@
             </div>
 
             <div class="wa-actions-bar">
-              <div class="wa-actions-row-primary">
-                <div class="wa-recipient-inputs">
-                  <div class="wa-phone-inline-box" title="Nombre del socio/asociado (opcional, reemplaza {nombre_asociado})">
-                    <span>Socio:</span>
-                    <input type="text" id="inp-whatsapp-nombre" class="wa-phone-inline-input" placeholder="Opcional (Nombre)" oninput="handleWaRecipientNameInput(this.value)"/>
-                  </div>
-                  <div class="wa-phone-inline-box" title="Teléfono del socio para envío de WhatsApp">
-                    <span>Tel:</span>
-                    <input type="tel" id="inp-whatsapp-telefono" class="wa-phone-inline-input" placeholder="Ej: 5493434123456"/>
-                  </div>
+              <div class="wa-recipient-inputs">
+                <div class="wa-phone-inline-box" title="Nombre del socio/asociado (opcional, reemplaza {nombre_asociado})">
+                  <span>Socio:</span>
+                  <input type="text" id="inp-whatsapp-nombre" class="wa-phone-inline-input" placeholder="Nombre" oninput="handleWaRecipientNameInput(this.value)"/>
                 </div>
-                <div class="wa-primary-actions">
-                  <button type="button" class="btn-copy" onclick="copyWhatsAppText()" title="Copiar texto al portapapeles">📋 Copiar</button>
-                  <button type="button" class="btn-whatsapp-send" onclick="sendWhatsApp()" title="Abrir conversación directa en WhatsApp">📲 Enviar WhatsApp</button>
+                <div class="wa-phone-inline-box" title="Teléfono del socio para envío de WhatsApp">
+                  <span>Tel:</span>
+                  <input type="tel" id="inp-whatsapp-telefono" class="wa-phone-inline-input" placeholder="549343..."/>
                 </div>
               </div>
-              <div class="wa-actions-row-secondary">
-                <span class="wa-secondary-label">Plantilla:</span>
-                <div class="wa-btn-group">
-                  <button type="button" class="btn-preview-wa" onclick="previsualizarPlantillaWhatsApp()" title="Actualizar vista previa con los parámetros actuales">👁️ Previsualizar</button>
-                  <button type="button" class="btn-save-custom" onclick="guardarMiFormato()" title="Guardar como mi plantilla predeterminada">💾 Guardar Predeterminada</button>
-                  <button type="button" class="btn-restore" onclick="restablecerPlantillaPorDefecto()" title="Restablecer plantilla por defecto">🔄 Restablecer por defecto</button>
-                </div>
+              <div class="wa-btn-group">
+                <button type="button" class="btn-wa-icon" onclick="previsualizarPlantillaWhatsApp()" title="Previsualizar mensaje con los parámetros actuales" aria-label="Previsualizar">👁️</button>
+                <button type="button" class="btn-wa-icon" onclick="guardarMiFormato()" title="Guardar como mi plantilla predeterminada" aria-label="Guardar plantilla predeterminada">💾</button>
+                <button type="button" class="btn-wa-icon" onclick="restablecerPlantillaPorDefecto()" title="Restablecer plantilla por defecto" aria-label="Restablecer plantilla por defecto">🔄</button>
+                <span class="wa-actions-divider" aria-hidden="true"></span>
+                <button type="button" class="btn-copy" onclick="copyWhatsAppText()" title="Copiar texto al portapapeles">📋 Copiar</button>
+                <button type="button" class="btn-whatsapp-send" onclick="sendWhatsApp()" title="Abrir conversación directa en WhatsApp">📲 Enviar</button>
               </div>
             </div>
           </div>

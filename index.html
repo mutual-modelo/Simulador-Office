@@ -16156,6 +16156,32 @@ ${cierreTxt}`;
         ? 'A (Riesgo Bajo)'
         : (ptsTotal >= 60 ? 'B (Riesgo Moderado)' : 'C (Riesgo Crítico / No Viable)');
 
+      const fechaIngresoFinal = pickTxt([
+        resDecIn.fechaIngreso,
+        labIn.fechaIngreso,
+        labIn.fechaIngresoLaboral,
+        recIn.fechaIngreso,
+        agIn.fechaIngreso,
+        obj.fechaIngreso
+      ], '');
+
+      const categoriaFinal = pickTxt([
+        resDecIn.categoria,
+        labIn.categoria,
+        recIn.categoria,
+        agIn.categoria,
+        obj.categoria
+      ], '');
+
+      const legajoFinal = pickTxt([
+        resDecIn.legajo,
+        labIn.legajo,
+        labIn.legajoMunicipal,
+        recIn.legajo,
+        agIn.legajo,
+        obj.legajo
+      ], '');
+
       obj.reciboSueldo = Object.assign({}, recIn, {
         titular: titularFinal,
         dni: dniFinal,
@@ -16164,8 +16190,10 @@ ${cierreTxt}`;
         escalafonCargo: cargoFinal,
         cargo: cargoFinal,
         situacionRevista: situacionRevFinal,
-        fechaIngreso: pickTxt([labIn.fechaIngreso, recIn.fechaIngreso, agIn.fechaIngreso], 'No consta en recibo'),
+        fechaIngreso: fechaIngresoFinal || 'No consta en recibo',
         antiguedadDetalle: antiguedadFinal,
+        categoria: categoriaFinal,
+        legajo: legajoFinal,
         cumpleAntiguedadMinima: cumpleAntigBool,
         periodo: periodoFinal,
         estadoPeriodo: pickTxt([vigIn.estadoVigencia, recIn.estadoPeriodo], 'VIGENTE'),
@@ -16199,6 +16227,9 @@ ${cierreTxt}`;
         cargo: cargoFinal,
         periodo: periodoFinal,
         antiguedad: antiguedadFinal,
+        fechaIngreso: fechaIngresoFinal,
+        categoria: categoriaFinal,
+        legajo: legajoFinal,
         antiguedadApta: cumpleAntigBool,
         sueldoBrutoTotal: bruto,
         descuentosLey: descLey,
@@ -16826,6 +16857,27 @@ ${cierreTxt}`;
 
       const memo = res.informeEjecutivo || 'Revisar detalle documental.';
 
+      const catRawCard = String(rec.categoria || res.categoria || resDec?.categoria || '').trim();
+      const catValCard = (catRawCard && !/no consta|no especificada|n\/a/i.test(catRawCard)) ? catRawCard : '';
+      const legajoRawCard = String(rec.legajo || res.legajo || resDec?.legajo || '').trim();
+      const legajoValCard = (legajoRawCard && !/no consta|no especificada|n\/a/i.test(legajoRawCard)) ? legajoRawCard : '';
+
+      const catBadgeHtml = catValCard
+        ? '<div><span style="color:#64748b;font-size:0.67rem;">🏷️ Categoría:</span><br/><span style="display:inline-flex;align-items:center;gap:4px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:6px;padding:1px 7px;font-weight:700;font-size:0.72rem;">' + sanitizeHTML(/^cat/i.test(catValCard) ? catValCard : ('Cat. ' + catValCard)) + '</span></div>'
+        : '';
+      const legajoBadgeHtml = legajoValCard
+        ? '<div><span style="color:#64748b;font-size:0.67rem;">🪪 Legajo:</span><br/><span style="display:inline-flex;align-items:center;gap:4px;background:#f8fafc;color:#0f172a;border:1px solid #cbd5e1;border-radius:6px;padding:1px 7px;font-weight:700;font-size:0.72rem;font-family:monospace;">' + sanitizeHTML(legajoValCard) + '</span></div>'
+        : '';
+
+      const antigDetalleCard = String(rec.antiguedadDetalle || resDec?.antiguedad || '').trim();
+      const fechaIngCard = String(rec.fechaIngreso || resDec?.fechaIngreso || '').trim();
+      const antigTextoCard = antigDetalleCard && !/no registrada|no especificada/i.test(antigDetalleCard)
+        ? antigDetalleCard
+        : (fechaIngCard && !/no consta|sin fecha/i.test(fechaIngCard) ? ('Ingreso ' + fechaIngCard) : 'No especificada');
+      const fechaIngSubHtml = (fechaIngCard && !/no consta|sin fecha/i.test(fechaIngCard) && antigTextoCard !== ('Ingreso ' + fechaIngCard))
+        ? ' <span style="color:#64748b;font-weight:500;">(Ing. ' + sanitizeHTML(fechaIngCard) + ')</span>'
+        : '';
+
       return '<div class="ai-executive-audit-card" style="display:flex;flex-direction:column;gap:0.75rem;">' +
         '<div class="ai-executive-header">' +
           '<div>' +
@@ -16844,7 +16896,7 @@ ${cierreTxt}`;
           '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px;font-size:0.74rem;color:#0f172a;">' +
             '<div><span style="color:#64748b;font-size:0.67rem;">Titular en recibo:</span><br/><strong>' + sanitizeHTML(rec.titular || TEXTO_ILEGIBLE_AMMER) + '</strong></div>' +
             '<div><span style="color:#64748b;font-size:0.67rem;">DNI / CUIL extraído:</span><br/><strong>' + sanitizeHTML(rec.dni || TEXTO_ILEGIBLE_AMMER) + '</strong> • ' + sanitizeHTML(rec.cuil || 'No consta en recibo') + '</div>' +
-            '<div><span style="color:#64748b;font-size:0.67rem;">Período liquidado:</span><br/><strong>' + sanitizeHTML(rec.periodo || TEXTO_ILEGIBLE_AMMER) + '</strong> ' + periodoVigBadge + '</div>' +
+            '<div><span style="color:#64748b;font-size:0.67rem;">📅 Período Liquidado:</span><br/><strong>' + sanitizeHTML(rec.periodo || TEXTO_ILEGIBLE_AMMER) + '</strong> ' + periodoVigBadge + '</div>' +
           '</div>' +
         '</div>' +
 
@@ -16854,10 +16906,12 @@ ${cierreTxt}`;
             '<span style="font-size:0.7rem;font-weight:800;color:#1e3a8a;text-transform:uppercase;">2. Datos Laborales y Antigüedad</span>' +
             antBadge +
           '</div>' +
-          '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px;font-size:0.74rem;color:#0f172a;">' +
+          '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:8px;font-size:0.74rem;color:#0f172a;">' +
             '<div><span style="color:#64748b;font-size:0.67rem;">Organismo / Empleador:</span><br/><strong>' + sanitizeHTML(rec.organismo || TEXTO_ILEGIBLE_AMMER) + '</strong></div>' +
             '<div><span style="color:#64748b;font-size:0.67rem;">Situación de Revista:</span><br/><strong>' + sanitizeHTML(rec.situacionRevista || TEXTO_ILEGIBLE_AMMER) + '</strong></div>' +
-            '<div><span style="color:#64748b;font-size:0.67rem;">Antigüedad / Ingreso:</span><br/><strong>' + sanitizeHTML(rec.antiguedadDetalle || 'No especificada') + '</strong> (' + sanitizeHTML(rec.fechaIngreso || 'Sin fecha impresa') + ')</div>' +
+            '<div><span style="color:#64748b;font-size:0.67rem;">⏳ Antigüedad / Ingreso:</span><br/><strong>' + sanitizeHTML(antigTextoCard) + '</strong>' + fechaIngSubHtml + '</div>' +
+            catBadgeHtml +
+            legajoBadgeHtml +
           '</div>' +
         '</div>' +
 
@@ -18437,6 +18491,7 @@ ${cierreTxt}`;
       const resDec = dictamen.resumenDecision || {};
       const ident = dictamen.identidad || {};
       const datLab = dictamen.datosLaborales || {};
+      const recSueldo = dictamen.reciboSueldo || {};
       const radSal = dictamen.radiografiaSalarial || {};
 
       const dni = String(dictamen.dni || resDec.dni || ident.dni || '').replace(/\D/g, '');
@@ -18446,9 +18501,10 @@ ${cierreTxt}`;
       const organismoRaw = String(dictamen.organismo || resDec.organismo || datLab.organismoEmpleador || datLab.organismo || '').trim();
       const cargoRaw = String(dictamen.cargo || resDec.cargo || datLab.escalafonCargo || datLab.cargo || datLab.situacionRevista || '').trim();
       const condicionRaw = String(dictamen.condicion || datLab.condicion || '').trim();
-      const legajoRaw = String(dictamen.legajo || datLab.legajo || datLab.legajoMunicipal || resDec.legajo || '').trim();
-      const antiguedadRaw = String(dictamen.antiguedad || datLab.antiguedad || datLab.antiguedadCalculada || '').trim();
-      const fechaIngresoRaw = String(dictamen.fechaIngreso || datLab.fechaIngresoLaboral || datLab.fechaIngreso || '').trim();
+      const legajoRaw = String(dictamen.legajo || recSueldo.legajo || datLab.legajo || datLab.legajoMunicipal || resDec.legajo || '').trim();
+      const categoriaRaw = String(dictamen.categoria || recSueldo.categoria || datLab.categoria || resDec.categoria || '').trim();
+      const antiguedadRaw = String(dictamen.antiguedad || recSueldo.antiguedadDetalle || datLab.antiguedad || datLab.antiguedadCalculada || '').trim();
+      const fechaIngresoRaw = String(dictamen.fechaIngreso || recSueldo.fechaIngreso || datLab.fechaIngresoLaboral || datLab.fechaIngreso || '').trim();
 
       const sueldoLiquido = Number(dictamen.sueldoLiquido || resDec.sueldoLiquido || radSal.sueldoLiquido || 0);
       const margen50 = Number(dictamen.margen || dictamen.margen50 || resDec.margenDisponiblePlanilla || radSal.cupoDisponiblePlanilla || 0);
@@ -18502,11 +18558,15 @@ ${cierreTxt}`;
         selCondicion.value = condicionSel;
       }
 
-      // 7. Legajo: si leyó número de legajo (ej: "211183"), asignarlo a #solLegajo
+      // 7. Legajo y Categoría Municipal: asignar a #solLegajo y #solicitud-categoria-municipal
       const inpLegajo = document.getElementById('solLegajo');
-      if (inpLegajo && legajoRaw) {
+      if (inpLegajo && legajoRaw && !/no consta|n\/a/i.test(legajoRaw)) {
         const legajoDigits = legajoRaw.replace(/\D/g, '') || legajoRaw;
         inpLegajo.value = legajoDigits;
+      }
+      const inpCatMuni = document.getElementById('solicitud-categoria-municipal');
+      if (inpCatMuni && categoriaRaw && !/no consta|n\/a/i.test(categoriaRaw)) {
+        inpCatMuni.value = categoriaRaw;
       }
 
       // 8. DNI, Nombre y Apellido, CUIL, Domicilio
@@ -18533,7 +18593,7 @@ ${cierreTxt}`;
       // 9. Antigüedad / Años y Meses: parsear antigüedad ("9 años, 1 mes", "9 - 1", etc.)
       let anios = 0;
       let meses = 0;
-      if (antiguedadRaw) {
+      if (antiguedadRaw && !/no registrada|no especificada|no consta/i.test(antiguedadRaw)) {
         const mAnios = antiguedadRaw.match(/(\d+)\s*(?:año|ano|a)/i);
         const mMeses = antiguedadRaw.match(/(\d+)\s*(?:mes|m)/i);
         if (mAnios) anios = parseInt(mAnios[1], 10) || 0;
@@ -18549,11 +18609,14 @@ ${cierreTxt}`;
           }
         }
       }
-      const totalMeses = (anios * 12) + meses;
+      let totalMeses = (anios * 12) + meses;
 
       let fechaIngresoFinal = '';
       if (fechaIngresoRaw && /^\d{4}-\d{2}-\d{2}$/.test(fechaIngresoRaw)) {
         fechaIngresoFinal = fechaIngresoRaw;
+      } else if (fechaIngresoRaw && /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/.test(fechaIngresoRaw)) {
+        const mF = fechaIngresoRaw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+        fechaIngresoFinal = `${mF[3]}-${mF[2].padStart(2, '0')}-${mF[1].padStart(2, '0')}`;
       } else if (totalMeses > 0) {
         const d = new Date();
         d.setFullYear(d.getFullYear() - anios);
@@ -18562,6 +18625,20 @@ ${cierreTxt}`;
         const mm = String(d.getMonth() + 1).padStart(2, '0');
         const dd = String(Math.min(d.getDate(), 28)).padStart(2, '0');
         fechaIngresoFinal = `${yyyy}-${mm}-${dd}`;
+      }
+
+      if (totalMeses === 0 && fechaIngresoFinal) {
+        const fIng = new Date(fechaIngresoFinal + 'T00:00:00');
+        const hoy = new Date();
+        if (!isNaN(fIng.getTime()) && fIng <= hoy) {
+          let diffMeses = (hoy.getFullYear() - fIng.getFullYear()) * 12 + (hoy.getMonth() - fIng.getMonth());
+          if (hoy.getDate() < fIng.getDate()) diffMeses--;
+          if (diffMeses > 0) {
+            anios = Math.floor(diffMeses / 12);
+            meses = diffMeses % 12;
+            totalMeses = diffMeses;
+          }
+        }
       }
 
       const inpFechaIngreso = document.getElementById('solicitud-fecha-ingreso');

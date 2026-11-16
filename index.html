@@ -11348,7 +11348,14 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         valor_cuota_estimada: Number(cuotaEstimada) || 0,
         tna_aplicada: 0,
         destino_fondos: 'Libre disponibilidad',
-        asesor_id: esUuidValido(session && session.id) ? String(session.id).trim() : null
+        asesor_id: esUuidValido(session && session.id) ? String(session.id).trim() : null,
+        asesor_nombre: asesorNombre,
+        analista_asignado: analistaAsig,
+        org_id: orgId,
+        org_nombre: orgNombre,
+        origen_canal: canalIngreso,
+        domicilio: domHistVal,
+        localidad: localidadVal
       };
 
       if (dictamenAAsentar) {

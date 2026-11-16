@@ -3797,22 +3797,29 @@
             </div>
 
             <div class="wa-actions-bar">
-              <div class="wa-recipient-inputs">
-                <div class="wa-phone-inline-box" title="Nombre del socio/asociado (opcional, reemplaza {nombre_asociado})">
-                  <span>Socio:</span>
-                  <input type="text" id="inp-whatsapp-nombre" class="wa-phone-inline-input" style="width:120px;" placeholder="Opcional (Nombre)" oninput="handleWaRecipientNameInput(this.value)"/>
+              <div class="wa-actions-row-primary">
+                <div class="wa-recipient-inputs">
+                  <div class="wa-phone-inline-box" title="Nombre del socio/asociado (opcional, reemplaza {nombre_asociado})">
+                    <span>Socio:</span>
+                    <input type="text" id="inp-whatsapp-nombre" class="wa-phone-inline-input" placeholder="Opcional (Nombre)" oninput="handleWaRecipientNameInput(this.value)"/>
+                  </div>
+                  <div class="wa-phone-inline-box" title="Teléfono del socio para envío de WhatsApp">
+                    <span>Tel:</span>
+                    <input type="tel" id="inp-whatsapp-telefono" class="wa-phone-inline-input" placeholder="Ej: 5493434123456"/>
+                  </div>
                 </div>
-                <div class="wa-phone-inline-box" title="Teléfono del socio para envío de WhatsApp">
-                  <span>Tel:</span>
-                  <input type="tel" id="inp-whatsapp-telefono" class="wa-phone-inline-input" placeholder="Ej: 5493434123456"/>
+                <div class="wa-primary-actions">
+                  <button type="button" class="btn-copy" onclick="copyWhatsAppText()" title="Copiar texto al portapapeles">📋 Copiar</button>
+                  <button type="button" class="btn-whatsapp-send" onclick="sendWhatsApp()" title="Abrir conversación directa en WhatsApp">📲 Enviar WhatsApp</button>
                 </div>
               </div>
-              <div class="wa-btn-group">
-                <button type="button" class="btn-preview-wa" onclick="previsualizarPlantillaWhatsApp()" title="Actualizar vista previa con los parámetros actuales">👁️ Previsualizar</button>
-                <button type="button" class="btn-save-custom" onclick="guardarMiFormato()" title="Guardar como mi plantilla predeterminada">💾 Guardar Predeterminada</button>
-                <button type="button" class="btn-restore" onclick="restablecerPlantillaPorDefecto()" title="Restablecer plantilla por defecto">🔄 Restablecer por defecto</button>
-                <button type="button" class="btn-copy" onclick="copyWhatsAppText()" title="Copiar texto al portapapeles">📋 Copiar</button>
-                <button type="button" class="btn-whatsapp-send" onclick="sendWhatsApp()" title="Abrir conversación directa en WhatsApp">📲 Enviar WhatsApp</button>
+              <div class="wa-actions-row-secondary">
+                <span class="wa-secondary-label">Plantilla:</span>
+                <div class="wa-btn-group">
+                  <button type="button" class="btn-preview-wa" onclick="previsualizarPlantillaWhatsApp()" title="Actualizar vista previa con los parámetros actuales">👁️ Previsualizar</button>
+                  <button type="button" class="btn-save-custom" onclick="guardarMiFormato()" title="Guardar como mi plantilla predeterminada">💾 Guardar Predeterminada</button>
+                  <button type="button" class="btn-restore" onclick="restablecerPlantillaPorDefecto()" title="Restablecer plantilla por defecto">🔄 Restablecer por defecto</button>
+                </div>
               </div>
             </div>
           </div>

@@ -205,6 +205,10 @@
     .antialiased { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
     .tracking-tight { letter-spacing: -0.025em; }
     .tracking-normal { letter-spacing: 0em; }
+    .text-base { font-size: 1rem; line-height: 1.5rem; }
+    .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+    .font-normal { font-weight: 400; }
+    .text-slate-800 { color: #1e293b; }
     .hidden { display: none !important; }
     .w-2 { width: 0.5rem; }
     .h-2 { height: 0.5rem; }
@@ -10473,12 +10477,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
         return '<tr>' +
           '<td>' + idBadge + '</td>' +
-          '<td style="white-space:nowrap;">' + fechaStr + '</td>' +
+          '<td style="white-space:nowrap;" class="text-xs font-medium text-slate-500">' + fechaStr + '</td>' +
           colAsesorHtml +
-          '<td><strong>' + sanitizeHTML(s.solicitante?.nombre || '—') + '</strong><div class="cell-domicilio-hist" title="' + domHistTxt + '">📍 ' + domHistTxt + '</div></td>' +
-          '<td class="tabular-nums">' + sanitizeHTML(s.solicitante?.dni || '—') + '</td>' +
-          '<td>' + sanitizeHTML(s.prestamo?.lineaNombre || 'Ayuda Económica') + '</td>' +
-          '<td class="tabular-nums" style="color:var(--color-brand-blue);font-weight:700;">' + formatMoney(s.prestamo?.monto || 0) + '</td>' +
+          '<td><span class="text-sm font-semibold text-slate-900 block">' + sanitizeHTML(s.solicitante?.nombre || '—') + '</span><div class="text-xs font-medium text-slate-500 cell-domicilio-hist" title="' + domHistTxt + '">📍 ' + domHistTxt + '</div></td>' +
+          '<td class="text-sm font-normal text-slate-600 font-mono tabular-nums">' + sanitizeHTML(s.solicitante?.dni || '—') + '</td>' +
+          '<td class="text-sm font-medium text-slate-800">' + sanitizeHTML(s.prestamo?.lineaNombre || 'Ayuda Económica') + '</td>' +
+          '<td class="text-sm font-mono font-bold text-slate-900 tabular-nums">' + formatMoney(s.prestamo?.monto || 0) + '</td>' +
           '<td>' + (s.prestamo?.cuotas || '—') + ' c</td>' +
           '<td>' + propHtml + '</td>' +
           '<td><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + sanitizeHTML(s.estado || 'Pendiente') + '</span>' + alertaDocHtml + '</td>' +
@@ -11289,16 +11293,15 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         s.Nro_Definitivo = idDef;
       }
 
-      const tituloExpediente = idDef ? ('Expediente ' + idDef) : ('Expediente ' + idProv + ' (Provisorio)');
-      const textoTituloCompleto = tituloExpediente + ' — ' + nombreSocio;
+      const tituloHtml = '<span class="text-lg font-bold font-mono text-slate-900">' + sanitizeHTML(tituloExpediente) + '</span> <span class="text-base font-semibold text-slate-800">— ' + sanitizeHTML(nombreSocio) + '</span>';
 
       const elModalTit = document.getElementById('modalFichaTitulo');
       if (elModalTit) {
-        elModalTit.innerHTML = sanitizeHTML(textoTituloCompleto) + '<span id="detalle-id-solicitud" data-id="' + sanitizeHTML(idActivo) + '" style="display:none;">' + sanitizeHTML(idActivo) + '</span>';
+        elModalTit.innerHTML = tituloHtml + '<span id="detalle-id-solicitud" data-id="' + sanitizeHTML(idActivo) + '" style="display:none;">' + sanitizeHTML(idActivo) + '</span>';
       }
       const elFichaTit = document.getElementById('fichaModalTitle');
       if (elFichaTit && elFichaTit !== elModalTit) {
-        elFichaTit.innerHTML = sanitizeHTML(textoTituloCompleto);
+        elFichaTit.innerHTML = tituloHtml;
       }
 
       const body = document.getElementById('fichaModalBody'); if (!body) return;
@@ -14164,11 +14167,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
         return '<tr>' +
           '<td>' + idBadge + '</td>' +
-          '<td style="white-space:nowrap;">' + fechaStr + '</td>' +
+          '<td style="white-space:nowrap;" class="text-xs font-medium text-slate-500">' + fechaStr + '</td>' +
           '<td>' + canalTag + '</td>' +
-          '<td><strong>' + sanitizeHTML(s.solicitante?.nombre || '—') + '</strong><br><span style="font-size:.68rem;color:var(--text-muted);">DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + '</span><div class="cell-domicilio-hist" title="' + domHistTxt + '">📍 ' + domHistTxt + '</div></td>' +
-          '<td>' + sanitizeHTML(s.solicitante?.organismo || '—') + '</td>' +
-          '<td>' + sanitizeHTML(s.prestamo?.lineaNombre || 'Ayuda') + '<br><span style="color:var(--color-brand-blue);font-weight:700;">' + formatMoney(s.prestamo?.monto || 0) + ' (' + (s.prestamo?.cuotas || '—') + 'c)</span></td>' +
+          '<td><span class="text-sm font-semibold text-slate-900 block">' + sanitizeHTML(s.solicitante?.nombre || '—') + '</span><span class="text-sm font-normal text-slate-600 font-mono block">DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + '</span><div class="text-xs font-medium text-slate-500 cell-domicilio-hist" title="' + domHistTxt + '">📍 ' + domHistTxt + '</div></td>' +
+          '<td class="text-xs font-medium text-slate-500">' + sanitizeHTML(s.solicitante?.organismo || '—') + '</td>' +
+          '<td><span class="text-xs font-medium text-slate-600 block">' + sanitizeHTML(s.prestamo?.lineaNombre || 'Ayuda') + '</span><span class="text-sm font-mono font-bold text-slate-900">' + formatMoney(s.prestamo?.monto || 0) + ' (' + (s.prestamo?.cuotas || '—') + 'c)</span></td>' +
           '<td>' + propHtml + '</td>' +
           '<td>' + sanitizeHTML(s.analistaAsignado || 'Sin Asignar') + '</td>' +
           '<td><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + sanitizeHTML(s.estado || 'Pendiente') + '</span>' + alertaDocHtml + '</td>' +
@@ -14299,12 +14302,12 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
 
         return '<tr>' +
           '<td>' + idBadge + '</td>' +
-          '<td style="white-space:nowrap;">' + fechaStr + '</td>' +
+          '<td style="white-space:nowrap;" class="text-xs font-medium text-slate-500">' + fechaStr + '</td>' +
           '<td><span class="badge-org-tag">' + sanitizeHTML(s.nombre_organizacion || 'Paraná Centro') + '</span></td>' +
-          '<td><strong>' + sanitizeHTML(s.comercializador || '—') + '</strong></td>' +
-          '<td><strong>' + sanitizeHTML(s.solicitante?.nombre || '—') + '</strong><br><span style="font-size:.68rem;color:var(--text-muted);">DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + '</span><div class="cell-domicilio-hist" title="' + domHistTxt + '">📍 ' + domHistTxt + '</div></td>' +
-          '<td>' + sanitizeHTML(s.solicitante?.organismo || '—') + '</td>' +
-          '<td>' + sanitizeHTML(s.prestamo?.lineaNombre || 'Ayuda') + '<br><span style="color:var(--color-brand-blue);font-weight:700;">' + formatMoney(s.prestamo?.monto || 0) + ' (' + (s.prestamo?.cuotas || '—') + 'c)</span></td>' +
+          '<td><span class="text-sm font-medium text-slate-800">' + sanitizeHTML(s.comercializador || '—') + '</span></td>' +
+          '<td><span class="text-sm font-semibold text-slate-900 block">' + sanitizeHTML(s.solicitante?.nombre || '—') + '</span><span class="text-sm font-normal text-slate-600 font-mono block">DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + '</span><div class="text-xs font-medium text-slate-500 cell-domicilio-hist" title="' + domHistTxt + '">📍 ' + domHistTxt + '</div></td>' +
+          '<td class="text-xs font-medium text-slate-500">' + sanitizeHTML(s.solicitante?.organismo || '—') + '</td>' +
+          '<td><span class="text-xs font-medium text-slate-600 block">' + sanitizeHTML(s.prestamo?.lineaNombre || 'Ayuda') + '</span><span class="text-sm font-mono font-bold text-slate-900">' + formatMoney(s.prestamo?.monto || 0) + ' (' + (s.prestamo?.cuotas || '—') + 'c)</span></td>' +
           '<td>' + propHtml + '</td>' +
           '<td>' + sanitizeHTML(s.analistaAsignado || 'Sin Asignar') + '</td>' +
           '<td><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + sanitizeHTML(s.estado || 'Pendiente') + '</span>' + alertaDocHtml + '</td>' +
@@ -16485,7 +16488,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const netoFormateado = sanitizeHTML(formatMontoSinSimboloAr(netoNum));
         const cuotaFinalFormateada = sanitizeHTML(formatMontoSinSimboloAr(cuotaNum));
         return '<tr class="' + zebraBg + ' hover:bg-indigo-50/40 transition-colors border-b border-slate-100 font-sans text-slate-700">' +
-          '<td class="py-3 px-4 text-xs font-semibold text-slate-700 whitespace-nowrap">' + p.plazo + ' cuotas fijas</td>' +
+          '<td class="py-3 px-4 text-sm font-medium text-slate-800 whitespace-nowrap">' + p.plazo + ' cuotas fijas</td>' +
           '<td class="py-3 px-4 text-sm font-bold text-emerald-600 font-mono whitespace-nowrap text-right">$ ' + netoFormateado + '</td>' +
           '<td class="py-3 px-4 text-sm font-bold text-slate-900 font-mono whitespace-nowrap text-right">$ ' + cuotaFinalFormateada + '</td>' +
           '<td class="py-2.5 px-4 text-right whitespace-nowrap">' +
@@ -16781,27 +16784,27 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         '<div class="p-6 space-y-4">' +
           '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 bg-slate-50/70 rounded-xl p-3.5 border border-slate-200/60">' +
             '<div>' +
-              '<span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Titular</span>' +
-              '<span class="text-xs sm:text-sm font-bold text-slate-900 break-words block">' + sanitizeHTML(titular) + '</span>' +
+              '<span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Titular</span>' +
+              '<span class="text-base font-bold text-slate-900 break-words block">' + sanitizeHTML(titular) + '</span>' +
             '</div>' +
             '<div>' +
-              '<span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">DNI / CUIL</span>' +
-              '<span class="font-mono text-xs text-slate-700 block mt-0.5">' + sanitizeHTML(dni) + (mostrarCuil ? ' · ' + sanitizeHTML(cuilClean) : '') + '</span>' +
+              '<span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">DNI / CUIL</span>' +
+              '<span class="text-base font-normal text-slate-600 block mt-0.5"><span class="font-mono text-slate-700">' + sanitizeHTML(dni) + '</span>' + (mostrarCuil ? ' · <span class="font-mono text-slate-700">' + sanitizeHTML(cuilClean) + '</span>' : '') + '</span>' +
             '</div>' +
             '<div>' +
-              '<span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Organismo</span>' +
-              '<span class="text-xs sm:text-sm font-bold text-slate-900 break-words block">' + sanitizeHTML(organismo) + '</span>' +
-              '<span class="text-xs text-slate-600 block mt-0.5">' + sanitizeHTML(cargo) + '</span>' +
+              '<span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Organismo</span>' +
+              '<span class="text-base font-bold text-slate-900 break-words block">' + sanitizeHTML(organismo) + '</span>' +
+              '<span class="text-sm font-normal text-slate-600 block mt-0.5">' + sanitizeHTML(cargo) + '</span>' +
             '</div>' +
             '<div>' +
-              '<span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Afectación de Haberes</span>' +
+              '<span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Afectación de Haberes</span>' +
               '<div class="flex items-center gap-2 mt-1">' +
                 '<div class="flex-1 bg-slate-200 rounded-full h-2 overflow-hidden">' +
                   '<div class="h-full ' + (parseFloat(porcentajeAfectacion) > 50 ? 'bg-rose-500' : 'bg-emerald-500') + '" style="width:' + Math.min(100, Math.max(0, parseFloat(porcentajeAfectacion))) + '%"></div>' +
                 '</div>' +
-                '<span class="font-mono text-xs font-bold text-slate-700 whitespace-nowrap">' + sanitizeHTML(porcentajeAfectacion) + '</span>' +
+                '<span class="font-mono text-sm font-bold text-slate-700 whitespace-nowrap">' + sanitizeHTML(porcentajeAfectacion) + '</span>' +
               '</div>' +
-              '<span class="text-[10px] text-slate-400 mt-1 block">Nivel de afectación salarial</span>' +
+              '<span class="text-xs text-slate-500 mt-1 block">Nivel de afectación salarial</span>' +
             '</div>' +
           '</div>' +
 

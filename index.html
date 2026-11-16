@@ -8089,6 +8089,33 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       }
     }
 
+    function normalizarFechaInput(val) {
+      if (val === null || val === undefined || val === '') return '';
+      try {
+        const s = String(val).trim();
+        if (!s || /^\d{1,5}$/.test(s)) return '';
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+        const isoMatch = s.match(/^(\d{4}-\d{2}-\d{2})[T\s]/);
+        if (isoMatch) return isoMatch[1];
+        const latamMatch = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+        if (latamMatch) {
+          const d = latamMatch[1].padStart(2, '0');
+          const m = latamMatch[2].padStart(2, '0');
+          const y = latamMatch[3];
+          return `${y}-${m}-${d}`;
+        }
+        const dt = new Date(s);
+        if (isNaN(dt.getTime())) return '';
+        const anio = dt.getFullYear();
+        if (anio < 1900 || anio > 2100) return '';
+        const mes = String(dt.getMonth() + 1).padStart(2, '0');
+        const dia = String(dt.getDate()).padStart(2, '0');
+        return `${anio}-${mes}-${dia}`;
+      } catch (e) {
+        return '';
+      }
+    }
+
     let timerBuscarDni = null;
     function handleDniInputDebounced(val) {
       clearTimeout(timerBuscarDni);
@@ -8116,7 +8143,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
               if (asoc.fechaNac || asoc.fechaNacimiento) {
                 const el = document.getElementById('solicitud-fecha-nacimiento') || document.getElementById('solFechaNac');
                 if (el) {
-                  el.value = String(asoc.fechaNac || asoc.fechaNacimiento).slice(0, 10);
+                  el.value = normalizarFechaInput(asoc.fechaNac || asoc.fechaNacimiento);
                   recalcularValidacionesEdadYCuotas();
                 }
               }
@@ -8176,10 +8203,11 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
               }
               if (typeof evaluarDocumentacionRequerida === 'function') evaluarDocumentacionRequerida();
               const fechaIng = asoc.fechaIngresoLaboral || asoc.Fecha_Ingreso_Laboral || asoc.fechaIngreso || '';
-              if (fechaIng) {
+              const fechaIngNorm = normalizarFechaInput(fechaIng);
+              if (fechaIngNorm) {
                 const elFI = document.getElementById('solicitud-fecha-ingreso');
-                if (elFI) elFI.value = String(fechaIng).slice(0, 10);
-                calcularAntiguedadReactiva(String(fechaIng).slice(0, 10));
+                if (elFI) elFI.value = fechaIngNorm;
+                calcularAntiguedadReactiva(fechaIngNorm);
               } else if (asoc.antiguedad) {
                 const elHid = document.getElementById('solicitud-antiguedad-formateada');
                 const elTxt = document.getElementById('texto-antiguedad');
@@ -11546,7 +11574,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
             '<div class="form-group"><label class="form-label">DNI *</label><input type="text" id="editDni" class="input-text" value="' + (s.solicitante?.dni || '') + '" required/></div>' +
             '<div class="form-group"><label class="form-label">CUIL</label><input type="text" id="editCuil" class="input-text" value="' + sanitizeHTML(s.solicitante?.cuil || '') + '" placeholder="Ej: 20-32111222-9"/></div>' +
             '<div class="form-group"><label class="form-label">Nombre y Apellido *</label><input type="text" id="editNombre" class="input-text" value="' + (s.solicitante?.nombre || '') + '" required/></div>' +
-            '<div class="form-group"><label class="form-label">Fecha Nacimiento *</label><input type="date" id="editFechaNac" class="input-text" value="' + String(s.solicitante?.fechaNac || s.solicitante?.fechaNacimiento || '').slice(0, 10) + '" required/></div>' +
+            '<div class="form-group"><label class="form-label">Fecha Nacimiento *</label><input type="date" id="editFechaNac" class="input-text" value="' + sanitizeHTML(normalizarFechaInput(s.solicitante?.fechaNac || s.solicitante?.fechaNacimiento || '')) + '" required/></div>' +
             '<div class="form-group"><label class="form-label">Sexo</label>' +
               '<select id="editSexo" class="input-text">' +
                 ['', 'Masculino', 'Femenino', 'Otro'].map(sx => '<option value="' + sx + '" ' + (s.solicitante?.sexo === sx ? 'selected' : '') + '>' + (sx || 'Seleccionar...') + '</option>').join('') +
@@ -11592,7 +11620,7 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
               '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">' +
                 '<div>' +
                   '<label class="antiguedad-reactive-label" for="editFechaIngreso">Fecha de Ingreso Laboral</label>' +
-                  '<input type="date" id="editFechaIngreso" name="Fecha_Ingreso_Laboral" class="antiguedad-reactive-input" value="' + sanitizeHTML(String(s.solicitante?.fechaIngresoLaboral || s.solicitante?.Fecha_Ingreso_Laboral || '').slice(0, 10)) + '" onchange="calcularAntiguedadReactiva(this.value, \'editTextoAntiguedad\', \'editAntiguedad\')" oninput="calcularAntiguedadReactiva(this.value, \'editTextoAntiguedad\', \'editAntiguedad\')"/>' +
+                  '<input type="date" id="editFechaIngreso" name="Fecha_Ingreso_Laboral" class="antiguedad-reactive-input" value="' + sanitizeHTML(normalizarFechaInput(s.solicitante?.fechaIngresoLaboral || s.solicitante?.Fecha_Ingreso_Laboral || '')) + '" onchange="calcularAntiguedadReactiva(this.value, \'editTextoAntiguedad\', \'editAntiguedad\')" oninput="calcularAntiguedadReactiva(this.value, \'editTextoAntiguedad\', \'editAntiguedad\')"/>' +
                 '</div>' +
                 '<div>' +
                   '<label class="antiguedad-reactive-label">Antigüedad Calculada (AÑOS - MESES)</label>' +

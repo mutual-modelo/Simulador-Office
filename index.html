@@ -200,6 +200,49 @@
     .border-amber-200\/50 { border-color: rgba(253, 230, 138, 0.5); }
     .hover\:text-rose-700:hover { color: #be123c; }
     .hover\:text-amber-800:hover { color: #92400e; }
+    /* Design System AMMER: Tipografía, tarjetas, badges y gradientes */
+    .font-sans { font-family: var(--font-sans, 'Plus Jakarta Sans', system-ui, sans-serif); }
+    .antialiased { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    .tracking-tight { letter-spacing: -0.025em; }
+    .tracking-normal { letter-spacing: 0em; }
+    .hidden { display: none !important; }
+    .w-2 { width: 0.5rem; }
+    .h-2 { height: 0.5rem; }
+    @keyframes ammerPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+    .animate-pulse { animation: ammerPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    .mb-1 { margin-bottom: 0.25rem; }
+    .mb-6 { margin-bottom: 1.5rem; }
+    .p-3\.5 { padding: 0.875rem; }
+    .rounded-2xl { border-radius: 1rem; }
+    .bg-slate-50\/70 { background-color: rgba(248, 250, 252, 0.7); }
+    .bg-slate-100\/50 { background-color: rgba(241, 245, 249, 0.5); }
+    .bg-emerald-50 { background-color: #ecfdf5; }
+    .bg-amber-50 { background-color: #fffbeb; }
+    .bg-rose-50 { background-color: #fff1f2; }
+    .bg-emerald-500 { background-color: #10b981; }
+    .bg-amber-500 { background-color: #f59e0b; }
+    .bg-rose-500 { background-color: #f43f5e; }
+    .text-indigo-950 { color: #1e1b4b; }
+    .text-emerald-700 { color: #047857; }
+    .text-emerald-600 { color: #059669; }
+    .text-amber-700 { color: #b45309; }
+    .text-rose-700 { color: #be123c; }
+    .text-rose-600 { color: #e11d48; }
+    .border-slate-200\/80 { border-color: rgba(226, 232, 240, 0.8); }
+    .border-slate-200\/60 { border-color: rgba(226, 232, 240, 0.6); }
+    .border-indigo-200\/80 { border-color: rgba(199, 210, 254, 0.8); }
+    .border-emerald-200 { border-color: #a7f3d0; }
+    .border-amber-200 { border-color: #fde68a; }
+    .border-rose-200 { border-color: #fecdd3; }
+    .bg-gradient-to-r { background-image: linear-gradient(to right, var(--tw-gradient-from, #4338ca), var(--tw-gradient-to, #312e81)); }
+    .from-indigo-700 { --tw-gradient-from: #4338ca; }
+    .to-indigo-900 { --tw-gradient-to: #312e81; }
+    .hover\:from-indigo-800:hover { --tw-gradient-from: #3730a3; }
+    .hover\:to-indigo-950:hover { --tw-gradient-to: #1e1b4b; }
+    .from-emerald-600 { --tw-gradient-from: #059669; }
+    .to-teal-700 { --tw-gradient-to: #0f766e; }
+    .hover\:from-emerald-700:hover { --tw-gradient-from: #047857; }
+    .hover\:to-teal-800:hover { --tw-gradient-to: #115e59; }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
       --font-sans:'Plus Jakarta Sans',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
@@ -4244,7 +4287,7 @@
                 </div>
               </div>
               <div style="display:flex;gap:0.4rem;align-items:center;">
-                <button type="button" class="btn-restore" style="white-space:nowrap;" onclick="limpiarPanelAuditoria()">Limpiar</button>
+                <button type="button" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold tracking-wide transition-all duration-150 cursor-pointer shadow-sm whitespace-nowrap" onclick="limpiarPanelAuditoria()">Limpiar</button>
               </div>
             </div>
 
@@ -16674,42 +16717,59 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
       const planillaViable = margen > 0 && !embargoDetectado;
       const cbuCondicionadoViable = !planillaViable && !embargoDetectado && liquido > 300000;
 
-      let badgeHtml = '';
+      let badgeTexto = '';
+      let badgeToneCls = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      let badgeDotCls = 'bg-emerald-500 animate-pulse';
       let dictamenText = '';
       let canalSugerido = '';
 
       if (planillaViable) {
-        badgeHtml = '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-xs">🟢 Habilitado Débito / Retención</span>';
+        badgeTexto = 'Habilitado Débito / Retención';
+        badgeToneCls = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        badgeDotCls = 'bg-emerald-500 animate-pulse';
         dictamenText = 'APTO POR PLANILLA — Margen positivo de $ ' + sanitizeHTML(formatMontoSinSimboloAr(margen)) + ' para retención en haberes.';
         canalSugerido = 'Habilitado Débito / Retención (Convenio Oficial AMMER)';
       } else if (cbuCondicionadoViable) {
-        badgeHtml = '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs">🟡 Habilitado Débito en Cuenta</span>';
+        badgeTexto = 'Habilitado Débito en Cuenta';
+        badgeToneCls = 'bg-amber-50 text-amber-700 border-amber-200';
+        badgeDotCls = 'bg-amber-500 animate-pulse';
         dictamenText = 'APTO CONDICIONADO — Cobro bancario en cuenta de $ ' + sanitizeHTML(formatMontoSinSimboloAr(liquido)) + ' sin embargos.';
         canalSugerido = 'Débito Automático en Cuenta CBU / Tarjeta Sidecreer';
       } else if (embargoDetectado) {
-        badgeHtml = '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-xs">🔴 Rechazado — Embargo Activo</span>';
+        badgeTexto = 'Rechazado — Embargo Activo';
+        badgeToneCls = 'bg-rose-50 text-rose-700 border-rose-200';
+        badgeDotCls = 'bg-rose-500';
         dictamenText = 'NO VIABLE — Se detectó retención judicial o embargo activo ($ ' + sanitizeHTML(formatMontoSinSimboloAr(embargoMonto)) + ').';
         canalSugerido = 'Canal bloqueado por política de riesgo crediticio institucional';
       } else {
-        badgeHtml = '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-xs">🔴 Margen Insuficiente</span>';
+        badgeTexto = 'Margen Insuficiente';
+        badgeToneCls = 'bg-rose-50 text-rose-700 border-rose-200';
+        badgeDotCls = 'bg-rose-500';
         dictamenText = 'NO VIABLE POR PLANILLA — Descuentos superan el margen (Margen de $ ' + sanitizeHTML(formatMontoSinSimboloAr(margen)) + ').';
         canalSugerido = 'Requiere cancelación de códigos previos o evaluación especial';
       }
 
-      return '<div class="rounded-xl overflow-hidden border border-slate-300 shadow-md bg-white">' +
-        '<!-- Cabecera Institucional Azul Marino -->' +
-        '<div class="bg-gradient-to-r from-slate-950 via-indigo-950 to-blue-950 text-white p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 border-b border-indigo-900/50">' +
+      const badgeHtml = badgeTexto
+        ? '<div id="badgeEstadoAuditoria" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border shadow-sm ' + badgeToneCls + '">' +
+            '<span class="w-2 h-2 rounded-full ' + badgeDotCls + '"></span>' +
+            '<span id="textoEstadoAuditoria">' + sanitizeHTML(badgeTexto) + '</span>' +
+          '</div>'
+        : '<div id="badgeEstadoAuditoria" class="hidden"></div>';
+
+      return '<div class="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden mb-6 font-sans antialiased">' +
+        '<!-- Cabecera Institucional Limpia -->' +
+        '<div class="bg-white border-b border-slate-200/80 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">' +
           '<div class="flex items-center gap-3">' +
-            '<div class="w-10 h-10 rounded-lg bg-indigo-600/30 border border-indigo-400/30 flex items-center justify-center shrink-0 text-indigo-300">' +
+            '<div class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-200/80 flex items-center justify-center shrink-0 text-indigo-700">' +
               '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
                 '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>' +
               '</svg>' +
             '</div>' +
             '<div>' +
-              '<h3 class="text-sm sm:text-base font-extrabold text-white tracking-tight m-0">' +
+              '<h3 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight m-0">' +
                 'Auditoría Documental y Crediticia AMMER' +
               '</h3>' +
-              '<p class="text-[11px] text-indigo-200/80 font-medium mt-0.5 mb-0">' +
+              '<p class="text-xs text-slate-500 font-normal mt-0.5 mb-0">' +
                 'Evaluación Salarial y Capacidad de Ayuda Económica' +
               '</p>' +
             '</div>' +
@@ -16718,8 +16778,8 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         '</div>' +
 
         '<!-- Grilla Limpia de Indicadores Clave Calculados -->' +
-        '<div class="p-4 sm:p-5 space-y-4">' +
-          '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 bg-slate-50/80 rounded-lg p-3.5 border border-slate-200/80">' +
+        '<div class="p-6 space-y-4">' +
+          '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 bg-slate-50/70 rounded-xl p-3.5 border border-slate-200/60">' +
             '<div>' +
               '<span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Titular</span>' +
               '<span class="text-xs sm:text-sm font-bold text-slate-900 break-words block">' + sanitizeHTML(titular) + '</span>' +
@@ -16746,24 +16806,24 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           '</div>' +
 
           '<div class="grid grid-cols-2 md:grid-cols-4 gap-3">' +
-            '<div class="p-3.5 rounded-lg border border-slate-200 bg-white shadow-xs">' +
-              '<span class="block text-[11px] text-slate-500 font-semibold uppercase tracking-wider">Total Haberes</span>' +
-              '<span class="font-mono text-base sm:text-lg font-black text-slate-900 mt-0.5 block">$ ' + sanitizeHTML(formatMontoSinSimboloAr(bruto)) + '</span>' +
-              '<span class="text-[10px] text-slate-400 mt-0.5 block">100% Haberes liquidados</span>' +
+            '<div class="bg-slate-50/70 border border-slate-200/60 rounded-xl p-3.5">' +
+              '<span class="text-slate-700 text-xs font-semibold uppercase tracking-wider mb-1 block">Total Haberes</span>' +
+              '<span class="font-mono text-base sm:text-lg font-bold text-slate-900 mt-0.5 block">$ ' + sanitizeHTML(formatMontoSinSimboloAr(bruto)) + '</span>' +
+              '<span class="text-[10px] text-slate-500 mt-0.5 block">100% Haberes liquidados</span>' +
             '</div>' +
-            '<div class="p-3.5 rounded-lg border border-slate-200 bg-white shadow-xs">' +
-              '<span class="block text-[11px] text-slate-500 font-semibold uppercase tracking-wider">Total Descuentos</span>' +
-              '<span class="font-mono text-base sm:text-lg font-black text-rose-600 mt-0.5 block">$ ' + sanitizeHTML(formatMontoSinSimboloAr(descuentos)) + '</span>' +
-              '<span class="text-[10px] text-rose-700/80 font-semibold mt-0.5 block">Afectación: ' + sanitizeHTML(porcentajeAfectacion) + '</span>' +
+            '<div class="bg-slate-50/70 border border-slate-200/60 rounded-xl p-3.5">' +
+              '<span class="text-slate-700 text-xs font-semibold uppercase tracking-wider mb-1 block">Total Descuentos</span>' +
+              '<span class="font-mono text-base sm:text-lg font-bold text-rose-600 mt-0.5 block">$ ' + sanitizeHTML(formatMontoSinSimboloAr(descuentos)) + '</span>' +
+              '<span class="text-[10px] text-rose-600 font-semibold mt-0.5 block">Afectación: ' + sanitizeHTML(porcentajeAfectacion) + '</span>' +
             '</div>' +
-            '<div class="p-3.5 rounded-lg border border-emerald-200 bg-emerald-50/60 shadow-xs">' +
-              '<span class="block text-[11px] text-emerald-800 font-semibold uppercase tracking-wider">Sueldo Líquido</span>' +
-              '<span class="font-mono text-base sm:text-lg font-black text-emerald-700 mt-0.5 block">$ ' + sanitizeHTML(formatMontoSinSimboloAr(liquido)) + '</span>' +
-              '<span class="text-[10px] text-emerald-700 font-medium mt-0.5 block">Neto en cuenta bancaria</span>' +
+            '<div class="bg-slate-50/70 border border-slate-200/60 rounded-xl p-3.5">' +
+              '<span class="text-slate-700 text-xs font-semibold uppercase tracking-wider mb-1 block">Sueldo Líquido</span>' +
+              '<span class="font-mono text-base sm:text-lg font-bold text-emerald-600 mt-0.5 block">$ ' + sanitizeHTML(formatMontoSinSimboloAr(liquido)) + '</span>' +
+              '<span class="text-[10px] text-slate-500 mt-0.5 block">Neto en cuenta bancaria</span>' +
             '</div>' +
-            '<div class="p-3.5 rounded-lg border ' + (margen > 0 ? 'border-emerald-200 bg-emerald-50/50' : 'border-rose-200 bg-rose-50/50') + ' shadow-xs">' +
-              '<span class="block text-[11px] ' + (margen > 0 ? 'text-emerald-800' : 'text-rose-800') + ' font-semibold uppercase tracking-wider">Margen Disponible Estimado</span>' +
-              '<span class="font-mono text-base sm:text-lg font-black ' + (margen > 0 ? 'text-emerald-700' : 'text-rose-700') + ' mt-0.5 block">$ ' + sanitizeHTML(formatMontoSinSimboloAr(margen)) + '</span>' +
+            '<div class="bg-slate-50/70 border border-slate-200/60 rounded-xl p-3.5">' +
+              '<span class="text-slate-700 text-xs font-semibold uppercase tracking-wider mb-1 block">Margen Disponible Estimado</span>' +
+              '<span class="font-mono text-base sm:text-lg font-bold ' + (margen > 0 ? 'text-emerald-600' : 'text-rose-600') + ' mt-0.5 block">$ ' + sanitizeHTML(formatMontoSinSimboloAr(margen)) + '</span>' +
               '<span class="font-mono text-[10px] text-slate-500 mt-0.5 block">Cupo: $ ' + sanitizeHTML(formatMontoSinSimboloAr(cupo50)) + '</span>' +
             '</div>' +
           '</div>' +
@@ -16900,10 +16960,10 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         '<div class="pt-3 mt-4 border-t border-slate-200">' +
           '<div class="flex flex-wrap justify-end gap-2">' +
             (idExpedienteAuditadoActivo
-              ? '<button type="button" class="btn-primary-action" style="width:auto;padding:7px 14px;font-size:0.74rem;background:#15803d;border-color:#166534;" onclick="aplicarDatosExtraidosAlExpediente()">Aplicar Datos al Expediente</button>'
+              ? '<button type="button" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-all duration-150 cursor-pointer" onclick="aplicarDatosExtraidosAlExpediente()">Aplicar Datos al Expediente</button>'
               : '') +
-            '<button type="button" id="btnAbrirNuevoExpedienteAudit" class="btn-primary-action" style="width:auto;padding:7px 14px;font-size:0.74rem;background:#059669;border-color:#047857;" onclick="abrirNuevoExpedienteDesdeAuditoria()">➕ Abrir Nuevo Expediente</button>' +
-            '<button type="button" id="btnGuardarDictamenBitacora" class="btn-primary-action" style="width:auto;padding:7px 14px;font-size:0.74rem;background:#1e3a8a;border-color:#172554;" onclick="guardarDictamenEnBitacoraExpediente()">💾 Guardar Dictamen en Bitácora del Expediente</button>' +
+            '<button type="button" id="btnAbrirNuevoExpedienteAudit" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-all duration-150 cursor-pointer" onclick="abrirNuevoExpedienteDesdeAuditoria()">➕ Abrir Nuevo Expediente</button>' +
+            '<button type="button" id="btnGuardarDictamenBitacora" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-700 to-indigo-900 hover:from-indigo-800 hover:to-indigo-950 text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-all duration-150 cursor-pointer" onclick="guardarDictamenEnBitacoraExpediente()">💾 Guardar Dictamen en Bitácora del Expediente</button>' +
           '</div>' +
           '<div id="selectorExpedienteBitacoraInline" class="hidden mt-3 p-3 rounded-lg border border-slate-200 bg-white"></div>' +
         '</div>';
@@ -16926,29 +16986,30 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         const isSidecreer = lineaInicial === 'SIDECREER';
 
         const tabActiveCls = 'tab-linea-auditoria px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all duration-150 bg-white text-indigo-950 shadow-sm border border-slate-200/50';
-        const tabInactiveCls = 'tab-linea-auditoria px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all duration-150 text-slate-600 hover:text-slate-900 hover:bg-white/60';
+        const tabInactiveCls = 'tab-linea-auditoria px-4 py-2 rounded-lg text-xs font-medium tracking-wide transition-all duration-150 text-slate-600 hover:text-slate-900 hover:bg-white/60';
 
         const filasPlanesHtml = renderizarFilasPlanesAuditoria(cuotaMaximaBase, lineaInicial);
 
         bloqueSimulacionHtml =
           '<!-- BLOQUE 2 (CONDICIONAL): SIMULACIÓN DE AYUDA ECONÓMICA SUGERIDA -->' +
-          '<div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sm:p-6">' +
+          '<div class="bg-white border border-slate-200/80 rounded-2xl shadow-sm p-6 mb-6 font-sans antialiased">' +
             '<div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3 mb-4">' +
               '<div>' +
-                '<h2 class="text-base font-extrabold text-slate-900 m-0">' +
+                '<h2 class="text-base font-bold text-slate-900 tracking-tight m-0">' +
                   '⚡ Simulación de Ayuda Económica Sugerida' +
                 '</h2>' +
-                '<p class="text-xs text-slate-500 mt-1 mb-0">' +
+                '<p class="text-xs text-slate-500 font-normal mt-1 mb-0">' +
                   'Proyección referencial según margen disponible y plazos reglamentarios vigentes' +
                 '</p>' +
               '</div>' +
-              '<span class="text-xs font-bold ' + (planillaViable ? 'text-emerald-700' : 'text-amber-700') + '">' +
-                (planillaViable ? '🟢 Margen Disponible: $ ' + sanitizeHTML(formatMontoSinSimboloAr(cuotaMaximaBase)) + ' / mes' : '🟡 Margen Estimado: $ ' + sanitizeHTML(formatMontoSinSimboloAr(cuotaMaximaBase)) + ' / mes') +
+              '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ' + (planillaViable ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200') + '">' +
+                '<span class="w-2 h-2 rounded-full ' + (planillaViable ? 'bg-emerald-500' : 'bg-amber-500') + '"></span>' +
+                (planillaViable ? 'Margen Disponible: $ ' + sanitizeHTML(formatMontoSinSimboloAr(cuotaMaximaBase)) + ' / mes' : 'Margen Estimado: $ ' + sanitizeHTML(formatMontoSinSimboloAr(cuotaMaximaBase)) + ' / mes') +
               '</span>' +
             '</div>' +
 
             '<!-- Selector de Línea Crediticia (Tabs / Píldoras Modernas) -->' +
-            '<div class="inline-flex p-1 bg-slate-100/90 rounded-xl border border-slate-200/80 gap-1 mb-5 shadow-inner">' +
+            '<div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200 gap-1 mb-5">' +
               '<button type="button" onclick="cambiarLineaAuditoria(\'FEDEM\')" id="tabLineaFEDEM" class="' + (isFedem ? tabActiveCls : tabInactiveCls) + '">' +
                 '🏛️ FEDEM Provincial' +
               '</button>' +
@@ -16987,9 +17048,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
           bloqueSimulacionHtml +
 
           '<!-- BLOQUE 3: INFORME COMPLETO DE AUDITORÍA DOCUMENTAL Y SALARIAL -->' +
-          '<div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">' +
+          '<div class="bg-white border border-slate-200/80 rounded-2xl shadow-sm p-6 mb-6 font-sans antialiased">' +
             '<div class="border-b border-slate-100 pb-3 mb-4">' +
-              '<h2 class="text-base font-extrabold text-slate-900">' +
+              '<h2 class="text-base font-bold text-slate-900 tracking-tight">' +
                 '2. Informe Completo de Auditoría Documental y Salarial' +
               '</h2>' +
             '</div>' +

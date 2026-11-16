@@ -6530,11 +6530,13 @@
        ======================================================================== */
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypo5JRygnotB7NbJ3l0mvY7xVM0mSgbUVHFjGrC1Zn52icqOb0kE8duCzwMS7JcVEX/exec";
     const SCRIPT_URL = APPS_SCRIPT_URL;
-    const AUDITOR_API_URL = "https://ammer-auditor-api.onrender.com/api/auditar-recibo";
+    const RENDER_API_URL = "https://ammer-auditor-api.onrender.com";
+    const AUDITOR_API_URL = `${RENDER_API_URL}/api/auditar-recibo`;
     const SUPABASE_URL = "https://mfaziwuvnaxviqgrybva.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_-uPo2ppGYLbdHF5x2gg2Yw_m-VsitJX";
     const CONFIG = {
       SCRIPT_URL: APPS_SCRIPT_URL,
+      RENDER_API_URL: RENDER_API_URL,
       AUDITOR_API_URL: AUDITOR_API_URL,
       SUPABASE_URL: SUPABASE_URL,
       SUPABASE_ANON_KEY: SUPABASE_ANON_KEY
@@ -8092,8 +8094,9 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
     function normalizarFechaInput(val) {
       if (val === null || val === undefined || val === '') return '';
       try {
+        if (typeof val === 'number') return '';
         const s = String(val).trim();
-        if (!s || /^\d{1,5}$/.test(s)) return '';
+        if (!s || s.length < 5 || /^\d{1,5}$/.test(s)) return '';
         if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
         const isoMatch = s.match(/^(\d{4}-\d{2}-\d{2})[T\s]/);
         if (isoMatch) return isoMatch[1];
@@ -11319,33 +11322,107 @@ Sin trámites engorrosos. ¡Respondé este mensaje para coordinar la acreditaci�
         solicitud: nueva
       };
 
-      const res = await callApi(payloadParaBackend, {
-        title: 'Guardando en Base de Datos Central...',
-        sub: '🔒 Almacenando documentación del expediente ' + provId + ' en el Legajo Digital Seguro (' + adjuntosBase64.length + ' archivos)...'
-      });
+      const lineaCodigoApi = (lineaKey === 'muni' || lineaKey === 'quad')
+        ? 'QUAD'
+        : (lineaKey === 'sidecreer' ? 'SIDECREER' : 'FEDEM');
+      const esUuidValido = (v) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(v || '').trim());
+      const renderSolicitudPayload = {
+        id_provisorio: provId || `SOL-${Date.now().toString().slice(-6)}`,
+        asociado: {
+          dni: String(dniVal || '').trim(),
+          cuil: String(cuilVal || '').trim() || null,
+          apellido_nombres: String(finalNombre || '').trim(),
+          telefono: String(celVal || '').trim() || null,
+          email: String(emailVal || '').trim() || null,
+          organismo: String(organismoVal || 'POLICIA DE ENTRE RIOS').trim(),
+          dependencia_laboral: String(dependenciaVal || '').trim() || null,
+          tipo_empleo: String(organismoVal || '').toLowerCase().includes('municipal') ? 'MUNICIPAL' : 'PROVINCIAL',
+          situacion_revista: String(situacionRevistaVal || 'TITULAR').trim(),
+          antiguedad_anios: parseInt(antiguedadVal, 10) || 0,
+          antiguedad_meses: 0,
+          legajo: String(legajoVal || '').trim() || null
+        },
+        linea_ayuda: lineaCodigoApi,
+        monto_solicitado: Number(monto) || 0,
+        cuotas_pactadas: parseInt(cuotas, 10) || 6,
+        valor_cuota_estimada: Number(cuotaEstimada) || 0,
+        tna_aplicada: 0,
+        destino_fondos: 'Libre disponibilidad',
+        asesor_id: esUuidValido(session && session.id) ? String(session.id).trim() : null
+      };
 
-      // Validación estricta Cloud-First: si falla el guardado en el servidor, NO cerrar el modal ni simular guardado local
-      const esExitoso = Boolean(res && (res.ok || (res.data && res.data.ok !== false) || res.idSolicitud || (res.data && res.data.idSolicitud)));
-      if (!esExitoso) {
-        showToast('⚠️ Error de conexión con el Servidor Central de la Mutual. Verifique su conexión.');
-        return;
+      if (dictamenAAsentar) {
+        const resDec = dictamenAAsentar.resumenDecision || dictamenAAsentar;
+        renderSolicitudPayload.auditoria = {
+          periodo_recibo: String(resDec.periodo || '').trim() || null,
+          sueldo_bruto_total: Number(resDec.sueldoBrutoTotal || resDec.sueldoBruto || 0) || 0,
+          descuentos_ley: Number(resDec.descuentosLey || 0) || 0,
+          total_descuentos: Number(resDec.totalDescuentos || 0) || 0,
+          sueldo_liquido: Number(resDec.sueldoLiquido || resDec.sueldoNeto || 0) || 0,
+          margen_computable: Number(resDec.margenDisponible || resDec.margen || 0) || 0,
+          dictamen_canal: lineaCodigoApi === 'QUAD' ? 'PLANILLA_QUAD' : (lineaCodigoApi === 'SIDECREER' ? 'DEBITO_SIDECREER' : 'PLANILLA_FEDEM'),
+          conceptos_detalle: Array.isArray(dictamenAAsentar.conceptos) ? dictamenAAsentar.conceptos : [],
+          raw_dictamen: dictamenAAsentar
+        };
       }
 
-      const resData = (res && res.data) ? res.data : res;
-      const idConfirmado = resData.id_provisorio || resData.idSolicitud || provId;
+      if (typeof mostrarCargando === 'function') {
+        mostrarCargando('Guardando Solicitud...', 'Registrando expediente ' + provId + ' en Supabase y encolando réplica...');
+      }
+
+      let resData = null;
+      try {
+        const resp = await fetchConTimeout(`${RENDER_API_URL}/api/solicitudes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(renderSolicitudPayload)
+        }, 45000);
+
+        resData = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          const errMsg = resData.detail || resData.error || ('Error HTTP ' + resp.status);
+          showToast('⚠️ Error al guardar solicitud: ' + errMsg);
+          mostrarNotificacionToast('Error al guardar solicitud: ' + errMsg, 'error');
+          return;
+        }
+      } catch (errPost) {
+        console.error('Error enviando solicitud a Render:', errPost);
+        showToast('⚠️ Error de conexión con el servidor al guardar la solicitud.');
+        mostrarNotificacionToast('Error de conexión con el servidor al guardar la solicitud.', 'error');
+        return;
+      } finally {
+        if (typeof ocultarCargando === 'function') ocultarCargando();
+      }
+
+      const idConfirmado = (resData && (resData.id_provisorio || resData.solicitud_id)) || provId;
+      if (resData && resData.solicitud_id) {
+        nueva.supabase_id = resData.solicitud_id;
+      }
+
+      // Agregar inmediatamente al inicio de la tabla visible local
+      const actuales = getStoredSolicitudes();
+      actuales.unshift(nueva);
+      saveStoredSolicitudes(actuales);
+
       window.stateArchivosAdjuntos = {};
       if (window.state && window.state.archivosAdjuntos) {
         window.state.archivosAdjuntos = {};
       }
 
+      document.getElementById('formAltaSolicitud')?.reset();
       cerrarModal('modalAltaSolicitud');
 
-      // Sincronización inmediata en vivo desde la base central para reflejar Bóveda Documental y estado oficial
-      await sincronizarGestionesDesdeNube(true);
+      if (typeof renderModuloComercializador === 'function') renderModuloComercializador();
+      if (typeof renderModuloMutualPropias === 'function') renderModuloMutualPropias();
+      if (typeof renderModuloMutual === 'function') renderModuloMutual();
+      actualizarCentroNotificaciones();
+
+      showToast('✅ Solicitud guardada exitosamente (' + idConfirmado + ')');
+      mostrarNotificacionToast('Solicitud guardada exitosamente (' + idConfirmado + ')', 'success');
 
       // Disparo automático e inteligente de Auditoría IA en segundo plano solo si no venía ya auditada
       if (!dictamenAAsentar) {
-        ejecutarAuditoriaAutomaticaExpediente(resData.id || nueva.id, adjuntosBase64);
+        ejecutarAuditoriaAutomaticaExpediente(nueva.id, adjuntosBase64);
       }
       window._dictamenAuditoriaParaNuevaSolicitud = null;
       window._dictamenAuditoriaTexto = null;

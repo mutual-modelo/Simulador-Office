@@ -6490,8 +6490,8 @@
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypo5JRygnotB7NbJ3l0mvY7xVM0mSgbUVHFjGrC1Zn52icqOb0kE8duCzwMS7JcVEX/exec";
     const SCRIPT_URL = APPS_SCRIPT_URL;
     const AUDITOR_API_URL = "https://ammer-auditor-api.onrender.com/api/auditar-recibo";
-    const SUPABASE_URL = "https://[TU_PROYECTO].supabase.co";
-    const SUPABASE_ANON_KEY = "[TU_ANON_PUBLIC_KEY]";
+    const SUPABASE_URL = "https://mfaziwuvnaxviqgrybva.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_-uPo2ppGYLbdHF5x2gg2Yw_m-VsitJX";
     const CONFIG = {
       SCRIPT_URL: APPS_SCRIPT_URL,
       AUDITOR_API_URL: AUDITOR_API_URL,
@@ -6548,14 +6548,16 @@
           if (!controller.signal.aborted) controller.abort('STATUS_CHECK_TIMEOUT');
         }, 4000) : null;
 
+        const headers = { 'apikey': SUPABASE_ANON_KEY };
+        if (SUPABASE_ANON_KEY.startsWith('eyJ')) {
+          headers['Authorization'] = `Bearer ${SUPABASE_ANON_KEY}`;
+        }
+
         let response;
         try {
           response = await fetch(endpoint, {
             method: 'GET',
-            headers: {
-              'apikey': SUPABASE_ANON_KEY,
-              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-            },
+            headers: headers,
             signal: controller ? controller.signal : undefined
           });
         } finally {

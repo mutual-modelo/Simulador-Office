@@ -2042,19 +2042,19 @@
 
     /* TABLA DE DATOS */
     .data-table-container{background:#fff;border:1px solid var(--border-color);border-radius:12px;margin-top:.75rem;overflow-x:auto;max-width:100%;width:100%;min-height:180px}
-    .data-table{width:100%;border-collapse:collapse;font-size:.72rem;table-layout:auto}
-    .data-table th{padding:.52rem .45rem;background:#f8fafc;font-size:.64rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;border-bottom:1px solid var(--border-color);text-align:left;white-space:normal;line-height:1.2}
-    .data-table td{padding:.5rem .45rem;border-bottom:1px solid #f1f5f9;vertical-align:middle;overflow-wrap:anywhere;word-break:normal}
-    .data-table td .cell-domicilio-hist{max-width:165px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .data-table{width:100%;border-collapse:collapse;font-size:.73rem;table-layout:auto}
+    .data-table th{padding:.55rem .6rem;background:#f8fafc;font-size:.65rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.02em;border-bottom:1px solid var(--border-color);text-align:left;white-space:nowrap}
+    .data-table td{padding:.52rem .6rem;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+    .data-table td .cell-domicilio-hist{max-width:165px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;vertical-align:bottom}
     .data-table td .text-sm{font-size:.76rem;line-height:1.25}
-    .data-table tbody tr{content-visibility:auto;contain-intrinsic-size:0 56px}
+    .data-table tbody tr{content-visibility:auto;contain-intrinsic-size:0 54px}
     .data-table tr:hover{background:#f8fafc}
     @media(max-width:1280px){
-      .data-table{font-size:.69rem}
-      .data-table th{padding:.45rem .35rem;font-size:.61rem}
-      .data-table td{padding:.42rem .35rem}
+      .data-table{font-size:.7rem}
+      .data-table th{padding:.48rem .45rem;font-size:.62rem}
+      .data-table td{padding:.45rem .45rem}
       .data-table td .cell-domicilio-hist{max-width:130px}
-      .data-table .badge-status{font-size:.63rem;padding:.12rem .4rem}
+      .data-table .badge-status{font-size:.64rem;padding:.14rem .42rem}
     }
     .badge-status{display:inline-flex;align-items:center;gap:.25rem;padding:.15rem .5rem;border-radius:9999px;font-size:.68rem;font-weight:700;white-space:nowrap}
     .badge-Pendiente{background:#fef9c3;color:#854d0e;border:1px solid #fde047}
@@ -3986,17 +3986,13 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>N° Solicitud</th>
-              <th>Fecha</th>
+              <th>Solicitud / Fecha</th>
               <th id="colHeadAsesor" style="display:none;">Asesor Origen</th>
               <th>Asociado</th>
-              <th>DNI</th>
-              <th>Línea</th>
-              <th>Monto Neto</th>
-              <th>Cuotas</th>
+              <th>Línea / Monto</th>
               <th>Propuesta Mutual</th>
               <th>Estado</th>
-              <th>Acciones</th>
+              <th style="text-align:right;">Acciones</th>
             </tr>
           </thead>
           <tbody id="tablaComercializadorBody"></tbody>
@@ -4171,16 +4167,13 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>N° Expediente</th>
-              <th>Fecha</th>
-              <th>Canal de Ingreso</th>
-              <th>Asociado (DNI)</th>
-              <th>Organismo</th>
-              <th>Línea / Monto</th>
-              <th>Propuesta Oferta</th>
-              <th>Analista</th>
+              <th>Expediente / Fecha</th>
+              <th>Canal</th>
+              <th>Asociado</th>
+              <th>Solicitado</th>
+              <th>Oferta / Analista</th>
               <th>Estado</th>
-              <th>Acción</th>
+              <th style="text-align:right;">Acción</th>
             </tr>
           </thead>
           <tbody id="tablaMutualPropiasBody"></tbody>
@@ -4339,17 +4332,13 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>N° Expediente</th>
-              <th>Fecha</th>
-              <th>Organización</th>
-              <th>Comercializador / Asesor</th>
-              <th>Asociado (DNI)</th>
-              <th>Organismo</th>
-              <th>Línea / Monto</th>
-              <th>Propuesta Oferta</th>
-              <th>Analista</th>
+              <th>Expediente / Fecha</th>
+              <th>Origen / Asesor</th>
+              <th>Asociado</th>
+              <th>Solicitado</th>
+              <th>Oferta / Analista</th>
               <th>Estado</th>
-              <th>Acción</th>
+              <th style="text-align:right;">Acción</th>
             </tr>
           </thead>
           <tbody id="tablaMutualBody"></tbody>
@@ -11618,21 +11607,21 @@ ${cierreTxt}`;
         const msgVacio = (getStoredSolicitudes().length === 0)
           ? 'No se registran solicitudes en el período seleccionado. Presione "+ Nueva Solicitud" para iniciar un trámite.'
           : 'No se registran solicitudes en el período seleccionado.';
-        renderHtmlPorLotes(tbody, '<tr><td colspan="' + (showAsesorCol ? 11 : 10) + '" style="text-align:center;padding:1.5rem;color:var(--text-muted);">' + msgVacio + '</td></tr>');
+        renderHtmlPorLotes(tbody, '<tr><td colspan="' + (showAsesorCol ? 7 : 6) + '" style="text-align:center;padding:1.5rem;color:var(--text-muted);">' + msgVacio + '</td></tr>');
         return;
       }
 
       const rowsHtml = filtered.map(s => {
         const esMio = (s.usuario_id === session.id || s.comercializador === session.nombre);
         const colAsesorHtml = showAsesorCol ?
-          '<td><strong>' + s.comercializador + '</strong>' + (esMio ? ' <span style="font-size:0.65rem;color:var(--color-brand-blue);font-weight:700;">(Tú)</span>' : '') + '<br><span class="badge-org-tag">' + (s.nombre_organizacion || 'Paraná Centro') + '</span></td>' : '';
+          '<td><div style="font-weight:700;color:#0f172a;font-size:0.74rem;">' + sanitizeHTML(s.comercializador || '—') + (esMio ? ' <span style="font-size:0.65rem;color:var(--color-brand-blue);font-weight:700;">(Tú)</span>' : '') + '</div><span class="badge-org-tag" style="display:inline-block;margin-top:2px;">' + sanitizeHTML(s.nombre_organizacion || 'Paraná Centro') + '</span></td>' : '';
         const fechaStr = formatearFechaTabla24hs(s.fecha || s.Fecha_Registro);
         const idBadge = renderBadgeIdentificadorExpediente(s);
 
         const prop = s.propuestaMutual;
         const propHtml = prop && prop.activa ?
-          '<div style="font-size:0.7rem;"><span style="color:#166534;font-weight:700;">' + formatMoney(prop.monto) + '</span> (' + prop.cuotas + 'c)<br><span style="font-size:0.65rem;color:#0369a1;">' + (prop.estadoPropuesta || 'Oferta lista') + '</span></div>' :
-          '<span style="font-size:0.68rem;color:var(--text-muted);">Sin oferta</span>';
+          '<div style="font-size:0.71rem;white-space:nowrap;"><span style="color:#166534;font-weight:700;">' + formatMoney(prop.monto) + '</span> (' + prop.cuotas + 'c)<div style="font-size:0.65rem;color:#0369a1;">' + sanitizeHTML(prop.estadoPropuesta || 'Oferta lista') + '</div></div>' :
+          '<span style="font-size:0.69rem;color:var(--text-muted);">Sin oferta</span>';
 
         const domHistTxt = sanitizeHTML(s.domicilio_historico || s.solicitante?.domicilio || 'Sin domicilio declarado');
         const cantObsDocs = (s.adjuntos || []).filter(a => a && a.observado).length +
@@ -11644,27 +11633,26 @@ ${cierreTxt}`;
         const docsCount = (s.archivosAdjuntos ? s.archivosAdjuntos.length : (s.adjuntos ? s.adjuntos.length : 0));
         const driveLinkHtml = puedeVerDrive
           ? (s.carpetaDriveUrl
-              ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 border border-slate-200/60 transition-colors inline-flex items-center gap-1 text-xs" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" title="Abrir Legajo Digital en Drive (' + docsCount + ' docs)" onclick="event.stopPropagation()">' +
-                  '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/></svg>' +
+              ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="h-7 px-2 rounded-lg text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 border border-slate-200 transition-colors inline-flex items-center gap-1 text-[11px] font-semibold whitespace-nowrap" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" title="Abrir Legajo Digital en Drive (' + docsCount + ' docs)" onclick="event.stopPropagation()">' +
+                  '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/></svg>' +
                   '<span>' + docsCount + '</span>' +
                 '</a>'
-              : '<span class="px-2 py-1 rounded-lg text-[11px] text-slate-400 border border-slate-200/60 bg-slate-50" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" title="Legajo Digital (' + docsCount + ' docs)">📎 ' + docsCount + '</span>')
+              : '<span class="h-7 px-2 rounded-lg text-[11px] font-medium text-slate-500 border border-slate-200 bg-slate-50 inline-flex items-center gap-1 whitespace-nowrap" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" title="Legajo Digital (' + docsCount + ' docs)">' +
+                  '<svg class="w-3.5 h-3.5 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>' +
+                  '<span>' + docsCount + '</span>' +
+                '</span>')
           : '';
 
         return '<tr>' +
-          '<td>' + idBadge + '</td>' +
-          '<td class="text-xs font-medium text-slate-500" style="min-width:68px;line-height:1.25;">' + fechaStr + '</td>' +
+          '<td>' + idBadge + '<div style="font-size:0.67rem;color:#64748b;margin-top:3px;white-space:nowrap;">' + fechaStr + '</div></td>' +
           colAsesorHtml +
-          '<td><span class="text-sm font-semibold text-slate-900 block">' + sanitizeHTML(s.solicitante?.nombre || '—') + '</span><div class="text-xs font-medium text-slate-500 cell-domicilio-hist" title="' + domHistTxt + '">📍 ' + domHistTxt + '</div></td>' +
-          '<td class="text-xs font-normal text-slate-600 font-mono tabular-nums">' + sanitizeHTML(s.solicitante?.dni || '—') + '</td>' +
-          '<td class="text-xs font-medium text-slate-800">' + sanitizeHTML(s.prestamo?.lineaNombre || 'Ayuda Económica') + '</td>' +
-          '<td class="text-xs font-mono font-bold text-slate-900 tabular-nums">' + formatMoney(s.prestamo?.monto || 0) + '</td>' +
-          '<td>' + (s.prestamo?.cuotas || '—') + ' c</td>' +
+          '<td><div class="text-sm font-semibold text-slate-900">' + sanitizeHTML(s.solicitante?.nombre || '—') + '</div><div class="text-xs text-slate-500" style="margin-top:2px;"><span class="font-mono text-slate-600">DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + '</span> · <span class="cell-domicilio-hist" style="max-width:150px;" title="' + domHistTxt + '">📍 ' + domHistTxt + '</span></div></td>' +
+          '<td><div class="text-xs font-mono font-bold text-slate-900" style="white-space:nowrap;">' + formatMoney(s.prestamo?.monto || 0) + ' <span class="font-semibold text-slate-500">(' + (s.prestamo?.cuotas || '—') + 'c)</span></div><div class="text-[11px] font-medium text-slate-500" style="margin-top:1px;">' + sanitizeHTML(s.prestamo?.lineaNombre || 'Ayuda Económica') + '</div></td>' +
           '<td>' + propHtml + '</td>' +
           '<td><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + sanitizeHTML(s.estado || 'Pendiente') + '</span>' + alertaDocHtml + '</td>' +
-          '<td><div class="flex items-center justify-end gap-1 flex-wrap">' +
-            '<button type="button" class="btn-ver-expediente inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/60 transition-colors cursor-pointer" data-id="' + sanitizeHTML(String(s.id || '')) + '" data-id-provisorio="' + sanitizeHTML(String(s.id_provisorio || s.idProvisorio || s.id || '')) + '" title="Ver Expediente Completo">' +
-              '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
+          '<td style="text-align:right;"><div style="display:inline-flex;align-items:center;justify-content:flex-end;gap:5px;white-space:nowrap;">' +
+            '<button type="button" class="btn-ver-expediente h-7 inline-flex items-center gap-1 px-2.5 rounded-lg text-[11px] font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 transition-colors cursor-pointer whitespace-nowrap" data-id="' + sanitizeHTML(String(s.id || '')) + '" data-id-provisorio="' + sanitizeHTML(String(s.id_provisorio || s.idProvisorio || s.id || '')) + '" title="Ver Expediente Completo">' +
+              '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
               '<span>Expediente</span>' +
             '</button>' +
             driveLinkHtml +
@@ -14902,7 +14890,7 @@ ${cierreTxt}`;
             '<span>Eliminar Solicitud</span>' +
           '</button>';
         } else {
-          return '<button type="button" class="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 border border-rose-200/50 transition-colors cursor-pointer inline-flex items-center justify-center" title="Eliminar solicitud preliminar" onclick="event.stopPropagation(); solicitarEliminarSolicitud(\'' + id + '\')">' +
+          return '<button type="button" class="h-7 w-7 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 border border-rose-200/70 transition-colors cursor-pointer inline-flex items-center justify-center shrink-0" title="Eliminar solicitud preliminar" onclick="event.stopPropagation(); solicitarEliminarSolicitud(\'' + id + '\')">' +
             '<svg class="w-3.5 h-3.5 shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
               '<polyline points="3 6 5 6 21 6"></polyline>' +
               '<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>' +
@@ -14921,7 +14909,7 @@ ${cierreTxt}`;
             '<span>Desestimar Gestión</span>' +
           '</button>';
         } else {
-          return '<button type="button" class="p-1.5 rounded-lg text-amber-600 hover:text-amber-800 hover:bg-amber-50 border border-amber-200/50 transition-colors cursor-pointer inline-flex items-center justify-center" title="Desestimar gestión" onclick="event.stopPropagation(); abrirModalDesestimarGestion(\'' + id + '\')">' +
+          return '<button type="button" class="h-7 w-7 rounded-lg text-amber-600 hover:text-amber-800 hover:bg-amber-50 border border-amber-200/70 transition-colors cursor-pointer inline-flex items-center justify-center shrink-0" title="Desestimar gestión" onclick="event.stopPropagation(); abrirModalDesestimarGestion(\'' + id + '\')">' +
             '<svg class="w-3.5 h-3.5 shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
               '<circle cx="12" cy="12" r="10"></circle>' +
               '<line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>' +
@@ -15448,7 +15436,7 @@ ${cierreTxt}`;
         const msgVacio = (getStoredSolicitudes().length === 0)
           ? 'No se registran solicitudes en el período seleccionado. Presione "+ Nueva Solicitud" para iniciar un trámite.'
           : 'No se registran solicitudes en el período seleccionado.';
-        renderHtmlPorLotes(tbody, '<tr><td colspan="10" style="text-align:center;padding:1.5rem;color:var(--text-muted);">' + msgVacio + '</td></tr>');
+        renderHtmlPorLotes(tbody, '<tr><td colspan="7" style="text-align:center;padding:1.5rem;color:var(--text-muted);">' + msgVacio + '</td></tr>');
         return;
       }
 
@@ -15458,13 +15446,13 @@ ${cierreTxt}`;
 
         const canalIcon = (s.origen_canal === 'WhatsApp Oficial') ? '💬 ' :
                           (s.origen_canal === 'Telefónico') ? '📞 ' : '🏛️ ';
-        const canalTag = '<span style="display:inline-block;font-size:0.66rem;font-weight:700;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;padding:2px 6px;border-radius:4px;line-height:1.25;max-width:125px;">' +
-          canalIcon + (s.origen_canal || 'Presencial Sede Central') + '</span>';
+        const canalTag = '<span style="display:inline-block;font-size:0.66rem;font-weight:700;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;padding:2px 7px;border-radius:5px;line-height:1.25;max-width:130px;">' +
+          canalIcon + sanitizeHTML(s.origen_canal || 'Presencial Sede Central') + '</span>';
 
         const prop = s.propuestaMutual;
         const propHtml = prop && prop.activa ?
-          '<div style="font-size:0.7rem;"><span style="color:#166534;font-weight:700;">' + formatMoney(prop.monto) + '</span> (' + prop.cuotas + 'c)<br><span style="font-size:0.65rem;color:#0369a1;">' + (prop.estadoPropuesta || 'Oferta lista') + '</span></div>' :
-          '<span style="font-size:0.68rem;color:var(--text-muted);">En evaluación</span>';
+          '<div style="font-size:0.71rem;white-space:nowrap;"><span style="color:#166534;font-weight:700;">' + formatMoney(prop.monto) + '</span> (' + prop.cuotas + 'c) <span style="font-size:0.65rem;color:#0369a1;">· ' + sanitizeHTML(prop.estadoPropuesta || 'Oferta') + '</span></div>' :
+          '<span style="font-size:0.69rem;color:var(--text-muted);">En evaluación</span>';
 
         const domHistTxt = sanitizeHTML(s.domicilio_historico || s.solicitante?.domicilio || 'Sin domicilio declarado');
         const cantObsDocs = (s.adjuntos || []).filter(a => a && a.observado).length +
@@ -15474,25 +15462,25 @@ ${cierreTxt}`;
           : '';
         const docsCount = (s.archivosAdjuntos ? s.archivosAdjuntos.length : (s.adjuntos ? s.adjuntos.length : 0));
         const driveLinkHtml = (s.carpetaDriveUrl && esUsuarioMutualConAccesoDrive())
-          ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 border border-slate-200/60 transition-colors inline-flex items-center gap-1 text-xs" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" title="Abrir Legajo Digital en Drive (' + docsCount + ' docs)" onclick="event.stopPropagation()">' +
-              '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/></svg>' +
+          ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="h-7 px-2 rounded-lg text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 border border-slate-200 transition-colors inline-flex items-center gap-1 text-[11px] font-semibold whitespace-nowrap" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" title="Abrir Legajo Digital en Drive (' + docsCount + ' docs)" onclick="event.stopPropagation()">' +
+              '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/></svg>' +
               '<span>' + docsCount + '</span>' +
             '</a>'
-          : '<span class="px-1.5 py-1 rounded-lg text-[11px] text-slate-400 border border-slate-200/60 bg-slate-50" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" title="Legajo Digital (' + docsCount + ' docs)">📎 ' + docsCount + '</span>';
+          : '<span class="h-7 px-2 rounded-lg text-[11px] font-medium text-slate-500 border border-slate-200 bg-slate-50 inline-flex items-center gap-1 whitespace-nowrap" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" title="Legajo Digital (' + docsCount + ' docs)">' +
+              '<svg class="w-3.5 h-3.5 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>' +
+              '<span>' + docsCount + '</span>' +
+            '</span>';
 
         return '<tr>' +
-          '<td>' + idBadge + '</td>' +
-          '<td class="text-xs font-medium text-slate-500" style="min-width:68px;line-height:1.25;">' + fechaStr + '</td>' +
+          '<td>' + idBadge + '<div style="font-size:0.67rem;color:#64748b;margin-top:3px;white-space:nowrap;">' + fechaStr + '</div></td>' +
           '<td>' + canalTag + '</td>' +
-          '<td><span class="text-sm font-semibold text-slate-900 block">' + sanitizeHTML(s.solicitante?.nombre || '—') + '</span><span class="text-xs font-normal text-slate-600 font-mono block">DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + '</span><div class="text-xs font-medium text-slate-500 cell-domicilio-hist" title="' + domHistTxt + '">📍 ' + domHistTxt + '</div></td>' +
-          '<td class="text-xs font-medium text-slate-500">' + sanitizeHTML(s.solicitante?.organismo || '—') + '</td>' +
-          '<td><span class="text-xs font-medium text-slate-600 block">' + sanitizeHTML(s.prestamo?.lineaNombre || 'Ayuda') + '</span><span class="text-xs font-mono font-bold text-slate-900">' + formatMoney(s.prestamo?.monto || 0) + ' (' + (s.prestamo?.cuotas || '—') + 'c)</span></td>' +
-          '<td>' + propHtml + '</td>' +
-          '<td>' + sanitizeHTML(s.analistaAsignado || 'Sin Asignar') + '</td>' +
+          '<td><div class="text-sm font-semibold text-slate-900">' + sanitizeHTML(s.solicitante?.nombre || '—') + '</div><div class="text-xs text-slate-500" style="margin-top:2px;"><span class="font-mono text-slate-600">DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + '</span> · <span class="cell-domicilio-hist" style="max-width:145px;" title="' + domHistTxt + '">📍 ' + domHistTxt + '</span></div></td>' +
+          '<td><div class="text-xs font-mono font-bold text-slate-900" style="white-space:nowrap;">' + formatMoney(s.prestamo?.monto || 0) + ' <span class="font-semibold text-slate-500">(' + (s.prestamo?.cuotas || '—') + 'c)</span></div><div class="text-[11px] font-medium text-slate-500" style="margin-top:1px;">' + sanitizeHTML(s.prestamo?.lineaNombre || 'Ayuda') + ' · ' + sanitizeHTML(s.solicitante?.organismo || '—') + '</div></td>' +
+          '<td>' + propHtml + '<div style="font-size:0.68rem;color:#64748b;margin-top:2px;">👤 ' + sanitizeHTML(s.analistaAsignado || 'Sin Asignar') + '</div></td>' +
           '<td><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + sanitizeHTML(s.estado || 'Pendiente') + '</span>' + alertaDocHtml + '</td>' +
-          '<td><div class="flex items-center justify-end gap-1 flex-wrap">' +
-            '<button type="button" class="btn-ver-expediente inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/60 transition-colors cursor-pointer" data-id="' + sanitizeHTML(String(s.id || '')) + '" data-id-provisorio="' + sanitizeHTML(String(s.id_provisorio || s.idProvisorio || s.id || '')) + '" title="Ver Expediente Completo">' +
-              '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
+          '<td style="text-align:right;"><div style="display:inline-flex;align-items:center;justify-content:flex-end;gap:5px;white-space:nowrap;">' +
+            '<button type="button" class="btn-ver-expediente h-7 inline-flex items-center gap-1 px-2.5 rounded-lg text-[11px] font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 transition-colors cursor-pointer whitespace-nowrap" data-id="' + sanitizeHTML(String(s.id || '')) + '" data-id-provisorio="' + sanitizeHTML(String(s.id_provisorio || s.idProvisorio || s.id || '')) + '" title="Ver Expediente Completo">' +
+              '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
               '<span>Expediente</span>' +
             '</button>' +
             driveLinkHtml +
@@ -15590,7 +15578,7 @@ ${cierreTxt}`;
         const msgVacio = (getStoredSolicitudes().length === 0)
           ? 'No se registran solicitudes en el período seleccionado. Presione "+ Nueva Solicitud" para iniciar un trámite.'
           : 'No se registran solicitudes en el período seleccionado.';
-        renderHtmlPorLotes(tbody, '<tr><td colspan="11" style="text-align:center;padding:1.5rem;color:var(--text-muted);">' + msgVacio + '</td></tr>');
+        renderHtmlPorLotes(tbody, '<tr><td colspan="7" style="text-align:center;padding:1.5rem;color:var(--text-muted);">' + msgVacio + '</td></tr>');
         return;
       }
 
@@ -15600,8 +15588,8 @@ ${cierreTxt}`;
 
         const prop = s.propuestaMutual;
         const propHtml = prop && prop.activa ?
-          '<div style="font-size:0.7rem;"><span style="color:#166534;font-weight:700;">' + formatMoney(prop.monto) + '</span> (' + prop.cuotas + 'c)<br><span style="font-size:0.65rem;color:#0369a1;">' + (prop.estadoPropuesta || 'Oferta lista') + '</span></div>' :
-          '<span style="font-size:0.68rem;color:var(--text-muted);">En evaluación</span>';
+          '<div style="font-size:0.71rem;white-space:nowrap;"><span style="color:#166534;font-weight:700;">' + formatMoney(prop.monto) + '</span> (' + prop.cuotas + 'c) <span style="font-size:0.65rem;color:#0369a1;">· ' + sanitizeHTML(prop.estadoPropuesta || 'Oferta') + '</span></div>' :
+          '<span style="font-size:0.69rem;color:var(--text-muted);">En evaluación</span>';
 
         const domHistTxt = sanitizeHTML(s.domicilio_historico || s.solicitante?.domicilio || 'Sin domicilio declarado');
         const cantObsDocs = (s.adjuntos || []).filter(a => a && a.observado).length +
@@ -15611,26 +15599,25 @@ ${cierreTxt}`;
           : '';
         const docsCount = (s.archivosAdjuntos ? s.archivosAdjuntos.length : (s.adjuntos ? s.adjuntos.length : 0));
         const driveLinkHtml = (s.carpetaDriveUrl && esUsuarioMutualConAccesoDrive())
-          ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 border border-slate-200/60 transition-colors inline-flex items-center gap-1 text-xs" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" title="Abrir Legajo Digital en Drive (' + docsCount + ' docs)" onclick="event.stopPropagation()">' +
-              '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/></svg>' +
+          ? '<a href="' + sanitizeHTML(s.carpetaDriveUrl) + '" target="_blank" rel="noopener noreferrer" class="h-7 px-2 rounded-lg text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 border border-slate-200 transition-colors inline-flex items-center gap-1 text-[11px] font-semibold whitespace-nowrap" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" title="Abrir Legajo Digital en Drive (' + docsCount + ' docs)" onclick="event.stopPropagation()">' +
+              '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/></svg>' +
               '<span>' + docsCount + '</span>' +
             '</a>'
-          : '<span class="px-2 py-1 rounded-lg text-[11px] text-slate-400 border border-slate-200/60 bg-slate-50" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" title="Legajo Digital (' + docsCount + ' docs)">📎 ' + docsCount + '</span>';
+          : '<span class="h-7 px-2 rounded-lg text-[11px] font-medium text-slate-500 border border-slate-200 bg-slate-50 inline-flex items-center gap-1 whitespace-nowrap" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" title="Legajo Digital (' + docsCount + ' docs)">' +
+              '<svg class="w-3.5 h-3.5 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>' +
+              '<span>' + docsCount + '</span>' +
+            '</span>';
 
         return '<tr>' +
-          '<td>' + idBadge + '</td>' +
-          '<td class="text-xs font-medium text-slate-500" style="min-width:68px;line-height:1.25;">' + fechaStr + '</td>' +
-          '<td><span class="badge-org-tag" style="display:inline-block;line-height:1.25;">' + sanitizeHTML(s.nombre_organizacion || 'Paraná Centro') + '</span></td>' +
-          '<td><span class="text-xs font-medium text-slate-800">' + sanitizeHTML(s.comercializador || '—') + '</span></td>' +
-          '<td><span class="text-sm font-semibold text-slate-900 block">' + sanitizeHTML(s.solicitante?.nombre || '—') + '</span><span class="text-xs font-normal text-slate-600 font-mono block">DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + '</span><div class="text-xs font-medium text-slate-500 cell-domicilio-hist" title="' + domHistTxt + '">📍 ' + domHistTxt + '</div></td>' +
-          '<td class="text-xs font-medium text-slate-500">' + sanitizeHTML(s.solicitante?.organismo || '—') + '</td>' +
-          '<td><span class="text-xs font-medium text-slate-600 block">' + sanitizeHTML(s.prestamo?.lineaNombre || 'Ayuda') + '</span><span class="text-xs font-mono font-bold text-slate-900">' + formatMoney(s.prestamo?.monto || 0) + ' (' + (s.prestamo?.cuotas || '—') + 'c)</span></td>' +
-          '<td>' + propHtml + '</td>' +
-          '<td>' + sanitizeHTML(s.analistaAsignado || 'Sin Asignar') + '</td>' +
+          '<td>' + idBadge + '<div style="font-size:0.67rem;color:#64748b;margin-top:3px;white-space:nowrap;">' + fechaStr + '</div></td>' +
+          '<td><div style="font-weight:700;color:#0f172a;font-size:0.74rem;">' + sanitizeHTML(s.comercializador || '—') + '</div><span class="badge-org-tag" style="display:inline-block;margin-top:2px;white-space:nowrap;">' + sanitizeHTML(s.nombre_organizacion || 'Paraná Centro') + '</span></td>' +
+          '<td><div class="text-sm font-semibold text-slate-900">' + sanitizeHTML(s.solicitante?.nombre || '—') + '</div><div class="text-xs text-slate-500" style="margin-top:2px;"><span class="font-mono text-slate-600">DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + '</span> · <span class="cell-domicilio-hist" style="max-width:145px;" title="' + domHistTxt + '">📍 ' + domHistTxt + '</span></div></td>' +
+          '<td><div class="text-xs font-mono font-bold text-slate-900" style="white-space:nowrap;">' + formatMoney(s.prestamo?.monto || 0) + ' <span class="font-semibold text-slate-500">(' + (s.prestamo?.cuotas || '—') + 'c)</span></div><div class="text-[11px] font-medium text-slate-500" style="margin-top:1px;">' + sanitizeHTML(s.prestamo?.lineaNombre || 'Ayuda') + ' · ' + sanitizeHTML(s.solicitante?.organismo || '—') + '</div></td>' +
+          '<td>' + propHtml + '<div style="font-size:0.68rem;color:#64748b;margin-top:2px;">👤 ' + sanitizeHTML(s.analistaAsignado || 'Sin Asignar') + '</div></td>' +
           '<td><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + sanitizeHTML(s.estado || 'Pendiente') + '</span>' + alertaDocHtml + '</td>' +
-          '<td><div class="flex items-center justify-end gap-1 flex-wrap">' +
-            '<button type="button" class="btn-ver-expediente inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/60 transition-colors cursor-pointer" data-id="' + sanitizeHTML(String(s.id || '')) + '" data-id-provisorio="' + sanitizeHTML(String(s.id_provisorio || s.idProvisorio || s.id || '')) + '" title="Ver Expediente Completo">' +
-              '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
+          '<td style="text-align:right;"><div style="display:inline-flex;align-items:center;justify-content:flex-end;gap:5px;white-space:nowrap;">' +
+            '<button type="button" class="btn-ver-expediente h-7 inline-flex items-center gap-1 px-2.5 rounded-lg text-[11px] font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 transition-colors cursor-pointer whitespace-nowrap" data-id="' + sanitizeHTML(String(s.id || '')) + '" data-id-provisorio="' + sanitizeHTML(String(s.id_provisorio || s.idProvisorio || s.id || '')) + '" title="Ver Expediente Completo">' +
+              '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
               '<span>Expediente</span>' +
             '</button>' +
             driveLinkHtml +

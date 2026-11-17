@@ -6094,7 +6094,7 @@
                   <th style="padding:0.5rem 0.65rem;border-bottom:1px solid #e2e8f0;">Período</th>
                   <th style="padding:0.5rem 0.65rem;border-bottom:1px solid #e2e8f0;">Línea</th>
                   <th style="padding:0.5rem 0.65rem;border-bottom:1px solid #e2e8f0;">Fecha de Corte</th>
-                  <th style="padding:0.5rem 0.65rem;border-bottom:1px solid #e2e8f0;">1er Cuota (≤ Corte / &gt; Corte)</th>
+                  <th style="padding:0.5rem 0.65rem;border-bottom:1px solid #e2e8f0;">1er Cuota Vigente</th>
                   <th style="padding:0.5rem 0.65rem;border-bottom:1px solid #e2e8f0;">Registrado</th>
                 </tr>
               </thead>
@@ -7712,6 +7712,7 @@ Aguardo su respuesta. Muchas gracias.`;
 
       document.querySelectorAll('.line-option-btn').forEach(btn => btn.classList.remove('active'));
       document.getElementById('lineBtn-' + state.linea)?.classList.add('active');
+      if (typeof actualizarBannerFechaCobroSimulador === 'function') actualizarBannerFechaCobroSimulador();
 
       document.getElementById('modeBtn-neto')?.classList.toggle('active', state.modo === 'neto');
       document.getElementById('modeBtn-cuota')?.classList.toggle('active', state.modo === 'cuota');
@@ -7865,7 +7866,10 @@ Aguardo su respuesta. Muchas gracias.`;
         const calc = calcularFechaCobroPrimerCuota(lineaKey, new Date());
         valEl.textContent = calc.fechaCobroStr;
         if (metaEl) {
-          metaEl.textContent = '(' + lineaNombre + ' · Corte del mes: ' + calc.fechaCorteStr + ')';
+          const estadoHtml = calc.superoCorte
+            ? '<span style="display:inline-flex;align-items:center;padding:1px 7px;border-radius:9999px;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;font-size:0.68rem;font-weight:700;margin-left:4px;">Cerrado (' + sanitizeHTML(calc.fechaCorteStr) + ')</span>'
+            : '<span style="display:inline-flex;align-items:center;padding:1px 7px;border-radius:9999px;background:#ecfdf5;color:#15803d;border:1px solid #bbf7d0;font-size:0.68rem;font-weight:700;margin-left:4px;">Abierto · Cierra ' + sanitizeHTML(calc.fechaCorteStr) + '</span>';
+          metaEl.innerHTML = '(' + sanitizeHTML(lineaNombre) + ') ' + estadoHtml;
         }
       }
 
@@ -7901,23 +7905,29 @@ Aguardo su respuesta. Muchas gracias.`;
         tbody.innerHTML = '<tr><td colspan="5" style="padding:0.85rem;text-align:center;color:#64748b;">Aún no hay fechas de corte registradas en el historial.</td></tr>';
         return;
       }
+      const hoy = new Date();
+      const hoyNum = (hoy.getFullYear() * 10000) + ((hoy.getMonth() + 1) * 100) + hoy.getDate();
+
       tbody.innerHTML = hist.map(reg => {
         const parts = String(reg.fechaCorte || '').split('-').map(n => parseInt(n, 10));
-        let cuotaPre = '--/--/----';
-        let cuotaPost = '--/--/----';
+        let cuotaVigenteHtml = '<span style="color:#64748b;">--/--/----</span>';
         let corteFmt = reg.fechaCorte || '—';
         if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
           corteFmt = formatearFechaDMY(parts[0], parts[1], parts[2]);
-          const pre = sumarMeses(parts[0], parts[1], 1);
-          const post = sumarMeses(parts[0], parts[1], 2);
-          cuotaPre = formatearFechaDMY(pre.anio, pre.mes, 10);
-          cuotaPost = formatearFechaDMY(post.anio, post.mes, 10);
+          const corteNum = (parts[0] * 10000) + (parts[1] * 100) + parts[2];
+          const cerrado = hoyNum > corteNum;
+          const resMes = sumarMeses(parts[0], parts[1], cerrado ? 2 : 1);
+          const fechaCuotaStr = formatearFechaDMY(resMes.anio, resMes.mes, 10);
+          const pill = cerrado
+            ? '<span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;padding:1px 6px;border-radius:9999px;font-size:0.65rem;font-weight:700;margin-left:4px;">Cerrado</span>'
+            : '<span style="background:#ecfdf5;color:#15803d;border:1px solid #bbf7d0;padding:1px 6px;border-radius:9999px;font-size:0.65rem;font-weight:700;margin-left:4px;">Abierto</span>';
+          cuotaVigenteHtml = '<strong>' + sanitizeHTML(fechaCuotaStr) + '</strong>' + pill;
         }
         return '<tr style="border-bottom:1px solid #f1f5f9;">' +
           '<td style="padding:0.45rem 0.65rem;font-weight:700;font-family:monospace;">' + sanitizeHTML(reg.periodo || '—') + '</td>' +
           '<td style="padding:0.45rem 0.65rem;font-weight:600;color:#0f172a;">' + sanitizeHTML(reg.lineaNombre || reg.linea || '—') + '</td>' +
           '<td style="padding:0.45rem 0.65rem;font-family:monospace;font-weight:700;color:#1d4ed8;">' + sanitizeHTML(corteFmt) + '</td>' +
-          '<td style="padding:0.45rem 0.65rem;font-family:monospace;color:#334155;">' + sanitizeHTML(cuotaPre) + ' / ' + sanitizeHTML(cuotaPost) + '</td>' +
+          '<td style="padding:0.45rem 0.65rem;font-family:monospace;color:#0f172a;">' + cuotaVigenteHtml + '</td>' +
           '<td style="padding:0.45rem 0.65rem;color:#64748b;">' + sanitizeHTML(reg.usuario || 'Admin') + ' · ' + sanitizeHTML(reg.fechaCarga || '') + '</td>' +
         '</tr>';
       }).join('');

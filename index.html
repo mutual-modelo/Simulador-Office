@@ -3703,6 +3703,29 @@
             </div>
           </div>
 
+          <!-- 1.5. FECHA DE COBRO DE LA 1ER CUOTA (DINÁMICO POR LÍNEA Y FECHA DE CORTE) -->
+          <div id="simuladorFechaCobroCard" class="panel" style="padding:0.7rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;background:#ffffff;border:1px solid #cbd5e1;">
+            <div style="display:flex;align-items:center;gap:0.65rem;flex-wrap:wrap;">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;flex-shrink:0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              </span>
+              <div style="display:flex;align-items:baseline;gap:0.45rem;flex-wrap:wrap;">
+                <span style="font-size:0.82rem;font-weight:600;color:#334155;">Fecha de Cobro de la 1er Cuota:</span>
+                <strong id="simuladorFechaCobroVal" class="tabular-nums" style="font-size:0.95rem;font-weight:800;color:#0f172a;font-family:var(--font-mono, monospace);">--/--/----</strong>
+                <span id="simuladorFechaCobroMeta" style="font-size:0.72rem;color:#64748b;font-weight:500;"></span>
+              </div>
+            </div>
+            <button type="button" id="btnAdminFechaCorte" onclick="abrirModalFechaCorte()" style="display:none;align-items:center;gap:0.4rem;padding:0.38rem 0.75rem;border-radius:8px;font-size:0.75rem;font-weight:700;background:#0f172a;color:#ffffff;border:1px solid #0f172a;cursor:pointer;white-space:nowrap;">
+              <span>📅</span>
+              <span>Fecha de Corte</span>
+            </button>
+          </div>
+
           <!-- 2. TABLA DE PLANES (3 COLUMNAS EXACTAS) -->
           <div class="panel">
             <div class="panel-header">
@@ -6025,6 +6048,67 @@
     </div>
   </div>
 
+  <!-- MODAL 3.5: CONFIGURACIÓN E HISTORIAL DE FECHAS DE CORTE (SOLO ADMIN) -->
+  <div id="modalFechaCorteAdmin" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
+    <div class="modal-window" style="max-width:740px;">
+      <div class="modal-header-bar">
+        <div class="modal-header-title">📅 Gestión de Fechas de Corte de Liquidación</div>
+        <button type="button" class="btn-close-modal" onclick="cerrarModal('modalFechaCorteAdmin')" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="modal-body-scroll" style="padding:1.15rem 1.25rem;display:flex;flex-direction:column;gap:1rem;">
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0.85rem 1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;">
+          <div>
+            <div style="font-size:0.82rem;font-weight:700;color:#0f172a;">Período a Configurar</div>
+            <div style="font-size:0.72rem;color:#64748b;">Si la solicitud se gestiona hasta la fecha de corte inclusive, la 1er cuota vence el día 10 del mes siguiente; si es posterior, el día 10 del mes subsiguiente.</div>
+          </div>
+          <input type="month" id="fcMesSelector" onchange="cargarInputsFechaCortePorMes(this.value)" style="padding:0.42rem 0.65rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;font-weight:600;color:#0f172a;background:#fff;"/>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem;">
+          <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:0.85rem;">
+            <label for="fcInput-fedem" style="display:block;font-size:0.76rem;font-weight:700;color:#1e293b;margin-bottom:0.4rem;">🏛️ FEDEM Provincial</label>
+            <input type="date" id="fcInput-fedem" style="width:100%;padding:0.45rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;color:#0f172a;"/>
+          </div>
+          <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:0.85rem;">
+            <label for="fcInput-muni" style="display:block;font-size:0.76rem;font-weight:700;color:#1e293b;margin-bottom:0.4rem;">🏢 Municipales QUAD</label>
+            <input type="date" id="fcInput-muni" style="width:100%;padding:0.45rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;color:#0f172a;"/>
+          </div>
+          <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:0.85rem;">
+            <label for="fcInput-sidecreer" style="display:block;font-size:0.76rem;font-weight:700;color:#1e293b;margin-bottom:0.4rem;">💳 Tarjeta Sidecreer</label>
+            <input type="date" id="fcInput-sidecreer" style="width:100%;padding:0.45rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;color:#0f172a;"/>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;">
+          <button type="button" onclick="guardarFechasCorteAdmin()" class="btn-primary-action" style="width:auto;padding:0.55rem 1.15rem;font-size:0.8rem;font-weight:700;">
+            💾 Guardar Fechas de Corte
+          </button>
+        </div>
+
+        <div style="border-top:1px solid #e2e8f0;padding-top:0.9rem;">
+          <div style="font-size:0.82rem;font-weight:800;color:#0f172a;margin-bottom:0.55rem;">📋 Historial de Fechas de Corte (Control Interno)</div>
+          <div style="overflow-x:auto;border:1px solid #e2e8f0;border-radius:8px;max-height:240px;overflow-y:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:0.74rem;text-align:left;">
+              <thead style="background:#f8fafc;color:#475569;position:sticky;top:0;">
+                <tr>
+                  <th style="padding:0.5rem 0.65rem;border-bottom:1px solid #e2e8f0;">Período</th>
+                  <th style="padding:0.5rem 0.65rem;border-bottom:1px solid #e2e8f0;">Línea</th>
+                  <th style="padding:0.5rem 0.65rem;border-bottom:1px solid #e2e8f0;">Fecha de Corte</th>
+                  <th style="padding:0.5rem 0.65rem;border-bottom:1px solid #e2e8f0;">1er Cuota (≤ Corte / &gt; Corte)</th>
+                  <th style="padding:0.5rem 0.65rem;border-bottom:1px solid #e2e8f0;">Registrado</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyHistorialFechasCorte"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer-bar">
+        <button type="button" class="btn-restore" onclick="cerrarModal('modalFechaCorteAdmin')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL 4: VISOR DOCUMENTAL ONLINE INTEGRADO IN-APP -->
   <div id="modalVisorDocumento" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
     <div class="modal-window doc-viewer-modal-window">
@@ -7682,9 +7766,226 @@ Aguardo su respuesta. Muchas gracias.`;
       document.getElementById('kpiCapitalVal').textContent = formatMoney(result.capital);
 
       renderMatrixTable();
+      actualizarBannerFechaCobroSimulador();
       renderWaPlazosSelector();
       updateWhatsAppPreview();
     }
+
+    const STORAGE_KEY_FECHAS_CORTE = 'ammer_fechas_corte_config_v1';
+    const STORAGE_KEY_HISTORIAL_CORTE = 'ammer_fechas_corte_historial_v1';
+    const LINEAS_CORTE_LISTA = [
+      { key: 'fedem', label: 'FEDEM Provincial', defaultDay: 15 },
+      { key: 'muni', label: 'Municipales QUAD', defaultDay: 15 },
+      { key: 'sidecreer', label: 'Tarjeta Sidecreer', defaultDay: 15 }
+    ];
+
+    function normalizarLineaCorteKey(lineaRaw) {
+      const k = String(lineaRaw || 'fedem').toLowerCase();
+      if (k === 'municipales' || k === 'muni' || k.includes('muni') || k.includes('quad')) return 'muni';
+      if (k.includes('sidecreer')) return 'sidecreer';
+      return 'fedem';
+    }
+
+    function obtenerConfigFechasCorte() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_FECHAS_CORTE);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function obtenerHistorialFechasCorte() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_HISTORIAL_CORTE);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function formatearFechaDMY(yyyy, mm, dd) {
+      return String(dd).padStart(2, '0') + '/' + String(mm).padStart(2, '0') + '/' + String(yyyy);
+    }
+
+    function sumarMeses(yyyy, mm, offsetMeses) {
+      const totalMeses = (yyyy * 12) + (mm - 1) + offsetMeses;
+      const nuevoAnio = Math.floor(totalMeses / 12);
+      const nuevoMes = (totalMeses % 12) + 1;
+      return { anio: nuevoAnio, mes: nuevoMes };
+    }
+
+    function obtenerFechaCorteParaMes(lineaKey, anio, mes) {
+      const key = normalizarLineaCorteKey(lineaKey);
+      const mesKey = anio + '-' + String(mes).padStart(2, '0');
+      const cfg = obtenerConfigFechasCorte();
+      const fechaGuardada = cfg[key] && cfg[key][mesKey];
+      if (fechaGuardada && /^\d{4}-\d{2}-\d{2}$/.test(fechaGuardada)) {
+        return fechaGuardada;
+      }
+      const def = LINEAS_CORTE_LISTA.find(l => l.key === key)?.defaultDay || 15;
+      const ultimoDiaMes = new Date(anio, mes, 0).getDate();
+      const dia = Math.min(def, ultimoDiaMes);
+      return mesKey + '-' + String(dia).padStart(2, '0');
+    }
+
+    function calcularFechaCobroPrimerCuota(lineaKey, fechaGestionDate) {
+      const hoy = fechaGestionDate instanceof Date ? fechaGestionDate : new Date();
+      const gAnio = hoy.getFullYear();
+      const gMes = hoy.getMonth() + 1;
+      const gDia = hoy.getDate();
+
+      const fechaCorteIso = obtenerFechaCorteParaMes(lineaKey, gAnio, gMes);
+      const [cAnio, cMes, cDia] = fechaCorteIso.split('-').map(n => parseInt(n, 10));
+
+      const gestionNum = (gAnio * 10000) + (gMes * 100) + gDia;
+      const corteNum = (cAnio * 10000) + (cMes * 100) + cDia;
+
+      // Si gestiona hasta el día de corte inclusive -> 1er cuota día 10 del mes siguiente; si es posterior -> día 10 del mes subsiguiente
+      const mesesASumar = (gestionNum <= corteNum) ? 1 : 2;
+      const cobro = sumarMeses(cAnio, cMes, mesesASumar);
+
+      return {
+        fechaCobroStr: formatearFechaDMY(cobro.anio, cobro.mes, 10),
+        fechaCorteStr: formatearFechaDMY(cAnio, cMes, cDia),
+        fechaCorteIso: fechaCorteIso,
+        superoCorte: gestionNum > corteNum
+      };
+    }
+
+    function actualizarBannerFechaCobroSimulador() {
+      const valEl = document.getElementById('simuladorFechaCobroVal');
+      const metaEl = document.getElementById('simuladorFechaCobroMeta');
+      const btnAdmin = document.getElementById('btnAdminFechaCorte');
+      const lineaKey = normalizarLineaCorteKey(typeof state !== 'undefined' ? state.linea : 'fedem');
+      const lineaNombre = (FINANCIAL_DATA[lineaKey] && FINANCIAL_DATA[lineaKey].name) || 'FEDEM Provincial';
+
+      if (valEl) {
+        const calc = calcularFechaCobroPrimerCuota(lineaKey, new Date());
+        valEl.textContent = calc.fechaCobroStr;
+        if (metaEl) {
+          metaEl.textContent = '(' + lineaNombre + ' · Corte del mes: ' + calc.fechaCorteStr + ')';
+        }
+      }
+
+      if (btnAdmin) {
+        const session = (typeof getSession === 'function') ? getSession() : null;
+        const esAdmin = Boolean(session && String(session.rol || '').toLowerCase().includes('admin'));
+        btnAdmin.style.display = esAdmin ? 'inline-flex' : 'none';
+      }
+    }
+
+    function cargarInputsFechaCortePorMes(mesKeyParam) {
+      const hoy = new Date();
+      const mesDefault = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0');
+      const mesKey = (mesKeyParam && /^\d{4}-\d{2}$/.test(mesKeyParam)) ? mesKeyParam : mesDefault;
+      const [anio, mes] = mesKey.split('-').map(n => parseInt(n, 10));
+
+      const selMes = document.getElementById('fcMesSelector');
+      if (selMes && selMes.value !== mesKey) selMes.value = mesKey;
+
+      LINEAS_CORTE_LISTA.forEach(item => {
+        const inp = document.getElementById('fcInput-' + item.key);
+        if (inp) {
+          inp.value = obtenerFechaCorteParaMes(item.key, anio, mes);
+        }
+      });
+    }
+
+    function renderHistorialFechasCorte() {
+      const tbody = document.getElementById('tbodyHistorialFechasCorte');
+      if (!tbody) return;
+      const hist = obtenerHistorialFechasCorte();
+      if (hist.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="padding:0.85rem;text-align:center;color:#64748b;">Aún no hay fechas de corte registradas en el historial.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = hist.map(reg => {
+        const parts = String(reg.fechaCorte || '').split('-').map(n => parseInt(n, 10));
+        let cuotaPre = '--/--/----';
+        let cuotaPost = '--/--/----';
+        let corteFmt = reg.fechaCorte || '—';
+        if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+          corteFmt = formatearFechaDMY(parts[0], parts[1], parts[2]);
+          const pre = sumarMeses(parts[0], parts[1], 1);
+          const post = sumarMeses(parts[0], parts[1], 2);
+          cuotaPre = formatearFechaDMY(pre.anio, pre.mes, 10);
+          cuotaPost = formatearFechaDMY(post.anio, post.mes, 10);
+        }
+        return '<tr style="border-bottom:1px solid #f1f5f9;">' +
+          '<td style="padding:0.45rem 0.65rem;font-weight:700;font-family:monospace;">' + sanitizeHTML(reg.periodo || '—') + '</td>' +
+          '<td style="padding:0.45rem 0.65rem;font-weight:600;color:#0f172a;">' + sanitizeHTML(reg.lineaNombre || reg.linea || '—') + '</td>' +
+          '<td style="padding:0.45rem 0.65rem;font-family:monospace;font-weight:700;color:#1d4ed8;">' + sanitizeHTML(corteFmt) + '</td>' +
+          '<td style="padding:0.45rem 0.65rem;font-family:monospace;color:#334155;">' + sanitizeHTML(cuotaPre) + ' / ' + sanitizeHTML(cuotaPost) + '</td>' +
+          '<td style="padding:0.45rem 0.65rem;color:#64748b;">' + sanitizeHTML(reg.usuario || 'Admin') + ' · ' + sanitizeHTML(reg.fechaCarga || '') + '</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function abrirModalFechaCorte() {
+      const session = (typeof getSession === 'function') ? getSession() : null;
+      if (!session || !String(session.rol || '').toLowerCase().includes('admin')) {
+        if (typeof showToast === 'function') showToast('⛔ Solo el rol Admin puede configurar fechas de corte.');
+        return;
+      }
+      const hoy = new Date();
+      const mesActual = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0');
+      cargarInputsFechaCortePorMes(mesActual);
+      renderHistorialFechasCorte();
+      abrirModal('modalFechaCorteAdmin');
+    }
+
+    function guardarFechasCorteAdmin() {
+      const selMes = document.getElementById('fcMesSelector');
+      const hoy = new Date();
+      const mesKey = (selMes && selMes.value) ? selMes.value : (hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0'));
+      const cfg = obtenerConfigFechasCorte();
+      const hist = obtenerHistorialFechasCorte();
+      const session = (typeof getSession === 'function') ? getSession() : null;
+      const usuarioStr = (session && session.nombre) ? session.nombre : 'Admin';
+      const ahoraStr = formatearFechaDMY(hoy.getFullYear(), hoy.getMonth() + 1, hoy.getDate()) + ' ' +
+        String(hoy.getHours()).padStart(2, '0') + ':' + String(hoy.getMinutes()).padStart(2, '0');
+
+      let cambios = 0;
+      LINEAS_CORTE_LISTA.forEach(item => {
+        const inp = document.getElementById('fcInput-' + item.key);
+        const val = inp ? String(inp.value || '').trim() : '';
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(val)) return;
+        if (!cfg[item.key]) cfg[item.key] = {};
+        const anterior = cfg[item.key][mesKey];
+        cfg[item.key][mesKey] = val;
+        if (anterior !== val) {
+          cambios++;
+          hist.unshift({
+            periodo: mesKey,
+            linea: item.key,
+            lineaNombre: item.label,
+            fechaCorte: val,
+            usuario: usuarioStr,
+            fechaCarga: ahoraStr
+          });
+        }
+      });
+
+      try {
+        localStorage.setItem(STORAGE_KEY_FECHAS_CORTE, JSON.stringify(cfg));
+        localStorage.setItem(STORAGE_KEY_HISTORIAL_CORTE, JSON.stringify(hist.slice(0, 120)));
+      } catch (e) {
+        console.warn('No se pudo guardar fechas de corte en localStorage:', e);
+      }
+
+      renderHistorialFechasCorte();
+      actualizarBannerFechaCobroSimulador();
+      if (typeof showToast === 'function') {
+        showToast(cambios > 0 ? '✅ Fechas de corte guardadas y registradas en el historial.' : 'ℹ️ Fechas de corte confirmadas sin cambios.');
+      }
+    }
+
+    window.abrirModalFechaCorte = abrirModalFechaCorte;
+    window.cargarInputsFechaCortePorMes = cargarInputsFechaCortePorMes;
+    window.guardarFechasCorteAdmin = guardarFechasCorteAdmin;
+    window.actualizarBannerFechaCobroSimulador = actualizarBannerFechaCobroSimulador;
 
     function renderMatrixTable() {
       const tbody = document.getElementById('matrixTableBody');

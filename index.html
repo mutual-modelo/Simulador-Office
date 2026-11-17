@@ -11260,9 +11260,25 @@ ${cierreTxt}`;
 
     function filtrarGestionesComercializador() { renderModuloComercializador(); }
 
+    function esUsuarioRolMutualOAdmin(sessionObj) {
+      const s = sessionObj || (typeof getSession === 'function' ? getSession() : null);
+      if (!s || !s.rol) return false;
+      const rolLow = String(s.rol).toLowerCase();
+      return (
+        rolLow.includes('admin') ||
+        rolLow.includes('analista') ||
+        rolLow.includes('asesor mutual') ||
+        rolLow.includes('supervisor') ||
+        (rolLow.includes('mutual') && !rolLow.includes('comercial'))
+      );
+    }
+
     window._origenModalAlta = 'comercializador';
     function abrirModalAltaSolicitud(origen = 'comercializador') {
-      window._origenModalAlta = origen;
+      const session = getSession();
+      const esMutualOAdmin = esUsuarioRolMutualOAdmin(session);
+      const origenEfectivo = (origen === 'mutual_sede' && esMutualOAdmin) ? 'mutual_sede' : 'comercializador';
+      window._origenModalAlta = origenEfectivo;
       document.getElementById('formAltaSolicitud')?.reset();
       window._bloqueoAntiguedadMinima = false;
       window._bloqueoEdadMaxima = false;
@@ -11303,13 +11319,11 @@ ${cierreTxt}`;
       resetDocumentRows('formAltaSolicitud');
       recalcularValidacionesEdadYCuotas();
       const b = document.getElementById('badgePadronDni'); if (b) b.style.display = 'none';
-      const session = getSession();
-      const isAnalistaOAdmin = (session && (session.rol === 'Analista' || session.rol === 'Admin'));
       const groupCanal = document.getElementById('groupCanalIngresoModal');
       const titleSpan = document.getElementById('lblAltaModalTitle');
       const grpDocsMut = document.getElementById('groupDocsInternosMutual');
-      if (grpDocsMut) grpDocsMut.style.display = (origen === 'mutual_sede' || isAnalistaOAdmin) ? 'block' : 'none';
-      if (origen === 'mutual_sede') {
+      if (grpDocsMut) grpDocsMut.style.display = (origenEfectivo === 'mutual_sede' || esMutualOAdmin) ? 'block' : 'none';
+      if (origenEfectivo === 'mutual_sede') {
         if (groupCanal) groupCanal.style.display = 'block';
         if (titleSpan) titleSpan.textContent = '🏛️ Nueva Solicitud Mutual (Sede Central / WhatsApp)';
       } else {
@@ -18543,8 +18557,9 @@ ${cierreTxt}`;
 
       cerrarModal('modalGuardadoAuditoriaInteligente');
 
-      // 1. Inicializar modal de alta en modo Sede Central
-      abrirModalAltaSolicitud('mutual_sede');
+      // 1. Inicializar modal de alta según el rol del usuario logueado
+      const origenSegunRol = esUsuarioRolMutualOAdmin() ? 'mutual_sede' : 'comercializador';
+      abrirModalAltaSolicitud(origenSegunRol);
 
       // Restaurar tarjeta de resumen de auditoría en la cabecera del formulario
       const bannerAud = document.getElementById('bannerResumenAuditoriaModalAlta');

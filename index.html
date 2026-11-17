@@ -6059,7 +6059,10 @@
         <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0.85rem 1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;">
           <div>
             <div style="font-size:0.82rem;font-weight:700;color:#0f172a;">Período a Configurar</div>
-            <div style="font-size:0.72rem;color:#64748b;">Si la solicitud se gestiona hasta la fecha de corte inclusive, la 1er cuota vence el día 10 del mes siguiente; si es posterior, el día 10 del mes subsiguiente.</div>
+            <div style="font-size:0.72rem;color:#64748b;line-height:1.45;">
+              <strong>FEDEM / Sidecreer:</strong> Pre-corte → día 10 del mes siguiente · Pos-corte → día 10 del mes subsiguiente.<br/>
+              <strong>Municipales QUAD:</strong> Pre-corte → último día del mismo mes · Pos-corte → último día del mes siguiente.
+            </div>
           </div>
           <input type="month" id="fcMesSelector" onchange="cargarInputsFechaCortePorMes(this.value)" style="padding:0.42rem 0.65rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;font-weight:600;color:#0f172a;background:#fff;"/>
         </div>
@@ -6080,7 +6083,7 @@
         </div>
 
         <div style="display:flex;justify-content:flex-end;">
-          <button type="button" onclick="guardarFechasCorteAdmin()" class="btn-primary-action" style="width:auto;padding:0.55rem 1.15rem;font-size:0.8rem;font-weight:700;">
+          <button type="button" id="btnGuardarFechasCorte" onclick="guardarFechasCorteAdmin()" class="btn-primary-action" style="width:auto;padding:0.55rem 1.15rem;font-size:0.8rem;font-weight:700;">
             💾 Guardar Fechas de Corte
           </button>
         </div>
@@ -6088,14 +6091,16 @@
         <div style="border-top:1px solid #e2e8f0;padding-top:0.9rem;">
           <div style="font-size:0.82rem;font-weight:800;color:#0f172a;margin-bottom:0.55rem;">📋 Historial de Fechas de Corte (Control Interno)</div>
           <div style="overflow-x:auto;border:1px solid #e2e8f0;border-radius:8px;max-height:240px;overflow-y:auto;">
-            <table style="width:100%;border-collapse:collapse;font-size:0.74rem;text-align:left;">
+            <table style="width:100%;border-collapse:collapse;font-size:0.73rem;text-align:left;">
               <thead style="background:#f8fafc;color:#475569;position:sticky;top:0;">
                 <tr>
-                  <th style="padding:0.5rem 0.65rem;border-bottom:1px solid #e2e8f0;">Período</th>
-                  <th style="padding:0.5rem 0.65rem;border-bottom:1px solid #e2e8f0;">Línea</th>
-                  <th style="padding:0.5rem 0.65rem;border-bottom:1px solid #e2e8f0;">Fecha de Corte</th>
-                  <th style="padding:0.5rem 0.65rem;border-bottom:1px solid #e2e8f0;">1er Cuota Vigente</th>
-                  <th style="padding:0.5rem 0.65rem;border-bottom:1px solid #e2e8f0;">Registrado</th>
+                  <th style="padding:0.5rem 0.55rem;border-bottom:1px solid #e2e8f0;">Período</th>
+                  <th style="padding:0.5rem 0.55rem;border-bottom:1px solid #e2e8f0;">Línea</th>
+                  <th style="padding:0.5rem 0.55rem;border-bottom:1px solid #e2e8f0;">Fecha de Corte</th>
+                  <th style="padding:0.5rem 0.55rem;border-bottom:1px solid #e2e8f0;">Pre-Corte (≤ Corte)</th>
+                  <th style="padding:0.5rem 0.55rem;border-bottom:1px solid #e2e8f0;">Pos-Corte (&gt; Corte)</th>
+                  <th style="padding:0.5rem 0.55rem;border-bottom:1px solid #e2e8f0;">Estado</th>
+                  <th style="padding:0.5rem 0.55rem;border-bottom:1px solid #e2e8f0;">Registrado</th>
                 </tr>
               </thead>
               <tbody id="tbodyHistorialFechasCorte"></tbody>
@@ -7831,6 +7836,28 @@ Aguardo su respuesta. Muchas gracias.`;
       return mesKey + '-' + String(dia).padStart(2, '0');
     }
 
+    function calcularVencimientosPorCorte(lineaKey, cAnio, cMes) {
+      const key = normalizarLineaCorteKey(lineaKey);
+      if (key === 'muni') {
+        // Municipales QUAD: Pre-corte -> último día del mismo mes; Pos-corte -> último día del mes siguiente
+        const preMes = sumarMeses(cAnio, cMes, 0);
+        const ultimoDiaPre = new Date(preMes.anio, preMes.mes, 0).getDate();
+        const posMes = sumarMeses(cAnio, cMes, 1);
+        const ultimoDiaPos = new Date(posMes.anio, posMes.mes, 0).getDate();
+        return {
+          preCorteStr: formatearFechaDMY(preMes.anio, preMes.mes, ultimoDiaPre),
+          posCorteStr: formatearFechaDMY(posMes.anio, posMes.mes, ultimoDiaPos)
+        };
+      }
+      // FEDEM / Sidecreer: Pre-corte -> día 10 del mes siguiente; Pos-corte -> día 10 del mes subsiguiente
+      const preMes = sumarMeses(cAnio, cMes, 1);
+      const posMes = sumarMeses(cAnio, cMes, 2);
+      return {
+        preCorteStr: formatearFechaDMY(preMes.anio, preMes.mes, 10),
+        posCorteStr: formatearFechaDMY(posMes.anio, posMes.mes, 10)
+      };
+    }
+
     function calcularFechaCobroPrimerCuota(lineaKey, fechaGestionDate) {
       const hoy = fechaGestionDate instanceof Date ? fechaGestionDate : new Date();
       const gAnio = hoy.getFullYear();
@@ -7842,17 +7869,49 @@ Aguardo su respuesta. Muchas gracias.`;
 
       const gestionNum = (gAnio * 10000) + (gMes * 100) + gDia;
       const corteNum = (cAnio * 10000) + (cMes * 100) + cDia;
+      const superoCorte = gestionNum > corteNum;
 
-      // Si gestiona hasta el día de corte inclusive -> 1er cuota día 10 del mes siguiente; si es posterior -> día 10 del mes subsiguiente
-      const mesesASumar = (gestionNum <= corteNum) ? 1 : 2;
-      const cobro = sumarMeses(cAnio, cMes, mesesASumar);
+      const vencs = calcularVencimientosPorCorte(lineaKey, cAnio, cMes);
 
       return {
-        fechaCobroStr: formatearFechaDMY(cobro.anio, cobro.mes, 10),
+        fechaCobroStr: superoCorte ? vencs.posCorteStr : vencs.preCorteStr,
+        preCorteStr: vencs.preCorteStr,
+        posCorteStr: vencs.posCorteStr,
         fechaCorteStr: formatearFechaDMY(cAnio, cMes, cDia),
         fechaCorteIso: fechaCorteIso,
-        superoCorte: gestionNum > corteNum
+        superoCorte: superoCorte
       };
+    }
+
+    async function sincronizarFechasCorteDesdeNube() {
+      try {
+        const resp = await fetch(`${RENDER_API_URL}/api/config/fechas-corte`, {
+          method: 'GET',
+          cache: 'no-store'
+        });
+        if (!resp.ok) return false;
+        const data = await resp.json();
+        if (!data || !data.ok) return false;
+
+        if (data.config && typeof data.config === 'object') {
+          localStorage.setItem(STORAGE_KEY_FECHAS_CORTE, JSON.stringify(data.config));
+        }
+        if (Array.isArray(data.historial)) {
+          localStorage.setItem(STORAGE_KEY_HISTORIAL_CORTE, JSON.stringify(data.historial));
+        }
+
+        actualizarBannerFechaCobroSimulador();
+        const modal = document.getElementById('modalFechaCorteAdmin');
+        if (modal && modal.classList.contains('active')) {
+          const selMes = document.getElementById('fcMesSelector');
+          cargarInputsFechaCortePorMes(selMes ? selMes.value : undefined);
+          renderHistorialFechasCorte();
+        }
+        return true;
+      } catch (e) {
+        console.warn('No se pudo sincronizar fechas de corte desde la nube:', e);
+        return false;
+      }
     }
 
     function actualizarBannerFechaCobroSimulador() {
@@ -7902,7 +7961,7 @@ Aguardo su respuesta. Muchas gracias.`;
       if (!tbody) return;
       const hist = obtenerHistorialFechasCorte();
       if (hist.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="padding:0.85rem;text-align:center;color:#64748b;">Aún no hay fechas de corte registradas en el historial.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="padding:0.85rem;text-align:center;color:#64748b;">Aún no hay fechas de corte registradas en el historial.</td></tr>';
         return;
       }
       const hoy = new Date();
@@ -7910,25 +7969,29 @@ Aguardo su respuesta. Muchas gracias.`;
 
       tbody.innerHTML = hist.map(reg => {
         const parts = String(reg.fechaCorte || '').split('-').map(n => parseInt(n, 10));
-        let cuotaVigenteHtml = '<span style="color:#64748b;">--/--/----</span>';
+        let preCorteHtml = '<span style="color:#64748b;">--/--/----</span>';
+        let posCorteHtml = '<span style="color:#64748b;">--/--/----</span>';
+        let estadoHtml = '<span style="color:#64748b;">—</span>';
         let corteFmt = reg.fechaCorte || '—';
         if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
           corteFmt = formatearFechaDMY(parts[0], parts[1], parts[2]);
           const corteNum = (parts[0] * 10000) + (parts[1] * 100) + parts[2];
           const cerrado = hoyNum > corteNum;
-          const resMes = sumarMeses(parts[0], parts[1], cerrado ? 2 : 1);
-          const fechaCuotaStr = formatearFechaDMY(resMes.anio, resMes.mes, 10);
-          const pill = cerrado
-            ? '<span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;padding:1px 6px;border-radius:9999px;font-size:0.65rem;font-weight:700;margin-left:4px;">Cerrado</span>'
-            : '<span style="background:#ecfdf5;color:#15803d;border:1px solid #bbf7d0;padding:1px 6px;border-radius:9999px;font-size:0.65rem;font-weight:700;margin-left:4px;">Abierto</span>';
-          cuotaVigenteHtml = '<strong>' + sanitizeHTML(fechaCuotaStr) + '</strong>' + pill;
+          const vencs = calcularVencimientosPorCorte(reg.linea || reg.lineaNombre || 'fedem', parts[0], parts[1]);
+          preCorteHtml = '<span style="' + (!cerrado ? 'font-weight:800;color:#15803d;' : 'color:#64748b;') + '">' + sanitizeHTML(vencs.preCorteStr) + '</span>';
+          posCorteHtml = '<span style="' + (cerrado ? 'font-weight:800;color:#c2410c;' : 'color:#0f172a;') + '">' + sanitizeHTML(vencs.posCorteStr) + '</span>';
+          estadoHtml = cerrado
+            ? '<span style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;padding:1px 6px;border-radius:9999px;font-size:0.65rem;font-weight:700;">Cerrado</span>'
+            : '<span style="background:#ecfdf5;color:#15803d;border:1px solid #bbf7d0;padding:1px 6px;border-radius:9999px;font-size:0.65rem;font-weight:700;">Abierto</span>';
         }
         return '<tr style="border-bottom:1px solid #f1f5f9;">' +
-          '<td style="padding:0.45rem 0.65rem;font-weight:700;font-family:monospace;">' + sanitizeHTML(reg.periodo || '—') + '</td>' +
-          '<td style="padding:0.45rem 0.65rem;font-weight:600;color:#0f172a;">' + sanitizeHTML(reg.lineaNombre || reg.linea || '—') + '</td>' +
-          '<td style="padding:0.45rem 0.65rem;font-family:monospace;font-weight:700;color:#1d4ed8;">' + sanitizeHTML(corteFmt) + '</td>' +
-          '<td style="padding:0.45rem 0.65rem;font-family:monospace;color:#0f172a;">' + cuotaVigenteHtml + '</td>' +
-          '<td style="padding:0.45rem 0.65rem;color:#64748b;">' + sanitizeHTML(reg.usuario || 'Admin') + ' · ' + sanitizeHTML(reg.fechaCarga || '') + '</td>' +
+          '<td style="padding:0.45rem 0.55rem;font-weight:700;font-family:monospace;">' + sanitizeHTML(reg.periodo || '—') + '</td>' +
+          '<td style="padding:0.45rem 0.55rem;font-weight:600;color:#0f172a;">' + sanitizeHTML(reg.lineaNombre || reg.linea || '—') + '</td>' +
+          '<td style="padding:0.45rem 0.55rem;font-family:monospace;font-weight:700;color:#1d4ed8;">' + sanitizeHTML(corteFmt) + '</td>' +
+          '<td style="padding:0.45rem 0.55rem;font-family:monospace;">' + preCorteHtml + '</td>' +
+          '<td style="padding:0.45rem 0.55rem;font-family:monospace;">' + posCorteHtml + '</td>' +
+          '<td style="padding:0.45rem 0.55rem;">' + estadoHtml + '</td>' +
+          '<td style="padding:0.45rem 0.55rem;color:#64748b;">' + sanitizeHTML(reg.usuario || 'Admin') + ' · ' + sanitizeHTML(reg.fechaCarga || '') + '</td>' +
         '</tr>';
       }).join('');
     }
@@ -7944,10 +8007,12 @@ Aguardo su respuesta. Muchas gracias.`;
       cargarInputsFechaCortePorMes(mesActual);
       renderHistorialFechasCorte();
       abrirModal('modalFechaCorteAdmin');
+      sincronizarFechasCorteDesdeNube();
     }
 
-    function guardarFechasCorteAdmin() {
+    async function guardarFechasCorteAdmin() {
       const selMes = document.getElementById('fcMesSelector');
+      const btnGuardar = document.getElementById('btnGuardarFechasCorte');
       const hoy = new Date();
       const mesKey = (selMes && selMes.value) ? selMes.value : (hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0'));
       const cfg = obtenerConfigFechasCorte();
@@ -7978,17 +8043,48 @@ Aguardo su respuesta. Muchas gracias.`;
         }
       });
 
+      const histRecortado = hist.slice(0, 120);
       try {
         localStorage.setItem(STORAGE_KEY_FECHAS_CORTE, JSON.stringify(cfg));
-        localStorage.setItem(STORAGE_KEY_HISTORIAL_CORTE, JSON.stringify(hist.slice(0, 120)));
+        localStorage.setItem(STORAGE_KEY_HISTORIAL_CORTE, JSON.stringify(histRecortado));
       } catch (e) {
         console.warn('No se pudo guardar fechas de corte en localStorage:', e);
       }
 
       renderHistorialFechasCorte();
       actualizarBannerFechaCobroSimulador();
+
+      if (btnGuardar) {
+        btnGuardar.disabled = true;
+        btnGuardar.textContent = '⏳ Sincronizando...';
+      }
+
+      let syncOk = false;
+      try {
+        const resp = await fetch(`${RENDER_API_URL}/api/config/fechas-corte`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ config: cfg, historial: histRecortado })
+        });
+        if (resp.ok) {
+          const resJson = await resp.json();
+          syncOk = Boolean(resJson && resJson.ok);
+        }
+      } catch (e) {
+        console.warn('Error sincronizando fechas de corte con la nube:', e);
+      } finally {
+        if (btnGuardar) {
+          btnGuardar.disabled = false;
+          btnGuardar.textContent = '💾 Guardar Fechas de Corte';
+        }
+      }
+
       if (typeof showToast === 'function') {
-        showToast(cambios > 0 ? '✅ Fechas de corte guardadas y registradas en el historial.' : 'ℹ️ Fechas de corte confirmadas sin cambios.');
+        if (syncOk) {
+          showToast(cambios > 0 ? '✅ Fechas de corte guardadas y sincronizadas para todos los usuarios.' : '✅ Fechas de corte confirmadas y sincronizadas en la nube.');
+        } else {
+          showToast('⚠️ Guardado local únicamente; no se pudo sincronizar con el servidor.');
+        }
       }
     }
 
@@ -7996,6 +8092,7 @@ Aguardo su respuesta. Muchas gracias.`;
     window.cargarInputsFechaCortePorMes = cargarInputsFechaCortePorMes;
     window.guardarFechasCorteAdmin = guardarFechasCorteAdmin;
     window.actualizarBannerFechaCobroSimulador = actualizarBannerFechaCobroSimulador;
+    window.sincronizarFechasCorteDesdeNube = sincronizarFechasCorteDesdeNube;
 
     function renderMatrixTable() {
       const tbody = document.getElementById('matrixTableBody');
@@ -19927,6 +20024,7 @@ ${cierreTxt}`;
       initSidebar();
       checkAuthAndInit();
       renderApp();
+      sincronizarFechasCorteDesdeNube();
       iniciarSincronizacionPasivaBackground();
     });
   </script>

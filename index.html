@@ -5336,15 +5336,34 @@
               </div>
             </div>
 
-            <!-- DROPZONE COMPACTO -->
-            <div class="document-dropzone" ondragover="event.preventDefault(); this.classList.add('is-dragover');" ondragleave="this.classList.remove('is-dragover');" ondrop="handleDropzoneDrop(event, 'altaSolicitud')">
+            <!-- DROPZONE COMPACTO POR LOTE -->
+            <div class="document-dropzone" style="cursor:pointer;" onclick="document.getElementById('inpLoteAltaSolicitud').click()" ondragover="event.preventDefault(); this.classList.add('is-dragover');" ondragleave="this.classList.remove('is-dragover');" ondrop="handleDropzoneDrop(event, 'altaSolicitud')">
+              <input type="file" id="inpLoteAltaSolicitud" multiple accept="image/*,application/pdf" style="display:none;" onchange="agregarArchivosALoteAlta(this.files); this.value='';">
               <svg class="document-dropzone-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                 <polyline points="17 8 12 3 7 8"/>
                 <line x1="12" y1="3" x2="12" y2="15"/>
               </svg>
-              <div class="document-dropzone-text">Arrastra tus comprobantes aquí o adjúntalos fila por fila</div>
-              <div class="document-dropzone-sub">Formatos admitidos: PDF, JPG, PNG (hasta 10 MB por archivo)</div>
+              <div class="document-dropzone-text">Arrastra varios archivos aquí o haz clic para cargar por Lote</div>
+              <div class="document-dropzone-sub">Podrás marcar el tipo de cada documento o reconocerlos automáticamente con IA (PDF, JPG, PNG hasta 10 MB)</div>
+              <div style="margin-top:0.55rem;">
+                <button type="button" class="btn-doc-upload" style="pointer-events:none;">📂 Seleccionar Lote de Archivos</button>
+              </div>
+            </div>
+
+            <!-- PANEL DE CLASIFICACIÓN POR LOTE -->
+            <div id="loteAltaSolicitudPanel" style="display:none; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:0.85rem 1rem; margin-bottom:0.9rem;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:0.6rem; flex-wrap:wrap; margin-bottom:0.65rem;">
+                <div style="font-size:0.82rem; font-weight:700; color:#0f172a;">
+                  📦 Archivos en Lote (<span id="loteAltaCount">0</span>)
+                </div>
+                <div style="display:flex; align-items:center; gap:0.45rem; flex-wrap:wrap;">
+                  <button type="button" id="btnReconocerLoteIA" onclick="clasificarLoteConIA()" style="background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; border:none; border-radius:6px; padding:0.4rem 0.75rem; font-size:0.75rem; font-weight:600; cursor:pointer;">🤖 Reconocer Tipos con IA</button>
+                  <button type="button" id="btnAplicarLote" onclick="aplicarLoteAlExpediente()" style="background:#059669; color:#fff; border:none; border-radius:6px; padding:0.4rem 0.75rem; font-size:0.75rem; font-weight:600; cursor:pointer;">✅ Aplicar Lote al Legajo</button>
+                  <button type="button" onclick="limpiarLoteArchivosAlta()" style="background:#fff; color:#64748b; border:1px solid #cbd5e1; border-radius:6px; padding:0.38rem 0.65rem; font-size:0.75rem; font-weight:600; cursor:pointer;">Limpiar</button>
+                </div>
+              </div>
+              <div id="loteAltaSolicitudLista" style="display:flex; flex-direction:column; gap:0.45rem;"></div>
             </div>
 
             <!-- LISTA DE FILAS DOCUMENTALES DINÁMICAS -->
@@ -7782,7 +7801,7 @@ Aguardo su respuesta. Muchas gracias.`;
 
       if (state.linea === 'muni' || state.linea === 'sidecreer') {
         if (totalLabel) totalLabel.textContent = "TOTAL A PAGAR";
-        if (totalBadge) totalBadge.textContent = "Total a Devolver";
+        if (totalBadge) totalBadge.textContent = (state.linea === 'sidecreer') ? "Importe ($) en Sidecreer" : "Total a Devolver";
         if (capitalLabel) capitalLabel.textContent = "IMPORTE SOLICITADO";
         if (capitalBadge) capitalBadge.textContent = "Capital Computable";
       } else {
@@ -10260,6 +10279,220 @@ ${cierreTxt}`;
       }
     }
 
+    window.__loteArchivosAlta = [];
+
+    const OPCIONES_TIPO_DOC_LOTE = [
+      { id: 'fileDni', label: 'DNI (Frente y Dorso)', badge: 'obligatorio' },
+      { id: 'fileRecibo', label: 'Recibo de Haberes / Sueldo', badge: 'obligatorio' },
+      { id: 'fileMovimientos', label: 'Movimientos Bancarios', badge: 'opcional' },
+      { id: 'fileSage', label: 'Certificado SAGE (CGE)', badge: 'opcional' },
+      { id: 'fileContrato', label: 'Contrato de Servicio', badge: 'opcional' },
+      { id: 'fileNotaUniversidad', label: 'Nota Universidad / Facultad', badge: 'opcional' },
+      { id: 'fileServicio', label: 'Servicio / Impuesto', badge: 'opcional' },
+      { id: 'fileCbu', label: 'Constancia de CBU', badge: 'opcional' },
+      { id: 'fileSidecreer', label: 'Tarjeta Sidecreer', badge: 'opcional' },
+      { id: 'fileTransferencia', label: 'Comprobante Transferencia', badge: 'interno' },
+      { id: 'fileSolicitudAyuda', label: 'Solicitud de Ayuda Económica', badge: 'interno' },
+      { id: 'fileAutorizacionDescuento', label: 'Autorización de Descuento', badge: 'interno' },
+      { id: 'fileOtros', label: 'Otros Documentos', badge: 'opcional' }
+    ];
+
+    function inferirTipoDocPorNombre(filename) {
+      const name = String(filename || '').toLowerCase();
+      if (name.includes('dni') || name.includes('frente') || name.includes('dorso')) return 'fileDni';
+      if (name.includes('recibo') || name.includes('sueldo') || name.includes('haber')) return 'fileRecibo';
+      if (name.includes('movimiento') || name.includes('extracto')) return 'fileMovimientos';
+      if (name.includes('sage')) return 'fileSage';
+      if (name.includes('contrato')) return 'fileContrato';
+      if (name.includes('universidad') || name.includes('facultad') || name.includes('nota')) return 'fileNotaUniversidad';
+      if (name.includes('servicio') || name.includes('luz') || name.includes('gas') || name.includes('agua') || name.includes('inmobiliario')) return 'fileServicio';
+      if (name.includes('cbu') || name.includes('banc')) return 'fileCbu';
+      if (name.includes('sidecreer')) return 'fileSidecreer';
+      if (name.includes('transferencia')) return 'fileTransferencia';
+      if (name.includes('solicitud')) return 'fileSolicitudAyuda';
+      if (name.includes('autorizacion') || name.includes('descuento')) return 'fileAutorizacionDescuento';
+      return 'fileOtros';
+    }
+
+    function agregarArchivosALoteAlta(fileList) {
+      const files = Array.from(fileList || []);
+      if (!files.length) return;
+      let agregados = 0;
+      files.forEach(f => {
+        const check = validarArchivoAdjunto(f);
+        if (!check.valido) {
+          showToast('⚠️ ' + f.name + ': ' + check.error);
+          return;
+        }
+        window.__loteArchivosAlta.push({
+          file: f,
+          tipo: inferirTipoDocPorNombre(f.name),
+          iaDetectado: false,
+          confianza: null
+        });
+        agregados++;
+      });
+      if (agregados > 0) {
+        renderLoteArchivosAlta();
+        showToast('📦 ' + agregados + ' archivo(s) agregado(s) al lote');
+      }
+    }
+
+    function cambiarTipoLoteArchivoAlta(idx, nuevoTipo) {
+      if (window.__loteArchivosAlta[idx]) {
+        window.__loteArchivosAlta[idx].tipo = nuevoTipo;
+        window.__loteArchivosAlta[idx].iaDetectado = false;
+      }
+    }
+
+    function quitarArchivoLoteAlta(idx) {
+      window.__loteArchivosAlta.splice(idx, 1);
+      renderLoteArchivosAlta();
+    }
+
+    function limpiarLoteArchivosAlta() {
+      window.__loteArchivosAlta = [];
+      renderLoteArchivosAlta();
+    }
+
+    function renderLoteArchivosAlta() {
+      const panel = document.getElementById('loteAltaSolicitudPanel');
+      const lista = document.getElementById('loteAltaSolicitudLista');
+      const countEl = document.getElementById('loteAltaCount');
+      if (!panel || !lista) return;
+
+      const items = window.__loteArchivosAlta || [];
+      if (countEl) countEl.textContent = String(items.length);
+
+      if (items.length === 0) {
+        panel.style.display = 'none';
+        lista.innerHTML = '';
+        return;
+      }
+
+      panel.style.display = 'block';
+      lista.innerHTML = items.map((item, idx) => {
+        const sizeKb = Math.max(1, Math.round(item.file.size / 1024));
+        const optionsHtml = OPCIONES_TIPO_DOC_LOTE.map(opt =>
+          `<option value="${opt.id}" ${item.tipo === opt.id ? 'selected' : ''}>${opt.label}</option>`
+        ).join('');
+        const iaBadge = item.iaDetectado
+          ? `<span style="background:#dbeafe;color:#1d4ed8;font-size:0.68rem;font-weight:700;padding:0.15rem 0.45rem;border-radius:999px;white-space:nowrap;">✨ IA${item.confianza ? ' ' + item.confianza : ''}</span>`
+          : '';
+        return `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:0.6rem;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:0.45rem 0.65rem;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:0.45rem;min-width:180px;flex:1;">
+              <span style="font-size:0.85rem;">📄</span>
+              <div style="min-width:0;">
+                <div style="font-size:0.78rem;font-weight:600;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px;" title="${item.file.name}">${item.file.name}</div>
+                <div style="font-size:0.68rem;color:#64748b;">${sizeKb} KB</div>
+              </div>
+              ${iaBadge}
+            </div>
+            <div style="display:flex;align-items:center;gap:0.4rem;">
+              <select onchange="cambiarTipoLoteArchivoAlta(${idx}, this.value)" style="font-size:0.76rem;padding:0.32rem 0.5rem;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;color:#0f172a;max-width:220px;">
+                ${optionsHtml}
+              </select>
+              <button type="button" onclick="quitarArchivoLoteAlta(${idx})" title="Quitar del lote" style="background:none;border:none;color:#94a3b8;font-size:1rem;font-weight:700;cursor:pointer;padding:0 0.25rem;line-height:1;">×</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function clasificarLoteConIA() {
+      const items = window.__loteArchivosAlta || [];
+      if (!items.length) return;
+      const btn = document.getElementById('btnReconocerLoteIA');
+      const prevText = btn ? btn.textContent : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Analizando lote con IA...';
+      }
+
+      let reconocidos = 0;
+      try {
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          try {
+            const b64 = await archivoABase64Puro(item.file);
+            const resp = await fetch(`${RENDER_API_URL}/api/clasificar-documento`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                file_base64: b64,
+                mime_type: item.file.type || 'application/octet-stream',
+                filename: item.file.name
+              })
+            });
+            if (resp.ok) {
+              const data = await resp.json();
+              if (data && data.tipo) {
+                item.tipo = data.tipo;
+                item.iaDetectado = true;
+                item.confianza = data.confianza || null;
+                reconocidos++;
+              }
+            }
+          } catch (errItem) {
+            console.warn('Error clasificando archivo con IA:', item.file.name, errItem);
+          }
+        }
+        renderLoteArchivosAlta();
+        if (reconocidos > 0) {
+          showToast('🤖 IA clasificó ' + reconocidos + ' de ' + items.length + ' archivo(s)');
+        } else {
+          showToast('⚠️ No se pudo clasificar automáticamente; selecciona los tipos manualmente');
+        }
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = prevText || '🤖 Reconocer Tipos con IA';
+        }
+      }
+    }
+
+    async function aplicarLoteAlExpediente() {
+      const items = window.__loteArchivosAlta || [];
+      if (!items.length) return;
+
+      const agrupados = {};
+      items.forEach(item => {
+        if (!agrupados[item.tipo]) agrupados[item.tipo] = [];
+        agrupados[item.tipo].push(item.file);
+      });
+
+      let asignados = 0;
+      for (const [targetId, fileArr] of Object.entries(agrupados)) {
+        const input = document.getElementById(targetId);
+        if (!input) continue;
+
+        const row = document.getElementById('row-' + targetId);
+        if (row) {
+          const isFlexCol = (targetId === 'fileDni' || targetId === 'fileRecibo' || targetId === 'fileSidecreer');
+          row.style.display = 'flex';
+          if (isFlexCol) row.style.flexDirection = 'column';
+          row.dataset.manuallyAdded = 'true';
+        }
+
+        const optMeta = OPCIONES_TIPO_DOC_LOTE.find(o => o.id === targetId);
+        const badgeType = optMeta ? optMeta.badge : 'opcional';
+
+        const dt = new DataTransfer();
+        if (input.files && input.files.length > 0 && (targetId === 'fileDni' || targetId === 'fileSidecreer') && fileArr.length === 1 && input.files.length === 1) {
+          dt.items.add(input.files[0]);
+        }
+        fileArr.forEach(f => dt.items.add(f));
+        input.files = dt.files;
+
+        await handleDocRowFileChange(input, targetId, badgeType);
+        asignados += fileArr.length;
+      }
+
+      limpiarLoteArchivosAlta();
+      showToast('✅ ' + asignados + ' archivo(s) aplicado(s) al legajo');
+    }
+
     function handleDropzoneDrop(event, context) {
       event.preventDefault();
       event.stopPropagation();
@@ -10271,43 +10504,33 @@ ${cierreTxt}`;
 
       const files = Array.from(dt.files);
 
+      if (context === 'altaSolicitud') {
+        agregarArchivosALoteAlta(files);
+        return;
+      }
+
       files.forEach(f => {
         const name = f.name.toLowerCase();
         let targetId = null;
         let badgeType = 'opcional';
 
         if (name.includes('dni')) {
-          targetId = (context === 'asociado') ? 'asocFileDni' : 'fileDni';
-          badgeType = (context === 'asociado') ? 'opcional' : 'obligatorio';
+          targetId = 'asocFileDni';
+          badgeType = 'opcional';
         } else if (name.includes('recibo') || name.includes('sueldo') || name.includes('haber')) {
-          targetId = (context === 'asociado') ? 'asocFileRecibo' : 'fileRecibo';
-          badgeType = (context === 'asociado') ? 'opcional' : 'obligatorio';
+          targetId = 'asocFileRecibo';
+          badgeType = 'opcional';
         } else if (name.includes('servicio') || name.includes('luz') || name.includes('gas') || name.includes('inmobiliario')) {
-          targetId = (context === 'asociado') ? 'asocFileServicio' : 'fileServicio';
+          targetId = 'asocFileServicio';
           badgeType = 'opcional';
         } else if (name.includes('cbu') || name.includes('banc')) {
-          targetId = (context === 'asociado') ? 'asocFileCbu' : 'fileCbu';
+          targetId = 'asocFileCbu';
           badgeType = 'opcional';
         } else if (name.includes('sage')) {
-          targetId = (context === 'asociado') ? 'asocFileSage' : 'fileSage';
+          targetId = 'asocFileSage';
           badgeType = 'opcional';
-        } else if (name.includes('movimiento') || name.includes('extracto')) {
-          targetId = 'fileMovimientos';
-          badgeType = 'opcional';
-        } else if (name.includes('sidecreer')) {
-          targetId = 'fileSidecreer';
-          badgeType = 'opcional';
-        } else if (name.includes('transferencia')) {
-          targetId = 'fileTransferencia';
-          badgeType = 'interno';
-        } else if (name.includes('solicitud')) {
-          targetId = 'fileSolicitudAyuda';
-          badgeType = 'interno';
-        } else if (name.includes('autorizacion') || name.includes('descuento')) {
-          targetId = 'fileAutorizacionDescuento';
-          badgeType = 'interno';
         } else {
-          targetId = (context === 'asociado') ? 'asocFileOtros' : 'fileOtros';
+          targetId = 'asocFileOtros';
           badgeType = 'opcional';
         }
 
@@ -10330,6 +10553,9 @@ ${cierreTxt}`;
     function resetDocumentRows(formId) {
       const form = document.getElementById(formId);
       if (!form) return;
+      if (formId === 'formAltaSolicitud') {
+        limpiarLoteArchivosAlta();
+      }
       form.querySelectorAll('.document-row-card').forEach(row => {
         const idKey = row.id.replace('row-', '');
         const input = document.getElementById(idKey);
@@ -20016,6 +20242,12 @@ ${cierreTxt}`;
     window.confirmarDesestimarGestion = confirmarDesestimarGestion;
     window.verificarEstadoSistema = verificarEstadoSistema;
     window.abrirModalExpediente = verFichaCompleta;
+    window.agregarArchivosALoteAlta = agregarArchivosALoteAlta;
+    window.cambiarTipoLoteArchivoAlta = cambiarTipoLoteArchivoAlta;
+    window.quitarArchivoLoteAlta = quitarArchivoLoteAlta;
+    window.limpiarLoteArchivosAlta = limpiarLoteArchivosAlta;
+    window.clasificarLoteConIA = clasificarLoteConIA;
+    window.aplicarLoteAlExpediente = aplicarLoteAlExpediente;
     window.CONFIG = CONFIG;
     window.estadoApp = window.estadoApp;
 

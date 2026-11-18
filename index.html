@@ -3689,7 +3689,7 @@
                 <span>Convenio Municipal opera exclusivamente en 12 y 24 cuotas.</span>
               </div>
               <!-- CONSULTA DE DISPONIBLE - CONVENIO SIDECREER -->
-              <div id="sidecreerConsultaCard" style="margin-top:0.85rem;padding:0.85rem 0.9rem;background:#ffffff;border:1px solid #cbd5e1;border-radius:10px;box-shadow:0 1px 2px rgba(15,23,42,0.04);">
+              <div id="sidecreerConsultaCard" style="display:none;margin-top:0.85rem;padding:0.85rem 0.9rem;background:#ffffff;border:1px solid #cbd5e1;border-radius:10px;box-shadow:0 1px 2px rgba(15,23,42,0.04);">
                 <div style="font-size:0.78rem;font-weight:800;color:#0f172a;margin-bottom:0.55rem;display:flex;align-items:center;gap:6px;">
                   <span>💳 Consulta de Disponible - Convenio Sidecreer</span>
                 </div>
@@ -7747,6 +7747,9 @@ Aguardo su respuesta. Muchas gracias.`;
 
       const muniNotice = document.getElementById('muniNotice');
       if (muniNotice) muniNotice.style.display = (state.linea === 'muni') ? 'flex' : 'none';
+
+      const sidecreerCard = document.getElementById('sidecreerConsultaCard');
+      if (sidecreerCard) sidecreerCard.style.display = (state.linea === 'sidecreer') ? 'block' : 'none';
 
       const ctxBadge = document.getElementById('waSimContextBadge');
       if (ctxBadge) {
@@ -20089,47 +20092,47 @@ ${cierreTxt}`;
           return;
         }
 
-        btnConsultar.disabled = true;
-        btnConsultar.style.opacity = '0.75';
-        btnConsultar.innerHTML = '<span>⏳ Consultando...</span>';
-        mostrarResultadoSidecreer('warn', '⏳ Consultando disponible en bot oficial Sidecreer...');
-
+        let copiadoOk = false;
         try {
-          const resp = await fetch(`${RENDER_API_URL}/api/sidecreer/consultar-saldo`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ numero_tarjeta: tarjetaLimpia })
-          });
-          const data = await resp.json().catch(() => ({}));
-
-          if (!resp.ok) {
-            const msgErr = data.detail || data.mensaje || 'Error al consultar el disponible.';
-            mostrarResultadoSidecreer('error', '❌ ' + sanitizeHTML(msgErr));
-            return;
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(tarjetaLimpia);
+            copiadoOk = true;
           }
+        } catch (e) {
+          copiadoOk = false;
+        }
 
-          if (data.ok) {
-            const fmtCuotas = (typeof formatMoney === 'function')
-              ? formatMoney(Number(data.saldo_cuotas || 0))
-              : ('$ ' + Number(data.saldo_cuotas || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-            const fmtContado = (typeof formatMoney === 'function')
-              ? formatMoney(Number(data.saldo_contado || 0))
-              : ('$ ' + Number(data.saldo_contado || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-            mostrarResultadoSidecreer(
-              'ok',
-              '<div style="font-weight:800;margin-bottom:2px;">✅ Disponible en Cuotas: ' + sanitizeHTML(fmtCuotas) + '</div>' +
-              '<div style="font-size:0.7rem;color:#166534;">Disponible Contado: <strong>' + sanitizeHTML(fmtContado) + '</strong></div>'
-            );
-          } else {
-            mostrarResultadoSidecreer('warn', '⚠️ ' + sanitizeHTML(data.mensaje || 'No se pudo obtener el disponible de la tarjeta.'));
+        if (!copiadoOk) {
+          try {
+            const aux = document.createElement('textarea');
+            aux.value = tarjetaLimpia;
+            aux.style.position = 'fixed';
+            aux.style.opacity = '0';
+            document.body.appendChild(aux);
+            aux.select();
+            copiadoOk = document.execCommand('copy');
+            document.body.removeChild(aux);
+          } catch (e) {
+            copiadoOk = false;
           }
-        } catch (err) {
-          console.error('Error consultando Sidecreer:', err);
-          mostrarResultadoSidecreer('error', '❌ No se pudo conectar con el servicio de consulta Sidecreer.');
-        } finally {
-          btnConsultar.disabled = false;
-          btnConsultar.style.opacity = '1';
-          btnConsultar.innerHTML = '<span>🔍 Consultar</span>';
+        }
+
+        const chatUrl = 'https://web.central.chat/5493435309272?lang=es';
+        window.open(chatUrl, '_blank', 'noopener,noreferrer');
+
+        if (copiadoOk) {
+          mostrarResultadoSidecreer(
+            'ok',
+            '<div style="font-weight:800;margin-bottom:2px;">✅ Tarjeta copiada: <span style="font-family:monospace;">' + sanitizeHTML(tarjetaLimpia) + '</span></div>' +
+            '<div style="font-size:0.7rem;color:#166534;">Se abrió el chat oficial de Sidecreer. Completá la verificación, enviá <strong>hola → 1 → 1</strong> y pegá el número.</div>'
+          );
+          if (typeof showToast === 'function') showToast('📋 Nro de tarjeta copiado y chat Sidecreer abierto.');
+        } else {
+          mostrarResultadoSidecreer(
+            'warn',
+            '<div style="font-weight:700;margin-bottom:2px;">💬 Chat de Sidecreer abierto</div>' +
+            '<div style="font-size:0.7rem;">Enviá <strong>hola → 1 → 1</strong> e ingresá: <strong style="font-family:monospace;">' + sanitizeHTML(tarjetaLimpia) + '</strong></div>'
+          );
         }
       });
     }

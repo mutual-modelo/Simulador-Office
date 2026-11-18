@@ -3688,6 +3688,20 @@
                 </svg>
                 <span>Convenio Municipal opera exclusivamente en 12 y 24 cuotas.</span>
               </div>
+              <!-- CONSULTA DE DISPONIBLE - CONVENIO SIDECREER -->
+              <div id="sidecreerConsultaCard" style="margin-top:0.85rem;padding:0.85rem 0.9rem;background:#ffffff;border:1px solid #cbd5e1;border-radius:10px;box-shadow:0 1px 2px rgba(15,23,42,0.04);">
+                <div style="font-size:0.78rem;font-weight:800;color:#0f172a;margin-bottom:0.55rem;display:flex;align-items:center;gap:6px;">
+                  <span>💳 Consulta de Disponible - Convenio Sidecreer</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:0.45rem;">
+                  <label for="input-tarjeta-sidecreer" style="font-size:0.72rem;font-weight:700;color:#334155;">Nro de Tarjeta</label>
+                  <input type="text" id="input-tarjeta-sidecreer" inputmode="numeric" autocomplete="off" maxlength="19" placeholder="0000 0000 0000 0000" style="width:100%;padding:0.5rem 0.7rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.86rem;font-weight:700;font-family:var(--font-mono, monospace);letter-spacing:0.06em;color:#0f172a;background:#f8fafc;outline:none;"/>
+                  <button type="button" id="btn-consultar-sidecreer" style="margin-top:0.15rem;width:100%;padding:0.52rem 0.85rem;border-radius:8px;border:1px solid #1d4ed8;background:#2563eb;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color 0.15s ease;">
+                    <span>🔍 Consultar</span>
+                  </button>
+                </div>
+                <div id="sidecreer-resultado-box" style="display:none;margin-top:0.6rem;padding:0.55rem 0.7rem;border-radius:8px;font-size:0.74rem;line-height:1.4;"></div>
+              </div>
               <!-- RECUADRO DE DISCLAIMER FORMAL OBLIGATORIO -->
               <div class="simulador-disclaimer-box" style="margin-top:0.85rem;padding:0.75rem 0.85rem;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid var(--color-brand-blue);border-radius:6px;font-size:0.68rem;line-height:1.45;color:#475569;">
                 <div style="font-weight:700;color:#1e293b;margin-bottom:3px;display:flex;align-items:center;gap:4px;">
@@ -19999,6 +20013,127 @@ ${cierreTxt}`;
     window.CONFIG = CONFIG;
     window.estadoApp = window.estadoApp;
 
+    function initConsultaSidecreerSimulador() {
+      const inputTarjeta = document.getElementById('input-tarjeta-sidecreer');
+      const btnConsultar = document.getElementById('btn-consultar-sidecreer');
+      const resBox = document.getElementById('sidecreer-resultado-box');
+      if (!inputTarjeta || !btnConsultar) return;
+
+      inputTarjeta.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace') {
+          const cursor = inputTarjeta.selectionStart;
+          if (cursor > 0 && inputTarjeta.selectionStart === inputTarjeta.selectionEnd) {
+            if (inputTarjeta.value[cursor - 1] === ' ') {
+              e.preventDefault();
+              const val = inputTarjeta.value;
+              inputTarjeta.value = val.slice(0, cursor - 2) + val.slice(cursor);
+              inputTarjeta.setSelectionRange(cursor - 2, cursor - 2);
+              inputTarjeta.dispatchEvent(new Event('input'));
+            }
+          }
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          btnConsultar.click();
+        }
+      });
+
+      inputTarjeta.addEventListener('input', () => {
+        const valOrig = inputTarjeta.value;
+        const cursorOrig = inputTarjeta.selectionStart;
+        const digitosAntes = (valOrig.slice(0, cursorOrig).match(/\d/g) || []).length;
+        const soloNum = valOrig.replace(/\D/g, '').slice(0, 16);
+
+        const partes = soloNum.match(/.{1,4}/g);
+        const formateado = partes ? partes.join(' ') : '';
+        inputTarjeta.value = formateado;
+        inputTarjeta.dataset.valorLimpio = soloNum;
+
+        let nuevoCursor = 0;
+        let cont = 0;
+        for (let i = 0; i < formateado.length; i++) {
+          if (formateado[i] !== ' ') cont++;
+          if (cont === digitosAntes) {
+            nuevoCursor = i + 1;
+            break;
+          }
+        }
+        if (digitosAntes === 0) nuevoCursor = 0;
+        if (digitosAntes >= soloNum.length) nuevoCursor = formateado.length;
+        inputTarjeta.setSelectionRange(nuevoCursor, nuevoCursor);
+      });
+
+      const mostrarResultadoSidecreer = (tipo, html) => {
+        if (!resBox) return;
+        resBox.style.display = 'block';
+        if (tipo === 'ok') {
+          resBox.style.background = '#ecfdf5';
+          resBox.style.border = '1px solid #86efac';
+          resBox.style.color = '#14532d';
+        } else if (tipo === 'warn') {
+          resBox.style.background = '#fffbeb';
+          resBox.style.border = '1px solid #fde68a';
+          resBox.style.color = '#78350f';
+        } else {
+          resBox.style.background = '#fef2f2';
+          resBox.style.border = '1px solid #fecaca';
+          resBox.style.color = '#991b1b';
+        }
+        resBox.innerHTML = html;
+      };
+
+      btnConsultar.addEventListener('click', async () => {
+        const tarjetaLimpia = (inputTarjeta.dataset.valorLimpio || inputTarjeta.value.replace(/\D/g, '')).trim();
+        if (tarjetaLimpia.length < 12 || tarjetaLimpia.length > 16) {
+          mostrarResultadoSidecreer('warn', '⚠️ Ingresá entre <strong>12 y 16 dígitos</strong> del Nro de Tarjeta Sidecreer.');
+          inputTarjeta.focus();
+          return;
+        }
+
+        btnConsultar.disabled = true;
+        btnConsultar.style.opacity = '0.75';
+        btnConsultar.innerHTML = '<span>⏳ Consultando...</span>';
+        mostrarResultadoSidecreer('warn', '⏳ Consultando disponible en bot oficial Sidecreer...');
+
+        try {
+          const resp = await fetch(`${RENDER_API_URL}/api/sidecreer/consultar-saldo`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ numero_tarjeta: tarjetaLimpia })
+          });
+          const data = await resp.json().catch(() => ({}));
+
+          if (!resp.ok) {
+            const msgErr = data.detail || data.mensaje || 'Error al consultar el disponible.';
+            mostrarResultadoSidecreer('error', '❌ ' + sanitizeHTML(msgErr));
+            return;
+          }
+
+          if (data.ok) {
+            const fmtCuotas = (typeof formatMoney === 'function')
+              ? formatMoney(Number(data.saldo_cuotas || 0))
+              : ('$ ' + Number(data.saldo_cuotas || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+            const fmtContado = (typeof formatMoney === 'function')
+              ? formatMoney(Number(data.saldo_contado || 0))
+              : ('$ ' + Number(data.saldo_contado || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+            mostrarResultadoSidecreer(
+              'ok',
+              '<div style="font-weight:800;margin-bottom:2px;">✅ Disponible en Cuotas: ' + sanitizeHTML(fmtCuotas) + '</div>' +
+              '<div style="font-size:0.7rem;color:#166534;">Disponible Contado: <strong>' + sanitizeHTML(fmtContado) + '</strong></div>'
+            );
+          } else {
+            mostrarResultadoSidecreer('warn', '⚠️ ' + sanitizeHTML(data.mensaje || 'No se pudo obtener el disponible de la tarjeta.'));
+          }
+        } catch (err) {
+          console.error('Error consultando Sidecreer:', err);
+          mostrarResultadoSidecreer('error', '❌ No se pudo conectar con el servicio de consulta Sidecreer.');
+        } finally {
+          btnConsultar.disabled = false;
+          btnConsultar.style.opacity = '1';
+          btnConsultar.innerHTML = '<span>🔍 Consultar</span>';
+        }
+      });
+    }
+
     window.addEventListener('DOMContentLoaded', async () => {
       const workspaceContenedor = document.getElementById('mainWorkspaceContent') || document;
       workspaceContenedor.addEventListener('click', (e) => {
@@ -20034,6 +20169,7 @@ ${cierreTxt}`;
       initSidebar();
       checkAuthAndInit();
       renderApp();
+      initConsultaSidecreerSimulador();
       sincronizarFechasCorteDesdeNube();
       iniciarSincronizacionPasivaBackground();
     });

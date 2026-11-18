@@ -20120,22 +20120,12 @@ ${cierreTxt}`;
           }
         }
 
+        if (resBox) resBox.style.display = 'none';
         const chatUrl = 'https://web.central.chat/5493435309272?lang=es';
         window.open(chatUrl, '_blank', 'noopener,noreferrer');
 
-        if (copiadoOk) {
-          mostrarResultadoSidecreer(
-            'ok',
-            '<div style="font-weight:800;margin-bottom:2px;">✅ Tarjeta copiada: <span style="font-family:monospace;">' + sanitizeHTML(tarjetaLimpia) + '</span></div>' +
-            '<div style="font-size:0.7rem;color:#166534;">Se abrió el chat oficial de Sidecreer. Completá la verificación, enviá <strong>hola → 1 → 1</strong> y pegá el número.</div>'
-          );
-          if (typeof showToast === 'function') showToast('📋 Nro de tarjeta copiado y chat Sidecreer abierto.');
-        } else {
-          mostrarResultadoSidecreer(
-            'warn',
-            '<div style="font-weight:700;margin-bottom:2px;">💬 Chat de Sidecreer abierto</div>' +
-            '<div style="font-size:0.7rem;">Enviá <strong>hola → 1 → 1</strong> e ingresá: <strong style="font-family:monospace;">' + sanitizeHTML(tarjetaLimpia) + '</strong></div>'
-          );
+        if (typeof showToast === 'function') {
+          showToast(copiadoOk ? '📋 Nro de tarjeta copiado y chat Sidecreer abierto.' : '💬 Chat Sidecreer abierto.');
         }
       });
     }

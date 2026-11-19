@@ -8286,7 +8286,7 @@ Aguardo su respuesta. Muchas gracias.`;
         const isActive = (p === state.plazo);
         html += '<tr class="clickable-row ' + (isActive ? 'active-matrix-row' : '') + '" onclick="setPlazo(' + p + ')">' +
           '<td>' + formatMoney(sim.neto) + '</td>' +
-          '<td><strong>' + p + ' Cuotas</strong>' + (isActive ? '<span style="font-size:0.675rem;color:var(--cuota-color);margin-left:5px;font-weight:700;">● Seleccionado</span>' : '') + '</td>' +
+          '<td><strong>' + p + ' Cuotas</strong></td>' +
           '<td>' + formatMoney(sim.cuota) + '</td></tr>';
       });
       tbody.innerHTML = html;

@@ -12,6 +12,7 @@ import {
   calcularOfertasPorPlazo,
   calcularOfertasDisponibles,
   enriquecerResultadoAuditoria,
+  generarConclusionesYRecomendaciones,
   round2Margen,
   esCodigoVacioPadron,
   normalizarDescripcionPadron,
@@ -804,20 +805,52 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
       rawIn.cuota_futura_2 ?? rawIn.cuotaFutura2 ?? datosDeclarados?.cuotaFutura2 ?? datosDeclarados?.cuota_futura_2 ?? 0
     )
   );
+  const cuotaRefIn = round2Margen(
+    limpiarNumeroPadron(
+      rawIn.cuota_refinanciar ?? rawIn.cuotaRefinanciar ?? datosDeclarados?.cuotaRefinanciar ?? datosDeclarados?.cuota_refinanciar ?? 0
+    )
+  );
+  const saldoCancIn = round2Margen(
+    limpiarNumeroPadron(
+      rawIn.saldo_cancelar ?? rawIn.saldoCancelar ?? datosDeclarados?.saldoCancelar ?? datosDeclarados?.saldo_cancelar ?? 0
+    )
+  );
+  const saldoExtIn = round2Margen(
+    limpiarNumeroPadron(
+      rawIn.saldo_vigente_externo ?? rawIn.saldoVigenteExterno ?? datosDeclarados?.saldoVigenteExterno ?? datosDeclarados?.saldo_vigente_externo ?? 0
+    )
+  );
+  const detalleRefIn = String(
+    rawIn.detalle_refinanciacion ?? rawIn.detalleRefinanciacion ?? datosDeclarados?.detalleRefinanciacion ?? datosDeclarados?.detalle_refinanciacion ?? ''
+  ).trim();
+  const factorMargenIn = limpiarNumeroPadron(
+    rawIn.factor_margen ?? rawIn.factorMargen ?? datosDeclarados?.factorMargen ?? datosDeclarados?.factor_margen ?? 1.0
+  ) || 1.0;
+
   const analisisMargen = calcularMargenRecibo({
     ...metaReciboIn,
     total_haberes: sueldoBruto ?? 0,
     total_descuentos: totalDescuentosRecibo ?? 0,
     liquido: sueldoLiquido ?? 0,
     cuota_futura_2: cuotaFutura2In,
+    cuota_refinanciar: cuotaRefIn,
+    saldo_cancelar: saldoCancIn,
+    saldo_vigente_externo: saldoExtIn,
+    detalle_refinanciacion: detalleRefIn,
+    factor_margen: factorMargenIn,
     items: desgloseConceptos.rows
   });
 
+  const offerOptsServer = {
+    saldoCancelar: analisisMargen.saldoCancelar,
+    saldoVigenteExterno: analisisMargen.saldoVigenteExterno,
+    cuotaRefinanciar: analisisMargen.cuotaRefinanciar
+  };
   const ofertasPorPlazo = analisisMargen.puedeOfrecerCuotas
     ? {
-        fedem: calcularOfertasPorPlazo(analisisMargen.disponibleRecibo, analisisMargen.netoLiquido, 'fedem'),
-        muni: calcularOfertasPorPlazo(analisisMargen.disponibleRecibo, analisisMargen.netoLiquido, 'muni'),
-        sidecreer: calcularOfertasPorPlazo(analisisMargen.disponibleRecibo, analisisMargen.netoLiquido, 'sidecreer')
+        fedem: calcularOfertasPorPlazo(analisisMargen.disponibleRecibo, analisisMargen.netoLiquido, 'fedem', offerOptsServer),
+        muni: calcularOfertasPorPlazo(analisisMargen.disponibleRecibo, analisisMargen.netoLiquido, 'muni', offerOptsServer),
+        sidecreer: calcularOfertasPorPlazo(analisisMargen.disponibleRecibo, analisisMargen.netoLiquido, 'sidecreer', offerOptsServer)
       }
     : { fedem: [], muni: [], sidecreer: [] };
 
@@ -1029,7 +1062,15 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     totalNoComputable: analisisMargen.totalNoComputable,
     afectable: analisisMargen.afectable,
     totalAfectado: analisisMargen.totalAfectado,
+    totalAfectadoEfectivo: analisisMargen.totalAfectadoEfectivo,
     cuotaFutura2: analisisMargen.cuotaFutura2,
+    cuotaRefinanciar: analisisMargen.cuotaRefinanciar,
+    saldoCancelar: analisisMargen.saldoCancelar,
+    saldoVigenteExterno: analisisMargen.saldoVigenteExterno,
+    detalleRefinanciacion: analisisMargen.detalleRefinanciacion,
+    factorMargen: analisisMargen.factorMargen,
+    disponibleReciboOriginal: analisisMargen.disponibleReciboOriginal,
+    disponibleBrutoRecibo: analisisMargen.disponibleBrutoRecibo,
     disponibleRecibo: analisisMargen.disponibleRecibo,
     margenDisponiblePlanilla: analisisMargen.disponibleRecibo,
     cuotaMaximaSeguraGeneral: analisisMargen.cuotaMaximaSeguraGeneral,
@@ -1044,6 +1085,18 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     decisionAlternativaCBU,
     scoringSugerido: scoreTotal
   };
+
+  const conclusionesRecomendaciones = generarConclusionesYRecomendaciones(
+    analisisMargen,
+    {
+      fedemCalc: codigosFedemMonto ?? 0,
+      sidecreerCalc: consumosSidecreer ?? 0,
+      bersaCalc: consumosBersa ?? 0,
+      mutualesCalc: otrasMutuales ?? 0
+    },
+    ofertasPorPlazo.fedem,
+    embargoDetectadoBool
+  );
 
   const detalleCompletoRecibo = {
     periodo: periodoStr,
@@ -1103,6 +1156,15 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
         '',
         '**Validaciones y Alertas Automáticas:**',
         ...analisisMargen.alertas.map((al: string) => `* ⚠️ ${al}`)
+      ]
+    : [];
+
+  const conclusionesSectionMd = (conclusionesRecomendaciones && conclusionesRecomendaciones.titulo)
+    ? [
+        '',
+        '#### 💡 Conclusiones y Recomendaciones (Incl. Refinanciación)',
+        `* **${conclusionesRecomendaciones.titulo}:** ${conclusionesRecomendaciones.resumen}`,
+        ...(conclusionesRecomendaciones.recomendaciones || []).map((rc: string) => `* ${rc}`)
       ]
     : [];
 
@@ -1180,6 +1242,7 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     '#### 🛡️ 5. Calificación Crediticia AMMER (Scoring)',
     `* **Score AMMER:** ${scoreTotal} / 100 • **Calificación:** ${calificacionLetra}`,
     `* **Dictamen del Auditor:** ${dictamenTextoFinal}`,
+    ...conclusionesSectionMd,
     ...tablaConceptosMd
   ].join('\n');
 
@@ -1192,7 +1255,8 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     resumenDecision,
     detalleCompletoRecibo,
     analisisMargen,
-    ofertasPorPlazo
+    ofertasPorPlazo,
+    conclusionesRecomendaciones
   };
 
   const descuentosVoluntariosTotal = round2Margen(
@@ -1204,6 +1268,7 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     detalleCompletoRecibo,
     analisisMargen,
     ofertasPorPlazo,
+    conclusionesRecomendaciones,
     validaciones: analisisMargen.validaciones,
     alertas: analisisMargen.alertas,
     tipoBeneficiario: analisisMargen.tipoBeneficiario,

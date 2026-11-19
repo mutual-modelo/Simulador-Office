@@ -858,6 +858,12 @@ export function calcularMargenRecibo(datosRecibo: Record<string, any> | null | u
     ? round2Margen(totalHaberes - Math.abs(totalDescuentosIn))
     : round2Margen(limpiarNumeroPadron(d.liquido ?? d.sueldoLiquido ?? d.sueldoNeto ?? 0));
   const cuotaFutura2 = round2Margen(Math.abs(limpiarNumeroPadron(d.cuota_futura_2 ?? d.cuotaFutura2 ?? 0)));
+  const cuotaRefinanciarIn = round2Margen(Math.abs(limpiarNumeroPadron(d.cuota_refinanciar ?? d.cuotaRefinanciar ?? 0)));
+  const saldoCancelar = round2Margen(Math.abs(limpiarNumeroPadron(d.saldo_cancelar ?? d.saldoCancelar ?? 0)));
+  const saldoVigenteExterno = round2Margen(Math.abs(limpiarNumeroPadron(d.saldo_vigente_externo ?? d.saldoVigenteExterno ?? 0)));
+  const detalleRefinanciacion = String(d.detalle_refinanciacion ?? d.detalleRefinanciacion ?? '').trim();
+  const factorMargenRaw = limpiarNumeroPadron(d.factor_margen ?? d.factorMargen ?? 1.0);
+  const factorMargen = (factorMargenRaw > 0 && factorMargenRaw <= 1.0) ? Number(factorMargenRaw.toFixed(4)) : 1.0;
 
   // PASO 1: Validaciones de consistencia de cabecera
   const liquidoEsperado = round2Margen(totalHaberes - Math.abs(totalDescuentosIn));
@@ -912,10 +918,16 @@ export function calcularMargenRecibo(datosRecibo: Record<string, any> | null | u
   const totalNoComputable = sumaAbs(itemsClasif.filter(i => i.clasificacion === 'NO_COMPUTABLE' && i.tipo !== 'DESCUENTO'));
   const afectable = round2Margen(subtotal2 - totalNoComputable);
 
-  // PASO 5: Afectado y Margen Disponible del Recibo
+  // PASO 5: Afectado, Refinanciación y Margen Disponible del Recibo
   const totalAfectado = sumaAbs(itemsClasif.filter(i => i.clasificacion === 'AFECTADO' && i.tipo !== 'HABER'));
-  const margenSinFutura2 = round2Margen(afectable - totalAfectado);
-  const disponibleRecibo = round2Margen(afectable - totalAfectado - cuotaFutura2);
+  const cuotaRefinanciarAplicada = round2Margen(Math.min(totalAfectado, cuotaRefinanciarIn));
+  const totalAfectadoEfectivo = round2Margen(Math.max(0, totalAfectado - cuotaRefinanciarAplicada));
+  const margenSinFutura2 = round2Margen(afectable - totalAfectadoEfectivo);
+  const disponibleReciboOriginal = round2Margen(afectable - totalAfectado - cuotaFutura2);
+  const disponibleBrutoRecibo = round2Margen(margenSinFutura2 - cuotaFutura2);
+  const disponibleRecibo = (factorMargen < 1 && disponibleBrutoRecibo > 0)
+    ? round2Margen(disponibleBrutoRecibo * factorMargen)
+    : disponibleBrutoRecibo;
 
   const sinDisponible = (margenSinFutura2 <= 0) || (disponibleRecibo <= 0);
   const estado = sinDisponible ? 'SIN_DISPONIBLE' : 'DISPONIBLE';
@@ -951,8 +963,17 @@ export function calcularMargenRecibo(datosRecibo: Record<string, any> | null | u
     total_no_computable: totalNoComputable,
     afectable,
     totalAfectado,
+    totalAfectadoEfectivo,
+    cuotaRefinanciar: cuotaRefinanciarAplicada,
+    cuotaRefinanciarSolicitada: cuotaRefinanciarIn,
+    saldoCancelar,
+    saldoVigenteExterno,
+    detalleRefinanciacion,
+    factorMargen,
     cuotaFutura2,
     margenSinFutura2,
+    disponibleReciboOriginal,
+    disponibleBrutoRecibo,
     disponibleRecibo,
     margen: disponibleRecibo,
     topeEndeudamientoMensual4167: topeEndeud4167,
@@ -1025,6 +1046,7 @@ export function calcularOfertasPorPlazo(
   disponibleRecibo: number,
   liquido: number,
   lineaCredito = 'fedem',
+  opts: { saldoCancelar?: number; saldoVigenteExterno?: number; cuotaRefinanciar?: number } = {},
 ) {
   if (disponibleRecibo <= 0 || liquido <= 0) return [];
   const lineaNorm = String(lineaCredito || 'fedem').trim().toLowerCase();
@@ -1032,16 +1054,27 @@ export function calcularOfertasPorPlazo(
     ? 'muni'
     : (lineaNorm.includes('side') ? 'sidecreer' : 'fedem');
 
+  const saldoCanc = round2Margen(Math.max(0, Number(opts.saldoCancelar || 0)));
+  const saldoExt = round2Margen(Math.max(0, Number(opts.saldoVigenteExterno || 0)));
+  const cuotaRef = round2Margen(Math.max(0, Number(opts.cuotaRefinanciar || 0)));
+
   const plazos = PLAZOS_POR_LINEA[key];
   const ofertas: Array<Record<string, any>> = [];
   for (const plazo of plazos) {
     const mult = MULTIPLICADORES_ENDEUDAMIENTO[plazo];
-    const topeCuota = round2Margen((mult * liquido) / plazo);
+    const topeCuotaBase = round2Margen((mult * liquido) / plazo);
+    const topeCuotaConSaldo = saldoExt > 0 ? round2Margen(Math.max(0, (mult * liquido - saldoExt) / plazo)) : topeCuotaBase;
+    const topeCuota = Math.min(topeCuotaBase, topeCuotaConSaldo);
     const topeCompromiso = round2Margen(mult * liquido);
     const cuotaMaxReal = round2Margen(Math.min(disponibleRecibo, topeCuota));
     if (cuotaMaxReal <= 0) continue;
     const sim = simularDesdeCuotaRef(cuotaMaxReal, plazo, key);
     if (!sim || sim.neto <= 0) continue;
+    const limitadoPor = disponibleRecibo <= topeCuota
+      ? 'MARGEN_RECIBO'
+      : ((saldoExt > 0 && topeCuotaConSaldo < topeCuotaBase) ? 'TOPE_ENDEUDAMIENTO_CON_SALDO' : 'TOPE_ENDEUDAMIENTO');
+    const netoBolsillo = round2Margen(sim.neto - saldoCanc);
+    const alivioMensual = cuotaRef > 0 ? round2Margen(cuotaRef - sim.cuotaFinal) : 0;
     ofertas.push({
       plazo,
       linea: key,
@@ -1051,12 +1084,16 @@ export function calcularOfertasPorPlazo(
       topeCompromisoTotal: topeCompromiso,
       disponibleRecibo: round2Margen(disponibleRecibo),
       cuotaMaximaReal: cuotaMaxReal,
-      limitadoPor: disponibleRecibo <= topeCuota ? 'MARGEN_RECIBO' : 'TOPE_ENDEUDAMIENTO',
+      limitadoPor,
       neto: sim.neto,
       capitalMaximoPrestar: sim.neto,
       capitalBruto: sim.capitalBruto,
       cuotaResultante: sim.cuotaFinal,
       totalPagar: sim.totalPagar,
+      saldoCancelar: saldoCanc,
+      netoBolsillo,
+      cubreCancelacion: saldoCanc > 0 ? sim.neto >= saldoCanc : true,
+      alivioMensual,
     });
   }
   return ofertas;
@@ -1077,7 +1114,11 @@ export function calcularOfertasDisponibles(
       ofertas: [],
     };
   }
-  const ofertas = calcularOfertasPorPlazo(margenInfo.disponibleRecibo, margenInfo.netoLiquido, lineaCredito);
+  const ofertas = calcularOfertasPorPlazo(margenInfo.disponibleRecibo, margenInfo.netoLiquido, lineaCredito, {
+    saldoCancelar: margenInfo.saldoCancelar,
+    saldoVigenteExterno: margenInfo.saldoVigenteExterno,
+    cuotaRefinanciar: margenInfo.cuotaRefinanciar,
+  });
   return {
     estado: 'DISPONIBLE',
     estadoLabel: 'DISPONIBLE',
@@ -1086,6 +1127,137 @@ export function calcularOfertasDisponibles(
     analisisMargen: margenInfo,
     ofertas,
   };
+}
+
+function fmtPesosTs(val: number): string {
+  const num = Number(val || 0);
+  const sign = num < 0 ? '-' : '';
+  const fixed = Math.abs(num).toFixed(2);
+  const [ent, dec] = fixed.split('.');
+  return `${sign}$ ${ent.replace(/\B(?=(\d{3})+(?!\d))/g, '.')},${dec}`;
+}
+
+export function generarConclusionesYRecomendaciones(
+  analisis: Record<string, any>,
+  desglose: Record<string, any>,
+  ofertasFedem: Array<Record<string, any>>,
+  embargoBool = false,
+) {
+  const disp = Number(analisis.disponibleRecibo || 0);
+  const dispOrig = Number(analisis.disponibleReciboOriginal ?? disp);
+  const tope4167 = Number(analisis.topeEndeudamientoMensual4167 || 0);
+  const cuotaSegura = Number(analisis.cuotaMaximaSeguraGeneral || 0);
+  const afectable = Number(analisis.afectable || 0);
+  const afectado = Number(analisis.totalAfectado || 0);
+  const cuotaRef = Number(analisis.cuotaRefinanciar || 0);
+  const saldoCanc = Number(analisis.saldoCancelar || 0);
+  const saldoExt = Number(analisis.saldoVigenteExterno || 0);
+  const detalleRef = String(analisis.detalleRefinanciacion || '').trim();
+  const factorMargen = Number(analisis.factorMargen || 1.0);
+  const puedeOfrecer = Boolean(analisis.puedeOfrecerCuotas) && disp > 0;
+
+  const refActiva = Boolean(cuotaRef > 0 || saldoCanc > 0 || saldoExt > 0 || detalleRef);
+  const escenarios: Array<{ entidad: string; montoLiberable: number; nuevoDisponible: number; nuevaCuotaSegura: number }> = [];
+  for (const [ent, val] of [
+    ['FEDEM', Number(desglose.fedemCalc ?? desglose.consumosFedem ?? 0)],
+    ['Sidecreer', Number(desglose.sidecreerCalc ?? desglose.consumosSidecreer ?? 0)],
+    ['BERSA', Number(desglose.bersaCalc ?? desglose.consumosBersa ?? 0)],
+    ['Otras Mutuales', Number(desglose.mutualesCalc ?? desglose.otrasMutuales ?? 0)],
+  ] as Array<[string, number]>) {
+    if (val > 0) {
+      const brutoEsc = round2Margen(dispOrig + val);
+      const nuevoDisp = (factorMargen < 1 && brutoEsc > 0) ? round2Margen(brutoEsc * factorMargen) : brutoEsc;
+      const nuevaCuota = nuevoDisp > 0 ? round2Margen(Math.min(nuevoDisp, tope4167)) : 0;
+      escenarios.push({ entidad: ent, montoLiberable: round2Margen(val), nuevoDisponible: nuevoDisp, nuevaCuotaSegura: nuevaCuota });
+    }
+  }
+
+  const recomendaciones: string[] = [];
+  let escenario = 'DISPONIBLE_LIMITADO_TOPE_NETO';
+  let titulo = '';
+  let resumen = '';
+
+  if (embargoBool) {
+    escenario = 'EMBARGO';
+    titulo = 'Rechazo preventivo por retención judicial / embargo activo';
+    resumen = `Se detectaron retenciones judiciales/embargos activos. Aun con Disponible Recibo de ${fmtPesosTs(disp)}, corresponde bloqueo reglamentario hasta acreditar levantamiento.`;
+    recomendaciones.push('Solicitar oficio o certificado de levantamiento de embargo antes de avanzar con cualquier línea o refinanciación.');
+  } else if (refActiva) {
+    escenario = 'REFINANCIACION_ACTIVA';
+    titulo = `Escenario de Refinanciación simulado${detalleRef ? ` (${detalleRef})` : ''}`;
+    const partes: string[] = [];
+    if (cuotaRef > 0) {
+      partes.push(`Al liberar ${fmtPesosTs(cuotaRef)}/mes de cuota vigente, el Disponible Recibo pasa de ${fmtPesosTs(dispOrig)} a ${fmtPesosTs(disp)} (Cuota Segura: ${fmtPesosTs(cuotaSegura)}/mes).`);
+    } else {
+      partes.push(`Se evalúa cancelación/refinanciación sobre el margen actual de ${fmtPesosTs(disp)}/mes.`);
+    }
+    if (saldoCanc > 0 && ofertasFedem.length > 0) {
+      const cubren = ofertasFedem.filter(o => o.neto >= saldoCanc);
+      if (cubren.length > 0) {
+        const primera = cubren[0];
+        const mejor = cubren[cubren.length - 1];
+        partes.push(`El Saldo a Cancelar (${fmtPesosTs(saldoCanc)}) se cubre desde ${primera.plazo} cuotas (bolsillo neto ${fmtPesosTs(primera.netoBolsillo)}), alcanzando hasta ${fmtPesosTs(mejor.netoBolsillo)} en bolsillo en ${mejor.plazo} cuotas.`);
+      } else {
+        const maxO = ofertasFedem[ofertasFedem.length - 1];
+        const faltante = round2Margen(saldoCanc - maxO.neto);
+        partes.push(`El Saldo a Cancelar (${fmtPesosTs(saldoCanc)}) supera el máximo entregable en ${maxO.plazo} cuotas (${fmtPesosTs(maxO.neto)}); requiere integrar ${fmtPesosTs(faltante)} o liberar más cuota.`);
+      }
+    }
+    resumen = partes.join(' ');
+    if (cuotaRef > 0 && ofertasFedem.length > 0) {
+      const ref24 = ofertasFedem.find(o => o.plazo === 24) || ofertasFedem[ofertasFedem.length - 1];
+      const alivio = round2Margen(cuotaRef - ref24.cuotaResultante);
+      if (alivio > 0) {
+        recomendaciones.push(`Alivio financiero mensual en ${ref24.plazo} cuotas: la cuota baja en ${fmtPesosTs(alivio)}/mes respecto a la retención liberada (${fmtPesosTs(cuotaRef)} → ${fmtPesosTs(ref24.cuotaResultante)}).`);
+      }
+    }
+    if (saldoExt > 0) {
+      recomendaciones.push(`Se descontó el Saldo Vigente Externo de ${fmtPesosTs(saldoExt)} del tope de endeudamiento acumulado (41,67% × N × Neto).`);
+    }
+  } else if (!puedeOfrecer) {
+    escenario = escenarios.length > 0 ? 'SIN_DISPONIBLE_REFINANCIABLE' : 'SIN_DISPONIBLE';
+    titulo = 'Margen agotado en recibo: requiere refinanciación previa o canal alternativo';
+    const deficit = round2Margen(absMinZero(disp));
+    resumen = `El Afectado real (${fmtPesosTs(afectado)}) supera al Afectable (${fmtPesosTs(afectable)}), dejando Disponible Recibo de ${fmtPesosTs(disp)}.`;
+    if (escenarios.length > 0) {
+      const mejorEsc = escenarios.reduce((a, b) => (b.montoLiberable > a.montoLiberable ? b : a), escenarios[0]);
+      recomendaciones.push(
+        `Para revertir el déficit (${fmtPesosTs(deficit)}) y habilitar planilla, se requiere cancelar/refinanciar al menos ${fmtPesosTs(round2Margen(deficit + 1))} de cuota mensual. Refinanciando ${mejorEsc.entidad} (${fmtPesosTs(mejorEsc.montoLiberable)}/mes), el Disponible pasaría a ${fmtPesosTs(mejorEsc.nuevoDisponible)} (Cuota Segura: ${fmtPesosTs(mejorEsc.nuevaCuotaSegura)}/mes).`,
+      );
+    }
+    recomendaciones.push('Si no se cancela deuda previa en planilla, evaluar línea alternativa por CBU / Convenio Sidecreer sujeta a scoring.');
+  } else if (disp <= tope4167) {
+    escenario = 'DISPONIBLE_LIMITADO_RECIBO';
+    titulo = 'Apto por planilla — Oferta acotada por Margen del Recibo';
+    resumen = `Posee Disponible Recibo positivo de ${fmtPesosTs(disp)}, por debajo del Tope 41,67% Neto (${fmtPesosTs(tope4167)}). La cuota máxima segura es ${fmtPesosTs(cuotaSegura)}/mes.`;
+    if (escenarios.length > 0) {
+      const mejorEsc = escenarios.reduce((a, b) => (b.montoLiberable > a.montoLiberable ? b : a), escenarios[0]);
+      recomendaciones.push(`Oportunidad de ampliación por Refinanciación: liberando ${mejorEsc.entidad} (${fmtPesosTs(mejorEsc.montoLiberable)}/mes), la cuota segura subiría hasta el Tope 41,67% (${fmtPesosTs(mejorEsc.nuevaCuotaSegura)}/mes).`);
+    }
+  } else {
+    escenario = 'DISPONIBLE_LIMITADO_TOPE_NETO';
+    titulo = 'Apto por planilla — Capacidad plena hasta Tope 41,67% Neto';
+    resumen = `El Disponible Recibo (${fmtPesosTs(disp)}) supera el Tope Reglamentario 41,67% Neto (${fmtPesosTs(tope4167)}). Se habilita la cuota máxima segura reglamentaria de ${fmtPesosTs(cuotaSegura)}/mes.`;
+  }
+
+  if (escenarios.length > 0 || refActiva) {
+    recomendaciones.push('Checklist Refinanciación: (1) adjuntar Certificado de Saldo Cancelatorio vigente, (2) cargar Cuota Futura 2 si hubiera retenciones en curso no liquidadas, y (3) confirmar que el Monto a Entregar cubra el saldo y deje bolsillo positivo.');
+  }
+
+  const plazoMinimoCobertura = saldoCanc > 0 ? (ofertasFedem.find(o => o.cubreCancelacion)?.plazo ?? null) : null;
+  return {
+    escenario,
+    titulo,
+    resumen,
+    recomendaciones,
+    refinanciacionActiva: refActiva,
+    escenariosSugeridos: escenarios,
+    plazoMinimoCobertura,
+  };
+}
+
+function absMinZero(v: number): number {
+  return v < 0 ? Math.abs(v) : 0;
 }
 
 export function enriquecerResultadoAuditoria(
@@ -1108,6 +1280,11 @@ export function enriquecerResultadoAuditoria(
     total_descuentos: res.total_descuentos ?? res.totalDescuentos ?? res.totalDescuentosRecibo,
     liquido: res.liquido ?? res.sueldoLiquido ?? res.sueldoNeto,
     cuota_futura_2: cf2,
+    cuota_refinanciar: res.cuota_refinanciar ?? res.cuotaRefinanciar ?? 0,
+    saldo_cancelar: res.saldo_cancelar ?? res.saldoCancelar ?? 0,
+    saldo_vigente_externo: res.saldo_vigente_externo ?? res.saldoVigenteExterno ?? 0,
+    detalle_refinanciacion: res.detalle_refinanciacion ?? res.detalleRefinanciacion ?? '',
+    factor_margen: res.factor_margen ?? res.factorMargen ?? 1.0,
     items: conceptosIn,
     lugar_de_trabajo: res.lugar_de_trabajo || res.lugarTrabajo || '',
     tipoRecibo: res.tipoRecibo || '',
@@ -1156,27 +1333,42 @@ export function enriquecerResultadoAuditoria(
     }
   }
 
+  const offerOpts = {
+    saldoCancelar: analisis.saldoCancelar,
+    saldoVigenteExterno: analisis.saldoVigenteExterno,
+    cuotaRefinanciar: analisis.cuotaRefinanciar,
+  };
   const ofertasPorPlazo = analisis.puedeOfrecerCuotas
     ? {
-        fedem: calcularOfertasPorPlazo(analisis.disponibleRecibo, analisis.netoLiquido, 'fedem'),
-        muni: calcularOfertasPorPlazo(analisis.disponibleRecibo, analisis.netoLiquido, 'muni'),
-        sidecreer: calcularOfertasPorPlazo(analisis.disponibleRecibo, analisis.netoLiquido, 'sidecreer'),
+        fedem: calcularOfertasPorPlazo(analisis.disponibleRecibo, analisis.netoLiquido, 'fedem', offerOpts),
+        muni: calcularOfertasPorPlazo(analisis.disponibleRecibo, analisis.netoLiquido, 'muni', offerOpts),
+        sidecreer: calcularOfertasPorPlazo(analisis.disponibleRecibo, analisis.netoLiquido, 'sidecreer', offerOpts),
       }
     : { fedem: [], muni: [], sidecreer: [] };
+
+  const desgloseDescuentos = {
+    descLeyCalc,
+    fedemCalc,
+    bersaCalc,
+    sidecreerCalc,
+    mutualesCalc,
+    embargoCalc,
+    fedemCodes,
+    embargoConcepto: embargoDescs.join('; '),
+  };
+  const embargoBool = Boolean(res.embargosJudiciales || embargoCalc > 0);
+  const conclusionesRecomendaciones = generarConclusionesYRecomendaciones(
+    analisis,
+    desgloseDescuentos,
+    ofertasPorPlazo.fedem,
+    embargoBool,
+  );
 
   return {
     analisis,
     itemsClasif,
     ofertasPorPlazo,
-    desgloseDescuentos: {
-      descLeyCalc,
-      fedemCalc,
-      bersaCalc,
-      sidecreerCalc,
-      mutualesCalc,
-      embargoCalc,
-      fedemCodes,
-      embargoConcepto: embargoDescs.join('; '),
-    },
+    desgloseDescuentos,
+    conclusionesRecomendaciones,
   };
 }

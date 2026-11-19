@@ -3570,6 +3570,22 @@
     .ai-clasif-badge.clasif-sin-clasif{background:#f1f5f9;color:#475569;border-color:#cbd5e1}
     .audit-sim-sec-btn{display:inline-flex;align-items:center;gap:0.25rem;padding:0.35rem 0.65rem;border-radius:0.5rem;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.72rem;font-weight:700;cursor:pointer;transition:all .15s ease;white-space:nowrap}
     .audit-sim-sec-btn:hover{background:#f1f5f9;border-color:#94a3b8;color:#0f172a}
+    .ai-refi-panel{background:#f8fafc;border:1px solid #cbd5e1;border-radius:0.85rem;padding:0.75rem 0.9rem}
+    .ai-refi-panel.is-active{background:#f0fdf4;border-color:#86efac}
+    .ai-refi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:0.55rem;margin-top:0.55rem;align-items:end}
+    .ai-refi-field label{display:block;font-size:0.66rem;font-weight:700;color:#475569;margin-bottom:0.2rem;text-transform:uppercase;letter-spacing:0.02em}
+    .ai-refi-input{width:100%;padding:0.34rem 0.55rem;border:1px solid #cbd5e1;border-radius:0.45rem;font-family:var(--font-mono,monospace);font-size:0.75rem;font-weight:700;color:#0f172a;background:#ffffff;outline:none}
+    .ai-refi-input.is-text{font-family:inherit;font-weight:600}
+    .ai-refi-input:focus{border-color:#4f46e5;box-shadow:0 0 0 2px rgba(79,70,229,0.14)}
+    .ai-refi-chips{display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.45rem;align-items:center}
+    .ai-refi-chip{border:1px solid #bfdbfe;background:#eff6ff;color:#1e40af;font-size:0.68rem;font-weight:700;padding:0.22rem 0.55rem;border-radius:999px;cursor:pointer;font-family:inherit;transition:all .15s ease}
+    .ai-refi-chip:hover{background:#dbeafe;border-color:#93c5fd}
+    .ai-concl-card{background:#ffffff;border:1px solid #cbd5e1;border-left:4px solid #4f46e5;border-radius:0.85rem;padding:0.85rem 1rem}
+    .ai-concl-card.tone-ok{border-left-color:#10b981;background:#f0fdf4}
+    .ai-concl-card.tone-warn{border-left-color:#f59e0b;background:#fffbeb}
+    .ai-concl-card.tone-danger{border-left-color:#ef4444;background:#fff1f2}
+    .ai-concl-list{margin:0.45rem 0 0 1.15rem;padding:0;font-size:0.74rem;color:#334155}
+    .ai-concl-list li{margin-bottom:0.22rem;line-height:1.4}
   </style>
 </head>
 <body>
@@ -3784,6 +3800,13 @@
                   🎯 Por Cuota Objetivo
                 </button>
               </div>
+            </div>
+
+            <div id="sidecreerDecimalesNotice" class="plazo-notice" style="display:none;margin-bottom:0.85rem;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <span>Se recomienda no usar Monto de Cuota con decimales, debido a que en la plataforma de Sidecreer no lo toma como valido al importe</span>
             </div>
 
             <!-- 3. Entrada Numérica Principal ($) -->
@@ -7907,6 +7930,9 @@ Aguardo su respuesta. Muchas gracias.`;
 
       const sidecreerCard = document.getElementById('sidecreerConsultaCard');
       if (sidecreerCard) sidecreerCard.style.display = (state.linea === 'sidecreer') ? 'block' : 'none';
+
+      const sidecreerDecimalesNotice = document.getElementById('sidecreerDecimalesNotice');
+      if (sidecreerDecimalesNotice) sidecreerDecimalesNotice.style.display = (state.linea === 'sidecreer') ? 'flex' : 'none';
 
       const ctxBadge = document.getElementById('waSimContextBadge');
       if (ctxBadge) {
@@ -16352,6 +16378,21 @@ ${cierreTxt}`;
     let idExpedienteAuditadoActivo = null;
     let _auditRegimenOverride = null;
     let _auditCuotaFutura2 = 0;
+    let _auditCuotaRefinanciar = 0;
+    let _auditSaldoCancelar = 0;
+    let _auditSaldoVigenteExterno = 0;
+    let _auditDetalleRefinanciacion = '';
+    let _auditFactorMargen = 1.0;
+    let _auditCuotaPersonalizada = 0;
+
+    function resetearParametrosRefinanciacionAuditoria() {
+      _auditCuotaRefinanciar = 0;
+      _auditSaldoCancelar = 0;
+      _auditSaldoVigenteExterno = 0;
+      _auditDetalleRefinanciacion = '';
+      _auditFactorMargen = 1.0;
+      _auditCuotaPersonalizada = 0;
+    }
 
     /* --- MOTOR DE AUDITORÍA DOCUMENTAL FORENSE AMMER (CERO ALUCINACIÓN) --- */
     const TEXTO_ILEGIBLE_AMMER = 'No especificado';
@@ -17381,6 +17422,12 @@ ${cierreTxt}`;
         ? round2Margen(totalHaberes - Math.abs(totalDescuentosIn))
         : round2Margen(limpiarNumeroPadron(d.liquido ?? d.sueldoLiquido ?? d.sueldoNeto ?? 0));
       const cuotaFutura2 = round2Margen(Math.abs(limpiarNumeroPadron(d.cuota_futura_2 ?? d.cuotaFutura2 ?? 0)));
+      const cuotaRefinanciarIn = round2Margen(Math.abs(limpiarNumeroPadron(d.cuota_refinanciar ?? d.cuotaRefinanciar ?? 0)));
+      const saldoCancelar = round2Margen(Math.abs(limpiarNumeroPadron(d.saldo_cancelar ?? d.saldoCancelar ?? 0)));
+      const saldoVigenteExterno = round2Margen(Math.abs(limpiarNumeroPadron(d.saldo_vigente_externo ?? d.saldoVigenteExterno ?? 0)));
+      const detalleRefinanciacion = String(d.detalle_refinanciacion ?? d.detalleRefinanciacion ?? '').trim();
+      const factorMargenRaw = limpiarNumeroPadron(d.factor_margen ?? d.factorMargen ?? 1.0);
+      const factorMargen = (factorMargenRaw > 0 && factorMargenRaw <= 1.0) ? Number(factorMargenRaw.toFixed(4)) : 1.0;
 
       // PASO 1: Validaciones de consistencia de cabecera
       const liquidoEsperado = round2Margen(totalHaberes - Math.abs(totalDescuentosIn));
@@ -17435,10 +17482,16 @@ ${cierreTxt}`;
       const totalNoComputable = sumaAbsPadron(itemsClasif.filter(i => i.clasificacion === 'NO_COMPUTABLE' && i.tipo !== 'DESCUENTO'));
       const afectable = round2Margen(subtotal2 - totalNoComputable);
 
-      // PASO 5: Afectado y Margen Disponible del Recibo
+      // PASO 5: Afectado, Refinanciación y Margen Disponible del Recibo
       const totalAfectado = sumaAbsPadron(itemsClasif.filter(i => i.clasificacion === 'AFECTADO' && i.tipo !== 'HABER'));
-      const margenSinFutura2 = round2Margen(afectable - totalAfectado);
-      const disponibleRecibo = round2Margen(afectable - totalAfectado - cuotaFutura2);
+      const cuotaRefinanciarAplicada = round2Margen(Math.min(totalAfectado, cuotaRefinanciarIn));
+      const totalAfectadoEfectivo = round2Margen(Math.max(0, totalAfectado - cuotaRefinanciarAplicada));
+      const margenSinFutura2 = round2Margen(afectable - totalAfectadoEfectivo);
+      const disponibleReciboOriginal = round2Margen(afectable - totalAfectado - cuotaFutura2);
+      const disponibleBrutoRecibo = round2Margen(margenSinFutura2 - cuotaFutura2);
+      const disponibleRecibo = (factorMargen < 1 && disponibleBrutoRecibo > 0)
+        ? round2Margen(disponibleBrutoRecibo * factorMargen)
+        : disponibleBrutoRecibo;
 
       const sinDisponible = (margenSinFutura2 <= 0) || (disponibleRecibo <= 0);
       const estado = sinDisponible ? 'SIN_DISPONIBLE' : 'DISPONIBLE';
@@ -17476,8 +17529,17 @@ ${cierreTxt}`;
         total_no_computable: totalNoComputable,
         afectable,
         totalAfectado,
+        totalAfectadoEfectivo,
+        cuotaRefinanciar: cuotaRefinanciarAplicada,
+        cuotaRefinanciarSolicitada: cuotaRefinanciarIn,
+        saldoCancelar,
+        saldoVigenteExterno,
+        detalleRefinanciacion,
+        factorMargen,
         cuotaFutura2,
         margenSinFutura2,
+        disponibleReciboOriginal,
+        disponibleBrutoRecibo,
         disponibleRecibo,
         margen: disponibleRecibo,
         topeEndeudamientoMensual4167: topeEndeud4167,
@@ -17505,19 +17567,26 @@ ${cierreTxt}`;
       };
     }
 
-    function calcularOfertasPorPlazo(disponibleRecibo, liquido, lineaCredito = 'fedem') {
+    function calcularOfertasPorPlazo(disponibleRecibo, liquido, lineaCredito = 'fedem', opts = {}) {
       if (disponibleRecibo <= 0 || liquido <= 0 || typeof MOTOR_FINANCIERO_EXACTO === 'undefined') return [];
+      const o = opts || {};
       const lineaNorm = String(lineaCredito || 'fedem').trim().toLowerCase();
       const key = (lineaNorm.includes('muni') || lineaNorm.includes('quad'))
         ? 'muni'
         : (lineaNorm.includes('side') ? 'sidecreer' : 'fedem');
+
+      const saldoCanc = round2Margen(Math.max(0, Number(o.saldoCancelar || 0)));
+      const saldoExt = round2Margen(Math.max(0, Number(o.saldoVigenteExterno || 0)));
+      const cuotaRef = round2Margen(Math.max(0, Number(o.cuotaRefinanciar || 0)));
 
       const plazos = PLAZOS_POR_LINEA[key] || [6, 12, 18, 24, 36, 48];
       const ofertas = [];
       for (let i = 0; i < plazos.length; i++) {
         const plazo = plazos[i];
         const mult = MULTIPLICADORES_ENDEUDAMIENTO[plazo];
-        const topeCuota = round2Margen((mult * liquido) / plazo);
+        const topeCuotaBase = round2Margen((mult * liquido) / plazo);
+        const topeCuotaConSaldo = saldoExt > 0 ? round2Margen(Math.max(0, (mult * liquido - saldoExt) / plazo)) : topeCuotaBase;
+        const topeCuota = Math.min(topeCuotaBase, topeCuotaConSaldo);
         const topeCompromiso = round2Margen(mult * liquido);
         const cuotaMaxReal = round2Margen(Math.min(disponibleRecibo, topeCuota));
         if (cuotaMaxReal <= 0) continue;
@@ -17536,6 +17605,11 @@ ${cierreTxt}`;
         const cuotaR = round2Margen(calc.cuotaFinal);
         const capBrutoR = round2Margen(calc.capitalBruto || 0);
         const totalR = round2Margen(calc.totalPagar || (calc.cuotaFinal * plazo));
+        const limitadoPor = disponibleRecibo <= topeCuota
+          ? 'MARGEN_RECIBO'
+          : ((saldoExt > 0 && topeCuotaConSaldo < topeCuotaBase) ? 'TOPE_ENDEUDAMIENTO_CON_SALDO' : 'TOPE_ENDEUDAMIENTO');
+        const netoBolsillo = round2Margen(netoR - saldoCanc);
+        const alivioMensual = cuotaRef > 0 ? round2Margen(cuotaRef - cuotaR) : 0;
 
         ofertas.push({
           plazo,
@@ -17546,12 +17620,16 @@ ${cierreTxt}`;
           topeCompromisoTotal: topeCompromiso,
           disponibleRecibo: round2Margen(disponibleRecibo),
           cuotaMaximaReal: cuotaMaxReal,
-          limitadoPor: disponibleRecibo <= topeCuota ? 'MARGEN_RECIBO' : 'TOPE_ENDEUDAMIENTO',
+          limitadoPor,
           neto: netoR,
           capitalMaximoPrestar: netoR,
           capitalBruto: capBrutoR,
           cuotaResultante: cuotaR,
-          totalPagar: totalR
+          totalPagar: totalR,
+          saldoCancelar: saldoCanc,
+          netoBolsillo,
+          cubreCancelacion: saldoCanc > 0 ? (netoR >= saldoCanc) : true,
+          alivioMensual
         });
       }
       return ofertas;
@@ -17569,7 +17647,11 @@ ${cierreTxt}`;
           ofertas: []
         };
       }
-      const ofertas = calcularOfertasPorPlazo(margenInfo.disponibleRecibo, margenInfo.netoLiquido, lineaCredito);
+      const ofertas = calcularOfertasPorPlazo(margenInfo.disponibleRecibo, margenInfo.netoLiquido, lineaCredito, {
+        saldoCancelar: margenInfo.saldoCancelar,
+        saldoVigenteExterno: margenInfo.saldoVigenteExterno,
+        cuotaRefinanciar: margenInfo.cuotaRefinanciar
+      });
       return {
         estado: 'DISPONIBLE',
         estadoLabel: 'DISPONIBLE',
@@ -17631,6 +17713,134 @@ ${cierreTxt}`;
       };
     }
 
+    function generarConclusionesYRecomendaciones(analisis, desglose, ofertasFedem, embargoBool = false) {
+      const am = analisis || {};
+      const desg = desglose || {};
+      const ofertas = Array.isArray(ofertasFedem) ? ofertasFedem : [];
+      const fmtP = (typeof formatPesosMargen === 'function') ? formatPesosMargen : (v => '$ ' + formatMontoSinSimboloAr(v));
+
+      const disp = Number(am.disponibleRecibo || 0);
+      const dispOrig = Number(am.disponibleReciboOriginal !== undefined ? am.disponibleReciboOriginal : disp);
+      const tope4167 = Number(am.topeEndeudamientoMensual4167 || 0);
+      const cuotaSegura = Number(am.cuotaMaximaSeguraGeneral || 0);
+      const afectable = Number(am.afectable || 0);
+      const afectado = Number(am.totalAfectado || 0);
+      const cuotaRef = Number(am.cuotaRefinanciar || 0);
+      const saldoCanc = Number(am.saldoCancelar || 0);
+      const saldoExt = Number(am.saldoVigenteExterno || 0);
+      const detalleRef = String(am.detalleRefinanciacion || '').trim();
+      const factorMargen = Number(am.factorMargen || 1.0);
+      const puedeOfrecer = Boolean(am.puedeOfrecerCuotas) && disp > 0;
+
+      const refActiva = Boolean(cuotaRef > 0 || saldoCanc > 0 || saldoExt > 0 || detalleRef);
+      const escenarios = [];
+      const pares = [
+        ['FEDEM', Number(desg.fedemCalc ?? desg.calcFedem ?? desg.consumosFedem ?? 0)],
+        ['Sidecreer', Number(desg.sidecreerCalc ?? desg.calcSidecreer ?? desg.consumosSidecreer ?? 0)],
+        ['BERSA', Number(desg.bersaCalc ?? desg.calcBersa ?? desg.consumosBersa ?? 0)],
+        ['Otras Mutuales', Number(desg.mutualesCalc ?? desg.calcMutuales ?? desg.otrasMutuales ?? 0)]
+      ];
+      for (let i = 0; i < pares.length; i++) {
+        const ent = pares[i][0];
+        const monto = pares[i][1];
+        if (monto > 0) {
+          const brutoEsc = round2Margen(dispOrig + monto);
+          const nuevoDisp = (factorMargen < 1 && brutoEsc > 0) ? round2Margen(brutoEsc * factorMargen) : brutoEsc;
+          const nuevaCuota = nuevoDisp > 0 ? round2Margen(Math.min(nuevoDisp, tope4167)) : 0;
+          escenarios.push({
+            entidad: ent,
+            montoLiberable: round2Margen(monto),
+            nuevoDisponible: nuevoDisp,
+            nuevaCuotaSegura: nuevaCuota
+          });
+        }
+      }
+
+      const recomendaciones = [];
+      let escenario = 'DISPONIBLE_LIMITADO_TOPE_NETO';
+      let titulo = '';
+      let resumen = '';
+
+      if (embargoBool) {
+        escenario = 'EMBARGO';
+        titulo = 'Rechazo preventivo por retención judicial / embargo activo';
+        resumen = 'Se detectaron retenciones judiciales/embargos activos. Aun con Disponible Recibo de ' + fmtP(disp) + ', corresponde bloqueo reglamentario hasta acreditar levantamiento.';
+        recomendaciones.push('Solicitar oficio o certificado de levantamiento de embargo antes de avanzar con cualquier línea o refinanciación.');
+      } else if (refActiva) {
+        escenario = 'REFINANCIACION_ACTIVA';
+        titulo = 'Escenario de Refinanciación simulado' + (detalleRef ? (' (' + detalleRef + ')') : '');
+        const partes = [];
+        if (cuotaRef > 0) {
+          partes.push('Al liberar ' + fmtP(cuotaRef) + '/mes de cuota vigente, el Disponible Recibo pasa de ' + fmtP(dispOrig) + ' a ' + fmtP(disp) + ' (Cuota Segura: ' + fmtP(cuotaSegura) + '/mes).');
+        } else {
+          partes.push('Se evalúa cancelación/refinanciación sobre el margen actual de ' + fmtP(disp) + '/mes.');
+        }
+        if (saldoCanc > 0 && ofertas.length > 0) {
+          const cubren = ofertas.filter(x => x.neto >= saldoCanc);
+          if (cubren.length > 0) {
+            const primera = cubren[0];
+            const mejor = cubren[cubren.length - 1];
+            partes.push('El Saldo a Cancelar (' + fmtP(saldoCanc) + ') se cubre desde ' + primera.plazo + ' cuotas (bolsillo neto ' + fmtP(primera.netoBolsillo) + '), alcanzando hasta ' + fmtP(mejor.netoBolsillo) + ' en bolsillo en ' + mejor.plazo + ' cuotas.');
+          } else {
+            const maxO = ofertas[ofertas.length - 1];
+            const faltante = round2Margen(saldoCanc - maxO.neto);
+            partes.push('El Saldo a Cancelar (' + fmtP(saldoCanc) + ') supera el máximo entregable en ' + maxO.plazo + ' cuotas (' + fmtP(maxO.neto) + '); requiere integrar ' + fmtP(faltante) + ' o liberar más cuota.');
+          }
+        }
+        resumen = partes.join(' ');
+        if (cuotaRef > 0 && ofertas.length > 0) {
+          const ref24 = ofertas.find(x => x.plazo === 24) || ofertas[ofertas.length - 1];
+          const alivio = round2Margen(cuotaRef - ref24.cuotaResultante);
+          if (alivio > 0) {
+            recomendaciones.push('Alivio financiero mensual en ' + ref24.plazo + ' cuotas: la cuota baja en ' + fmtP(alivio) + '/mes respecto a la retención liberada (' + fmtP(cuotaRef) + ' → ' + fmtP(ref24.cuotaResultante) + ').');
+          }
+        }
+        if (saldoExt > 0) {
+          recomendaciones.push('Se descontó el Saldo Vigente Externo de ' + fmtP(saldoExt) + ' del tope de endeudamiento acumulado (41,67% × N × Neto).');
+        }
+      } else if (!puedeOfrecer) {
+        escenario = escenarios.length > 0 ? 'SIN_DISPONIBLE_REFINANCIABLE' : 'SIN_DISPONIBLE';
+        titulo = 'Margen agotado en recibo: requiere refinanciación previa o canal alternativo';
+        const deficit = disp < 0 ? round2Margen(Math.abs(disp)) : 0;
+        resumen = 'El Afectado real (' + fmtP(afectado) + ') supera al Afectable (' + fmtP(afectable) + '), dejando Disponible Recibo de ' + fmtP(disp) + '.';
+        if (escenarios.length > 0) {
+          const mejorEsc = escenarios.reduce((a, b) => (b.montoLiberable > a.montoLiberable ? b : a), escenarios[0]);
+          recomendaciones.push(
+            'Para revertir el déficit (' + fmtP(deficit) + ') y habilitar planilla, se requiere cancelar/refinanciar al menos ' + fmtP(round2Margen(deficit + 1)) +
+            ' de cuota mensual. Refinanciando ' + mejorEsc.entidad + ' (' + fmtP(mejorEsc.montoLiberable) + '/mes), el Disponible pasaría a ' + fmtP(mejorEsc.nuevoDisponible) + ' (Cuota Segura: ' + fmtP(mejorEsc.nuevaCuotaSegura) + '/mes).'
+          );
+        }
+        recomendaciones.push('Si no se cancela deuda previa en planilla, evaluar línea alternativa por CBU / Convenio Sidecreer sujeta a scoring.');
+      } else if (disp <= tope4167) {
+        escenario = 'DISPONIBLE_LIMITADO_RECIBO';
+        titulo = 'Apto por planilla — Oferta acotada por Margen del Recibo';
+        resumen = 'Posee Disponible Recibo positivo de ' + fmtP(disp) + ', por debajo del Tope 41,67% Neto (' + fmtP(tope4167) + '). La cuota máxima segura es ' + fmtP(cuotaSegura) + '/mes.';
+        if (escenarios.length > 0) {
+          const mejorEsc = escenarios.reduce((a, b) => (b.montoLiberable > a.montoLiberable ? b : a), escenarios[0]);
+          recomendaciones.push('Oportunidad de ampliación por Refinanciación: liberando ' + mejorEsc.entidad + ' (' + fmtP(mejorEsc.montoLiberable) + '/mes), la cuota segura subiría hasta el Tope 41,67% (' + fmtP(mejorEsc.nuevaCuotaSegura) + '/mes).');
+        }
+      } else {
+        escenario = 'DISPONIBLE_LIMITADO_TOPE_NETO';
+        titulo = 'Apto por planilla — Capacidad plena hasta Tope 41,67% Neto';
+        resumen = 'El Disponible Recibo (' + fmtP(disp) + ') supera el Tope Reglamentario 41,67% Neto (' + fmtP(tope4167) + '). Se habilita la cuota máxima segura reglamentaria de ' + fmtP(cuotaSegura) + '/mes.';
+      }
+
+      if (escenarios.length > 0 || refActiva) {
+        recomendaciones.push('Checklist Refinanciación: (1) adjuntar Certificado de Saldo Cancelatorio vigente, (2) cargar Cuota Futura 2 si hubiera retenciones en curso no liquidadas, y (3) confirmar que el Monto a Entregar cubra el saldo y deje bolsillo positivo.');
+      }
+
+      const plazoMinimoCobertura = saldoCanc > 0 ? ((ofertas.find(o => o.cubreCancelacion) || {}).plazo ?? null) : null;
+      return {
+        escenario,
+        titulo,
+        resumen,
+        recomendaciones,
+        refinanciacionActiva: refActiva,
+        escenariosSugeridos: escenarios,
+        plazoMinimoCobertura
+      };
+    }
+
     function enriquecerResultadoAuditoriaJS(rawDict, opts = {}) {
       const res = Object.assign({}, rawDict || {});
       const conceptosIn = Array.isArray(res.conceptos)
@@ -17641,11 +17851,42 @@ ${cierreTxt}`;
           ? opts.cuotaFutura2
           : (res.cuota_futura_2 ?? res.cuotaFutura2 ?? 0)
       );
+      const cuotaRef = limpiarNumeroPadron(
+        (opts && opts.cuotaRefinanciar !== undefined && opts.cuotaRefinanciar !== null)
+          ? opts.cuotaRefinanciar
+          : (res.cuota_refinanciar ?? res.cuotaRefinanciar ?? 0)
+      );
+      const saldoCanc = limpiarNumeroPadron(
+        (opts && opts.saldoCancelar !== undefined && opts.saldoCancelar !== null)
+          ? opts.saldoCancelar
+          : (res.saldo_cancelar ?? res.saldoCancelar ?? 0)
+      );
+      const saldoExt = limpiarNumeroPadron(
+        (opts && opts.saldoVigenteExterno !== undefined && opts.saldoVigenteExterno !== null)
+          ? opts.saldoVigenteExterno
+          : (res.saldo_vigente_externo ?? res.saldoVigenteExterno ?? 0)
+      );
+      const detRef = String(
+        (opts && opts.detalleRefinanciacion !== undefined && opts.detalleRefinanciacion !== null)
+          ? opts.detalleRefinanciacion
+          : (res.detalle_refinanciacion ?? res.detalleRefinanciacion ?? '')
+      ).trim();
+      const facMargen = limpiarNumeroPadron(
+        (opts && opts.factorMargen !== undefined && opts.factorMargen !== null)
+          ? opts.factorMargen
+          : (res.factor_margen ?? res.factorMargen ?? 1.0)
+      );
+
       const analisis = calcularMargenRecibo({
         total_haberes: res.total_haberes ?? res.sueldoBrutoTotal ?? res.sueldoBruto,
         total_descuentos: res.total_descuentos ?? res.totalDescuentos ?? res.totalDescuentosRecibo,
         liquido: res.liquido ?? res.sueldoLiquido ?? res.sueldoNeto,
         cuota_futura_2: cf2,
+        cuota_refinanciar: cuotaRef,
+        saldo_cancelar: saldoCanc,
+        saldo_vigente_externo: saldoExt,
+        detalle_refinanciacion: detRef,
+        factor_margen: facMargen || 1.0,
         items: conceptosIn,
         lugar_de_trabajo: res.lugar_de_trabajo || res.lugarTrabajo || '',
         regimenOverride: (opts && opts.regimenOverride) || res.regimenOverride || '',
@@ -17659,19 +17900,32 @@ ${cierreTxt}`;
 
       const itemsClasif = analisis.items;
       const desgloseDescuentos = enrichmentDesgloseDescuentosPadron(itemsClasif);
+      const offerOpts = {
+        saldoCancelar: analisis.saldoCancelar,
+        saldoVigenteExterno: analisis.saldoVigenteExterno,
+        cuotaRefinanciar: analisis.cuotaRefinanciar
+      };
       const ofertasPorPlazo = analisis.puedeOfrecerCuotas
         ? {
-            fedem: calcularOfertasPorPlazo(analisis.disponibleRecibo, analisis.netoLiquido, 'fedem'),
-            muni: calcularOfertasPorPlazo(analisis.disponibleRecibo, analisis.netoLiquido, 'muni'),
-            sidecreer: calcularOfertasPorPlazo(analisis.disponibleRecibo, analisis.netoLiquido, 'sidecreer')
+            fedem: calcularOfertasPorPlazo(analisis.disponibleRecibo, analisis.netoLiquido, 'fedem', offerOpts),
+            muni: calcularOfertasPorPlazo(analisis.disponibleRecibo, analisis.netoLiquido, 'muni', offerOpts),
+            sidecreer: calcularOfertasPorPlazo(analisis.disponibleRecibo, analisis.netoLiquido, 'sidecreer', offerOpts)
           }
         : { fedem: [], muni: [], sidecreer: [] };
+      const embargoBool = Boolean(res.embargosJudiciales || desgloseDescuentos.embargoCalc > 0);
+      const conclusionesRecomendaciones = generarConclusionesYRecomendaciones(
+        analisis,
+        desgloseDescuentos,
+        ofertasPorPlazo.fedem,
+        embargoBool
+      );
 
       return {
         analisis,
         itemsClasif,
         ofertasPorPlazo,
-        desgloseDescuentos
+        desgloseDescuentos,
+        conclusionesRecomendaciones
       };
     }
 
@@ -17902,6 +18156,27 @@ ${cierreTxt}`;
         ? Math.max(0, round2Margen(limpiarNumeroPadron(opts.cuotaFutura2)))
         : Math.max(0, round2Margen(limpiarNumeroPadron(amIn.cuotaFutura2 ?? obj.cuotaFutura2 ?? obj.cuota_futura_2 ?? 0)));
 
+      const cuotaRefOpt = (opts && opts.cuotaRefinanciar !== undefined && opts.cuotaRefinanciar !== null)
+        ? Math.max(0, round2Margen(limpiarNumeroPadron(opts.cuotaRefinanciar)))
+        : Math.max(0, round2Margen(limpiarNumeroPadron(amIn.cuotaRefinanciar ?? obj.cuotaRefinanciar ?? obj.cuota_refinanciar ?? 0)));
+
+      const saldoCancOpt = (opts && opts.saldoCancelar !== undefined && opts.saldoCancelar !== null)
+        ? Math.max(0, round2Margen(limpiarNumeroPadron(opts.saldoCancelar)))
+        : Math.max(0, round2Margen(limpiarNumeroPadron(amIn.saldoCancelar ?? obj.saldoCancelar ?? obj.saldo_cancelar ?? 0)));
+
+      const saldoExtOpt = (opts && opts.saldoVigenteExterno !== undefined && opts.saldoVigenteExterno !== null)
+        ? Math.max(0, round2Margen(limpiarNumeroPadron(opts.saldoVigenteExterno)))
+        : Math.max(0, round2Margen(limpiarNumeroPadron(amIn.saldoVigenteExterno ?? obj.saldoVigenteExterno ?? obj.saldo_vigente_externo ?? 0)));
+
+      const detalleRefOpt = (opts && opts.detalleRefinanciacion !== undefined && opts.detalleRefinanciacion !== null)
+        ? String(opts.detalleRefinanciacion).trim()
+        : String(amIn.detalleRefinanciacion ?? obj.detalleRefinanciacion ?? obj.detalle_refinanciacion ?? '').trim();
+
+      const facRawOpt = (opts && opts.factorMargen !== undefined && opts.factorMargen !== null)
+        ? limpiarNumeroPadron(opts.factorMargen)
+        : limpiarNumeroPadron(amIn.factorMargen ?? obj.factorMargen ?? obj.factor_margen ?? 1.0);
+      const factorMargenOpt = (facRawOpt > 0 && facRawOpt <= 1.0) ? Number(facRawOpt.toFixed(4)) : 1.0;
+
       const fuenteConceptosIn = Array.isArray(detRecIn.conceptos) && detRecIn.conceptos.length > 0
         ? detRecIn.conceptos
         : (Array.isArray(recIn.conceptos) && recIn.conceptos.length > 0
@@ -18027,6 +18302,13 @@ ${cierreTxt}`;
           liquido: liqLeg,
           totalSubtotal1Desc: descLeyLeg,
           cuotaFutura2: cf2Opt,
+          cuotaRefinanciar: cuotaRefOpt,
+          saldoCancelar: saldoCancOpt,
+          saldoVigenteExterno: saldoExtOpt,
+          detalleRefinanciacion: detalleRefOpt,
+          factorMargen: factorMargenOpt,
+          disponibleReciboOriginal: margenLeg,
+          disponibleBrutoRecibo: margenLeg,
           disponibleRecibo: margenLeg,
           margen: margenLeg,
           topeEndeudamientoMensual4167: topeEndLeg,
@@ -18036,11 +18318,12 @@ ${cierreTxt}`;
           items: []
         };
         desgloseLocal = clasificarConceptosReciboLocal([], null);
+        const legOpts = { saldoCancelar: saldoCancOpt, saldoVigenteExterno: saldoExtOpt, cuotaRefinanciar: cuotaRefOpt };
         ofertasPorPlazoFinal = obj.ofertasPorPlazo || (puedeLeg
           ? {
-              fedem: calcularOfertasPorPlazo(margenLeg, liqLeg, 'fedem'),
-              muni: calcularOfertasPorPlazo(margenLeg, liqLeg, 'muni'),
-              sidecreer: calcularOfertasPorPlazo(margenLeg, liqLeg, 'sidecreer')
+              fedem: calcularOfertasPorPlazo(margenLeg, liqLeg, 'fedem', legOpts),
+              muni: calcularOfertasPorPlazo(margenLeg, liqLeg, 'muni', legOpts),
+              sidecreer: calcularOfertasPorPlazo(margenLeg, liqLeg, 'sidecreer', legOpts)
             }
           : { fedem: [], muni: [], sidecreer: [] });
       } else {
@@ -18049,6 +18332,11 @@ ${cierreTxt}`;
           total_descuentos: descHeader,
           liquido: liqHeader,
           cuota_futura_2: cf2Opt,
+          cuota_refinanciar: cuotaRefOpt,
+          saldo_cancelar: saldoCancOpt,
+          saldo_vigente_externo: saldoExtOpt,
+          detalle_refinanciacion: detalleRefOpt,
+          factor_margen: factorMargenOpt,
           items: conceptosParaCalculo,
           lugar_de_trabajo: obj.lugar_de_trabajo || obj.lugarTrabajo || amIn.lugarTrabajo || resDecIn.lugarTrabajo || '',
           regimenOverride: regOverrideOpt,
@@ -18064,6 +18352,11 @@ ${cierreTxt}`;
           !opts.forzarReclasificar &&
           (!regOverrideOpt || regOverrideOpt === amIn.tipoBeneficiario) &&
           cf2Opt === round2Margen(amIn.cuotaFutura2 || 0) &&
+          cuotaRefOpt === round2Margen(amIn.cuotaRefinanciar || 0) &&
+          saldoCancOpt === round2Margen(amIn.saldoCancelar || 0) &&
+          saldoExtOpt === round2Margen(amIn.saldoVigenteExterno || 0) &&
+          detalleRefOpt === String(amIn.detalleRefinanciacion || '').trim() &&
+          Math.abs(factorMargenOpt - Number(amIn.factorMargen || 1.0)) < 0.0001 &&
           Array.isArray(amIn.items || obj.conceptos || detRecIn.conceptos);
 
         if (yaCalculadoMismoEstado && !tieneConceptos) {
@@ -18089,11 +18382,16 @@ ${cierreTxt}`;
           };
         }
 
+        const normOfferOpts = {
+          saldoCancelar: amFinal.saldoCancelar,
+          saldoVigenteExterno: amFinal.saldoVigenteExterno,
+          cuotaRefinanciar: amFinal.cuotaRefinanciar
+        };
         ofertasPorPlazoFinal = amFinal.puedeOfrecerCuotas
           ? {
-              fedem: calcularOfertasPorPlazo(amFinal.disponibleRecibo, amFinal.netoLiquido, 'fedem'),
-              muni: calcularOfertasPorPlazo(amFinal.disponibleRecibo, amFinal.netoLiquido, 'muni'),
-              sidecreer: calcularOfertasPorPlazo(amFinal.disponibleRecibo, amFinal.netoLiquido, 'sidecreer')
+              fedem: calcularOfertasPorPlazo(amFinal.disponibleRecibo, amFinal.netoLiquido, 'fedem', normOfferOpts),
+              muni: calcularOfertasPorPlazo(amFinal.disponibleRecibo, amFinal.netoLiquido, 'muni', normOfferOpts),
+              sidecreer: calcularOfertasPorPlazo(amFinal.disponibleRecibo, amFinal.netoLiquido, 'sidecreer', normOfferOpts)
             }
           : { fedem: [], muni: [], sidecreer: [] };
       }
@@ -18216,6 +18514,19 @@ ${cierreTxt}`;
       obj.alertas = amFinal.alertas || [];
       obj.conceptos = desgloseLocal.rows;
 
+      const conclusionesRecomendaciones = generarConclusionesYRecomendaciones(
+        amFinal,
+        {
+          fedemCalc: fedem,
+          sidecreerCalc: sidecreer,
+          bersaCalc: bersa,
+          mutualesCalc: mutuales
+        },
+        ofertasPorPlazoFinal.fedem,
+        embargoBool
+      );
+      obj.conclusionesRecomendaciones = conclusionesRecomendaciones;
+
       obj.reciboSueldo = Object.assign({}, recIn, {
         titular: titularFinal,
         dni: dniFinal,
@@ -18281,7 +18592,15 @@ ${cierreTxt}`;
         totalNoComputable: amFinal.totalNoComputable,
         afectable: amFinal.afectable,
         totalAfectado: amFinal.totalAfectado,
+        totalAfectadoEfectivo: amFinal.totalAfectadoEfectivo,
         cuotaFutura2: amFinal.cuotaFutura2,
+        cuotaRefinanciar: amFinal.cuotaRefinanciar,
+        saldoCancelar: amFinal.saldoCancelar,
+        saldoVigenteExterno: amFinal.saldoVigenteExterno,
+        detalleRefinanciacion: amFinal.detalleRefinanciacion,
+        factorMargen: amFinal.factorMargen,
+        disponibleReciboOriginal: amFinal.disponibleReciboOriginal,
+        disponibleBrutoRecibo: amFinal.disponibleBrutoRecibo,
         disponibleRecibo: disponibleRecibo,
         topeEndeudamientoMensual4167: amFinal.topeEndeudamientoMensual4167,
         cuotaMaximaSeguraGeneral: amFinal.cuotaMaximaSeguraGeneral,
@@ -18318,7 +18637,8 @@ ${cierreTxt}`;
         resumenDecision: obj.resumenDecision,
         detalleCompletoRecibo: obj.detalleCompletoRecibo,
         analisisMargen: obj.analisisMargen,
-        ofertasPorPlazo: obj.ofertasPorPlazo
+        ofertasPorPlazo: obj.ofertasPorPlazo,
+        conclusionesRecomendaciones: obj.conclusionesRecomendaciones
       };
 
       obj.scoringCrediticio = Object.assign({}, obj.scoringCrediticio || obj.scoringAmmer || {}, {
@@ -18353,12 +18673,18 @@ ${cierreTxt}`;
       const rec = norm.reciboSueldo || {};
       const sc = norm.scoringCrediticio || {};
       const am = norm.analisisMargen || {};
+      const concl = norm.conclusionesRecomendaciones || null;
       const ofertasMap = norm.ofertasPorPlazo || { fedem: [], muni: [], sidecreer: [] };
       const fmtP = (typeof formatPesosMargen === 'function') ? formatPesosMargen : formatMontoAuditoriaExacto;
       const conceptosRows = Array.isArray(detRec.conceptos) ? detRec.conceptos : [];
       const esPasivo = am.tipoBeneficiario === 'PASIVO';
       const pctTopeLbl = esPasivo ? '35%' : '20%';
       const pctAfectLbl = esPasivo ? '65%' : '80%';
+      const facMargen = Number(am.factorMargen || 1.0);
+      const cuotaRef = Number(am.cuotaRefinanciar || 0);
+      const saldoCanc = Number(am.saldoCancelar || 0);
+      const saldoExt = Number(am.saldoVigenteExterno || 0);
+      const detRef = String(am.detalleRefinanciacion || '').trim();
 
       const lineas = [
         '### INFORME DE AUDITORÍA DOCUMENTAL Y CREDITICIA AMMER (MOTOR PADRÓN OFICIAL)',
@@ -18374,13 +18700,26 @@ ${cierreTxt}`;
         '* **(=) Subtotal2 (' + pctAfectLbl + '):** ' + fmtP(am.subtotal2 ?? 0),
         '* **(-) No Computable:** ' + fmtP(am.totalNoComputable ?? 0),
         '* **(=) Afectable:** ' + fmtP(am.afectable ?? 0),
-        '* **(-) Afectado' + (am.cuotaFutura2 > 0 ? ' + Cuota Futura 2' : '') + ':** ' + fmtP((am.totalAfectado ?? 0) + (am.cuotaFutura2 ?? 0)),
-        '* **(=) Disponible Recibo:** ' + (am.puedeOfrecerCuotas ? fmtP(am.disponibleRecibo) : ('SIN Disponible (' + fmtP(am.disponibleRecibo ?? 0) + ')')),
-        '* **Neto Líquido / Tope Endeudamiento (41,67%):** ' + fmtP(am.netoLiquido ?? resDec.sueldoLiquido ?? rec.sueldoNeto ?? 0) + ' / ' + fmtP(am.topeEndeudamientoMensual4167 ?? 0),
-        '* **Cuota Máxima Segura:** ' + (am.puedeOfrecerCuotas ? fmtP(am.cuotaMaximaSeguraGeneral ?? 0) : 'SIN Disponible'),
-        '* **Decisión Planilla:** ' + (resDec.decisionPlanilla || 'REVISAR'),
-        '* **Scoring AMMER:** ' + (sc.puntajeTotal ?? 0) + ' / 100 (' + (sc.calificacionLetra || '') + ')'
+        '* **(-) Afectado' + (am.cuotaFutura2 > 0 ? ' + Cuota Futura 2' : '') + ':** ' + fmtP((am.totalAfectado ?? 0) + (am.cuotaFutura2 ?? 0))
       ];
+      if (cuotaRef > 0) {
+        lineas.push('* **(+) Cuota a Liberar / Refinanciar' + (detRef ? ' (' + detRef + ')' : '') + ':** ' + fmtP(am.cuotaRefinanciarAplicada ?? cuotaRef) + ' (Afectado efectivo: ' + fmtP(am.totalAfectadoEfectivo ?? 0) + ')');
+      }
+      if (facMargen < 1) {
+        lineas.push('* **Disponible Bruto Recibo (100%):** ' + fmtP(am.disponibleBrutoRecibo ?? 0) + ' → **Criterio Margen (' + Math.round(facMargen * 100) + '% c/ Gastos):** ' + fmtP(am.disponibleRecibo ?? 0));
+      }
+      lineas.push('* **(=) Disponible Recibo:** ' + (am.puedeOfrecerCuotas ? fmtP(am.disponibleRecibo) : ('SIN Disponible (' + fmtP(am.disponibleRecibo ?? 0) + ')')));
+      if (saldoCanc > 0) {
+        lineas.push('* **Saldo a Cancelar (Refinanciación):** ' + fmtP(saldoCanc));
+      }
+      if (saldoExt > 0) {
+        lineas.push('* **Saldo en Préstamos Vigentes (Externo):** ' + fmtP(saldoExt));
+      }
+      lineas.push('* **Neto Líquido / Tope Endeudamiento (41,67%):** ' + fmtP(am.netoLiquido ?? resDec.sueldoLiquido ?? rec.sueldoNeto ?? 0) + ' / ' + fmtP(am.topeEndeudamientoMensual4167 ?? 0));
+      lineas.push('* **Cuota Máxima Segura:** ' + (am.puedeOfrecerCuotas ? fmtP(am.cuotaMaximaSeguraGeneral ?? 0) : 'SIN Disponible'));
+      lineas.push('* **Decisión Planilla:** ' + (resDec.decisionPlanilla || 'REVISAR'));
+      lineas.push('* **Scoring AMMER:** ' + (sc.puntajeTotal ?? 0) + ' / 100 (' + (sc.calificacionLetra || '') + ')');
+
       if (Array.isArray(am.alertas) && am.alertas.length > 0) {
         lineas.push('');
         lineas.push('#### Alertas de Consistencia');
@@ -18390,11 +18729,28 @@ ${cierreTxt}`;
       if (am.puedeOfrecerCuotas && ofertasFedem.length > 0) {
         lineas.push('');
         lineas.push('#### Oferta Máxima Sugerida por Plazo (FEDEM)');
-        lineas.push('| Monto a Entregar | Cantidad de Cuotas | Monto de Cuota | Limitado Por |');
+        lineas.push('| Monto a Entregar | Cantidad de Cuotas | Monto de Cuota | Limitado Por / Refinanciación |');
         lineas.push('| ---: | :---: | ---: | :--- |');
         ofertasFedem.forEach(o => {
-          lineas.push('| ' + fmtP(o.neto) + ' | ' + o.plazo + ' cuotas (' + o.multiplicador + 'x Neto) | ' + fmtP(o.cuotaResultante) + ' | ' + (o.limitadoPor || '—') + ' |');
+          const extras = [];
+          if (saldoCanc > 0 && o.netoBolsillo !== undefined) {
+            extras.push('Bolsillo: ' + fmtP(o.netoBolsillo));
+          }
+          if (cuotaRef > 0 && o.alivioMensual !== undefined && o.alivioMensual !== null) {
+            extras.push('Alivio: ' + (o.alivioMensual >= 0 ? '+' : '') + fmtP(o.alivioMensual));
+          }
+          const limTxt = (o.limitadoPor || '—') + (extras.length > 0 ? (' · ' + extras.join(' · ')) : '');
+          lineas.push('| ' + fmtP(o.neto) + ' | ' + o.plazo + ' cuotas (' + o.multiplicador + 'x Neto) | ' + fmtP(o.cuotaResultante) + ' | ' + limTxt + ' |');
         });
+      }
+      if (concl && concl.titulo) {
+        lineas.push('');
+        lineas.push('#### Conclusiones y Recomendaciones');
+        lineas.push('* **' + concl.titulo + ':** ' + (concl.resumen || ''));
+        (concl.recomendaciones || []).forEach(recLine => lineas.push('* ' + recLine));
+        if (concl.plazoMinimoCobertura) {
+          lineas.push('* **Plazo mínimo que cubre el saldo a cancelar:** ' + concl.plazoMinimoCobertura + ' cuotas');
+        }
       }
       if (conceptosRows.length > 0) {
         lineas.push('');
@@ -18985,6 +19341,12 @@ ${cierreTxt}`;
             '</ul></div>')
         : '';
 
+      const cuotaRefFicha = Number(am.cuotaRefinanciar ?? resDec.cuotaRefinanciar ?? 0) || 0;
+      const saldoCancFicha = Number(am.saldoCancelar ?? resDec.saldoCancelar ?? 0) || 0;
+      const saldoExtFicha = Number(am.saldoVigenteExterno ?? resDec.saldoVigenteExterno ?? 0) || 0;
+      const facMargenFicha = Number(am.factorMargen ?? resDec.factorMargen ?? 1.0) || 1.0;
+      const conclFicha = res.conclusionesRecomendaciones || null;
+
       const waterfallFichaHtml = esPadron
         ? ('<div style="margin-top:8px;padding-top:6px;border-top:1px dashed #cbd5e1;font-size:0.69rem;color:#334155;display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;">' +
             '<span><strong>Subtotal1:</strong> ' + sanitizeHTML(fmtP(subtotal1Val ?? 0)) + '</span>' +
@@ -18992,6 +19354,20 @@ ${cierreTxt}`;
             '<span><strong>Subtotal2 (' + pctAfectLbl + '):</strong> ' + sanitizeHTML(fmtP(subtotal2Val ?? 0)) + '</span>' +
             '<span><strong>No Comp.:</strong> -' + sanitizeHTML(fmtP(totalNoCompVal)) + '</span>' +
             '<span><strong>Afectado:</strong> -' + sanitizeHTML(fmtP(totalAfectadoVal)) + (cuotaFutura2Val > 0 ? (' · <strong>CF2:</strong> -' + sanitizeHTML(fmtP(cuotaFutura2Val))) : '') + '</span>' +
+            (cuotaRefFicha > 0 ? ('<span><strong>Cuota Refinanciar:</strong> +' + sanitizeHTML(fmtP(cuotaRefFicha)) + '</span>') : '') +
+            (saldoCancFicha > 0 ? ('<span><strong>Saldo Cancelar:</strong> ' + sanitizeHTML(fmtP(saldoCancFicha)) + '</span>') : '') +
+            (saldoExtFicha > 0 ? ('<span><strong>Saldo Externo:</strong> ' + sanitizeHTML(fmtP(saldoExtFicha)) + '</span>') : '') +
+            (facMargenFicha < 1 ? ('<span><strong>Criterio:</strong> ' + Math.round(facMargenFicha * 100) + '%</span>') : '') +
+          '</div>')
+        : '';
+
+      const conclFichaHtml = (conclFicha && conclFicha.titulo)
+        ? ('<div style="margin-top:8px;padding:6px 8px;border-radius:6px;background:#eef2ff;border:1px solid #c7d2fe;font-size:0.71rem;color:#1e293b;">' +
+            '<div style="font-weight:800;color:#312e81;">💡 ' + sanitizeHTML(conclFicha.titulo) + '</div>' +
+            (conclFicha.resumen ? ('<div style="margin-top:2px;">' + sanitizeHTML(conclFicha.resumen) + '</div>') : '') +
+            ((Array.isArray(conclFicha.recomendaciones) && conclFicha.recomendaciones.length > 0)
+              ? ('<ul style="margin:4px 0 0 14px;padding:0;">' + conclFicha.recomendaciones.map(rc => '<li>' + sanitizeHTML(rc) + '</li>').join('') + '</ul>')
+              : '') +
           '</div>')
         : '';
 
@@ -19144,6 +19520,7 @@ ${cierreTxt}`;
             '</div>' +
           '</div>' +
           waterfallFichaHtml +
+          conclFichaHtml +
         '</div>' +
 
         // SECCIÓN 5: Scoring AMMER, Decisión Dual y Transcripción Literal
@@ -19294,6 +19671,7 @@ ${cierreTxt}`;
       idExpedienteAuditadoActivo = null;
       _auditRegimenOverride = null;
       _auditCuotaFutura2 = 0;
+      resetearParametrosRefinanciacionAuditoria();
       if (lista.length === 1) {
         return procesarReciboUnico(lista[0]);
       }
@@ -19307,6 +19685,7 @@ ${cierreTxt}`;
       archivosAuditoriaCola = [];
       _auditRegimenOverride = null;
       _auditCuotaFutura2 = 0;
+      resetearParametrosRefinanciacionAuditoria();
       let procesados = 0;
 
       for (const file of arr) {
@@ -19369,6 +19748,7 @@ ${cierreTxt}`;
       idExpedienteAuditadoActivo = String(id);
       _auditRegimenOverride = null;
       _auditCuotaFutura2 = 0;
+      resetearParametrosRefinanciacionAuditoria();
 
       const s = getStoredSolicitudes().find(x => String(x.id) === String(id));
       if (s && s.adjuntos && s.adjuntos.length > 0) {
@@ -19399,6 +19779,7 @@ ${cierreTxt}`;
       idExpedienteAuditadoActivo = null;
       _auditRegimenOverride = null;
       _auditCuotaFutura2 = 0;
+      resetearParametrosRefinanciacionAuditoria();
       const inp = document.getElementById('fileInputAuditoriaIA');
       if (inp) inp.value = '';
       renderListaArchivosAuditoriaPills();
@@ -19415,21 +19796,40 @@ ${cierreTxt}`;
       showToast('Panel de auditoría reiniciado.');
     }
 
-    function recalcularMargenInteractivoAuditoria(nuevoRegimen = undefined, nuevaCuotaFutura2 = undefined) {
+    function recalcularMargenInteractivoAuditoria(nuevoRegimen = undefined, nuevaCuotaFutura2 = undefined, refiOpts = undefined) {
       if (!ultimoResultadoAuditoria) {
         showToast('Analizá un recibo primero para recalcular margen y ofertas.');
         return null;
       }
+      const r2 = (typeof round2Margen === 'function') ? round2Margen : (n => Math.round(n * 100) / 100);
+      const parseNumAudit = (v) => (typeof limpiarNumeroPadron === 'function')
+        ? limpiarNumeroPadron(v)
+        : (parseNumeroSeguroAuditoria(v) || 0);
+
       if (nuevoRegimen !== undefined) {
         const regUp = nuevoRegimen ? String(nuevoRegimen).trim().toUpperCase() : '';
         _auditRegimenOverride = (regUp === 'PASIVO' || regUp === 'ACTIVO') ? regUp : null;
       }
       if (nuevaCuotaFutura2 !== undefined) {
-        const cfVal = (typeof limpiarNumeroPadron === 'function')
-          ? limpiarNumeroPadron(nuevaCuotaFutura2)
-          : (parseNumeroSeguroAuditoria(nuevaCuotaFutura2) || 0);
-        const r2 = (typeof round2Margen === 'function') ? round2Margen : (n => Math.round(n * 100) / 100);
-        _auditCuotaFutura2 = Math.max(0, r2(cfVal));
+        _auditCuotaFutura2 = Math.max(0, r2(parseNumAudit(nuevaCuotaFutura2)));
+      }
+      if (refiOpts && typeof refiOpts === 'object') {
+        if (refiOpts.cuotaRefinanciar !== undefined) {
+          _auditCuotaRefinanciar = Math.max(0, r2(parseNumAudit(refiOpts.cuotaRefinanciar)));
+        }
+        if (refiOpts.saldoCancelar !== undefined) {
+          _auditSaldoCancelar = Math.max(0, r2(parseNumAudit(refiOpts.saldoCancelar)));
+        }
+        if (refiOpts.saldoVigenteExterno !== undefined) {
+          _auditSaldoVigenteExterno = Math.max(0, r2(parseNumAudit(refiOpts.saldoVigenteExterno)));
+        }
+        if (refiOpts.detalleRefinanciacion !== undefined) {
+          _auditDetalleRefinanciacion = String(refiOpts.detalleRefinanciacion || '').trim();
+        }
+        if (refiOpts.factorMargen !== undefined) {
+          const fm = parseNumAudit(refiOpts.factorMargen);
+          _auditFactorMargen = (fm > 0 && fm <= 1.0) ? Number(fm.toFixed(4)) : 1.0;
+        }
       }
 
       const cloned = Object.assign({}, ultimoResultadoAuditoria);
@@ -19458,10 +19858,16 @@ ${cierreTxt}`;
       }
       delete cloned.analisisMargen;
       delete cloned.ofertasPorPlazo;
+      delete cloned.conclusionesRecomendaciones;
 
       const actualizado = normalizarResultadoAuditoriaIA(cloned, {
         regimenOverride: _auditRegimenOverride,
         cuotaFutura2: _auditCuotaFutura2,
+        cuotaRefinanciar: _auditCuotaRefinanciar,
+        saldoCancelar: _auditSaldoCancelar,
+        saldoVigenteExterno: _auditSaldoVigenteExterno,
+        detalleRefinanciacion: _auditDetalleRefinanciacion,
+        factorMargen: _auditFactorMargen,
         forzarReclasificar: true
       });
       if (!actualizado) return null;
@@ -19472,7 +19878,7 @@ ${cierreTxt}`;
 
     function cambiarRegimenAuditoriaInteractivo(regimen) {
       const regUp = String(regimen || '').toUpperCase() === 'PASIVO' ? 'PASIVO' : 'ACTIVO';
-      return recalcularMargenInteractivoAuditoria(regUp, undefined);
+      return recalcularMargenInteractivoAuditoria(regUp, undefined, undefined);
     }
 
     function aplicarCuotaFutura2Auditoria(val) {
@@ -19481,7 +19887,37 @@ ${cierreTxt}`;
         const inp = document.getElementById('inputAuditCuotaFutura2');
         valor = inp ? inp.value : 0;
       }
-      return recalcularMargenInteractivoAuditoria(undefined, valor);
+      return recalcularMargenInteractivoAuditoria(undefined, valor, undefined);
+    }
+
+    function aplicarRefinanciacionAuditoria(presetOpts = undefined) {
+      if (presetOpts && typeof presetOpts === 'object') {
+        return recalcularMargenInteractivoAuditoria(undefined, undefined, presetOpts);
+      }
+      const inpCuota = document.getElementById('inputAuditCuotaRefinanciar');
+      const inpSaldo = document.getElementById('inputAuditSaldoCancelar');
+      const inpExt = document.getElementById('inputAuditSaldoVigenteExterno');
+      const inpDet = document.getElementById('inputAuditDetalleRefinanciacion');
+      return recalcularMargenInteractivoAuditoria(undefined, undefined, {
+        cuotaRefinanciar: inpCuota ? inpCuota.value : _auditCuotaRefinanciar,
+        saldoCancelar: inpSaldo ? inpSaldo.value : _auditSaldoCancelar,
+        saldoVigenteExterno: inpExt ? inpExt.value : _auditSaldoVigenteExterno,
+        detalleRefinanciacion: inpDet ? inpDet.value : _auditDetalleRefinanciacion
+      });
+    }
+
+    function limpiarRefinanciacionAuditoria() {
+      return recalcularMargenInteractivoAuditoria(undefined, undefined, {
+        cuotaRefinanciar: 0,
+        saldoCancelar: 0,
+        saldoVigenteExterno: 0,
+        detalleRefinanciacion: ''
+      });
+    }
+
+    function cambiarFactorMargenAuditoria(factor) {
+      const fVal = Number(factor) === 0.7 || Number(factor) === 0.70 ? 0.70 : 1.0;
+      return recalcularMargenInteractivoAuditoria(undefined, undefined, { factorMargen: fVal });
     }
 
     function formatearAntiguedadLegible(rawVal) {
@@ -19516,7 +19952,7 @@ ${cierreTxt}`;
       if (ultimoResultadoAuditoria.detalleCompletoRecibo) {
         aplicarCambio(ultimoResultadoAuditoria.detalleCompletoRecibo.conceptos);
       }
-      return recalcularMargenInteractivoAuditoria(undefined, undefined);
+      return recalcularMargenInteractivoAuditoria(undefined, undefined, undefined);
     }
 
     async function ejecutarAuditoriaDocumentalIA() {
@@ -19527,6 +19963,7 @@ ${cierreTxt}`;
 
       _auditRegimenOverride = null;
       _auditCuotaFutura2 = 0;
+      resetearParametrosRefinanciacionAuditoria();
 
       const loadBar = document.getElementById('aiAuditLoadingBar');
       const loaderIA = document.getElementById('loader-auditoria-ia');
@@ -19653,7 +20090,7 @@ ${cierreTxt}`;
       mostrarBannerErrorAuditoria(mensajeError);
     }
 
-    function calcularPlanesSugeridosAuditoria(cuotaMaximaObjetivo, canalKey = 'fedem', netoLiquido = null) {
+    function calcularPlanesSugeridosAuditoria(cuotaMaximaObjetivo, canalKey = 'fedem', netoLiquido = null, offerOpts = null) {
       const cuotaTope = parseNumeroSeguroAuditoria(cuotaMaximaObjetivo);
       if (!cuotaTope || cuotaTope <= 0 || typeof MOTOR_FINANCIERO_EXACTO === 'undefined') {
         return [];
@@ -19666,9 +20103,16 @@ ${cierreTxt}`;
         ? netoLiquido
         : (typeof window !== 'undefined' ? window._netoLiquidoAuditoria : null);
       const liqNum = parseNumeroSeguroAuditoria(liqRaw);
+      const effOpts = (offerOpts && typeof offerOpts === 'object')
+        ? offerOpts
+        : (typeof window !== 'undefined' && window._offerOptsAuditoria ? window._offerOptsAuditoria : {});
+      const cuotaPersRaw = parseNumeroSeguroAuditoria(effOpts.cuotaPersonalizada);
+      const cuotaPers = (cuotaPersRaw && cuotaPersRaw > 0) ? cuotaPersRaw : 0;
+      const cuotaEfectiva = (cuotaPers > 0 && cuotaPers < cuotaTope) ? cuotaPers : cuotaTope;
+      const usandoCuotaPers = cuotaPers > 0 && cuotaPers < cuotaTope;
 
       if (liqNum !== null && liqNum > 0 && typeof calcularOfertasPorPlazo === 'function') {
-        const ofertas = calcularOfertasPorPlazo(cuotaTope, liqNum, key);
+        const ofertas = calcularOfertasPorPlazo(cuotaEfectiva, liqNum, key, effOpts);
         return ofertas.map(o => ({
           plazo: o.plazo,
           lineaKey: key,
@@ -19677,28 +20121,36 @@ ${cierreTxt}`;
           topeCompromisoTotal: o.topeCompromisoTotal,
           disponibleRecibo: o.disponibleRecibo,
           cuotaMaximaReal: o.cuotaMaximaReal,
-          limitadoPor: o.limitadoPor,
+          limitadoPor: (usandoCuotaPers && o.limitadoPor === 'MARGEN_RECIBO') ? 'CUOTA_PERSONALIZADA' : o.limitadoPor,
           neto: o.neto,
           capitalBruto: o.capitalBruto,
           cuotaFinal: o.cuotaResultante,
-          totalPagar: o.totalPagar
+          totalPagar: o.totalPagar,
+          saldoCancelar: o.saldoCancelar || 0,
+          netoBolsillo: o.netoBolsillo !== undefined ? o.netoBolsillo : o.neto,
+          cubreCancelacion: o.cubreCancelacion !== undefined ? o.cubreCancelacion : true,
+          alivioMensual: o.alivioMensual !== undefined ? o.alivioMensual : null
         }));
       }
 
       const plazos = (key === 'muni') ? [12, 24] : [6, 12, 18, 24, 36, 48];
       const multMap = { 6: 2.5, 12: 5, 18: 7.5, 24: 10, 36: 15, 48: 20 };
+      const saldoCanc = Math.max(0, Number(effOpts.saldoCancelar || 0));
+      const cuotaRef = Math.max(0, Number(effOpts.cuotaRefinanciar || 0));
 
       return plazos.map(plazo => {
         let calc = null;
         if (key === 'muni') {
-          calc = MOTOR_FINANCIERO_EXACTO.calcularMunicipalesDesdeCuota(cuotaTope, plazo);
+          calc = MOTOR_FINANCIERO_EXACTO.calcularMunicipalesDesdeCuota(cuotaEfectiva, plazo);
         } else if (key === 'sidecreer') {
-          calc = MOTOR_FINANCIERO_EXACTO.calcularSidecreerDesdeCuota(cuotaTope, plazo);
+          calc = MOTOR_FINANCIERO_EXACTO.calcularSidecreerDesdeCuota(cuotaEfectiva, plazo);
         } else {
-          calc = MOTOR_FINANCIERO_EXACTO.calcularFEDEMDesdeCuota(cuotaTope, plazo);
+          calc = MOTOR_FINANCIERO_EXACTO.calcularFEDEMDesdeCuota(cuotaEfectiva, plazo);
         }
         if (!calc || !Number.isFinite(calc.neto) || calc.neto <= 0) return null;
         const r2 = (typeof round2Margen === 'function') ? round2Margen : (n => Math.round(n * 100) / 100);
+        const netoR = r2(calc.neto);
+        const cuotaR = r2(calc.cuotaFinal);
         return {
           plazo,
           lineaKey: key,
@@ -19706,12 +20158,16 @@ ${cierreTxt}`;
           topeEndeudamientoCuota: null,
           topeCompromisoTotal: null,
           disponibleRecibo: r2(cuotaTope),
-          cuotaMaximaReal: r2(cuotaTope),
-          limitadoPor: 'MARGEN_RECIBO',
-          neto: r2(calc.neto),
+          cuotaMaximaReal: r2(cuotaEfectiva),
+          limitadoPor: usandoCuotaPers ? 'CUOTA_PERSONALIZADA' : 'MARGEN_RECIBO',
+          neto: netoR,
           capitalBruto: r2(calc.capitalBruto || 0),
-          cuotaFinal: r2(calc.cuotaFinal),
-          totalPagar: r2(calc.totalPagar || (calc.cuotaFinal * plazo))
+          cuotaFinal: cuotaR,
+          totalPagar: r2(calc.totalPagar || (calc.cuotaFinal * plazo)),
+          saldoCancelar: r2(saldoCanc),
+          netoBolsillo: saldoCanc > 0 ? r2(netoR - saldoCanc) : netoR,
+          cubreCancelacion: saldoCanc > 0 ? (netoR >= saldoCanc) : true,
+          alivioMensual: cuotaRef > 0 ? r2(cuotaRef - cuotaR) : null
         };
       }).filter(Boolean);
     }
@@ -19719,24 +20175,48 @@ ${cierreTxt}`;
     function renderizarFilasPlanesAuditoria(cuotaMaxima, lineaKey = 'FEDEM', netoLiquido = null) {
       const normKey = String(lineaKey || 'FEDEM').toUpperCase();
       const planesKey = (normKey.includes('QUAD') || normKey.includes('MUNI')) ? 'muni' : (normKey.includes('SIDE') ? 'sidecreer' : 'fedem');
-      const planes = calcularPlanesSugeridosAuditoria(cuotaMaxima, planesKey, netoLiquido);
+      const offerOpts = (typeof window !== 'undefined' && window._offerOptsAuditoria) ? window._offerOptsAuditoria : null;
+      const planes = calcularPlanesSugeridosAuditoria(cuotaMaxima, planesKey, netoLiquido, offerOpts);
       if (!planes || planes.length === 0) {
-        return '<tr><td colspan="4" class="py-4 px-3 text-center text-xs text-slate-500 font-sans">No hay ofertas habilitadas (SIN Disponible o margen insuficiente para esta línea).</td></tr>';
+        return '<tr><td colspan="4" class="py-4 px-3 text-center text-xs text-slate-500 font-sans">No hay ofertas habilitadas (SIN Disponible, saldo vigente supera tope o margen insuficiente para esta línea).</td></tr>';
       }
       return planes.map((p, idx) => {
         const zebraBg = (idx % 2 === 1) ? 'bg-slate-50/40' : 'bg-white';
         const netoNum = Number(p.neto) || 0;
         const cuotaNum = Number(p.cuotaFinal) || 0;
         const totalNum = Number(p.totalPagar) || 0;
+        const saldoCanc = Number(p.saldoCancelar) || 0;
+        const bolsilloNum = Number(p.netoBolsillo ?? netoNum);
+        const cubreSaldo = p.cubreCancelacion !== false;
+        const alivioNum = (p.alivioMensual !== null && p.alivioMensual !== undefined) ? Number(p.alivioMensual) : null;
+
         const netoFormateado = sanitizeHTML(formatMontoSinSimboloAr(netoNum));
         const cuotaFinalFormateada = sanitizeHTML(formatMontoSinSimboloAr(cuotaNum));
         const compMaxTxt = p.topeCompromisoTotal ? ('Comp. máx.: $ ' + sanitizeHTML(formatMontoSinSimboloAr(p.topeCompromisoTotal))) : '';
         const multTxt = p.multiplicador ? (p.multiplicador + 'x Neto · 41,67%') : '';
-        const limitadoLabel = p.limitadoPor === 'TOPE_ENDEUDAMIENTO' ? 'Tope 41,67% Neto' : 'Margen Recibo';
+        const limitadoLabel = p.limitadoPor === 'CUOTA_PERSONALIZADA'
+          ? 'Cuota Personalizada'
+          : (p.limitadoPor === 'TOPE_ENDEUDAMIENTO_CON_SALDO'
+            ? 'Tope 41,67% + Saldo Vigente'
+            : (p.limitadoPor === 'TOPE_ENDEUDAMIENTO' ? 'Tope 41,67% Neto' : 'Margen Recibo'));
+
+        let bolsilloHtml = '';
+        if (saldoCanc > 0) {
+          const badgeCubre = cubreSaldo
+            ? '<span class="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">Cubre saldo</span>'
+            : '<span class="inline-block px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 text-[10px] font-bold">Falta $ ' + sanitizeHTML(formatMontoSinSimboloAr(Math.abs(bolsilloNum))) + '</span>';
+          bolsilloHtml = '<div class="text-[11px] font-mono font-bold ' + (cubreSaldo ? 'text-indigo-700' : 'text-rose-700') + ' mt-0.5 flex items-center gap-1.5 flex-wrap">' +
+            '<span>Bolsillo: $ ' + sanitizeHTML(formatMontoSinSimboloAr(bolsilloNum)) + '</span>' + badgeCubre +
+          '</div>';
+        }
+        const alivioHtml = (alivioNum !== null)
+          ? '<div class="text-[10px] font-mono font-bold ' + (alivioNum >= 0 ? 'text-emerald-700' : 'text-amber-700') + ' mt-0.5">Alivio: ' + (alivioNum >= 0 ? '+$ ' : '-$ ') + sanitizeHTML(formatMontoSinSimboloAr(Math.abs(alivioNum))) + '/mes</div>'
+          : '';
 
         return '<tr class="' + zebraBg + ' hover:bg-indigo-50/40 transition-colors border-b border-slate-100 font-sans text-slate-700">' +
           '<td class="py-3 px-4 whitespace-nowrap">' +
             '<div class="text-sm font-bold text-emerald-700 font-mono">$ ' + netoFormateado + '</div>' +
+            bolsilloHtml +
             (totalNum > 0 ? '<div class="text-[10px] text-slate-400 font-mono mt-0.5">Total: $ ' + sanitizeHTML(formatMontoSinSimboloAr(totalNum)) + '</div>' : '') +
           '</td>' +
           '<td class="py-3 px-4 text-center whitespace-nowrap">' +
@@ -19745,6 +20225,7 @@ ${cierreTxt}`;
           '</td>' +
           '<td class="py-3 px-4 text-right whitespace-nowrap">' +
             '<div class="text-sm font-bold text-slate-900 font-mono">$ ' + cuotaFinalFormateada + '</div>' +
+            alivioHtml +
             '<div class="text-[10px] text-slate-400 mt-0.5">Tope: ' + limitadoLabel + '</div>' +
           '</td>' +
           '<td class="py-2.5 px-4 text-right whitespace-nowrap">' +
@@ -19793,6 +20274,78 @@ ${cierreTxt}`;
       if (tbody) {
         tbody.innerHTML = renderizarFilasPlanesAuditoria(cuota, selected, liq);
       }
+    }
+
+    function actualizarUICuotaPersonalizadaAuditoria() {
+      const cuota = window._cuotaMaximaAuditoria || 0;
+      const cuotaSeguraMax = window._cuotaSeguraMaxAuditoria || cuota;
+      const liq = (typeof window !== 'undefined' && window._netoLiquidoAuditoria !== undefined) ? window._netoLiquidoAuditoria : null;
+      const linea = window._lineaAuditoriaSugerida || 'FEDEM';
+      window._offerOptsAuditoria = Object.assign({}, window._offerOptsAuditoria || {}, {
+        cuotaPersonalizada: _auditCuotaPersonalizada > 0 ? _auditCuotaPersonalizada : 0
+      });
+
+      const tbody = document.getElementById('tbodyPlanesAuditoria');
+      if (tbody) {
+        tbody.innerHTML = renderizarFilasPlanesAuditoria(cuota, linea, liq);
+      }
+
+      const inp = document.getElementById('inputAuditCuotaPersonalizada');
+      if (inp) {
+        inp.value = _auditCuotaPersonalizada > 0 ? _auditCuotaPersonalizada.toFixed(2) : '';
+      }
+
+      const btnReset = document.getElementById('btnLimpiarCuotaPersSim');
+      if (btnReset) {
+        btnReset.style.display = _auditCuotaPersonalizada > 0 ? 'inline-flex' : 'none';
+      }
+
+      const badge = document.getElementById('badgeCuotaSeguraSim');
+      if (badge) {
+        const cuotaMostrar = (_auditCuotaPersonalizada > 0 && _auditCuotaPersonalizada < cuotaSeguraMax)
+          ? _auditCuotaPersonalizada
+          : cuotaSeguraMax;
+        badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span>' +
+          (_auditCuotaPersonalizada > 0 && _auditCuotaPersonalizada < cuotaSeguraMax
+            ? ('Cuota Objetivo: ' + sanitizeHTML(formatPesosMargen(cuotaMostrar)) + ' / mes (Máx.: ' + sanitizeHTML(formatPesosMargen(cuotaSeguraMax)) + ')')
+            : ('Cuota Segura Máx.: ' + sanitizeHTML(formatPesosMargen(cuotaSeguraMax)) + ' / mes'));
+      }
+    }
+
+    function aplicarCuotaPersonalizadaAuditoria(val) {
+      const maxDisp = Number(window._cuotaMaximaAuditoria || 0);
+      const maxSeg = Number(window._cuotaSeguraMaxAuditoria || maxDisp);
+      if (!maxDisp || maxDisp <= 0) return 0;
+
+      let raw = val;
+      if (raw === undefined) {
+        const inp = document.getElementById('inputAuditCuotaPersonalizada');
+        raw = inp ? inp.value : 0;
+      }
+      const parsed = (typeof limpiarNumeroPadron === 'function')
+        ? limpiarNumeroPadron(raw)
+        : (parseNumeroSeguroAuditoria(raw) || 0);
+      const r2 = (typeof round2Margen === 'function') ? round2Margen : (n => Math.round(n * 100) / 100);
+      const clean = Math.max(0, r2(parsed));
+
+      if (clean <= 0) {
+        _auditCuotaPersonalizada = 0;
+      } else if (clean > maxSeg && maxSeg > 0) {
+        _auditCuotaPersonalizada = 0;
+        if (typeof showToast === 'function') {
+          showToast('La cuota ingresada supera la Cuota Máxima Segura (' + formatPesosMargen(maxSeg) + '). Se mantiene el tope máximo.');
+        }
+      } else {
+        _auditCuotaPersonalizada = clean;
+      }
+      actualizarUICuotaPersonalizadaAuditoria();
+      return _auditCuotaPersonalizada;
+    }
+
+    function limpiarCuotaPersonalizadaAuditoria() {
+      _auditCuotaPersonalizada = 0;
+      actualizarUICuotaPersonalizadaAuditoria();
+      return 0;
     }
 
     /* --- TARJETA DE RESUMEN DE AUDITORÍA CONTENIDA PARA EL MODAL DE NUEVA SOLICITUD --- */
@@ -20022,10 +20575,20 @@ ${cierreTxt}`;
       const afectable = parseNumeroSeguroAuditoria(am.afectable ?? r.afectable) ?? round2Margen(subtotal2 - totalNoComp);
       const totalAfectado = parseNumeroSeguroAuditoria(am.totalAfectado ?? r.totalAfectado) ?? 0;
       const cuotaFutura2 = parseNumeroSeguroAuditoria(am.cuotaFutura2 ?? r.cuotaFutura2 ?? _auditCuotaFutura2) ?? 0;
-      const disponibleRecibo = parseNumeroSeguroAuditoria(am.disponibleRecibo ?? r.disponibleRecibo ?? r.margenDisponiblePlanilla ?? rec.margenDisponibleCuota) ?? round2Margen(afectable - totalAfectado - cuotaFutura2);
+      const cuotaRef = parseNumeroSeguroAuditoria(am.cuotaRefinanciar ?? r.cuotaRefinanciar) ?? 0;
+      const cuotaRefAplicada = parseNumeroSeguroAuditoria(am.cuotaRefinanciarAplicada) ?? Math.min(totalAfectado, cuotaRef);
+      const totalAfectadoEfectivo = parseNumeroSeguroAuditoria(am.totalAfectadoEfectivo ?? r.totalAfectadoEfectivo) ?? Math.max(0, round2Margen(totalAfectado - cuotaRefAplicada));
+      const saldoCanc = parseNumeroSeguroAuditoria(am.saldoCancelar ?? r.saldoCancelar) ?? 0;
+      const saldoExt = parseNumeroSeguroAuditoria(am.saldoVigenteExterno ?? r.saldoVigenteExterno) ?? 0;
+      const detRef = String(am.detalleRefinanciacion ?? r.detalleRefinanciacion ?? '').trim();
+      const facMargen = Number(am.factorMargen ?? r.factorMargen ?? 1.0) || 1.0;
+      const dispOriginal = parseNumeroSeguroAuditoria(am.disponibleReciboOriginal ?? r.disponibleReciboOriginal) ?? round2Margen(afectable - totalAfectado - cuotaFutura2);
+      const dispBruto = parseNumeroSeguroAuditoria(am.disponibleBrutoRecibo ?? r.disponibleBrutoRecibo) ?? round2Margen(afectable - totalAfectadoEfectivo - cuotaFutura2);
+      const disponibleRecibo = parseNumeroSeguroAuditoria(am.disponibleRecibo ?? r.disponibleRecibo ?? r.margenDisponiblePlanilla ?? rec.margenDisponibleCuota) ?? dispBruto;
       const puedeOfrecer = am.puedeOfrecerCuotas !== undefined ? Boolean(am.puedeOfrecerCuotas) : (disponibleRecibo > 0);
       const topeEndeud = parseNumeroSeguroAuditoria(am.topeEndeudamientoMensual4167) ?? round2Margen((5 * Math.max(0, liquido)) / 12);
       const cuotaSegura = parseNumeroSeguroAuditoria(am.cuotaMaximaSeguraGeneral ?? r.cuotaMaximaSeguraGeneral) ?? (puedeOfrecer ? round2Margen(Math.min(disponibleRecibo, topeEndeud)) : 0);
+      const concl = audit.conclusionesRecomendaciones || null;
 
       const embargoDetectado = Boolean(
         r.embargosJudiciales || payload.embargosJudiciales || rec.embargoDetectado || (parseNumeroSeguroAuditoria(rec.embargoMonto) || 0) > 0
@@ -20046,7 +20609,7 @@ ${cierreTxt}`;
         dictamenText = 'NO VIABLE — Se detectó retención judicial o embargo activo (' + formatPesosMargen(embargoMonto) + ').';
         canalSugerido = 'Canal bloqueado por política de riesgo crediticio institucional';
       } else if (puedeOfrecer && disponibleRecibo > 0) {
-        badgeTexto = 'DISPONIBLE · ' + (esPasivo ? 'Pasivos 65%' : 'Activos 80%');
+        badgeTexto = (cuotaRefAplicada > 0 ? 'DISPONIBLE (Refi) · ' : 'DISPONIBLE · ') + (esPasivo ? 'Pasivos 65%' : 'Activos 80%');
         badgeToneCls = 'bg-emerald-50 text-emerald-700 border-emerald-200';
         badgeDotCls = 'bg-emerald-500 animate-pulse';
         dictamenText = 'APTO POR PLANILLA — Disponible Recibo ' + formatPesosMargen(disponibleRecibo) + ' · Cuota segura (Tope 41,67% Neto): ' + formatPesosMargen(cuotaSegura) + '.';
@@ -20113,6 +20676,85 @@ ${cierreTxt}`;
           : 'Acotado por Tope de Endeudamiento 41,67% Neto (' + formatPesosMargen(topeEndeud) + ' < ' + formatPesosMargen(disponibleRecibo) + ')');
 
       const cf2Display = cuotaFutura2 > 0 ? cuotaFutura2.toFixed(2) : '';
+      const cuotaRefDisplay = cuotaRef > 0 ? cuotaRef.toFixed(2) : '';
+      const saldoCancDisplay = saldoCanc > 0 ? saldoCanc.toFixed(2) : '';
+      const saldoExtDisplay = saldoExt > 0 ? saldoExt.toFixed(2) : '';
+      const refPanelActive = Boolean(cuotaRef > 0 || saldoCanc > 0 || saldoExt > 0 || detRef);
+      const esFactor70 = facMargen < 0.99;
+
+      const chipsRefi = (concl && Array.isArray(concl.escenariosSugeridos) && concl.escenariosSugeridos.length > 0)
+        ? ('<div class="ai-refi-chips">' +
+            '<span style="font-size:0.67rem;font-weight:700;color:#475569;">Detección en AFECTADO (clic para precargar cuota a liberar):</span>' +
+            concl.escenariosSugeridos.map(esc => {
+              const entSafe = String(esc.entidad || '').replace(/'/g, '');
+              const mNum = Number(esc.montoLiberable || 0);
+              return '<button type="button" class="ai-refi-chip" onclick="aplicarRefinanciacionAuditoria({ cuotaRefinanciar: ' + mNum.toFixed(2) + ', detalleRefinanciacion: \'Refinanciación ' + sanitizeHTML(entSafe) + '\' })">' +
+                '🔄 ' + sanitizeHTML(esc.entidad) + ': ' + sanitizeHTML(formatPesosMargen(mNum)) +
+              '</button>';
+            }).join('') +
+          '</div>')
+        : '';
+
+      const refiPanelHtml =
+        '<div class="ai-refi-panel ' + (refPanelActive ? 'is-active' : '') + '">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">' +
+            '<span style="font-size:0.72rem;font-weight:800;color:#1e293b;">🔄 Refinanciación de Préstamos Vigentes y Saldo Externo</span>' +
+            '<span style="font-size:0.66rem;color:#64748b;">Liberá cuotas del AFECTADO, descontá Saldo a Cancelar del neto o restá Saldo en Préstamos Vigentes del tope 41,67%</span>' +
+          '</div>' +
+          chipsRefi +
+          '<div class="ai-refi-grid">' +
+            '<div class="ai-refi-field">' +
+              '<label for="inputAuditCuotaRefinanciar">Cuota a Liberar / Refinanciar ($)</label>' +
+              '<input type="number" step="0.01" min="0" id="inputAuditCuotaRefinanciar" class="ai-refi-input" value="' + sanitizeHTML(cuotaRefDisplay) + '" placeholder="0,00" onkeydown="if(event.key===\'Enter\'){event.preventDefault();aplicarRefinanciacionAuditoria();}"/>' +
+            '</div>' +
+            '<div class="ai-refi-field">' +
+              '<label for="inputAuditSaldoCancelar">Saldo a Cancelar ($)</label>' +
+              '<input type="number" step="0.01" min="0" id="inputAuditSaldoCancelar" class="ai-refi-input" value="' + sanitizeHTML(saldoCancDisplay) + '" placeholder="0,00" onkeydown="if(event.key===\'Enter\'){event.preventDefault();aplicarRefinanciacionAuditoria();}"/>' +
+            '</div>' +
+            '<div class="ai-refi-field">' +
+              '<label for="inputAuditSaldoVigenteExterno">Saldo en Préstamos Vigentes ($)</label>' +
+              '<input type="number" step="0.01" min="0" id="inputAuditSaldoVigenteExterno" class="ai-refi-input" value="' + sanitizeHTML(saldoExtDisplay) + '" placeholder="0,00" onkeydown="if(event.key===\'Enter\'){event.preventDefault();aplicarRefinanciacionAuditoria();}"/>' +
+            '</div>' +
+            '<div class="ai-refi-field">' +
+              '<label for="inputAuditDetalleRefinanciacion">Entidad / Nota Refinanciación</label>' +
+              '<input type="text" id="inputAuditDetalleRefinanciacion" class="ai-refi-input is-text" value="' + sanitizeHTML(detRef) + '" placeholder="Ej: BERSA / FEDEM" onkeydown="if(event.key===\'Enter\'){event.preventDefault();aplicarRefinanciacionAuditoria();}"/>' +
+            '</div>' +
+            '<div style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">' +
+              '<button type="button" class="ai-cf2-btn" onclick="aplicarRefinanciacionAuditoria()">Aplicar Refinanciación</button>' +
+              (refPanelActive ? '<button type="button" class="audit-sim-sec-btn" onclick="limpiarRefinanciacionAuditoria()">Limpiar</button>' : '') +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+      let conclHtml = '';
+      if (concl && concl.titulo) {
+        const escTone = concl.escenario === 'EMBARGO' || concl.escenario === 'SIN_DISPONIBLE'
+          ? 'tone-danger'
+          : ((concl.escenario === 'SIN_DISPONIBLE_REFINANCIABLE' || concl.escenario === 'DISPONIBLE_LIMITADO_RECIBO') ? 'tone-warn' : 'tone-ok');
+        const escBadgeMap = {
+          EMBARGO: '🚫 Embargo Judicial',
+          REFINANCIACION_ACTIVA: '🔄 Refinanciación Simulada',
+          SIN_DISPONIBLE_REFINANCIABLE: '⚠️ Refinanciable',
+          SIN_DISPONIBLE: '🔴 Margen Agotado',
+          DISPONIBLE_LIMITADO_RECIBO: '🟡 Acotado por Recibo',
+          DISPONIBLE_LIMITADO_TOPE_NETO: '✅ Capacidad Plena'
+        };
+        const escBadgeLbl = escBadgeMap[concl.escenario] || '💡 Dictamen';
+        conclHtml =
+          '<div class="ai-concl-card ' + escTone + '">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">' +
+              '<div style="font-size:0.8rem;font-weight:800;color:#0f172a;">💡 Conclusiones y Recomendaciones — ' + sanitizeHTML(concl.titulo) + '</div>' +
+              '<span style="font-size:0.66rem;font-weight:800;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,0.85);border:1px solid #cbd5e1;color:#1e293b;">' + sanitizeHTML(escBadgeLbl) + '</span>' +
+            '</div>' +
+            '<p style="font-size:0.75rem;font-weight:600;color:#1e293b;margin:0;line-height:1.45;">' + sanitizeHTML(concl.resumen || '') + '</p>' +
+            (concl.plazoMinimoCobertura
+              ? ('<div style="margin-top:6px;font-size:0.71rem;font-weight:700;color:#065f46;">✓ Cobertura del Saldo a Cancelar desde <strong>' + concl.plazoMinimoCobertura + ' cuotas</strong>.</div>')
+              : '') +
+            ((Array.isArray(concl.recomendaciones) && concl.recomendaciones.length > 0)
+              ? ('<ul class="ai-concl-list">' + concl.recomendaciones.map(recIt => '<li>' + sanitizeHTML(recIt) + '</li>').join('') + '</ul>')
+              : '') +
+          '</div>';
+      }
 
       return '<div class="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden mb-6 font-sans antialiased">' +
         '<!-- Cabecera Institucional Limpia -->' +
@@ -20140,7 +20782,7 @@ ${cierreTxt}`;
 
         '<!-- Grilla Limpia de Indicadores Clave Calculados -->' +
         '<div class="p-6 space-y-4">' +
-          // Toolbar interactiva de Régimen (Activos 80% vs Pasivos 65%) y Cuota Futura 2
+          // Toolbar interactiva de Régimen (Activos 80% vs Pasivos 65%), Criterio (100% vs 70%) y Cuota Futura 2
           '<div class="ai-regime-toolbar">' +
             '<div class="flex items-center gap-2 flex-wrap">' +
               '<span style="font-size:0.7rem;font-weight:800;color:#334155;text-transform:uppercase;">Régimen Tope:</span>' +
@@ -20149,12 +20791,21 @@ ${cierreTxt}`;
                 '<button type="button" onclick="cambiarRegimenAuditoriaInteractivo(\'PASIVO\')" class="ai-regime-btn ' + (esPasivo ? 'is-active' : '') + '">👴 Pasivos / Jubilados (65% · Tope 35%)</button>' +
               '</div>' +
             '</div>' +
+            '<div class="flex items-center gap-2 flex-wrap">' +
+              '<span style="font-size:0.7rem;font-weight:800;color:#334155;text-transform:uppercase;">Criterio Margen:</span>' +
+              '<div class="ai-regime-toggle-wrap">' +
+                '<button type="button" onclick="cambiarFactorMargenAuditoria(1.0)" class="ai-regime-btn ' + (!esFactor70 ? 'is-active' : '') + '">100% AMMER Directo</button>' +
+                '<button type="button" onclick="cambiarFactorMargenAuditoria(0.70)" class="ai-regime-btn ' + (esFactor70 ? 'is-active' : '') + '">70% Conservador c/ Gastos</button>' +
+              '</div>' +
+            '</div>' +
             '<div class="ai-cf2-wrap">' +
               '<label class="ai-cf2-label" for="inputAuditCuotaFutura2">Cuota Futura 2 ($):</label>' +
               '<input type="number" step="0.01" min="0" id="inputAuditCuotaFutura2" class="ai-cf2-input" value="' + sanitizeHTML(cf2Display) + '" placeholder="0,00" onkeydown="if(event.key===\'Enter\'){event.preventDefault();aplicarCuotaFutura2Auditoria();}"/>' +
               '<button type="button" class="ai-cf2-btn" onclick="aplicarCuotaFutura2Auditoria()">Aplicar</button>' +
             '</div>' +
           '</div>' +
+
+          refiPanelHtml +
 
           validHtml +
 
@@ -20243,14 +20894,21 @@ ${cierreTxt}`;
                 '<span class="ai-wf-sub">Subtotal2 - No Computable</span>' +
               '</div>' +
               '<div class="ai-wf-item">' +
-                '<span class="ai-wf-label">(-) Afectado' + (cuotaFutura2 > 0 ? ' + Futura 2' : '') + '</span>' +
-                '<span class="ai-wf-val text-rose-600">- ' + sanitizeHTML(formatPesosMargen(round2Margen(totalAfectado + cuotaFutura2))) + '</span>' +
-                '<span class="ai-wf-sub">Afectado: ' + sanitizeHTML(formatPesosMargen(totalAfectado)) + (cuotaFutura2 > 0 ? (' · CF2: ' + sanitizeHTML(formatPesosMargen(cuotaFutura2))) : '') + '</span>' +
+                '<span class="ai-wf-label">(-) Afectado' + (cuotaRefAplicada > 0 ? ' efectivo' : '') + (cuotaFutura2 > 0 ? ' + Futura 2' : '') + '</span>' +
+                '<span class="ai-wf-val text-rose-600">- ' + sanitizeHTML(formatPesosMargen(round2Margen(totalAfectadoEfectivo + cuotaFutura2))) + '</span>' +
+                '<span class="ai-wf-sub">Recibo: ' + sanitizeHTML(formatPesosMargen(totalAfectado)) +
+                  (cuotaRefAplicada > 0 ? (' · Cuota a liberar: -' + sanitizeHTML(formatPesosMargen(cuotaRefAplicada))) : '') +
+                  (cuotaFutura2 > 0 ? (' · CF2: ' + sanitizeHTML(formatPesosMargen(cuotaFutura2))) : '') +
+                '</span>' +
               '</div>' +
               '<div class="ai-wf-item ' + (puedeOfrecer ? 'is-ok' : 'is-danger') + '">' +
-                '<span class="ai-wf-label">(=) Disponible Recibo</span>' +
+                '<span class="ai-wf-label">(=) Disponible Recibo' + (esFactor70 ? ' (× 70%)' : '') + '</span>' +
                 '<span class="ai-wf-val ' + (puedeOfrecer ? 'text-emerald-700' : 'text-rose-700') + '">' + sanitizeHTML(formatPesosMargen(disponibleRecibo)) + '</span>' +
-                '<span class="ai-wf-sub">' + (puedeOfrecer ? '✅ Margen Real Positivo' : '🔴 SIN Disponible') + '</span>' +
+                '<span class="ai-wf-sub">' +
+                  (cuotaRefAplicada > 0 ? ('Orig.: ' + sanitizeHTML(formatPesosMargen(dispOriginal)) + ' → ') : '') +
+                  (esFactor70 ? ('Bruto 100%: ' + sanitizeHTML(formatPesosMargen(dispBruto)) + ' · ') : '') +
+                  (puedeOfrecer ? '✅ Margen Real Positivo' : '🔴 SIN Disponible') +
+                '</span>' +
               '</div>' +
             '</div>' +
 
@@ -20263,7 +20921,7 @@ ${cierreTxt}`;
                 '<div class="ai-debt-bar-track">' +
                   '<div class="ai-debt-bar-fill ' + (puedeOfrecer ? 'bg-emerald-500' : 'bg-rose-500') + '" style="width:' + ratioTope + '%"></div>' +
                 '</div>' +
-                '<div style="font-size:0.66rem;color:#64748b;margin-top:0.25rem;">' + sanitizeHTML(limitadoTxt) + '</div>' +
+                '<div style="font-size:0.66rem;color:#64748b;margin-top:0.25rem;">' + sanitizeHTML(limitadoTxt) + (saldoExt > 0 ? (' · Saldo Externo descontado: ' + sanitizeHTML(formatPesosMargen(saldoExt))) : '') + '</div>' +
               '</div>' +
               '<div style="background:' + (puedeOfrecer ? '#ecfdf5' : '#fff1f2') + ';border:1px solid ' + (puedeOfrecer ? '#a7f3d0' : '#fecdd3') + ';border-radius:0.6rem;padding:0.45rem 0.75rem;text-align:right;">' +
                 '<span style="display:block;font-size:0.62rem;font-weight:800;text-transform:uppercase;color:' + (puedeOfrecer ? '#065f46' : '#9f1239') + ';">Cuota Máxima Segura</span>' +
@@ -20271,6 +20929,8 @@ ${cierreTxt}`;
               '</div>' +
             '</div>' +
           '</div>' +
+
+          conclHtml +
 
           '<div class="bg-slate-50/90 rounded-xl p-4 border border-slate-200">' +
             '<div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">' +
@@ -20297,6 +20957,13 @@ ${cierreTxt}`;
         const regStored = rawJSON && (rawJSON.regimenOverride || (rawJSON.analisisMargen && rawJSON.analisisMargen.regimenOverride));
         _auditRegimenOverride = regStored ? String(regStored).trim().toUpperCase() : null;
         _auditCuotaFutura2 = Number(rawJSON && rawJSON.analisisMargen && rawJSON.analisisMargen.cuotaFutura2 || 0) || 0;
+        const amStored = (rawJSON && rawJSON.analisisMargen) || {};
+        _auditCuotaRefinanciar = Number(amStored.cuotaRefinanciar ?? rawJSON?.cuotaRefinanciar ?? rawJSON?.cuota_refinanciar ?? 0) || 0;
+        _auditSaldoCancelar = Number(amStored.saldoCancelar ?? rawJSON?.saldoCancelar ?? rawJSON?.saldo_cancelar ?? 0) || 0;
+        _auditSaldoVigenteExterno = Number(amStored.saldoVigenteExterno ?? rawJSON?.saldoVigenteExterno ?? rawJSON?.saldo_vigente_externo ?? 0) || 0;
+        _auditDetalleRefinanciacion = String(amStored.detalleRefinanciacion ?? rawJSON?.detalleRefinanciacion ?? rawJSON?.detalle_refinanciacion ?? '').trim();
+        const fmStored = Number(amStored.factorMargen ?? rawJSON?.factorMargen ?? rawJSON?.factor_margen ?? 1.0);
+        _auditFactorMargen = (fmStored > 0 && fmStored <= 1.0) ? Number(fmStored.toFixed(4)) : 1.0;
       }
 
       const audit = normalizarResultadoAuditoriaIA(rawJSON);
@@ -20337,6 +21004,11 @@ ${cierreTxt}`;
 
       ocultarBannerErrorAuditoria();
       ultimoResultadoAuditoria = audit;
+      window._offerOptsAuditoria = {
+        saldoCancelar: Number(am.saldoCancelar || 0) || 0,
+        saldoVigenteExterno: Number(am.saldoVigenteExterno || 0) || 0,
+        cuotaRefinanciar: Number(am.cuotaRefinanciar || 0) || 0
+      };
 
       const disponibleRecibo = parseNumeroSeguroAuditoria(
         am.disponibleRecibo ?? r.disponibleRecibo ?? r.margenDisponiblePlanilla ?? rec.margenDisponibleCuota
@@ -20426,7 +21098,7 @@ ${cierreTxt}`;
                 '<p class="text-xs font-medium mt-1 mb-0" style="line-height:1.45;">' +
                   'El margen afectable real del recibo es negativo o nulo (<strong>Disponible Recibo: ' + sanitizeHTML(formatPesosMargen(disponibleRecibo)) + '</strong>' +
                   ' = Afectable ' + sanitizeHTML(formatPesosMargen(am.afectable ?? 0)) +
-                  ' − Afectado ' + sanitizeHTML(formatPesosMargen(am.totalAfectado ?? 0)) +
+                  ' − Afectado efectivo ' + sanitizeHTML(formatPesosMargen(am.totalAfectadoEfectivo ?? am.totalAfectado ?? 0)) +
                   (am.cuotaFutura2 > 0 ? (' − Cuota Futura 2 ' + sanitizeHTML(formatPesosMargen(am.cuotaFutura2))) : '') + '). ' +
                   'Por regla de corte reglamentaria no se habilitan ofertas de cuotas ni se aplica cálculo estimativo sobre el neto líquido.' +
                 '</p>' +
@@ -20453,6 +21125,8 @@ ${cierreTxt}`;
         const alertaEmbargoSim = embargoDetectado
           ? '<div class="ai-valid-alerts-box mb-4">⚠️ <strong>Atención Embargo Judicial Detectado (' + sanitizeHTML(formatPesosMargen(embargoMonto)) + '):</strong> Verifique vigencia o levantamiento antes de pre-cargar una solicitud.</div>'
           : '';
+        const saldoCancSim = Number(am.saldoCancelar || 0) || 0;
+        const saldoExtSim = Number(am.saldoVigenteExterno || 0) || 0;
 
         bloqueSimulacionHtml =
           '<!-- BLOQUE 2 (CONDICIONAL): SIMULACIÓN DE AYUDA ECONÓMICA SUGERIDA -->' +
@@ -20463,7 +21137,7 @@ ${cierreTxt}`;
                   '⚡ Simulación de Ayuda Económica Sugerida' +
                 '</h2>' +
                 '<p class="text-xs text-slate-500 font-normal mt-1 mb-0">' +
-                  'Oferta máxima por plazo acotada por min(Disponible Recibo, Tope Endeudamiento 41,67% Neto Líquido)' +
+                  'Oferta máxima por plazo acotada por min(Disponible Recibo, Tope Endeudamiento 41,67% Neto Líquido' + (saldoExtSim > 0 ? ' − Saldo Vigente' : '') + ')' +
                 '</p>' +
               '</div>' +
               '<div class="flex items-center gap-2 flex-wrap">' +
@@ -20474,6 +21148,12 @@ ${cierreTxt}`;
                 '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-indigo-50 text-indigo-800 border-indigo-200 font-mono">' +
                   'Disponible: ' + sanitizeHTML(formatPesosMargen(disponibleRecibo)) + ' · Tope 41,67%: ' + sanitizeHTML(formatPesosMargen(topeEndeud)) +
                 '</span>' +
+                (saldoCancSim > 0
+                  ? ('<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border bg-amber-50 text-amber-800 border-amber-200 font-mono">Saldo Cancelar: ' + sanitizeHTML(formatPesosMargen(saldoCancSim)) + '</span>')
+                  : '') +
+                (saldoExtSim > 0
+                  ? ('<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border bg-rose-50 text-rose-800 border-rose-200 font-mono">Saldo Vigente Ext.: ' + sanitizeHTML(formatPesosMargen(saldoExtSim)) + '</span>')
+                  : '') +
               '</div>' +
             '</div>' +
 
@@ -20657,6 +21337,7 @@ ${cierreTxt}`;
       ocultarBannerErrorAuditoria();
       _auditRegimenOverride = null;
       _auditCuotaFutura2 = 0;
+      resetearParametrosRefinanciacionAuditoria();
 
       const sizeKb = (typeof file === 'object' && typeof file.size === 'number')
         ? Math.max(1, Math.round(file.size / 1024))
@@ -20813,6 +21494,7 @@ ${cierreTxt}`;
       const rec = audit.reciboSueldo || {};
       const sc = audit.scoringCrediticio || {};
       const am = audit.analisisMargen || {};
+      const concl = audit.conclusionesRecomendaciones || null;
       const ofertasMap = audit.ofertasPorPlazo || { fedem: [], muni: [], sidecreer: [] };
 
       const titular = limpiarTextoAuditoria(r.titular || rec.titular, 'No especificado');
@@ -20834,7 +21516,15 @@ ${cierreTxt}`;
       const totalNoComputable = parseNumeroSeguroAuditoria(am.totalNoComputable ?? r.totalNoComputable) ?? 0;
       const afectable = parseNumeroSeguroAuditoria(am.afectable ?? r.afectable) ?? 0;
       const totalAfectado = parseNumeroSeguroAuditoria(am.totalAfectado ?? r.totalAfectado) ?? 0;
+      const totalAfectadoEfectivo = parseNumeroSeguroAuditoria(am.totalAfectadoEfectivo ?? r.totalAfectadoEfectivo) ?? totalAfectado;
       const cuotaFutura2 = parseNumeroSeguroAuditoria(am.cuotaFutura2 ?? r.cuotaFutura2) ?? 0;
+      const cuotaRefinanciar = parseNumeroSeguroAuditoria(am.cuotaRefinanciar ?? r.cuotaRefinanciar) ?? 0;
+      const saldoCancelar = parseNumeroSeguroAuditoria(am.saldoCancelar ?? r.saldoCancelar) ?? 0;
+      const saldoVigenteExterno = parseNumeroSeguroAuditoria(am.saldoVigenteExterno ?? r.saldoVigenteExterno) ?? 0;
+      const detalleRefinanciacion = String(am.detalleRefinanciacion ?? r.detalleRefinanciacion ?? '').trim();
+      const factorMargen = Number(am.factorMargen ?? r.factorMargen ?? 1.0) || 1.0;
+      const disponibleReciboOriginal = parseNumeroSeguroAuditoria(am.disponibleReciboOriginal ?? r.disponibleReciboOriginal) ?? 0;
+      const disponibleBrutoRecibo = parseNumeroSeguroAuditoria(am.disponibleBrutoRecibo ?? r.disponibleBrutoRecibo) ?? 0;
       const disponibleRecibo = parseNumeroSeguroAuditoria(am.disponibleRecibo ?? r.disponibleRecibo ?? r.margenDisponiblePlanilla ?? rec.margenDisponibleCuota) ?? 0;
       const topeEndeud4167 = parseNumeroSeguroAuditoria(am.topeEndeudamientoMensual4167) ?? round2Margen((5 * Math.max(0, liquido)) / 12);
       const puedeOfrecerCuotas = am.puedeOfrecerCuotas !== undefined ? Boolean(am.puedeOfrecerCuotas) : (disponibleRecibo > 0);
@@ -20885,7 +21575,15 @@ ${cierreTxt}`;
         totalNoComputable,
         afectable,
         totalAfectado,
+        totalAfectadoEfectivo,
         cuotaFutura2,
+        cuotaRefinanciar,
+        saldoCancelar,
+        saldoVigenteExterno,
+        detalleRefinanciacion,
+        factorMargen,
+        disponibleReciboOriginal,
+        disponibleBrutoRecibo,
         disponibleRecibo,
         margenDisponiblePlanilla: disponibleRecibo,
         topeEndeudamientoMensual4167: topeEndeud4167,
@@ -20898,7 +21596,8 @@ ${cierreTxt}`;
         decisionAlternativaCBU,
         scoringSugerido: score,
         analisisMargen: am,
-        ofertasPorPlazo: ofertasMap
+        ofertasPorPlazo: ofertasMap,
+        conclusionesRecomendaciones: concl
       };
 
       const pctTopeLbl = tipoBenef === 'PASIVO' ? '35%' : '20%';
@@ -20906,6 +21605,12 @@ ${cierreTxt}`;
       const dispTexto = puedeOfrecerCuotas
         ? ('DISPONIBLE (' + formatPesosMargen(disponibleRecibo) + ')')
         : ('SIN Disponible (' + formatPesosMargen(disponibleRecibo) + ') — Ofertas bloqueadas');
+      const refLineaTxt = (cuotaRefinanciar > 0 || saldoCancelar > 0 || saldoVigenteExterno > 0 || factorMargen < 0.99)
+        ? ('\n• Refinanciación / Criterio: Cuota a liberar ' + formatPesosMargen(cuotaRefinanciar) + ' | Saldo Cancelar ' + formatPesosMargen(saldoCancelar) + ' | Saldo Externo ' + formatPesosMargen(saldoVigenteExterno) + ' | Criterio ' + Math.round(factorMargen * 100) + '%' + (detalleRefinanciacion ? (' (' + detalleRefinanciacion + ')') : ''))
+        : '';
+      const conclLineaTxt = (concl && concl.titulo)
+        ? ('\n• Conclusión: ' + concl.titulo + ' — ' + (concl.resumen || ''))
+        : '';
 
       const textoFormateado =
         '[DICTAMEN DE AUDITORÍA DOCUMENTAL IA — AMMER (MOTOR PADRÓN OFICIAL)]\n' +
@@ -20914,7 +21619,8 @@ ${cierreTxt}`;
         '• Haberes Brutos: ' + formatPesosMargen(bruto) + ' | Total Descuentos: ' + formatPesosMargen(descuentos) + ' | Neto Líquido: ' + formatPesosMargen(liquido) + '\n' +
         '• Cascada Padrón: Subtotal1 ' + formatPesosMargen(subtotal1) + ' (SUBTOTAL_1: -' + formatPesosMargen(totalSubtotal1Desc) + ') | Tope ' + pctTopeLbl + ' (-' + formatPesosMargen(subtotalTope) + ') → Subtotal2 (' + pctAfectLbl + '): ' + formatPesosMargen(subtotal2) + '\n' +
         '• Afectable: ' + formatPesosMargen(afectable) + ' (No Computable: -' + formatPesosMargen(totalNoComputable) + ') | Afectado: -' + formatPesosMargen(totalAfectado) + (cuotaFutura2 > 0 ? (' | Cuota Futura 2: -' + formatPesosMargen(cuotaFutura2)) : '') + '\n' +
-        '• Disponible Recibo: ' + dispTexto + ' | Tope Endeud. 41,67% Líquido: ' + formatPesosMargen(topeEndeud4167) + ' | Cuota Segura Máx.: ' + formatPesosMargen(cuotaMaximaSegura) + '\n' +
+        '• Disponible Recibo: ' + dispTexto + ' | Tope Endeud. 41,67% Líquido: ' + formatPesosMargen(topeEndeud4167) + ' | Cuota Segura Máx.: ' + formatPesosMargen(cuotaMaximaSegura) +
+        refLineaTxt + conclLineaTxt + '\n' +
         '• Embargos: ' + (embargosJudiciales ? ('SÍ (' + formatPesosMargen(embargoMonto) + ')') : 'NO ($ 0,00)') + ' | Decisión Planilla: ' + decisionPlanilla + ' | Alternativa CBU: ' + decisionAlternativaCBU;
 
       return {
@@ -22158,6 +22864,14 @@ ${cierreTxt}`;
     window.recalcularMargenInteractivoAuditoria = recalcularMargenInteractivoAuditoria;
     window.cambiarRegimenAuditoriaInteractivo = cambiarRegimenAuditoriaInteractivo;
     window.aplicarCuotaFutura2Auditoria = aplicarCuotaFutura2Auditoria;
+    window.aplicarRefinanciacionAuditoria = aplicarRefinanciacionAuditoria;
+    window.limpiarRefinanciacionAuditoria = limpiarRefinanciacionAuditoria;
+    window.cambiarFactorMargenAuditoria = cambiarFactorMargenAuditoria;
+    window.generarConclusionesYRecomendaciones = generarConclusionesYRecomendaciones;
+    window.resetearParametrosRefinanciacionAuditoria = resetearParametrosRefinanciacionAuditoria;
+    window.cambiarClasificacionItemAuditoria = cambiarClasificacionItemAuditoria;
+    window.aplicarCuotaPersonalizadaAuditoria = aplicarCuotaPersonalizadaAuditoria;
+    window.limpiarCuotaPersonalizadaAuditoria = limpiarCuotaPersonalizadaAuditoria;
     window.CONFIG = CONFIG;
     window.estadoApp = window.estadoApp;
 

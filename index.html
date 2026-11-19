@@ -2730,23 +2730,27 @@
     .doc-row-native-input {
       display: none !important;
     }
-    .btn-doc-attach {
+    .btn-doc-attach,
+    .btn-doc-upload {
       display: inline-flex;
       align-items: center;
-      gap: 0.35rem;
-      padding: 0.375rem 0.75rem;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.42rem 0.9rem;
       background: #eff6ff;
       color: #135596;
       border: 1px solid #bfdbfe;
       border-radius: 0.5rem;
       font-size: 0.75rem;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
       transition: all 0.16s ease;
       white-space: nowrap;
       text-decoration: none;
+      box-shadow: 0 1px 2px rgba(15, 39, 68, 0.06);
     }
-    .btn-doc-attach:hover {
+    .btn-doc-attach:hover,
+    .btn-doc-upload:hover {
       background: #dbeafe;
       border-color: #93c5fd;
       color: #0c3966;
@@ -2762,16 +2766,24 @@
       border-color: #135596;
     }
     #modalAltaSolicitud .btn-doc-attach,
-    #modalAltaAsociado .btn-doc-attach {
+    #modalAltaAsociado .btn-doc-attach,
+    #modalAltaSolicitud .btn-doc-upload,
+    #modalAltaAsociado .btn-doc-upload,
+    .document-dropzone .btn-doc-upload {
       background: #135596;
       color: #ffffff;
-      border-color: #0f4477;
+      border: 1px solid #0f4477;
       border-radius: 10px;
-      padding: 0.42rem 0.85rem;
+      padding: 0.48rem 1rem;
+      font-size: 0.78rem;
       font-weight: 600;
+      box-shadow: 0 2px 6px rgba(19, 85, 150, 0.22);
     }
     #modalAltaSolicitud .btn-doc-attach:hover,
-    #modalAltaAsociado .btn-doc-attach:hover {
+    #modalAltaAsociado .btn-doc-attach:hover,
+    #modalAltaSolicitud .btn-doc-upload:hover,
+    #modalAltaAsociado .btn-doc-upload:hover,
+    .document-dropzone:hover .btn-doc-upload {
       background: #0f4477;
       border-color: #0c3966;
       color: #ffffff;
@@ -5504,8 +5516,11 @@
               </svg>
               <div class="document-dropzone-text">Arrastra varios archivos aquí o haz clic para cargar por Lote</div>
               <div class="document-dropzone-sub">Podrás marcar el tipo de cada documento o reconocerlos automáticamente con IA (PDF, JPG, PNG hasta 10 MB)</div>
-              <div style="margin-top:0.55rem;">
-                <button type="button" class="btn-doc-upload" style="pointer-events:none;">📂 Seleccionar Lote de Archivos</button>
+              <div style="margin-top:0.6rem;">
+                <button type="button" class="btn-doc-upload btn-doc-attach" style="pointer-events:none;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                  <span>Seleccionar Lote de Archivos</span>
+                </button>
               </div>
             </div>
 

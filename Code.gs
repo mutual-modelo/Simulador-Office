@@ -497,7 +497,8 @@ function autenticarUsuario(payload) {
     const uPass = String(row[map['Password']] || '').trim();
     const activo = String(row[map['Activo']] === undefined ? 'SI' : row[map['Activo']]).trim().toLowerCase();
 
-    if ((uLogin === userInput || uEmail === userInput) && uPass === passInput) {
+    if (!uPass) continue;
+    if ((uLogin === userInput || uEmail === userInput) && passwordCoincide_(uPass, passInput)) {
       if (activo === 'no' || activo === 'false' || activo === '0') {
         return { ok: false, error: 'El usuario se encuentra inactivo.' };
       }
@@ -520,6 +521,45 @@ function autenticarUsuario(payload) {
   }
 
   return { ok: false, error: 'Usuario o contraseña incorrectos.' };
+}
+
+/**
+ * Compara la clave ingresada contra la guardada en la hoja 'Usuarios'.
+ * Acepta clave en texto plano o hash SHA-256 (64 caracteres hex, sin sal).
+ */
+function passwordCoincide_(guardada, ingresada) {
+  const g = String(guardada || '').trim();
+  const i = String(ingresada || '');
+  if (!g || !i) return false;
+  if (g === i.trim()) return true;
+  if (/^[a-f0-9]{64}$/i.test(g)) {
+    return hashSha256Hex_(i.trim()) === g.toLowerCase();
+  }
+  return false;
+}
+
+function hashSha256Hex_(texto) {
+  const bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(texto), Utilities.Charset.UTF_8);
+  return bytes.map(function (b) { return ('0' + (b < 0 ? b + 256 : b).toString(16)).slice(-2); }).join('');
+}
+
+/**
+ * Utilidad manual (ejecutar desde el editor): convierte a SHA-256 todas las claves
+ * en texto plano de la hoja 'Usuarios'. Las que ya son hash no se tocan.
+ */
+function convertirPasswordsUsuariosAHash() {
+  const sheet = obtenerOInicializarHoja_(CONFIG_AMMER.SHEET_USUARIOS, HEADERS_USUARIOS);
+  const data = sheet.getDataRange().getValues();
+  const { map } = obtenerHeaderMap_(sheet);
+  let n = 0;
+  for (let i = 1; i < data.length; i++) {
+    const v = String(data[i][map['Password']] || '').trim();
+    if (v && !/^[a-f0-9]{64}$/i.test(v)) {
+      sheet.getRange(i + 1, map['Password'] + 1).setValue(hashSha256Hex_(v));
+      n++;
+    }
+  }
+  return n;
 }
 
 function obtenerListaAnalistas() {

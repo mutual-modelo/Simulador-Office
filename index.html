@@ -11653,6 +11653,101 @@ ${cierreTxt}`;
       return [...pendientesRecientes, ...listaRemota];
     }
 
+    function convertirFilaSupabaseASolicitudCRM(row) {
+      if (!row || typeof row !== 'object') return null;
+      const asoc = (row.asociados && typeof row.asociados === 'object') ? row.asociados : {};
+      const idProv = String(row.id_provisorio || row.id || '').trim();
+      const idSol = idProv.replace(/^PROV-/i, '') || String(row.id || '').trim();
+      const lineaRaw = String(row.linea_ayuda || 'FEDEM_PROVINCIAL').toUpperCase();
+      const lineaNombre = lineaRaw.includes('QUAD') || lineaRaw.includes('MUNI')
+        ? 'Municipales (QUAD)'
+        : (lineaRaw.includes('SIDE') ? 'Tarjeta Sidecreer' : 'FEDEM Provincial');
+      const lineaKey = lineaRaw.includes('QUAD') || lineaRaw.includes('MUNI')
+        ? 'muni'
+        : (lineaRaw.includes('SIDE') ? 'sidecreer' : 'fedem');
+      const monto = Number(row.monto_solicitado || 0);
+      const cuotas = Number(row.cuotas_pactadas || 12);
+      const cuotaEst = Number(row.valor_cuota_estimada || 0);
+      const totalDev = Number((cuotaEst * cuotas).toFixed(2)) || 0;
+      const estadoRaw = String(row.estado || 'Pendiente').trim();
+      const estado = (estadoRaw.toUpperCase() === 'INGRESADO') ? 'Pendiente' : estadoRaw;
+      const asesorId = String(row.asesor_id || 'USR-001').trim();
+
+      return normalizarSolicitud({
+        id: idSol,
+        supabase_id: row.id,
+        id_provisorio: idProv || ('PROV-' + idSol),
+        id_definitivo: row.id_definitivo || '',
+        fecha: row.created_at || row.updated_at || '',
+        usuario_id: asesorId,
+        idAsesor: asesorId,
+        idUsuarioAsesor: asesorId,
+        ID_Usuario_Asesor: asesorId,
+        comercializador: row.asesor_nombre || 'Sede Central',
+        nombreAsesor: row.asesor_nombre || 'Sede Central',
+        organizacion_id: row.org_id || 'MUTUAL-CENTRAL',
+        idOrganizacion: row.org_id || 'MUTUAL-CENTRAL',
+        nombre_organizacion: row.org_nombre || 'AMMER',
+        nombreOrganizacion: row.org_nombre || 'AMMER',
+        origen_canal: row.origen_canal || 'Presencial Sede Central',
+        DNI_Asociado: String(asoc.dni || ''),
+        Apellido_Nombre: String(asoc.apellido_nombres || 'SIN_NOMBRE'),
+        solicitante: {
+          dni: String(asoc.dni || ''),
+          cuil: String(asoc.cuil || ''),
+          legajo: String(asoc.legajo || ''),
+          nombre: String(asoc.apellido_nombres || 'SIN_NOMBRE'),
+          email: String(asoc.email || ''),
+          celular: String(asoc.telefono || ''),
+          organismo: String(asoc.organismo || 'Provincial'),
+          dependencia: String(asoc.dependencia_laboral || ''),
+          situacionRevista: String(asoc.situacion_revista || 'TITULAR'),
+          antiguedad: asoc.antiguedad_anios ? (asoc.antiguedad_anios + ' años') : ''
+        },
+        prestamo: {
+          linea: lineaKey,
+          lineaNombre: lineaNombre,
+          monto: monto,
+          cuotas: cuotas,
+          cuotaEstimada: cuotaEst,
+          totalADevolver: totalDev
+        },
+        estado: estado
+      });
+    }
+
+    async function cargarSolicitudesFallbackSupabase() {
+      try {
+        const respRender = await fetchConTimeout(`${RENDER_API_URL}/api/solicitudes?limit=150`, { method: 'GET' }, 15000);
+        if (respRender && respRender.ok) {
+          const dataRender = await respRender.json();
+          if (dataRender && Array.isArray(dataRender.solicitudes) && dataRender.solicitudes.length > 0) {
+            return dataRender.solicitudes.map(convertirFilaSupabaseASolicitudCRM).filter(Boolean);
+          }
+        }
+      } catch (eR) {
+        console.warn('Fallback Render /api/solicitudes no disponible:', eR);
+      }
+      try {
+        if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+          const ep = `${SUPABASE_URL}/rest/v1/solicitudes_ayudas?select=*,asociados(*)&order=created_at.desc&limit=150`;
+          const respSb = await fetchConTimeout(ep, {
+            method: 'GET',
+            headers: { 'apikey': SUPABASE_ANON_KEY }
+          }, 12000);
+          if (respSb && respSb.ok) {
+            const rowsSb = await respSb.json();
+            if (Array.isArray(rowsSb) && rowsSb.length > 0) {
+              return rowsSb.map(convertirFilaSupabaseASolicitudCRM).filter(Boolean);
+            }
+          }
+        }
+      } catch (eS) {
+        console.warn('Fallback directo Supabase no disponible:', eS);
+      }
+      return null;
+    }
+
     let _cloudSyncPromise = null;
     async function cargarSolicitudesDesdeNube(silencioso = false) {
       const session = getSession();
@@ -11735,9 +11830,26 @@ ${cierreTxt}`;
 
           throw new Error((resJSON && (resJSON.error || resJSON.message)) || 'Respuesta inválida de servidor');
         } catch (err) {
-          console.error('Error al sincronizar desde el servidor central:', err);
+          console.warn('Apps Script no respondió JSON válido, consultando respaldo en Supabase/Render:', err);
+          const listaFallback = await cargarSolicitudesFallbackSupabase();
+          if (Array.isArray(listaFallback) && listaFallback.length > 0) {
+            const localesPrevias = (window.estadoApp && Array.isArray(window.estadoApp.solicitudes))
+              ? window.estadoApp.solicitudes
+              : [];
+            const fusionadas = fusionarSolicitudesLocalesYRemotas(localesPrevias, listaFallback);
+            saveStoredSolicitudes(fusionadas);
+            renderModuloComercializador();
+            renderModuloMutualPropias();
+            renderModuloMutual();
+            actualizarCentroNotificaciones();
+            actualizarContadorBoveda();
+            if (!silencioso) {
+              showToast('Expedientes sincronizados desde base Supabase (' + fusionadas.length + ' trámites) ✓');
+            }
+            return fusionadas;
+          }
           if (!silencioso) {
-            showToast('⚠️ Error de conexión con el Servidor Central de la Mutual. Verifique su conexión.');
+            showToast('⚠️ Error de conexión con el Servidor Central de la Mutual. Verifique la URL de implementación de Apps Script.');
           }
           return null;
         } finally {
@@ -11909,24 +12021,9 @@ ${cierreTxt}`;
         const orgIdSol = String(sol.organizacion_id || sol.idOrganizacion || sol.ID_Organizacion || '').toLowerCase();
         const comercializadorLower = String(sol.comercializador || '').toLowerCase().trim();
 
-        // 2. El Analista ve:
+        // 2. El Analista / Personal Interno Mutual ve toda la cartera (Sede Central + Red Comercial)
         if (rol === 'analista' || rol.includes('analista') || rol.includes('asesor mutual')) {
-          // Expedientes históricos sin ID de asesor siguen visibles para auditoría
-          if (!solAsesorId || solAsesorId === 'USR-000') return true;
-          // (a) Las propias que originó
-          const esOriginador = Boolean(
-            (userId && solAsesorId === userId) ||
-            (miNombre && (comercializadorLower === miNombre || comercializadorLower === (miNombre + ' (sede central)')))
-          );
-          // (b) Las que le fueron asignadas o derivadas a su nombre
-          const estaAsignadoAMi = Boolean(miNombre && analistaAsignado === miNombre);
-          // (c) Todas las de comercializadores externos
-          const esDeComercializador =
-            origenCanal.includes('comercial') ||
-            origenCanal.includes('externo') ||
-            (!orgIdSol.includes('mutual') && !orgIdSol.includes('central') && orgIdSol !== '');
-
-          return esOriginador || estaAsignadoAMi || esDeComercializador;
+          return true;
         }
 
         // 3. El Titular de Organización ve todas las de su Organización
@@ -15819,13 +15916,20 @@ ${cierreTxt}`;
       const orgaTipo = document.getElementById('filtroMutualPropiasOrganismo')?.value || '';
 
       return visibles.filter(s => {
-        const esSedeCentral = (s.organizacion_id === 'org_sede_central' ||
-          s.organizacion_id === 'MUTUAL-CENTRAL' ||
-          s.organizacion_id === 'AMMER-CENTRAL' ||
+        const orgIdLow = String(s.organizacion_id || s.idOrganizacion || '').toLowerCase();
+        const orgNomLow = String(s.nombre_organizacion || s.nombreOrganizacion || '').toLowerCase();
+        const esSedeCentral = (
+          orgIdLow === 'org_sede_central' ||
+          orgIdLow === 'mutual-central' ||
+          orgIdLow === 'ammer-central' ||
+          orgNomLow === 'ammer' ||
+          orgNomLow.includes('sede central') ||
+          orgNomLow.includes('mutual modelo') ||
           s.origen_canal === 'Presencial Sede Central' ||
           s.origen_canal === 'WhatsApp Oficial' ||
           s.origen_canal === 'Telefónico' ||
-          (s.comercializador && s.comercializador.includes('Sede Central')));
+          (s.comercializador && (s.comercializador.includes('Sede Central') || s.comercializador.includes('AMMER')))
+        );
         const analistaAsig = String(s.analistaAsignado || s.Analista_Asignado || '').toLowerCase().trim();
         const estaAsignadoAMi = Boolean(miNombre && analistaAsig === miNombre);
 

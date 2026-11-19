@@ -8,6 +8,7 @@
 const CONFIG_AMMER = {
   SHEET_SOLICITUDES: 'Solicitudes_Ayudas',
   SHEET_USUARIOS: 'Usuarios',
+  SHEET_USUARIOS_ROLES: 'Usuarios_Roles',
   SHEET_ASOCIADOS: 'Padron_Asociados',
   DRIVE_ROOT_NAME: 'Mutual Modelo - Legajos Digitales',
   SPREADSHEET_ID: '1YYKQiKvLpMVFeunrbYP3Rbzdgjt2MVsn89r9wEn7P6U',
@@ -494,8 +495,106 @@ function parseJSONSafe_(raw, fallback) {
 }
 
 /* ============================================================================
-   3. AUTENTICACIÓN Y USUARIOS
+   3. AUTENTICACIÓN Y USUARIOS (TOLERANTE A 'Usuarios' Y 'Usuarios_Roles')
    ============================================================================ */
+function obtenerColUsuario_(row, map, aliases, defVal) {
+  for (let k = 0; k < aliases.length; k++) {
+    const colName = aliases[k];
+    if (map[colName] !== undefined && row[map[colName]] !== undefined && String(row[map[colName]]).trim() !== '') {
+      return String(row[map[colName]]).trim();
+    }
+  }
+  const keys = Object.keys(map);
+  for (let k = 0; k < aliases.length; k++) {
+    const targetLow = String(aliases[k]).toLowerCase();
+    for (let j = 0; j < keys.length; j++) {
+      if (keys[j].toLowerCase() === targetLow) {
+        const val = row[map[keys[j]]];
+        if (val !== undefined && String(val).trim() !== '') return String(val).trim();
+      }
+    }
+  }
+  return defVal !== undefined ? defVal : '';
+}
+
+function obtenerHojasCandidatasUsuarios_() {
+  const ss = obtenerSpreadsheet_();
+  const nombres = [CONFIG_AMMER.SHEET_USUARIOS, CONFIG_AMMER.SHEET_USUARIOS_ROLES, 'Usuarios', 'Usuarios_Roles'];
+  const vistas = {};
+  const hojas = [];
+  for (let i = 0; i < nombres.length; i++) {
+    const nom = nombres[i];
+    if (!nom || vistas[nom]) continue;
+    vistas[nom] = true;
+    const sh = ss.getSheetByName(nom);
+    if (sh && sh.getLastRow() > 1) {
+      hojas.push(sh);
+    }
+  }
+  if (hojas.length === 0) {
+    hojas.push(obtenerOInicializarHoja_(CONFIG_AMMER.SHEET_USUARIOS, HEADERS_USUARIOS));
+  }
+  return hojas;
+}
+
+/**
+ * Utilidad manual (ejecutar desde Apps Script): unifica Usuarios_Roles dentro de Usuarios
+ * asegurando que todos los usuarios, IDs (USR-001...) y organizaciones queden en una sola hoja 'Usuarios',
+ * y elimina la hoja duplicada 'Usuarios_Roles' si ya están todos migrados.
+ */
+function unificarHojasUsuarios() {
+  const ss = obtenerSpreadsheet_();
+  const shUsuarios = obtenerOInicializarHoja_(CONFIG_AMMER.SHEET_USUARIOS, HEADERS_USUARIOS);
+  const shRoles = ss.getSheetByName('Usuarios_Roles');
+  if (!shRoles) return 'Solo existe la hoja Usuarios (Usuarios_Roles ya no existe).';
+
+  const { map: mapU, totalCols: colsU } = obtenerHeaderMap_(shUsuarios);
+  const dataU = shUsuarios.getDataRange().getValues();
+  const existentes = {};
+  for (let i = 1; i < dataU.length; i++) {
+    const uKey = obtenerColUsuario_(dataU[i], mapU, ['Usuario', 'Email', 'ID_Usuario'], '').toLowerCase();
+    if (uKey) existentes[uKey] = i + 1;
+  }
+
+  const { map: mapR } = obtenerHeaderMap_(shRoles);
+  const dataR = shRoles.getDataRange().getValues();
+  let agregados = 0;
+  for (let i = 1; i < dataR.length; i++) {
+    const r = dataR[i];
+    const idU = obtenerColUsuario_(r, mapR, ['ID_Usuario', 'ID', 'Id_Usuario', 'Usuario_ID'], '');
+    const loginU = obtenerColUsuario_(r, mapR, ['Usuario', 'Username', 'Login'], '');
+    const emailU = obtenerColUsuario_(r, mapR, ['Email', 'Correo', 'Mail'], '');
+    const passU = obtenerColUsuario_(r, mapR, ['Password', 'Clave', 'Contraseña', 'Contrasena', 'Pass', 'Hash'], '');
+    const nomU = obtenerColUsuario_(r, mapR, ['Nombre', 'Apellido_Nombre', 'Nombre_Completo', 'Asesor'], '');
+    const rolU = obtenerColUsuario_(r, mapR, ['Rol', 'Role', 'Perfil'], 'Comercializador');
+    const orgIdU = obtenerColUsuario_(r, mapR, ['ID_Organizacion', 'Organizacion_ID', 'Id_Organizacion'], 'MUTUAL-CENTRAL');
+    const orgNomU = obtenerColUsuario_(r, mapR, ['Nombre_Organizacion', 'Organizacion', 'Sucursal'], 'AMMER');
+    const titU = obtenerColUsuario_(r, mapR, ['Es_Titular', 'Titular', 'Es_Titular_Org'], 'NO');
+    const actU = obtenerColUsuario_(r, mapR, ['Activo', 'Estado'], 'Activo');
+
+    const claveBusqueda = (loginU || emailU || idU).toLowerCase();
+    if (!claveBusqueda) continue;
+    if (!existentes[claveBusqueda]) {
+      const nuevaFila = new Array(colsU).fill('');
+      const setCol = (c, v) => { if (mapU[c] !== undefined) nuevaFila[mapU[c]] = v; };
+      setCol('ID_Usuario', idU || ('USR-' + String(dataU.length + agregados).padStart(3, '0')));
+      setCol('Usuario', loginU || emailU);
+      setCol('Email', emailU);
+      setCol('Password', passU);
+      setCol('Nombre', nomU || loginU);
+      setCol('Rol', rolU);
+      setCol('ID_Organizacion', orgIdU);
+      setCol('Nombre_Organizacion', orgNomU);
+      setCol('Es_Titular', titU);
+      setCol('Activo', actU);
+      shUsuarios.appendRow(nuevaFila);
+      existentes[claveBusqueda] = true;
+      agregados++;
+    }
+  }
+  return 'Unificación completada: ' + agregados + ' usuario(s) copiados de Usuarios_Roles a Usuarios.';
+}
+
 function autenticarUsuario(payload) {
   const userInput = String(payload.usuario || payload.email || '').trim().toLowerCase();
   const passInput = String(payload.password || payload.clave || '').trim();
@@ -503,45 +602,55 @@ function autenticarUsuario(payload) {
     return { ok: false, error: 'Debe ingresar usuario y contraseña.' };
   }
 
-  const sheet = obtenerOInicializarHoja_(CONFIG_AMMER.SHEET_USUARIOS, HEADERS_USUARIOS);
-  const data = sheet.getDataRange().getValues();
-  if (data.length <= 1) {
-    return { ok: false, error: 'No hay usuarios configurados en la hoja Usuarios.' };
-  }
+  const hojas = obtenerHojasCandidatasUsuarios_();
+  for (let h = 0; h < hojas.length; h++) {
+    const sheet = hojas[h];
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) continue;
+    const { map } = obtenerHeaderMap_(sheet);
 
-  const { map } = obtenerHeaderMap_(sheet);
-  for (let i = 1; i < data.length; i++) {
-    const row = data[i];
-    const uLogin = String(row[map['Usuario']] || '').trim().toLowerCase();
-    const uEmail = String(row[map['Email']] || '').trim().toLowerCase();
-    const uPass = String(row[map['Password']] || '').trim();
-    const activo = String(row[map['Activo']] === undefined ? 'SI' : row[map['Activo']]).trim().toLowerCase();
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const uId = obtenerColUsuario_(row, map, ['ID_Usuario', 'ID', 'Id_Usuario', 'Usuario_ID'], 'USR-' + String(i).padStart(3, '0'));
+      const uLogin = obtenerColUsuario_(row, map, ['Usuario', 'Username', 'Login'], '').toLowerCase();
+      const uEmail = obtenerColUsuario_(row, map, ['Email', 'Correo', 'Mail'], '').toLowerCase();
+      const uPass = obtenerColUsuario_(row, map, ['Password', 'Clave', 'Contraseña', 'Contrasena', 'Pass', 'Hash'], '');
+      const uSalt = obtenerColUsuario_(row, map, ['Salt'], '');
+      const activo = obtenerColUsuario_(row, map, ['Activo', 'Estado'], 'SI').toLowerCase();
 
-    if (!uPass) continue;
-    const uSalt = map['Salt'] !== undefined ? String(row[map['Salt']] || '').trim() : '';
-    if ((uLogin === userInput || uEmail === userInput) && passwordCoincide_(uPass, passInput, uSalt)) {
-      if (activo === 'no' || activo === 'false' || activo === '0') {
-        return { ok: false, error: 'El usuario se encuentra inactivo.' };
+      if (!uPass) continue;
+      if ((uLogin === userInput || uEmail === userInput || uId.toLowerCase() === userInput) && passwordCoincide_(uPass, passInput, uSalt)) {
+        if (activo === 'no' || activo === 'false' || activo === '0' || activo === 'inactivo') {
+          return { ok: false, error: 'El usuario se encuentra inactivo.' };
+        }
+        if (!uSalt) {
+          try { guardarPasswordConSal_(sheet, i + 1, passInput); } catch (eSalt) { Logger.log('No se pudo salar clave: ' + eSalt); }
+        }
+        const rawTit = obtenerColUsuario_(row, map, ['Es_Titular', 'Titular', 'Es_Titular_Org'], 'NO').toLowerCase();
+        const esTitular = ['si', 'sí', 'true', '1', 'x'].indexOf(rawTit) !== -1;
+        const rawRol = obtenerColUsuario_(row, map, ['Rol', 'Role', 'Perfil'], 'Comercializador');
+        const rawNombre = obtenerColUsuario_(row, map, ['Nombre', 'Apellido_Nombre', 'Nombre_Completo', 'Asesor'], uLogin || uEmail);
+        const rawOrgId = obtenerColUsuario_(row, map, ['ID_Organizacion', 'Organizacion_ID', 'Id_Organizacion'], 'MUTUAL-CENTRAL');
+        const rawOrgNom = obtenerColUsuario_(row, map, ['Nombre_Organizacion', 'Organizacion', 'Sucursal'], 'AMMER');
+
+        const usuarioObj = {
+          id: uId,
+          idUsuario: uId,
+          usuario_id: uId,
+          usuario: uLogin || uEmail,
+          email: uEmail || uLogin,
+          nombre: rawNombre,
+          rol: rawRol,
+          idOrganizacion: rawOrgId,
+          organizacion_id: rawOrgId,
+          nombreOrganizacion: rawOrgNom,
+          nombre_organizacion: rawOrgNom,
+          esTitular: esTitular,
+          esTitularOrg: esTitular,
+          es_titular_organizacion: esTitular
+        };
+        return { ok: true, usuario: usuarioObj };
       }
-      // Migración transparente: si la clave aún no tiene sal, se re-guarda con sal al ingresar correctamente.
-      if (!uSalt) {
-        try { guardarPasswordConSal_(sheet, i + 1, passInput); } catch (eSalt) { Logger.log('No se pudo salar clave: ' + eSalt); }
-      }
-      const esTitular = ['si', 'sí', 'true', '1', 'x'].indexOf(String(row[map['Es_Titular']] || '').trim().toLowerCase()) !== -1;
-      const usuarioObj = {
-        id: String(row[map['ID_Usuario']] || ('USR-' + i)),
-        usuario: uLogin || uEmail,
-        email: uEmail || uLogin,
-        nombre: String(row[map['Nombre']] || uLogin),
-        rol: String(row[map['Rol']] || 'Comercializador'),
-        idOrganizacion: String(row[map['ID_Organizacion']] || 'org_parana_centro'),
-        organizacion_id: String(row[map['ID_Organizacion']] || 'org_parana_centro'),
-        nombreOrganizacion: String(row[map['Nombre_Organizacion']] || 'Organización Paraná Centro'),
-        nombre_organizacion: String(row[map['Nombre_Organizacion']] || 'Organización Paraná Centro'),
-        esTitular: esTitular,
-        es_titular_organizacion: esTitular
-      };
-      return { ok: true, usuario: usuarioObj };
     }
   }
 
@@ -630,23 +739,32 @@ function convertirPasswordsUsuariosAHash() {
 }
 
 function obtenerListaAnalistas() {
-  const sheet = obtenerOInicializarHoja_(CONFIG_AMMER.SHEET_USUARIOS, HEADERS_USUARIOS);
-  const data = sheet.getDataRange().getValues();
-  const { map } = obtenerHeaderMap_(sheet);
+  const hojas = obtenerHojasCandidatasUsuarios_();
   const analistas = [];
+  const vistos = {};
 
-  for (let i = 1; i < data.length; i++) {
-    const row = data[i];
-    const rol = String(row[map['Rol']] || '').toLowerCase();
-    const activo = String(row[map['Activo']] === undefined ? 'SI' : row[map['Activo']]).trim().toLowerCase();
-    if (activo === 'no' || activo === 'false' || activo === '0') continue;
-    if (rol.indexOf('analista') !== -1 || rol.indexOf('admin') !== -1 || rol.indexOf('mutual') !== -1) {
-      analistas.push({
-        id: String(row[map['ID_Usuario']] || ''),
-        nombre: String(row[map['Nombre']] || ''),
-        usuario: String(row[map['Usuario']] || ''),
-        rol: String(row[map['Rol']] || '')
-      });
+  for (let h = 0; h < hojas.length; h++) {
+    const sheet = hojas[h];
+    const data = sheet.getDataRange().getValues();
+    const { map } = obtenerHeaderMap_(sheet);
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const rol = obtenerColUsuario_(row, map, ['Rol', 'Role', 'Perfil'], '').toLowerCase();
+      const activo = obtenerColUsuario_(row, map, ['Activo', 'Estado'], 'SI').toLowerCase();
+      if (activo === 'no' || activo === 'false' || activo === '0' || activo === 'inactivo') continue;
+      if (rol.indexOf('analista') !== -1 || rol.indexOf('admin') !== -1 || rol.indexOf('mutual') !== -1) {
+        const idU = obtenerColUsuario_(row, map, ['ID_Usuario', 'ID', 'Id_Usuario'], '');
+        const uLog = obtenerColUsuario_(row, map, ['Usuario', 'Username', 'Login'], '');
+        const key = (idU || uLog).toLowerCase();
+        if (key && vistos[key]) continue;
+        if (key) vistos[key] = true;
+        analistas.push({
+          id: idU,
+          nombre: obtenerColUsuario_(row, map, ['Nombre', 'Apellido_Nombre', 'Nombre_Completo'], ''),
+          usuario: uLog,
+          rol: obtenerColUsuario_(row, map, ['Rol', 'Role', 'Perfil'], '')
+        });
+      }
     }
   }
   return { ok: true, analistas: analistas };
@@ -1135,6 +1253,7 @@ function listarSolicitudes(usuarioActivoInput) {
     const fechaIngresoRow = String(laborales.fechaIngresoLaboral || laborales.Fecha_Ingreso_Laboral || get('Fecha_Ingreso_Laboral') || '').trim();
     const item = {
       id: idSol,
+      filaSheet: i + 1,
       id_provisorio: meta.id_provisorio || ('PROV-' + idSol),
       id_definitivo: nroDefVal,
       Nro_Definitivo: nroDefVal,
@@ -1240,20 +1359,8 @@ function listarSolicitudes(usuarioActivoInput) {
     const itemAnalista = String(item.analistaAsignado || '').toLowerCase().trim();
 
     if (rol === 'analista' || rol.indexOf('analista') !== -1 || rol.indexOf('asesor mutual') !== -1) {
-      // Filas antiguas sin idAsesor se conservan visibles para auditoría
-      if (!itemAsesorId || itemAsesorId === 'USR-000') return true;
-
-      const esOriginador = Boolean(
-        (userId && itemAsesorId === userId) ||
-        (miNombre && (itemNombreAsesor === miNombre || itemNombreRaw === miNombre))
-      );
-      const estaAsignadoAMi = Boolean(miNombre && itemAnalista === miNombre);
-      const esDeComercializador =
-        itemCanal.indexOf('comercial') !== -1 ||
-        itemCanal.indexOf('externo') !== -1 ||
-        (itemOrgId !== '' && itemOrgId.indexOf('mutual') === -1 && itemOrgId.indexOf('central') === -1);
-
-      return esOriginador || estaAsignadoAMi || esDeComercializador;
+      // Personal interno de Mutual (Analistas) ve toda la cartera de Sede Central y Red Comercial
+      return true;
     }
 
     if (esTitular) {

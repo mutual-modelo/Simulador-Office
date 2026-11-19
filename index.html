@@ -17040,6 +17040,13 @@ ${cierreTxt}`;
         return candidatas[0].clasificacion;
       }
 
+      if (descNorm) {
+        const exactasDesc = candidatas.filter(r => r.nombreNorm === descNorm).map(r => r.clasificacion);
+        if (exactasDesc.length > 0) {
+          return mostCommonClasifPadron(exactasDesc);
+        }
+      }
+
       const dtok = new Set(descNorm.split(' ').filter(t => t.length >= 2));
       if (dtok.size > 0) {
         const scored = [];
@@ -17205,19 +17212,61 @@ ${cierreTxt}`;
           const codSinSuf = quitarSufijoCodigoPadron(codigoUp);
           const codSinSufNz = stripZerosPadron(codSinSuf);
 
-          const buscarListaLugares = (lugaresLista, cands, idxMap, met) => {
+          const EQUIV_GRUPOS = [
+            ['GE_', 'GE'],
+            ['SG_', 'SG'],
+            ['SA_', 'SAL_'],
+            ['JU_', 'JU', 'JUB_']
+          ];
+
+          const agruparLugares = (lugaresLista) => {
+            const grupos = [];
+            const vistos = new Set();
             for (let li = 0; li < lugaresLista.length; li++) {
               const lug = lugaresLista[li];
+              if (vistos.has(lug)) continue;
+              const grupo = [lug];
+              for (let ei = 0; ei < EQUIV_GRUPOS.length; ei++) {
+                const eq = EQUIV_GRUPOS[ei];
+                if (eq.includes(lug)) {
+                  for (let ej = 0; ej < eq.length; ej++) {
+                    const e = eq[ej];
+                    if (lugaresLista.includes(e) && !grupo.includes(e)) {
+                      grupo.push(e);
+                    }
+                  }
+                  break;
+                }
+              }
+              for (let gi = 0; gi < grupo.length; gi++) vistos.add(grupo[gi]);
+              grupos.push(grupo);
+            }
+            return grupos;
+          };
+
+          const buscarListaLugares = (lugaresLista, cands, idxMap, met) => {
+            const grupos = agruparLugares(lugaresLista);
+            for (let gi = 0; gi < grupos.length; gi++) {
+              const grupo = grupos[gi];
               for (let ci = 0; ci < cands.length; ci++) {
                 const codCand = cands[ci];
                 if (!codCand) continue;
-                const filas = idxMap.get(lug + '|' + codCand);
-                if (filas && filas.length > 0) {
+                const filas = [];
+                for (let li = 0; li < grupo.length; li++) {
+                  const f = idxMap.get(grupo[li] + '|' + codCand);
+                  if (f && f.length > 0) {
+                    for (let fi = 0; fi < f.length; fi++) filas.push(f[fi]);
+                  }
+                }
+                if (filas.length > 0) {
                   const c = resolverConflictoFilasPadron(filas, codCand, descNorm, side);
                   if (c) {
                     clasifFinal = c;
                     metodo = met;
-                    lugarMatch = lug;
+                    const mejorFila =
+                      filas.find(r => r.clasificacion === c && r.nombreNorm === descNorm) ||
+                      filas.find(r => r.clasificacion === c);
+                    lugarMatch = mejorFila ? mejorFila.lugar : grupo[0];
                     return true;
                   }
                 }
@@ -17364,7 +17413,8 @@ ${cierreTxt}`;
         );
       }
       if (itemsCero.length > 0) {
-        alertas.push('Se detectaron ' + itemsCero.length + ' ítem(s) con importe $0,00 en el detalle.');
+        const detalleCero = itemsCero.map(it => (it.codigo ? ('Cód. ' + it.codigo) : 'S/C') + (it.descripcion ? (' (' + it.descripcion + ')') : '')).join(', ');
+        alertas.push('Se detectaron ' + itemsCero.length + ' ítem(s) con importe $0,00 en el detalle: ' + detalleCero + '.');
       }
       if (itemsSinCodigo.length > 0) {
         alertas.push('Se detectaron ' + itemsSinCodigo.length + ' ítem(s) sin código numérico asignado (clasificados por descripción).');
@@ -18959,7 +19009,10 @@ ${cierreTxt}`;
         ? '<div><span style="color:#64748b;font-size:0.67rem;display:inline-flex;align-items:center;gap:3px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M15 10h3M15 14h3"/></svg> Legajo:</span><br/><span style="display:inline-flex;align-items:center;gap:4px;background:#f8fafc;color:#0f172a;border:1px solid #cbd5e1;border-radius:6px;padding:1px 7px;font-weight:700;font-size:0.72rem;font-family:monospace;">' + sanitizeHTML(legajoValCard) + '</span></div>'
         : '';
 
-      const antigDetalleCard = String(rec.antiguedadDetalle || resDec.antiguedad || '').trim();
+      const antigDetalleRawCard = String(rec.antiguedadDetalle || resDec.antiguedad || '').trim();
+      const antigDetalleCard = (typeof formatearAntiguedadLegible === 'function')
+        ? formatearAntiguedadLegible(antigDetalleRawCard)
+        : antigDetalleRawCard;
       const fechaIngCard = String(rec.fechaIngreso || resDec.fechaIngreso || '').trim();
       const antigTextoCard = antigDetalleCard && !/no registrada|no especificada/i.test(antigDetalleCard)
         ? antigDetalleCard
@@ -19431,6 +19484,41 @@ ${cierreTxt}`;
       return recalcularMargenInteractivoAuditoria(undefined, valor);
     }
 
+    function formatearAntiguedadLegible(rawVal) {
+      const s = String(rawVal || '').trim();
+      if (!s) return '';
+      const m = s.match(/^(\d{1,2})\s*\/\s*(\d{1,2})$/);
+      if (m) {
+        const anios = parseInt(m[1], 10);
+        const meses = parseInt(m[2], 10);
+        if (anios === 0 && meses > 0) return meses + (meses === 1 ? ' mes' : ' meses');
+        return anios + (anios === 1 ? ' año' : ' años') + (meses > 0 ? (', ' + meses + (meses === 1 ? ' mes' : ' meses')) : '');
+      }
+      return s;
+    }
+
+    function cambiarClasificacionItemAuditoria(idx, nuevaClasif) {
+      if (!ultimoResultadoAuditoria) return null;
+      const clsNorm = String(nuevaClasif || '').trim().toUpperCase();
+      const aplicarCambio = (arr) => {
+        if (!Array.isArray(arr) || !arr[idx]) return;
+        if (!clsNorm || clsNorm === 'AUTO') {
+          delete arr[idx].clasificacion;
+          delete arr[idx].metodoClasificacion;
+          delete arr[idx].lugarPadronMatch;
+        } else {
+          arr[idx].clasificacion = clsNorm;
+          arr[idx].metodoClasificacion = 'EXPLICITA_NORMALIZADA';
+          arr[idx].lugarPadronMatch = 'MANUAL';
+        }
+      };
+      aplicarCambio(ultimoResultadoAuditoria.conceptos);
+      if (ultimoResultadoAuditoria.detalleCompletoRecibo) {
+        aplicarCambio(ultimoResultadoAuditoria.detalleCompletoRecibo.conceptos);
+      }
+      return recalcularMargenInteractivoAuditoria(undefined, undefined);
+    }
+
     async function ejecutarAuditoriaDocumentalIA() {
       if (archivosAuditoriaCola.length === 0) {
         showToast('Seleccioná o arrastrá un Recibo de Sueldo (PDF o Imagen) para auditar.');
@@ -19887,7 +19975,10 @@ ${cierreTxt}`;
       const periodoClean = (periodoRaw && !/mes auditado|no consta|n\/a/i.test(periodoRaw)) ? periodoRaw : 'No especificado';
 
       const antigRaw = limpiarTextoAuditoria(r.antiguedad || rec.antiguedadDetalle || datLab.antiguedad || datLab.antiguedadDetalle || payload.antiguedad, '');
-      const antigClean = (antigRaw && !/no registrada|no especificada|no consta|n\/a/i.test(antigRaw)) ? antigRaw : '';
+      const antigCleanRaw = (antigRaw && !/no registrada|no especificada|no consta|n\/a/i.test(antigRaw)) ? antigRaw : '';
+      const antigClean = (typeof formatearAntiguedadLegible === 'function')
+        ? formatearAntiguedadLegible(antigCleanRaw)
+        : antigCleanRaw;
 
       const fechaIngRaw = limpiarTextoAuditoria(r.fechaIngreso || rec.fechaIngreso || datLab.fechaIngreso || datLab.fechaIngresoLaboral || payload.fechaIngreso, '');
       const fechaIngClean = (fechaIngRaw && !/no consta|sin fecha|n\/a/i.test(fechaIngRaw)) ? fechaIngRaw : '';
@@ -20272,12 +20363,22 @@ ${cierreTxt}`;
 
       let conceptosHTML = '';
       if (conceptos.length > 0) {
-        conceptosHTML = conceptos.map(c => {
+        conceptosHTML = conceptos.map((c, idx) => {
           const haber = c.haberes > 0 ? c.haberes : 0;
           const desc = c.descuentos > 0 ? c.descuentos : 0;
           const badgeClasif = (typeof renderBadgeClasificacionPadron === 'function')
             ? renderBadgeClasificacionPadron(c.clasificacion, c.metodoClasificacion, c.lugarPadronMatch)
             : '<span class="ai-clasif-badge clasif-sin-clasif">' + sanitizeHTML(c.clasificacion || '—') + '</span>';
+          const esManual = c.metodoClasificacion === 'EXPLICITA_NORMALIZADA' && c.lugarPadronMatch === 'MANUAL';
+          const selVal = esManual ? (c.clasificacion || 'AUTO') : 'AUTO';
+          const selectOverride =
+            '<select aria-label="Reclasificar ítem" title="Ajustar clasificación manualmente" onchange="cambiarClasificacionItemAuditoria(' + idx + ', this.value)" style="margin-left:6px;font-size:0.65rem;padding:1px 4px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;color:#475569;cursor:pointer;">' +
+              '<option value="AUTO"' + (selVal === 'AUTO' ? ' selected' : '') + '>Auto</option>' +
+              '<option value="COMPUTABLE"' + (selVal === 'COMPUTABLE' ? ' selected' : '') + '>Computable</option>' +
+              '<option value="NO_COMPUTABLE"' + (selVal === 'NO_COMPUTABLE' ? ' selected' : '') + '>No Computable</option>' +
+              '<option value="SUBTOTAL_1"' + (selVal === 'SUBTOTAL_1' ? ' selected' : '') + '>Subtotal 1</option>' +
+              '<option value="AFECTADO"' + (selVal === 'AFECTADO' ? ' selected' : '') + '>Afectado</option>' +
+            '</select>';
           return '<tr class="border-b border-slate-100 hover:bg-slate-50/80">' +
             '<td class="py-2.5 px-3 font-mono text-xs font-semibold text-slate-600">' + sanitizeHTML(c.codigo || '—') + '</td>' +
             '<td class="py-2.5 px-3 text-xs font-medium text-slate-800">' + sanitizeHTML(c.descripcion || 'Concepto liquidado') + '</td>' +
@@ -20287,7 +20388,7 @@ ${cierreTxt}`;
             '<td class="py-2.5 px-3 font-mono text-xs text-right font-semibold ' + (desc > 0 ? 'text-rose-700' : 'text-slate-300') + '">' +
               (desc > 0 ? sanitizeHTML(formatPesosMargen(desc)) : '—') +
             '</td>' +
-            '<td class="py-2.5 px-3 text-left whitespace-nowrap">' + badgeClasif + '</td>' +
+            '<td class="py-2.5 px-3 text-left whitespace-nowrap">' + badgeClasif + selectOverride + '</td>' +
           '</tr>';
         }).join('');
       } else {

@@ -504,6 +504,13 @@ function resolverConflictoFilas(
     return candidatas[0].clasificacion;
   }
 
+  if (descNorm) {
+    const exactasDesc = candidatas.filter(r => r.nombreNorm === descNorm).map(r => r.clasificacion);
+    if (exactasDesc.length > 0) {
+      return mostCommonClasif(exactasDesc);
+    }
+  }
+
   const dtok = new Set(descNorm.split(' ').filter(t => t.length >= 2));
   if (dtok.size > 0) {
     const scored: Array<{ sim: number; clasif: string }> = [];
@@ -670,22 +677,58 @@ export function clasificarItemsRecibo(
       const codSinSuf = quitarSufijoCodigo(codigoUp);
       const codSinSufNz = stripZeros(codSinSuf);
 
+      const EQUIV_GRUPOS: string[][] = [
+        ['GE_', 'GE'],
+        ['SG_', 'SG'],
+        ['SA_', 'SAL_'],
+        ['JU_', 'JU', 'JUB_'],
+      ];
+
+      const agruparLugares = (lugaresLista: string[]): string[][] => {
+        const grupos: string[][] = [];
+        const vistos = new Set<string>();
+        for (const lug of lugaresLista) {
+          if (vistos.has(lug)) continue;
+          const grupo = [lug];
+          for (const eq of EQUIV_GRUPOS) {
+            if (eq.includes(lug)) {
+              for (const e of eq) {
+                if (lugaresLista.includes(e) && !grupo.includes(e)) {
+                  grupo.push(e);
+                }
+              }
+              break;
+            }
+          }
+          for (const g of grupo) vistos.add(g);
+          grupos.push(grupo);
+        }
+        return grupos;
+      };
+
       const buscarListaLugares = (
         lugaresLista: string[],
         cands: string[],
         idxMap: Map<string, RegistroPadron[]>,
         met: string,
       ): boolean => {
-        for (const lug of lugaresLista) {
+        for (const grupo of agruparLugares(lugaresLista)) {
           for (const codCand of cands) {
             if (!codCand) continue;
-            const filas = idxMap.get(`${lug}|${codCand}`);
-            if (filas && filas.length > 0) {
+            const filas: RegistroPadron[] = [];
+            for (const lug of grupo) {
+              const f = idxMap.get(`${lug}|${codCand}`);
+              if (f && f.length > 0) filas.push(...f);
+            }
+            if (filas.length > 0) {
               const c = resolverConflictoFilas(filas, codCand, descNorm, side);
               if (c) {
                 clasifFinal = c;
                 metodo = met;
-                lugarMatch = lug;
+                const mejorFila =
+                  filas.find(r => r.clasificacion === c && r.nombreNorm === descNorm) ||
+                  filas.find(r => r.clasificacion === c);
+                lugarMatch = mejorFila ? mejorFila.lugar : grupo[0];
                 return true;
               }
             }
@@ -845,7 +888,10 @@ export function calcularMargenRecibo(datosRecibo: Record<string, any> | null | u
     );
   }
   if (itemsCero.length > 0) {
-    alertas.push(`Se detectaron ${itemsCero.length} ítem(s) con importe $0,00 en el detalle.`);
+    const detalleCero = itemsCero
+      .map(i => `${i.codigo ? `Cód. ${i.codigo}` : 'S/C'}${i.descripcion ? ` (${i.descripcion})` : ''}`)
+      .join(', ');
+    alertas.push(`Se detectaron ${itemsCero.length} ítem(s) con importe $0,00 en el detalle: ${detalleCero}.`);
   }
   if (itemsSinCodigo.length > 0) {
     alertas.push(`Se detectaron ${itemsSinCodigo.length} ítem(s) sin código numérico asignado (clasificados por descripción).`);

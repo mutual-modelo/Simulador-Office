@@ -2392,6 +2392,15 @@ function resolverConflictoFilasGs_(filas, codigoNorm, descNorm, side) {
   }
   if (numUnicas === 1) return candidatas[0].clasificacion;
 
+  if (descNorm) {
+    const exactasDesc = candidatas
+      .filter(function(r) { return r.nombreNorm === descNorm; })
+      .map(function(r) { return r.clasificacion; });
+    if (exactasDesc.length > 0) {
+      return mostCommonClasifGs_(exactasDesc);
+    }
+  }
+
   const dtokList = descNorm.split(' ').filter(function(t) { return t.length >= 2; });
   const dtok = {};
   let dtokSize = 0;
@@ -2572,19 +2581,68 @@ function clasificarItemsRecibo(items, lugarTrabajo, metaRecibo) {
       const codSinSuf = quitarSufijoCodigoGs_(codigoUp);
       const codSinSufNz = stripZerosGs_(codSinSuf);
 
-      const buscarListaLugares = function(lugaresLista, cands, idxMap, met) {
+      const EQUIV_GRUPOS = [
+        ['GE_', 'GE'],
+        ['SG_', 'SG'],
+        ['SA_', 'SAL_'],
+        ['JU_', 'JU', 'JUB_']
+      ];
+
+      const agruparLugares = function(lugaresLista) {
+        const grupos = [];
+        const vistos = {};
         for (let li = 0; li < lugaresLista.length; li++) {
           const lug = lugaresLista[li];
+          if (vistos[lug]) continue;
+          const grupo = [lug];
+          for (let ei = 0; ei < EQUIV_GRUPOS.length; ei++) {
+            const eq = EQUIV_GRUPOS[ei];
+            if (eq.indexOf(lug) >= 0) {
+              for (let ej = 0; ej < eq.length; ej++) {
+                const e = eq[ej];
+                if (lugaresLista.indexOf(e) >= 0 && grupo.indexOf(e) < 0) {
+                  grupo.push(e);
+                }
+              }
+              break;
+            }
+          }
+          for (let gi = 0; gi < grupo.length; gi++) vistos[grupo[gi]] = true;
+          grupos.push(grupo);
+        }
+        return grupos;
+      };
+
+      const buscarListaLugares = function(lugaresLista, cands, idxMap, met) {
+        const grupos = agruparLugares(lugaresLista);
+        for (let gi = 0; gi < grupos.length; gi++) {
+          const grupo = grupos[gi];
           for (let ci = 0; ci < cands.length; ci++) {
             const codCand = cands[ci];
             if (!codCand) continue;
-            const filas = idxMap[lug + '|' + codCand];
-            if (filas && filas.length > 0) {
+            const filas = [];
+            for (let li = 0; li < grupo.length; li++) {
+              const f = idxMap[grupo[li] + '|' + codCand];
+              if (f && f.length > 0) {
+                for (let fi = 0; fi < f.length; fi++) filas.push(f[fi]);
+              }
+            }
+            if (filas.length > 0) {
               const c = resolverConflictoFilasGs_(filas, codCand, descNorm, side);
               if (c) {
                 clasifFinal = c;
                 metodo = met;
-                lugarMatch = lug;
+                let mejorFila = null;
+                for (let fi = 0; fi < filas.length; fi++) {
+                  if (filas[fi].clasificacion === c && filas[fi].nombreNorm === descNorm) {
+                    mejorFila = filas[fi];
+                    break;
+                  }
+                  if (!mejorFila && filas[fi].clasificacion === c) {
+                    mejorFila = filas[fi];
+                  }
+                }
+                lugarMatch = mejorFila ? mejorFila.lugar : grupo[0];
                 return true;
               }
             }
@@ -2729,7 +2787,10 @@ function calcularMargenRecibo(datosRecibo) {
     );
   }
   if (itemsCero.length > 0) {
-    alertas.push('Se detectaron ' + itemsCero.length + ' ítem(s) con importe $0,00 en el detalle.');
+    const detalleCero = itemsCero.map(function(it) {
+      return (it.codigo ? ('Cód. ' + it.codigo) : 'S/C') + (it.descripcion ? (' (' + it.descripcion + ')') : '');
+    }).join(', ');
+    alertas.push('Se detectaron ' + itemsCero.length + ' ítem(s) con importe $0,00 en el detalle: ' + detalleCero + '.');
   }
   if (itemsSinCodigo.length > 0) {
     alertas.push('Se detectaron ' + itemsSinCodigo.length + ' ítem(s) sin código numérico asignado (clasificados por descripción).');
@@ -3298,7 +3359,16 @@ function mapearAuditoriaEnAppsScript_(raw, datosDeclarados) {
   const dniStr = String(dniExtraido || idObj.dni || (datosDeclarados && datosDeclarados.dni) || DEFAULT_TXT).trim();
   const cuilStr = String(idObj.cuil || (datosDeclarados && datosDeclarados.cuil) || '').trim();
   const organismoStr = String(lab.organismoEmpleador || (datosDeclarados && datosDeclarados.organismo) || 'Organismo Provincial').trim();
-  const antiguedadStr = String(lab.antiguedadDetalle || 'No registrada').trim();
+  const antiguedadRawStr = String(lab.antiguedadDetalle || 'No registrada').trim();
+  const antigMatchGs = antiguedadRawStr.match(/^(\d{1,2})\s*\/\s*(\d{1,2})$/);
+  const antiguedadStr = antigMatchGs
+    ? (function() {
+        const anios = parseInt(antigMatchGs[1], 10);
+        const meses = parseInt(antigMatchGs[2], 10);
+        if (anios === 0 && meses > 0) return meses + (meses === 1 ? ' mes' : ' meses');
+        return anios + (anios === 1 ? ' año' : ' años') + (meses > 0 ? (', ' + meses + (meses === 1 ? ' mes' : ' meses')) : '');
+      })()
+    : antiguedadRawStr;
 
   const resumenDecision = {
     titular: titularStr,

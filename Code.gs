@@ -54,7 +54,8 @@ const HEADERS_USUARIOS = [
   'ID_Organizacion',
   'Nombre_Organizacion',
   'Es_Titular',
-  'Activo'
+  'Activo',
+  'Salt'
 ];
 
 const HEADERS_ASOCIADOS = [
@@ -498,9 +499,14 @@ function autenticarUsuario(payload) {
     const activo = String(row[map['Activo']] === undefined ? 'SI' : row[map['Activo']]).trim().toLowerCase();
 
     if (!uPass) continue;
-    if ((uLogin === userInput || uEmail === userInput) && passwordCoincide_(uPass, passInput)) {
+    const uSalt = map['Salt'] !== undefined ? String(row[map['Salt']] || '').trim() : '';
+    if ((uLogin === userInput || uEmail === userInput) && passwordCoincide_(uPass, passInput, uSalt)) {
       if (activo === 'no' || activo === 'false' || activo === '0') {
         return { ok: false, error: 'El usuario se encuentra inactivo.' };
+      }
+      // Migración transparente: si la clave aún no tiene sal, se re-guarda con sal al ingresar correctamente.
+      if (!uSalt) {
+        try { guardarPasswordConSal_(sheet, i + 1, passInput); } catch (eSalt) { Logger.log('No se pudo salar clave: ' + eSalt); }
       }
       const esTitular = ['si', 'sí', 'true', '1', 'x'].indexOf(String(row[map['Es_Titular']] || '').trim().toLowerCase()) !== -1;
       const usuarioObj = {
@@ -525,17 +531,57 @@ function autenticarUsuario(payload) {
 
 /**
  * Compara la clave ingresada contra la guardada en la hoja 'Usuarios'.
- * Acepta clave en texto plano o hash SHA-256 (64 caracteres hex, sin sal).
+ * - Con Salt: SHA-256(salt + clave).
+ * - Sin Salt (formato anterior): texto plano o SHA-256 simple (64 hex).
  */
-function passwordCoincide_(guardada, ingresada) {
+function passwordCoincide_(guardada, ingresada, salt) {
   const g = String(guardada || '').trim();
-  const i = String(ingresada || '');
+  const i = String(ingresada || '').trim();
   if (!g || !i) return false;
-  if (g === i.trim()) return true;
-  if (/^[a-f0-9]{64}$/i.test(g)) {
-    return hashSha256Hex_(i.trim()) === g.toLowerCase();
-  }
+  if (salt) return hashSha256Hex_(salt + i) === g.toLowerCase();
+  if (g === i) return true;
+  if (/^[a-f0-9]{64}$/i.test(g)) return hashSha256Hex_(i) === g.toLowerCase();
   return false;
+}
+
+function generarSalt_() {
+  return Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
+}
+
+function asegurarColumnaSalt_(sheet) {
+  let { map } = obtenerHeaderMap_(sheet);
+  if (map['Salt'] === undefined) {
+    const col = Math.max(sheet.getLastColumn(), 1) + 1;
+    sheet.getRange(1, col).setValue('Salt');
+    map = obtenerHeaderMap_(sheet).map;
+  }
+  return map;
+}
+
+function guardarPasswordConSal_(sheet, filaSheet, passwordPlano) {
+  const map = asegurarColumnaSalt_(sheet);
+  const salt = generarSalt_();
+  sheet.getRange(filaSheet, map['Salt'] + 1).setValue(salt);
+  sheet.getRange(filaSheet, map['Password'] + 1).setValue(hashSha256Hex_(salt + String(passwordPlano).trim()));
+}
+
+/**
+ * Utilidad manual (editor de Apps Script): fija una nueva clave con sal para un usuario.
+ * Ej.: establecerPasswordUsuario('jvicentin', 'NuevaClave2026')
+ */
+function establecerPasswordUsuario(usuario, nuevaClave) {
+  const sheet = obtenerOInicializarHoja_(CONFIG_AMMER.SHEET_USUARIOS, HEADERS_USUARIOS);
+  const data = sheet.getDataRange().getValues();
+  const { map } = obtenerHeaderMap_(sheet);
+  const u = String(usuario || '').trim().toLowerCase();
+  if (!u || !String(nuevaClave || '').trim()) throw new Error('Usuario y clave son obligatorios.');
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][map['Usuario']] || '').trim().toLowerCase() === u) {
+      guardarPasswordConSal_(sheet, i + 1, nuevaClave);
+      return 'OK: clave actualizada para ' + u;
+    }
+  }
+  throw new Error('Usuario no encontrado: ' + u);
 }
 
 function hashSha256Hex_(texto) {
@@ -544,18 +590,20 @@ function hashSha256Hex_(texto) {
 }
 
 /**
- * Utilidad manual (ejecutar desde el editor): convierte a SHA-256 todas las claves
- * en texto plano de la hoja 'Usuarios'. Las que ya son hash no se tocan.
+ * Utilidad manual (editor de Apps Script): para cada usuario con clave en TEXTO PLANO
+ * genera Salt y guarda SHA-256(salt + clave). Las claves que ya son hash no se pueden
+ * recalcular (se re-salan solas en el próximo login correcto del usuario).
  */
 function convertirPasswordsUsuariosAHash() {
   const sheet = obtenerOInicializarHoja_(CONFIG_AMMER.SHEET_USUARIOS, HEADERS_USUARIOS);
+  const map = asegurarColumnaSalt_(sheet);
   const data = sheet.getDataRange().getValues();
-  const { map } = obtenerHeaderMap_(sheet);
   let n = 0;
   for (let i = 1; i < data.length; i++) {
     const v = String(data[i][map['Password']] || '').trim();
-    if (v && !/^[a-f0-9]{64}$/i.test(v)) {
-      sheet.getRange(i + 1, map['Password'] + 1).setValue(hashSha256Hex_(v));
+    const salt = String(data[i][map['Salt']] || '').trim();
+    if (v && !salt && !/^[a-f0-9]{64}$/i.test(v)) {
+      guardarPasswordConSal_(sheet, i + 1, v);
       n++;
     }
   }

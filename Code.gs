@@ -10,7 +10,8 @@ const CONFIG_AMMER = {
   SHEET_USUARIOS: 'Usuarios',
   SHEET_ASOCIADOS: 'Padron_Asociados',
   DRIVE_ROOT_NAME: 'Mutual Modelo - Legajos Digitales',
-  SPREADSHEET_NAME: 'Mutual_Modelo_Simulador_Office_DB'
+  SPREADSHEET_ID: '1YYKQiKvLpMVFeunrbYP3Rbzdgjt2MVsn89r9wEn7P6U',
+  SPREADSHEET_NAME: 'BD_Mutual_Modelo_SimuladorOffice'
 };
 
 const HEADERS_SOLICITUDES = [
@@ -203,6 +204,26 @@ function crearRespuestaJSON(obj) {
    ============================================================================ */
 function obtenerSpreadsheet_() {
   const props = PropertiesService.getScriptProperties();
+
+  // 1. Priorizar siempre la planilla oficial configurada o vinculada al contenedor
+  if (CONFIG_AMMER.SPREADSHEET_ID) {
+    try {
+      const ssOficial = SpreadsheetApp.openById(CONFIG_AMMER.SPREADSHEET_ID);
+      if (ssOficial) {
+        props.setProperty('SPREADSHEET_ID', ssOficial.getId());
+        return ssOficial;
+      }
+    } catch (_) {}
+  }
+
+  try {
+    const ssActiva = SpreadsheetApp.getActiveSpreadsheet();
+    if (ssActiva) {
+      props.setProperty('SPREADSHEET_ID', ssActiva.getId());
+      return ssActiva;
+    }
+  } catch (_) {}
+
   const savedId = props.getProperty('SPREADSHEET_ID');
   if (savedId) {
     try {
@@ -211,17 +232,15 @@ function obtenerSpreadsheet_() {
   }
 
   let ss = null;
-  try {
-    ss = SpreadsheetApp.getActiveSpreadsheet();
-  } catch (_) {}
-
-  if (!ss) {
-    const files = DriveApp.getFilesByName(CONFIG_AMMER.SPREADSHEET_NAME);
+  const candidatosNombres = [CONFIG_AMMER.SPREADSHEET_NAME, 'BD_Mutual_Modelo_SimuladorOffice', 'Mutual_Modelo_Simulador_Office_DB'];
+  for (let i = 0; i < candidatosNombres.length && !ss; i++) {
+    const files = DriveApp.getFilesByName(candidatosNombres[i]);
     if (files.hasNext()) {
       ss = SpreadsheetApp.openById(files.next().getId());
-    } else {
-      ss = SpreadsheetApp.create(CONFIG_AMMER.SPREADSHEET_NAME);
     }
+  }
+  if (!ss) {
+    ss = SpreadsheetApp.create(CONFIG_AMMER.SPREADSHEET_NAME);
   }
 
   props.setProperty('SPREADSHEET_ID', ss.getId());

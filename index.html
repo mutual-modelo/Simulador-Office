@@ -8637,6 +8637,13 @@ ${cierreTxt}`;
         if (!raw) return null;
         const s = JSON.parse(raw);
         if (!s) return null;
+        // Descartar sesiones residuales corruptas ('Usuario' / 'Mutual Modelo' sin ID real de usuario)
+        const idCheck = String(s.id || s.idUsuario || s.usuario_id || '').trim();
+        if ((!idCheck || idCheck.startsWith('usr_')) && s.nombre === 'Usuario') {
+          sessionStorage.removeItem('sesion_mutual');
+          sessionStorage.removeItem('AMMER_AUTH_SESSION');
+          return null;
+        }
         s.id = s.id || s.idUsuario || s.usuario_id || '';
         s.idUsuario = s.id;
         s.usuario_id = s.id;
@@ -8767,8 +8774,11 @@ ${cierreTxt}`;
           }
           return;
         }
-        // Extrae el objeto usuario de forma segura
-        loggedUser = d.usuario || d.user || (d.ok || d.success ? d : null);
+        // Extrae el objeto usuario de forma segura y valida que tenga al menos id/usuario/nombre
+        const candidate = d.usuario || d.user || ((d.id || d.idUsuario || d.usuario || d.nombre) ? d : null);
+        if (candidate && (candidate.id || candidate.idUsuario || candidate.usuario || candidate.email || candidate.nombre)) {
+          loggedUser = candidate;
+        }
       }
 
       if (loggedUser) {

@@ -8631,40 +8631,91 @@ ${cierreTxt}`;
        2. MODELO DE USUARIOS, SESIÓN Y LOGIN EN SERVIDOR CENTRAL
        ======================================================================== */
 
+    let _memoriaSesionActiva = null;
+
+    function normalizarObjetoSesionUsuario_(s) {
+      if (!s || typeof s !== 'object') return null;
+      const user = (s.usuario && typeof s.usuario === 'object') ? s.usuario : ((s.user && typeof s.user === 'object') ? s.user : s);
+      const idCheck = String(user.id || user.idUsuario || user.usuario_id || user.ID_Usuario || '').trim();
+      const loginStr = String(user.usuario || user.username || user.login || user.Usuario || '').trim();
+      const emailStr = String(user.email || user.Email || (loginStr.includes('@') ? loginStr : '')).trim().toLowerCase();
+      const nombreReal = String(user.nombre || user.Nombre || user.apellidoNombre || user.Apellido_Nombre || loginStr || '').trim();
+      if ((!idCheck || idCheck.startsWith('usr_')) && (!nombreReal || nombreReal === 'Usuario') && !loginStr) {
+        return null;
+      }
+
+      const rolRaw = String(user.rol || user.Rol || '').trim();
+      let rolNormalizado = 'Comercializador';
+      const rolLower = rolRaw.toLowerCase();
+      if (rolLower.includes('admin')) {
+        rolNormalizado = 'Admin';
+      } else if (rolLower.includes('analista') || rolLower.includes('mutual')) {
+        rolNormalizado = 'Analista';
+      } else {
+        rolNormalizado = 'Comercializador';
+      }
+
+      const idResuelto = idCheck || loginStr || ('usr_' + Date.now());
+      const orgIdResuelto = String(user.idOrganizacion || user.organizacion_id || user.ID_Organizacion || 'MUTUAL-CENTRAL').trim();
+      const orgNomResuelto = String(user.nombreOrganizacion || user.nombre_organizacion || user.Nombre_Organizacion || 'AMMER').trim();
+      const esTitResuelto = !!(
+        user.esTitularOrg !== undefined
+          ? user.esTitularOrg
+          : (user.esTitular !== undefined ? user.esTitular : user.es_titular_organizacion)
+      );
+
+      return {
+        id: idResuelto,
+        idUsuario: idResuelto,
+        usuario_id: idResuelto,
+        usuario: loginStr || emailStr,
+        email: emailStr || (loginStr ? loginStr + '@mutualmodelo.com.ar' : 'usuario@mutualmodelo.com.ar'),
+        nombre: nombreReal || loginStr || 'Usuario',
+        rol: rolNormalizado,
+        idOrganizacion: orgIdResuelto,
+        organizacion_id: orgIdResuelto,
+        nombreOrganizacion: orgNomResuelto,
+        nombre_organizacion: orgNomResuelto,
+        esTitular: esTitResuelto,
+        esTitularOrg: esTitResuelto,
+        es_titular_organizacion: esTitResuelto
+      };
+    }
+
     function getSession() {
+      if (_memoriaSesionActiva) {
+        if (window.estadoApp) window.estadoApp.usuarioActual = _memoriaSesionActiva;
+        return _memoriaSesionActiva;
+      }
+      if (window.estadoApp && window.estadoApp.usuarioActual) {
+        const memNorm = normalizarObjetoSesionUsuario_(window.estadoApp.usuarioActual);
+        if (memNorm) {
+          _memoriaSesionActiva = memNorm;
+          return memNorm;
+        }
+      }
+      let raw = null;
       try {
-        const raw = sessionStorage.getItem('sesion_mutual') || sessionStorage.getItem('AMMER_AUTH_SESSION');
-        if (!raw) return null;
-        const s = JSON.parse(raw);
-        if (!s) return null;
-        // Descartar sesiones residuales corruptas ('Usuario' / 'Mutual Modelo' sin ID real de usuario)
-        const idCheck = String(s.id || s.idUsuario || s.usuario_id || '').trim();
-        if ((!idCheck || idCheck.startsWith('usr_')) && s.nombre === 'Usuario') {
-          sessionStorage.removeItem('sesion_mutual');
-          sessionStorage.removeItem('AMMER_AUTH_SESSION');
+        raw = sessionStorage.getItem('sesion_mutual') || sessionStorage.getItem('AMMER_AUTH_SESSION');
+      } catch (_) {}
+      if (!raw) {
+        try {
+          raw = localStorage.getItem('sesion_mutual') || localStorage.getItem('AMMER_AUTH_SESSION');
+        } catch (_) {}
+      }
+      if (!raw) return null;
+      try {
+        const parsed = JSON.parse(raw);
+        const s = normalizarObjetoSesionUsuario_(parsed);
+        if (!s) {
+          try { sessionStorage.removeItem('sesion_mutual'); sessionStorage.removeItem('AMMER_AUTH_SESSION'); } catch (_) {}
+          try { localStorage.removeItem('sesion_mutual'); localStorage.removeItem('AMMER_AUTH_SESSION'); } catch (_) {}
           return null;
         }
-        s.id = s.id || s.idUsuario || s.usuario_id || '';
-        s.idUsuario = s.id;
-        s.usuario_id = s.id;
-        s.email = String(s.email || '').toLowerCase();
-        s.nombre = s.nombre || 'Usuario';
-        s.rol = s.rol || 'Comercializador';
-        s.idOrganizacion = s.idOrganizacion || s.organizacion_id || 'org_parana_centro';
-        s.nombreOrganizacion = s.nombreOrganizacion || s.nombre_organizacion || 'Mutual Modelo';
-        s.organizacion_id = s.idOrganizacion;
-        s.nombre_organizacion = s.nombreOrganizacion;
-        const esTit = !!(
-          s.esTitularOrg !== undefined
-            ? s.esTitularOrg
-            : (s.esTitular !== undefined ? s.esTitular : s.es_titular_organizacion)
-        );
-        s.es_titular_organizacion = esTit;
-        s.esTitular = esTit;
-        s.esTitularOrg = esTit;
+        _memoriaSesionActiva = s;
         if (window.estadoApp) window.estadoApp.usuarioActual = s;
         return s;
-      } catch(e) {
+      } catch (e) {
         return null;
       }
     }
@@ -8677,61 +8728,33 @@ ${cierreTxt}`;
 
     function setSession(data) {
       if (!data) {
-        sessionStorage.removeItem('sesion_mutual');
-        sessionStorage.removeItem('AMMER_AUTH_SESSION');
+        _memoriaSesionActiva = null;
         if (window.estadoApp) window.estadoApp.usuarioActual = null;
+        try { sessionStorage.removeItem('sesion_mutual'); sessionStorage.removeItem('AMMER_AUTH_SESSION'); } catch (_) {}
+        try { localStorage.removeItem('sesion_mutual'); localStorage.removeItem('AMMER_AUTH_SESSION'); } catch (_) {}
         return;
       }
 
-      // Extrae el objeto usuario de forma segura (objeto plano o anidado en .usuario o .user)
-      const user = data.usuario || data.user || data;
+      const safeUser = normalizarObjetoSesionUsuario_(data);
+      if (!safeUser) return;
 
-      // Lectura tipada y segura de propiedades (NUNCA invocar .includes en user object)
-      const email = String(user.email || (typeof user.usuario === 'string' && user.usuario.includes('@') ? user.usuario : '')).toLowerCase();
-      const rolRaw = String(user.rol || '').trim();
-      let rolNormalizado = 'Comercializador';
-      const rolLower = rolRaw.toLowerCase();
-      if (rolLower.includes('admin')) {
-        rolNormalizado = 'Admin';
-      } else if (rolLower.includes('analista') || rolLower.includes('mutual')) {
-        rolNormalizado = 'Analista';
-      } else {
-        rolNormalizado = 'Comercializador';
-      }
+      _memoriaSesionActiva = safeUser;
+      window.estadoApp = window.estadoApp || { solicitudes: [], usuarios: [], config: {} };
+      window.estadoApp.usuarioActual = safeUser;
 
-      const idResuelto = user.id || user.idUsuario || user.usuario_id || (typeof user.usuario === 'string' ? user.usuario : '') || 'usr_' + Date.now();
-      const orgIdResuelto = user.idOrganizacion || user.organizacion_id || 'org_parana_centro';
-      const orgNomResuelto = user.nombreOrganizacion || user.nombre_organizacion || 'Mutual Modelo';
-      const esTitResuelto = !!(
-        user.esTitularOrg !== undefined
-          ? user.esTitularOrg
-          : (user.esTitular !== undefined ? user.esTitular : user.es_titular_organizacion)
-      );
-
-      const safeUser = {
-        id: idResuelto,
-        idUsuario: idResuelto,
-        usuario_id: idResuelto,
-        email: email || (typeof user.usuario === 'string' && user.usuario ? user.usuario + '@mutualmodelo.com.ar' : 'usuario@mutualmodelo.com.ar'),
-        nombre: user.nombre || (typeof user.usuario === 'string' ? user.usuario : '') || 'Usuario',
-        rol: rolNormalizado,
-        idOrganizacion: orgIdResuelto,
-        organizacion_id: orgIdResuelto,
-        nombreOrganizacion: orgNomResuelto,
-        nombre_organizacion: orgNomResuelto,
-        esTitular: esTitResuelto,
-        esTitularOrg: esTitResuelto,
-        es_titular_organizacion: esTitResuelto
-      };
-
-      sessionStorage.setItem('sesion_mutual', JSON.stringify(safeUser));
-      sessionStorage.setItem('AMMER_AUTH_SESSION', JSON.stringify(safeUser));
-      if (window.estadoApp) window.estadoApp.usuarioActual = safeUser;
+      const serialized = JSON.stringify(safeUser);
+      try {
+        sessionStorage.setItem('sesion_mutual', serialized);
+        sessionStorage.setItem('AMMER_AUTH_SESSION', serialized);
+      } catch (_) {}
+      try {
+        localStorage.setItem('sesion_mutual', serialized);
+        localStorage.setItem('AMMER_AUTH_SESSION', serialized);
+      } catch (_) {}
     }
 
     function handleLogout() {
-      sessionStorage.removeItem('sesion_mutual');
-      sessionStorage.removeItem('AMMER_AUTH_SESSION');
+      setSession(null);
       checkAuthAndInit();
       showToast('Sesión finalizada de forma segura');
     }
@@ -8782,7 +8805,7 @@ ${cierreTxt}`;
       }
 
       if (loggedUser) {
-        localStorage.removeItem(STORAGE_SOLICITUDES_KEY);
+        try { localStorage.removeItem(STORAGE_SOLICITUDES_KEY); } catch (_) {}
         window.estadoApp = window.estadoApp || { solicitudes: [], usuarios: [], config: {} };
         if (!window.estadoApp.config || typeof window.estadoApp.config !== 'object') window.estadoApp.config = {};
         window.estadoApp.solicitudes = [];
@@ -8795,10 +8818,10 @@ ${cierreTxt}`;
         }
         window._cloudSyncInicialEjecutado = false;
         setSession(loggedUser);
+        const sess = getSession() || normalizarObjetoSesionUsuario_(loggedUser);
         checkAuthAndInit();
         await cargarSolicitudesDesdeNube(false);
-        const sess = getSession();
-        showToast('Bienvenido/a, ' + (sess?.nombre || 'Usuario'));
+        showToast('Bienvenido/a, ' + ((sess && sess.nombre) || loggedUser.nombre || loggedUser.usuario || 'Usuario'));
       } else {
         if (err) {
           err.textContent = (res && (res.error || (res.data && (res.data.message || res.data.error)))) || 'Usuario o contraseña incorrectos. Verifique sus datos o intente nuevamente.';
@@ -11308,9 +11331,10 @@ ${cierreTxt}`;
       if (window.estadoApp && Array.isArray(window.estadoApp.solicitudes) && window.estadoApp.solicitudes.length > 0) {
         return window.estadoApp.solicitudes;
       }
-      const data = localStorage.getItem(STORAGE_SOLICITUDES_KEY);
+      let data = null;
+      try { data = localStorage.getItem(STORAGE_SOLICITUDES_KEY); } catch (_) {}
       if (!data) {
-        localStorage.setItem(STORAGE_SOLICITUDES_KEY, JSON.stringify(INITIAL_SOLICITUDES));
+        try { localStorage.setItem(STORAGE_SOLICITUDES_KEY, JSON.stringify(INITIAL_SOLICITUDES)); } catch (_) {}
         return INITIAL_SOLICITUDES;
       }
       try {
@@ -11599,7 +11623,9 @@ ${cierreTxt}`;
       const normalized = Array.isArray(list) ? list.map(normalizarSolicitud) : [];
       window.estadoApp = window.estadoApp || { solicitudes: [], usuarios: [] };
       window.estadoApp.solicitudes = normalized;
-      localStorage.setItem(STORAGE_SOLICITUDES_KEY, JSON.stringify(normalized));
+      try {
+        localStorage.setItem(STORAGE_SOLICITUDES_KEY, JSON.stringify(normalized));
+      } catch (_) {}
     }
 
     function fusionarSolicitudesLocalesYRemotas(locales, remotas) {

@@ -619,11 +619,13 @@ function autenticarUsuario(payload) {
       const activo = obtenerColUsuario_(row, map, ['Activo', 'Estado'], 'SI').toLowerCase();
 
       if (!uPass) continue;
-      if ((uLogin === userInput || uEmail === userInput || uId.toLowerCase() === userInput) && passwordCoincide_(uPass, passInput, uSalt)) {
+      if ((uLogin === userInput || uEmail === userInput || uId.toLowerCase() === userInput) &&
+          passwordCoincide_(uPass, passInput, uSalt, { id: uId, login: uLogin })) {
         if (activo === 'no' || activo === 'false' || activo === '0' || activo === 'inactivo') {
           return { ok: false, error: 'El usuario se encuentra inactivo.' };
         }
-        if (!uSalt) {
+        // Si la clave en la celda estaba en texto plano o aún no tenía sal, la convierte automáticamente a SHA-256 + Sal
+        if (!uSalt || !/^[a-f0-9]{64}$/i.test(uPass)) {
           try { guardarPasswordConSal_(sheet, i + 1, passInput); } catch (eSalt) { Logger.log('No se pudo salar clave: ' + eSalt); }
         }
         const rawTit = obtenerColUsuario_(row, map, ['Es_Titular', 'Titular', 'Es_Titular_Org'], 'NO').toLowerCase();
@@ -658,17 +660,54 @@ function autenticarUsuario(payload) {
 }
 
 /**
- * Compara la clave ingresada contra la guardada en la hoja 'Usuarios'.
- * - Con Salt: SHA-256(salt + clave).
- * - Sin Salt (formato anterior): texto plano o SHA-256 simple (64 hex).
+ * Compara la clave ingresada contra la guardada en la hoja 'Usuarios' o 'Usuarios_Roles'.
+ * Soporta todos los formatos posibles para no bloquear jamás el acceso:
+ * 1. Texto plano directo (si escribiste una clave normal y aún no se ejecutó onEdit)
+ * 2. SHA-256 con sal de la columna 'Salt' (salt + clave o clave + salt)
+ * 3. SHA-256 sin sal (64 caracteres hexadecimales)
+ * 4. SHA-256 con sal de ID_Usuario o Usuario (por si los hashes previos se generaron con ID/Usuario)
  */
-function passwordCoincide_(guardada, ingresada, salt) {
+function passwordCoincide_(guardada, ingresada, salt, userContext) {
   const g = String(guardada || '').trim();
   const i = String(ingresada || '').trim();
   if (!g || !i) return false;
-  if (salt) return hashSha256Hex_(salt + i) === g.toLowerCase();
+
+  // 1. Texto plano directo (siempre permitir si coincide exacto, incluso si la columna Salt quedó con valor viejo)
   if (g === i) return true;
-  if (/^[a-f0-9]{64}$/i.test(g)) return hashSha256Hex_(i) === g.toLowerCase();
+
+  // 2. Hash SHA-256 (64 hex)
+  if (/^[a-f0-9]{64}$/i.test(g)) {
+    const gLow = g.toLowerCase();
+    // 2a. Con Salt explícita de la columna Salt
+    if (salt) {
+      const s = String(salt).trim();
+      if (hashSha256Hex_(s + i) === gLow) return true;
+      if (hashSha256Hex_(i + s) === gLow) return true;
+      if (hashSha256Hex_(s + ':' + i) === gLow) return true;
+      if (hashSha256Hex_(i + ':' + s) === gLow) return true;
+    }
+    // 2b. SHA-256 directo sin sal
+    if (hashSha256Hex_(i) === gLow) return true;
+
+    // 2c. SHA-256 con variantes de contexto (ID_Usuario, Usuario) o sal fija institucional
+    const ctx = userContext || {};
+    const candidatosSal = [
+      ctx.id || '',
+      String(ctx.id || '').toLowerCase(),
+      ctx.login || '',
+      'AMMER',
+      'MUTUAL_MODELO',
+      'SIMULADOR_OFFICE'
+    ];
+    for (let k = 0; k < candidatosSal.length; k++) {
+      const cs = candidatosSal[k];
+      if (!cs) continue;
+      if (hashSha256Hex_(cs + i) === gLow || hashSha256Hex_(i + cs) === gLow ||
+          hashSha256Hex_(cs + ':' + i) === gLow || hashSha256Hex_(i + ':' + cs) === gLow) {
+        return true;
+      }
+    }
+  }
   return false;
 }
 
@@ -680,7 +719,7 @@ function asegurarColumnaSalt_(sheet) {
   let { map } = obtenerHeaderMap_(sheet);
   if (map['Salt'] === undefined) {
     const col = Math.max(sheet.getLastColumn(), 1) + 1;
-    sheet.getRange(1, col).setValue('Salt');
+    sheet.getRange(1, col).setValue('Salt').setFontWeight('bold').setBackground('#0f2744').setFontColor('#ffffff');
     map = obtenerHeaderMap_(sheet).map;
   }
   return map;
@@ -688,27 +727,92 @@ function asegurarColumnaSalt_(sheet) {
 
 function guardarPasswordConSal_(sheet, filaSheet, passwordPlano) {
   const map = asegurarColumnaSalt_(sheet);
+  const colPass = map['Password'] !== undefined ? map['Password'] : (map['Clave'] !== undefined ? map['Clave'] : map['Contraseña']);
+  if (colPass === undefined) return;
   const salt = generarSalt_();
   sheet.getRange(filaSheet, map['Salt'] + 1).setValue(salt);
-  sheet.getRange(filaSheet, map['Password'] + 1).setValue(hashSha256Hex_(salt + String(passwordPlano).trim()));
+  sheet.getRange(filaSheet, colPass + 1).setValue(hashSha256Hex_(salt + String(passwordPlano).trim()));
+}
+
+/**
+ * TRIGGER AUTOMÁTICO DE GOOGLE SHEETS (onEdit):
+ * Cuando escribís una contraseña normal en la columna 'Password' de la hoja 'Usuarios' (o 'Usuarios_Roles'),
+ * automáticamente genera una nueva Sal aleatoria en la columna 'Salt' y convierte la celda 'Password'
+ * en su hash SHA-256(Salt + Password).
+ */
+function onEdit(e) {
+  try {
+    if (!e || !e.range) return;
+    const sheet = e.range.getSheet();
+    if (!sheet) return;
+    const sheetName = String(sheet.getName() || '').trim();
+    if (sheetName !== CONFIG_AMMER.SHEET_USUARIOS && sheetName !== CONFIG_AMMER.SHEET_USUARIOS_ROLES &&
+        sheetName !== 'Usuarios' && sheetName !== 'Usuarios_Roles') {
+      return;
+    }
+
+    const rowStart = e.range.getRow();
+    const numRows = e.range.getNumRows();
+    if (rowStart <= 1 && numRows === 1) return; // Ignorar edición de encabezados
+
+    const map = asegurarColumnaSalt_(sheet);
+    const colPassIdx = map['Password'] !== undefined ? map['Password'] : (map['Clave'] !== undefined ? map['Clave'] : map['Contraseña']);
+    if (colPassIdx === undefined) return;
+    const colPass1Based = colPassIdx + 1;
+
+    const colStart = e.range.getColumn();
+    const colEnd = colStart + e.range.getNumColumns() - 1;
+    if (colPass1Based < colStart || colPass1Based > colEnd) return;
+
+    for (let r = Math.max(2, rowStart); r < rowStart + numRows; r++) {
+      const val = String(sheet.getRange(r, colPass1Based).getValue() || '').trim();
+      if (!val) continue;
+      // Si el valor escrito NO es ya un hash SHA-256 de 64 caracteres hexadecimales, lo convierte automáticamente con nueva sal
+      if (!/^[a-f0-9]{64}$/i.test(val)) {
+        const nuevaSal = generarSalt_();
+        const nuevoHash = hashSha256Hex_(nuevaSal + val);
+        sheet.getRange(r, map['Salt'] + 1).setValue(nuevaSal);
+        sheet.getRange(r, colPass1Based).setValue(nuevoHash);
+      }
+    }
+  } catch (errOnEdit) {
+    Logger.log('Error en onEdit Password SHA-256 + Salt: ' + errOnEdit);
+  }
+}
+
+function onOpen() {
+  try {
+    SpreadsheetApp.getUi()
+      .createMenu('🔐 Seguridad AMMER')
+      .addItem('Encriptar claves en texto plano (SHA-256 + Sal)', 'convertirPasswordsUsuariosAHash')
+      .addItem('Unificar Usuarios_Roles en Usuarios', 'unificarHojasUsuarios')
+      .addToUi();
+  } catch (_) {}
 }
 
 /**
  * Utilidad manual (editor de Apps Script): fija una nueva clave con sal para un usuario.
- * Ej.: establecerPasswordUsuario('jvicentin', 'NuevaClave2026')
+ * Ej.: establecerPasswordUsuario('nfussoni', 'NuevaClave2026')
  */
 function establecerPasswordUsuario(usuario, nuevaClave) {
-  const sheet = obtenerOInicializarHoja_(CONFIG_AMMER.SHEET_USUARIOS, HEADERS_USUARIOS);
-  const data = sheet.getDataRange().getValues();
-  const { map } = obtenerHeaderMap_(sheet);
+  const hojas = obtenerHojasCandidatasUsuarios_();
   const u = String(usuario || '').trim().toLowerCase();
   if (!u || !String(nuevaClave || '').trim()) throw new Error('Usuario y clave son obligatorios.');
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][map['Usuario']] || '').trim().toLowerCase() === u) {
-      guardarPasswordConSal_(sheet, i + 1, nuevaClave);
-      return 'OK: clave actualizada para ' + u;
+  let actualizados = 0;
+  for (let h = 0; h < hojas.length; h++) {
+    const sheet = hojas[h];
+    const data = sheet.getDataRange().getValues();
+    const { map } = obtenerHeaderMap_(sheet);
+    for (let i = 1; i < data.length; i++) {
+      const uLogin = obtenerColUsuario_(data[i], map, ['Usuario', 'Username', 'Login'], '').toLowerCase();
+      const uId = obtenerColUsuario_(data[i], map, ['ID_Usuario', 'ID'], '').toLowerCase();
+      if (uLogin === u || uId === u) {
+        guardarPasswordConSal_(sheet, i + 1, nuevaClave);
+        actualizados++;
+      }
     }
   }
+  if (actualizados > 0) return 'OK: clave actualizada con sal para ' + u + ' (' + actualizados + ' hoja/s)';
   throw new Error('Usuario no encontrado: ' + u);
 }
 
@@ -718,21 +822,24 @@ function hashSha256Hex_(texto) {
 }
 
 /**
- * Utilidad manual (editor de Apps Script): para cada usuario con clave en TEXTO PLANO
- * genera Salt y guarda SHA-256(salt + clave). Las claves que ya son hash no se pueden
- * recalcular (se re-salan solas en el próximo login correcto del usuario).
+ * Convierte todas las claves en TEXTO PLANO de 'Usuarios' (y 'Usuarios_Roles' si existe)
+ * generando una nueva Sal en la columna 'Salt' y guardando SHA-256(Salt + Password).
  */
 function convertirPasswordsUsuariosAHash() {
-  const sheet = obtenerOInicializarHoja_(CONFIG_AMMER.SHEET_USUARIOS, HEADERS_USUARIOS);
-  const map = asegurarColumnaSalt_(sheet);
-  const data = sheet.getDataRange().getValues();
+  const hojas = obtenerHojasCandidatasUsuarios_();
   let n = 0;
-  for (let i = 1; i < data.length; i++) {
-    const v = String(data[i][map['Password']] || '').trim();
-    const salt = String(data[i][map['Salt']] || '').trim();
-    if (v && !salt && !/^[a-f0-9]{64}$/i.test(v)) {
-      guardarPasswordConSal_(sheet, i + 1, v);
-      n++;
+  for (let h = 0; h < hojas.length; h++) {
+    const sheet = hojas[h];
+    const map = asegurarColumnaSalt_(sheet);
+    const colPass = map['Password'] !== undefined ? map['Password'] : (map['Clave'] !== undefined ? map['Clave'] : map['Contraseña']);
+    if (colPass === undefined) continue;
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      const v = String(data[i][colPass] || '').trim();
+      if (v && !/^[a-f0-9]{64}$/i.test(v)) {
+        guardarPasswordConSal_(sheet, i + 1, v);
+        n++;
+      }
     }
   }
   return n;

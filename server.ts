@@ -4,6 +4,19 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI, Type } from '@google/genai';
+import {
+  normalizarClasificacion,
+  resolverSegmentoBeneficiario,
+  clasificarItemsRecibo,
+  calcularMargenRecibo,
+  calcularOfertasPorPlazo,
+  calcularOfertasDisponibles,
+  enriquecerResultadoAuditoria,
+  round2Margen,
+  esCodigoVacioPadron,
+  normalizarDescripcionPadron,
+  limpiarNumeroPadron
+} from './padronMotor.ts';
 
 dotenv.config();
 
@@ -88,6 +101,8 @@ app.get('/api/health', (req, res) => {
   res.json({
     ok: true,
     service: 'AMMER AI Document Audit Service',
+    version: '2.3.0',
+    padronRegistros: 2076,
     geminiConfigured: !!process.env.GEMINI_API_KEY,
     timestamp: new Date().toISOString()
   });
@@ -96,7 +111,29 @@ app.get('/api/health', (req, res) => {
 // Endpoint principal: Auditoría Documental Forense y Crediticia AMMER (Multimodal)
 const handlerAuditoriaDocumental = async (req: any, res: any) => {
   try {
-    const { archivos, datosDeclarados, textoExtraido, fileBase64, base64Archivo, base64, fileName, nombreArchivo, mimeType } = req.body || {};
+    const {
+      archivos,
+      datosDeclarados,
+      textoExtraido,
+      fileBase64,
+      base64Archivo,
+      base64,
+      fileName,
+      nombreArchivo,
+      mimeType,
+      cuotaFutura2,
+      cuota_futura_2,
+      lugarTrabajo,
+      lugar_de_trabajo
+    } = req.body || {};
+
+    const cf2Input = cuotaFutura2 !== undefined ? cuotaFutura2 : cuota_futura_2;
+    const lugarInput = lugarTrabajo || lugar_de_trabajo || '';
+    const datosContexto = {
+      ...(datosDeclarados || {}),
+      ...(cf2Input !== undefined && cf2Input !== null ? { cuotaFutura2: cf2Input } : {}),
+      ...(lugarInput ? { lugarTrabajo: lugarInput } : {})
+    };
 
     let listaArchivos: any[] = Array.isArray(archivos) ? archivos : [];
     const directB64 = String(fileBase64 || base64Archivo || base64 || '').trim();
@@ -185,13 +222,17 @@ FECHA DE AUDITORÍA: ${fechaActualStr} (Mes ${mesActual}/${anioActual})
 
 OBJETIVO DE EXTRACCIÓN DUAL:
 Analiza el recibo de haberes oficial de la Provincia de Entre Ríos (texto literal extraído y/o imagen adjunta) y extrae con rigor matemático estricto toda la información para construir DOS BLOQUES ESTRUCTURADOS:
-1. "resumenDecision": Datos ejecutivos para definir en 5 segundos si se aprueba por planilla, se rechaza o aplica alternativa condicionada por CBU (Titular, DNI, CUIL, Organismo, Cargo, Período, Antigüedad, Bruto, Descuentos de Ley, BERSA, Sidecreer, Mutuales/Proveeduría, FEDEM, Total Descuentos, Líquido, Cupo 50%, Margen Planilla, Estado de Afectación, Embargos, Decisión Planilla, Decisión Alternativa CBU y Scoring).
+1. "resumenDecision": Datos ejecutivos (Titular, DNI, CUIL, Organismo, Cargo, Período, Antigüedad, Tipo Activo/Pasivo, Lugar de Trabajo Padrón, Bruto, Descuentos de Ley / SUBTOTAL_1, BERSA, Sidecreer, Mutuales/Proveeduría, FEDEM, Total Descuentos, Líquido, Margen Afectable Real y Scoring).
 2. "detalleCompletoRecibo": Transcripción literal renglón por renglón de CADA código, concepto/descripción e importe impreso en el recibo (columnas Haberes y Descuentos), sin omitir ningún código ni fila, junto con el período, escalafón/cargo y subtotales/líquido exactos.
 
 REGLAS INVIOLABLES DE CALIBRACIÓN EQUILIBRADA Y CERO ALUCINACIÓN:
 1. ANCLAS EXACTAS DE TOTALES Y LISTA COMPLETA DE CONCEPTOS:
-   - Busca explícitamente las etiquetas impresas 'TOTAL HABERES' (asígnalo exactamente a sueldoBrutoTotal y detalleCompletoRecibo.totales.totalHaberes), 'TOTAL DESCUENTOS' (asígnalo exactamente a totalDescuentosRecibo y detalleCompletoRecibo.totales.totalDescuentos) y 'LÍQUIDO A PAGAR' o 'NETO A COBRAR' (asígnalo exactamente a sueldoLiquido y detalleCompletoRecibo.totales.liquidoAPagar).
-   - Transcribe en "detalleCompletoRecibo.conceptos" la lista COMPLETA de todos los renglones impresos en el recibo en su orden exacto, sin omitir ninguno: cada fila con su "codigo" (ej. "001", "502", "491", o "" si no tiene código numérico), "descripcion" literal impresa, "haberes" (monto numérico o 0 si corresponde a descuento) y "descuentos" (monto numérico o 0 si corresponde a haber).
+   - Busca explícitamente las etiquetas impresas 'TOTAL HABERES' (asígnalo exactamente a sueldoBrutoTotal y detalleCompletoRecibo.totales.totalHaberes), 'TOTAL DESCUENTOS' (asígnalo exactamente a totalDescuentos y detalleCompletoRecibo.totales.totalDescuentos) y 'LÍQUIDO A PAGAR' o 'NETO A COBRAR' (asígnalo exactamente a sueldoLiquido y detalleCompletoRecibo.totales.liquidoAPagar).
+   - Identifica con exactitud:
+     * "tipoRecibo": "PASIVO" si corresponde a Caja de Jubilaciones / Jubilados / Pensionados, o "ACTIVO" para Administración Central, Policía, Salud, Educación/CGE, Vialidad o Municipal.
+     * "lugarTrabajo": código de padrón correspondiente ("JU_" Jubilados/Pasivos, "PO_" Policía/Penitenciario, "SA_" Salud, "SG_" Educación/CGE, "VI_" Vialidad, "GE_" Escalafón General).
+     * "formatoRecibo": "Recibos Jubilados 2025", "Ultimo recibo SUELDO - Formato 2025" o "Municipal".
+   - Transcribe en "conceptos" la lista COMPLETA de todos los renglones impresos en el recibo en su orden exacto, sin omitir ninguno: cada fila con su "codigo" (ej. "001", "502", "491", "101", o "" si no tiene código numérico), "descripcion" literal impresa, "haberes" (monto numérico o 0 si corresponde a descuento) y "descuentos" (monto numérico o 0 si corresponde a haber).
    - Prohibido inventar, redondear o estimar importes, códigos, fechas o nombres.
 2. SIN BLOQUEOS NI FALSOS POSITIVOS:
    - Si un descuento opcional (consumos BERSA, SIDECREER, otras mutuales/proveedurías, códigos FEDEM 366/368/1115/1117 o embargos) NO figura en el recibo, consigna 0 (y embargoDetectado: false). NUNCA lo marques como "ILEGIBLE".
@@ -212,19 +253,14 @@ ${datosDeclarados && (datosDeclarados.nombre || datosDeclarados.dni) ? `
 - Monto solicitado: $ ${datosDeclarados.monto || 0}
 ` : 'NO SE ENVIÓ CARÁTULA PREVIA (AUDITORÍA DIRECTA DE DOCUMENTO). Marca estadoCotejoCaratula como "VERIFICADO EN DOCUMENTO (SIN CARÁTULA PREVIA)" y extrae todos los datos visibles del comprobante.'}
 
-DIRECTIVAS DE CLASIFICACIÓN CONTABLE (ENTRE RÍOS):
+DIRECTIVAS DE CLASIFICACIÓN CONTABLE (PADRÓN OFICIAL ENTRE RÍOS):
 - sueldoBrutoTotal: Valor exacto de 'TOTAL HABERES' (remunerativos + no remunerativos impresos en el recibo).
-- descuentosLey: Jubilación (ej. Cód. 502), Obra Social IOSPER/OSER (Cód. 505), Seguros obligatorios (Códs. 510, 524, 327) y Ley 4035.
-- consumosBersa: Retenciones Banco Entre Ríos / BERSA (0 si no figura).
-- consumosSidecreer: Tarjeta Sidecreer (0 si no figura).
-- otrasMutuales: Mutuales, cooperativas, sindicatos y proveedurías (ej. Proveeduría MUPER Cód. 491, Cód. 338, etc.) (0 si no figura).
-- codigosFedemMonto: Suma de Códigos Oficiales FEDEM 366, 368 (Activos) o 1115, 1117 (Pasivos) (0 si no figura).
-- Embargos Judiciales: Embargos ejecutivos, judiciales o cuota alimentaria (embargoDetectado: true/false).
-- Regla de Decisión Dual:
-  * cupoMaximo50 = Sueldo Bruto Total * 0.50.
-  * margenDisponiblePlanilla = cupoMaximo50 - Total Descuentos.
-  * Si margenDisponiblePlanilla > 0 (y cubre la cuota simulada si existe): decisionPlanilla = "APTO POR PLANILLA", decisionAlternativaCBU = "NO REQUIERE ALTERNATIVA (Viable por planilla)".
-  * Si margenDisponiblePlanilla <= 0 por descuentos voluntarios/mutuales pero NO registra embargos judiciales, cumple antigüedad mínima (>= 1 año) y percibe sueldoLiquido relevante en cuenta: decisionPlanilla = "RECHAZADO / CUPO EXCEDIDO", decisionAlternativaCBU = "APTO CONDICIONADO (Posee $<sueldoLiquido> de neto en cuenta)".
+- descuentosLey: Descuentos prioritarios de ley (SUBTOTAL_1: Jubilación Cód. 502, OSER Cód. 505, SISER, IAPS, IAPV, Alimentaria, Cuota gremial/sindical prioritaria y Ley 4035).
+- consumosBersa: Retenciones Banco Entre Ríos / BERSA (AFECTADO; 0 si no figura).
+- consumosSidecreer: Tarjeta Sidecreer Cód. 412/812 (AFECTADO; 0 si no figura).
+- otrasMutuales: Mutuales, cooperativas, sindicatos y proveedurías (ej. Proveeduría MUPER Cód. 491/829, Cód. 338, etc.) (AFECTADO; 0 si no figura).
+- consumosFedem: Suma de Códigos Oficiales FEDEM 366, 368 (Activos) o 1115, 1117 (Pasivos) (AFECTADO; 0 si no figura).
+- Embargos Judiciales: Embargos ejecutivos, judiciales o cuota alimentaria (embargosJudiciales: true/false).
 
 Devuelve estrictamente JSON conforme al schema.
 `;
@@ -242,6 +278,9 @@ Devuelve estrictamente JSON conforme al schema.
         legajo: { type: Type.STRING },
         cargo: { type: Type.STRING, description: 'Escalafón, categoría o cargo literal impreso en el recibo' },
         situacionRevista: { type: Type.STRING, description: 'ACTIVO TITULAR | ACTIVO SUPLENTE | PASIVO' },
+        tipoRecibo: { type: Type.STRING, description: 'ACTIVO | PASIVO' },
+        lugarTrabajo: { type: Type.STRING, description: 'Código padrón Entre Ríos: GE_, SG_, PO_, SA_, VI_, JU_, JUB_' },
+        formatoRecibo: { type: Type.STRING, description: 'Ultimo recibo SUELDO - Formato 2025 | Recibos Jubilados 2025 | Municipal' },
         fechaIngreso: { type: Type.STRING },
         periodo: { type: Type.STRING, description: 'Mes y año liquidado (ej. 08/2026 o Agosto 2026)' },
         esVigente: { type: Type.BOOLEAN },
@@ -301,7 +340,7 @@ Devuelve estrictamente JSON conforme al schema.
           model: modelo,
           contents: [{ parts }],
           config: {
-            systemInstruction: 'Eres Auditor Crediticio Senior y Especialista en Verificación Documental Forense de AMMER. Extrae literalmente todos los datos personales, organismo, cargo, período, antigüedad, TOTAL HABERES (sueldoBrutoTotal), TOTAL DESCUENTOS (totalDescuentos), LÍQUIDO A PAGAR (sueldoLiquido) y todos los renglones de códigos, conceptos, haberes y descuentos impresos en el recibo de Entre Ríos sin inventar cifras ni redondear. Coloca 0 cuando un descuento opcional no figure en el comprobante y cadena vacía "" si un dato secundario no consta en el recibo. Devuelve exclusivamente JSON puro conforme al schema, sin bloques markdown.',
+            systemInstruction: 'Eres Auditor Crediticio Senior y Especialista en Verificación Documental Forense de AMMER. Extrae literalmente todos los datos personales, organismo, cargo, período, antigüedad, tipoRecibo (ACTIVO/PASIVO), lugarTrabajo (GE_/SG_/PO_/SA_/VI_/JU_), TOTAL HABERES (sueldoBrutoTotal), TOTAL DESCUENTOS (totalDescuentos), LÍQUIDO A PAGAR (sueldoLiquido) y todos los renglones de códigos, conceptos, haberes y descuentos impresos en el recibo de Entre Ríos sin inventar cifras ni redondear. Coloca 0 cuando un descuento opcional no figure en el comprobante y cadena vacía "" si un dato secundario no consta en el recibo. Devuelve exclusivamente JSON puro conforme al schema, sin bloques markdown.',
             responseMimeType: 'application/json',
             responseSchema
           }
@@ -320,7 +359,7 @@ Devuelve estrictamente JSON conforme al schema.
           continue;
         }
 
-        const mappedCandidate = mapearEstructuraAuditoria(parsedCandidate, datosDeclarados);
+        const mappedCandidate = mapearEstructuraAuditoria(parsedCandidate, datosContexto);
         const resDecCand = mappedCandidate?.resumenDecision;
         const conceptsCand = mappedCandidate?.detalleCompletoRecibo?.conceptos || [];
         const conceptosConImporte = conceptsCand.filter((c: any) => Number(c?.haberes || 0) > 0 || Number(c?.descuentos || 0) > 0);
@@ -366,6 +405,10 @@ Devuelve estrictamente JSON conforme al schema.
       auditoria: auditModelOutput,
       resumenDecision: auditModelOutput.resumenDecision,
       detalleCompletoRecibo: auditModelOutput.detalleCompletoRecibo,
+      analisisMargen: auditModelOutput.analisisMargen,
+      ofertasPorPlazo: auditModelOutput.ofertasPorPlazo,
+      validaciones: auditModelOutput.validaciones,
+      alertas: auditModelOutput.alertas,
       resumenJson: auditModelOutput.resumenJson,
       informeMarkdown: auditModelOutput.informeMarkdown
     });
@@ -382,6 +425,34 @@ Devuelve estrictamente JSON conforme al schema.
 app.post('/api/auditar-documentos', handlerAuditoriaDocumental);
 app.post('/api/auditar-recibo', handlerAuditoriaDocumental);
 app.post('/api/analizar-recibo', handlerAuditoriaDocumental);
+
+app.post('/api/calcular-margen-recibo', (req, res) => {
+  try {
+    const body = req.body || {};
+    const datos = body.datosRecibo && typeof body.datosRecibo === 'object' ? body.datosRecibo : body;
+    const linea = String(body.lineaCredito || body.linea || datos.lineaCredito || 'fedem');
+    const resOfertas = calcularOfertasDisponibles(datos, linea);
+    const ofertasPorPlazo = resOfertas.estado === 'DISPONIBLE'
+      ? {
+          fedem: calcularOfertasPorPlazo(resOfertas.disponibleRecibo, resOfertas.analisisMargen.netoLiquido, 'fedem'),
+          muni: calcularOfertasPorPlazo(resOfertas.disponibleRecibo, resOfertas.analisisMargen.netoLiquido, 'muni'),
+          sidecreer: calcularOfertasPorPlazo(resOfertas.disponibleRecibo, resOfertas.analisisMargen.netoLiquido, 'sidecreer')
+        }
+      : { fedem: [], muni: [], sidecreer: [] };
+    return res.json({
+      ok: true,
+      success: true,
+      ...resOfertas,
+      ofertasPorPlazo
+    });
+  } catch (error: any) {
+    return res.status(400).json({
+      ok: false,
+      success: false,
+      error: error?.message || 'No se pudo calcular el margen del recibo.'
+    });
+  }
+});
 
 function formatCurrencyAuditAr_(val: number | null | undefined): string {
   if (val === null || val === undefined || !Number.isFinite(Number(val))) {
@@ -509,28 +580,23 @@ function extraerJSONResilienteServidor_(str: any): any {
   return null;
 }
 
-function clasificarConceptosRecibo_(conceptosRaw: any[]) {
-  const round2 = (n: number) => Math.round(n * 100) / 100;
-  const rows = Array.isArray(conceptosRaw) ? conceptosRaw.map((c: any) => {
-    let habParsed = limpiarMontoServidor_(c?.haberes ?? c?.montoHaber ?? c?.importeHaber);
-    let descParsed = limpiarMontoServidor_(c?.descuentos ?? c?.retenciones ?? c?.montoDescuento ?? c?.importeDescuento);
-    const montoUnico = limpiarMontoServidor_(c?.monto ?? c?.importe);
-    if (habParsed === null && descParsed === null && montoUnico !== null && montoUnico > 0) {
-      const tipoStr = String(c?.tipo ?? c?.columna ?? '').toUpperCase();
-      if (tipoStr.includes('DESC') || tipoStr.includes('RETEN') || tipoStr.includes('DEDU')) {
-        descParsed = montoUnico;
-      } else {
-        habParsed = montoUnico;
-      }
-    }
-    return {
-      codigo: String(c?.codigo ?? '').trim(),
-      descripcion: String(c?.descripcion ?? c?.concepto ?? c?.detalle ?? '').trim(),
-      haberes: habParsed !== null ? round2(Math.max(0, habParsed)) : 0,
-      descuentos: descParsed !== null ? round2(Math.max(0, descParsed)) : 0
-    };
-  }).filter(r => r.codigo || r.descripcion || r.haberes > 0 || r.descuentos > 0) : [];
+const SIDECREER_RE_SERV_ = /SIDECREER|SIDE\s*CRE(?:\s*E?\s*R)?|SI\s*DE\s*CRE(?:\s*E?\s*R)?|DE\s*CREER/;
 
+function stripZerosServ_(c: string): string {
+  return String(c || '').replace(/^0+/, '') || String(c || '');
+}
+
+function quitarSufijoServ_(cod: string): string {
+  if (!cod) return '';
+  return String(cod).trim().toUpperCase().replace(/(?:_|-|\s)+(R|A|D)$/i, '').replace(/^_+|_+$/g, '') || String(cod).trim().toUpperCase();
+}
+
+function clasificarConceptosRecibo_(conceptosRaw: any[], metaRecibo?: Record<string, any>) {
+  const itemsClasif = clasificarItemsRecibo(
+    Array.isArray(conceptosRaw) ? conceptosRaw : [],
+    String(metaRecibo?.lugarTrabajo || metaRecibo?.lugar_de_trabajo || ''),
+    metaRecibo || {}
+  );
   let sumHaberes = 0;
   let sumDescuentos = 0;
   let calcLey = 0;
@@ -542,39 +608,42 @@ function clasificarConceptosRecibo_(conceptosRaw: any[]) {
   const fedemCodes: string[] = [];
   const embargoDescs: string[] = [];
 
-  for (const r of rows) {
-    sumHaberes = round2(sumHaberes + r.haberes);
-    sumDescuentos = round2(sumDescuentos + r.descuentos);
-    if (r.descuentos <= 0) continue;
+  for (const r of itemsClasif) {
+    sumHaberes = round2Margen(sumHaberes + (r.haberes || 0));
+    sumDescuentos = round2Margen(sumDescuentos + (r.descuentos || 0));
+    if (r.tipo !== 'DESCUENTO' && (r.clasificacion === 'COMPUTABLE' || r.clasificacion === 'NO_COMPUTABLE')) {
+      continue;
+    }
+    const imp = Math.abs(r.descuentos || r.importe || 0);
+    if (imp <= 0) continue;
 
-    const codClean = r.codigo.replace(/^0+/, '') || r.codigo;
-    const descUp = r.descripcion.toUpperCase();
+    const descUp = normalizarDescripcionPadron(r.descripcion || '');
+    const codClean = stripZerosServ_(quitarSufijoServ_(esCodigoVacioPadron(r.codigo) ? '' : r.codigo));
 
-    if (['366', '368', '1115', '1117'].includes(codClean) || descUp.includes('FEDEM')) {
-      calcFedem = round2(calcFedem + r.descuentos);
-      const lbl = r.codigo ? `${r.codigo} (${r.descripcion || 'FEDEM'})` : (r.descripcion || 'FEDEM');
-      if (!fedemCodes.includes(lbl)) fedemCodes.push(lbl);
-    } else if (/EMBARGO|JUDICIAL|ALIMENTO|LITIS|OFICIO/.test(descUp)) {
-      calcEmbargo = round2(calcEmbargo + r.descuentos);
+    if (/EMBARGO|JUDICIAL|LITIS|OFICIO/.test(descUp)) {
+      calcEmbargo = round2Margen(calcEmbargo + imp);
       if (r.descripcion) embargoDescs.push(r.descripcion);
-    } else if (/SIDECREER/.test(descUp)) {
-      calcSidecreer = round2(calcSidecreer + r.descuentos);
-    } else if (/BERSA|BANCO ENTRE RIOS|NUEVO BANCO/.test(descUp)) {
-      calcBersa = round2(calcBersa + r.descuentos);
-    } else if (
-      ['502', '505', '510', '524', '327'].includes(codClean) ||
-      /JUBILAC|CAJA JUB|IOSPER|OSER|OBRA SOCIAL|LEY 4035|SEGURO.*OBLIG|APORTE PERSONAL|FONDO SOLIDARIO/.test(descUp)
-    ) {
-      calcLey = round2(calcLey + r.descuentos);
-    } else {
-      calcMutuales = round2(calcMutuales + r.descuentos);
+    } else if (r.clasificacion === 'SUBTOTAL_1') {
+      calcLey = round2Margen(calcLey + imp);
+    } else if (r.clasificacion === 'AFECTADO') {
+      if (['366', '368', '369', '1115', '1117'].includes(codClean) || descUp.includes('FEDEM')) {
+        calcFedem = round2Margen(calcFedem + imp);
+        const lbl = r.codigo ? `${r.codigo} (${r.descripcion || 'FEDEM'})` : (r.descripcion || 'FEDEM');
+        if (!fedemCodes.includes(lbl)) fedemCodes.push(lbl);
+      } else if (SIDECREER_RE_SERV_.test(descUp) || codClean === '412' || codClean === '812') {
+        calcSidecreer = round2Margen(calcSidecreer + imp);
+      } else if (descUp.includes('BERSA') || descUp.includes('BANCO ENTRE RIOS') || codClean === '480' || codClean === '960') {
+        calcBersa = round2Margen(calcBersa + imp);
+      } else {
+        calcMutuales = round2Margen(calcMutuales + imp);
+      }
     }
   }
 
   return {
-    rows,
-    sumHaberes: rows.length > 0 ? sumHaberes : null,
-    sumDescuentos: rows.length > 0 ? sumDescuentos : null,
+    rows: itemsClasif,
+    sumHaberes: itemsClasif.length > 0 ? sumHaberes : null,
+    sumDescuentos: itemsClasif.length > 0 ? sumDescuentos : null,
     calcLey,
     calcBersa,
     calcSidecreer,
@@ -591,7 +660,6 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
   const rawIn = raw || {};
   const resDecIn = rawIn.resumenDecision || {};
   const detRecIn = rawIn.detalleCompletoRecibo || {};
-  const desgloseConceptos = clasificarConceptosRecibo_(detRecIn.conceptos || rawIn.conceptos);
 
   const idObj = rawIn.identidad || (rawIn.datosAgente ? {
     titularDetectado: rawIn.datosAgente.nombreTitular || rawIn.datosAgente.nombreApellido || rawIn.datosAgente.nombre,
@@ -633,6 +701,17 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     cumpleAntiguedadMinima: rawIn.antiguedadApta
   } : {})));
 
+  const metaReciboIn = {
+    lugarTrabajo: rawIn.lugarTrabajo || rawIn.lugar_de_trabajo || datosDeclarados?.lugarTrabajo || datosDeclarados?.lugar_de_trabajo || '',
+    tipoRecibo: rawIn.tipoRecibo || datosDeclarados?.tipoRecibo || '',
+    formatoRecibo: rawIn.formatoRecibo || rawIn.formato || '',
+    organismo: lab.organismoEmpleador || rawIn.organismo || datosDeclarados?.organismo || '',
+    situacionRevista: lab.situacionRevista || rawIn.situacionRevista || '',
+    condicion: lab.condicion || rawIn.condicion || '',
+    cargo: lab.escalafonCargo || detRecIn.escalafonCargo || rawIn.cargo || ''
+  };
+  const desgloseConceptos = clasificarConceptosRecibo_(detRecIn.conceptos || rawIn.conceptos, metaReciboIn);
+
   const vig = rawIn.vigenciaRecibo || (rawIn.liquidacion ? {
     periodoLiquidado: rawIn.liquidacion.periodo || rawIn.liquidacion.periodoLiquidado || rawIn.datosAgente?.periodoLiquidado,
     estadoVigencia: rawIn.liquidacion.estadoVigencia || 'VIGENTE',
@@ -657,11 +736,11 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     sueldoLiquido: rawIn.liquidacion.sueldoLiquidoBolsillo ?? rawIn.liquidacion.sueldoLiquido ?? rawIn.liquidacion.sueldoNetoBolsillo ?? rawIn.liquidacion.sueldoNeto
   } : (resDecIn.sueldoBrutoTotal !== undefined || detRecIn.totales ? {
     sueldoBrutoTotal: resDecIn.sueldoBrutoTotal ?? detRecIn.totales?.totalHaberes,
-    descuentosLey: resDecIn.descuentosLey ?? desgloseConceptos.calcLey,
-    consumosBersa: resDecIn.consumosBersa ?? desgloseConceptos.calcBersa,
-    consumosSidecreer: resDecIn.consumosSidecreer ?? desgloseConceptos.calcSidecreer,
-    otrasMutuales: resDecIn.otrasMutualesOProveeduria ?? resDecIn.otrasMutuales ?? desgloseConceptos.calcMutuales,
-    codigosFedemMonto: resDecIn.consumosFedem ?? resDecIn.codigosFedemMonto ?? desgloseConceptos.calcFedem,
+    descuentosLey: desgloseConceptos.rows.length > 0 ? desgloseConceptos.calcLey : (resDecIn.descuentosLey ?? desgloseConceptos.calcLey),
+    consumosBersa: desgloseConceptos.rows.length > 0 ? desgloseConceptos.calcBersa : (resDecIn.consumosBersa ?? desgloseConceptos.calcBersa),
+    consumosSidecreer: desgloseConceptos.rows.length > 0 ? desgloseConceptos.calcSidecreer : (resDecIn.consumosSidecreer ?? desgloseConceptos.calcSidecreer),
+    otrasMutuales: desgloseConceptos.rows.length > 0 ? desgloseConceptos.calcMutuales : (resDecIn.otrasMutualesOProveeduria ?? resDecIn.otrasMutuales ?? desgloseConceptos.calcMutuales),
+    codigosFedemMonto: desgloseConceptos.rows.length > 0 ? desgloseConceptos.calcFedem : (resDecIn.consumosFedem ?? resDecIn.codigosFedemMonto ?? desgloseConceptos.calcFedem),
     codigosFedemDetectados: desgloseConceptos.fedemCodes,
     embargoDetectado: Boolean(resDecIn.embargosJudiciales) || desgloseConceptos.calcEmbargo > 0,
     embargoMonto: typeof resDecIn.embargosJudiciales === 'number' ? resDecIn.embargosJudiciales : desgloseConceptos.calcEmbargo,
@@ -681,36 +760,26 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     decisionAlternativaCBU: resDecIn.decisionAlternativaCBU
   } : {}));
 
-  const round2 = (n: number) => Math.round(n * 100) / 100;
   const toNumOrNull = (v: any): number | null => limpiarMontoServidor_(v);
 
   let sueldoBruto = toNumOrNull(sal.sueldoBrutoTotal ?? sal.sueldoBruto ?? detRecIn.totales?.totalHaberes);
   if (sueldoBruto === null && desgloseConceptos.sumHaberes !== null) sueldoBruto = desgloseConceptos.sumHaberes;
 
-  let descuentosLey = toNumOrNull(sal.descuentosLey);
+  let descuentosLey = desgloseConceptos.rows.length > 0 ? desgloseConceptos.calcLey : toNumOrNull(sal.descuentosLey);
   if ((descuentosLey === null || descuentosLey === 0) && desgloseConceptos.calcLey > 0) descuentosLey = desgloseConceptos.calcLey;
 
-  let consumosBersa = toNumOrNull(sal.consumosBersa ?? sal.consumosBancariosBersa);
-  if ((consumosBersa === null || consumosBersa === 0) && desgloseConceptos.calcBersa > 0) consumosBersa = desgloseConceptos.calcBersa;
-
-  let consumosSidecreer = toNumOrNull(sal.consumosSidecreer);
-  if ((consumosSidecreer === null || consumosSidecreer === 0) && desgloseConceptos.calcSidecreer > 0) consumosSidecreer = desgloseConceptos.calcSidecreer;
-
-  let otrasMutuales = toNumOrNull(sal.otrasMutuales ?? sal.otrasMutualesOProveeduria);
-  if ((otrasMutuales === null || otrasMutuales === 0) && desgloseConceptos.calcMutuales > 0) otrasMutuales = desgloseConceptos.calcMutuales;
-
-  let codigosFedemMonto = toNumOrNull(sal.codigosFedemMonto ?? sal.consumosFedem);
-  if ((codigosFedemMonto === null || codigosFedemMonto === 0) && desgloseConceptos.calcFedem > 0) codigosFedemMonto = desgloseConceptos.calcFedem;
-
-  let embargoMonto = toNumOrNull(sal.embargoMonto ?? (typeof sal.embargosJudiciales === 'number' ? sal.embargosJudiciales : null));
-  if ((embargoMonto === null || embargoMonto === 0) && desgloseConceptos.calcEmbargo > 0) embargoMonto = desgloseConceptos.calcEmbargo;
+  let consumosBersa = desgloseConceptos.rows.length > 0 ? desgloseConceptos.calcBersa : toNumOrNull(sal.consumosBersa ?? sal.consumosBancariosBersa);
+  let consumosSidecreer = desgloseConceptos.rows.length > 0 ? desgloseConceptos.calcSidecreer : toNumOrNull(sal.consumosSidecreer);
+  let otrasMutuales = desgloseConceptos.rows.length > 0 ? desgloseConceptos.calcMutuales : toNumOrNull(sal.otrasMutuales ?? sal.otrasMutualesOProveeduria);
+  let codigosFedemMonto = desgloseConceptos.rows.length > 0 ? desgloseConceptos.calcFedem : toNumOrNull(sal.codigosFedemMonto ?? sal.consumosFedem);
+  let embargoMonto = desgloseConceptos.rows.length > 0 ? Math.max(desgloseConceptos.calcEmbargo, toNumOrNull(sal.embargoMonto) || 0) : toNumOrNull(sal.embargoMonto ?? (typeof sal.embargosJudiciales === 'number' ? sal.embargosJudiciales : null));
 
   let totalDescuentosRecibo = toNumOrNull(sal.totalDescuentosRecibo ?? sal.totalDescuentos ?? detRecIn.totales?.totalDescuentos);
   if (totalDescuentosRecibo === null && desgloseConceptos.sumDescuentos !== null) totalDescuentosRecibo = desgloseConceptos.sumDescuentos;
 
   let sueldoLiquido = toNumOrNull(sal.sueldoLiquido ?? sal.sueldoNeto ?? detRecIn.totales?.liquidoAPagar);
   if (sueldoLiquido === null && sueldoBruto !== null && totalDescuentosRecibo !== null && sueldoBruto >= totalDescuentosRecibo) {
-    sueldoLiquido = round2(sueldoBruto - totalDescuentosRecibo);
+    sueldoLiquido = round2Margen(sueldoBruto - totalDescuentosRecibo);
   }
 
   // Deducciones voluntarias ausentes representan $0,00 (nunca bloquear por ilegibilidad)
@@ -722,23 +791,44 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
   if (embargoMonto === null) embargoMonto = 0;
 
   if (totalDescuentosRecibo === null && sueldoBruto !== null && sueldoLiquido !== null && sueldoBruto >= sueldoLiquido) {
-    totalDescuentosRecibo = round2(sueldoBruto - sueldoLiquido);
+    totalDescuentosRecibo = round2Margen(sueldoBruto - sueldoLiquido);
   } else if (totalDescuentosRecibo === null && descuentosLey !== null) {
-    totalDescuentosRecibo = round2(
+    totalDescuentosRecibo = round2Margen(
       descuentosLey + (consumosBersa || 0) + (consumosSidecreer || 0) + (otrasMutuales || 0) + (codigosFedemMonto || 0) + (embargoMonto || 0)
     );
   }
 
-  // Regla matemática estricta AMMER:
-  // Cupo Máximo Legal = Sueldo Bruto Total * 0.50
-  // Margen Disponible Planilla = Cupo Máximo Legal - Total Descuentos Actuales del Recibo
-  const cupoMaximoLegal = sueldoBruto !== null ? round2(sueldoBruto * 0.50) : null;
-  const margenDisponibleMensual = (cupoMaximoLegal !== null && totalDescuentosRecibo !== null)
-    ? round2(cupoMaximoLegal - totalDescuentosRecibo)
-    : null;
+  // Motor Oficial de Margen Real (Padrón 2.076 registros + Topes Activos 80% / Pasivos 65% + Endeudamiento 41,67% Neto)
+  const cuotaFutura2In = round2Margen(
+    limpiarNumeroPadron(
+      rawIn.cuota_futura_2 ?? rawIn.cuotaFutura2 ?? datosDeclarados?.cuotaFutura2 ?? datosDeclarados?.cuota_futura_2 ?? 0
+    )
+  );
+  const analisisMargen = calcularMargenRecibo({
+    ...metaReciboIn,
+    total_haberes: sueldoBruto ?? 0,
+    total_descuentos: totalDescuentosRecibo ?? 0,
+    liquido: sueldoLiquido ?? 0,
+    cuota_futura_2: cuotaFutura2In,
+    items: desgloseConceptos.rows
+  });
+
+  const ofertasPorPlazo = analisisMargen.puedeOfrecerCuotas
+    ? {
+        fedem: calcularOfertasPorPlazo(analisisMargen.disponibleRecibo, analisisMargen.netoLiquido, 'fedem'),
+        muni: calcularOfertasPorPlazo(analisisMargen.disponibleRecibo, analisisMargen.netoLiquido, 'muni'),
+        sidecreer: calcularOfertasPorPlazo(analisisMargen.disponibleRecibo, analisisMargen.netoLiquido, 'sidecreer')
+      }
+    : { fedem: [], muni: [], sidecreer: [] };
+
+  const cupoMaximoLegal = sueldoBruto !== null ? round2Margen(sueldoBruto * 0.50) : null;
+  const margenDisponibleMensual = lecturaSalarialPrincipalOk ? analisisMargen.disponibleRecibo : null;
 
   const cuotaSimulada = Number(datosDeclarados?.cuota || 0);
   const alertasCriticas: string[] = Array.isArray(scRaw.alertasCriticas) ? [...scRaw.alertasCriticas] : [];
+  for (const al of analisisMargen.alertas) {
+    if (!alertasCriticas.includes(al)) alertasCriticas.push(al);
+  }
   const camposIlegibles: string[] = Array.isArray(scRaw.camposIlegibles) ? [...scRaw.camposIlegibles] : [];
 
   if (sueldoBruto === null && !camposIlegibles.includes('Sueldo Bruto Total')) camposIlegibles.push('Sueldo Bruto Total');
@@ -773,7 +863,7 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
 
   // Verificación de tope de edad 80 años para pasivos si hay fechaNacimiento y plazo
   let cumpleTopeEdad80: boolean | null = lab.cumpleTopeEdad80 !== undefined ? lab.cumpleTopeEdad80 : null;
-  const esPasivo = String(lab.situacionRevista || '').toUpperCase().includes('PASIVO');
+  const esPasivo = analisisMargen.tipoBeneficiario === 'PASIVO' || String(lab.situacionRevista || '').toUpperCase().includes('PASIVO');
   const dobStr = String(idObj.fechaNacimiento || datosDeclarados?.fechaNacimiento || '').trim();
   const plazoMeses = Number(datosDeclarados?.plazoCuotas || datosDeclarados?.cuotas || 0);
   if (esPasivo && /^\d{4}-\d{2}-\d{2}$/.test(dobStr)) {
@@ -791,7 +881,7 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     }
   }
 
-  const embargoDetectadoBool = Boolean(sal.embargoDetectado || resDecIn.embargosJudiciales) || (embargoMonto !== null && embargoMonto > 0);
+  const embargoDetectadoBool = Boolean(sal.embargoDetectado || sal.embargosJudiciales || resDecIn.embargosJudiciales) || (embargoMonto !== null && embargoMonto > 0);
   const embargoConceptoStr = sal.embargoConcepto || desgloseConceptos.embargoConcepto || '';
 
   if (lab.esInvalidezODiscapacidad) {
@@ -801,21 +891,22 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     alertasCriticas.push(`Presencia de embargo judicial/retención: ${embargoConceptoStr || 'Embargo'} (${formatCurrencyAuditAr_(embargoMonto)}).`);
   }
 
-  // Diagnóstico de afectación por planilla y canal alternativo CBU
+  // Regla de corte estricta: SIN Disponible si afectable - totalAfectado <= 0 o disponibleRecibo <= 0
   let estadoAfectacion = 'MARGEN DISPONIBLE';
   let estadoAfectacionPlanilla = 'MARGEN DISPONIBLE POR PLANILLA';
   if (margenDisponibleMensual === null) {
     estadoAfectacion = 'VERIFICAR MARGEN';
     estadoAfectacionPlanilla = 'VERIFICAR MARGEN';
-  } else if (margenDisponibleMensual <= 0 || (cuotaSimulada > 0 && margenDisponibleMensual < cuotaSimulada)) {
+  } else if (!analisisMargen.puedeOfrecerCuotas || margenDisponibleMensual <= 0) {
     estadoAfectacion = 'SALDO NEGATIVO / AFECTACIÓN EXCEDIDA';
-    estadoAfectacionPlanilla = margenDisponibleMensual < 0
-      ? 'SALDO NEGATIVO POR PLANILLA'
-      : 'CUPO INSUFICIENTE POR PLANILLA';
+    estadoAfectacionPlanilla = 'SIN Disponible';
+    const msgSinDisp = `SIN Disponible: Margen afectable real del recibo agotado (${formatCurrencyAuditAr_(margenDisponibleMensual)}). No se habilitan ofertas de cuotas.`;
+    if (!alertasCriticas.includes(msgSinDisp)) alertasCriticas.push(msgSinDisp);
+  } else if (cuotaSimulada > 0 && analisisMargen.cuotaMaximaSeguraGeneral < cuotaSimulada) {
+    estadoAfectacion = 'SALDO NEGATIVO / AFECTACIÓN EXCEDIDA';
+    estadoAfectacionPlanilla = 'CUPO INSUFICIENTE PARA CUOTA SIMULADA';
     alertasCriticas.push(
-      cuotaSimulada > 0
-        ? `Margen disponible por planilla (${formatCurrencyAuditAr_(margenDisponibleMensual)}) insuficiente para cuota simulada (${formatCurrencyAuditAr_(cuotaSimulada)}).`
-        : `Margen disponible por planilla negativo o agotado (${formatCurrencyAuditAr_(margenDisponibleMensual)}).`
+      `Cuota máxima segura real (${formatCurrencyAuditAr_(analisisMargen.cuotaMaximaSeguraGeneral)}) inferior a la cuota simulada (${formatCurrencyAuditAr_(cuotaSimulada)}).`
     );
   }
 
@@ -827,7 +918,7 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     lab.cumpleAntiguedadMinima === false
   );
 
-  const umbralNetoCbu = Math.max(150000, cuotaSimulada > 0 ? round2(cuotaSimulada * 2) : 150000);
+  const umbralNetoCbu = Math.max(150000, cuotaSimulada > 0 ? round2Margen(cuotaSimulada * 2) : 150000);
   const aplicaAlternativaCbu = Boolean(
     !tieneExclusionDura &&
     estadoAfectacion === 'SALDO NEGATIVO / AFECTACIÓN EXCEDIDA' &&
@@ -838,11 +929,12 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
   let decisionPlanilla = 'APTO POR PLANILLA';
   if (margenDisponibleMensual === null) {
     decisionPlanilla = 'OBSERVADO / VERIFICAR RECIBO';
-  } else if (tieneExclusionDura || margenDisponibleMensual <= 0 || (cuotaSimulada > 0 && margenDisponibleMensual < cuotaSimulada)) {
+  } else if (tieneExclusionDura) {
+    decisionPlanilla = 'RECHAZADO / RESTRICCIÓN REGLAMENTARIA';
+  } else if (!analisisMargen.puedeOfrecerCuotas || margenDisponibleMensual <= 0) {
+    decisionPlanilla = 'SIN DISPONIBLE / CUPO EXCEDIDO';
+  } else if (cuotaSimulada > 0 && analisisMargen.cuotaMaximaSeguraGeneral < cuotaSimulada) {
     decisionPlanilla = 'RECHAZADO / CUPO EXCEDIDO';
-    if (tieneExclusionDura && margenDisponibleMensual > 0) {
-      decisionPlanilla = 'RECHAZADO / RESTRICCIÓN REGLAMENTARIA';
-    }
   }
 
   let decisionAlternativaCBU = 'NO REQUIERE ALTERNATIVA (Viable por planilla)';
@@ -859,7 +951,7 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
   // Score y dictamen coherente con decisión dual (planilla vs alternativa CBU)
   let scoreTotal = typeof scRaw.puntajeTotal === 'number'
     ? Math.max(0, Math.min(100, Math.round(scRaw.puntajeTotal)))
-    : (lecturaSalarialPrincipalOk ? 85 : 55);
+    : (lecturaSalarialPrincipalOk ? 88 : 55);
   let dictamen = String(scRaw.dictamen || (lecturaSalarialPrincipalOk ? 'APTO_OTORGAMIENTO' : 'OBSERVADO')).toUpperCase();
   if (dictamen.startsWith('APTO')) dictamen = 'APTO_OTORGAMIENTO';
 
@@ -872,8 +964,11 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
       scoreTotal = Math.max(60, Math.min(scoreTotal, 68));
     } else {
       dictamen = 'RECHAZADO';
-      scoreTotal = Math.min(scoreTotal, 45);
+      scoreTotal = Math.min(scoreTotal, 48);
     }
+  } else if (lecturaSalarialPrincipalOk && analisisMargen.puedeOfrecerCuotas) {
+    dictamen = 'APTO_OTORGAMIENTO';
+    scoreTotal = Math.max(scoreTotal, 85);
   }
 
   if ((sueldoBruto === null || sueldoLiquido === null || totalDescuentosRecibo === null) && dictamen === 'APTO_OTORGAMIENTO') {
@@ -885,7 +980,7 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     ? 'A (Riesgo Bajo)'
     : (scoreTotal >= 60 ? 'B (Riesgo Moderado)' : 'C (Riesgo Crítico / No Viable)');
 
-  const codigosFedemList = Array.isArray(sal.codigosFedemDetectados) && sal.codigosFedemDetectados.length > 0
+  const codigosFedemList = (Array.isArray(sal.codigosFedemDetectados) && sal.codigosFedemDetectados.length > 0 && desgloseConceptos.fedemCodes.length === 0)
     ? sal.codigosFedemDetectados
     : desgloseConceptos.fedemCodes;
   const codigosFedemPrevios = Boolean(resDecIn.codigosFedemPrevios) || codigosFedemList.length > 0 || (codigosFedemMonto || 0) > 0;
@@ -916,6 +1011,9 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     periodo: periodoStr,
     antiguedad: antiguedadStr,
     antiguedadApta: cumpleAntig,
+    tipoBeneficiario: analisisMargen.tipoBeneficiario,
+    lugarTrabajo: analisisMargen.lugarTrabajo,
+    porcentajeTope: analisisMargen.porcentajeTope,
     sueldoBrutoTotal: sueldoBruto ?? 0,
     descuentosLey: descuentosLey ?? 0,
     consumosBersa: consumosBersa ?? 0,
@@ -925,10 +1023,23 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     totalDescuentos: totalDescuentosRecibo ?? 0,
     sueldoLiquido: sueldoLiquido ?? 0,
     cupoMaximo50: cupoMaximoLegal ?? 0,
-    margenDisponiblePlanilla: margenDisponibleMensual ?? 0,
-    estadoAfectacion: estadoAfectacionPlanilla,
+    subtotal1: analisisMargen.subtotal1,
+    subtotalTope: analisisMargen.subtotalTope,
+    subtotal2: analisisMargen.subtotal2,
+    totalNoComputable: analisisMargen.totalNoComputable,
+    afectable: analisisMargen.afectable,
+    totalAfectado: analisisMargen.totalAfectado,
+    cuotaFutura2: analisisMargen.cuotaFutura2,
+    disponibleRecibo: analisisMargen.disponibleRecibo,
+    margenDisponiblePlanilla: analisisMargen.disponibleRecibo,
+    cuotaMaximaSeguraGeneral: analisisMargen.cuotaMaximaSeguraGeneral,
+    estadoMargen: analisisMargen.estado,
+    estadoAfectacion: analisisMargen.estado === 'SIN_DISPONIBLE' ? 'SIN Disponible' : estadoAfectacionPlanilla,
     embargosJudiciales: embargoDetectadoBool,
+    embargoMonto: embargoMonto || 0,
+    embargoConcepto: embargoConceptoStr,
     codigosFedemPrevios,
+    codigosFedemDetectados: codigosFedemList,
     decisionPlanilla,
     decisionAlternativaCBU,
     scoringSugerido: scoreTotal
@@ -959,30 +1070,55 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
   const embargoMd = embargoDetectadoBool
     ? `🔴 PRESENCIA DE EMBARGO DETECTADA: ${formatCurrencyAuditAr_(embargoMonto)} / ${embargoConceptoStr || 'Concepto judicial/retención'}`
     : '🟢 SIN EMBARGOS';
-  const afectacionMd = estadoAfectacion === 'MARGEN DISPONIBLE'
-    ? '🟢 MARGEN DISPONIBLE POR PLANILLA'
-    : (estadoAfectacion === 'SALDO NEGATIVO / AFECTACIÓN EXCEDIDA' ? `🔴 ${estadoAfectacionPlanilla}` : `⚠️ ${estadoAfectacion}`);
+  const afectacionMd = analisisMargen.estado === 'SIN_DISPONIBLE'
+    ? `🔴 SIN Disponible (${formatCurrencyAuditAr_(analisisMargen.disponibleRecibo)})`
+    : (estadoAfectacion === 'MARGEN DISPONIBLE'
+      ? `🟢 DISPONIBLE (${formatCurrencyAuditAr_(analisisMargen.disponibleRecibo)})`
+      : `⚠️ ${estadoAfectacionPlanilla}`);
 
   const dictamenTextoFinal = scRaw.dictamenAuditor ||
     (decisionPlanilla === 'APTO POR PLANILLA'
-      ? `APTO POR PLANILLA: Margen disponible de ${formatCurrencyAuditAr_(margenDisponibleMensual)} dentro del tope legal del 50%. Legajo sin embargos ni observaciones excluyentes.`
+      ? `APTO POR PLANILLA (${analisisMargen.etiquetaBeneficiario}): Margen disponible real de ${formatCurrencyAuditAr_(analisisMargen.disponibleRecibo)} y cuota máxima segura de ${formatCurrencyAuditAr_(analisisMargen.cuotaMaximaSeguraGeneral)} (tope 41,67% del Neto Líquido).`
       : (aplicaAlternativaCbu
-        ? `PLANILLA EXCEDIDA (${formatCurrencyAuditAr_(margenDisponibleMensual)}) por deducciones voluntarias, sin embargos judiciales. ${decisionAlternativaCBU} para evaluar vía Débito CBU / Sidecreer o cancelación.`
-        : `NO VIABLE: ${alertasCriticas[0] || 'Restricción crediticia o margen agotado'}. Requiere revisión del comité antes de avanzar.`));
+        ? `PLANILLA SIN DISPONIBLE (${formatCurrencyAuditAr_(analisisMargen.disponibleRecibo)}) por afectaciones previas, sin embargos judiciales. ${decisionAlternativaCBU}.`
+        : `NO VIABLE: ${alertasCriticas[0] || 'SIN Disponible o restricción excluyente'}. Revisar antes de otorgar.`));
+
+  const ofertasSectionMd = ofertasPorPlazo.fedem.length > 0
+    ? [
+        '',
+        '**Oferta Máxima Estimada por Plazo (Línea FEDEM):**',
+        '| Plazo | Mult. Neto | Tope Cuota (41,67%) | Cuota Máxima Segura | Capital Máximo a Prestar |',
+        '| :--- | :---: | ---: | ---: | ---: |',
+        ...ofertasPorPlazo.fedem.map((of: any) =>
+          `| ${of.plazo} cuotas | ${of.multiplicador}x | ${formatCurrencyAuditAr_(of.topeEndeudamientoCuota)} | ${formatCurrencyAuditAr_(of.cuotaMaximaReal)} | **${formatCurrencyAuditAr_(of.neto)}** |`
+        )
+      ]
+    : [
+        '',
+        `* **Ofertas de Cuotas:** 🔴 **SIN Disponible** (${formatCurrencyAuditAr_(analisisMargen.disponibleRecibo)}) — Ofertas deshabilitadas.`
+      ];
+
+  const alertasSectionMd = analisisMargen.alertas.length > 0
+    ? [
+        '',
+        '**Validaciones y Alertas Automáticas:**',
+        ...analisisMargen.alertas.map((al: string) => `* ⚠️ ${al}`)
+      ]
+    : [];
 
   const tablaConceptosMd = desgloseConceptos.rows.length > 0
     ? [
         '',
-        '#### 🧾 6. Transcripción Literal del Recibo (Detalle Completo de Conceptos)',
+        '#### 🧾 6. Transcripción Literal del Recibo (Detalle Completo de Conceptos y Clasificación Padrón)',
         `* **Período:** ${detalleCompletoRecibo.periodo} • **Escalafón / Cargo:** ${detalleCompletoRecibo.escalafonCargo}`,
         '',
-        '| Código | Concepto / Descripción | Haberes ($) | Descuentos ($) |',
-        '| :--- | :--- | ---: | ---: |',
-        ...desgloseConceptos.rows.map(r =>
-          `| ${r.codigo || '—'} | ${r.descripcion || '—'} | ${r.haberes > 0 ? formatCurrencyAuditAr_(r.haberes) : '—'} | ${r.descuentos > 0 ? formatCurrencyAuditAr_(r.descuentos) : '—'} |`
+        '| Código | Concepto / Descripción | Haberes ($) | Descuentos ($) | Clasificación |',
+        '| :--- | :--- | ---: | ---: | :--- |',
+        ...desgloseConceptos.rows.map((r: any) =>
+          `| ${r.codigo || '—'} | ${r.descripcion || '—'} | ${r.haberes > 0 ? formatCurrencyAuditAr_(r.haberes) : '—'} | ${r.descuentos > 0 ? formatCurrencyAuditAr_(r.descuentos) : '—'} | \`${r.clasificacion}\` |`
         ),
-        `| **TOTALES** | **SUBTOTALES Y LÍQUIDO EXACTO** | **${formatCurrencyAuditAr_(sueldoBruto)}** | **${formatCurrencyAuditAr_(totalDescuentosRecibo)}** |`,
-        `| **NETO** | **LÍQUIDO A PAGAR EN CUENTA** | **${formatCurrencyAuditAr_(sueldoLiquido)}** | — |`
+        `| **TOTALES** | **SUBTOTALES Y LÍQUIDO EXACTO** | **${formatCurrencyAuditAr_(sueldoBruto)}** | **${formatCurrencyAuditAr_(totalDescuentosRecibo)}** | — |`,
+        `| **NETO** | **LÍQUIDO A PAGAR EN CUENTA** | **${formatCurrencyAuditAr_(sueldoLiquido)}** | — | — |`
       ]
     : [];
 
@@ -992,6 +1128,7 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     '',
     '#### ⚡ Resumen Ejecutivo de Decisión (5 Segundos)',
     `* **Decisión Descuento por Planilla:** **${decisionPlanilla}** (${afectacionMd})`,
+    `* **Régimen / Jurisdicción Padrón:** **${analisisMargen.etiquetaBeneficiario}** (\`${analisisMargen.lugarTrabajo}\`)`,
     `* **Decisión Alternativa CBU / Cuenta:** **${decisionAlternativaCBU}**`,
     `* **Scoring Sugerido AMMER:** **${scoreTotal} / 100** • ${calificacionLetra}`,
     '',
@@ -1012,20 +1149,33 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     '| Concepto | Monto Detectado ($) | Observaciones / Estado |',
     '| :--- | :--- | :--- |',
     `| **Sueldo Bruto Total** | ${formatCurrencyAuditAr_(sueldoBruto)} | Remunerativo + No Remunerativo |`,
-    `| **Descuentos de Ley** | ${formatCurrencyAuditAr_(descuentosLey)} | Jubilación, IOSPER, Ley 4035 |`,
-    `| **Consumos BERSA / Préstamos** | ${formatCurrencyAuditAr_(consumosBersa)} | Retenciones bancarias |`,
-    `| **Consumos SIDECREER** | ${formatCurrencyAuditAr_(consumosSidecreer)} | Descuento por tarjeta oficial |`,
-    `| **Otras Mutuales / Proveeduría** | ${formatCurrencyAuditAr_(otrasMutuales)} | Descuentos por código voluntario |`,
+    `| **Descuentos de Ley / SUBTOTAL_1** | ${formatCurrencyAuditAr_(analisisMargen.totalSubtotal1Desc)} | Jubilación, OSER, Seguros, Prioritarios |`,
+    `| **Consumos BERSA / Préstamos** | ${formatCurrencyAuditAr_(consumosBersa)} | Retenciones bancarias (AFECTADO) |`,
+    `| **Consumos SIDECREER** | ${formatCurrencyAuditAr_(consumosSidecreer)} | Descuento por tarjeta oficial (AFECTADO) |`,
+    `| **Otras Mutuales / Proveeduría** | ${formatCurrencyAuditAr_(otrasMutuales)} | Descuentos por código mutual (AFECTADO) |`,
     `| **Códigos FEDEM Activos** | ${formatCurrencyAuditAr_(codigosFedemMonto)} | ${fedemObs} |`,
     `| **Total Descuentos en Recibo** | ${formatCurrencyAuditAr_(totalDescuentosRecibo)} | Deducciones consolidadas |`,
     `| **Sueldo Líquido de Bolsillo** | ${formatCurrencyAuditAr_(sueldoLiquido)} | Neto final a cobrar |`,
     '',
     `* **Embargos Judiciales / Inhibiciones:** ${embargoMd}`,
     '',
-    '#### 📊 4. Análisis de Afectación Salarial y Margen',
-    `* **Cupo Máximo Legal (50% del Bruto):** ${formatCurrencyAuditAr_(cupoMaximoLegal)}`,
-    `* **Margen Disponible por Planilla:** ${formatCurrencyAuditAr_(margenDisponibleMensual)}`,
-    `* **Estado de Afectación:** ${afectacionMd}`,
+    `#### 📊 4. Análisis de Margen Real y Capacidad de Endeudamiento (${analisisMargen.tipoBeneficiario})`,
+    '| Paso del Pipeline | Monto ($) | Criterio Aplicado |',
+    '| :--- | ---: | :--- |',
+    `| Total Haberes (Bruto) | ${formatCurrencyAuditAr_(analisisMargen.totalHaberes)} | Base de cabecera / suma haberes |`,
+    `| (-) Descuentos Prioritarios (\`SUBTOTAL_1\`) | ${formatCurrencyAuditAr_(analisisMargen.totalSubtotal1Desc)} | Aportes ley, OSER, SISER, vivienda/alimentaria |`,
+    `| **(=) \`Subtotal1\` (Bruto Depurado)** | **${formatCurrencyAuditAr_(analisisMargen.subtotal1)}** | \`total_haberes - SUBTOTAL_1\` |`,
+    `| (-) Reserva Tope (\`Subtotal_tope\` ${Math.round(analisisMargen.porcentajeTope * 100)}%) | ${formatCurrencyAuditAr_(analisisMargen.subtotalTope)} | Reserva intocable (${analisisMargen.etiquetaBeneficiario}) |`,
+    `| **(=) \`Subtotal2\` (${Math.round(analisisMargen.porcentajeAfectableMaximo * 100)}% Máximo)** | **${formatCurrencyAuditAr_(analisisMargen.subtotal2)}** | \`Subtotal1 - Subtotal_tope\` |`,
+    `| (-) Haberes \`NO_COMPUTABLE\` | ${formatCurrencyAuditAr_(analisisMargen.totalNoComputable)} | Sumas fijas no remun., salario fliar., SAC |`,
+    `| **(=) \`Afectable\` Real del Recibo** | **${formatCurrencyAuditAr_(analisisMargen.afectable)}** | \`Subtotal2 - total_no_computable\` |`,
+    `| (-) Descuentos \`AFECTADO\` (Mutuales/FEDEM) | ${formatCurrencyAuditAr_(analisisMargen.totalAfectado)} | Suma códigos comerciales/financieros |`,
+    `| (-) Cuota Futura 2 | ${formatCurrencyAuditAr_(analisisMargen.cuotaFutura2)} | Reserva operativa opcional |`,
+    `| **(=) \`Disponible\` Real del Recibo** | **${formatCurrencyAuditAr_(analisisMargen.disponibleRecibo)}** | \`${analisisMargen.estadoLabel}\` |`,
+    `| **Tope Endeudamiento (41,67% Neto Líquido)** | **${formatCurrencyAuditAr_(analisisMargen.topeEndeudamientoMensual4167)}** | \`(5 × Neto Líquido) / 12\` |`,
+    `| **Cuota Máxima Segura Real** | **${formatCurrencyAuditAr_(analisisMargen.cuotaMaximaSeguraGeneral)}** | \`min(Disponible, Tope Endeudamiento)\` |`,
+    ...ofertasSectionMd,
+    ...alertasSectionMd,
     '',
     '#### 🛡️ 5. Calificación Crediticia AMMER (Scoring)',
     `* **Score AMMER:** ${scoreTotal} / 100 • **Calificación:** ${calificacionLetra}`,
@@ -1040,16 +1190,27 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
 
   const resumenJson = {
     resumenDecision,
-    detalleCompletoRecibo
+    detalleCompletoRecibo,
+    analisisMargen,
+    ofertasPorPlazo
   };
 
-  const descuentosVoluntariosTotal = round2(
+  const descuentosVoluntariosTotal = round2Margen(
     (consumosBersa || 0) + (consumosSidecreer || 0) + (otrasMutuales || 0) + (codigosFedemMonto || 0) + (embargoMonto || 0)
   );
 
   return {
     resumenDecision,
     detalleCompletoRecibo,
+    analisisMargen,
+    ofertasPorPlazo,
+    validaciones: analisisMargen.validaciones,
+    alertas: analisisMargen.alertas,
+    tipoBeneficiario: analisisMargen.tipoBeneficiario,
+    lugarTrabajo: analisisMargen.lugarTrabajo,
+    porcentajeTope: analisisMargen.porcentajeTope,
+    estado: analisisMargen.estado,
+    estadoLabel: analisisMargen.estadoLabel,
     scoringCrediticio: {
       puntajeTotal: scoreTotal,
       calificacionLetra,
@@ -1061,7 +1222,7 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
         calidadDocumental: { puntaje: pCalidad, maximo: 20, detalle: camposIlegibles.length ? `Campos faltantes: ${camposIlegibles.join(', ')}` : 'Lectura literal verificada sin campos cortados o borrosos.' },
         vigenciaYFormalidad: { puntaje: pVigencia, maximo: 20, detalle: vigenciaBool ? `Período ${periodoStr} vigente según calendario.` : `Período ${periodoStr} observado.` },
         coincidenciaIdentidad: { puntaje: pIdentidad, maximo: 30, detalle: dniCoincideBool ? 'Coincidencia total entre documento y carátula.' : 'Discrepancia en cotejo de identidad.' },
-        capacidadFinanciera: { puntaje: pFinanciera, maximo: 30, detalle: `Tope 50% Bruto (${formatCurrencyAuditAr_(cupoMaximoLegal)}) vs Descuentos (${formatCurrencyAuditAr_(totalDescuentosRecibo)}).` }
+        capacidadFinanciera: { puntaje: pFinanciera, maximo: 30, detalle: `Afectable ${analisisMargen.tipoBeneficiario} (${formatCurrencyAuditAr_(analisisMargen.afectable)}) vs Afectado (${formatCurrencyAuditAr_(analisisMargen.totalAfectado)}) → Disponible: ${formatCurrencyAuditAr_(analisisMargen.disponibleRecibo)}.` }
       }
     },
     reciboSueldo: {
@@ -1074,6 +1235,8 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
       escalafonCargo: escalafonCargoStr,
       cargo: escalafonCargoStr,
       situacionRevista: lab.situacionRevista || 'ACTIVO TITULAR',
+      tipoBeneficiario: analisisMargen.tipoBeneficiario,
+      lugarTrabajo: analisisMargen.lugarTrabajo,
       fechaIngreso: lab.fechaIngreso || 'No consta en recibo',
       antiguedadDetalle: antiguedadStr,
       antiguedadAnios: lab.antiguedadAnios !== undefined ? lab.antiguedadAnios : null,
@@ -1100,7 +1263,8 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
       totalDescuentosRecibo: totalDescuentosRecibo ?? 0,
       sueldoNeto: sueldoLiquido ?? 0,
       topeLegal50Porciento: cupoMaximoLegal ?? 0,
-      margenDisponibleCuota: margenDisponibleMensual ?? 0,
+      margenDisponibleCuota: analisisMargen.disponibleRecibo,
+      cuotaMaximaSeguraGeneral: analisisMargen.cuotaMaximaSeguraGeneral,
       estadoAfectacion,
       estadoAfectacionPlanilla,
       decisionPlanilla,
@@ -1125,9 +1289,9 @@ function mapearEstructuraAuditoria(raw: any, datosDeclarados: any) {
     alertasCriticas,
     camposIlegibles,
     observacionesAuditor: [
-      `Organismo: ${organismoStr} (${lab.situacionRevista || 'ACTIVO TITULAR'}).`,
+      `Organismo: ${organismoStr} · Régimen: ${analisisMargen.etiquetaBeneficiario}.`,
       `Decisión Planilla: ${decisionPlanilla} | Alternativa CBU: ${decisionAlternativaCBU}.`,
-      `Cupo Máximo Legal (50% del Bruto): ${formatCurrencyAuditAr_(cupoMaximoLegal)} | Margen Disponible: ${formatCurrencyAuditAr_(margenDisponibleMensual)}.`,
+      `Disponible Recibo: ${formatCurrencyAuditAr_(analisisMargen.disponibleRecibo)} | Cuota Máxima Segura (41,67% Neto): ${formatCurrencyAuditAr_(analisisMargen.cuotaMaximaSeguraGeneral)}.`,
       lab.observacionesEspeciales || ''
     ].filter(Boolean),
     informeEjecutivo: dictamenTextoFinal,

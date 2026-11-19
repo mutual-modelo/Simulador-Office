@@ -16384,6 +16384,12 @@ ${cierreTxt}`;
     let _auditDetalleRefinanciacion = '';
     let _auditFactorMargen = 1.0;
     let _auditCuotaPersonalizada = 0;
+    function esAdminAuditoria() {
+      try {
+        const sess = (typeof getSession === 'function') ? getSession() : null;
+        return Boolean(sess && String(sess.rol || '').toLowerCase().includes('admin'));
+      } catch (e) { return false; }
+    }
 
     function resetearParametrosRefinanciacionAuditoria() {
       _auditCuotaRefinanciar = 0;
@@ -19401,7 +19407,7 @@ ${cierreTxt}`;
         '<div class="ai-executive-header">' +
           '<div>' +
             '<h4 style="font-size:0.86rem;font-weight:800;color:var(--color-primary);margin:0;">Auditoría Documental y Crediticia AMMER</h4>' +
-            '<span style="font-size:0.67rem;color:var(--text-muted);">Motor Padrón 2.076 códigos · ' + (esPasivo ? 'Pasivos 65%' : 'Activos 80%') + ' (' + sanitizeHTML(lugarTrabajo) + ')</span>' +
+            (esAdminAuditoria() ? '<span style="font-size:0.67rem;color:var(--text-muted);">Motor Padrón 2.076 códigos · ' + (esPasivo ? 'Pasivos 65%' : 'Activos 80%') + ' (' + sanitizeHTML(lugarTrabajo) + ')</span>' : '') +
           '</div>' +
           '<div>' + badgeHtml + '</div>' +
         '</div>' +
@@ -20180,6 +20186,7 @@ ${cierreTxt}`;
       if (!planes || planes.length === 0) {
         return '<tr><td colspan="4" class="py-4 px-3 text-center text-xs text-slate-500 font-sans">No hay ofertas habilitadas (SIN Disponible, saldo vigente supera tope o margen insuficiente para esta línea).</td></tr>';
       }
+      const esAdm = esAdminAuditoria();
       return planes.map((p, idx) => {
         const zebraBg = (idx % 2 === 1) ? 'bg-slate-50/40' : 'bg-white';
         const netoNum = Number(p.neto) || 0;
@@ -20217,16 +20224,15 @@ ${cierreTxt}`;
           '<td class="py-3 px-4 whitespace-nowrap">' +
             '<div class="text-sm font-bold text-emerald-700 font-mono">$ ' + netoFormateado + '</div>' +
             bolsilloHtml +
-            (totalNum > 0 ? '<div class="text-[10px] text-slate-400 font-mono mt-0.5">Total: $ ' + sanitizeHTML(formatMontoSinSimboloAr(totalNum)) + '</div>' : '') +
+            (esAdm && totalNum > 0 ? '<div class="text-[10px] text-slate-400 font-mono mt-0.5">Total: $ ' + sanitizeHTML(formatMontoSinSimboloAr(totalNum)) + '</div>' : '') +
           '</td>' +
           '<td class="py-3 px-4 text-center whitespace-nowrap">' +
             '<div class="text-sm font-bold text-slate-800">' + p.plazo + ' cuotas fijas</div>' +
-            (multTxt ? '<div class="text-[10px] text-slate-500 font-mono mt-0.5">' + multTxt + (compMaxTxt ? ' · ' + compMaxTxt : '') + '</div>' : '') +
+            (esAdm && multTxt ? '<div class="text-[10px] text-slate-500 font-mono mt-0.5">' + multTxt + (compMaxTxt ? ' · ' + compMaxTxt : '') + '</div>' : '') +
           '</td>' +
           '<td class="py-3 px-4 text-right whitespace-nowrap">' +
             '<div class="text-sm font-bold text-slate-900 font-mono">$ ' + cuotaFinalFormateada + '</div>' +
-            alivioHtml +
-            '<div class="text-[10px] text-slate-400 mt-0.5">Tope: ' + limitadoLabel + '</div>' +
+            (esAdm ? alivioHtml + '<div class="text-[10px] text-slate-400 mt-0.5">Tope: ' + limitadoLabel + '</div>' : '') +
           '</td>' +
           '<td class="py-2.5 px-4 text-right whitespace-nowrap">' +
             '<div class="inline-flex items-center justify-end gap-1.5">' +
@@ -20769,13 +20775,13 @@ ${cierreTxt}`;
               '<h3 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight m-0">' +
                 'Auditoría Documental y Crediticia AMMER' +
               '</h3>' +
-              '<p class="text-xs text-slate-500 font-normal mt-0.5 mb-0">' +
+              (esAdminAuditoria() ? '<p class="text-xs text-slate-500 font-normal mt-0.5 mb-0">' +
                 'Motor Padrón Oficial (2.076 códigos) • ' + (esPasivo ? 'Pasivos 65% afectable' : 'Activos 80% afectable') + ' · Tope Endeudamiento 41,67% Neto' +
-              '</p>' +
+              '</p>' : '') +
             '</div>' +
           '</div>' +
           '<div class="flex items-center gap-2 flex-wrap">' +
-            '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-800 border border-indigo-200 text-xs font-bold font-mono">' + sanitizeHTML(lugarTrabajo) + '</span>' +
+            (esAdminAuditoria() ? '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-800 border border-indigo-200 text-xs font-bold font-mono">' + sanitizeHTML(lugarTrabajo) + '</span>' : '') +
             badgeHtml +
           '</div>' +
         '</div>' +
@@ -21111,6 +21117,9 @@ ${cierreTxt}`;
         const lineaInicial = (orgUpper.includes('MUNICIP') || orgUpper.includes('QUAD')) ? 'QUAD' : 'FEDEM';
 
         window._cuotaMaximaAuditoria = disponibleRecibo;
+        window._cuotaSeguraMaxAuditoria = cuotaSegura > 0 ? cuotaSegura : disponibleRecibo;
+        _auditCuotaPersonalizada = 0;
+        window._offerOptsAuditoria = Object.assign({}, window._offerOptsAuditoria || {}, { cuotaPersonalizada: 0 });
         window._netoLiquidoAuditoria = liquido;
         window._lineaAuditoriaSugerida = lineaInicial;
 
@@ -21136,28 +21145,36 @@ ${cierreTxt}`;
                 '<h2 class="text-base font-bold text-slate-900 tracking-tight m-0">' +
                   '⚡ Simulación de Ayuda Económica Sugerida' +
                 '</h2>' +
-                '<p class="text-xs text-slate-500 font-normal mt-1 mb-0">' +
+                (esAdminAuditoria() ? '<p class="text-xs text-slate-500 font-normal mt-1 mb-0">' +
                   'Oferta máxima por plazo acotada por min(Disponible Recibo, Tope Endeudamiento 41,67% Neto Líquido' + (saldoExtSim > 0 ? ' − Saldo Vigente' : '') + ')' +
-                '</p>' +
+                '</p>' : '') +
               '</div>' +
               '<div class="flex items-center gap-2 flex-wrap">' +
-                '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200 font-mono">' +
+                '<span id="badgeCuotaSeguraSim" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200 font-mono">' +
                   '<span class="w-2 h-2 rounded-full bg-emerald-500"></span>' +
                   'Cuota Segura Máx.: ' + sanitizeHTML(formatPesosMargen(cuotaSegura)) + ' / mes' +
                 '</span>' +
-                '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-indigo-50 text-indigo-800 border-indigo-200 font-mono">' +
+                (esAdminAuditoria() ? '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-indigo-50 text-indigo-800 border-indigo-200 font-mono">' +
                   'Disponible: ' + sanitizeHTML(formatPesosMargen(disponibleRecibo)) + ' · Tope 41,67%: ' + sanitizeHTML(formatPesosMargen(topeEndeud)) +
-                '</span>' +
-                (saldoCancSim > 0
+                '</span>' : '') +
+                (esAdminAuditoria() && saldoCancSim > 0
                   ? ('<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border bg-amber-50 text-amber-800 border-amber-200 font-mono">Saldo Cancelar: ' + sanitizeHTML(formatPesosMargen(saldoCancSim)) + '</span>')
                   : '') +
-                (saldoExtSim > 0
+                (esAdminAuditoria() && saldoExtSim > 0
                   ? ('<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border bg-rose-50 text-rose-800 border-rose-200 font-mono">Saldo Vigente Ext.: ' + sanitizeHTML(formatPesosMargen(saldoExtSim)) + '</span>')
                   : '') +
               '</div>' +
             '</div>' +
 
             alertaEmbargoSim +
+
+            '<div class="flex flex-wrap items-center gap-2 mb-4 p-3 rounded-xl border border-slate-200 bg-slate-50">' +
+              '<label for="inputAuditCuotaPersonalizada" class="text-xs font-bold text-slate-700">Cuota deseada ($)</label>' +
+              '<input id="inputAuditCuotaPersonalizada" type="text" inputmode="decimal" placeholder="Máx. ' + sanitizeHTML(formatPesosMargen(cuotaSegura)) + '" onkeydown="if(event.key===\'Enter\'){aplicarCuotaPersonalizadaAuditoria();}" class="w-44 px-3 py-1.5 rounded-lg border border-slate-300 text-sm font-mono bg-white" />' +
+              '<button type="button" onclick="aplicarCuotaPersonalizadaAuditoria()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">Simular</button>' +
+              '<button type="button" id="btnLimpiarCuotaPersSim" onclick="limpiarCuotaPersonalizadaAuditoria()" style="display:none" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 text-xs font-semibold">Restablecer al máximo</button>' +
+              '<span class="text-[11px] text-slate-500">Ingresá una cuota menor o igual a la máxima segura para simular un monto menor.</span>' +
+            '</div>' +
 
             '<!-- Selector de Línea Crediticia (Tabs / Píldoras Modernas) -->' +
             '<div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200 gap-1 mb-5">' +
@@ -22872,6 +22889,7 @@ ${cierreTxt}`;
     window.cambiarClasificacionItemAuditoria = cambiarClasificacionItemAuditoria;
     window.aplicarCuotaPersonalizadaAuditoria = aplicarCuotaPersonalizadaAuditoria;
     window.limpiarCuotaPersonalizadaAuditoria = limpiarCuotaPersonalizadaAuditoria;
+    window.aplicarCuotaPersonalizadaAuditoria = aplicarCuotaPersonalizadaAuditoria;
     window.CONFIG = CONFIG;
     window.estadoApp = window.estadoApp;
 

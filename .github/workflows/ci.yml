@@ -18,11 +18,15 @@ jobs:
       - name: Validar sintaxis JS embebida en index.html y JSON del padrón
         run: |
           python3 - <<'PY'
-          import json, re, subprocess, sys, tempfile
+          import hashlib, json, re, subprocess, sys, tempfile
 
-          with open("padron_codigos_descuentos_normalizado.json", encoding="utf-8") as f:
-              padron = json.load(f)
-          print(f"Padrón JSON válido: {len(padron)} entradas/claves")
+          raw_padron = open("padron_codigos_descuentos_normalizado.json", "rb").read()
+          padron = json.loads(raw_padron.decode("utf-8"))
+          manifest = json.load(open("padron_manifest.json", encoding="utf-8"))
+          sha_actual = hashlib.sha256(raw_padron).hexdigest()
+          if sha_actual != manifest["sha256"]:
+              sys.exit(f"Desfase de padrón JSON: actual={sha_actual} esperado={manifest['sha256']}")
+          print(f"Padrón JSON válido y sincronizado: sha256={sha_actual[:12]}... ({len(padron)} claves)")
 
           html = open("index.html", encoding="utf-8").read()
           scripts = re.findall(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", html, re.S | re.I)

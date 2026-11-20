@@ -4560,113 +4560,287 @@
       </div>
     </section>
 
-      <!-- VISTA PRINCIPAL INDEPENDIENTE: AUDITORÍA DOCUMENTAL Y SALARIAL (RECIBOS) -->
+      <!-- VISTA PRINCIPAL INDEPENDIENTE: AUDITORÍA IA 2.0 (DUAL-CONTROL MULTIDOCUMENTO) -->
       <section id="vistaAuditoriaIA" class="app-view">
         <div id="wrapperMutualAuditoria">
           <div class="ai-audit-hub">
             <div class="ai-audit-header">
               <div>
-                <div class="ai-audit-title">
-                  <span>Auditoría Documental y Crediticia AMMER</span>
+                <div class="ai-audit-title" style="display:flex;align-items:center;gap:0.55rem;flex-wrap:wrap;">
+                  <span>Auditoría IA 2.0 — Control Documental y Crediticio AMMER</span>
+                  <span style="display:inline-flex;align-items:center;padding:2px 9px;border-radius:9999px;font-size:11px;font-weight:800;background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;">Dual-Control IA + Determinista</span>
                 </div>
                 <div class="ai-audit-desc">
-                  Recibos oficiales de Entre Ríos (Policía, CGE, Salud, Administración Central, Municipios y Caja de Jubilaciones) · Evaluación Salarial y Capacidad de Ayuda Económica
+                  Recibos de Haberes ER · DNI &amp; MRZ ICAO 9303 · Domicilio / Constancia Policial (&le; 45 días) · CajaJper (Jubilaciones) · Boletín Oficial ER · Consolidación Integral
                 </div>
               </div>
-              <div style="display:flex;gap:0.4rem;align-items:center;">
-                <button type="button" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold tracking-wide transition-all duration-150 cursor-pointer shadow-sm whitespace-nowrap" onclick="limpiarPanelAuditoria()">Limpiar</button>
+              <div style="display:flex;gap:0.45rem;align-items:center;flex-wrap:wrap;">
+                <button type="button" id="btnIrTabConsolidadoHeader" onclick="cambiarTabAuditoria20('integral')" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 text-xs font-bold tracking-wide transition-all duration-150 cursor-pointer shadow-sm whitespace-nowrap">
+                  <span>🛡️ Consolidado</span>
+                  <span id="badgeResumenHeaderAuditoria20" style="padding:1px 7px;border-radius:9999px;font-size:10px;font-weight:800;background:#ffffff;color:#475569;border:1px solid #cbd5e1;">SIN DATOS</span>
+                </button>
+                <button type="button" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold tracking-wide transition-all duration-150 cursor-pointer shadow-sm whitespace-nowrap" onclick="limpiarPanelAuditoria()">Limpiar Todo</button>
               </div>
             </div>
 
-            <!-- Único Componente de Entrada Directa (Auto-inicio al seleccionar o soltar archivo) -->
-            <div id="aiDropzoneDirecta"
-                 class="ai-dropzone-box"
-                 role="button"
-                 tabindex="0"
-                 aria-label="Subir o arrastrar Recibo de Sueldo en PDF o Imagen"
-                 onclick="document.getElementById('fileInputAuditoriaIA').click()"
-                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('fileInputAuditoriaIA').click();}"
-                 ondragover="manejarDragOverAuditoria(event)"
-                 ondragleave="manejarDragLeaveAuditoria(event)"
-                 ondrop="manejarDropReciboAuditoria(event)">
-              <input type="file" id="fileInputAuditoriaIA" multiple accept="application/pdf,image/*" style="display:none;" onchange="manejarSeleccionReciboAuditoria(this.files)"/>
-              <div style="font-weight:800;font-size:.94rem;color:var(--color-primary);">
-                📁 Subir o arrastrar Recibo de Sueldo (PDF o Imagen)
-              </div>
-              <div style="font-size:.74rem;color:var(--text-muted);margin-top:4px;">
-                Seleccioná o soltá aquí el recibo (PDF digital, PDF escaneado, JPG o PNG) para iniciar automáticamente la auditoría y simulación de ayuda económica.
-              </div>
-              <div id="listaArchivosAuditoriaPills" style="margin-top:.55rem;min-height:0;"></div>
+            <!-- Menú de Navegación Auditoría IA 2.0 -->
+            <div id="audit20TabsNav" role="tablist" aria-label="Módulos de Auditoría IA 2.0" style="display:flex;flex-wrap:wrap;gap:0.45rem;padding:0.55rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:1rem;">
+              <button type="button" role="tab" data-audit-tab="recibo" onclick="cambiarTabAuditoria20('recibo')" class="audit20-tab-btn" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.48rem 0.85rem;border-radius:9px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all .15s;">
+                <span>🧾 Recibo de Haberes</span>
+                <span id="tabBadgeAuditRecibo" style="font-size:10px;padding:1px 6px;border-radius:9999px;background:rgba(255,255,255,0.2);color:#ffffff;">—</span>
+              </button>
+              <button type="button" role="tab" data-audit-tab="dni" onclick="cambiarTabAuditoria20('dni')" class="audit20-tab-btn" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.48rem 0.85rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all .15s;">
+                <span>🪪 DNI &amp; MRZ</span>
+                <span id="tabBadgeAuditDni" style="font-size:10px;padding:1px 6px;border-radius:9999px;background:#f1f5f9;color:#64748b;">—</span>
+              </button>
+              <button type="button" role="tab" data-audit-tab="domicilio" onclick="cambiarTabAuditoria20('domicilio')" class="audit20-tab-btn" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.48rem 0.85rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all .15s;">
+                <span>🏠 Domicilio / Policial</span>
+                <span id="tabBadgeAuditDomicilio" style="font-size:10px;padding:1px 6px;border-radius:9999px;background:#f1f5f9;color:#64748b;">—</span>
+              </button>
+              <button type="button" role="tab" data-audit-tab="cajajper" onclick="cambiarTabAuditoria20('cajajper')" class="audit20-tab-btn" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.48rem 0.85rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all .15s;">
+                <span>🏛️ CajaJper (Jubilaciones)</span>
+                <span id="tabBadgeAuditCajaJper" style="font-size:10px;padding:1px 6px;border-radius:9999px;background:#f1f5f9;color:#64748b;">—</span>
+              </button>
+              <button type="button" role="tab" data-audit-tab="boletin" onclick="cambiarTabAuditoria20('boletin')" class="audit20-tab-btn" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.48rem 0.85rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all .15s;">
+                <span>📰 Boletín Oficial ER</span>
+                <span id="tabBadgeAuditBoletin" style="font-size:10px;padding:1px 6px;border-radius:9999px;background:#f1f5f9;color:#64748b;">—</span>
+              </button>
+              <button type="button" role="tab" data-audit-tab="integral" onclick="cambiarTabAuditoria20('integral')" class="audit20-tab-btn" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.48rem 0.85rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all .15s;">
+                <span>🛡️ Tablero Consolidado</span>
+                <span id="tabBadgeAuditIntegral" style="font-size:10px;padding:1px 6px;border-radius:9999px;background:#f1f5f9;color:#64748b;">—</span>
+              </button>
             </div>
 
-            <!-- Estado del análisis -->
-            <div id="loader-auditoria-ia" class="hidden" role="status" aria-live="polite" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:.75rem 1rem;margin-top:.85rem;margin-bottom:.5rem;display:none;align-items:center;justify-content:center;gap:.65rem;">
-              <div class="api-spinner" style="width:18px;height:18px;margin:0;border-top-color:var(--color-brand-blue);"></div>
-              <span style="color:var(--color-primary);font-size:.8rem;font-weight:700;">Analizando recibo oficial de Entre Ríos...</span>
-            </div>
-            <div id="aiAuditLoadingBar" style="display:none;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:1rem;margin-top:.85rem;margin-bottom:.75rem;text-align:center;">
-              <div class="api-spinner" style="margin:0 auto .5rem;border-top-color:var(--color-brand-blue);"></div>
-              <strong style="color:var(--color-primary);font-size:.85rem;" id="aiAuditStageText">Analizando recibo oficial de Entre Ríos...</strong>
-              <p style="font-size:.71rem;color:var(--text-muted);margin-top:3px;">Verificando Haberes Brutos, Descuentos de Ley, BERSA, Sidecreer, Mutuales, Códigos FEDEM, Embargos y Planes Sugeridos.</p>
+            <!-- PANEL 1: RECIBO DE HABERES (FLUJO EXISTENTE INTACTO) -->
+            <div id="audit20PanelRecibo" class="audit20-panel" style="display:block;">
+              <!-- Único Componente de Entrada Directa (Auto-inicio al seleccionar o soltar archivo) -->
+              <div id="aiDropzoneDirecta"
+                   class="ai-dropzone-box"
+                   role="button"
+                   tabindex="0"
+                   aria-label="Subir o arrastrar Recibo de Sueldo en PDF o Imagen"
+                   onclick="document.getElementById('fileInputAuditoriaIA').click()"
+                   onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('fileInputAuditoriaIA').click();}"
+                   ondragover="manejarDragOverAuditoria(event)"
+                   ondragleave="manejarDragLeaveAuditoria(event)"
+                   ondrop="manejarDropReciboAuditoria(event)">
+                <input type="file" id="fileInputAuditoriaIA" multiple accept="application/pdf,image/*" style="display:none;" onchange="manejarSeleccionReciboAuditoria(this.files)"/>
+                <div style="font-weight:800;font-size:.94rem;color:var(--color-primary);">
+                  📁 Subir o arrastrar Recibo de Sueldo (PDF o Imagen)
+                </div>
+                <div style="font-size:.74rem;color:var(--text-muted);margin-top:4px;">
+                  Seleccioná o soltá aquí el recibo (PDF digital, PDF escaneado, JPG o PNG) para iniciar automáticamente la auditoría y simulación de ayuda económica.
+                </div>
+                <div id="listaArchivosAuditoriaPills" style="margin-top:.55rem;min-height:0;"></div>
+              </div>
+
+              <!-- Estado del análisis -->
+              <div id="loader-auditoria-ia" class="hidden" role="status" aria-live="polite" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:.75rem 1rem;margin-top:.85rem;margin-bottom:.5rem;display:none;align-items:center;justify-content:center;gap:.65rem;">
+                <div class="api-spinner" style="width:18px;height:18px;margin:0;border-top-color:var(--color-brand-blue);"></div>
+                <span style="color:var(--color-primary);font-size:.8rem;font-weight:700;">Analizando recibo oficial de Entre Ríos...</span>
+              </div>
+              <div id="aiAuditLoadingBar" style="display:none;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:1rem;margin-top:.85rem;margin-bottom:.75rem;text-align:center;">
+                <div class="api-spinner" style="margin:0 auto .5rem;border-top-color:var(--color-brand-blue);"></div>
+                <strong style="color:var(--color-primary);font-size:.85rem;" id="aiAuditStageText">Analizando recibo oficial de Entre Ríos...</strong>
+                <p style="font-size:.71rem;color:var(--text-muted);margin-top:3px;">Verificando Haberes Brutos, Descuentos de Ley, BERSA, Sidecreer, Mutuales, Códigos FEDEM, Embargos y Planes Sugeridos.</p>
+              </div>
+
+              <!-- Banner Rojo Visible de Error Estricto (Prohibido renderizar $ 0,00 si hay falla) -->
+              <div id="bannerErrorAuditoriaIA" class="hidden" role="alert" aria-live="assertive" style="background:#fef2f2;border:2px solid #fca5a5;color:#7f1d1d;border-radius:12px;padding:1rem 1.15rem;margin-top:.85rem;margin-bottom:.75rem;">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;">
+                  <div style="display:flex;align-items:flex-start;gap:.65rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="8" x2="12" y2="12"></line>
+                      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <div>
+                      <div style="font-weight:800;font-size:.86rem;color:#991b1b;margin-bottom:3px;">No se pudo procesar el comprobante</div>
+                      <div id="bannerErrorAuditoriaTexto" style="font-size:.78rem;line-height:1.45;color:#7f1d1d;"></div>
+                    </div>
+                  </div>
+                  <button type="button" onclick="ocultarBannerErrorAuditoria()" style="background:transparent;border:none;color:#991b1b;font-size:1.15rem;font-weight:800;cursor:pointer;line-height:1;" title="Cerrar aviso">&times;</button>
+                </div>
+              </div>
+
+              <!-- Pantalla de Resultados en 3 Bloques (Oculto hasta procesar exitosamente) -->
+              <div id="aiAuditResultadosContainer" style="display:none;"></div>
             </div>
 
-            <!-- Banner Rojo Visible de Error Estricto (Prohibido renderizar $ 0,00 si hay falla) -->
-            <div id="bannerErrorAuditoriaIA" class="hidden" role="alert" aria-live="assertive" style="background:#fef2f2;border:2px solid #fca5a5;color:#7f1d1d;border-radius:12px;padding:1rem 1.15rem;margin-top:.85rem;margin-bottom:.75rem;">
-              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;">
-                <div style="display:flex;align-items:flex-start;gap:.65rem;">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                  </svg>
+            <!-- PANEL 2: VALIDADOR MIXTO DNI + MRZ + FORENSE -->
+            <div id="audit20PanelDni" class="audit20-panel" style="display:none;">
+              <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:1.25rem;">
+                <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;border-bottom:1px solid #f1f5f9;padding-bottom:0.75rem;margin-bottom:1rem;">
                   <div>
-                    <div style="font-weight:800;font-size:.86rem;color:#991b1b;margin-bottom:3px;">No se pudo procesar el comprobante</div>
-                    <div id="bannerErrorAuditoriaTexto" style="font-size:.78rem;line-height:1.45;color:#7f1d1d;"></div>
+                    <h3 style="margin:0;font-size:0.98rem;font-weight:800;color:#0f172a;">🪪 Auditoría Mixta de DNI Argentino (Visión IA + ICAO 9303 MRZ + Forense)</h3>
+                    <p style="margin:4px 0 0 0;font-size:0.76rem;color:#64748b;">Verifica vigencia, dígitos verificadores del código óptico MRZ dorso, cruce frente vs. dorso, metadatos EXIF/PDF y estado RENAPER-ready.</p>
+                  </div>
+                  <span style="padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700;background:#f8fafc;color:#475569;border:1px solid #cbd5e1;">RENAPER: Conector listo</span>
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0.75rem;margin-bottom:0.85rem;">
+                  <div>
+                    <label for="inputDniEsperadoAudit20" style="display:block;font-size:0.73rem;font-weight:700;color:#334155;margin-bottom:4px;">DNI esperado del asociado (opcional)</label>
+                    <input id="inputDniEsperadoAudit20" type="text" inputmode="numeric" placeholder="Ej: 40838259 (contrasta frente y MRZ)" style="width:100%;padding:0.52rem 0.75rem;border-radius:10px;border:1px solid #cbd5e1;font-size:0.82rem;font-family:ui-monospace,monospace;" />
+                  </div>
+                  <div>
+                    <label for="fileInputDniAudit20" style="display:block;font-size:0.73rem;font-weight:700;color:#334155;margin-bottom:4px;">Imagen o PDF del DNI (frente o frente+dorso)</label>
+                    <input id="fileInputDniAudit20" type="file" accept="application/pdf,image/*" onchange="ejecutarValidacionDniAudit20(this.files[0])" style="width:100%;padding:0.42rem 0.65rem;border-radius:10px;border:1px dashed #94a3b8;background:#f8fafc;font-size:0.78rem;cursor:pointer;" />
                   </div>
                 </div>
-                <button type="button" onclick="ocultarBannerErrorAuditoria()" style="background:transparent;border:none;color:#991b1b;font-size:1.15rem;font-weight:800;cursor:pointer;line-height:1;" title="Cerrar aviso">&times;</button>
+
+                <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;">
+                  <button type="button" id="btnValidarDniAudit20" onclick="ejecutarValidacionDniAudit20()" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.55rem 1.05rem;border-radius:10px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;">
+                    <span>🪪 Validar DNI (IA + MRZ + Forense)</span>
+                  </button>
+                  <button type="button" onclick="inspeccionarSoloForenseAudit20('dni')" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.52rem 0.9rem;border-radius:10px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.76rem;font-weight:600;cursor:pointer;">
+                    <span>🔬 Solo Forense de Archivo</span>
+                  </button>
+                </div>
+
+                <div id="resultadoDniAudit20" style="display:none;margin-top:1rem;"></div>
               </div>
             </div>
 
-            <!-- Pantalla de Resultados en 3 Bloques (Oculto hasta procesar exitosamente) -->
-            <div id="aiAuditResultadosContainer" style="display:none;"></div>
-
-            <!-- Panel Consulta Boletín Oficial de Entre Ríos (Etapa 1) -->
-            <div id="panelBoletinOficialER" class="bg-white border border-slate-200/90 rounded-2xl shadow-sm p-5 mt-5 font-sans antialiased" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:1.25rem;margin-top:1rem;">
-              <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 mb-4" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;border-bottom:1px solid #f1f5f9;padding-bottom:0.75rem;margin-bottom:1rem;">
-                <div>
-                  <h3 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight m-0 flex items-center gap-2 flex-wrap" style="margin:0;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;font-size:0.95rem;font-weight:800;color:#0f172a;">
-                    <span>📰 Consulta Boletín Oficial de Entre Ríos</span>
-                    <span id="badgeEstadoIndiceBoletin" style="display:inline-flex;align-items:center;padding:2px 9px;border-radius:9999px;font-size:11px;font-weight:700;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;">Verificando índice...</span>
-                  </h3>
-                  <p class="text-xs text-slate-500 mt-1 mb-0" style="font-size:0.76rem;color:#64748b;margin:4px 0 0 0;">
-                    Búsqueda por DNI o CUIL en ediciones oficiales (designaciones, retiros, recursos, embargos y edictos).
-                  </p>
+            <!-- PANEL 3: VALIDADOR MIXTO DOMICILIO / CONSTANCIA POLICIAL ≤ 45 DÍAS -->
+            <div id="audit20PanelDomicilio" class="audit20-panel" style="display:none;">
+              <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:1.25rem;">
+                <div style="border-bottom:1px solid #f1f5f9;padding-bottom:0.75rem;margin-bottom:1rem;">
+                  <h3 style="margin:0;font-size:0.98rem;font-weight:800;color:#0f172a;">🏠 Validación de Domicilio &amp; Constancia Policial (&le; 45 días)</h3>
+                  <p style="margin:4px 0 0 0;font-size:0.76rem;color:#64748b;">Control determinista de antigüedad máxima 45 días (boletas de servicio o certificado policial de domicilio) y regla de 3ros (acepta boleta a nombre de tercero solo si coincide exactamente con el domicilio del DNI).</p>
                 </div>
-                <div id="wrapAdminSyncBoletin" style="display:none;align-items:center;gap:0.5rem;flex-wrap:wrap;">
-                  <button type="button" onclick="sincronizarBoletinOficialAuditoria(30)" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.45rem 0.85rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.75rem;font-weight:600;cursor:pointer;box-shadow:0 1px 2px rgba(15,23,42,0.05);">↻ Sincronizar últimos 30 días</button>
-                  <button type="button" onclick="sincronizarBoletinOficialAuditoria(0)" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.45rem 0.9rem;border-radius:9px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.75rem;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(15,39,68,0.2);" title="Indexa todas las ediciones históricas desde Diciembre 2003 en segundo plano">📚 Indexar Histórico 2003–2026</button>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem;margin-bottom:0.85rem;">
+                  <div>
+                    <label for="inputDomNombreAudit20" style="display:block;font-size:0.73rem;font-weight:700;color:#334155;margin-bottom:4px;">Apellido y Nombre del solicitante</label>
+                    <input id="inputDomNombreAudit20" type="text" placeholder="Ej: LOZA FRANCISCO ADRIEL" style="width:100%;padding:0.52rem 0.75rem;border-radius:10px;border:1px solid #cbd5e1;font-size:0.8rem;" />
+                  </div>
+                  <div>
+                    <label for="inputDomDniAudit20" style="display:block;font-size:0.73rem;font-weight:700;color:#334155;margin-bottom:4px;">DNI del solicitante</label>
+                    <input id="inputDomDniAudit20" type="text" inputmode="numeric" placeholder="Ej: 40838259" style="width:100%;padding:0.52rem 0.75rem;border-radius:10px;border:1px solid #cbd5e1;font-size:0.8rem;font-family:ui-monospace,monospace;" />
+                  </div>
+                  <div>
+                    <label for="inputDomDirDniAudit20" style="display:block;font-size:0.73rem;font-weight:700;color:#334155;margin-bottom:4px;">Domicilio en el DNI (para regla 3ros)</label>
+                    <input id="inputDomDirDniAudit20" type="text" placeholder="Ej: Av. Ramírez 1450, Paraná" style="width:100%;padding:0.52rem 0.75rem;border-radius:10px;border:1px solid #cbd5e1;font-size:0.8rem;" />
+                  </div>
+                  <div>
+                    <label for="fileInputDomAudit20" style="display:block;font-size:0.73rem;font-weight:700;color:#334155;margin-bottom:4px;">Boleta de servicio o Constancia Policial</label>
+                    <input id="fileInputDomAudit20" type="file" accept="application/pdf,image/*" onchange="ejecutarValidacionDomicilioAudit20(this.files[0])" style="width:100%;padding:0.42rem 0.65rem;border-radius:10px;border:1px dashed #94a3b8;background:#f8fafc;font-size:0.78rem;cursor:pointer;" />
+                  </div>
                 </div>
-              </div>
 
-              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:0.55rem;">
-                <input id="inputBoletinDniConsulta"
-                       type="text"
-                       inputmode="numeric"
-                       placeholder="Ingresá DNI o CUIL (ej: 18071072 o 20-18071072-3)"
-                       onkeydown="if(event.key==='Enter'){event.preventDefault();consultarBoletinOficialAuditoria();}"
-                       style="flex:1 1 280px;min-width:260px;padding:0.55rem 0.85rem;border-radius:10px;border:1px solid #cbd5e1;font-size:0.84rem;font-family:ui-monospace,monospace;background:#ffffff;color:#0f172a;outline:none;" />
-                <button type="button" id="btnConsultarBoletinER" onclick="consultarBoletinOficialAuditoria()" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.55rem 1rem;border-radius:10px;border:1px solid #135596;background:#135596;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;box-shadow:0 2px 6px rgba(19,85,150,0.22);">
-                  <span>🔍 Consultar Boletín</span>
-                </button>
-                <a id="btnAbrirDateasRespaldo" href="https://www.dateas.com/es/docs/boletin-oficial-provincia-de-entre-rios" target="_blank" rel="noopener noreferrer" onclick="actualizarLinkDateasBoletin()" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.55rem 0.9rem;border-radius:10px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.76rem;font-weight:600;text-decoration:none;">
-                  <span>↗ Ver en Dateas</span>
-                </a>
-              </div>
+                <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;">
+                  <button type="button" id="btnValidarDomAudit20" onclick="ejecutarValidacionDomicilioAudit20()" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.55rem 1.05rem;border-radius:10px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;">
+                    <span>🏠 Validar Comprobante (&le; 45 días)</span>
+                  </button>
+                  <button type="button" onclick="inspeccionarSoloForenseAudit20('domicilio')" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.52rem 0.9rem;border-radius:10px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.76rem;font-weight:600;cursor:pointer;">
+                    <span>🔬 Solo Forense de Archivo</span>
+                  </button>
+                </div>
 
-              <div id="boletinSyncProgressBox" style="display:none;margin-top:0.75rem;padding:0.65rem 0.9rem;border-radius:10px;background:#eef2ff;border:1px solid #c7d2fe;font-size:0.76rem;color:#1e1b4b;"></div>
-              <div id="resultadoBoletinOficialER" class="mt-4" style="display:none;margin-top:0.9rem;"></div>
+                <div id="resultadoDomicilioAudit20" style="display:none;margin-top:1rem;"></div>
+              </div>
             </div>
+
+            <!-- PANEL 4: CAJAJPER (GESTIONES EN CURSO DE JUBILACIONES) -->
+            <div id="audit20PanelCajaJper" class="audit20-panel" style="display:none;">
+              <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:1.25rem;">
+                <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;border-bottom:1px solid #f1f5f9;padding-bottom:0.75rem;margin-bottom:1rem;">
+                  <div>
+                    <h3 style="margin:0;font-size:0.98rem;font-weight:800;color:#0f172a;">🏛️ Consulta Caja de Jubilaciones y Pensiones ER (CajaJper)</h3>
+                    <p style="margin:4px 0 0 0;font-size:0.76rem;color:#64748b;">Verifica trámites previsionales en curso por DNI o NUC y alerta posibles transiciones de agente ACTIVO a PASIVO (JU_).</p>
+                  </div>
+                  <a href="https://www.cajajper.gov.ar/secciones/servicios/expedientes/index.php" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.42rem 0.85rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.75rem;font-weight:600;text-decoration:none;">
+                    <span>↗ Portal Oficial CajaJper</span>
+                  </a>
+                </div>
+
+                <div style="display:flex;flex-wrap:wrap;gap:0.6rem;align-items:flex-end;">
+                  <div style="flex:1 1 200px;">
+                    <label for="inputCajaJperDniAudit20" style="display:block;font-size:0.73rem;font-weight:700;color:#334155;margin-bottom:4px;">DNI (sin puntos)</label>
+                    <input id="inputCajaJperDniAudit20" type="text" inputmode="numeric" placeholder="Ej: 18071072" onkeydown="if(event.key==='Enter'){event.preventDefault();consultarCajaJperAudit20();}" style="width:100%;padding:0.55rem 0.8rem;border-radius:10px;border:1px solid #cbd5e1;font-size:0.84rem;font-family:ui-monospace,monospace;" />
+                  </div>
+                  <div style="flex:1 1 180px;">
+                    <label for="inputCajaJperNucAudit20" style="display:block;font-size:0.73rem;font-weight:700;color:#334155;margin-bottom:4px;">NUC (opcional)</label>
+                    <input id="inputCajaJperNucAudit20" type="text" inputmode="numeric" placeholder="Número Único de Caja" onkeydown="if(event.key==='Enter'){event.preventDefault();consultarCajaJperAudit20();}" style="width:100%;padding:0.55rem 0.8rem;border-radius:10px;border:1px solid #cbd5e1;font-size:0.84rem;font-family:ui-monospace,monospace;" />
+                  </div>
+                  <div style="flex:0 1 180px;">
+                    <label for="selectCajaJperTipoReciboAudit20" style="display:block;font-size:0.73rem;font-weight:700;color:#334155;margin-bottom:4px;">Condición del recibo</label>
+                    <select id="selectCajaJperTipoReciboAudit20" style="width:100%;padding:0.55rem 0.75rem;border-radius:10px;border:1px solid #cbd5e1;font-size:0.82rem;background:#ffffff;">
+                      <option value="">Auto (según recibo)</option>
+                      <option value="ACTIVO">ACTIVO</option>
+                      <option value="PASIVO">PASIVO</option>
+                    </select>
+                  </div>
+                  <button type="button" id="btnConsultarCajaJperAudit20" onclick="consultarCajaJperAudit20()" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.58rem 1.05rem;border-radius:10px;border:1px solid #135596;background:#135596;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;">
+                    <span>🔍 Consultar Expediente</span>
+                  </button>
+                </div>
+
+                <div id="resultadoCajaJperAudit20" style="display:none;margin-top:1rem;"></div>
+              </div>
+            </div>
+
+            <!-- PANEL 5: BOLETÍN OFICIAL DE ENTRE RÍOS (ETAPA 1 PRESERVADO) -->
+            <div id="audit20PanelBoletin" class="audit20-panel" style="display:none;">
+              <div id="panelBoletinOficialER" class="bg-white border border-slate-200/90 rounded-2xl shadow-sm p-5 font-sans antialiased" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:1.25rem;">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 mb-4" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;border-bottom:1px solid #f1f5f9;padding-bottom:0.75rem;margin-bottom:1rem;">
+                  <div>
+                    <h3 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight m-0 flex items-center gap-2 flex-wrap" style="margin:0;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;font-size:0.95rem;font-weight:800;color:#0f172a;">
+                      <span>📰 Consulta Boletín Oficial de Entre Ríos</span>
+                      <span id="badgeEstadoIndiceBoletin" style="display:inline-flex;align-items:center;padding:2px 9px;border-radius:9999px;font-size:11px;font-weight:700;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;">Verificando índice...</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-1 mb-0" style="font-size:0.76rem;color:#64748b;margin:4px 0 0 0;">
+                      Búsqueda por DNI o CUIL en ediciones oficiales (designaciones, retiros, recursos, embargos y edictos).
+                    </p>
+                  </div>
+                  <div id="wrapAdminSyncBoletin" style="display:none;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                    <button type="button" onclick="sincronizarBoletinOficialAuditoria(30)" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.45rem 0.85rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.75rem;font-weight:600;cursor:pointer;box-shadow:0 1px 2px rgba(15,23,42,0.05);">↻ Sincronizar últimos 30 días</button>
+                    <button type="button" onclick="sincronizarBoletinOficialAuditoria(0)" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.45rem 0.9rem;border-radius:9px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.75rem;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(15,39,68,0.2);" title="Indexa todas las ediciones históricas desde Diciembre 2003 en segundo plano">📚 Indexar Histórico 2003–2026</button>
+                  </div>
+                </div>
+
+                <div style="display:flex;flex-wrap:wrap;align-items:center;gap:0.55rem;">
+                  <input id="inputBoletinDniConsulta"
+                         type="text"
+                         inputmode="numeric"
+                         placeholder="Ingresá DNI o CUIL (ej: 18071072 o 20-18071072-3)"
+                         onkeydown="if(event.key==='Enter'){event.preventDefault();consultarBoletinOficialAuditoria();}"
+                         style="flex:1 1 280px;min-width:260px;padding:0.55rem 0.85rem;border-radius:10px;border:1px solid #cbd5e1;font-size:0.84rem;font-family:ui-monospace,monospace;background:#ffffff;color:#0f172a;outline:none;" />
+                  <button type="button" id="btnConsultarBoletinER" onclick="consultarBoletinOficialAuditoria()" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.55rem 1rem;border-radius:10px;border:1px solid #135596;background:#135596;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;box-shadow:0 2px 6px rgba(19,85,150,0.22);">
+                    <span>🔍 Consultar Boletín</span>
+                  </button>
+                  <a id="btnAbrirDateasRespaldo" href="https://www.dateas.com/es/docs/boletin-oficial-provincia-de-entre-rios" target="_blank" rel="noopener noreferrer" onclick="actualizarLinkDateasBoletin()" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.55rem 0.9rem;border-radius:10px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.76rem;font-weight:600;text-decoration:none;">
+                    <span>↗ Ver en Dateas</span>
+                  </a>
+                </div>
+
+                <div id="boletinSyncProgressBox" style="display:none;margin-top:0.75rem;padding:0.65rem 0.9rem;border-radius:10px;background:#eef2ff;border:1px solid #c7d2fe;font-size:0.76rem;color:#1e1b4b;"></div>
+                <div id="resultadoBoletinOficialER" class="mt-4" style="display:none;margin-top:0.9rem;"></div>
+              </div>
+            </div>
+
+            <!-- PANEL 6: TABLERO CONSOLIDADO DUAL-CONTROL -->
+            <div id="audit20PanelIntegral" class="audit20-panel" style="display:none;">
+              <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:1.25rem;">
+                <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;border-bottom:1px solid #f1f5f9;padding-bottom:0.75rem;margin-bottom:1rem;">
+                  <div>
+                    <h3 style="margin:0;font-size:0.98rem;font-weight:800;color:#0f172a;">🛡️ Tablero Consolidado Dual-Control (Cruce Multidocumento)</h3>
+                    <p style="margin:4px 0 0 0;font-size:0.76rem;color:#64748b;">Cruza identidad, domicilio, vigencia documental, Boletín Oficial ER y gestiones en CajaJper para emitir el dictamen maestro.</p>
+                  </div>
+                  <button type="button" id="btnRecalcularConsolidadoAudit20" onclick="ejecutarAuditoriaIntegralAudit20()" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.52rem 1rem;border-radius:10px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;">
+                    <span>↻ Recalcular Dictamen Maestro</span>
+                  </button>
+                </div>
+
+                <div id="resultadoIntegralAudit20">
+                  <div style="padding:1.2rem;border-radius:12px;background:#f8fafc;border:1px dashed #cbd5e1;text-align:center;color:#64748b;font-size:0.82rem;">
+                    Evaluá al menos un pilar (Recibo, DNI, Domicilio, CajaJper o Boletín Oficial ER) para visualizar los semáforos y el cruce automático de identidad.
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
@@ -19984,6 +20158,7 @@ ${cierreTxt}`;
       const resBol = document.getElementById('resultadoBoletinOficialER');
       if (resBol) { resBol.style.display = 'none'; resBol.innerHTML = ''; }
       if (typeof actualizarLinkDateasBoletin === 'function') actualizarLinkDateasBoletin();
+      if (typeof limpiarEstadoAuditoria20 === 'function') limpiarEstadoAuditoria20();
       showToast('Panel de auditoría reiniciado.');
     }
 
@@ -21478,6 +21653,9 @@ ${cierreTxt}`;
           inpBol.value = dniExtraido;
           actualizarLinkDateasBoletin();
         }
+        if (typeof registrarReciboEnAuditoria20 === 'function') {
+          registrarReciboEnAuditoria20(audit);
+        }
       } catch (_) {}
       if (typeof container.scrollIntoView === 'function') {
         container.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -21650,6 +21828,9 @@ ${cierreTxt}`;
         }
 
         const lista = Array.isArray(data.resultados) ? data.resultados : [];
+        if (typeof registrarBoletinEnAuditoria20 === 'function') {
+          try { registrarBoletinEnAuditoria20(data); } catch (_) {}
+        }
         if (lista.length === 0) {
           resBox.innerHTML =
             '<div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 flex flex-wrap items-center justify-between gap-2">' +
@@ -23193,6 +23374,682 @@ ${cierreTxt}`;
     window.asignarNumeroDefinitivoModal = asignarNumeroDefinitivoModal;
     window.actualizarVistaDetalleExpediente = actualizarVistaDetalleExpediente;
     window.handleArchivoComplementarioSeleccionado = handleArchivoComplementarioSeleccionado;
+    // =========================================================================
+    // ETAPA 3: AUDITORÍA IA 2.0 — CONTROLADOR MULTI-MÓDULO DUAL-CONTROL
+    // =========================================================================
+    window._auditoria20Estado = {
+      tabActiva: 'recibo',
+      dniSolicitante: '',
+      nombreSolicitante: '',
+      domicilioDni: '',
+      recibo: null,
+      dni: null,
+      domicilio: null,
+      cajajper: null,
+      boletin: null,
+      integral: null
+    };
+
+    function _estiloBadgeSemaforoAudit20(estado) {
+      const up = String(estado || '').toUpperCase();
+      if (up === 'APROBADO' || up === 'VERDE' || up === 'BAJO' || up === 'SIN_EXPEDIENTES') {
+        return { bg: '#ecfdf5', fg: '#065f46', bd: '#a7f3d0', txt: 'OK' };
+      }
+      if (up === 'RECHAZADO' || up === 'ROJO' || up === 'ALTO') {
+        return { bg: '#fff1f2', fg: '#9f1239', bd: '#fecdd3', txt: up === 'ROJO' ? 'ALERTA' : up };
+      }
+      if (up === 'NO_EVALUADO' || up === 'SIN_DATOS' || !up) {
+        return { bg: '#f1f5f9', fg: '#64748b', bd: '#cbd5e1', txt: '—' };
+      }
+      return { bg: '#fffbeb', fg: '#92400e', bd: '#fde68a', txt: 'OBS' };
+    }
+
+    function actualizarBadgesTabsAuditoria20() {
+      const st = window._auditoria20Estado || {};
+      const mapBadges = [
+        {
+          id: 'tabBadgeAuditRecibo',
+          estado: st.recibo
+            ? (st.recibo.embargosJudiciales ? 'AMARILLO' : (Number(st.recibo.sueldoLiquido || 0) > 0 ? 'APROBADO' : 'RECHAZADO'))
+            : null,
+          label: st.recibo ? (st.recibo.embargosJudiciales ? 'EMB' : 'OK') : '—'
+        },
+        {
+          id: 'tabBadgeAuditDni',
+          estado: st.dni ? st.dni.dictamen_final : null,
+          label: st.dni ? (st.dni.es_valido ? 'OK' : 'RECH') : '—'
+        },
+        {
+          id: 'tabBadgeAuditDomicilio',
+          estado: st.domicilio ? st.domicilio.dictamen_final : null,
+          label: st.domicilio ? (st.domicilio.es_valido ? 'OK' : 'RECH') : '—'
+        },
+        {
+          id: 'tabBadgeAuditCajaJper',
+          estado: st.cajajper
+            ? ((st.cajajper.resumen_riesgo && st.cajajper.resumen_riesgo.nivel_alerta) || 'BAJO')
+            : null,
+          label: st.cajajper
+            ? (st.cajajper.cantidad_expedientes > 0 ? (st.cajajper.cantidad_expedientes + ' EXP') : '0 EXP')
+            : '—'
+        },
+        {
+          id: 'tabBadgeAuditBoletin',
+          estado: st.boletin
+            ? (Number(st.boletin.total_menciones || 0) === 0 ? 'APROBADO' : (st.boletin.tiene_alerta_critica ? 'RECHAZADO' : 'OBSERVADO'))
+            : null,
+          label: st.boletin ? (Number(st.boletin.total_menciones || 0) + ' MENC') : '—'
+        },
+        {
+          id: 'tabBadgeAuditIntegral',
+          estado: st.integral ? st.integral.dictamen_maestro : null,
+          label: st.integral ? (st.integral.dictamen_maestro || '—').replace('APROBADO_CON_OBSERVACIONES', 'OBS') : '—'
+        }
+      ];
+
+      mapBadges.forEach(item => {
+        const el = document.getElementById(item.id);
+        if (!el) return;
+        const est = _estiloBadgeSemaforoAudit20(item.estado);
+        el.textContent = item.label;
+        el.style.background = est.bg;
+        el.style.color = est.fg;
+        el.style.border = '1px solid ' + est.bd;
+      });
+
+      const hdrBadge = document.getElementById('badgeResumenHeaderAuditoria20');
+      if (hdrBadge) {
+        const dm = st.integral ? st.integral.dictamen_maestro : 'SIN DATOS';
+        const estHdr = _estiloBadgeSemaforoAudit20(st.integral ? st.integral.dictamen_maestro : 'NO_EVALUADO');
+        hdrBadge.textContent = String(dm || 'SIN DATOS').replace(/_/g, ' ');
+        hdrBadge.style.background = estHdr.bg;
+        hdrBadge.style.color = estHdr.fg;
+        hdrBadge.style.borderColor = estHdr.bd;
+      }
+    }
+
+    function cambiarTabAuditoria20(tabKey) {
+      const paneles = {
+        recibo: 'audit20PanelRecibo',
+        dni: 'audit20PanelDni',
+        domicilio: 'audit20PanelDomicilio',
+        cajajper: 'audit20PanelCajaJper',
+        boletin: 'audit20PanelBoletin',
+        integral: 'audit20PanelIntegral'
+      };
+      const key = paneles[tabKey] ? tabKey : 'recibo';
+      window._auditoria20Estado.tabActiva = key;
+
+      Object.keys(paneles).forEach(k => {
+        const panel = document.getElementById(paneles[k]);
+        if (panel) panel.style.display = (k === key) ? 'block' : 'none';
+      });
+
+      document.querySelectorAll('#audit20TabsNav .audit20-tab-btn').forEach(btn => {
+        const activo = btn.getAttribute('data-audit-tab') === key;
+        btn.style.background = activo ? '#0f2744' : '#ffffff';
+        btn.style.color = activo ? '#ffffff' : '#334155';
+        btn.style.borderColor = activo ? '#0f2744' : '#cbd5e1';
+      });
+
+      if (key === 'boletin' && typeof cargarEstadoBoletinOficialAuditoria === 'function') {
+        cargarEstadoBoletinOficialAuditoria();
+      }
+      if (key === 'integral') {
+        ejecutarAuditoriaIntegralAudit20(true);
+      }
+    }
+
+    function _propagarContextoAsociadoAudit20(ctx = {}) {
+      const st = window._auditoria20Estado;
+      const dniClean = String(ctx.dni || '').replace(/\D/g, '').trim();
+      const nombreClean = String(ctx.nombre || '').trim();
+      const dirClean = String(ctx.domicilio || '').trim();
+
+      if (dniClean.length >= 7) {
+        st.dniSolicitante = dniClean;
+        ['inputDniEsperadoAudit20', 'inputDomDniAudit20', 'inputCajaJperDniAudit20', 'inputBoletinDniConsulta'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el && !el.value.trim()) el.value = dniClean;
+        });
+        if (typeof actualizarLinkDateasBoletin === 'function') actualizarLinkDateasBoletin();
+      }
+      if (nombreClean) {
+        st.nombreSolicitante = nombreClean;
+        const elNom = document.getElementById('inputDomNombreAudit20');
+        if (elNom && !elNom.value.trim()) elNom.value = nombreClean;
+      }
+      if (dirClean) {
+        st.domicilioDni = dirClean;
+        const elDir = document.getElementById('inputDomDirDniAudit20');
+        if (elDir && !elDir.value.trim()) elDir.value = dirClean;
+      }
+      if (ctx.tipoRecibo) {
+        const selTipo = document.getElementById('selectCajaJperTipoReciboAudit20');
+        const trUp = String(ctx.tipoRecibo).toUpperCase().trim();
+        if (selTipo && !selTipo.value && (trUp === 'ACTIVO' || trUp === 'PASIVO')) {
+          selTipo.value = trUp;
+        }
+      }
+    }
+
+    function registrarReciboEnAuditoria20(audit) {
+      if (!audit || typeof audit !== 'object') return;
+      const r = audit.resultado || audit;
+      const d = r.datosPersonales || {};
+      const rec = r.detalleCompletoRecibo || {};
+      const res = r.resumen || {};
+      const dniExt = String(r.dni || rec.dni || d.dni || '').replace(/\D/g, '').trim();
+      const titularExt = String(r.titular || rec.titular || d.nombre || '').trim();
+      const tipoRec = String(r.tipoRecibo || rec.tipoRecibo || r.regimen || '').toUpperCase().trim();
+      const liquido = Number(r.sueldoLiquido ?? rec.sueldoLiquido ?? res.sueldoLiquido ?? 0);
+      const embargos = Boolean(r.embargosJudiciales ?? rec.embargosJudiciales);
+
+      window._auditoria20Estado.recibo = {
+        titular: titularExt,
+        dni: dniExt,
+        tipoRecibo: tipoRec || 'ACTIVO',
+        sueldoLiquido: liquido,
+        embargosJudiciales: embargos
+      };
+
+      _propagarContextoAsociadoAudit20({
+        dni: dniExt,
+        nombre: titularExt,
+        tipoRecibo: tipoRec
+      });
+      actualizarBadgesTabsAuditoria20();
+      ejecutarAuditoriaIntegralAudit20(true);
+    }
+
+    function registrarBoletinEnAuditoria20(data) {
+      if (!data || typeof data !== 'object') return;
+      const lista = Array.isArray(data.resultados) ? data.resultados : [];
+      window._auditoria20Estado.boletin = {
+        total_menciones: lista.length,
+        tiene_alerta_critica: Boolean(data.tiene_alerta_critica),
+        menciones: lista
+      };
+      actualizarBadgesTabsAuditoria20();
+      ejecutarAuditoriaIntegralAudit20(true);
+    }
+
+    function limpiarEstadoAuditoria20() {
+      window._auditoria20Estado = {
+        tabActiva: window._auditoria20Estado ? window._auditoria20Estado.tabActiva : 'recibo',
+        dniSolicitante: '',
+        nombreSolicitante: '',
+        domicilioDni: '',
+        recibo: null,
+        dni: null,
+        domicilio: null,
+        cajajper: null,
+        boletin: null,
+        integral: null
+      };
+      [
+        'inputDniEsperadoAudit20', 'fileInputDniAudit20',
+        'inputDomNombreAudit20', 'inputDomDniAudit20', 'inputDomDirDniAudit20', 'fileInputDomAudit20',
+        'inputCajaJperDniAudit20', 'inputCajaJperNucAudit20', 'selectCajaJperTipoReciboAudit20'
+      ].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      ['resultadoDniAudit20', 'resultadoDomicilioAudit20', 'resultadoCajaJperAudit20'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.style.display = 'none'; el.innerHTML = ''; }
+      });
+      const elInt = document.getElementById('resultadoIntegralAudit20');
+      if (elInt) {
+        elInt.innerHTML = '<div style="padding:1.2rem;border-radius:12px;background:#f8fafc;border:1px dashed #cbd5e1;text-align:center;color:#64748b;font-size:0.82rem;">Evaluá al menos un pilar (Recibo, DNI, Domicilio, CajaJper o Boletín Oficial ER) para visualizar los semáforos y el cruce automático de identidad.</div>';
+      }
+      actualizarBadgesTabsAuditoria20();
+    }
+
+    function _renderBloqueForenseAudit20(forense) {
+      if (!forense) return '';
+      const riesgo = String(forense.nivel_riesgo || 'BAJO').toUpperCase();
+      const cls = riesgo === 'ALTO'
+        ? 'background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;'
+        : (riesgo === 'MEDIO'
+          ? 'background:#fffbeb;border:1px solid #fde68a;color:#92400e;'
+          : 'background:#f8fafc;border:1px solid #e2e8f0;color:#334155;');
+      const alertas = Array.isArray(forense.alertas) ? forense.alertas : [];
+      const meta = forense.metadatos || {};
+      const swTxt = meta.producer || meta.creator || (meta.exif && meta.exif.Software) || 'Sin rastro de edición';
+      return '<div style="margin-top:0.75rem;padding:0.75rem 0.9rem;border-radius:10px;' + cls + 'font-size:0.75rem;">' +
+        '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:0.4rem;font-weight:700;">' +
+          '<span>🔬 Forense de Archivo (' + sanitizeHTML(forense.tipo_archivo || 'DOC') + ') · Riesgo: ' + sanitizeHTML(riesgo) + '</span>' +
+          '<span style="font-family:monospace;font-weight:500;font-size:11px;">SHA-256: ' + sanitizeHTML(String(forense.sha256 || '').slice(0, 14)) + '… · Generador: ' + sanitizeHTML(swTxt) + '</span>' +
+        '</div>' +
+        (alertas.length > 0
+          ? ('<ul style="margin:0.4rem 0 0 1.1rem;padding:0;">' + alertas.map(a => '<li>' + sanitizeHTML(a) + '</li>').join('') + '</ul>')
+          : '<div style="margin-top:3px;">Sin alertas de alteración en metadatos EXIF/PDF.</div>') +
+      '</div>';
+    }
+
+    async function _leerArchivoPayloadAudit20(file) {
+      const b64 = await archivoABase64Puro(file);
+      const name = String(file.name || 'documento.pdf');
+      const mime = file.type || (name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
+      return { fileBase64: b64, mimeType: mime, fileName: name };
+    }
+
+    async function inspeccionarSoloForenseAudit20(origen) {
+      const inputId = origen === 'domicilio' ? 'fileInputDomAudit20' : 'fileInputDniAudit20';
+      const outId = origen === 'domicilio' ? 'resultadoDomicilioAudit20' : 'resultadoDniAudit20';
+      const inp = document.getElementById(inputId);
+      const file = inp && inp.files && inp.files[0];
+      if (!file) {
+        showToast('Seleccioná primero un archivo PDF o imagen.');
+        return;
+      }
+      const out = document.getElementById(outId);
+      if (out) {
+        out.style.display = 'block';
+        out.innerHTML = '<div style="padding:0.75rem;border-radius:10px;background:#f8fafc;border:1px solid #cbd5e1;font-size:0.78rem;">🔬 Inspeccionando estructura y metadatos EXIF/PDF...</div>';
+      }
+      try {
+        const payload = await _leerArchivoPayloadAudit20(file);
+        const resp = await fetchConTimeout(`${RENDER_API_URL}/api/forense-archivo`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }, 25000);
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(data.detail || ('HTTP ' + resp.status));
+        if (out) out.innerHTML = _renderBloqueForenseAudit20(data);
+      } catch (err) {
+        if (out) out.innerHTML = '<div style="padding:0.75rem;border-radius:10px;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;font-size:0.78rem;">⚠️ Error forense: ' + sanitizeHTML(err.message || String(err)) + '</div>';
+      }
+    }
+
+    async function ejecutarValidacionDniAudit20(fileOverride) {
+      const inpFile = document.getElementById('fileInputDniAudit20');
+      const file = fileOverride || (inpFile && inpFile.files && inpFile.files[0]);
+      if (!file) {
+        showToast('Seleccioná una imagen o PDF del DNI para validar.');
+        return;
+      }
+      const out = document.getElementById('resultadoDniAudit20');
+      const btn = document.getElementById('btnValidarDniAudit20');
+      const dniEsp = String((document.getElementById('inputDniEsperadoAudit20') || {}).value || '').replace(/\D/g, '').trim();
+
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Analizando DNI + MRZ...'; }
+      if (out) {
+        out.style.display = 'block';
+        out.innerHTML = '<div style="padding:0.85rem;border-radius:10px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;font-size:0.78rem;font-weight:600;">⏳ Ejecutando extracción IA Vision + verificación ICAO 9303 MRZ + análisis forense...</div>';
+      }
+
+      try {
+        const basePayload = await _leerArchivoPayloadAudit20(file);
+        const resp = await fetchConTimeout(`${RENDER_API_URL}/api/validar-dni`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...basePayload,
+            dniEsperado: dniEsp || null,
+            consultarRenaper: true
+          })
+        }, 65000);
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(data.detail || ('HTTP ' + resp.status));
+
+        window._auditoria20Estado.dni = data;
+        const ext = data.datos_extraidos || {};
+        const det = data.validacion_determinista || {};
+        const mrz = det.mrz || {};
+        const ren = data.renaper || {};
+        const evIa = data.evaluacion_ia || {};
+        const motivos = Array.isArray(data.motivos) ? data.motivos : [];
+
+        _propagarContextoAsociadoAudit20({
+          dni: ext.dni || det.dni_extraido,
+          nombre: [ext.apellido, ext.nombres].filter(Boolean).join(' '),
+          domicilio: ext.domicilio_dni
+        });
+        actualizarBadgesTabsAuditoria20();
+        ejecutarAuditoriaIntegralAudit20(true);
+
+        const ok = Boolean(data.es_valido);
+        const hdrStyle = ok
+          ? 'background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;'
+          : 'background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;';
+
+        const checksMrzHtml = mrz.mrz_presente
+          ? Object.entries(mrz.checks || {}).map(([k, v]) =>
+              '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:9999px;font-size:11px;font-weight:700;' +
+              (v ? 'background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;' : 'background:#fff1f2;color:#9f1239;border:1px solid #fecdd3;') + '">' +
+              (v ? '✔' : '✖') + ' ' + sanitizeHTML(k) + '</span>'
+            ).join(' ')
+          : '<span style="font-size:0.74rem;color:#64748b;">MRZ no detectado (si subiste solo el frente, agregá el dorso para validar checksums ICAO 9303).</span>';
+
+        out.innerHTML =
+          '<div style="padding:0.9rem 1rem;border-radius:12px;' + hdrStyle + '">' +
+            '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0.5rem;">' +
+              '<div style="font-size:0.9rem;font-weight:800;">' + (ok ? '✅' : '⛔') + ' Dictamen DNI: ' + sanitizeHTML(data.dictamen_final || 'REVISION_MANUAL') + '</div>' +
+              (data.discrepancia_ia_vs_reglas ? '<span style="padding:2px 9px;border-radius:9999px;font-size:11px;font-weight:800;background:#7f1d1d;color:#ffffff;">⚠️ Discrepancia IA vs. Reglas Python</span>' : '') +
+            '</div>' +
+            '<ul style="margin:0.45rem 0 0 1.15rem;padding:0;font-size:0.76rem;">' + motivos.map(m => '<li>' + sanitizeHTML(m) + '</li>').join('') + '</ul>' +
+          '</div>' +
+          '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:0.6rem;margin-top:0.75rem;font-size:0.76rem;">' +
+            '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Titular</div><div style="font-weight:800;color:#0f172a;">' + sanitizeHTML(([ext.apellido, ext.nombres].filter(Boolean).join(', ')) || 'No leído') + '</div></div>' +
+            '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">DNI / CUIL</div><div style="font-weight:800;font-family:monospace;color:#0f172a;">' + sanitizeHTML(det.dni_extraido || '—') + (ext.cuil ? (' · ' + sanitizeHTML(ext.cuil)) : '') + '</div></div>' +
+            '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Vencimiento / Vigencia</div><div style="font-weight:800;color:#0f172a;">' + sanitizeHTML(det.fecha_vencimiento_iso || 'No visible') + (det.dni_vigente === true ? ' (Vigente)' : (det.dni_vigente === false ? ' (VENCIDO)' : '')) + '</div></div>' +
+            '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Domicilio DNI</div><div style="font-weight:700;color:#0f172a;">' + sanitizeHTML(ext.domicilio_dni || 'No visible (requiere dorso)') + '</div></div>' +
+            '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">RENAPER</div><div style="font-weight:700;color:#334155;">' + sanitizeHTML(ren.estado || 'PENDIENTE_CREDENCIALES') + '</div></div>' +
+          '</div>' +
+          '<div style="margin-top:0.75rem;padding:0.7rem 0.85rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;">' +
+            '<div style="font-size:0.74rem;font-weight:800;color:#0f172a;margin-bottom:5px;">🔐 Verificación Criptográfica MRZ ICAO 9303:</div>' +
+            '<div style="display:flex;flex-wrap:wrap;gap:0.4rem;">' + checksMrzHtml + '</div>' +
+            (evIa.observacionesIA ? ('<div style="margin-top:6px;font-size:0.73rem;color:#475569;"><strong>🤖 Visión IA:</strong> ' + sanitizeHTML(evIa.observacionesIA) + '</div>') : '') +
+          '</div>' +
+          _renderBloqueForenseAudit20(data.forense);
+      } catch (err) {
+        if (out) out.innerHTML = '<div style="padding:0.85rem;border-radius:10px;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;font-size:0.78rem;">⚠️ Error validando DNI: ' + sanitizeHTML(err.message || String(err)) + '</div>';
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<span>🪪 Validar DNI (IA + MRZ + Forense)</span>'; }
+      }
+    }
+
+    async function ejecutarValidacionDomicilioAudit20(fileOverride) {
+      const inpFile = document.getElementById('fileInputDomAudit20');
+      const file = fileOverride || (inpFile && inpFile.files && inpFile.files[0]);
+      if (!file) {
+        showToast('Seleccioná una boleta de servicio o constancia policial de domicilio.');
+        return;
+      }
+      const out = document.getElementById('resultadoDomicilioAudit20');
+      const btn = document.getElementById('btnValidarDomAudit20');
+      const nomSol = String((document.getElementById('inputDomNombreAudit20') || {}).value || '').trim();
+      const dniSol = String((document.getElementById('inputDomDniAudit20') || {}).value || '').replace(/\D/g, '').trim();
+      const dirDni = String((document.getElementById('inputDomDirDniAudit20') || {}).value || '').trim();
+
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Validando domicilio...'; }
+      if (out) {
+        out.style.display = 'block';
+        out.innerHTML = '<div style="padding:0.85rem;border-radius:10px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;font-size:0.78rem;font-weight:600;">⏳ Analizando fecha (&le; 45 días), titularidad/terceros, constancia policial y metadatos...</div>';
+      }
+
+      try {
+        const basePayload = await _leerArchivoPayloadAudit20(file);
+        const resp = await fetchConTimeout(`${RENDER_API_URL}/api/validar-domicilio`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...basePayload,
+            nombreSolicitante: nomSol || null,
+            dniSolicitante: dniSol || null,
+            domicilioDni: dirDni || null
+          })
+        }, 65000);
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(data.detail || ('HTTP ' + resp.status));
+
+        window._auditoria20Estado.domicilio = data;
+        actualizarBadgesTabsAuditoria20();
+        ejecutarAuditoriaIntegralAudit20(true);
+
+        const ext = data.datos_extraidos || {};
+        const det = data.validacion_determinista || {};
+        const evIa = data.evaluacion_ia || {};
+        const motivos = Array.isArray(data.motivos) ? data.motivos : [];
+        const ok = Boolean(data.es_valido);
+        const hdrStyle = ok
+          ? 'background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;'
+          : 'background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;';
+
+        const diasTxt = det.dias_antiguedad !== null && det.dias_antiguedad !== undefined
+          ? (det.dias_antiguedad + ' días (máx. ' + (det.max_dias_permitidos || 45) + ')')
+          : 'Fecha no legible';
+
+        const titularStatus = det.es_constancia_policial
+          ? 'Constancia Policial (certifica al interesado)'
+          : (det.es_titular_solicitante === true
+            ? 'Titular directo coincide con solicitante'
+            : (det.tercero_autorizado_por_domicilio === true
+              ? 'Tercero autorizado (domicilio coincide con DNI)'
+              : (det.es_titular_solicitante === false ? 'Tercero NO validado con DNI' : 'Sin titular para contrastar')));
+
+        out.innerHTML =
+          '<div style="padding:0.9rem 1rem;border-radius:12px;' + hdrStyle + '">' +
+            '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0.5rem;">' +
+              '<div style="font-size:0.9rem;font-weight:800;">' + (ok ? '✅' : '⛔') + ' Dictamen Domicilio: ' + sanitizeHTML(data.dictamen_final || 'RECHAZADO') + ' · [' + sanitizeHTML(data.documento_tipo || 'DOMICILIO') + ']</div>' +
+              (data.discrepancia_ia_vs_reglas ? '<span style="padding:2px 9px;border-radius:9999px;font-size:11px;font-weight:800;background:#7f1d1d;color:#ffffff;">⚠️ Discrepancia IA vs. Reglas Python</span>' : '') +
+            '</div>' +
+            '<ul style="margin:0.45rem 0 0 1.15rem;padding:0;font-size:0.76rem;">' + motivos.map(m => '<li>' + sanitizeHTML(m) + '</li>').join('') + '</ul>' +
+          '</div>' +
+          '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.6rem;margin-top:0.75rem;font-size:0.76rem;">' +
+            '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Ente / Empresa</div><div style="font-weight:800;color:#0f172a;">' + sanitizeHTML(ext.empresa_o_dependencia || ext.tipo_comprobante || '—') + '</div></div>' +
+            '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Titular en Comprobante</div><div style="font-weight:800;color:#0f172a;">' + sanitizeHTML(ext.titular || '—') + '</div></div>' +
+            '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Emisión y Antigüedad</div><div style="font-weight:800;color:' + (det.vigente_45_dias ? '#065f46' : '#9f1239') + ';">' + sanitizeHTML((det.fecha_emision_iso || 'N/D') + ' · ' + diasTxt) + '</div></div>' +
+            '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Domicilio Detectado</div><div style="font-weight:700;color:#0f172a;">' + sanitizeHTML([ext.domicilio_completo, ext.localidad].filter(Boolean).join(', ') || '—') + '</div></div>' +
+            '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Regla Titularidad / 3ros</div><div style="font-weight:700;color:#0f172a;">' + sanitizeHTML(titularStatus) + '</div></div>' +
+          '</div>' +
+          (evIa.observacionesIA ? ('<div style="margin-top:0.65rem;padding:0.6rem 0.8rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;font-size:0.73rem;color:#475569;"><strong>🤖 Visión IA:</strong> ' + sanitizeHTML(evIa.observacionesIA) + '</div>') : '') +
+          _renderBloqueForenseAudit20(data.forense);
+      } catch (err) {
+        if (out) out.innerHTML = '<div style="padding:0.85rem;border-radius:10px;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;font-size:0.78rem;">⚠️ Error validando domicilio: ' + sanitizeHTML(err.message || String(err)) + '</div>';
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<span>🏠 Validar Comprobante (&le; 45 días)</span>'; }
+      }
+    }
+
+    async function consultarCajaJperAudit20() {
+      const dni = String((document.getElementById('inputCajaJperDniAudit20') || {}).value || '').replace(/\D/g, '').trim();
+      const nuc = String((document.getElementById('inputCajaJperNucAudit20') || {}).value || '').replace(/\D/g, '').trim();
+      const selTipo = document.getElementById('selectCajaJperTipoReciboAudit20');
+      const tipoRecibo = (selTipo && selTipo.value)
+        ? selTipo.value
+        : ((window._auditoria20Estado.recibo && window._auditoria20Estado.recibo.tipoRecibo) || '');
+
+      if (!dni && !nuc) {
+        showToast('Ingresá al menos el DNI o el NUC para consultar CajaJper.');
+        return;
+      }
+
+      const out = document.getElementById('resultadoCajaJperAudit20');
+      const btn = document.getElementById('btnConsultarCajaJperAudit20');
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Consultando CajaJper...'; }
+      if (out) {
+        out.style.display = 'block';
+        out.innerHTML = '<div style="padding:0.85rem;border-radius:10px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;font-size:0.78rem;font-weight:600;">⏳ Conectando con Caja de Jubilaciones de Entre Ríos (cajajper.gov.ar)...</div>';
+      }
+
+      try {
+        const resp = await fetchConTimeout(`${RENDER_API_URL}/api/cajajper/consultar-expediente`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            dni: dni || null,
+            nuc: nuc || null,
+            tipoRecibo: tipoRecibo || null,
+            incluirResumenIA: true
+          })
+        }, 35000);
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(data.detail || ('HTTP ' + resp.status));
+
+        window._auditoria20Estado.cajajper = data;
+        if (dni) _propagarContextoAsociadoAudit20({ dni });
+        actualizarBadgesTabsAuditoria20();
+        ejecutarAuditoriaIntegralAudit20(true);
+
+        const exps = Array.isArray(data.expedientes) ? data.expedientes : [];
+        const riesgo = data.resumen_riesgo || {};
+        const nivel = String(riesgo.nivel_alerta || 'BAJO').toUpperCase();
+        const alertas = Array.isArray(riesgo.alertas) ? riesgo.alertas : [];
+
+        if (exps.length === 0) {
+          out.innerHTML =
+            '<div style="padding:0.9rem 1rem;border-radius:12px;background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;font-size:0.8rem;">' +
+              '<strong>✅ Sin trámites previsionales en curso</strong> · ' + sanitizeHTML(data.mensaje || 'No se registran expedientes iniciados.') +
+            '</div>';
+          return;
+        }
+
+        const boxCls = nivel === 'ALTO'
+          ? 'background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;'
+          : (nivel === 'MEDIO'
+            ? 'background:#fffbeb;border:1px solid #fde68a;color:#92400e;'
+            : 'background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;');
+
+        const filasHtml = exps.map(e => {
+          const badgeEstado = e.estado_firma === 'FIRMADO'
+            ? '<span style="padding:2px 7px;border-radius:9999px;font-size:10px;font-weight:800;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;">FIRMADO</span>'
+            : (e.estado_firma === 'CON_ORDEN_FIRMA'
+              ? '<span style="padding:2px 7px;border-radius:9999px;font-size:10px;font-weight:800;background:#fffbeb;color:#92400e;border:1px solid #fde68a;">CON ORDEN FIRMA</span>'
+              : '<span style="padding:2px 7px;border-radius:9999px;font-size:10px;font-weight:800;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;">EN TRÁMITE</span>');
+          return '<tr style="border-bottom:1px solid #f1f5f9;">' +
+            '<td style="padding:0.55rem 0.65rem;font-family:monospace;font-weight:700;">' + sanitizeHTML(e.nuc || '—') + '</td>' +
+            '<td style="padding:0.55rem 0.65rem;font-family:monospace;">' + sanitizeHTML(e.ru || '—') + '</td>' +
+            '<td style="padding:0.55rem 0.65rem;font-weight:700;">' + sanitizeHTML(e.beneficio || '—') + '</td>' +
+            '<td style="padding:0.55rem 0.65rem;">' + sanitizeHTML(e.fecha_inicio || '—') + '</td>' +
+            '<td style="padding:0.55rem 0.65rem;">' + sanitizeHTML(e.area_actual || '—') + '</td>' +
+            '<td style="padding:0.55rem 0.65rem;">' + sanitizeHTML(e.ultimo_movimiento || '—') + (e.dias_desde_ultimo_movimiento !== null && e.dias_desde_ultimo_movimiento !== undefined ? (' <span style="color:#64748b;font-size:11px;">(' + e.dias_desde_ultimo_movimiento + 'd)</span>') : '') + '</td>' +
+            '<td style="padding:0.55rem 0.65rem;">' + badgeEstado + '</td>' +
+          '</tr>';
+        }).join('');
+
+        const sol = data.solicitante || {};
+        out.innerHTML =
+          '<div style="padding:0.9rem 1rem;border-radius:12px;' + boxCls + '">' +
+            '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0.5rem;">' +
+              '<div style="font-size:0.86rem;font-weight:800;">🏛️ ' + sanitizeHTML(((sol.nombre || '') + ' ' + (sol.apellido || '')).trim() || 'Titular') + ' (DNI ' + sanitizeHTML(sol.documento || dni || '—') + ') · ' + exps.length + ' expediente(s) · Alerta ' + sanitizeHTML(nivel) + '</div>' +
+              '<a href="https://www.cajajper.gov.ar/secciones/servicios/expedientes/index.php" target="_blank" rel="noopener noreferrer" style="font-size:11px;font-weight:700;text-decoration:underline;color:inherit;">Abrir en Portal CajaJper ↗</a>' +
+            '</div>' +
+            (alertas.length > 0 ? ('<ul style="margin:0.4rem 0 0 1.15rem;padding:0;font-size:0.75rem;">' + alertas.map(a => '<li>' + sanitizeHTML(a) + '</li>').join('') + '</ul>') : '') +
+            (data.evaluacion_ia && data.evaluacion_ia.observacion_ia ? ('<div style="margin-top:0.5rem;padding:0.45rem 0.65rem;border-radius:8px;background:rgba(255,255,255,0.7);font-size:0.74rem;color:#1e293b;"><strong>🤖 Análisis IA:</strong> ' + sanitizeHTML(data.evaluacion_ia.observacion_ia) + '</div>') : '') +
+          '</div>' +
+          '<div style="overflow-x:auto;margin-top:0.75rem;border:1px solid #e2e8f0;border-radius:10px;">' +
+            '<table style="width:100%;border-collapse:collapse;font-size:0.76rem;text-align:left;">' +
+              '<thead style="background:#f8fafc;border-bottom:1px solid #e2e8f0;color:#475569;font-size:11px;text-transform:uppercase;">' +
+                '<tr><th style="padding:0.55rem 0.65rem;">NUC</th><th style="padding:0.55rem 0.65rem;">RU</th><th style="padding:0.55rem 0.65rem;">Beneficio / Trámite</th><th style="padding:0.55rem 0.65rem;">Inicio</th><th style="padding:0.55rem 0.65rem;">Área Actual</th><th style="padding:0.55rem 0.65rem;">Último Mov.</th><th style="padding:0.55rem 0.65rem;">Estado</th></tr>' +
+              '</thead>' +
+              '<tbody>' + filasHtml + '</tbody>' +
+            '</table>' +
+          '</div>';
+      } catch (err) {
+        if (out) out.innerHTML = '<div style="padding:0.85rem;border-radius:10px;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;font-size:0.78rem;">⚠️ Error consultando CajaJper: ' + sanitizeHTML(err.message || String(err)) + '</div>';
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<span>🔍 Consultar Expediente</span>'; }
+      }
+    }
+
+    async function ejecutarAuditoriaIntegralAudit20(silencioso = false) {
+      const st = window._auditoria20Estado || {};
+      const out = document.getElementById('resultadoIntegralAudit20');
+      const tieneAlgunPilar = Boolean(st.recibo || st.dni || st.domicilio || st.boletin || st.cajajper);
+      if (!tieneAlgunPilar) {
+        actualizarBadgesTabsAuditoria20();
+        return null;
+      }
+
+      const btn = document.getElementById('btnRecalcularConsolidadoAudit20');
+      if (btn && !silencioso) { btn.disabled = true; btn.textContent = '⏳ Consolidando...'; }
+
+      try {
+        const resp = await fetchConTimeout(`${RENDER_API_URL}/api/auditoria-integral`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            dniSolicitante: st.dniSolicitante || null,
+            nombreSolicitante: st.nombreSolicitante || null,
+            dniResultado: st.dni || null,
+            domicilioResultado: st.domicilio || null,
+            reciboResultado: st.recibo || null,
+            boletinResultado: st.boletin || null,
+            cajajperResultado: st.cajajper || null
+          })
+        }, 25000);
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(data.detail || ('HTTP ' + resp.status));
+
+        st.integral = data;
+        actualizarBadgesTabsAuditoria20();
+
+        if (!out) return data;
+
+        const dm = String(data.dictamen_maestro || 'SIN_DATOS');
+        const esApto = Boolean(data.apto_continuar);
+        const bannerStyle = dm === 'APROBADO'
+          ? 'background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;'
+          : (dm === 'APROBADO_CON_OBSERVACIONES'
+            ? 'background:#fffbeb;border:1px solid #fde68a;color:#92400e;'
+            : 'background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;');
+
+        const nombresPilares = {
+          recibo: '🧾 Recibo de Haberes',
+          dni: '🪪 DNI & MRZ',
+          domicilio: '🏠 Domicilio / Policial',
+          cajajper: '🏛️ CajaJper (Jubilaciones)',
+          boletin_er: '📰 Boletín Oficial ER'
+        };
+        const tabsMapa = {
+          recibo: 'recibo',
+          dni: 'dni',
+          domicilio: 'domicilio',
+          cajajper: 'cajajper',
+          boletin_er: 'boletin'
+        };
+
+        const semHtml = Object.entries(data.semaforos || {}).map(([k, v]) => {
+          const est = _estiloBadgeSemaforoAudit20(v);
+          return '<button type="button" onclick="cambiarTabAuditoria20(\'' + (tabsMapa[k] || 'recibo') + '\')" style="text-align:left;padding:0.75rem 0.85rem;border-radius:12px;border:1px solid ' + est.bd + ';background:' + est.bg + ';color:' + est.fg + ';cursor:pointer;">' +
+            '<div style="font-size:11px;font-weight:700;opacity:0.85;">' + sanitizeHTML(nombresPilares[k] || k) + '</div>' +
+            '<div style="font-size:0.86rem;font-weight:800;margin-top:3px;">' + sanitizeHTML(v) + '</div>' +
+          '</button>';
+        }).join('');
+
+        const crit = Array.isArray(data.alertas_criticas) ? data.alertas_criticas : [];
+        const prev = Array.isArray(data.alertas_preventivas) ? data.alertas_preventivas : [];
+        const cruces = data.cruces_identidad || {};
+        const crucesHtml = Object.keys(cruces).length > 0
+          ? Object.entries(cruces).map(([k, val]) => {
+              const txtVal = typeof val === 'object' ? (val.coincide ? 'COINCIDE' : 'NO COINCIDE') : String(val);
+              return '<span style="padding:3px 9px;border-radius:9999px;font-size:11px;font-weight:700;background:#f8fafc;border:1px solid #cbd5e1;color:#334155;">' + sanitizeHTML(k + ': ' + txtVal) + '</span>';
+            }).join(' ')
+          : '<span style="font-size:0.75rem;color:#64748b;">Completá DNI + Recibo/CajaJper para visualizar los cruces automáticos de identidad.</span>';
+
+        out.innerHTML =
+          '<div style="padding:1rem 1.15rem;border-radius:12px;' + bannerStyle + '">' +
+            '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0.5rem;">' +
+              '<div style="font-size:1rem;font-weight:800;">' + (esApto ? '✅' : '⛔') + ' DICTAMEN MAESTRO: ' + sanitizeHTML(dm.replace(/_/g, ' ')) + '</div>' +
+              '<div style="font-size:0.78rem;font-weight:700;">DNI Ref.: ' + sanitizeHTML(data.dni_referencia || 'No informado') + (data.nombre_referencia ? (' · ' + sanitizeHTML(data.nombre_referencia)) : '') + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.65rem;margin-top:0.85rem;">' + semHtml + '</div>' +
+          '<div style="margin-top:0.85rem;padding:0.75rem 0.9rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;">' +
+            '<div style="font-size:0.75rem;font-weight:800;color:#0f172a;margin-bottom:5px;">🔗 Cruces de Identidad entre Documentos</div>' +
+            '<div style="display:flex;flex-wrap:wrap;gap:0.4rem;">' + crucesHtml + '</div>' +
+          '</div>' +
+          (crit.length > 0
+            ? ('<div style="margin-top:0.85rem;padding:0.8rem 0.95rem;border-radius:10px;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;font-size:0.77rem;"><strong>⛔ Alertas Críticas:</strong><ul style="margin:0.35rem 0 0 1.1rem;padding:0;">' + crit.map(c => '<li>' + sanitizeHTML(c) + '</li>').join('') + '</ul></div>')
+            : '') +
+          (prev.length > 0
+            ? ('<div style="margin-top:0.85rem;padding:0.8rem 0.95rem;border-radius:10px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:0.77rem;"><strong>⚠️ Observaciones Preventivas:</strong><ul style="margin:0.35rem 0 0 1.1rem;padding:0;">' + prev.map(p => '<li>' + sanitizeHTML(p) + '</li>').join('') + '</ul></div>')
+            : '');
+
+        return data;
+      } catch (err) {
+        if (!silencioso && out) {
+          out.innerHTML = '<div style="padding:0.85rem;border-radius:10px;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;font-size:0.78rem;">⚠️ Error consolidando auditoría: ' + sanitizeHTML(err.message || String(err)) + '</div>';
+        }
+        return null;
+      } finally {
+        if (btn && !silencioso) { btn.disabled = false; btn.innerHTML = '<span>↻ Recalcular Dictamen Maestro</span>'; }
+      }
+    }
+
+    window.cambiarTabAuditoria20 = cambiarTabAuditoria20;
+    window.ejecutarValidacionDniAudit20 = ejecutarValidacionDniAudit20;
+    window.ejecutarValidacionDomicilioAudit20 = ejecutarValidacionDomicilioAudit20;
+    window.inspeccionarSoloForenseAudit20 = inspeccionarSoloForenseAudit20;
+    window.consultarCajaJperAudit20 = consultarCajaJperAudit20;
+    window.ejecutarAuditoriaIntegralAudit20 = ejecutarAuditoriaIntegralAudit20;
+    window.registrarReciboEnAuditoria20 = registrarReciboEnAuditoria20;
+    window.registrarBoletinEnAuditoria20 = registrarBoletinEnAuditoria20;
+    window.limpiarEstadoAuditoria20 = limpiarEstadoAuditoria20;
     window.calcularAntiguedadReactiva = calcularAntiguedadReactiva;
     window.calcularEdadDesdeFecha = calcularEdadDesdeFecha;
     window.recalcularValidacionesEdadYCuotas = recalcularValidacionesEdadYCuotas;

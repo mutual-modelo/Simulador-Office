@@ -4761,13 +4761,13 @@
               </div>
             </div>
 
-            <!-- PANEL 3: VALIDADOR MIXTO DOMICILIO / CONSTANCIA POLICIAL ≤ 45 DÍAS -->
+            <!-- PANEL 3: VALIDADOR MIXTO DOMICILIO / CONSTANCIA POLICIAL ≤ 60 DÍAS -->
             <div id="audit20PanelDomicilio" class="audit20-panel" style="display:none;">
               <div class="audit20-card">
                 <div class="audit20-card-head">
                   <div>
-                    <h3 class="audit20-card-title">🏠 Validación de Domicilio &amp; Constancia Policial (&le; 45 días)</h3>
-                    <p class="audit20-card-sub">Control determinista de antigüedad máxima 45 días (boletas de servicio o certificado policial de domicilio) y regla de 3ros (acepta boleta a nombre de tercero solo si coincide exactamente con el domicilio del DNI).</p>
+                    <h3 class="audit20-card-title">🏠 Validación de Domicilio &amp; Constancia Policial (&le; 60 días)</h3>
+                    <p class="audit20-card-sub">Control determinista por fecha de emisión con máximo de 60 días (boletas de servicio o constancia policial de domicilio; las relaciones entre vigencia y vencimiento varían según el servicio) y regla de 3ros.</p>
                   </div>
                 </div>
 
@@ -4811,9 +4811,6 @@
                     <h3 class="audit20-card-title">🏛️ Consulta Caja de Jubilaciones y Pensiones ER (CajaJper)</h3>
                     <p class="audit20-card-sub">Verifica trámites previsionales en curso por DNI o NUC y alerta posibles transiciones de agente ACTIVO a PASIVO (JU_).</p>
                   </div>
-                  <a href="https://www.cajajper.gov.ar/secciones/servicios/expedientes/index.php" target="_blank" rel="noopener noreferrer" class="audit20-btn audit20-btn--secondary">
-                    <span>↗ Ir a CajaJper</span>
-                  </a>
                 </div>
 
                 <div class="audit20-form-grid">
@@ -4874,9 +4871,6 @@
                   <button type="button" id="btnConsultarBoletinER" onclick="consultarBoletinOficialAuditoria()" class="audit20-btn audit20-btn--primary audit20-btn--lg">
                     <span>🔍 Buscar en Boletín</span>
                   </button>
-                  <a id="btnAbrirDateasRespaldo" href="https://www.dateas.com/es/docs/boletin-oficial-provincia-de-entre-rios" target="_blank" rel="noopener noreferrer" onclick="actualizarLinkDateasBoletin()" class="audit20-btn audit20-btn--secondary audit20-btn--lg">
-                    <span>↗ Consultar en Dateas</span>
-                  </a>
                 </div>
 
                 <div id="boletinSyncProgressBox" style="display:none;margin-top:0.75rem;padding:0.65rem 0.9rem;border-radius:10px;background:#eef2ff;border:1px solid #c7d2fe;font-size:0.76rem;color:#1e1b4b;"></div>
@@ -10823,7 +10817,9 @@ ${cierreTxt}`;
         }
       }
 
-      const formateado = anios + ' AÑOS - ' + meses + ' MESES';
+      const formateado = (anios === 0 && meses > 0)
+        ? (meses + (meses === 1 ? ' mes' : ' meses'))
+        : (anios + (anios === 1 ? ' año' : ' años') + ' y ' + meses + (meses === 1 ? ' mes' : ' meses'));
       if (txtEl) txtEl.textContent = formateado;
       if (hidEl) hidEl.value = formateado;
 
@@ -12167,7 +12163,7 @@ ${cierreTxt}`;
           organismo: String(asoc.organismo || 'Provincial'),
           dependencia: String(asoc.dependencia_laboral || ''),
           situacionRevista: String(asoc.situacion_revista || 'TITULAR'),
-          antiguedad: asoc.antiguedad_anios ? (asoc.antiguedad_anios + ' años') : ''
+          antiguedad: asoc.antiguedad_texto || (asoc.antiguedad_anios ? (asoc.antiguedad_anios + (Number(asoc.antiguedad_anios) === 1 ? ' año' : ' años') + (asoc.antiguedad_meses > 0 ? (' y ' + asoc.antiguedad_meses + (Number(asoc.antiguedad_meses) === 1 ? ' mes' : ' meses')) : '')) : '')
         },
         prestamo: {
           linea: lineaKey,
@@ -20083,8 +20079,8 @@ ${cierreTxt}`;
           '</div>' +
         '</div>' +
 
-        // SECCIÓN 4: Afectación Padrón, Tope 41,67% y Embargos (Semáforo)
-        '<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:0.65rem 0.85rem;font-variant-numeric:tabular-nums;">' +
+        // SECCIÓN 4: Afectación Padrón, Tope 41,67% y Embargos (Semáforo · solo Admin)
+        (esAdminAuditoria() ? ('<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:0.65rem 0.85rem;font-variant-numeric:tabular-nums;">' +
           '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;">' +
             '<span style="font-size:0.7rem;font-weight:800;color:#1e3a8a;text-transform:uppercase;">4. Cascada Padrón, Endeudamiento 41,67% y Embargos</span>' +
             '<span style="padding:2px 9px;border-radius:6px;background:' + semaforoBg + ';color:' + semaforoFg + ';font-weight:800;font-size:0.68rem;">' + semaforoLbl + '</span>' +
@@ -20135,7 +20131,7 @@ ${cierreTxt}`;
           '</div>' +
           '<div style="font-size:0.74rem;font-weight:800;margin-bottom:4px;" class="' + dictamenClass + '">' + dictamenCesion + '</div>' +
           '<p class="ai-memo-text" style="margin:0;">"' + sanitizeHTML(memo) + '"</p>' +
-        '</div>' +
+        '</div>') : '') +
 
         ((res.detalleCompletoRecibo && Array.isArray(res.detalleCompletoRecibo.conceptos) && res.detalleCompletoRecibo.conceptos.length > 0) ? (
           '<details style="background:#ffffff;border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;">' +
@@ -20143,7 +20139,7 @@ ${cierreTxt}`;
             '<div style="font-size:0.68rem;color:#475569;margin:6px 0;"><strong>Período:</strong> ' + sanitizeHTML(res.detalleCompletoRecibo.periodo || rec.periodo || '—') + ' • <strong>Escalafón / Cargo:</strong> ' + sanitizeHTML(res.detalleCompletoRecibo.escalafonCargo || rec.escalafonCargo || '—') + '</div>' +
             '<div style="overflow-x:auto;">' +
               '<table style="width:100%;border-collapse:collapse;font-size:0.71rem;font-variant-numeric:tabular-nums;">' +
-                '<thead><tr style="background:#f8fafc;border-bottom:1px solid #cbd5e1;"><th style="padding:4px 6px;text-align:left;">Cód.</th><th style="padding:4px 6px;text-align:left;">Concepto / Descripción</th><th style="padding:4px 6px;text-align:right;">Haberes ($)</th><th style="padding:4px 6px;text-align:right;">Descuentos ($)</th><th style="padding:4px 6px;text-align:left;">Clasificación</th></tr></thead>' +
+                '<thead><tr style="background:#f8fafc;border-bottom:1px solid #cbd5e1;"><th style="padding:4px 6px;text-align:left;">Cód.</th><th style="padding:4px 6px;text-align:left;">Concepto / Descripción</th><th style="padding:4px 6px;text-align:right;">Haberes ($)</th><th style="padding:4px 6px;text-align:right;">Descuentos ($)</th>' + (esAdminAuditoria() ? '<th style="padding:4px 6px;text-align:left;">Clasificación</th>' : '') + '</tr></thead>' +
                 '<tbody>' +
                   res.detalleCompletoRecibo.conceptos.map(c => {
                     const bCls = (typeof renderBadgeClasificacionPadron === 'function')
@@ -20154,7 +20150,7 @@ ${cierreTxt}`;
                       '<td style="padding:3px 6px;">' + sanitizeHTML(c.descripcion || '—') + '</td>' +
                       '<td style="padding:3px 6px;text-align:right;color:#166534;">' + (c.haberes > 0 ? sanitizeHTML(fmtP(c.haberes)) : '—') + '</td>' +
                       '<td style="padding:3px 6px;text-align:right;color:#b91c1c;">' + (c.descuentos > 0 ? sanitizeHTML(fmtP(c.descuentos)) : '—') + '</td>' +
-                      '<td style="padding:3px 6px;text-align:left;">' + bCls + '</td>' +
+                      (esAdminAuditoria() ? ('<td style="padding:3px 6px;text-align:left;">' + bCls + '</td>') : '') +
                     '</tr>';
                   }).join('') +
                   '<tr style="background:#f8fafc;border-top:2px solid #cbd5e1;font-weight:800;">' +
@@ -20520,13 +20516,41 @@ ${cierreTxt}`;
     function formatearAntiguedadLegible(rawVal) {
       const s = String(rawVal || '').trim();
       if (!s) return '';
-      const m = s.match(/^(\d{1,2})\s*\/\s*(\d{1,2})$/);
-      if (m) {
-        const anios = parseInt(m[1], 10);
-        const meses = parseInt(m[2], 10);
-        if (anios === 0 && meses > 0) return meses + (meses === 1 ? ' mes' : ' meses');
-        return anios + (anios === 1 ? ' año' : ' años') + (meses > 0 ? (', ' + meses + (meses === 1 ? ' mes' : ' meses')) : '');
+      const low = s.toLowerCase();
+      if (/no registrada|no especificada|no consta|n\/a/.test(low)) return s;
+
+      const joinYM = (anios, meses) => {
+        const partes = [];
+        if (anios > 0) partes.push(anios + (anios === 1 ? ' año' : ' años'));
+        if (meses > 0) partes.push(meses + (meses === 1 ? ' mes' : ' meses'));
+        if (partes.length === 0) return '0 años y 0 meses';
+        return partes.join(' y ');
+      };
+
+      const mYmText = s.match(/^\s*(\d{1,2})\s*(?:años?|a\.?)\s*(?:[-,/yY\s]*)\s*(\d{1,2})\s*(?:mes(?:es)?|m\.?)\s*$/i);
+      if (mYmText) return joinYM(parseInt(mYmText[1], 10), parseInt(mYmText[2], 10));
+
+      const mSlash = s.match(/^\s*(\d{1,2})\s*[/\-]\s*(\d{1,2})\s*$/);
+      if (mSlash) return joinYM(parseInt(mSlash[1], 10), parseInt(mSlash[2], 10));
+
+      const mNum = s.match(/^\s*(\d{1,2})\s*$/);
+      if (mNum) {
+        const a = parseInt(mNum[1], 10);
+        return a + (a === 1 ? ' año' : ' años');
       }
+
+      const mOnlyY = s.match(/^\s*(\d{1,2})\s*(?:años?|a\.?)\s*$/i);
+      if (mOnlyY) {
+        const a = parseInt(mOnlyY[1], 10);
+        return a + (a === 1 ? ' año' : ' años');
+      }
+
+      const mOnlyM = s.match(/^\s*(\d{1,2})\s*(?:mes(?:es)?|m\.?)\s*$/i);
+      if (mOnlyM) {
+        const m = parseInt(mOnlyM[1], 10);
+        return m + (m === 1 ? ' mes' : ' meses');
+      }
+
       return s;
     }
 
@@ -21353,6 +21377,11 @@ ${cierreTxt}`;
           '</div>';
       }
 
+      const esAdmin = esAdminAuditoria();
+      const accionesBoxSoloNonAdmin = accionesHtml
+        ? ('<div class="bg-slate-50/90 rounded-xl p-4 border border-slate-200">' + accionesHtml + '</div>')
+        : '';
+
       return '<div class="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden mb-6 font-sans antialiased">' +
         '<!-- Cabecera Institucional Limpia -->' +
         '<div class="bg-white border-b border-slate-200/80 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">' +
@@ -21364,47 +21393,45 @@ ${cierreTxt}`;
             '</div>' +
             '<div>' +
               '<h3 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight m-0">' +
-                'Auditoría Documental y Crediticia AMMER' +
+                (esAdmin ? 'Auditoría Documental y Crediticia AMMER' : 'Auditoría Documental de Recibo AMMER') +
               '</h3>' +
-              (esAdminAuditoria() ? '<p class="text-xs text-slate-500 font-normal mt-0.5 mb-0">' +
+              (esAdmin ? '<p class="text-xs text-slate-500 font-normal mt-0.5 mb-0">' +
                 'Motor Padrón Oficial (2.076 códigos) • ' + (esPasivo ? 'Pasivos 65% afectable' : 'Activos 80% afectable') + ' · Tope Endeudamiento 41,67% Neto' +
               '</p>' : '') +
             '</div>' +
           '</div>' +
           '<div class="flex items-center gap-2 flex-wrap">' +
-            (esAdminAuditoria() ? '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-800 border border-indigo-200 text-xs font-bold font-mono">' + sanitizeHTML(lugarTrabajo) + '</span>' : '') +
-            badgeHtml +
+            (esAdmin ? '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-800 border border-indigo-200 text-xs font-bold font-mono">' + sanitizeHTML(lugarTrabajo) + '</span>' + badgeHtml : '') +
           '</div>' +
         '</div>' +
 
         '<!-- Grilla Limpia de Indicadores Clave Calculados -->' +
         '<div class="p-6 space-y-4">' +
-          // Toolbar interactiva de Régimen (Activos 80% vs Pasivos 65%), Criterio (100% vs 70%) y Cuota Futura 2
-          '<div class="ai-regime-toolbar">' +
-            '<div class="flex items-center gap-2 flex-wrap">' +
-              '<span style="font-size:0.7rem;font-weight:800;color:#334155;text-transform:uppercase;">Régimen Tope:</span>' +
-              '<div class="ai-regime-toggle-wrap">' +
-                '<button type="button" onclick="cambiarRegimenAuditoriaInteractivo(\'ACTIVO\')" class="ai-regime-btn ' + (!esPasivo ? 'is-active' : '') + '">🏛️ Activos (80% · Tope 20%)</button>' +
-                '<button type="button" onclick="cambiarRegimenAuditoriaInteractivo(\'PASIVO\')" class="ai-regime-btn ' + (esPasivo ? 'is-active' : '') + '">👴 Pasivos / Jubilados (65% · Tope 35%)</button>' +
+          (esAdmin ? (
+            '<div class="ai-regime-toolbar">' +
+              '<div class="flex items-center gap-2 flex-wrap">' +
+                '<span style="font-size:0.7rem;font-weight:800;color:#334155;text-transform:uppercase;">Régimen Tope:</span>' +
+                '<div class="ai-regime-toggle-wrap">' +
+                  '<button type="button" onclick="cambiarRegimenAuditoriaInteractivo(\'ACTIVO\')" class="ai-regime-btn ' + (!esPasivo ? 'is-active' : '') + '">🏛️ Activos (80% · Tope 20%)</button>' +
+                  '<button type="button" onclick="cambiarRegimenAuditoriaInteractivo(\'PASIVO\')" class="ai-regime-btn ' + (esPasivo ? 'is-active' : '') + '">👴 Pasivos / Jubilados (65% · Tope 35%)</button>' +
+                '</div>' +
+              '</div>' +
+              '<div class="flex items-center gap-2 flex-wrap">' +
+                '<span style="font-size:0.7rem;font-weight:800;color:#334155;text-transform:uppercase;">Criterio Margen:</span>' +
+                '<div class="ai-regime-toggle-wrap">' +
+                  '<button type="button" onclick="cambiarFactorMargenAuditoria(1.0)" class="ai-regime-btn ' + (!esFactor70 ? 'is-active' : '') + '">100% AMMER Directo</button>' +
+                  '<button type="button" onclick="cambiarFactorMargenAuditoria(0.70)" class="ai-regime-btn ' + (esFactor70 ? 'is-active' : '') + '">70% Conservador c/ Gastos</button>' +
+                '</div>' +
+              '</div>' +
+              '<div class="ai-cf2-wrap">' +
+                '<label class="ai-cf2-label" for="inputAuditCuotaFutura2">Cuota Futura 2 ($):</label>' +
+                '<input type="number" step="0.01" min="0" id="inputAuditCuotaFutura2" class="ai-cf2-input" value="' + sanitizeHTML(cf2Display) + '" placeholder="0,00" onkeydown="if(event.key===\'Enter\'){event.preventDefault();aplicarCuotaFutura2Auditoria();}"/>' +
+                '<button type="button" class="ai-cf2-btn" onclick="aplicarCuotaFutura2Auditoria()">Aplicar</button>' +
               '</div>' +
             '</div>' +
-            '<div class="flex items-center gap-2 flex-wrap">' +
-              '<span style="font-size:0.7rem;font-weight:800;color:#334155;text-transform:uppercase;">Criterio Margen:</span>' +
-              '<div class="ai-regime-toggle-wrap">' +
-                '<button type="button" onclick="cambiarFactorMargenAuditoria(1.0)" class="ai-regime-btn ' + (!esFactor70 ? 'is-active' : '') + '">100% AMMER Directo</button>' +
-                '<button type="button" onclick="cambiarFactorMargenAuditoria(0.70)" class="ai-regime-btn ' + (esFactor70 ? 'is-active' : '') + '">70% Conservador c/ Gastos</button>' +
-              '</div>' +
-            '</div>' +
-            '<div class="ai-cf2-wrap">' +
-              '<label class="ai-cf2-label" for="inputAuditCuotaFutura2">Cuota Futura 2 ($):</label>' +
-              '<input type="number" step="0.01" min="0" id="inputAuditCuotaFutura2" class="ai-cf2-input" value="' + sanitizeHTML(cf2Display) + '" placeholder="0,00" onkeydown="if(event.key===\'Enter\'){event.preventDefault();aplicarCuotaFutura2Auditoria();}"/>' +
-              '<button type="button" class="ai-cf2-btn" onclick="aplicarCuotaFutura2Auditoria()">Aplicar</button>' +
-            '</div>' +
-          '</div>' +
-
-          refiPanelHtml +
-
-          validHtml +
+            refiPanelHtml +
+            validHtml
+          ) : '') +
 
           '<div class="bg-slate-50/70 rounded-xl p-3.5 border border-slate-200/60">' +
             '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">' +
@@ -21429,7 +21456,9 @@ ${cierreTxt}`;
                   '</div>' +
                   '<span class="font-mono text-sm font-bold text-slate-700 whitespace-nowrap">' + sanitizeHTML(porcentajeDescuentos) + '</span>' +
                 '</div>' +
-                '<span class="text-xs text-slate-500 mt-1 block">Afectado real: ' + sanitizeHTML(formatPesosMargen(totalAfectado)) + '</span>' +
+                (esAdmin
+                  ? '<span class="text-xs text-slate-500 mt-1 block">Afectado real: ' + sanitizeHTML(formatPesosMargen(totalAfectado)) + '</span>'
+                  : '<span class="text-xs text-slate-500 mt-1 block">Haberes: ' + sanitizeHTML(formatPesosMargen(bruto)) + ' · Retenciones: ' + sanitizeHTML(formatPesosMargen(descuentos)) + '</span>') +
               '</div>' +
             '</div>' +
             '<div class="mt-3 pt-3 border-t border-slate-200/70 flex flex-wrap items-center gap-2">' +
@@ -21448,100 +21477,102 @@ ${cierreTxt}`;
             '</div>' +
           '</div>' +
 
-          '<!-- Cascada Oficial de 5 Pasos del Motor Padrón -->' +
-          '<div class="ai-waterfall-card">' +
-            '<div class="ai-waterfall-title">' +
-              '<span style="font-size:0.78rem;font-weight:800;color:#1e3a8a;text-transform:uppercase;letter-spacing:0.03em;">📊 Cascada de Cálculo del Margen Afectable (' + (esPasivo ? 'Pasivos 65% · Tope 35%' : 'Activos 80% · Tope 20%') + ')</span>' +
-              '<span class="font-mono" style="font-size:0.72rem;font-weight:700;color:#475569;">Neto Líquido: ' + sanitizeHTML(formatPesosMargen(liquido)) + '</span>' +
-            '</div>' +
-            '<div class="ai-waterfall-grid">' +
-              '<div class="ai-wf-item">' +
-                '<span class="ai-wf-label">Total Haberes</span>' +
-                '<span class="ai-wf-val">' + sanitizeHTML(formatPesosMargen(bruto)) + '</span>' +
-                '<span class="ai-wf-sub">100% Haberes recibo</span>' +
+          (esAdmin ? (
+            '<!-- Cascada Oficial de 5 Pasos del Motor Padrón -->' +
+            '<div class="ai-waterfall-card">' +
+              '<div class="ai-waterfall-title">' +
+                '<span style="font-size:0.78rem;font-weight:800;color:#1e3a8a;text-transform:uppercase;letter-spacing:0.03em;">📊 Cascada de Cálculo del Margen Afectable (' + (esPasivo ? 'Pasivos 65% · Tope 35%' : 'Activos 80% · Tope 20%') + ')</span>' +
+                '<span class="font-mono" style="font-size:0.72rem;font-weight:700;color:#475569;">Neto Líquido: ' + sanitizeHTML(formatPesosMargen(liquido)) + '</span>' +
               '</div>' +
-              '<div class="ai-wf-item">' +
-                '<span class="ai-wf-label">(-) Descuentos SUBTOTAL_1</span>' +
-                '<span class="ai-wf-val text-rose-600">- ' + sanitizeHTML(formatPesosMargen(totalSub1)) + '</span>' +
-                '<span class="ai-wf-sub">Ley / Jubilación / OSER / Prioritarios</span>' +
-              '</div>' +
-              '<div class="ai-wf-item is-subtotal">' +
-                '<span class="ai-wf-label">(=) Subtotal1</span>' +
-                '<span class="ai-wf-val text-blue-800">' + sanitizeHTML(formatPesosMargen(subtotal1)) + '</span>' +
-                '<span class="ai-wf-sub">Bruto depurado</span>' +
-              '</div>' +
-              '<div class="ai-wf-item">' +
-                '<span class="ai-wf-label">(-) Tope Reserva (' + pctTopeNum + '%)</span>' +
-                '<span class="ai-wf-val text-rose-600">- ' + sanitizeHTML(formatPesosMargen(subtotalTope)) + '</span>' +
-                '<span class="ai-wf-sub">' + (esPasivo ? 'Pasivos: reserva 35%' : 'Activos: reserva 20%') + '</span>' +
-              '</div>' +
-              '<div class="ai-wf-item is-subtotal">' +
-                '<span class="ai-wf-label">(=) Subtotal2 (' + pctAfectNum + '%)</span>' +
-                '<span class="ai-wf-val text-blue-800">' + sanitizeHTML(formatPesosMargen(subtotal2)) + '</span>' +
-                '<span class="ai-wf-sub">Subtotal1 - Tope Reserva</span>' +
-              '</div>' +
-              '<div class="ai-wf-item">' +
-                '<span class="ai-wf-label">(-) No Computable</span>' +
-                '<span class="ai-wf-val text-amber-700">- ' + sanitizeHTML(formatPesosMargen(totalNoComp)) + '</span>' +
-                '<span class="ai-wf-sub">Sumas no remun. / Sal. fliar.</span>' +
-              '</div>' +
-              '<div class="ai-wf-item is-subtotal">' +
-                '<span class="ai-wf-label">(=) Afectable</span>' +
-                '<span class="ai-wf-val text-indigo-800">' + sanitizeHTML(formatPesosMargen(afectable)) + '</span>' +
-                '<span class="ai-wf-sub">Subtotal2 - No Computable</span>' +
-              '</div>' +
-              '<div class="ai-wf-item">' +
-                '<span class="ai-wf-label">(-) Afectado' + (cuotaRefAplicada > 0 ? ' efectivo' : '') + (cuotaFutura2 > 0 ? ' + Futura 2' : '') + '</span>' +
-                '<span class="ai-wf-val text-rose-600">- ' + sanitizeHTML(formatPesosMargen(round2Margen(totalAfectadoEfectivo + cuotaFutura2))) + '</span>' +
-                '<span class="ai-wf-sub">Recibo: ' + sanitizeHTML(formatPesosMargen(totalAfectado)) +
-                  (cuotaRefAplicada > 0 ? (' · Cuota a liberar: -' + sanitizeHTML(formatPesosMargen(cuotaRefAplicada))) : '') +
-                  (cuotaFutura2 > 0 ? (' · CF2: ' + sanitizeHTML(formatPesosMargen(cuotaFutura2))) : '') +
-                '</span>' +
-              '</div>' +
-              '<div class="ai-wf-item ' + (puedeOfrecer ? 'is-ok' : 'is-danger') + '">' +
-                '<span class="ai-wf-label">(=) Disponible Recibo' + (esFactor70 ? ' (× 70%)' : '') + '</span>' +
-                '<span class="ai-wf-val ' + (puedeOfrecer ? 'text-emerald-700' : 'text-rose-700') + '">' + sanitizeHTML(formatPesosMargen(disponibleRecibo)) + '</span>' +
-                '<span class="ai-wf-sub">' +
-                  (cuotaRefAplicada > 0 ? ('Orig.: ' + sanitizeHTML(formatPesosMargen(dispOriginal)) + ' → ') : '') +
-                  (esFactor70 ? ('Bruto 100%: ' + sanitizeHTML(formatPesosMargen(dispBruto)) + ' · ') : '') +
-                  (puedeOfrecer ? '✅ Margen Real Positivo' : '🔴 SIN Disponible') +
-                '</span>' +
-              '</div>' +
-            '</div>' +
-
-            '<div class="ai-debt-bar-wrap">' +
-              '<div style="flex:1;min-width:240px;">' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:0.72rem;">' +
-                  '<span style="font-weight:700;color:#334155;">Tope Endeudamiento (41,67% Neto Líquido)</span>' +
-                  '<strong class="font-mono" style="color:#1e3a8a;">' + sanitizeHTML(formatPesosMargen(topeEndeud)) + ' / mes</strong>' +
+              '<div class="ai-waterfall-grid">' +
+                '<div class="ai-wf-item">' +
+                  '<span class="ai-wf-label">Total Haberes</span>' +
+                  '<span class="ai-wf-val">' + sanitizeHTML(formatPesosMargen(bruto)) + '</span>' +
+                  '<span class="ai-wf-sub">100% Haberes recibo</span>' +
                 '</div>' +
-                '<div class="ai-debt-bar-track">' +
-                  '<div class="ai-debt-bar-fill ' + (puedeOfrecer ? 'bg-emerald-500' : 'bg-rose-500') + '" style="width:' + ratioTope + '%"></div>' +
+                '<div class="ai-wf-item">' +
+                  '<span class="ai-wf-label">(-) Descuentos SUBTOTAL_1</span>' +
+                  '<span class="ai-wf-val text-rose-600">- ' + sanitizeHTML(formatPesosMargen(totalSub1)) + '</span>' +
+                  '<span class="ai-wf-sub">Ley / Jubilación / OSER / Prioritarios</span>' +
                 '</div>' +
-                '<div style="font-size:0.66rem;color:#64748b;margin-top:0.25rem;">' + sanitizeHTML(limitadoTxt) + (saldoExt > 0 ? (' · Saldo Externo descontado: ' + sanitizeHTML(formatPesosMargen(saldoExt))) : '') + '</div>' +
+                '<div class="ai-wf-item is-subtotal">' +
+                  '<span class="ai-wf-label">(=) Subtotal1</span>' +
+                  '<span class="ai-wf-val text-blue-800">' + sanitizeHTML(formatPesosMargen(subtotal1)) + '</span>' +
+                  '<span class="ai-wf-sub">Bruto depurado</span>' +
+                '</div>' +
+                '<div class="ai-wf-item">' +
+                  '<span class="ai-wf-label">(-) Tope Reserva (' + pctTopeNum + '%)</span>' +
+                  '<span class="ai-wf-val text-rose-600">- ' + sanitizeHTML(formatPesosMargen(subtotalTope)) + '</span>' +
+                  '<span class="ai-wf-sub">' + (esPasivo ? 'Pasivos: reserva 35%' : 'Activos: reserva 20%') + '</span>' +
+                '</div>' +
+                '<div class="ai-wf-item is-subtotal">' +
+                  '<span class="ai-wf-label">(=) Subtotal2 (' + pctAfectNum + '%)</span>' +
+                  '<span class="ai-wf-val text-blue-800">' + sanitizeHTML(formatPesosMargen(subtotal2)) + '</span>' +
+                  '<span class="ai-wf-sub">Subtotal1 - Tope Reserva</span>' +
+                '</div>' +
+                '<div class="ai-wf-item">' +
+                  '<span class="ai-wf-label">(-) No Computable</span>' +
+                  '<span class="ai-wf-val text-amber-700">- ' + sanitizeHTML(formatPesosMargen(totalNoComp)) + '</span>' +
+                  '<span class="ai-wf-sub">Sumas no remun. / Sal. fliar.</span>' +
+                '</div>' +
+                '<div class="ai-wf-item is-subtotal">' +
+                  '<span class="ai-wf-label">(=) Afectable</span>' +
+                  '<span class="ai-wf-val text-indigo-800">' + sanitizeHTML(formatPesosMargen(afectable)) + '</span>' +
+                  '<span class="ai-wf-sub">Subtotal2 - No Computable</span>' +
+                '</div>' +
+                '<div class="ai-wf-item">' +
+                  '<span class="ai-wf-label">(-) Afectado' + (cuotaRefAplicada > 0 ? ' efectivo' : '') + (cuotaFutura2 > 0 ? ' + Futura 2' : '') + '</span>' +
+                  '<span class="ai-wf-val text-rose-600">- ' + sanitizeHTML(formatPesosMargen(round2Margen(totalAfectadoEfectivo + cuotaFutura2))) + '</span>' +
+                  '<span class="ai-wf-sub">Recibo: ' + sanitizeHTML(formatPesosMargen(totalAfectado)) +
+                    (cuotaRefAplicada > 0 ? (' · Cuota a liberar: -' + sanitizeHTML(formatPesosMargen(cuotaRefAplicada))) : '') +
+                    (cuotaFutura2 > 0 ? (' · CF2: ' + sanitizeHTML(formatPesosMargen(cuotaFutura2))) : '') +
+                  '</span>' +
+                '</div>' +
+                '<div class="ai-wf-item ' + (puedeOfrecer ? 'is-ok' : 'is-danger') + '">' +
+                  '<span class="ai-wf-label">(=) Disponible Recibo' + (esFactor70 ? ' (× 70%)' : '') + '</span>' +
+                  '<span class="ai-wf-val ' + (puedeOfrecer ? 'text-emerald-700' : 'text-rose-700') + '">' + sanitizeHTML(formatPesosMargen(disponibleRecibo)) + '</span>' +
+                  '<span class="ai-wf-sub">' +
+                    (cuotaRefAplicada > 0 ? ('Orig.: ' + sanitizeHTML(formatPesosMargen(dispOriginal)) + ' → ') : '') +
+                    (esFactor70 ? ('Bruto 100%: ' + sanitizeHTML(formatPesosMargen(dispBruto)) + ' · ') : '') +
+                    (puedeOfrecer ? '✅ Margen Real Positivo' : '🔴 SIN Disponible') +
+                  '</span>' +
+                '</div>' +
               '</div>' +
-              '<div style="background:' + (puedeOfrecer ? '#ecfdf5' : '#fff1f2') + ';border:1px solid ' + (puedeOfrecer ? '#a7f3d0' : '#fecdd3') + ';border-radius:0.6rem;padding:0.45rem 0.75rem;text-align:right;">' +
-                '<span style="display:block;font-size:0.62rem;font-weight:800;text-transform:uppercase;color:' + (puedeOfrecer ? '#065f46' : '#9f1239') + ';">Cuota Máxima Segura</span>' +
-                '<strong class="font-mono" style="font-size:0.95rem;color:' + (puedeOfrecer ? '#047857' : '#be123c') + ';">' + (puedeOfrecer ? sanitizeHTML(formatPesosMargen(cuotaSegura)) : 'SIN Disponible') + '</strong>' +
+
+              '<div class="ai-debt-bar-wrap">' +
+                '<div style="flex:1;min-width:240px;">' +
+                  '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:0.72rem;">' +
+                    '<span style="font-weight:700;color:#334155;">Tope Endeudamiento (41,67% Neto Líquido)</span>' +
+                    '<strong class="font-mono" style="color:#1e3a8a;">' + sanitizeHTML(formatPesosMargen(topeEndeud)) + ' / mes</strong>' +
+                  '</div>' +
+                  '<div class="ai-debt-bar-track">' +
+                    '<div class="ai-debt-bar-fill ' + (puedeOfrecer ? 'bg-emerald-500' : 'bg-rose-500') + '" style="width:' + ratioTope + '%"></div>' +
+                  '</div>' +
+                  '<div style="font-size:0.66rem;color:#64748b;margin-top:0.25rem;">' + sanitizeHTML(limitadoTxt) + (saldoExt > 0 ? (' · Saldo Externo descontado: ' + sanitizeHTML(formatPesosMargen(saldoExt))) : '') + '</div>' +
+                '</div>' +
+                '<div style="background:' + (puedeOfrecer ? '#ecfdf5' : '#fff1f2') + ';border:1px solid ' + (puedeOfrecer ? '#a7f3d0' : '#fecdd3') + ';border-radius:0.6rem;padding:0.45rem 0.75rem;text-align:right;">' +
+                  '<span style="display:block;font-size:0.62rem;font-weight:800;text-transform:uppercase;color:' + (puedeOfrecer ? '#065f46' : '#9f1239') + ';">Cuota Máxima Segura</span>' +
+                  '<strong class="font-mono" style="font-size:0.95rem;color:' + (puedeOfrecer ? '#047857' : '#be123c') + ';">' + (puedeOfrecer ? sanitizeHTML(formatPesosMargen(cuotaSegura)) : 'SIN Disponible') + '</strong>' +
+                '</div>' +
               '</div>' +
             '</div>' +
-          '</div>' +
 
-          conclHtml +
+            conclHtml +
 
-          '<div class="bg-slate-50/90 rounded-xl p-4 border border-slate-200">' +
-            '<div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">' +
-              '<div class="p-3 rounded-lg border ' + (puedeOfrecer && !embargoDetectado ? 'bg-emerald-50/70 border-emerald-200' : 'bg-rose-50/50 border-rose-200') + '">' +
-                '<span class="block text-[11px] font-bold uppercase tracking-wider ' + (puedeOfrecer && !embargoDetectado ? 'text-emerald-900' : 'text-rose-900') + '">Dictamen Crediticio:</span>' +
-                '<p class="text-xs font-bold text-slate-900 mt-1 mb-0">' + sanitizeHTML(dictamenText) + '</p>' +
+            '<div class="bg-slate-50/90 rounded-xl p-4 border border-slate-200">' +
+              '<div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">' +
+                '<div class="p-3 rounded-lg border ' + (puedeOfrecer && !embargoDetectado ? 'bg-emerald-50/70 border-emerald-200' : 'bg-rose-50/50 border-rose-200') + '">' +
+                  '<span class="block text-[11px] font-bold uppercase tracking-wider ' + (puedeOfrecer && !embargoDetectado ? 'text-emerald-900' : 'text-rose-900') + '">Dictamen Crediticio:</span>' +
+                  '<p class="text-xs font-bold text-slate-900 mt-1 mb-0">' + sanitizeHTML(dictamenText) + '</p>' +
+                '</div>' +
+                '<div class="p-3 rounded-lg border ' + (puedeOfrecer && !embargoDetectado ? 'bg-indigo-50/70 border-indigo-200' : 'bg-rose-50/50 border-rose-200') + '">' +
+                  '<span class="block text-[11px] font-bold uppercase tracking-wider ' + (puedeOfrecer && !embargoDetectado ? 'text-indigo-900' : 'text-rose-900') + '">Canal Sugerido:</span>' +
+                  '<p class="text-xs font-bold text-slate-900 mt-1 mb-0">' + sanitizeHTML(canalSugerido) + '</p>' +
+                '</div>' +
               '</div>' +
-              '<div class="p-3 rounded-lg border ' + (puedeOfrecer && !embargoDetectado ? 'bg-indigo-50/70 border-indigo-200' : 'bg-rose-50/50 border-rose-200') + '">' +
-                '<span class="block text-[11px] font-bold uppercase tracking-wider ' + (puedeOfrecer && !embargoDetectado ? 'text-indigo-900' : 'text-rose-900') + '">Canal Sugerido:</span>' +
-                '<p class="text-xs font-bold text-slate-900 mt-1 mb-0">' + sanitizeHTML(canalSugerido) + '</p>' +
-              '</div>' +
-            '</div>' +
-            (accionesHtml ? ('<div class="mt-3">' + accionesHtml + '</div>') : '') +
-          '</div>' +
+              (accionesHtml ? ('<div class="mt-3">' + accionesHtml + '</div>') : '') +
+            '</div>'
+          ) : accionesBoxSoloNonAdmin) +
         '</div>' +
       '</div>';
     }
@@ -21630,6 +21661,7 @@ ${cierreTxt}`;
         ? rec.codigosFedemDetectados
         : conceptosClasif.fedemCodes;
 
+      const esAdmin = esAdminAuditoria();
       let conceptosHTML = '';
       if (conceptos.length > 0) {
         conceptosHTML = conceptos.map((c, idx) => {
@@ -21640,14 +21672,15 @@ ${cierreTxt}`;
             : '<span class="ai-clasif-badge clasif-sin-clasif">' + sanitizeHTML(c.clasificacion || '—') + '</span>';
           const esManual = c.metodoClasificacion === 'EXPLICITA_NORMALIZADA' && c.lugarPadronMatch === 'MANUAL';
           const selVal = esManual ? (c.clasificacion || 'AUTO') : 'AUTO';
-          const selectOverride =
-            '<select aria-label="Reclasificar ítem" title="Ajustar clasificación manualmente" onchange="cambiarClasificacionItemAuditoria(' + idx + ', this.value)" style="margin-left:6px;font-size:0.65rem;padding:1px 4px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;color:#475569;cursor:pointer;">' +
-              '<option value="AUTO"' + (selVal === 'AUTO' ? ' selected' : '') + '>Auto</option>' +
-              '<option value="COMPUTABLE"' + (selVal === 'COMPUTABLE' ? ' selected' : '') + '>Computable</option>' +
-              '<option value="NO_COMPUTABLE"' + (selVal === 'NO_COMPUTABLE' ? ' selected' : '') + '>No Computable</option>' +
-              '<option value="SUBTOTAL_1"' + (selVal === 'SUBTOTAL_1' ? ' selected' : '') + '>Subtotal 1</option>' +
-              '<option value="AFECTADO"' + (selVal === 'AFECTADO' ? ' selected' : '') + '>Afectado</option>' +
-            '</select>';
+          const selectOverride = esAdmin
+            ? ('<select aria-label="Reclasificar ítem" title="Ajustar clasificación manualmente" onchange="cambiarClasificacionItemAuditoria(' + idx + ', this.value)" style="margin-left:6px;font-size:0.65rem;padding:1px 4px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;color:#475569;cursor:pointer;">' +
+                '<option value="AUTO"' + (selVal === 'AUTO' ? ' selected' : '') + '>Auto</option>' +
+                '<option value="COMPUTABLE"' + (selVal === 'COMPUTABLE' ? ' selected' : '') + '>Computable</option>' +
+                '<option value="NO_COMPUTABLE"' + (selVal === 'NO_COMPUTABLE' ? ' selected' : '') + '>No Computable</option>' +
+                '<option value="SUBTOTAL_1"' + (selVal === 'SUBTOTAL_1' ? ' selected' : '') + '>Subtotal 1</option>' +
+                '<option value="AFECTADO"' + (selVal === 'AFECTADO' ? ' selected' : '') + '>Afectado</option>' +
+              '</select>')
+            : '';
           return '<tr class="border-b border-slate-100 hover:bg-slate-50/80">' +
             '<td class="py-2.5 px-3 font-mono text-xs font-semibold text-slate-600">' + sanitizeHTML(c.codigo || '—') + '</td>' +
             '<td class="py-2.5 px-3 text-xs font-medium text-slate-800">' + sanitizeHTML(c.descripcion || 'Concepto liquidado') + '</td>' +
@@ -21657,7 +21690,7 @@ ${cierreTxt}`;
             '<td class="py-2.5 px-3 font-mono text-xs text-right font-semibold ' + (desc > 0 ? 'text-rose-700' : 'text-slate-300') + '">' +
               (desc > 0 ? sanitizeHTML(formatPesosMargen(desc)) : '—') +
             '</td>' +
-            '<td class="py-2.5 px-3 text-left whitespace-nowrap">' + badgeClasif + selectOverride + '</td>' +
+            (esAdmin ? ('<td class="py-2.5 px-3 text-left whitespace-nowrap">' + badgeClasif + selectOverride + '</td>') : '') +
           '</tr>';
         }).join('');
       } else {
@@ -21666,7 +21699,7 @@ ${cierreTxt}`;
           '<td class="py-2.5 px-3 text-xs text-slate-500">Totales consolidados extraídos del comprobante adjunto</td>' +
           '<td class="py-2.5 px-3 font-mono text-xs text-right font-semibold text-emerald-700">' + sanitizeHTML(formatPesosMargen(bruto)) + '</td>' +
           '<td class="py-2.5 px-3 font-mono text-xs text-right font-semibold text-rose-700">' + sanitizeHTML(formatPesosMargen(descuentos)) + '</td>' +
-          '<td class="py-2.5 px-3 text-xs text-slate-400">Resumen</td>' +
+          (esAdmin ? '<td class="py-2.5 px-3 text-xs text-slate-400">Resumen</td>' : '') +
         '</tr>';
       }
 
@@ -21682,122 +21715,167 @@ ${cierreTxt}`;
           '<div id="selectorExpedienteBitacoraInline" class="hidden mt-3 p-3 rounded-lg border border-slate-200 bg-white"></div>' +
         '</div>';
 
-      // BLOQUE 2 (CONDICIONAL): Cortafuegos estricto SIN Disponible vs Ofertas Seguras por Plazo
+      // BLOQUE 2 (CONDICIONAL · SOLO ADMIN): Cortafuegos estricto SIN Disponible vs Ofertas Seguras por Plazo
       let bloqueSimulacionHtml = '';
-      if (!puedeOfrecerCuotas || disponibleRecibo <= 0 || am.estado === 'SIN_DISPONIBLE') {
-        window._cuotaMaximaAuditoria = 0;
-        window._netoLiquidoAuditoria = liquido;
-        bloqueSimulacionHtml =
-          '<div class="ai-sin-disponible-banner font-sans antialiased">' +
-            '<div class="flex items-start justify-between gap-3 flex-wrap">' +
-              '<div>' +
-                '<div class="text-sm font-black tracking-tight" style="display:flex;align-items:center;gap:6px;">🔴 SIN Disponible — Simulación Automática de Cuotas Bloqueada</div>' +
-                '<p class="text-xs font-medium mt-1 mb-0" style="line-height:1.45;">' +
-                  'El margen afectable real del recibo es negativo o nulo (<strong>Disponible Recibo: ' + sanitizeHTML(formatPesosMargen(disponibleRecibo)) + '</strong>' +
-                  ' = Afectable ' + sanitizeHTML(formatPesosMargen(am.afectable ?? 0)) +
-                  ' − Afectado efectivo ' + sanitizeHTML(formatPesosMargen(am.totalAfectadoEfectivo ?? am.totalAfectado ?? 0)) +
-                  (am.cuotaFutura2 > 0 ? (' − Cuota Futura 2 ' + sanitizeHTML(formatPesosMargen(am.cuotaFutura2))) : '') + '). ' +
-                  'Por regla de corte reglamentaria no se habilitan ofertas de cuotas ni se aplica cálculo estimativo sobre el neto líquido.' +
-                '</p>' +
+      if (esAdmin) {
+        if (!puedeOfrecerCuotas || disponibleRecibo <= 0 || am.estado === 'SIN_DISPONIBLE') {
+          window._cuotaMaximaAuditoria = 0;
+          window._netoLiquidoAuditoria = liquido;
+          bloqueSimulacionHtml =
+            '<div class="ai-sin-disponible-banner font-sans antialiased">' +
+              '<div class="flex items-start justify-between gap-3 flex-wrap">' +
+                '<div>' +
+                  '<div class="text-sm font-black tracking-tight" style="display:flex;align-items:center;gap:6px;">🔴 SIN Disponible — Simulación Automática de Cuotas Bloqueada</div>' +
+                  '<p class="text-xs font-medium mt-1 mb-0" style="line-height:1.45;">' +
+                    'El margen afectable real del recibo es negativo o nulo (<strong>Disponible Recibo: ' + sanitizeHTML(formatPesosMargen(disponibleRecibo)) + '</strong>' +
+                    ' = Afectable ' + sanitizeHTML(formatPesosMargen(am.afectable ?? 0)) +
+                    ' − Afectado efectivo ' + sanitizeHTML(formatPesosMargen(am.totalAfectadoEfectivo ?? am.totalAfectado ?? 0)) +
+                    (am.cuotaFutura2 > 0 ? (' − Cuota Futura 2 ' + sanitizeHTML(formatPesosMargen(am.cuotaFutura2))) : '') + '). ' +
+                    'Por regla de corte reglamentaria no se habilitan ofertas de cuotas ni se aplica cálculo estimativo sobre el neto líquido.' +
+                  '</p>' +
+                '</div>' +
+                '<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-black bg-white text-rose-700 border border-rose-200 font-mono">SIN Disponible (' + sanitizeHTML(formatPesosMargen(disponibleRecibo)) + ')</span>' +
               '</div>' +
-              '<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-black bg-white text-rose-700 border border-rose-200 font-mono">SIN Disponible (' + sanitizeHTML(formatPesosMargen(disponibleRecibo)) + ')</span>' +
-            '</div>' +
-          '</div>';
-      } else {
-        const orgUpper = String(organismo || '').toUpperCase();
-        const lineaInicial = (orgUpper.includes('MUNICIP') || orgUpper.includes('QUAD')) ? 'QUAD' : 'FEDEM';
+            '</div>';
+        } else {
+          const orgUpper = String(organismo || '').toUpperCase();
+          const lineaInicial = (orgUpper.includes('MUNICIP') || orgUpper.includes('QUAD')) ? 'QUAD' : 'FEDEM';
 
-        window._cuotaMaximaAuditoria = disponibleRecibo;
-        window._cuotaSeguraMaxAuditoria = cuotaSegura > 0 ? cuotaSegura : disponibleRecibo;
-        _auditCuotaPersonalizada = 0;
-        window._offerOptsAuditoria = Object.assign({}, window._offerOptsAuditoria || {}, { cuotaPersonalizada: 0 });
-        window._netoLiquidoAuditoria = liquido;
-        window._lineaAuditoriaSugerida = lineaInicial;
+          window._cuotaMaximaAuditoria = disponibleRecibo;
+          window._cuotaSeguraMaxAuditoria = cuotaSegura > 0 ? cuotaSegura : disponibleRecibo;
+          _auditCuotaPersonalizada = 0;
+          window._offerOptsAuditoria = Object.assign({}, window._offerOptsAuditoria || {}, { cuotaPersonalizada: 0 });
+          window._netoLiquidoAuditoria = liquido;
+          window._lineaAuditoriaSugerida = lineaInicial;
 
-        const isFedem = lineaInicial === 'FEDEM';
-        const isQuad = lineaInicial === 'QUAD';
-        const isSidecreer = lineaInicial === 'SIDECREER';
+          const isFedem = lineaInicial === 'FEDEM';
+          const isQuad = lineaInicial === 'QUAD';
+          const isSidecreer = lineaInicial === 'SIDECREER';
 
-        const tabActiveCls = 'tab-linea-auditoria px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all duration-150 bg-white text-indigo-950 shadow-sm border border-slate-200/50';
-        const tabInactiveCls = 'tab-linea-auditoria px-4 py-2 rounded-lg text-xs font-medium tracking-wide transition-all duration-150 text-slate-600 hover:text-slate-900 hover:bg-white/60';
+          const tabActiveCls = 'tab-linea-auditoria px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all duration-150 bg-white text-indigo-950 shadow-sm border border-slate-200/50';
+          const tabInactiveCls = 'tab-linea-auditoria px-4 py-2 rounded-lg text-xs font-medium tracking-wide transition-all duration-150 text-slate-600 hover:text-slate-900 hover:bg-white/60';
 
-        const filasPlanesHtml = renderizarFilasPlanesAuditoria(disponibleRecibo, lineaInicial, liquido);
-        const alertaEmbargoSim = embargoDetectado
-          ? '<div class="ai-valid-alerts-box mb-4">⚠️ <strong>Atención Embargo Judicial Detectado (' + sanitizeHTML(formatPesosMargen(embargoMonto)) + '):</strong> Verifique vigencia o levantamiento antes de pre-cargar una solicitud.</div>'
-          : '';
-        const saldoCancSim = Number(am.saldoCancelar || 0) || 0;
-        const saldoExtSim = Number(am.saldoVigenteExterno || 0) || 0;
+          const filasPlanesHtml = renderizarFilasPlanesAuditoria(disponibleRecibo, lineaInicial, liquido);
+          const alertaEmbargoSim = embargoDetectado
+            ? '<div class="ai-valid-alerts-box mb-4">⚠️ <strong>Atención Embargo Judicial Detectado (' + sanitizeHTML(formatPesosMargen(embargoMonto)) + '):</strong> Verifique vigencia o levantamiento antes de pre-cargar una solicitud.</div>'
+            : '';
+          const saldoCancSim = Number(am.saldoCancelar || 0) || 0;
+          const saldoExtSim = Number(am.saldoVigenteExterno || 0) || 0;
 
-        bloqueSimulacionHtml =
-          '<!-- BLOQUE 2 (CONDICIONAL): SIMULACIÓN DE AYUDA ECONÓMICA SUGERIDA -->' +
-          '<div class="bg-white border border-slate-200/80 rounded-2xl shadow-sm p-6 mb-6 font-sans antialiased">' +
-            '<div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3 mb-4">' +
-              '<div>' +
-                '<h2 class="text-base font-bold text-slate-900 tracking-tight m-0">' +
-                  '⚡ Simulación de Ayuda Económica Sugerida' +
-                '</h2>' +
-                (esAdminAuditoria() ? '<p class="text-xs text-slate-500 font-normal mt-1 mb-0">' +
-                  'Oferta máxima por plazo acotada por min(Disponible Recibo, Tope Endeudamiento 41,67% Neto Líquido' + (saldoExtSim > 0 ? ' − Saldo Vigente' : '') + ')' +
-                '</p>' : '') +
+          bloqueSimulacionHtml =
+            '<!-- BLOQUE 2 (CONDICIONAL): SIMULACIÓN DE AYUDA ECONÓMICA SUGERIDA -->' +
+            '<div class="bg-white border border-slate-200/80 rounded-2xl shadow-sm p-6 mb-6 font-sans antialiased">' +
+              '<div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3 mb-4">' +
+                '<div>' +
+                  '<h2 class="text-base font-bold text-slate-900 tracking-tight m-0">' +
+                    '⚡ Simulación de Ayuda Económica Sugerida' +
+                  '</h2>' +
+                  '<p class="text-xs text-slate-500 font-normal mt-1 mb-0">' +
+                    'Oferta máxima por plazo acotada por min(Disponible Recibo, Tope Endeudamiento 41,67% Neto Líquido' + (saldoExtSim > 0 ? ' − Saldo Vigente' : '') + ')' +
+                  '</p>' +
+                '</div>' +
+                '<div class="flex items-center gap-2 flex-wrap">' +
+                  '<span id="badgeCuotaSeguraSim" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200 font-mono">' +
+                    '<span class="w-2 h-2 rounded-full bg-emerald-500"></span>' +
+                    'Cuota Segura Máx.: ' + sanitizeHTML(formatPesosMargen(cuotaSegura)) + ' / mes' +
+                  '</span>' +
+                  '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-indigo-50 text-indigo-800 border-indigo-200 font-mono">' +
+                    'Disponible: ' + sanitizeHTML(formatPesosMargen(disponibleRecibo)) + ' · Tope 41,67%: ' + sanitizeHTML(formatPesosMargen(topeEndeud)) +
+                  '</span>' +
+                  (saldoCancSim > 0
+                    ? ('<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border bg-amber-50 text-amber-800 border-amber-200 font-mono">Saldo Cancelar: ' + sanitizeHTML(formatPesosMargen(saldoCancSim)) + '</span>')
+                    : '') +
+                  (saldoExtSim > 0
+                    ? ('<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border bg-rose-50 text-rose-800 border-rose-200 font-mono">Saldo Vigente Ext.: ' + sanitizeHTML(formatPesosMargen(saldoExtSim)) + '</span>')
+                    : '') +
+                '</div>' +
               '</div>' +
-              '<div class="flex items-center gap-2 flex-wrap">' +
-                '<span id="badgeCuotaSeguraSim" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200 font-mono">' +
-                  '<span class="w-2 h-2 rounded-full bg-emerald-500"></span>' +
-                  'Cuota Segura Máx.: ' + sanitizeHTML(formatPesosMargen(cuotaSegura)) + ' / mes' +
-                '</span>' +
-                (esAdminAuditoria() ? '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-indigo-50 text-indigo-800 border-indigo-200 font-mono">' +
-                  'Disponible: ' + sanitizeHTML(formatPesosMargen(disponibleRecibo)) + ' · Tope 41,67%: ' + sanitizeHTML(formatPesosMargen(topeEndeud)) +
-                '</span>' : '') +
-                (esAdminAuditoria() && saldoCancSim > 0
-                  ? ('<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border bg-amber-50 text-amber-800 border-amber-200 font-mono">Saldo Cancelar: ' + sanitizeHTML(formatPesosMargen(saldoCancSim)) + '</span>')
-                  : '') +
-                (esAdminAuditoria() && saldoExtSim > 0
-                  ? ('<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border bg-rose-50 text-rose-800 border-rose-200 font-mono">Saldo Vigente Ext.: ' + sanitizeHTML(formatPesosMargen(saldoExtSim)) + '</span>')
-                  : '') +
+
+              alertaEmbargoSim +
+
+              '<div class="flex flex-wrap items-center gap-2 mb-4 p-3 rounded-xl border border-slate-200 bg-slate-50">' +
+                '<label for="inputAuditCuotaPersonalizada" class="text-xs font-bold text-slate-700">Cuota deseada ($)</label>' +
+                '<input id="inputAuditCuotaPersonalizada" type="text" inputmode="decimal" placeholder="Máx. ' + sanitizeHTML(formatPesosMargen(cuotaSegura)) + '" onkeydown="if(event.key===\'Enter\'){aplicarCuotaPersonalizadaAuditoria();}" class="w-44 px-3 py-1.5 rounded-lg border border-slate-300 text-sm font-mono bg-white" />' +
+                '<button type="button" onclick="aplicarCuotaPersonalizadaAuditoria()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">Simular</button>' +
+                '<button type="button" id="btnLimpiarCuotaPersSim" onclick="limpiarCuotaPersonalizadaAuditoria()" style="display:none" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 text-xs font-semibold">Restablecer al máximo</button>' +
+                '<span class="text-[11px] text-slate-500">Ingresá una cuota menor o igual a la máxima segura para simular un monto menor.</span>' +
               '</div>' +
-            '</div>' +
 
-            alertaEmbargoSim +
+              '<!-- Selector de Línea Crediticia (Tabs / Píldoras Modernas) -->' +
+              '<div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200 gap-1 mb-5">' +
+                '<button type="button" onclick="cambiarLineaAuditoria(\'FEDEM\')" id="tabLineaFEDEM" class="' + (isFedem ? tabActiveCls : tabInactiveCls) + '">' +
+                  '🏛️ FEDEM Provincial' +
+                '</button>' +
+                '<button type="button" onclick="cambiarLineaAuditoria(\'QUAD\')" id="tabLineaQUAD" class="' + (isQuad ? tabActiveCls : tabInactiveCls) + '">' +
+                  '🏢 QUAD Municipales' +
+                '</button>' +
+                '<button type="button" onclick="cambiarLineaAuditoria(\'SIDECREER\')" id="tabLineaSidecreer" class="' + (isSidecreer ? tabActiveCls : tabInactiveCls) + '">' +
+                  '💳 Convenio Sidecreer' +
+                '</button>' +
+              '</div>' +
 
-            '<div class="flex flex-wrap items-center gap-2 mb-4 p-3 rounded-xl border border-slate-200 bg-slate-50">' +
-              '<label for="inputAuditCuotaPersonalizada" class="text-xs font-bold text-slate-700">Cuota deseada ($)</label>' +
-              '<input id="inputAuditCuotaPersonalizada" type="text" inputmode="decimal" placeholder="Máx. ' + sanitizeHTML(formatPesosMargen(cuotaSegura)) + '" onkeydown="if(event.key===\'Enter\'){aplicarCuotaPersonalizadaAuditoria();}" class="w-44 px-3 py-1.5 rounded-lg border border-slate-300 text-sm font-mono bg-white" />' +
-              '<button type="button" onclick="aplicarCuotaPersonalizadaAuditoria()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">Simular</button>' +
-              '<button type="button" id="btnLimpiarCuotaPersSim" onclick="limpiarCuotaPersonalizadaAuditoria()" style="display:none" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 text-xs font-semibold">Restablecer al máximo</button>' +
-              '<span class="text-[11px] text-slate-500">Ingresá una cuota menor o igual a la máxima segura para simular un monto menor.</span>' +
-            '</div>' +
-
-            '<!-- Selector de Línea Crediticia (Tabs / Píldoras Modernas) -->' +
-            '<div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200 gap-1 mb-5">' +
-              '<button type="button" onclick="cambiarLineaAuditoria(\'FEDEM\')" id="tabLineaFEDEM" class="' + (isFedem ? tabActiveCls : tabInactiveCls) + '">' +
-                '🏛️ FEDEM Provincial' +
-              '</button>' +
-              '<button type="button" onclick="cambiarLineaAuditoria(\'QUAD\')" id="tabLineaQUAD" class="' + (isQuad ? tabActiveCls : tabInactiveCls) + '">' +
-                '🏢 QUAD Municipales' +
-              '</button>' +
-              '<button type="button" onclick="cambiarLineaAuditoria(\'SIDECREER\')" id="tabLineaSidecreer" class="' + (isSidecreer ? tabActiveCls : tabInactiveCls) + '">' +
-                '💳 Convenio Sidecreer' +
-              '</button>' +
-            '</div>' +
-
-            '<!-- Tabla de Simulación Sugerida: Orden exacto Monto a Entregar | Cantidad de Cuotas | Monto de Cuota | Acción -->' +
-            '<div class="overflow-x-auto rounded-lg border border-slate-200">' +
-              '<table class="w-full text-left border-collapse font-sans text-slate-700">' +
-                '<thead class="bg-slate-50 border-b border-slate-200">' +
-                  '<tr>' +
-                    '<th class="py-3 px-4 text-[11px] font-bold text-emerald-700 uppercase whitespace-nowrap">Monto a Entregar</th>' +
-                    '<th class="py-3 px-4 text-[11px] font-bold text-slate-500 uppercase text-center whitespace-nowrap">Cantidad de Cuotas</th>' +
-                    '<th class="py-3 px-4 text-[11px] font-bold text-slate-700 uppercase text-right whitespace-nowrap">Monto de Cuota</th>' +
-                    '<th class="py-3 px-4 text-[11px] font-bold text-slate-500 uppercase text-right whitespace-nowrap">Acción</th>' +
-                  '</tr>' +
-                '</thead>' +
-                '<tbody id="tbodyPlanesAuditoria" class="divide-y divide-slate-100 font-sans text-slate-700">' +
-                  filasPlanesHtml +
-                '</tbody>' +
-              '</table>' +
-            '</div>' +
-          '</div>';
+              '<!-- Tabla de Simulación Sugerida: Orden exacto Monto a Entregar | Cantidad de Cuotas | Monto de Cuota | Acción -->' +
+              '<div class="overflow-x-auto rounded-lg border border-slate-200">' +
+                '<table class="w-full text-left border-collapse font-sans text-slate-700">' +
+                  '<thead class="bg-slate-50 border-b border-slate-200">' +
+                    '<tr>' +
+                      '<th class="py-3 px-4 text-[11px] font-bold text-emerald-700 uppercase whitespace-nowrap">Monto a Entregar</th>' +
+                      '<th class="py-3 px-4 text-[11px] font-bold text-slate-500 uppercase text-center whitespace-nowrap">Cantidad de Cuotas</th>' +
+                      '<th class="py-3 px-4 text-[11px] font-bold text-slate-700 uppercase text-right whitespace-nowrap">Monto de Cuota</th>' +
+                      '<th class="py-3 px-4 text-[11px] font-bold text-slate-500 uppercase text-right whitespace-nowrap">Acción</th>' +
+                    '</tr>' +
+                  '</thead>' +
+                  '<tbody id="tbodyPlanesAuditoria" class="divide-y divide-slate-100 font-sans text-slate-700">' +
+                    filasPlanesHtml +
+                  '</tbody>' +
+                '</table>' +
+              '</div>' +
+            '</div>';
+        }
       }
+
+      const radiografiaHtml = esAdmin
+        ? ('<div class="mb-5">' +
+            '<p class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-3">' +
+              'A. Radiografía de Retenciones y Controles Reglamentarios' +
+            '</p>' +
+            '<div class="grid grid-cols-2 md:grid-cols-3 gap-3">' +
+              '<div class="p-3 rounded-lg border border-slate-100 bg-slate-50">' +
+                '<span class="block text-[11px] font-semibold text-slate-500">Descuentos SUBTOTAL_1 (Prioritarios / Ley)</span>' +
+                '<span class="font-mono text-sm font-bold text-slate-900">' + sanitizeHTML(formatPesosMargen(descLey)) + '</span>' +
+                '<span class="block text-[10px] text-slate-400 mt-0.5">Jubilación, Obra Social OSER y Seguros</span>' +
+              '</div>' +
+              '<div class="p-3 rounded-lg border border-slate-100 bg-slate-50">' +
+                '<span class="block text-[11px] font-semibold text-slate-500">Bancos / BERSA y Sidecreer (AFECTADO)</span>' +
+                '<span class="font-mono text-sm font-bold text-slate-900">' + sanitizeHTML(formatPesosMargen(descBersa + descSidecreer)) + '</span>' +
+                '<span class="block font-mono text-[10px] text-slate-400 mt-0.5">BERSA: ' + sanitizeHTML(formatPesosMargen(descBersa)) + ' · Sidecreer: ' + sanitizeHTML(formatPesosMargen(descSidecreer)) + '</span>' +
+              '</div>' +
+              '<div class="p-3 rounded-lg border border-slate-100 bg-slate-50">' +
+                '<span class="block text-[11px] font-semibold text-slate-500">Mutuales / Proveeduría / FEDEM</span>' +
+                '<span class="font-mono text-sm font-bold text-slate-900">' + sanitizeHTML(formatPesosMargen(descMutuales + descFedem)) + '</span>' +
+                '<span class="block text-[10px] text-slate-400 mt-0.5">' + (fedemDetectados.length > 0 ? ('FEDEM: ' + sanitizeHTML(fedemDetectados.join(', '))) : 'Sin códigos FEDEM previos · Embargos: ' + (embargoDetectado ? ('SÍ (' + sanitizeHTML(formatPesosMargen(embargoMonto)) + ')') : 'NO')) + '</span>' +
+              '</div>' +
+            '</div>' +
+          '</div>')
+        : ('<div class="mb-5">' +
+            '<p class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-3">' +
+              'A. Resumen General de Haberes y Retenciones' +
+            '</p>' +
+            '<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">' +
+              '<div class="p-3 rounded-lg border border-slate-100 bg-slate-50">' +
+                '<span class="block text-[11px] font-semibold text-slate-500">Total Haberes (Bruto)</span>' +
+                '<span class="font-mono text-sm font-bold text-emerald-700">' + sanitizeHTML(formatPesosMargen(bruto)) + '</span>' +
+              '</div>' +
+              '<div class="p-3 rounded-lg border border-slate-100 bg-slate-50">' +
+                '<span class="block text-[11px] font-semibold text-slate-500">Total Descuentos / Retenciones</span>' +
+                '<span class="font-mono text-sm font-bold text-rose-700">' + sanitizeHTML(formatPesosMargen(descuentos)) + '</span>' +
+              '</div>' +
+              '<div class="p-3 rounded-lg border border-emerald-200 bg-emerald-50/70">' +
+                '<span class="block text-[11px] font-semibold text-emerald-800">Líquido a Pagar (Neto)</span>' +
+                '<span class="font-mono text-sm font-bold text-emerald-900">' + sanitizeHTML(formatPesosMargen(liquido)) + '</span>' +
+              '</div>' +
+            '</div>' +
+          '</div>');
 
       const html =
         '<div class="space-y-6 text-slate-800">' +
@@ -21810,38 +21888,16 @@ ${cierreTxt}`;
           '<div class="bg-white border border-slate-200/80 rounded-2xl shadow-sm p-6 mb-6 font-sans antialiased">' +
             '<div class="border-b border-slate-100 pb-3 mb-4">' +
               '<h2 class="text-base font-bold text-slate-900 tracking-tight">' +
-                '2. Informe Completo de Auditoría Documental y Salarial' +
+                (esAdmin ? '2. Informe Completo de Auditoría Documental y Salarial' : 'Informe Completo de Auditoría (Detalle del Recibo)') +
               '</h2>' +
             '</div>' +
 
-            '<!-- A. Radiografía de Retenciones y Controles Reglamentarios -->' +
-            '<div class="mb-5">' +
-              '<p class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-3">' +
-                'A. Radiografía de Retenciones y Controles Reglamentarios' +
-              '</p>' +
-              '<div class="grid grid-cols-2 md:grid-cols-3 gap-3">' +
-                '<div class="p-3 rounded-lg border border-slate-100 bg-slate-50">' +
-                  '<span class="block text-[11px] font-semibold text-slate-500">Descuentos SUBTOTAL_1 (Prioritarios / Ley)</span>' +
-                  '<span class="font-mono text-sm font-bold text-slate-900">' + sanitizeHTML(formatPesosMargen(descLey)) + '</span>' +
-                  '<span class="block text-[10px] text-slate-400 mt-0.5">Jubilación, Obra Social OSER y Seguros</span>' +
-                '</div>' +
-                '<div class="p-3 rounded-lg border border-slate-100 bg-slate-50">' +
-                  '<span class="block text-[11px] font-semibold text-slate-500">Bancos / BERSA y Sidecreer (AFECTADO)</span>' +
-                  '<span class="font-mono text-sm font-bold text-slate-900">' + sanitizeHTML(formatPesosMargen(descBersa + descSidecreer)) + '</span>' +
-                  '<span class="block font-mono text-[10px] text-slate-400 mt-0.5">BERSA: ' + sanitizeHTML(formatPesosMargen(descBersa)) + ' · Sidecreer: ' + sanitizeHTML(formatPesosMargen(descSidecreer)) + '</span>' +
-                '</div>' +
-                '<div class="p-3 rounded-lg border border-slate-100 bg-slate-50">' +
-                  '<span class="block text-[11px] font-semibold text-slate-500">Mutuales / Proveeduría / FEDEM</span>' +
-                  '<span class="font-mono text-sm font-bold text-slate-900">' + sanitizeHTML(formatPesosMargen(descMutuales + descFedem)) + '</span>' +
-                  '<span class="block text-[10px] text-slate-400 mt-0.5">' + (fedemDetectados.length > 0 ? ('FEDEM: ' + sanitizeHTML(fedemDetectados.join(', '))) : 'Sin códigos FEDEM previos · Embargos: ' + (embargoDetectado ? ('SÍ (' + sanitizeHTML(formatPesosMargen(embargoMonto)) + ')') : 'NO')) + '</span>' +
-                '</div>' +
-              '</div>' +
-            '</div>' +
+            radiografiaHtml +
 
             '<!-- B. Desglose Exhaustivo de Conceptos (Recibo Literal y Padrón) -->' +
             '<div>' +
               '<p class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-3">' +
-                'B. Desglose Exhaustivo de Conceptos (Recibo Literal y Clasificación Padrón)' +
+                (esAdmin ? 'B. Desglose Exhaustivo de Conceptos (Recibo Literal y Clasificación Padrón)' : 'B. Detalle Completo del Recibo') +
               '</p>' +
               '<div class="overflow-x-auto rounded-lg border border-slate-200">' +
                 '<table class="w-full text-left">' +
@@ -21851,7 +21907,7 @@ ${cierreTxt}`;
                       '<th class="py-2.5 px-3 text-[11px] font-bold text-slate-500 uppercase">Descripción del Concepto</th>' +
                       '<th class="py-2.5 px-3 text-[11px] font-bold text-emerald-700 uppercase text-right">Haberes ($)</th>' +
                       '<th class="py-2.5 px-3 text-[11px] font-bold text-rose-700 uppercase text-right">Descuentos ($)</th>' +
-                      '<th class="py-2.5 px-3 text-[11px] font-bold text-slate-500 uppercase">Clasificación</th>' +
+                      (esAdmin ? '<th class="py-2.5 px-3 text-[11px] font-bold text-slate-500 uppercase">Clasificación</th>' : '') +
                     '</tr>' +
                   '</thead>' +
                   '<tbody class="divide-y divide-slate-100">' +
@@ -21862,11 +21918,11 @@ ${cierreTxt}`;
                       '<td colspan="2" class="py-2.5 px-3 text-xs font-extrabold text-slate-800">TOTALES CONSOLIDADOS (BRUTO / RETENCIONES)</td>' +
                       '<td class="py-2.5 px-3 font-mono text-xs font-black text-emerald-700 text-right">' + sanitizeHTML(formatPesosMargen(bruto)) + '</td>' +
                       '<td class="py-2.5 px-3 font-mono text-xs font-black text-rose-700 text-right">' + sanitizeHTML(formatPesosMargen(descuentos)) + '</td>' +
-                      '<td class="py-2.5 px-3"></td>' +
+                      (esAdmin ? '<td class="py-2.5 px-3"></td>' : '') +
                     '</tr>' +
                     '<tr class="bg-emerald-50 border-t border-emerald-200">' +
                       '<td colspan="2" class="py-3 px-3 text-sm font-black text-emerald-800">LÍQUIDO A PAGAR (NETO FINAL EN BOLSILLO)</td>' +
-                      '<td colspan="3" class="py-3 px-3 font-mono text-base font-black text-emerald-800 text-right">' + sanitizeHTML(formatPesosMargen(liquido)) + '</td>' +
+                      '<td colspan="' + (esAdmin ? '3' : '2') + '" class="py-3 px-3 font-mono text-base font-black text-emerald-800 text-right">' + sanitizeHTML(formatPesosMargen(liquido)) + '</td>' +
                     '</tr>' +
                   '</tfoot>' +
                 '</table>' +
@@ -22585,13 +22641,16 @@ ${cierreTxt}`;
       if (inpFechaIngreso && fechaIngresoFinal) {
         inpFechaIngreso.value = fechaIngresoFinal;
       }
+      const antigLegibleModal = (anios === 0 && meses > 0)
+        ? `${meses} ${meses === 1 ? 'mes' : 'meses'}`
+        : `${anios} ${anios === 1 ? 'año' : 'años'} y ${meses} ${meses === 1 ? 'mes' : 'meses'}`;
       const txtAntiguedad = document.getElementById('texto-antiguedad');
       if (txtAntiguedad) {
-        txtAntiguedad.textContent = `${anios} AÑOS - ${meses} MESES`;
+        txtAntiguedad.textContent = antigLegibleModal;
       }
       const hidAntiguedad = document.getElementById('solicitud-antiguedad-formateada');
       if (hidAntiguedad) {
-        hidAntiguedad.value = `${anios} Años, ${meses} Meses`;
+        hidAntiguedad.value = antigLegibleModal;
       }
       window._antiguedadMesesActual = totalMeses;
       window._bloqueoAntiguedadMinima = (totalMeses < 10);

@@ -235,23 +235,18 @@
 
   function _renderBloqueForenseAudit20(forense) {
     if (!forense) return '';
-    const riesgo = String(forense.nivel_riesgo || 'BAJO').toUpperCase();
-    const cls = riesgo === 'ALTO'
-      ? 'background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;'
-      : (riesgo === 'MEDIO'
-        ? 'background:#fffbeb;border:1px solid #fde68a;color:#92400e;'
-        : 'background:#f8fafc;border:1px solid #e2e8f0;color:#334155;');
     const alertas = Array.isArray(forense.alertas) ? forense.alertas : [];
     const meta = forense.metadatos || {};
-    const swTxt = meta.producer || meta.creator || (meta.exif && meta.exif.Software) || 'Sin rastro de edición';
-    return '<div style="margin-top:0.75rem;padding:0.75rem 0.9rem;border-radius:10px;' + cls + 'font-size:0.75rem;">' +
+    const swTxt = meta.producer || meta.creator || (meta.exif && meta.exif.Software) || 'Sin software registrado';
+    return '<div style="margin-top:0.75rem;padding:0.75rem 0.9rem;border-radius:10px;background:#f8fafc;border:1px solid #cbd5e1;color:#334155;font-size:0.75rem;">' +
       '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:0.4rem;font-weight:700;">' +
-        '<span>🔬 Forense de Archivo (' + sanitizeHTML(forense.tipo_archivo || 'DOC') + ') · Riesgo: ' + sanitizeHTML(riesgo) + '</span>' +
-        '<span style="font-family:monospace;font-weight:500;font-size:11px;">SHA-256: ' + sanitizeHTML(String(forense.sha256 || '').slice(0, 14)) + '… · Generador: ' + sanitizeHTML(swTxt) + '</span>' +
+        '<span>🔬 Forense de Archivos (' + sanitizeHTML(forense.tipo_archivo || 'DOC') + ') · <span style="font-weight:600;color:#475569;">Comentario informativo (a criterio del asesor)</span></span>' +
+        '<span style="font-family:monospace;font-weight:500;font-size:11px;color:#64748b;">SHA-256: ' + sanitizeHTML(String(forense.sha256 || '').slice(0, 14)) + '… · Generador: ' + sanitizeHTML(swTxt) + '</span>' +
       '</div>' +
       (alertas.length > 0
-        ? ('<ul style="margin:0.4rem 0 0 1.1rem;padding:0;">' + alertas.map(a => '<li>' + sanitizeHTML(a) + '</li>').join('') + '</ul>')
-        : '<div style="margin-top:3px;">Sin alertas de alteración en metadatos EXIF/PDF.</div>') +
+        ? ('<ul style="margin:0.4rem 0 0 1.1rem;padding:0;color:#334155;">' + alertas.map(a => '<li>' + sanitizeHTML(a) + '</li>').join('') + '</ul>' +
+           '<div style="margin-top:0.35rem;font-size:11px;color:#64748b;">ℹ️ Las observaciones sobre metadatos tienen carácter meramente informativo; queda a criterio del asesor tomarlas como alerta o no.</div>')
+        : '<div style="margin-top:3px;color:#475569;">Sin observaciones técnicas relevantes en metadatos EXIF/PDF.</div>') +
     '</div>';
   }
 
@@ -395,7 +390,7 @@
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Validando domicilio...'; }
     if (out) {
       out.style.display = 'block';
-      out.innerHTML = '<div style="padding:0.85rem;border-radius:10px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;font-size:0.78rem;font-weight:600;">⏳ Analizando fecha (&le; 45 días), titularidad/terceros, constancia policial y metadatos...</div>';
+      out.innerHTML = '<div style="padding:0.85rem;border-radius:10px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;font-size:0.78rem;font-weight:600;">⏳ Analizando fecha de emisión (&le; 60 días), titularidad/terceros, constancia policial y metadatos...</div>';
     }
 
     try {
@@ -427,8 +422,9 @@
         : 'background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;';
 
       const diasTxt = det.dias_antiguedad !== null && det.dias_antiguedad !== undefined
-        ? (det.dias_antiguedad + ' días (máx. ' + (det.max_dias_permitidos || 45) + ')')
+        ? (det.dias_antiguedad + ' días (máx. ' + (det.max_dias_permitidos || 60) + ')')
         : 'Fecha no legible';
+      const vigenteEmision = Boolean(det.vigente_60_dias ?? det.vigente_45_dias);
 
       const titularStatus = det.es_constancia_policial
         ? 'Constancia Policial (certifica al interesado)'
@@ -449,7 +445,7 @@
         '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.6rem;margin-top:0.75rem;font-size:0.76rem;">' +
           '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Ente / Empresa</div><div style="font-weight:800;color:#0f172a;">' + sanitizeHTML(ext.empresa_o_dependencia || ext.tipo_comprobante || '—') + '</div></div>' +
           '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Titular en Comprobante</div><div style="font-weight:800;color:#0f172a;">' + sanitizeHTML(ext.titular || '—') + '</div></div>' +
-          '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Emisión y Antigüedad</div><div style="font-weight:800;color:' + (det.vigente_45_dias ? '#065f46' : '#9f1239') + ';">' + sanitizeHTML((det.fecha_emision_iso || 'N/D') + ' · ' + diasTxt) + '</div></div>' +
+          '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Emisión y Antigüedad</div><div style="font-weight:800;color:' + (vigenteEmision ? '#065f46' : '#9f1239') + ';">' + sanitizeHTML((det.fecha_emision_iso || 'N/D') + ' · ' + diasTxt) + '</div></div>' +
           '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Domicilio Detectado</div><div style="font-weight:700;color:#0f172a;">' + sanitizeHTML([ext.domicilio_completo, ext.localidad].filter(Boolean).join(', ') || '—') + '</div></div>' +
           '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Regla Titularidad / 3ros</div><div style="font-weight:700;color:#0f172a;">' + sanitizeHTML(titularStatus) + '</div></div>' +
         '</div>' +
@@ -543,7 +539,6 @@
         '<div style="padding:0.9rem 1rem;border-radius:12px;' + boxCls + '">' +
           '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0.5rem;">' +
             '<div style="font-size:0.86rem;font-weight:800;">🏛️ ' + sanitizeHTML(((sol.nombre || '') + ' ' + (sol.apellido || '')).trim() || 'Titular') + ' (DNI ' + sanitizeHTML(sol.documento || dni || '—') + ') · ' + exps.length + ' expediente(s) · Alerta ' + sanitizeHTML(nivel) + '</div>' +
-            '<a href="https://www.cajajper.gov.ar/secciones/servicios/expedientes/index.php" target="_blank" rel="noopener noreferrer" style="font-size:11px;font-weight:700;text-decoration:underline;color:inherit;">Abrir en Portal CajaJper ↗</a>' +
           '</div>' +
           (alertas.length > 0 ? ('<ul style="margin:0.4rem 0 0 1.15rem;padding:0;font-size:0.75rem;">' + alertas.map(a => '<li>' + sanitizeHTML(a) + '</li>').join('') + '</ul>') : '') +
           (data.evaluacion_ia && data.evaluacion_ia.observacion_ia ? ('<div style="margin-top:0.5rem;padding:0.45rem 0.65rem;border-radius:8px;background:rgba(255,255,255,0.7);font-size:0.74rem;color:#1e293b;"><strong>🤖 Análisis IA:</strong> ' + sanitizeHTML(data.evaluacion_ia.observacion_ia) + '</div>') : '') +

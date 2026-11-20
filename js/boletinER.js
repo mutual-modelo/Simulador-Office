@@ -14,16 +14,7 @@
   }
 
   function actualizarLinkDateasBoletin() {
-    const inp = document.getElementById('inputBoletinDniConsulta');
-    const link = document.getElementById('btnAbrirDateasRespaldo');
-    if (!link) return;
-    const digits = String(inp ? inp.value : '').replace(/\D/g, '');
-    const dni = (digits.length === 11) ? digits.slice(2, 10) : digits;
-    if (dni.length >= 6) {
-      link.href = 'https://www.dateas.com/es/docs/search?text=' + encodeURIComponent(dni) + '&pcountry=AR&publication=boletin-oficial-provincia-de-entre-rios&from-date=&to-date=';
-    } else {
-      link.href = 'https://www.dateas.com/es/docs/boletin-oficial-provincia-de-entre-rios';
-    }
+    return;
   }
 
   async function cargarEstadoBoletinOficialAuditoria() {
@@ -167,12 +158,10 @@
         throw new Error(data.detail || data.mensaje || ('HTTP ' + resp.status));
       }
 
-      const safeDateas = _safeUrl(data.url_dateas);
       if (data.ok === false) {
         resBox.innerHTML =
           '<div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900">' +
             '<strong>⚠️ ' + sanitizeHTML(data.mensaje || 'Índice no listo') + '</strong>' +
-            (safeDateas ? (' <a href="' + safeDateas + '" target="_blank" rel="noopener noreferrer" class="underline font-semibold ml-1">Consultar en Dateas ↗</a>') : '') +
           '</div>';
         return;
       }
@@ -185,7 +174,6 @@
         resBox.innerHTML =
           '<div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 flex flex-wrap items-center justify-between gap-2">' +
             '<div><strong>✅ Sin menciones registradas</strong> · ' + sanitizeHTML(data.mensaje || '') + '</div>' +
-            (safeDateas ? ('<a href="' + safeDateas + '" target="_blank" rel="noopener noreferrer" class="text-emerald-800 underline font-semibold">Verificar en Dateas ↗</a>') : '') +
           '</div>';
         return;
       }
@@ -224,7 +212,6 @@
         '<div class="p-3.5 rounded-xl border mb-3 ' + headerCls + '">' +
           '<div class="flex flex-wrap items-center justify-between gap-2">' +
             '<div class="text-xs font-bold">' + iconTxt + ' ' + sanitizeHTML(data.mensaje || '') + '</div>' +
-            (safeDateas ? ('<a href="' + safeDateas + '" target="_blank" rel="noopener noreferrer" class="text-xs underline font-semibold">Contrastar en Dateas ↗</a>') : '') +
           '</div>' +
           resumenHtml +
         '</div>' +

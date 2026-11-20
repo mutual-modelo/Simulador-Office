@@ -40,7 +40,19 @@ jobs:
               if res.returncode != 0:
                   print(res.stderr)
                   sys.exit(f"Error de sintaxis JS en script inline #{i}")
-          print(f"Scripts inline válidos: {len(scripts)}")
+
+          import pathlib
+          srcs = re.findall(r'<script[^>]*\bsrc=["\']([^"\']+)["\']', html, re.I)
+          for s in srcs:
+              if not s.startswith(("http://", "https://", "//")):
+                  p_mod = pathlib.Path(s.split("?")[0])
+                  if not p_mod.exists():
+                      sys.exit(f"Falta archivo JS referenciado en index.html: {p_mod}")
+                  res = subprocess.run(["node", "--check", str(p_mod)], capture_output=True, text=True)
+                  if res.returncode != 0:
+                      print(res.stderr)
+                      sys.exit(f"Error de sintaxis JS en {p_mod}")
+          print(f"Scripts inline ({len(scripts)}) y módulos locales válidos")
           PY
       - name: Instalar dependencias con Bun y verificar build Vite
         run: |

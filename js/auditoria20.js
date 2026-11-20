@@ -201,7 +201,103 @@
     ejecutarAuditoriaIntegralAudit20(true);
   }
 
+  global._auditoria20Files = global._auditoria20Files || { dni: null, domicilio: null };
+
+  function _renderFilePillAudit20(pillId, file, extraTag = '') {
+    const el = document.getElementById(pillId);
+    if (!el) return;
+    if (!file) {
+      el.innerHTML = '';
+      el.style.display = 'none';
+      return;
+    }
+    const kb = Math.max(1, Math.round((Number(file.size || 0)) / 1024));
+    const isPdf = (file.type && String(file.type).toLowerCase().includes('pdf')) || String(file.name || '').toLowerCase().endsWith('.pdf');
+    const ico = isPdf ? '📄' : '🖼️';
+    el.style.display = 'block';
+    el.innerHTML = '<span class="ai-file-pill" onclick="event.stopPropagation()">' +
+      '<span>' + ico + ' <strong>' + sanitizeHTML(file.name || 'documento') + '</strong> (' + kb + ' KB' + (extraTag ? (' · ' + sanitizeHTML(extraTag)) : '') + ')</span>' +
+    '</span>';
+  }
+
+  function manejarDragOverAudit20(ev, dzId) {
+    if (!ev) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    const dz = document.getElementById(dzId);
+    if (dz && dz.classList) dz.classList.add('drag-active');
+  }
+
+  function manejarDragLeaveAudit20(ev, dzId) {
+    if (!ev) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    const dz = document.getElementById(dzId);
+    if (dz && dz.classList) dz.classList.remove('drag-active');
+  }
+
+  async function manejarDropAudit20(ev, tipo, dzId) {
+    if (!ev) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    const dz = document.getElementById(dzId);
+    if (dz && dz.classList) dz.classList.remove('drag-active');
+    const files = ev.dataTransfer && ev.dataTransfer.files ? ev.dataTransfer.files : null;
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    if (tipo === 'dni') {
+      await manejarArchivoDniAudit20(file);
+    } else if (tipo === 'domicilio') {
+      await manejarArchivoDomAudit20(file);
+    }
+  }
+
+  function establecerArchivoDniAudit20(file, opts = {}) {
+    if (!file) return null;
+    global._auditoria20Files.dni = file;
+    _renderFilePillAudit20('dniArchivoSeleccionadoPill', file, opts.desdeFusion ? 'Frente + Dorso PDF A4' : '');
+    const inp = document.getElementById('fileInputDniAudit20');
+    if (inp && typeof DataTransfer === 'function') {
+      try {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        inp.files = dt.files;
+      } catch (_) {}
+    }
+    return file;
+  }
+
+  async function manejarArchivoDniAudit20(file) {
+    if (!file) return null;
+    establecerArchivoDniAudit20(file);
+    return ejecutarValidacionDniAudit20(file);
+  }
+
+  function establecerArchivoDomAudit20(file, opts = {}) {
+    if (!file) return null;
+    global._auditoria20Files.domicilio = file;
+    _renderFilePillAudit20('domArchivoSeleccionadoPill', file, '');
+    const inp = document.getElementById('fileInputDomAudit20');
+    if (inp && typeof DataTransfer === 'function') {
+      try {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        inp.files = dt.files;
+      } catch (_) {}
+    }
+    return file;
+  }
+
+  async function manejarArchivoDomAudit20(file) {
+    if (!file) return null;
+    establecerArchivoDomAudit20(file);
+    return ejecutarValidacionDomicilioAudit20(file);
+  }
+
   function limpiarEstadoAuditoria20() {
+    global._auditoria20Files = { dni: null, domicilio: null };
+    _renderFilePillAudit20('dniArchivoSeleccionadoPill', null);
+    _renderFilePillAudit20('domArchivoSeleccionadoPill', null);
     global._auditoria20Estado = {
       tabActiva: global._auditoria20Estado ? global._auditoria20Estado.tabActiva : 'recibo',
       dniSolicitante: '',
@@ -260,10 +356,11 @@
   async function inspeccionarSoloForenseAudit20(origen) {
     const inputId = origen === 'domicilio' ? 'fileInputDomAudit20' : 'fileInputDniAudit20';
     const outId = origen === 'domicilio' ? 'resultadoDomicilioAudit20' : 'resultadoDniAudit20';
+    const key = origen === 'domicilio' ? 'domicilio' : 'dni';
     const inp = document.getElementById(inputId);
-    const file = inp && inp.files && inp.files[0];
+    const file = (global._auditoria20Files && global._auditoria20Files[key]) || (inp && inp.files && inp.files[0]);
     if (!file) {
-      showToast('Seleccioná primero un archivo PDF o imagen.');
+      showToast('Seleccioná o arrastrá primero un archivo PDF o imagen.');
       return;
     }
     const out = document.getElementById(outId);
@@ -288,11 +385,12 @@
 
   async function ejecutarValidacionDniAudit20(fileOverride) {
     const inpFile = document.getElementById('fileInputDniAudit20');
-    const file = fileOverride || (inpFile && inpFile.files && inpFile.files[0]);
+    const file = fileOverride || (global._auditoria20Files && global._auditoria20Files.dni) || (inpFile && inpFile.files && inpFile.files[0]);
     if (!file) {
-      showToast('Seleccioná una imagen o PDF del DNI para validar.');
+      showToast('Seleccioná, arrastrá o unificá frente/dorso del DNI para validar.');
       return;
     }
+    if (fileOverride) establecerArchivoDniAudit20(fileOverride);
     const out = document.getElementById('resultadoDniAudit20');
     const btn = document.getElementById('btnValidarDniAudit20');
     const dniEsp = String((document.getElementById('inputDniEsperadoAudit20') || {}).value || '').replace(/\D/g, '').trim();
@@ -344,7 +442,7 @@
             (v ? 'background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;' : 'background:#fff1f2;color:#9f1239;border:1px solid #fecdd3;') + '">' +
             (v ? '✔' : '✖') + ' ' + sanitizeHTML(k) + '</span>'
           ).join(' ')
-        : '<span style="font-size:0.74rem;color:#64748b;">MRZ no detectado (si subiste solo el frente, agregá el dorso para validar checksums ICAO 9303).</span>';
+        : '<span style="font-size:0.74rem;color:#64748b;">MRZ no detectado (si subiste solo el frente, agregá o unificá el dorso para validar checksums ICAO 9303).</span>';
 
       out.innerHTML =
         '<div style="padding:0.9rem 1rem;border-radius:12px;' + hdrStyle + '">' +
@@ -376,11 +474,12 @@
 
   async function ejecutarValidacionDomicilioAudit20(fileOverride) {
     const inpFile = document.getElementById('fileInputDomAudit20');
-    const file = fileOverride || (inpFile && inpFile.files && inpFile.files[0]);
+    const file = fileOverride || (global._auditoria20Files && global._auditoria20Files.domicilio) || (inpFile && inpFile.files && inpFile.files[0]);
     if (!file) {
-      showToast('Seleccioná una boleta de servicio o constancia policial de domicilio.');
+      showToast('Seleccioná o arrastrá una boleta de servicio o constancia policial de domicilio.');
       return;
     }
+    if (fileOverride) establecerArchivoDomAudit20(fileOverride);
     const out = document.getElementById('resultadoDomicilioAudit20');
     const btn = document.getElementById('btnValidarDomAudit20');
     const nomSol = String((document.getElementById('inputDomNombreAudit20') || {}).value || '').trim();
@@ -674,4 +773,11 @@
   global.registrarReciboEnAuditoria20 = registrarReciboEnAuditoria20;
   global.registrarBoletinEnAuditoria20 = registrarBoletinEnAuditoria20;
   global.limpiarEstadoAuditoria20 = limpiarEstadoAuditoria20;
+  global.manejarDragOverAudit20 = manejarDragOverAudit20;
+  global.manejarDragLeaveAudit20 = manejarDragLeaveAudit20;
+  global.manejarDropAudit20 = manejarDropAudit20;
+  global.establecerArchivoDniAudit20 = establecerArchivoDniAudit20;
+  global.manejarArchivoDniAudit20 = manejarArchivoDniAudit20;
+  global.establecerArchivoDomAudit20 = establecerArchivoDomAudit20;
+  global.manejarArchivoDomAudit20 = manejarArchivoDomAudit20;
 })(window);

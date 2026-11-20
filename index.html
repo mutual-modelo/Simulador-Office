@@ -4785,7 +4785,7 @@
                   <span class="audit20-pill-tag" style="background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;">Dual-Control IA + Determinista</span>
                 </div>
                 <div class="ai-audit-desc">
-                  Recibos de Haberes ER · DNI &amp; MRZ ICAO 9303 · Domicilio / Constancia Policial (&le; 45 días) · CajaJper (Jubilaciones) · Boletín Oficial ER · Consolidación Integral
+                  Recibos de Haberes ER (único o múltiples) · DNI &amp; MRZ ICAO 9303 · Domicilio / Constancia Policial (&le; 60 días) · CajaJper (Jubilaciones) · Boletín Oficial ER · Consolidación Integral
                 </div>
               </div>
               <div class="audit20-actions">
@@ -4847,13 +4847,27 @@
                    ondragleave="manejarDragLeaveAuditoria(event)"
                    ondrop="manejarDropReciboAuditoria(event)">
                 <input type="file" id="fileInputAuditoriaIA" multiple accept="application/pdf,image/*" style="display:none;" onchange="manejarSeleccionReciboAuditoria(this.files)"/>
+                <input type="file" id="fileInputAuditoriaAgregar" multiple accept="application/pdf,image/*" style="display:none;" onchange="agregarRecibosAuditoria(this.files)"/>
                 <div style="font-weight:800;font-size:.94rem;color:var(--color-primary);">
-                  📁 Subir o arrastrar Recibo de Sueldo (PDF o Imagen)
+                  📁 Subir o arrastrar Recibo(s) de Sueldo (PDF o Imagen)
                 </div>
                 <div style="font-size:.74rem;color:var(--text-muted);margin-top:4px;">
-                  Seleccioná o soltá aquí el recibo (PDF digital, PDF escaneado, JPG o PNG) para iniciar automáticamente la auditoría y simulación de ayuda económica.
+                  Seleccioná o soltá aquí uno o varios recibos (ej. docente con múltiples escuelas) en PDF digital, PDF escaneado, JPG o PNG para iniciar automáticamente la auditoría consolidada.
                 </div>
                 <div id="listaArchivosAuditoriaPills" style="margin-top:.55rem;min-height:0;"></div>
+              </div>
+              <div id="auditMultiRecibosActions" style="display:none;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-top:0.65rem;padding:0.6rem 0.85rem;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;">
+                <span style="font-size:0.75rem;color:#334155;font-weight:600;">
+                  💡 ¿La persona trabaja en otro establecimiento o escuela? Podés sumar más recibos para consolidar haberes y retenciones.
+                </span>
+                <div style="display:flex;gap:0.45rem;flex-wrap:wrap;">
+                  <button type="button" onclick="document.getElementById('fileInputAuditoriaAgregar').click()" class="audit20-btn audit20-btn--indigo">
+                    <span>➕ Agregar otro recibo</span>
+                  </button>
+                  <button type="button" onclick="ejecutarAuditoriaDocumentalIA()" class="audit20-btn audit20-btn--navy">
+                    <span>⚡ Re-analizar todos</span>
+                  </button>
+                </div>
               </div>
 
               <!-- Estado del análisis -->
@@ -4905,13 +4919,36 @@
                     <label for="inputDniEsperadoAudit20" class="audit20-label">DNI esperado del asociado (opcional)</label>
                     <input id="inputDniEsperadoAudit20" type="text" inputmode="numeric" placeholder="Ej: 40838259 (contrasta frente y MRZ)" class="audit20-input is-mono" />
                   </div>
-                  <div class="audit20-field">
-                    <label for="fileInputDniAudit20" class="audit20-label">Imagen o PDF del DNI (frente o frente+dorso)</label>
-                    <input id="fileInputDniAudit20" type="file" accept="application/pdf,image/*" onchange="ejecutarValidacionDniAudit20(this.files[0])" class="audit20-file-input" />
+                  <div class="audit20-field" style="justify-content:flex-end;">
+                    <label class="audit20-label">¿Tenés frente y dorso por separado?</label>
+                    <button type="button" onclick="abrirAsistenteFrenteDorso('fileInputDniAudit20', 'DNI COMPLETO', 'audit20_dni')" class="audit20-btn audit20-btn--indigo audit20-btn--lg" style="width:100%;">
+                      <span>🪪 Unificar Frente y Dorso (PDF A4)</span>
+                    </button>
                   </div>
                 </div>
 
-                <div class="audit20-actions">
+                <div id="dniDropzoneAudit20"
+                     class="ai-dropzone-box"
+                     style="margin-top:0.75rem;"
+                     role="button"
+                     tabindex="0"
+                     aria-label="Subir o arrastrar DNI en PDF o Imagen"
+                     onclick="document.getElementById('fileInputDniAudit20').click()"
+                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('fileInputDniAudit20').click();}"
+                     ondragover="manejarDragOverAudit20(event)"
+                     ondragleave="manejarDragLeaveAudit20(event)"
+                     ondrop="manejarDropAudit20(event, 'dni')">
+                  <input id="fileInputDniAudit20" type="file" accept="application/pdf,image/*" style="display:none;" onchange="manejarArchivoDniAudit20(this.files[0])" />
+                  <div style="font-weight:800;font-size:.92rem;color:var(--color-primary);">
+                    📁 Subir o arrastrar DNI (PDF o Imagen)
+                  </div>
+                  <div style="font-size:.73rem;color:var(--text-muted);margin-top:4px;">
+                    Seleccioná o soltá aquí el archivo del DNI (PDF frente+dorso unificado o imagen) para iniciar la validación automática.
+                  </div>
+                  <div id="dniArchivoSeleccionadoPill" style="margin-top:.5rem;"></div>
+                </div>
+
+                <div class="audit20-actions" style="margin-top:0.85rem;">
                   <button type="button" id="btnValidarDniAudit20" onclick="ejecutarValidacionDniAudit20()" class="audit20-btn audit20-btn--navy audit20-btn--lg">
                     <span>🪪 Auditar DNI</span>
                   </button>
@@ -4943,14 +4980,31 @@
                     <label for="inputDomDniAudit20" class="audit20-label">DNI del solicitante</label>
                     <input id="inputDomDniAudit20" type="text" inputmode="numeric" placeholder="Ej: 40838259" class="audit20-input is-mono" />
                   </div>
-                  <div class="audit20-field">
+                  <div class="audit20-field" style="grid-column:1 / -1;">
                     <label for="inputDomDirDniAudit20" class="audit20-label">Domicilio en el DNI (para regla 3ros)</label>
                     <input id="inputDomDirDniAudit20" type="text" placeholder="Ej: Av. Ramírez 1450, Paraná" class="audit20-input" />
                   </div>
-                  <div class="audit20-field">
-                    <label for="fileInputDomAudit20" class="audit20-label">Boleta de servicio o Constancia Policial</label>
-                    <input id="fileInputDomAudit20" type="file" accept="application/pdf,image/*" onchange="ejecutarValidacionDomicilioAudit20(this.files[0])" class="audit20-file-input" />
+                </div>
+
+                <div id="domDropzoneAudit20"
+                     class="ai-dropzone-box"
+                     style="margin-top:0.75rem;"
+                     role="button"
+                     tabindex="0"
+                     aria-label="Subir o arrastrar Boleta de Servicio o Constancia Policial en PDF o Imagen"
+                     onclick="document.getElementById('fileInputDomAudit20').click()"
+                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('fileInputDomAudit20').click();}"
+                     ondragover="manejarDragOverAudit20(event)"
+                     ondragleave="manejarDragLeaveAudit20(event)"
+                     ondrop="manejarDropAudit20(event, 'domicilio')">
+                  <input id="fileInputDomAudit20" type="file" accept="application/pdf,image/*" style="display:none;" onchange="manejarArchivoDomAudit20(this.files[0])" />
+                  <div style="font-weight:800;font-size:.92rem;color:var(--color-primary);">
+                    📁 Subir o arrastrar Boleta de Servicio o Constancia Policial (PDF o Imagen)
                   </div>
+                  <div style="font-size:.73rem;color:var(--text-muted);margin-top:4px;">
+                    Seleccioná o soltá aquí la boleta de servicio o certificado policial de domicilio (PDF, JPG o PNG) para iniciar la validación automática.
+                  </div>
+                  <div id="domArchivoSeleccionadoPill" style="margin-top:.5rem;"></div>
                 </div>
 
                 <div class="audit20-actions">
@@ -9763,7 +9817,7 @@ ${cierreTxt}`;
           subEl.textContent = 'Calculador de Ayudas Económicas · Asociación Mutual Modelo de Entre Ríos';
         } else if (viewId === 'vistaAuditoriaIA') {
           titleEl.textContent = 'Auditoría IA 2.0 (Multidocumento)';
-          subEl.textContent = 'Recibos, DNI/MRZ, Domicilio <= 45d, CajaJper, Boletín ER y Consolidado';
+          subEl.textContent = 'Recibos, DNI/MRZ, Domicilio <= 60d, CajaJper, Boletín ER y Consolidado';
         } else if (viewId === 'view-ficha-asociado') {
           titleEl.textContent = 'Padrón y Fichas de Asociados';
           subEl.textContent = 'Historial documental inmutable, semáforo por pilar y solicitudes en Supabase';
@@ -9834,6 +9888,23 @@ ${cierreTxt}`;
       if (window.estadoApp) window.estadoApp.usuarioActual = session;
       if (loginWrapper) loginWrapper.style.display = 'none';
       if (appLayout) appLayout.style.display = 'flex';
+
+      if (typeof RENDER_API_URL === 'string' && RENDER_API_URL.startsWith('http') && typeof getApiAuthToken === 'function' && !getApiAuthToken() && !window._checkingAuthMeSync) {
+        window._checkingAuthMeSync = true;
+        fetchConTimeout(`${RENDER_API_URL}/api/auth/me`, { method: 'GET' }, 10000)
+          .then(resp => {
+            if (resp && resp.status === 401) {
+              setApiAuthToken(null);
+              setSession(null);
+              if (typeof showToast === 'function') {
+                showToast('⚠️ Sesión desactualizada por seguridad. Iniciá sesión nuevamente.');
+              }
+              checkAuthAndInit();
+            }
+          })
+          .catch(() => {})
+          .finally(() => { window._checkingAuthMeSync = false; });
+      }
 
       // Actualizar tarjeta de perfil en el pie de la Sidebar
       const rolLabel = (session.rol === 'Comercializador')
@@ -10375,6 +10446,16 @@ ${cierreTxt}`;
           } else {
             await adjuntarPdfUnificadoDirectoFicha(solicitudId, pdfRes);
           }
+          return;
+        }
+
+        if (mode === 'audit20_dni') {
+          ocultarCargando();
+          cerrarAsistenteFrenteDorso();
+          if (pdfFile && typeof establecerArchivoDniAudit20 === 'function') {
+            establecerArchivoDniAudit20(pdfFile, { desdeFusion: true });
+          }
+          showToast('✅ Frente y Dorso unificados en PDF A4. Hacé clic en "Auditar DNI" para analizarlo.');
           return;
         }
 
@@ -18468,7 +18549,8 @@ ${cierreTxt}`;
           importe: round2Margen(importeAbs),
           clasificacion: clasifFinal,
           metodoClasificacion: metodo,
-          lugarPadronMatch: lugarMatch || seg.lugarPrincipal
+          lugarPadronMatch: lugarMatch || seg.lugarPrincipal,
+          origenRecibo: item.origenRecibo ? String(item.origenRecibo) : ''
         });
       }
 
@@ -19726,12 +19808,19 @@ ${cierreTxt}`;
         }
       };
 
+      if (Array.isArray(obj.recibosIndividuales) && obj.recibosIndividuales.length > 0) {
+        obj.cantidadRecibos = obj.recibosIndividuales.length;
+        obj.resumenDecision.cantidadRecibos = obj.recibosIndividuales.length;
+      }
+
       obj.resumenJson = {
         resumenDecision: obj.resumenDecision,
         detalleCompletoRecibo: obj.detalleCompletoRecibo,
         analisisMargen: obj.analisisMargen,
         ofertasPorPlazo: obj.ofertasPorPlazo,
-        conclusionesRecomendaciones: obj.conclusionesRecomendaciones
+        conclusionesRecomendaciones: obj.conclusionesRecomendaciones,
+        cantidadRecibos: obj.cantidadRecibos || 1,
+        recibosIndividuales: Array.isArray(obj.recibosIndividuales) ? obj.recibosIndividuales : []
       };
 
       obj.scoringCrediticio = Object.assign({}, obj.scoringCrediticio || obj.scoringAmmer || {}, {
@@ -19909,19 +19998,12 @@ ${cierreTxt}`;
         candidatosEndpoints.push(String(contexto.endpoint));
       } else if (esHostEstatico) {
         candidatosEndpoints.push(SERVICIO_AUDITORIA_CLOUD_URL);
-        if (typeof APPS_SCRIPT_URL === 'string' && APPS_SCRIPT_URL.startsWith('http')) {
-          candidatosEndpoints.push(APPS_SCRIPT_URL);
-        }
       } else {
         // 1. Microservicio de auditoría forense con Gemini Pro en Render (Oficial AMMER)
         candidatosEndpoints.push(SERVICIO_AUDITORIA_CLOUD_URL);
         // 2. Proxy local Express Node.js
         candidatosEndpoints.push('/api/auditar-recibo');
         candidatosEndpoints.push('/api/auditar-documentos');
-        // 3. Fallback en Google Apps Script
-        if (typeof APPS_SCRIPT_URL === 'string' && APPS_SCRIPT_URL.startsWith('http')) {
-          candidatosEndpoints.push(APPS_SCRIPT_URL);
-        }
       }
 
       const ejecutarPeticionAuditoria = async (urlDestino) => {
@@ -20052,8 +20134,8 @@ ${cierreTxt}`;
           }
         }
 
-        // Si el endpoint institucional respondió con un error de validación de documento (ej. HTTP 422 / 400), detener y mostrarlo directamente
-        if (!resCandidato.esAppsScript && resp && (resp.status === 400 || resp.status === 422)) {
+        // Si el endpoint institucional respondió con error real (400/401/403/422/5xx), detener y mostrarlo directamente sin ocultar el status
+        if (!resCandidato.esAppsScript && resp && !resp.ok && resp.status !== 404 && resp.status !== 405) {
           break;
         }
       }
@@ -20067,9 +20149,17 @@ ${cierreTxt}`;
 
       const { resp, data, rawText, error: errRed } = ultimoResultadoRed || {};
       const statusNum = resp ? resp.status : 0;
-      const msgErr = (data && data.error)
-        ? (statusNum && !String(data.error).includes(String(statusNum)) ? ('Error ' + statusNum + ': ' + data.error) : String(data.error))
-        : (errRed || ('Error ' + (statusNum || 'de red') + ': ' + String(rawText || 'Sin respuesta del servidor documental').substring(0, 160)));
+      const errSrvTexto = data && (data.error || data.detail || data.mensaje || data.message);
+      let msgErr = '';
+      if (statusNum === 401) {
+        msgErr = 'Error 401: Tu sesión ante el servidor institucional expiró o falta token de autorización. Cerrá sesión desde el menú lateral y volvé a ingresar.';
+      } else if (errSrvTexto) {
+        msgErr = (statusNum && !String(errSrvTexto).includes(String(statusNum)))
+          ? ('Error ' + statusNum + ': ' + errSrvTexto)
+          : String(errSrvTexto);
+      } else {
+        msgErr = errRed || ('Error ' + (statusNum || 'de red') + ': ' + String(rawText || 'Sin respuesta del servidor documental').substring(0, 160));
+      }
       console.warn('Servicio de auditoría devolvió error técnico:', msgErr);
       window._ultimaErrorAuditoriaIA = msgErr;
       return null;
@@ -20700,6 +20790,10 @@ ${cierreTxt}`;
 
     function renderListaArchivosAuditoriaPills() {
       const container = document.getElementById('listaArchivosAuditoriaPills');
+      const actionsBar = document.getElementById('auditMultiRecibosActions');
+      if (actionsBar) {
+        actionsBar.style.display = archivosAuditoriaCola.length > 0 ? 'flex' : 'none';
+      }
       if (!container) return;
       if (archivosAuditoriaCola.length === 0) {
         container.innerHTML = '';
@@ -20715,8 +20809,9 @@ ${cierreTxt}`;
         const modoTxt = (arch.textoExtraido && arch.textoExtraido.length >= 40)
           ? ' · Capa de texto PDF'
           : (arch.renderizadoDesdePdfEscaneado ? ' · Escaneo HD JPEG 2x' : '');
+        const numBadge = archivosAuditoriaCola.length > 1 ? ('<strong style="color:#1e40af;margin-right:3px;">#' + (idx + 1) + '</strong>') : '';
         return '<span class="ai-file-pill" onclick="event.stopPropagation()">' +
-          '<span>' + icon + ' <strong>' + sanitizeHTML(arch.nombre) + '</strong> (' + kb + ' KB' + modoTxt + ')</span>' +
+          '<span>' + numBadge + icon + ' <strong>' + sanitizeHTML(arch.nombre) + '</strong> (' + kb + ' KB' + modoTxt + ')</span>' +
           '<button type="button" class="ai-file-pill-del" onclick="event.stopPropagation();removerArchivoAuditoria(' + idx + ')" title="Quitar">&times;</button>' +
         '</span>';
       }).join(' ');
@@ -20725,6 +20820,62 @@ ${cierreTxt}`;
     function removerArchivoAuditoria(idx) {
       archivosAuditoriaCola.splice(idx, 1);
       renderListaArchivosAuditoriaPills();
+      if (archivosAuditoriaCola.length === 0) {
+        const resCont = document.getElementById('aiAuditResultadosContainer');
+        if (resCont) { resCont.style.display = 'none'; resCont.innerHTML = ''; }
+      } else if (typeof showToast === 'function') {
+        showToast('Recibo quitado. Hacé clic en "Re-analizar todos" para actualizar la consolidación.');
+      }
+    }
+
+    async function agregarRecibosAuditoria(files) {
+      if (!files || files.length === 0) return null;
+      const arr = Array.from(files);
+      const inpAdd = document.getElementById('fileInputAuditoriaAgregar');
+      if (inpAdd) inpAdd.value = '';
+      if (!Array.isArray(archivosAuditoriaCola)) archivosAuditoriaCola = [];
+
+      let agregados = 0;
+      for (const file of arr) {
+        if (typeof file.size === 'number' && file.size < 5120) {
+          const msgDanado = '⚠️ El archivo "' + file.name + '" parece estar vacío o dañado (pesa menos de 5 KB).';
+          mostrarBannerErrorAuditoria(msgDanado);
+          mostrarNotificacionToast(msgDanado, 'error');
+          continue;
+        }
+        if (file.size > 15 * 1024 * 1024) {
+          const msgMax = 'El archivo "' + file.name + '" supera el límite permitido de 15 MB.';
+          mostrarBannerErrorAuditoria(msgMax);
+          showToast(msgMax);
+          continue;
+        }
+        try {
+          const nombreArchivo = file.name || 'documento_auditoria';
+          const mimeReal = String(file.type || '').toLowerCase();
+          const esPdf = mimeReal === 'application/pdf' || mimeReal.includes('pdf') || nombreArchivo.toLowerCase().endsWith('.pdf');
+          const mimeFinal = esPdf
+            ? 'application/pdf'
+            : (mimeReal.includes('png') ? 'image/png' : (mimeReal.includes('webp') ? 'image/webp' : 'image/jpeg'));
+          const b64Puro = await archivoABase64Puro(file);
+          if (!b64Puro) throw new Error('No se pudo leer "' + nombreArchivo + '".');
+          archivosAuditoriaCola.push({
+            nombre: nombreArchivo,
+            mimeType: mimeFinal,
+            base64: b64Puro,
+            textoExtraido: ''
+          });
+          agregados++;
+        } catch (err) {
+          const msgProc = err && err.message ? err.message : ('Error procesando "' + file.name + '"');
+          mostrarBannerErrorAuditoria(msgProc);
+          showToast('⚠️ ' + msgProc);
+        }
+      }
+      if (agregados > 0) {
+        renderListaArchivosAuditoriaPills();
+        return ejecutarAuditoriaDocumentalIA();
+      }
+      return null;
     }
 
     function manejarDragOverAuditoria(ev) {
@@ -20875,6 +21026,8 @@ ${cierreTxt}`;
       resetearParametrosRefinanciacionAuditoria();
       const inp = document.getElementById('fileInputAuditoriaIA');
       if (inp) inp.value = '';
+      const inpAdd = document.getElementById('fileInputAuditoriaAgregar');
+      if (inpAdd) inpAdd.value = '';
       renderListaArchivosAuditoriaPills();
       ocultarBannerErrorAuditoria();
       const resCont = document.getElementById('aiAuditResultadosContainer');
@@ -21082,6 +21235,135 @@ ${cierreTxt}`;
       return recalcularMargenInteractivoAuditoria(undefined, undefined, undefined);
     }
 
+    async function consolidarRecibosMultiplesAuditoria(resultadosIndiv) {
+      if (!Array.isArray(resultadosIndiv) || resultadosIndiv.length === 0) return null;
+      if (resultadosIndiv.length === 1) return resultadosIndiv[0];
+
+      if (typeof RENDER_API_URL === 'string' && RENDER_API_URL.startsWith('http')) {
+        try {
+          const resp = await fetchConTimeout(`${RENDER_API_URL}/api/consolidar-recibos-multiples`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              recibos: resultadosIndiv,
+              cuotaFutura2: 0
+            })
+          }, 30000);
+          if (resp && resp.ok) {
+            const data = await resp.json().catch(() => null);
+            if (data && (data.ok !== false)) {
+              const norm = normalizarResultadoAuditoriaIA(data);
+              if (norm) return norm;
+            }
+          }
+        } catch (errCons) {
+          console.warn('Fallback local al consolidar múltiples recibos:', errCons && errCons.message ? errCons.message : errCons);
+        }
+      }
+
+      // Fallback determinista local si el endpoint no respondió
+      const r2 = (typeof round2Margen === 'function') ? round2Margen : (n => Math.round(n * 100) / 100);
+      let sumBruto = 0, sumDesc = 0, sumLiq = 0, sumLey = 0, sumBersa = 0, sumSide = 0, sumMut = 0, sumFed = 0;
+      let embargoAny = false;
+      const orgs = [], periodos = [], cargos = [], categorias = [], legajos = [], conceptosMerged = [], recibosIndiv = [];
+      let titularRef = '', dniRef = '', cuilRef = '', antRef = '', fechaIngRef = '', tipoRef = '', lugarRef = '';
+
+      resultadosIndiv.forEach((raw, idx0) => {
+        const idx = idx0 + 1;
+        const r = raw.resumenDecision || raw.reciboSueldo || raw || {};
+        const d = raw.detalleCompletoRecibo || {};
+        const am = raw.analisisMargen || {};
+        const tit = String(r.titular || raw.titular || '').trim();
+        const dni = String(r.dni || raw.dni || '').trim();
+        const cuil = String(r.cuil || raw.cuil || '').trim();
+        const org = String(r.organismo || raw.organismo || 'Organismo').trim();
+        const cargo = String(r.cargo || d.escalafonCargo || '').trim();
+        const per = String(r.periodo || d.periodo || '').trim();
+        const ant = String(r.antiguedad || (raw.reciboSueldo && raw.reciboSueldo.antiguedadDetalle) || '').trim();
+        const fec = String(r.fechaIngreso || raw.fechaIngreso || '').trim();
+        const cat = String(r.categoria || raw.categoria || '').trim();
+        const leg = String(r.legajo || raw.legajo || '').trim();
+        if (!titularRef && tit) titularRef = tit;
+        if (!dniRef && dni) dniRef = dni;
+        if (!cuilRef && cuil) cuilRef = cuil;
+        if (!antRef && ant) antRef = ant;
+        if (!fechaIngRef && fec) fechaIngRef = fec;
+        if (!tipoRef && (am.tipoBeneficiario || r.tipoBeneficiario)) tipoRef = am.tipoBeneficiario || r.tipoBeneficiario;
+        if (!lugarRef && (am.lugarTrabajo || r.lugarTrabajo)) lugarRef = am.lugarTrabajo || r.lugarTrabajo;
+        if (org && !orgs.includes(org)) orgs.push(org);
+        if (per && !periodos.includes(per)) periodos.push(per);
+        if (cargo && !cargos.includes(cargo)) cargos.push(cargo);
+        if (cat && !categorias.includes(cat)) categorias.push(cat);
+        if (leg && !legajos.includes(leg)) legajos.push(leg);
+
+        const bI = r2(Number(am.totalHaberes ?? r.sueldoBrutoTotal ?? 0) || 0);
+        const dI = r2(Math.abs(Number(am.totalDescuentos ?? r.totalDescuentos ?? 0) || 0));
+        const lI = r2(Number(am.netoLiquido ?? r.sueldoLiquido ?? (bI - dI)) || 0);
+        sumBruto = r2(sumBruto + bI);
+        sumDesc = r2(sumDesc + dI);
+        sumLiq = r2(sumLiq + lI);
+        sumLey = r2(sumLey + (Number(r.descuentosLey || 0) || 0));
+        sumBersa = r2(sumBersa + (Number(r.consumosBersa || 0) || 0));
+        sumSide = r2(sumSide + (Number(r.consumosSidecreer || 0) || 0));
+        sumMut = r2(sumMut + (Number(r.otrasMutualesOProveeduria || r.otrasMutuales || 0) || 0));
+        sumFed = r2(sumFed + (Number(r.consumosFedem || 0) || 0));
+        if (r.embargosJudiciales) embargoAny = true;
+
+        const etiqueta = 'Recibo ' + idx + (org ? ' · ' + org : '');
+        const cList = Array.isArray(raw.conceptos) ? raw.conceptos : (Array.isArray(d.conceptos) ? d.conceptos : []);
+        const cCopyList = cList.map(c => Object.assign({}, c, { origenRecibo: etiqueta }));
+        cCopyList.forEach(c => conceptosMerged.push(c));
+
+        recibosIndiv.push({
+          indice: idx,
+          archivoNombre: raw.archivoNombre || ('Recibo ' + idx),
+          titular: tit || 'No especificado',
+          dni: dni || 'No especificado',
+          cuil: cuil,
+          organismo: org,
+          cargo: cargo || 'Agente / Activo',
+          periodo: per || 'Mes auditado',
+          antiguedad: ant || 'No registrada',
+          fechaIngreso: fec,
+          categoria: cat,
+          legajo: leg,
+          sueldoBrutoTotal: bI,
+          totalDescuentos: dI,
+          sueldoLiquido: lI,
+          embargosJudiciales: Boolean(r.embargosJudiciales),
+          conceptos: cCopyList
+        });
+      });
+
+      const merged = {
+        titular: titularRef || 'No especificado',
+        dni: dniRef || 'No especificado',
+        cuil: cuilRef,
+        organismo: (orgs.join(' + ') || 'Varios Empleadores') + ' (' + recibosIndiv.length + ' recibos)',
+        cargo: cargos.join(' / ') || 'Agente / Pluriempleo',
+        periodo: periodos.join(' · ') || 'Mes auditado',
+        antiguedad: antRef || 'No registrada',
+        fechaIngreso: fechaIngRef,
+        categoria: categorias.join(' / '),
+        legajo: legajos.join(' / '),
+        tipoRecibo: tipoRef || 'ACTIVO',
+        lugarTrabajo: lugarRef || 'GE_',
+        sueldoBrutoTotal: sumBruto,
+        totalDescuentos: sumDesc,
+        sueldoLiquido: sumLiq,
+        descuentosLey: sumLey,
+        consumosBersa: sumBersa,
+        consumosSidecreer: sumSide,
+        otrasMutuales: sumMut,
+        consumosFedem: sumFed,
+        embargosJudiciales: embargoAny,
+        conceptos: conceptosMerged,
+        cantidadRecibos: recibosIndiv.length,
+        recibosIndividuales: recibosIndiv
+      };
+      return normalizarResultadoAuditoriaIA(merged);
+    }
+
     async function ejecutarAuditoriaDocumentalIA() {
       if (archivosAuditoriaCola.length === 0) {
         showToast('Seleccioná o arrastrá un Recibo de Sueldo (PDF o Imagen) para auditar.');
@@ -21139,13 +21421,52 @@ ${cierreTxt}`;
       try {
         renderListaArchivosAuditoriaPills();
 
-        const auditRes = await procesarAuditoriaConTimeout(archivosAuditoriaCola, {
-          idSolicitud: idExpedienteAuditadoActivo || 'DOCUMENTOS_SUELTOS',
-          datosDeclarados: datosDeclarados,
-          permitirBackendSinKey: true,
-          preservarLoadingBar: true,
-          timeoutMs: 90000
-        });
+        let auditRes = null;
+        if (archivosAuditoriaCola.length === 1) {
+          auditRes = await procesarAuditoriaConTimeout(archivosAuditoriaCola, {
+            idSolicitud: idExpedienteAuditadoActivo || 'DOCUMENTOS_SUELTOS',
+            datosDeclarados: datosDeclarados,
+            permitirBackendSinKey: true,
+            preservarLoadingBar: true,
+            timeoutMs: 90000
+          });
+        } else {
+          clearInterval(stepTimer);
+          const resultadosIndiv = [];
+          const erroresIndiv = [];
+          for (let idxRec = 0; idxRec < archivosAuditoriaCola.length; idxRec++) {
+            const archItem = archivosAuditoriaCola[idxRec];
+            if (stageText) {
+              stageText.textContent = 'Analizando recibo ' + (idxRec + 1) + ' de ' + archivosAuditoriaCola.length + ': ' + archItem.nombre + '...';
+            }
+            const resItem = await procesarAuditoriaConTimeout([archItem], {
+              idSolicitud: idExpedienteAuditadoActivo || 'DOCUMENTOS_SUELTOS',
+              datosDeclarados: datosDeclarados,
+              permitirBackendSinKey: true,
+              preservarLoadingBar: true,
+              timeoutMs: 90000
+            });
+            if (resItem) {
+              resItem.archivoNombre = archItem.nombre;
+              resultadosIndiv.push(resItem);
+            } else {
+              erroresIndiv.push(archItem.nombre + ': ' + (window._ultimaErrorAuditoriaIA || 'no legible'));
+            }
+          }
+          if (resultadosIndiv.length === 0) {
+            auditRes = null;
+          } else if (resultadosIndiv.length === 1) {
+            auditRes = resultadosIndiv[0];
+          } else {
+            if (stageText) {
+              stageText.textContent = 'Consolidando ' + resultadosIndiv.length + ' recibos en motor Padrón oficial...';
+            }
+            auditRes = await consolidarRecibosMultiplesAuditoria(resultadosIndiv);
+          }
+          if (erroresIndiv.length > 0 && typeof showToast === 'function' && resultadosIndiv.length > 0) {
+            showToast('⚠️ ' + erroresIndiv.length + ' recibo(s) no se pudieron leer: ' + erroresIndiv[0]);
+          }
+        }
 
         clearInterval(stepTimer);
 
@@ -22168,6 +22489,46 @@ ${cierreTxt}`;
         : conceptosClasif.fedemCodes;
 
       const esAdmin = esAdminAuditoria();
+      const recibosIndiv = Array.isArray(audit.recibosIndividuales)
+        ? audit.recibosIndividuales
+        : (Array.isArray(payload.recibosIndividuales) ? payload.recibosIndividuales : []);
+      const esMultiRecibo = recibosIndiv.length > 1;
+      let desgloseMultiRecibosHtml = '';
+      if (esMultiRecibo) {
+        desgloseMultiRecibosHtml =
+          '<div class="mb-5">' +
+            '<p class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-3">' +
+              '📑 Desglose Individual por Recibo (' + recibosIndiv.length + ' empleos / establecimientos)' +
+            '</p>' +
+            '<div class="grid grid-cols-1 md:grid-cols-2 gap-3">' +
+              recibosIndiv.map(ri => {
+                const orgCard = limpiarTextoAuditoria(ri.organismo, 'Organismo Provincial');
+                const catCard = ri.categoria ? (' · Cat. ' + sanitizeHTML(ri.categoria)) : '';
+                const legCard = ri.legajo ? (' · Leg. ' + sanitizeHTML(ri.legajo)) : '';
+                return '<div class="p-3.5 rounded-xl border border-indigo-200/80 bg-indigo-50/30">' +
+                  '<div class="flex items-start justify-between gap-2 mb-2">' +
+                    '<div>' +
+                      '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200 mb-1">Recibo #' + ri.indice + ' · ' + sanitizeHTML(ri.archivoNombre || ('Comprobante ' + ri.indice)) + '</span>' +
+                      '<div class="text-xs font-bold text-slate-900">' + sanitizeHTML(orgCard) + '</div>' +
+                      '<div class="text-[11px] text-slate-600">' + sanitizeHTML(ri.cargo || 'Agente / Activo') + catCard + legCard + '</div>' +
+                    '</div>' +
+                    '<span class="font-mono text-[11px] font-semibold text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200">' + sanitizeHTML(ri.periodo || 'Mes auditado') + '</span>' +
+                  '</div>' +
+                  '<div class="grid grid-cols-3 gap-2 pt-2 border-t border-indigo-100 text-xs">' +
+                    '<div><span class="block text-[10px] text-slate-500">Haberes</span><strong class="font-mono text-emerald-700">' + sanitizeHTML(formatPesosMargen(ri.sueldoBrutoTotal || 0)) + '</strong></div>' +
+                    '<div><span class="block text-[10px] text-slate-500">Retenciones</span><strong class="font-mono text-rose-700">' + sanitizeHTML(formatPesosMargen(ri.totalDescuentos || 0)) + '</strong></div>' +
+                    '<div><span class="block text-[10px] text-slate-500">Líquido</span><strong class="font-mono text-slate-900">' + sanitizeHTML(formatPesosMargen(ri.sueldoLiquido || 0)) + '</strong></div>' +
+                  '</div>' +
+                  '<div class="mt-1.5 text-[10px] text-slate-500 flex items-center justify-between gap-2">' +
+                    '<span>Antigüedad: <strong>' + sanitizeHTML(ri.antiguedad || 'No registrada') + '</strong></span>' +
+                    (ri.embargosJudiciales ? '<span class="text-rose-700 font-bold">⚠️ Embargo detectado</span>' : '') +
+                  '</div>' +
+                '</div>';
+              }).join('') +
+            '</div>' +
+          '</div>';
+      }
+
       let conceptosHTML = '';
       if (conceptos.length > 0) {
         conceptosHTML = conceptos.map((c, idx) => {
@@ -22187,9 +22548,12 @@ ${cierreTxt}`;
                 '<option value="AFECTADO"' + (selVal === 'AFECTADO' ? ' selected' : '') + '>Afectado</option>' +
               '</select>')
             : '';
+          const origenPill = (esMultiRecibo && c.origenRecibo)
+            ? (' <span class="inline-block ml-1 px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-semibold">' + sanitizeHTML(c.origenRecibo) + '</span>')
+            : '';
           return '<tr class="border-b border-slate-100 hover:bg-slate-50/80">' +
             '<td class="py-2.5 px-3 font-mono text-xs font-semibold text-slate-600">' + sanitizeHTML(c.codigo || '—') + '</td>' +
-            '<td class="py-2.5 px-3 text-xs font-medium text-slate-800">' + sanitizeHTML(c.descripcion || 'Concepto liquidado') + '</td>' +
+            '<td class="py-2.5 px-3 text-xs font-medium text-slate-800">' + sanitizeHTML(c.descripcion || 'Concepto liquidado') + origenPill + '</td>' +
             '<td class="py-2.5 px-3 font-mono text-xs text-right font-semibold ' + (haber > 0 ? 'text-emerald-700' : 'text-slate-300') + '">' +
               (haber > 0 ? sanitizeHTML(formatPesosMargen(haber)) : '—') +
             '</td>' +
@@ -22399,6 +22763,8 @@ ${cierreTxt}`;
             '</div>' +
 
             radiografiaHtml +
+
+            desgloseMultiRecibosHtml +
 
             '<!-- B. Desglose Exhaustivo de Conceptos (Recibo Literal y Padrón) -->' +
             '<div>' +

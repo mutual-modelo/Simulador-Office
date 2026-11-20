@@ -14,7 +14,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "npm"
       - name: Validar sintaxis JS embebida en index.html y JSON del padrón
         run: |
           python3 - <<'PY'
@@ -40,5 +39,5 @@ jobs:
           PY
       - name: Instalar dependencias y verificar build Vite
         run: |
-          npm ci
+          npm install --no-audit --no-fund
           npm run build

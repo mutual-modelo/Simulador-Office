@@ -3724,7 +3724,7 @@
           <span class="sidebar-nav-label sidebar-text">Auditoría IA</span>
           <span class="sidebar-text" style="margin-left:auto;background:rgba(99,102,241,0.2);color:#a5b4fc;border:1px solid rgba(99,102,241,0.35);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:0.03em;flex-shrink:0;">2.0</span>
         </button>
-        <button type="button" id="btnNavFichaAsociado" class="sidebar-nav-item" data-view="view-ficha-asociado" data-tooltip="Padrón y Fichas" onclick="cambiarVistaPrincipal('ficha-asociado')">
+        <button type="button" id="btnNavFichaAsociado" class="sidebar-nav-item" data-view="view-ficha-asociado" data-tooltip="Padrón y Fichas" onclick="cambiarVistaPrincipal('ficha-asociado')" style="display:none;">
           <span class="sidebar-nav-icon" style="color:#38bdf8;">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
@@ -4629,7 +4629,7 @@
                 <button type="button" id="btnGuardarFichaAudit20" onclick="guardarValidacionesEnFichaAsociado()" class="audit20-btn audit20-btn--emerald">
                   <span>💾 Guardar Auditoría en Ficha</span>
                 </button>
-                <button type="button" onclick="abrirFichaHistoricaAsociado()" class="audit20-btn audit20-btn--secondary">
+                <button type="button" id="btnAbrirFichaHistoricaAudit20" onclick="abrirFichaHistoricaAsociado()" class="audit20-btn audit20-btn--secondary" style="display:none;">
                   <span>🗂️ Abrir Ficha Histórica</span>
                 </button>
                 <button type="button" id="btnIrTabConsolidadoHeader" onclick="cambiarTabAuditoria20('integral')" class="audit20-btn audit20-btn--indigo">
@@ -9392,10 +9392,24 @@ ${cierreTxt}`;
       if (viewId === 'vistaAuditoriaIA' && typeof cargarEstadoBoletinOficialAuditoria === 'function') {
         cargarEstadoBoletinOficialAuditoria();
       }
-      if (viewId === 'view-ficha-asociado' && typeof buscarPadronFichasAsociados === 'function') {
-        buscarPadronFichasAsociados();
+      if (viewId === 'view-ficha-asociado') {
+        if (!tieneAccesoPadronFichas(sess)) {
+          showToast('⛔ Acceso restringido: Padrón y Fichas solo está habilitado para rol Analista o Admin.');
+          cambiarPestana('view-simulador');
+          return;
+        }
+        if (typeof buscarPadronFichasAsociados === 'function') {
+          buscarPadronFichasAsociados();
+        }
       }
     }
+
+    function tieneAccesoPadronFichas(sessObj) {
+      const s = sessObj || getSession();
+      const rol = String((s && (s.rol || s.role)) || '').trim().toLowerCase();
+      return rol === 'analista' || rol === 'admin' || rol === 'administrador';
+    }
+    window.tieneAccesoPadronFichas = tieneAccesoPadronFichas;
 
     function checkAuthAndInit() {
       const session = getSession();
@@ -9433,6 +9447,7 @@ ${cierreTxt}`;
       const sidebar = document.getElementById('main-sidebar');
       const isCollapsed = sidebar ? sidebar.classList.contains('w-20') : false;
       const textCls = 'sidebar-text' + (isCollapsed ? ' hidden' : '');
+      const puedeVerPadronFichas = tieneAccesoPadronFichas(session);
 
       const navBody = document.getElementById('sidebarNavBody');
       if (navBody) {
@@ -9460,7 +9475,9 @@ ${cierreTxt}`;
             '<span class="sidebar-nav-icon">' + iconSimulador + '</span>' +
             '<span class="sidebar-nav-label ' + textCls + '">Simulador</span></button>';
           html += itemAuditoriaIA;
-          html += itemPadronFichas;
+          if (puedeVerPadronFichas) {
+            html += itemPadronFichas;
+          }
           html += '<button type="button" class="sidebar-nav-item" data-view="view-mutual-propias" data-tooltip="Mis Gestiones" onclick="cambiarPestana(\'view-mutual-propias\')">' +
             '<span class="sidebar-nav-icon">' + iconGestiones + '</span>' +
             '<span class="sidebar-nav-label ' + textCls + '">Mis Gestiones</span></button>';
@@ -9476,7 +9493,6 @@ ${cierreTxt}`;
             '<span class="sidebar-nav-icon">' + iconSimulador + '</span>' +
             '<span class="sidebar-nav-label ' + textCls + '">Simulador</span></button>';
           html += itemAuditoriaIA;
-          html += itemPadronFichas;
           html += '<button type="button" class="sidebar-nav-item" data-view="view-comercializador" data-tooltip="' + tabName + '" onclick="cambiarPestana(\'view-comercializador\')">' +
             '<span class="sidebar-nav-icon">' + iconGestiones + '</span>' +
             '<span class="sidebar-nav-label ' + textCls + '">' + tabName + '</span></button>';
@@ -9502,10 +9518,14 @@ ${cierreTxt}`;
         }
       } catch (_) {}
 
-      // Visibilidad exclusiva de + Nuevo Asociado para Analista y Admin
+      // Visibilidad exclusiva de + Nuevo Asociado y Padrón/Fichas para Analista y Admin
       const btnNuevoAsoc = document.getElementById('btnNuevoAsociadoPropias');
       if (btnNuevoAsoc) {
-        btnNuevoAsoc.style.display = (session.rol === 'Analista' || session.rol === 'Admin') ? 'inline-flex' : 'none';
+        btnNuevoAsoc.style.display = puedeVerPadronFichas ? 'inline-flex' : 'none';
+      }
+      const btnFichaAudit20 = document.getElementById('btnAbrirFichaHistoricaAudit20');
+      if (btnFichaAudit20) {
+        btnFichaAudit20.style.display = puedeVerPadronFichas ? 'inline-flex' : 'none';
       }
       actualizarCentroNotificaciones();
       cambiarPestana('view-simulador');
@@ -13590,7 +13610,7 @@ ${cierreTxt}`;
       }
 
       const dniSocioFicha = String((s.solicitante && s.solicitante.dni) || s.dni || s.DNI || '').replace(/\D/g, '').trim();
-      const btnFichaHistHtml = dniSocioFicha.length >= 7
+      const btnFichaHistHtml = (dniSocioFicha.length >= 7 && typeof tieneAccesoPadronFichas === 'function' && tieneAccesoPadronFichas())
         ? '<button type="button" onclick="cerrarModal(\'modalFichaCompleta\');abrirFichaHistoricaAsociado(\'' + sanitizeHTML(dniSocioFicha) + '\')" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;border:1px solid #1e3a8a;background:#eef2ff;color:#1e3a8a;font-size:0.72rem;font-weight:700;cursor:pointer;">🗂️ Ver Ficha Histórica (Padrón)</button>'
         : '';
 

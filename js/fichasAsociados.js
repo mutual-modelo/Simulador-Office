@@ -109,7 +109,20 @@
     }
   }
 
+  function _usuarioPuedeVerPadronFichas() {
+    if (typeof global.tieneAccesoPadronFichas === 'function') {
+      return global.tieneAccesoPadronFichas();
+    }
+    const sess = typeof global.getSession === 'function' ? global.getSession() : null;
+    const rol = String((sess && (sess.rol || sess.role)) || '').trim().toLowerCase();
+    return rol === 'analista' || rol === 'admin' || rol === 'administrador';
+  }
+
   function abrirFichaHistoricaAsociado(dniOpcional = '') {
+    if (!_usuarioPuedeVerPadronFichas()) {
+      if (typeof showToast === 'function') showToast('⛔ Acceso restringido: Padrón y Fichas es exclusivo para Analista o Admin.');
+      return;
+    }
     const clean = String(dniOpcional || _obtenerDniActivoAuditoria20() || '').replace(/\D/g, '').trim();
     cambiarVistaPrincipal('ficha-asociado');
     const inp = document.getElementById('inputBuscarFichaPadron');
@@ -145,6 +158,7 @@
   }
 
   async function buscarPadronFichasAsociados() {
+    if (!_usuarioPuedeVerPadronFichas()) return;
     const listEl = document.getElementById('padronFichasListaContainer');
     const q = String((document.getElementById('inputBuscarFichaPadron') || {}).value || '').trim();
     const est = String((document.getElementById('selectFiltroEstadoFichaPadron') || {}).value || 'TODOS').trim();
@@ -197,6 +211,7 @@
   }
 
   async function cargarFichaDetalleAsociado(dni) {
+    if (!_usuarioPuedeVerPadronFichas()) return;
     const dniClean = String(dni || '').replace(/\D/g, '').trim();
     const detEl = document.getElementById('fichaAsociadoDetalleContainer');
     if (!detEl || dniClean.length < 7) return;

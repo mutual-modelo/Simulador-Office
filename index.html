@@ -1540,14 +1540,31 @@
     .faq-badge-prov { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
     .faq-badge-mun { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
 
-    /* Reproductor de Videotutoriales en Centro de Ayuda */
+    /* Reproductor Flotante (Lightbox) de Videotutoriales en Centro de Ayuda */
+    .wiki-video-lightbox-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 12000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      background: rgba(2, 6, 23, 0.78);
+      backdrop-filter: blur(4px);
+    }
+    .wiki-video-lightbox-backdrop.is-open {
+      display: flex;
+    }
     .wiki-video-theater {
-      grid-column: 1 / -1;
+      width: 100%;
+      max-width: 940px;
       background: #0f172a;
-      border-radius: 14px;
-      border: 1px solid #1e293b;
+      border-radius: 16px;
+      border: 1px solid #334155;
       overflow: hidden;
-      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.16);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55);
+      display: flex;
+      flex-direction: column;
     }
     .wiki-video-theater-head {
       display: flex;
@@ -1560,7 +1577,7 @@
       color: #ffffff;
     }
     .wiki-video-theater-title {
-      font-size: 0.86rem;
+      font-size: 0.88rem;
       font-weight: 700;
       display: flex;
       align-items: center;
@@ -1576,9 +1593,9 @@
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
-      padding: 0.35rem 0.7rem;
+      padding: 0.38rem 0.72rem;
       border-radius: 8px;
-      font-size: 0.72rem;
+      font-size: 0.74rem;
       font-weight: 600;
       border: 1px solid rgba(255, 255, 255, 0.25);
       background: rgba(255, 255, 255, 0.12);
@@ -1591,11 +1608,47 @@
       background: rgba(255, 255, 255, 0.24);
       color: #ffffff;
     }
+    .wiki-video-ctrl-btn.is-close {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: rgba(248, 113, 113, 0.45);
+    }
+    .wiki-video-ctrl-btn.is-close:hover {
+      background: rgba(239, 68, 68, 0.48);
+    }
+    .wiki-video-switcher-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1rem;
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+    }
+    .wiki-video-switch-pill {
+      padding: 0.26rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.71rem;
+      font-weight: 600;
+      border: 1px solid #475569;
+      background: #0f172a;
+      color: #cbd5e1;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .wiki-video-switch-pill:hover {
+      border-color: #60a5fa;
+      color: #ffffff;
+    }
+    .wiki-video-switch-pill.is-active {
+      background: #2563eb;
+      border-color: #60a5fa;
+      color: #ffffff;
+    }
     .wiki-video-frame-wrap {
       position: relative;
       width: 100%;
       aspect-ratio: 16 / 9;
-      max-height: 440px;
+      max-height: calc(85vh - 115px);
       background: #020617;
     }
     .wiki-video-frame-wrap:fullscreen,
@@ -1620,9 +1673,9 @@
       display: inline-flex;
       align-items: center;
       gap: 0.3rem;
-      padding: 0.32rem 0.65rem;
+      padding: 0.34rem 0.68rem;
       border-radius: 7px;
-      font-size: 0.72rem;
+      font-size: 0.73rem;
       font-weight: 600;
       border: 1px solid #cbd5e1;
       background: #ffffff;
@@ -7026,27 +7079,7 @@
             <span>Videotutoriales Operativos — Plataforma &amp; Convenio Sidecreer</span>
           </div>
 
-          <div id="wikiVideoTheaterBox" class="wiki-video-theater">
-            <div class="wiki-video-theater-head">
-              <div class="wiki-video-theater-title">
-                <span>▶️</span>
-                <span id="wikiVideoCurrentTitle">1. Acceso y Simulador de Ayudas Económicas</span>
-              </div>
-              <div class="wiki-video-theater-actions">
-                <button type="button" onclick="pantallaCompletaVideoWiki()" class="wiki-video-ctrl-btn" title="Ver reproductor en pantalla completa">
-                  <span>⛶ Pantalla completa</span>
-                </button>
-                <a id="wikiVideoOpenNewTab" href="https://drive.google.com/file/d/1y5sKmW3nzdwRA96i8-PvyybPiUYR99OM/view" target="_blank" rel="noopener noreferrer" class="wiki-video-ctrl-btn" title="Abrir video en una pestaña nueva">
-                  <span>↗ Abrir en pestaña nueva</span>
-                </a>
-              </div>
-            </div>
-            <div id="wikiVideoPlayerFrameWrap" class="wiki-video-frame-wrap">
-              <iframe id="wikiVideoPlayerIframe" src="about:blank" title="Videotutorial Mutual Modelo" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe>
-            </div>
-          </div>
-
-          <details class="faq-item wiki-video-card is-playing group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="videos" data-video-id="1y5sKmW3nzdwRA96i8-PvyybPiUYR99OM" open>
+          <details class="faq-item wiki-video-card group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="videos" data-video-id="1y5sKmW3nzdwRA96i8-PvyybPiUYR99OM">
             <summary>
               <span><span class="faq-badge faq-badge-sim">VIDEO 1</span> Acceso y Simulador de Ayudas Económicas</span>
             </summary>
@@ -7498,6 +7531,39 @@
           </details>
         </div>
 
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL FLOTANTE (LIGHTBOX) DE VIDEOTUTORIALES -->
+  <div id="wikiVideoLightboxModal" class="wiki-video-lightbox-backdrop" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1" onclick="if(event.target===this)cerrarVideoModalWiki()">
+    <div id="wikiVideoTheaterBox" class="wiki-video-theater">
+      <div class="wiki-video-theater-head">
+        <div class="wiki-video-theater-title">
+          <span>▶️</span>
+          <span id="wikiVideoCurrentTitle">1. Acceso y Simulador de Ayudas Económicas</span>
+        </div>
+        <div class="wiki-video-theater-actions">
+          <button type="button" onclick="pantallaCompletaVideoWiki()" class="wiki-video-ctrl-btn" title="Ver reproductor en pantalla completa">
+            <span>⛶ Pantalla completa</span>
+          </button>
+          <a id="wikiVideoOpenNewTab" href="https://drive.google.com/file/d/1y5sKmW3nzdwRA96i8-PvyybPiUYR99OM/view" target="_blank" rel="noopener noreferrer" class="wiki-video-ctrl-btn" title="Abrir video en una pestaña nueva">
+            <span>↗ Pestaña nueva</span>
+          </a>
+          <button type="button" onclick="cerrarVideoModalWiki()" class="wiki-video-ctrl-btn is-close" title="Cerrar reproductor de video">
+            <span>✕ Cerrar</span>
+          </button>
+        </div>
+      </div>
+      <div class="wiki-video-switcher-bar">
+        <button type="button" class="wiki-video-switch-pill" data-video-id="1y5sKmW3nzdwRA96i8-PvyybPiUYR99OM" onclick="seleccionarVideoCentroAyuda('1y5sKmW3nzdwRA96i8-PvyybPiUYR99OM', '1. Acceso y Simulador de Ayudas Económicas', false)">1. Simulador</button>
+        <button type="button" class="wiki-video-switch-pill" data-video-id="1HTEnperK1CM5zkwttU0mV1VYKhdwUABr" onclick="seleccionarVideoCentroAyuda('1HTEnperK1CM5zkwttU0mV1VYKhdwUABr', '2. Auditoría Documental IA', false)">2. Auditoría</button>
+        <button type="button" class="wiki-video-switch-pill" data-video-id="1LkVJUuWxIjVmTl3yxWS9vZ3DvadAn4S9" onclick="seleccionarVideoCentroAyuda('1LkVJUuWxIjVmTl3yxWS9vZ3DvadAn4S9', '3. Mis Gestiones y Carga de Solicitudes', false)">3. Mis Gestiones</button>
+        <button type="button" class="wiki-video-switch-pill" data-video-id="14RbYEms8oSZK0-nqz3x_BOkRdv262cvG" onclick="seleccionarVideoCentroAyuda('14RbYEms8oSZK0-nqz3x_BOkRdv262cvG', '4. Uso del Centro de Ayuda / Wiki', false)">4. Centro Ayuda</button>
+        <button type="button" class="wiki-video-switch-pill" data-video-id="1cBeeJ4P0Yu8qknqy8O5WurpbqRLrjof8" onclick="seleccionarVideoCentroAyuda('1cBeeJ4P0Yu8qknqy8O5WurpbqRLrjof8', '5. Tutorial Convenio Sidecreer (Operatoria Completa)', false)">5. Sidecreer</button>
+      </div>
+      <div id="wikiVideoPlayerFrameWrap" class="wiki-video-frame-wrap">
+        <iframe id="wikiVideoPlayerIframe" src="about:blank" title="Videotutorial Mutual Modelo" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe>
       </div>
     </div>
   </div>
@@ -10843,12 +10909,13 @@ ${cierreTxt}`;
     let _wikiActiveVideoId = '1y5sKmW3nzdwRA96i8-PvyybPiUYR99OM';
     let _wikiActiveVideoTitle = '1. Acceso y Simulador de Ayudas Económicas';
 
-    function seleccionarVideoCentroAyuda(videoId, titulo, autoScroll = true) {
+    function seleccionarVideoCentroAyuda(videoId, titulo) {
       const idClean = String(videoId || '').replace(/[^A-Za-z0-9_-]/g, '').trim();
       if (!idClean) return;
       _wikiActiveVideoId = idClean;
       _wikiActiveVideoTitle = String(titulo || 'Videotutorial Mutual Modelo');
 
+      const lightbox = document.getElementById('wikiVideoLightboxModal');
       const iframe = document.getElementById('wikiVideoPlayerIframe');
       const titleEl = document.getElementById('wikiVideoCurrentTitle');
       const newTabEl = document.getElementById('wikiVideoOpenNewTab');
@@ -10866,13 +10933,33 @@ ${cierreTxt}`;
         const cardVid = card.getAttribute('data-video-id');
         card.classList.toggle('is-playing', cardVid === idClean);
       });
+      document.querySelectorAll('.wiki-video-switch-pill').forEach(pill => {
+        const pillVid = pill.getAttribute('data-video-id');
+        pill.classList.toggle('is-active', pillVid === idClean);
+      });
 
-      if (autoScroll) {
-        const box = document.getElementById('wikiVideoTheaterBox');
-        if (box && typeof box.scrollIntoView === 'function') {
-          box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
+      if (lightbox) {
+        lightbox.classList.add('is-open');
+        lightbox.setAttribute('aria-hidden', 'false');
+        lightbox.focus();
       }
+    }
+
+    function cerrarVideoModalWiki() {
+      if (document.fullscreenElement && typeof document.exitFullscreen === 'function') {
+        try { document.exitFullscreen(); } catch (_) {}
+      }
+      const lightbox = document.getElementById('wikiVideoLightboxModal');
+      if (lightbox) {
+        lightbox.classList.remove('is-open');
+        lightbox.setAttribute('aria-hidden', 'true');
+      }
+      const iframe = document.getElementById('wikiVideoPlayerIframe');
+      if (iframe) {
+        iframe.src = 'about:blank';
+        iframe.removeAttribute('data-loaded-id');
+      }
+      document.querySelectorAll('.wiki-video-card').forEach(card => card.classList.remove('is-playing'));
     }
 
     function pantallaCompletaVideoWiki() {
@@ -10892,11 +10979,22 @@ ${cierreTxt}`;
     }
 
     function abrirVideoPantallaCompletaWiki(videoId, titulo) {
-      seleccionarVideoCentroAyuda(videoId, titulo, true);
-      setTimeout(() => pantallaCompletaVideoWiki(), 80);
+      seleccionarVideoCentroAyuda(videoId, titulo);
+      setTimeout(() => pantallaCompletaVideoWiki(), 120);
     }
 
+    document.addEventListener('keydown', function(ev) {
+      if (ev.key === 'Escape') {
+        const lightbox = document.getElementById('wikiVideoLightboxModal');
+        if (lightbox && lightbox.classList.contains('is-open')) {
+          ev.stopPropagation();
+          cerrarVideoModalWiki();
+        }
+      }
+    });
+
     window.seleccionarVideoCentroAyuda = seleccionarVideoCentroAyuda;
+    window.cerrarVideoModalWiki = cerrarVideoModalWiki;
     window.pantallaCompletaVideoWiki = pantallaCompletaVideoWiki;
     window.abrirVideoPantallaCompletaWiki = abrirVideoPantallaCompletaWiki;
 
@@ -10911,20 +11009,12 @@ ${cierreTxt}`;
         }
         const btnTodas = document.querySelector('#contenedor-categorias-faq .btn-categoria-faq[data-cat="todas"], #faqPillsBar .wiki-pill-btn[data-cat="todas"]');
         filtrarFAQPorCategoria('todas', btnTodas);
-        seleccionarVideoCentroAyuda(_wikiActiveVideoId, _wikiActiveVideoTitle, false);
         if (inp) setTimeout(() => inp.focus(), 150);
       }
     }
 
     function cerrarModalFaqWiki() {
-      if (document.fullscreenElement && typeof document.exitFullscreen === 'function') {
-        try { document.exitFullscreen(); } catch (_) {}
-      }
-      const iframe = document.getElementById('wikiVideoPlayerIframe');
-      if (iframe) {
-        iframe.src = 'about:blank';
-        iframe.removeAttribute('data-loaded-id');
-      }
+      cerrarVideoModalWiki();
       const modal = document.getElementById('modalFaqWiki') || document.getElementById('modal-faq');
       if (modal) {
         if (modal.id) cerrarModal(modal.id);

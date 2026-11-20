@@ -7280,19 +7280,19 @@
         }
         const activeBypass = localStorage.getItem('ammer_admin_bypass');
 
-        if (!SUPABASE_URL || SUPABASE_URL.includes('[TU_PROYECTO]') || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.includes('[TU_ANON_PUBLIC_KEY]')) {
+        if (!RENDER_API_URL || RENDER_API_URL.includes('[TU_API]')) {
           return true;
         }
 
-        const endpoint = `${SUPABASE_URL}/rest/v1/configuracion_sistema?id=eq.1&select=modo_mantenimiento,titulo_mantenimiento,mensaje_mantenimiento,admin_bypass_token`;
+        const endpoint = `${RENDER_API_URL}/api/config/estado`;
         const controller = (typeof AbortController === 'function') ? new AbortController() : null;
         const timerId = controller ? setTimeout(() => {
           if (!controller.signal.aborted) controller.abort('STATUS_CHECK_TIMEOUT');
-        }, 4000) : null;
+        }, 5000) : null;
 
-        const headers = { 'apikey': SUPABASE_ANON_KEY };
-        if (SUPABASE_ANON_KEY.startsWith('eyJ')) {
-          headers['Authorization'] = `Bearer ${SUPABASE_ANON_KEY}`;
+        const headers = {};
+        if (activeBypass) {
+          headers['X-Admin-Key'] = activeBypass;
         }
 
         let response;
@@ -7310,17 +7310,16 @@
           return true;
         }
 
-        const data = await response.json();
-        if (!data || data.length === 0) return true;
+        const config = await response.json();
+        if (!config) return true;
 
-        const config = data[0];
         if (config.modo_mantenimiento === true) {
-          if (activeBypass && config.admin_bypass_token && activeBypass === config.admin_bypass_token) {
-            console.log('🛡️ Acceso de Administrador / Creador concedido vía Token Secreto.');
+          if (config.es_admin === true) {
+            console.log('🛡️ Acceso de Administrador / Creador concedido vía validación en servidor.');
             mostrarBannerAdminBypass();
             return true;
           }
-          mostrarPantallaMantenimiento(config.titulo_mantenimiento, config.mensaje_mantenimiento);
+          mostrarPantallaMantenimiento(config.titulo, config.mensaje);
           throw new Error('Acceso suspendido: Plataforma en mantenimiento programado.');
         }
         return true;

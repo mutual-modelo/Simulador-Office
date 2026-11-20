@@ -7428,6 +7428,34 @@
     }
 
     // Helper robusto de red con AbortController y timeout explícito para evitar canales colgados
+    const AUTH_TOKEN_STORAGE_KEY = 'AMMER_API_TOKEN';
+    let _memoriaApiAuthToken = null;
+
+    function getApiAuthToken() {
+      if (_memoriaApiAuthToken) return _memoriaApiAuthToken;
+      try {
+        const sTok = sessionStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+        if (sTok) { _memoriaApiAuthToken = sTok; return sTok; }
+      } catch (_) {}
+      try {
+        const lTok = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+        if (lTok) { _memoriaApiAuthToken = lTok; return lTok; }
+      } catch (_) {}
+      return null;
+    }
+
+    function setApiAuthToken(token) {
+      const clean = (token && typeof token === 'string') ? token.trim() : '';
+      _memoriaApiAuthToken = clean || null;
+      if (!clean) {
+        try { sessionStorage.removeItem(AUTH_TOKEN_STORAGE_KEY); } catch (_) {}
+        try { localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY); } catch (_) {}
+        return;
+      }
+      try { sessionStorage.setItem(AUTH_TOKEN_STORAGE_KEY, clean); } catch (_) {}
+      try { localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, clean); } catch (_) {}
+    }
+
     async function fetchConTimeout(url, options = {}, timeoutMs = 90000) {
       const controller = (typeof AbortController === 'function') ? new AbortController() : null;
       let timerId = null;
@@ -7450,10 +7478,24 @@
         }, timeoutMs);
       }
       try {
-        const fetchOpts = controller
-          ? Object.assign({}, options, { signal: controller.signal })
-          : options;
-        return await fetch(url, fetchOpts);
+        const urlStr = String(url || '');
+        const fetchOpts = Object.assign({}, options || {});
+        if (controller) fetchOpts.signal = controller.signal;
+        if (RENDER_API_URL && urlStr.startsWith(RENDER_API_URL) && !urlStr.includes('/api/auth/login') && !urlStr.includes('/api/config/estado')) {
+          const tok = getApiAuthToken();
+          if (tok) {
+            const mergedHeaders = Object.assign({}, fetchOpts.headers || {});
+            if (!mergedHeaders['Authorization'] && !mergedHeaders['authorization']) {
+              mergedHeaders['Authorization'] = `Bearer ${tok}`;
+            }
+            fetchOpts.headers = mergedHeaders;
+          }
+        }
+        const resp = await fetch(url, fetchOpts);
+        if (resp && resp.status === 401 && RENDER_API_URL && urlStr.startsWith(RENDER_API_URL) && !urlStr.includes('/api/auth/login')) {
+          setApiAuthToken(null);
+        }
+        return resp;
       } finally {
         if (timerId !== null) clearTimeout(timerId);
         if (controller && externalSignal && typeof externalSignal.removeEventListener === 'function') {
@@ -8586,11 +8628,11 @@ Aguardo su respuesta. Muchas gracias.`;
 
       let syncOk = false;
       try {
-        const resp = await fetch(`${RENDER_API_URL}/api/config/fechas-corte`, {
+        const resp = await fetchConTimeout(`${RENDER_API_URL}/api/config/fechas-corte`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ config: cfg, historial: histRecortado })
-        });
+        }, 25000);
         if (resp.ok) {
           const resJson = await resp.json();
           syncOk = Boolean(resJson && resJson.ok);
@@ -9069,6 +9111,7 @@ ${cierreTxt}`;
     }
 
     function handleLogout() {
+      setApiAuthToken(null);
       setSession(null);
       checkAuthAndInit();
       showToast('Sesión finalizada de forma segura');
@@ -9092,22 +9135,57 @@ ${cierreTxt}`;
       const err = document.getElementById('loginErrorMsg');
       if (err) err.style.display = 'none';
 
-      const res = await callApi({
-        action: 'login',
-        usuario: userVal,
-        password: passVal,
-        clave: passVal
-      }, {
-        title: 'Verificando Credenciales...',
-        sub: 'Consultando base de usuarios'
-      });
+      let res = null;
+      let credencialRechazada = false;
+
+      if (RENDER_API_URL && !RENDER_API_URL.includes('[TU_API]')) {
+        mostrarCargando('Verificando Credenciales...', 'Validando sesión segura en servidor AMMER');
+        try {
+          const respAuth = await fetchConTimeout(`${RENDER_API_URL}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              usuario: userVal,
+              password: passVal,
+              clave: passVal
+            })
+          }, 22000);
+          const dataAuth = await respAuth.json().catch(() => ({}));
+          if (respAuth.ok && dataAuth && dataAuth.ok !== false) {
+            if (dataAuth.token) {
+              setApiAuthToken(dataAuth.token);
+            }
+            res = { ok: true, data: dataAuth };
+          } else if (respAuth.status === 401 || respAuth.status === 400) {
+            credencialRechazada = true;
+            setApiAuthToken(null);
+            res = { ok: false, error: dataAuth.detail || dataAuth.message || 'Usuario o contraseña incorrectos.', data: dataAuth };
+          }
+        } catch (errAuth) {
+          console.warn('Auth backend no disponible temporalmente, usando fallback Apps Script:', errAuth);
+        } finally {
+          ocultarCargando();
+        }
+      }
+
+      if (!res && !credencialRechazada) {
+        res = await callApi({
+          action: 'login',
+          usuario: userVal,
+          password: passVal,
+          clave: passVal
+        }, {
+          title: 'Verificando Credenciales...',
+          sub: 'Consultando base de usuarios'
+        });
+      }
 
       let loggedUser = null;
-      if (res.ok && res.data) {
+      if (res && res.ok && res.data) {
         const d = res.data;
         if (d.ok === false || d.success === false) {
           if (err) {
-            err.textContent = d.message || d.error || 'Usuario o contraseña incorrectos.';
+            err.textContent = d.message || d.error || d.detail || 'Usuario o contraseña incorrectos.';
             err.style.display = 'block';
           }
           return;
@@ -10945,7 +11023,7 @@ ${cierreTxt}`;
           const item = items[i];
           try {
             const b64 = await archivoABase64Puro(item.file);
-            const resp = await fetch(`${RENDER_API_URL}/api/clasificar-documento`, {
+            const resp = await fetchConTimeout(`${RENDER_API_URL}/api/clasificar-documento`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -10953,7 +11031,7 @@ ${cierreTxt}`;
                 mime_type: item.file.type || 'application/octet-stream',
                 filename: item.file.name
               })
-            });
+            }, 30000);
             if (resp.ok) {
               const data = await resp.json();
               if (data && data.tipo) {

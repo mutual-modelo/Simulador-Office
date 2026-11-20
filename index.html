@@ -21522,7 +21522,7 @@ ${cierreTxt}`;
       const badge = document.getElementById('badgeEstadoIndiceBoletin');
       const progBox = document.getElementById('boletinSyncProgressBox');
       try {
-        const resp = await fetchConTimeout(`${RENDER_API_URL}/api/boletin/estado`, { method: 'GET' }, 10000);
+        const resp = await fetchConTimeout(`${RENDER_API_URL}/api/boletin/estado`, { method: 'GET' }, 30000);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
         if (badge) {
@@ -21574,10 +21574,19 @@ ${cierreTxt}`;
         }
       } catch (_) {
         if (badge) {
-          badge.textContent = 'Pendiente deploy en Render';
+          badge.textContent = 'Conectando con Render...';
           badge.style.background = '#f1f5f9';
           badge.style.color = '#64748b';
           badge.style.borderColor = '#cbd5e1';
+        }
+        if (progBox && progBox.style.display === 'block') {
+          progBox.textContent = '⏳ Render está reiniciando o completando un deploy. Reintentando conexión automáticamente...';
+          if (!_boletinPollTimer) {
+            _boletinPollTimer = setTimeout(() => {
+              _boletinPollTimer = null;
+              cargarEstadoBoletinOficialAuditoria();
+            }, 5000);
+          }
         }
       }
     }
@@ -21594,13 +21603,13 @@ ${cierreTxt}`;
       }
       try {
         const body = ultimosDias > 0
-          ? { ultimos_dias: ultimosDias, solo_faltantes: true, concurrency: 3 }
-          : { desde: '2003-12', solo_faltantes: true, concurrency: 3 };
+          ? { ultimos_dias: ultimosDias, solo_faltantes: true, concurrency: 2 }
+          : { desde: '2003-12', solo_faltantes: true, concurrency: 2 };
         const resp = await fetchConTimeout(`${RENDER_API_URL}/api/boletin/sincronizar`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
-        }, 15000);
+        }, 35000);
         const data = await resp.json().catch(() => ({}));
         if (!resp.ok || data.ok === false) {
           throw new Error(data.detail || data.mensaje || ('HTTP ' + resp.status));
@@ -21610,7 +21619,7 @@ ${cierreTxt}`;
       } catch (err) {
         if (progBox) {
           progBox.style.display = 'block';
-          progBox.textContent = '⚠️ No se pudo iniciar la sincronización: ' + (err && err.message ? err.message : String(err));
+          progBox.textContent = '⚠️ Render no respondió aún (puede estar reiniciando o despertando). Reintentá en 15 segundos.';
         }
       }
     }

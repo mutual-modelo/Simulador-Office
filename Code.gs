@@ -180,6 +180,9 @@ function doPost(e) {
       case 'calcularMargenRecibo':
         return crearRespuestaJSON(calcularOfertasDisponiblesBackendGs_(payload));
 
+      case 'limpiarDatosPrueba':
+        return crearRespuestaJSON(limpiarDatosPruebaBackend(payload));
+
       default:
         return crearRespuestaJSON({
           ok: false,
@@ -310,14 +313,19 @@ function obtenerOCrearCarpetaRaiz_() {
 
 function obtenerOCrearCarpetaExpediente_(idSolicitud, apellidoNombre, dni, idAlternativo) {
   const root = obtenerOCrearCarpetaRaiz_();
-  const nombreSeguro = String(apellidoNombre || 'Socio').replace(/[\\/:*?"<>|]/g, '').trim();
-  const prefijo = String(idSolicitud || '').trim();
-  const alt = String(idAlternativo || '').trim();
-  const nombreCarpeta = prefijo + ' - ' + nombreSeguro + (dni ? (' (' + dni + ')') : '');
+  const nombreSeguro = String(apellidoNombre || 'SOCIO')
+    .replace(/[\\/:*?"<>|]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toUpperCase();
+  const prefijo = String(idSolicitud || '').trim().toUpperCase();
+  const alt = String(idAlternativo || '').trim().toUpperCase();
+  const nombreCarpeta = prefijo ? (prefijo + ' - ' + nombreSeguro) : nombreSeguro;
 
   const coincidePrefijo = (fname, p) => {
     if (!p) return false;
-    return fname === p || fname.indexOf(p + ' -') === 0 || fname.indexOf(p + ' ') === 0;
+    const up = String(fname || '').toUpperCase();
+    return up === p || up.indexOf(p + ' -') === 0 || up.indexOf(p + ' ') === 0;
   };
 
   let folderAlt = null;
@@ -326,6 +334,9 @@ function obtenerOCrearCarpetaExpediente_(idSolicitud, apellidoNombre, dni, idAlt
     const f = iter.next();
     const fname = f.getName();
     if (fname === nombreCarpeta || coincidePrefijo(fname, prefijo)) {
+      if (fname !== nombreCarpeta) {
+        try { f.setName(nombreCarpeta); } catch (_) {}
+      }
       return f;
     }
     if (!folderAlt && alt && alt !== prefijo && coincidePrefijo(fname, alt)) {
@@ -1571,6 +1582,82 @@ function eliminarSolicitudBackend(payload) {
   } finally {
     lock.releaseLock();
   }
+}
+
+function limpiarDatosPruebaBackend(payload) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const usuarioActivo = (payload && payload.usuarioActivo) || {};
+    const rol = String(usuarioActivo.rol || (payload && payload.rol) || '').trim().toLowerCase();
+    if (rol && rol !== 'admin' && rol !== 'administrador') {
+      return { ok: false, error: 'Acceso restringido: esta acción requiere rol Admin.' };
+    }
+
+    const limpiarSolicitudes = !payload || payload.limpiarSolicitudes !== false;
+    const limpiarPadron = !payload || payload.limpiarPadron !== false;
+    const incluirDrive = !payload || payload.incluirDrive !== false;
+
+    const ss = obtenerSpreadsheet_();
+    let solicitudesBorradas = 0;
+    let asociadosBorrados = 0;
+    let carpetasDrivePapelera = 0;
+
+    if (limpiarSolicitudes && ss) {
+      const sheetSol = ss.getSheetByName(CONFIG_AMMER.SHEET_SOLICITUDES);
+      if (sheetSol && sheetSol.getLastRow() > 1) {
+        solicitudesBorradas = sheetSol.getLastRow() - 1;
+        sheetSol.deleteRows(2, solicitudesBorradas);
+      }
+    }
+
+    if (limpiarPadron && ss) {
+      const sheetAsoc = ss.getSheetByName(CONFIG_AMMER.SHEET_ASOCIADOS);
+      if (sheetAsoc && sheetAsoc.getLastRow() > 1) {
+        asociadosBorrados = sheetAsoc.getLastRow() - 1;
+        sheetAsoc.deleteRows(2, asociadosBorrados);
+      }
+    }
+
+    if (incluirDrive) {
+      try {
+        const root = obtenerOCrearCarpetaRaiz_();
+        const protegidas = {
+          'TUTORIAL SIDECREER_': true,
+          'BD_MUTUAL_MODELO_SIMULADOROFFICE': true
+        };
+        const iter = root.getFolders();
+        while (iter.hasNext()) {
+          const f = iter.next();
+          const up = String(f.getName() || '').trim().toUpperCase();
+          if (protegidas[up]) continue;
+          try {
+            f.setTrashed(true);
+            carpetasDrivePapelera++;
+          } catch (_) {}
+        }
+      } catch (_) {}
+    }
+
+    SpreadsheetApp.flush();
+    return {
+      ok: true,
+      solicitudesBorradas: solicitudesBorradas,
+      asociadosBorrados: asociadosBorrados,
+      carpetasDrivePapelera: carpetasDrivePapelera
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function limpiarDatosPruebaCompleto() {
+  return limpiarDatosPruebaBackend({
+    usuarioActivo: { rol: 'Admin' },
+    limpiarSolicitudes: true,
+    limpiarPadron: true,
+    incluirDrive: true
+  });
 }
 
 function reasignarAnalistaBackend(payload) {

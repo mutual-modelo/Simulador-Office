@@ -1830,6 +1830,12 @@
     .currency-prefix{position:absolute;left:.875rem;font-family:var(--font-mono);font-size:1.15rem;font-weight:700;color:var(--text-muted);pointer-events:none}
     .input-currency{width:100%;padding:.625rem .875rem .625rem 2.15rem;font-family:var(--font-mono);font-size:1.25rem;font-weight:700;color:var(--color-brand-blue);background:#fff;border:2px solid var(--border-color);border-radius:8px;outline:none;transition:border-color .15s ease,box-shadow .15s ease}
     .input-currency:focus{border-color:var(--color-brand-blue);box-shadow:0 0 0 3px rgba(19,85,150,.18)}
+    .sidecreer-card-input{width:100%;padding:.625rem .875rem .625rem 2.4rem;font-family:var(--font-sans);font-variant-numeric:tabular-nums;font-size:1.1rem;font-weight:700;letter-spacing:.08em;color:var(--color-brand-blue);background:#fff;border:2px solid var(--border-color);border-radius:8px;outline:none;transition:border-color .15s ease,box-shadow .15s ease}
+    .sidecreer-card-input::placeholder{color:#94a3b8;font-weight:600;letter-spacing:.08em}
+    .sidecreer-card-input:focus{border-color:var(--color-brand-blue);box-shadow:0 0 0 3px rgba(19,85,150,.18)}
+    .padron-split-grid{display:grid;grid-template-columns:minmax(300px,360px) minmax(0,1fr);gap:1.25rem;align-items:start}
+    @media(max-width:960px){.padron-split-grid{grid-template-columns:1fr}}
+    .padron-card-item:hover{border-color:#93c5fd !important;background:#f8fafc !important}
     .quick-chips{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.375rem}
     .chip-btn{background:#fff;border:1px solid var(--border-color);border-radius:6px;padding:.225rem .5rem;font-family:var(--font-mono);font-size:.7rem;font-weight:600;color:var(--text-main);cursor:pointer;transition:all .12s ease}
     .chip-btn:hover:not(.active){background:#f1f5f9;border-color:#94a3b8}
@@ -4073,21 +4079,24 @@
                 <span>Convenio Municipal opera exclusivamente en 12 y 24 cuotas.</span>
               </div>
               <!-- CONSULTA DE DISPONIBLE - CONVENIO SIDECREER -->
-              <div id="sidecreerConsultaCard" style="display:none;margin-top:0.85rem;padding:0.85rem 0.9rem;background:#ffffff;border:1px solid #cbd5e1;border-radius:10px;box-shadow:0 1px 2px rgba(15,23,42,0.04);">
-                <div style="font-size:0.78rem;font-weight:800;color:#0f172a;margin-bottom:0.55rem;display:flex;align-items:center;gap:6px;">
+              <div id="sidecreerConsultaCard" style="display:none;margin-top:0.85rem;padding:0.9rem 0.95rem;background:#ffffff;border:1px solid #cbd5e1;border-radius:10px;box-shadow:0 1px 4px rgba(15,23,42,0.05);">
+                <div style="font-size:0.8rem;font-weight:800;color:#0f172a;margin-bottom:0.55rem;display:flex;align-items:center;gap:6px;">
                   <span>💳 Consulta de Disponible - Convenio Sidecreer</span>
                 </div>
-                <div style="display:flex;flex-direction:column;gap:0.45rem;">
-                  <label for="input-tarjeta-sidecreer" style="font-size:0.72rem;font-weight:700;color:#334155;">Nro de Tarjeta</label>
-                  <input type="text" id="input-tarjeta-sidecreer" inputmode="numeric" autocomplete="off" maxlength="19" placeholder="0000 0000 0000 0000" style="width:100%;padding:0.5rem 0.7rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.86rem;font-weight:700;font-family:var(--font-mono, monospace);letter-spacing:0.06em;color:#0f172a;background:#f8fafc;outline:none;"/>
-                  <button type="button" id="btn-consultar-sidecreer" style="margin-top:0.15rem;width:100%;padding:0.52rem 0.85rem;border-radius:8px;border:1px solid #1d4ed8;background:#2563eb;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background-color 0.15s ease;">
+                <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                  <label for="input-tarjeta-sidecreer" class="form-label" style="margin-bottom:0;"><span>Nro de Tarjeta</span></label>
+                  <div class="currency-input-wrap">
+                    <span class="currency-prefix" style="font-size:1rem;left:0.75rem;">💳</span>
+                    <input type="text" id="input-tarjeta-sidecreer" class="sidecreer-card-input" inputmode="numeric" autocomplete="off" maxlength="19" placeholder="0000 0000 0000 0000"/>
+                  </div>
+                  <button type="button" id="btn-consultar-sidecreer" style="margin-top:0.1rem;width:100%;padding:0.6rem 0.9rem;border-radius:8px;border:1px solid var(--color-brand-blue);background:var(--color-brand-blue);color:#ffffff;font-family:var(--font-sans);font-size:0.82rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 3px 8px rgba(19,85,150,0.22);transition:background-color 0.15s ease;">
                     <span>🔍 Consultar</span>
                   </button>
                 </div>
-                <div style="margin-top:0.55rem;padding:0.48rem 0.65rem;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #2563eb;border-radius:6px;font-size:0.7rem;line-height:1.4;color:#475569;">
+                <div style="margin-top:0.6rem;padding:0.5rem 0.65rem;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid var(--color-brand-blue);border-radius:6px;font-size:0.72rem;line-height:1.45;color:#475569;">
                   En el chat escribe <strong>"Hola"</strong>, luego la <strong>opción 1</strong> y por último pega el <strong>"Nro de Tarjeta"</strong> que el sistema ya copió automáticamente.
                 </div>
-                <div id="sidecreer-resultado-box" style="display:none;margin-top:0.6rem;padding:0.55rem 0.7rem;border-radius:8px;font-size:0.74rem;line-height:1.4;"></div>
+                <div id="sidecreer-resultado-box" style="display:none;margin-top:0.6rem;padding:0.55rem 0.7rem;border-radius:8px;font-size:0.75rem;line-height:1.45;"></div>
               </div>
               <!-- RECUADRO DE DISCLAIMER FORMAL OBLIGATORIO -->
               <div class="simulador-disclaimer-box" style="margin-top:0.85rem;padding:0.75rem 0.85rem;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid var(--color-brand-blue);border-radius:6px;font-size:0.68rem;line-height:1.45;color:#475569;">
@@ -4472,6 +4481,9 @@
 
         <!-- LADO DERECHO: BOTONERA DE ACCIONES JERÁRQUICAS -->
         <div class="gestiones-actions-group">
+          <button type="button" id="btnLimpiarGestionesPruebasPropias" class="btn-action-refresh" onclick="limpiarDatosPruebaSistema('all')" title="Eliminar datos de prueba de Gestiones y Padrón" style="display:none;color:#be123c;border-color:#fecdd3;background:#fff1f2;">
+            <span>🧹 Limpiar Pruebas</span>
+          </button>
           <button type="button" class="btn-action-refresh" onclick="sincronizarGestionesDesdeNube()" title="Sincronizar expedientes desde la base de datos central">
             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="23 4 23 10 17 10"></polyline>
@@ -4653,6 +4665,9 @@
 
         <!-- LADO DERECHO: ACCIONES -->
         <div class="gestiones-actions-group">
+          <button type="button" id="btnLimpiarGestionesPruebasComercial" class="btn-action-refresh" onclick="limpiarDatosPruebaSistema('all')" title="Eliminar datos de prueba de Gestiones y Padrón" style="display:none;color:#be123c;border-color:#fecdd3;background:#fff1f2;">
+            <span>🧹 Limpiar Pruebas</span>
+          </button>
           <button type="button" class="btn-action-refresh" onclick="sincronizarGestionesDesdeNube()" title="Sincronizar expedientes desde la base de datos central">
             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="23 4 23 10 17 10"></polyline>
@@ -4781,11 +4796,7 @@
             <div class="ai-audit-header">
               <div style="flex:1 1 360px;min-width:260px;">
                 <div class="ai-audit-title" style="display:flex;align-items:center;gap:0.55rem;flex-wrap:wrap;">
-                  <span>Auditoría IA 2.0 — Control Documental y Crediticio AMMER</span>
-                  <span class="audit20-pill-tag" style="background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;">Dual-Control IA + Determinista</span>
-                </div>
-                <div class="ai-audit-desc">
-                  Recibos de Haberes ER (único o múltiples) · DNI &amp; MRZ ICAO 9303 · Domicilio / Constancia Policial (&le; 60 días) · CajaJper (Jubilaciones) · Boletín Oficial ER · Consolidación Integral
+                  <span>Auditoría Documental y Crediticia AMMER</span>
                 </div>
               </div>
               <div class="audit20-actions">
@@ -4805,8 +4816,8 @@
               </div>
             </div>
 
-            <!-- Menú de Navegación Auditoría IA 2.0 -->
-            <div id="audit20TabsNav" role="tablist" aria-label="Módulos de Auditoría IA 2.0" class="audit20-tabs-bar">
+            <!-- Menú de Navegación Auditoría IA -->
+            <div id="audit20TabsNav" role="tablist" aria-label="Módulos de Auditoría IA" class="audit20-tabs-bar">
               <button type="button" role="tab" aria-selected="true" data-audit-tab="recibo" onclick="cambiarTabAuditoria20('recibo')" class="audit20-tab-btn is-active">
                 <span>🧾 Recibo de Haberes</span>
                 <span id="tabBadgeAuditRecibo" style="font-size:10px;padding:1px 6px;border-radius:9999px;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;">—</span>
@@ -4833,9 +4844,8 @@
               </button>
             </div>
 
-            <!-- PANEL 1: RECIBO DE HABERES (FLUJO EXISTENTE INTACTO) -->
+            <!-- PANEL 1: RECIBO DE HABERES -->
             <div id="audit20PanelRecibo" class="audit20-panel" style="display:block;">
-              <!-- Único Componente de Entrada Directa (Auto-inicio al seleccionar o soltar archivo) -->
               <div id="aiDropzoneDirecta"
                    class="ai-dropzone-box"
                    role="button"
@@ -4850,9 +4860,6 @@
                 <input type="file" id="fileInputAuditoriaAgregar" multiple accept="application/pdf,image/*" style="display:none;" onchange="agregarRecibosAuditoria(this.files)"/>
                 <div style="font-weight:800;font-size:.94rem;color:var(--color-primary);">
                   📁 Subir o arrastrar Recibo(s) de Sueldo (PDF o Imagen)
-                </div>
-                <div style="font-size:.74rem;color:var(--text-muted);margin-top:4px;">
-                  Seleccioná o soltá aquí uno o varios recibos (ej. docente con múltiples escuelas) en PDF digital, PDF escaneado, JPG o PNG para iniciar automáticamente la auditoría consolidada.
                 </div>
                 <div id="listaArchivosAuditoriaPills" style="margin-top:.55rem;min-height:0;"></div>
               </div>
@@ -4878,7 +4885,6 @@
               <div id="aiAuditLoadingBar" style="display:none;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:1rem;margin-top:.85rem;margin-bottom:.75rem;text-align:center;">
                 <div class="api-spinner" style="margin:0 auto .5rem;border-top-color:var(--color-brand-blue);"></div>
                 <strong style="color:var(--color-primary);font-size:.85rem;" id="aiAuditStageText">Analizando recibo oficial de Entre Ríos...</strong>
-                <p style="font-size:.71rem;color:var(--text-muted);margin-top:3px;">Verificando Haberes Brutos, Descuentos de Ley, BERSA, Sidecreer, Mutuales, Códigos FEDEM, Embargos y Planes Sugeridos.</p>
               </div>
 
               <!-- Banner Rojo Visible de Error Estricto (Prohibido renderizar $ 0,00 si hay falla) -->
@@ -4903,21 +4909,19 @@
               <div id="aiAuditResultadosContainer" style="display:none;"></div>
             </div>
 
-            <!-- PANEL 2: VALIDADOR MIXTO DNI + MRZ + FORENSE -->
+            <!-- PANEL 2: VALIDADOR DE DNI -->
             <div id="audit20PanelDni" class="audit20-panel" style="display:none;">
               <div class="audit20-card">
                 <div class="audit20-card-head">
                   <div>
-                    <h3 class="audit20-card-title">🪪 Auditoría Mixta de DNI Argentino (Visión IA + ICAO 9303 MRZ + Forense)</h3>
-                    <p class="audit20-card-sub">Verifica vigencia, dígitos verificadores del código óptico MRZ dorso, cruce frente vs. dorso, metadatos EXIF/PDF y estado RENAPER-ready.</p>
+                    <h3 class="audit20-card-title">🪪 Validación de DNI</h3>
                   </div>
-                  <span class="audit20-pill-tag" style="background:#f8fafc;color:#475569;border:1px solid #cbd5e1;">RENAPER: Conector listo</span>
                 </div>
 
                 <div class="audit20-form-grid">
                   <div class="audit20-field">
                     <label for="inputDniEsperadoAudit20" class="audit20-label">DNI esperado del asociado (opcional)</label>
-                    <input id="inputDniEsperadoAudit20" type="text" inputmode="numeric" placeholder="Ej: 40838259 (contrasta frente y MRZ)" class="audit20-input is-mono" />
+                    <input id="inputDniEsperadoAudit20" type="text" inputmode="numeric" placeholder="Ej: 40838259" class="audit20-input is-mono" />
                   </div>
                   <div class="audit20-field" style="justify-content:flex-end;">
                     <label class="audit20-label">¿Tenés frente y dorso por separado?</label>
@@ -4942,9 +4946,6 @@
                   <div style="font-weight:800;font-size:.92rem;color:var(--color-primary);">
                     📁 Subir o arrastrar DNI (PDF o Imagen)
                   </div>
-                  <div style="font-size:.73rem;color:var(--text-muted);margin-top:4px;">
-                    Seleccioná o soltá aquí el archivo del DNI (PDF frente+dorso unificado o imagen) para iniciar la validación automática.
-                  </div>
                   <div id="dniArchivoSeleccionadoPill" style="margin-top:.5rem;"></div>
                 </div>
 
@@ -4961,13 +4962,12 @@
               </div>
             </div>
 
-            <!-- PANEL 3: VALIDADOR MIXTO DOMICILIO / CONSTANCIA POLICIAL ≤ 60 DÍAS -->
+            <!-- PANEL 3: DOMICILIO / CONSTANCIA POLICIAL ≤ 60 DÍAS -->
             <div id="audit20PanelDomicilio" class="audit20-panel" style="display:none;">
               <div class="audit20-card">
                 <div class="audit20-card-head">
                   <div>
                     <h3 class="audit20-card-title">🏠 Validación de Domicilio &amp; Constancia Policial (&le; 60 días)</h3>
-                    <p class="audit20-card-sub">Control determinista por fecha de emisión con máximo de 60 días (boletas de servicio o constancia policial de domicilio; las relaciones entre vigencia y vencimiento varían según el servicio) y regla de 3ros.</p>
                   </div>
                 </div>
 
@@ -4981,7 +4981,7 @@
                     <input id="inputDomDniAudit20" type="text" inputmode="numeric" placeholder="Ej: 40838259" class="audit20-input is-mono" />
                   </div>
                   <div class="audit20-field" style="grid-column:1 / -1;">
-                    <label for="inputDomDirDniAudit20" class="audit20-label">Domicilio en el DNI (para regla 3ros)</label>
+                    <label for="inputDomDirDniAudit20" class="audit20-label">Domicilio en el DNI (opcional)</label>
                     <input id="inputDomDirDniAudit20" type="text" placeholder="Ej: Av. Ramírez 1450, Paraná" class="audit20-input" />
                   </div>
                 </div>
@@ -5000,9 +5000,6 @@
                   <input id="fileInputDomAudit20" type="file" accept="application/pdf,image/*" style="display:none;" onchange="manejarArchivoDomAudit20(this.files[0])" />
                   <div style="font-weight:800;font-size:.92rem;color:var(--color-primary);">
                     📁 Subir o arrastrar Boleta de Servicio o Constancia Policial (PDF o Imagen)
-                  </div>
-                  <div style="font-size:.73rem;color:var(--text-muted);margin-top:4px;">
-                    Seleccioná o soltá aquí la boleta de servicio o certificado policial de domicilio (PDF, JPG o PNG) para iniciar la validación automática.
                   </div>
                   <div id="domArchivoSeleccionadoPill" style="margin-top:.5rem;"></div>
                 </div>
@@ -5026,7 +5023,6 @@
                 <div class="audit20-card-head">
                   <div>
                     <h3 class="audit20-card-title">🏛️ Consulta Caja de Jubilaciones y Pensiones ER (CajaJper)</h3>
-                    <p class="audit20-card-sub">Verifica trámites previsionales en curso por DNI o NUC y alerta posibles transiciones de agente ACTIVO a PASIVO (JU_).</p>
                   </div>
                 </div>
 
@@ -5058,7 +5054,7 @@
               </div>
             </div>
 
-            <!-- PANEL 5: BOLETÍN OFICIAL DE ENTRE RÍOS (ETAPA 1 PRESERVADO) -->
+            <!-- PANEL 5: BOLETÍN OFICIAL DE ENTRE RÍOS -->
             <div id="audit20PanelBoletin" class="audit20-panel" style="display:none;">
               <div id="panelBoletinOficialER" class="audit20-card font-sans antialiased">
                 <div class="audit20-card-head">
@@ -5067,13 +5063,10 @@
                       <span>📰 Consulta Boletín Oficial de Entre Ríos</span>
                       <span id="badgeEstadoIndiceBoletin" class="audit20-pill-tag" style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;">Verificando índice...</span>
                     </h3>
-                    <p class="audit20-card-sub">
-                      Búsqueda por DNI o CUIL en ediciones oficiales (designaciones, retiros, recursos, embargos y edictos).
-                    </p>
                   </div>
                   <div id="wrapAdminSyncBoletin" class="audit20-actions" style="display:none;">
                     <button type="button" onclick="sincronizarBoletinOficialAuditoria(30)" class="audit20-btn audit20-btn--secondary">↻ Sincronizar 30 días</button>
-                    <button type="button" onclick="sincronizarBoletinOficialAuditoria(0)" class="audit20-btn audit20-btn--navy" title="Indexa todas las ediciones históricas desde Diciembre 2003 en segundo plano">📚 Indexar 2003–2026</button>
+                    <button type="button" onclick="sincronizarBoletinOficialAuditoria(0)" class="audit20-btn audit20-btn--navy" title="Indexa ediciones históricas">📚 Indexar 2003–2026</button>
                   </div>
                 </div>
 
@@ -5095,13 +5088,12 @@
               </div>
             </div>
 
-            <!-- PANEL 6: TABLERO CONSOLIDADO DUAL-CONTROL -->
+            <!-- PANEL 6: DICTAMEN FINAL CONSOLIDADO -->
             <div id="audit20PanelIntegral" class="audit20-panel" style="display:none;">
               <div class="audit20-card">
                 <div class="audit20-card-head">
                   <div>
-                    <h3 class="audit20-card-title">🛡️ Dictamen Final Dual-Control (Cruce Multidocumento)</h3>
-                    <p class="audit20-card-sub">Cruza identidad, domicilio, vigencia documental, Boletín Oficial ER y gestiones en CajaJper para emitir el dictamen maestro.</p>
+                    <h3 class="audit20-card-title">🛡️ Dictamen Final Consolidado</h3>
                   </div>
                   <div class="audit20-actions">
                     <button type="button" id="btnRecalcularConsolidadoAudit20" onclick="ejecutarAuditoriaIntegralAudit20()" class="audit20-btn audit20-btn--navy audit20-btn--lg">
@@ -5115,7 +5107,7 @@
 
                 <div id="resultadoIntegralAudit20">
                   <div style="padding:1.2rem;border-radius:12px;background:#f8fafc;border:1px dashed #cbd5e1;text-align:center;color:#64748b;font-size:0.82rem;">
-                    Evaluá al menos un pilar (Recibo, DNI, Domicilio, CajaJper o Boletín Oficial ER) para visualizar los semáforos y el cruce automático de identidad.
+                    Evaluá la documentación en las pestañas anteriores para visualizar el dictamen consolidado.
                   </div>
                 </div>
               </div>
@@ -5125,35 +5117,42 @@
         </div>
       </section>
 
-      <!-- VISTA PRINCIPAL: PADRÓN Y FICHAS HISTÓRICAS DE ASOCIADOS (ETAPA 4) -->
+      <!-- VISTA PRINCIPAL: PADRÓN Y FICHAS HISTÓRICAS DE ASOCIADOS -->
       <section id="view-ficha-asociado" class="app-view">
-        <div style="max-width:1280px;margin:0 auto;padding:0.5rem 0 2rem 0;">
-          <div class="audit20-card">
-            <div class="audit20-card-head">
-              <div>
-                <h2 style="margin:0;font-size:1.08rem;font-weight:800;color:#0f172a;">🗂️ Padrón y Fichas Históricas de Asociados</h2>
-                <p class="audit20-card-sub">Historial documental inmutable en Supabase (DNI, Domicilio/Policial, Recibos, CajaJper, Boletín ER y Solicitudes).</p>
+        <div style="max-width:1320px;margin:0 auto;padding:0.5rem 0 2rem 0;">
+          <div class="audit20-card" style="padding:1.25rem 1.35rem;">
+            <div class="audit20-card-head" style="gap:0.85rem;border-bottom:1px solid #e2e8f0;padding-bottom:1rem;margin-bottom:1rem;">
+              <div style="flex:1 1 280px;">
+                <h2 style="margin:0;font-size:1.15rem;font-weight:800;color:#0f172a;">🗂️ Padrón y Fichas Históricas de Asociados</h2>
+                <p style="margin:4px 0 0 0;font-size:0.8rem;color:#64748b;">Consulta integral de documentación, validaciones vigentes y solicitudes por asociado.</p>
               </div>
-              <div class="audit20-actions">
-                <input id="inputBuscarFichaPadron" type="text" placeholder="Buscar por DNI o Apellido/Nombre..." onkeydown="if(event.key==='Enter'){event.preventDefault();buscarPadronFichasAsociados();}" class="audit20-input" style="min-width:250px;width:auto;" />
-                <select id="selectFiltroEstadoFichaPadron" onchange="buscarPadronFichasAsociados()" class="audit20-select" style="width:auto;min-width:170px;">
+              <div class="audit20-actions" style="flex:1 1 auto;justify-content:flex-end;">
+                <input id="inputBuscarFichaPadron" type="text" placeholder="Buscar por DNI o Apellido/Nombre..." onkeydown="if(event.key==='Enter'){event.preventDefault();buscarPadronFichasAsociados();}" class="audit20-input" style="flex:1 1 230px;min-width:210px;max-width:300px;" />
+                <select id="selectFiltroEstadoFichaPadron" onchange="buscarPadronFichasAsociados()" class="audit20-select" style="width:auto;min-width:160px;">
                   <option value="TODOS">Todos los perfiles</option>
-                  <option value="APTO">APTO</option>
-                  <option value="OBSERVADO">OBSERVADO</option>
-                  <option value="RECHAZADO">RECHAZADO</option>
-                  <option value="PENDIENTE">PENDIENTE</option>
+                  <option value="APTO">Apto</option>
+                  <option value="OBSERVADO">Observado</option>
+                  <option value="RECHAZADO">Rechazado</option>
+                  <option value="PENDIENTE">Pendiente</option>
                 </select>
-                <button type="button" onclick="buscarPadronFichasAsociados()" class="audit20-btn audit20-btn--navy audit20-btn--lg">🔍 Filtrar Padrón</button>
+                <button type="button" onclick="buscarPadronFichasAsociados()" class="audit20-btn audit20-btn--navy audit20-btn--lg">🔍 Filtrar</button>
+                <button type="button" id="btnLimpiarPadronPruebasAdmin" onclick="limpiarDatosPruebaSistema('all')" class="audit20-btn audit20-btn--secondary audit20-btn--lg" style="display:none;color:#be123c;border-color:#fecdd3;background:#fff1f2;" title="Eliminar registros de prueba del padrón y gestiones">🧹 Limpiar Pruebas</button>
               </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:minmax(280px,360px) 1fr;gap:1rem;align-items:start;">
-              <div id="padronFichasListaContainer" style="max-height:700px;overflow-y:auto;padding-right:4px;">
-                <div style="padding:1rem;text-align:center;color:#64748b;font-size:0.78rem;">Cargando padrón...</div>
+            <div class="padron-split-grid">
+              <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:0.75rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:0 0.25rem 0.6rem 0.25rem;border-bottom:1px solid #e2e8f0;margin-bottom:0.65rem;">
+                  <span style="font-size:0.74rem;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:0.03em;">Listado de Asociados</span>
+                  <span id="padronResultadosCountBadge" style="font-size:0.72rem;font-weight:700;padding:2px 8px;border-radius:9999px;background:#e0e7ff;color:#3730a3;">0 asociados</span>
+                </div>
+                <div id="padronFichasListaContainer" style="max-height:680px;overflow-y:auto;padding-right:3px;">
+                  <div style="padding:1rem;text-align:center;color:#64748b;font-size:0.78rem;">Cargando padrón...</div>
+                </div>
               </div>
               <div id="fichaAsociadoDetalleContainer">
-                <div style="padding:2rem 1.25rem;border-radius:14px;background:#f8fafc;border:1px dashed #cbd5e1;text-align:center;color:#64748b;font-size:0.84rem;">
-                  Seleccioná un asociado del listado izquierdo (o ingresá un DNI en el buscador) para visualizar su ficha vigente, su línea de tiempo inmutable y sus solicitudes.
+                <div style="padding:2.5rem 1.5rem;border-radius:14px;background:#f8fafc;border:1px dashed #cbd5e1;text-align:center;color:#64748b;font-size:0.86rem;">
+                  Seleccioná un asociado del listado izquierdo (o ingresá un DNI en el buscador) para visualizar su ficha documental y sus solicitudes.
                 </div>
               </div>
             </div>
@@ -9816,11 +9815,11 @@ ${cierreTxt}`;
           titleEl.textContent = 'Simulador Oficial';
           subEl.textContent = 'Calculador de Ayudas Económicas · Asociación Mutual Modelo de Entre Ríos';
         } else if (viewId === 'vistaAuditoriaIA') {
-          titleEl.textContent = 'Auditoría IA 2.0 (Multidocumento)';
-          subEl.textContent = 'Recibos, DNI/MRZ, Domicilio <= 60d, CajaJper, Boletín ER y Consolidado';
+          titleEl.textContent = 'Auditoría IA';
+          subEl.textContent = 'Control documental y crediticio de asociados';
         } else if (viewId === 'view-ficha-asociado') {
           titleEl.textContent = 'Padrón y Fichas de Asociados';
-          subEl.textContent = 'Historial documental inmutable, semáforo por pilar y solicitudes en Supabase';
+          subEl.textContent = 'Consulta integral de documentación y solicitudes';
         } else if (viewId === 'view-comercializador') {
           titleEl.textContent = sess.es_titular_organizacion ? 'Gestiones Organización' : 'Mis Gestiones';
           subEl.textContent = 'Seguimiento operativo y alta de solicitudes de ayuda económica';
@@ -16551,15 +16550,23 @@ ${cierreTxt}`;
       const usuarioOperador = (session && session.nombre) ? session.nombre : 'Operador';
 
       try {
+        const idSolDelete = s.idSolicitud || s.id || id;
         callApi({
           action: 'eliminarSolicitud',
-          idSolicitud: s.idSolicitud || s.id || id,
-          id: s.idSolicitud || s.id || id,
+          idSolicitud: idSolDelete,
+          id: idSolDelete,
           usuarioOperador: usuarioOperador
         }, {
           title: 'Eliminando solicitud...',
           sub: 'Borrando expediente de la base central'
         }).catch(console.warn);
+
+        if (typeof RENDER_API_URL === 'string' && RENDER_API_URL.startsWith('http')) {
+          const idParaSupa = s.id_provisorio || s.supabase_id || idSolDelete;
+          fetchConTimeout(`${RENDER_API_URL}/api/solicitudes/${encodeURIComponent(idParaSupa)}`, {
+            method: 'DELETE'
+          }, 15000).catch(() => {});
+        }
 
         const filtrados = all.filter(x => String(x.id) !== String(id) && String(x.idSolicitud) !== String(id));
         saveStoredSolicitudes(filtrados);
@@ -16577,6 +16584,72 @@ ${cierreTxt}`;
       } catch (err) {
         console.error('Error al eliminar solicitud:', err);
         showToast('Error al procesar la eliminación de la solicitud');
+      }
+    }
+
+    async function limpiarDatosPruebaSistema(scope = 'all') {
+      const sess = (typeof getSession === 'function') ? getSession() : null;
+      const rolLower = String((sess && (sess.rol || sess.role)) || '').trim().toLowerCase();
+      if (rolLower !== 'admin' && rolLower !== 'administrador') {
+        showToast('⛔ Solo usuarios con rol Admin pueden limpiar datos de prueba.');
+        return;
+      }
+
+      if (!confirm('¿Confirmás eliminar todas las gestiones de prueba, registros del Padrón y carpetas de prueba en Drive? Los paneles quedarán completamente limpios.')) {
+        return;
+      }
+
+      mostrarCargando('Limpiando datos de prueba...', 'Vaciando Gestiones, Padrón y archivos temporales');
+      try {
+        try { localStorage.removeItem(STORAGE_SOLICITUDES_KEY); } catch (_) {}
+        if (window.estadoApp) window.estadoApp.solicitudes = [];
+
+        if (typeof RENDER_API_URL === 'string' && RENDER_API_URL.startsWith('http')) {
+          const respSupa = await fetchConTimeout(`${RENDER_API_URL}/api/admin/limpiar-pruebas`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              limpiarSolicitudes: scope === 'all' || scope === 'solicitudes',
+              limpiarPadron: scope === 'all' || scope === 'padron'
+            })
+          }, 25000).catch(() => null);
+          if (respSupa && !respSupa.ok) {
+            const errJson = await respSupa.json().catch(() => ({}));
+            console.warn('Limpieza Supabase avisó:', errJson.detail || respSupa.status);
+          }
+        }
+
+        if (typeof APPS_SCRIPT_URL === 'string' && APPS_SCRIPT_URL.startsWith('http')) {
+          await fetchConTimeout(APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              action: 'limpiarDatosPrueba',
+              limpiarSolicitudes: scope === 'all' || scope === 'solicitudes',
+              limpiarPadron: scope === 'all' || scope === 'padron',
+              incluirDrive: true,
+              usuarioActivo: sess
+            })
+          }, 25000).catch(console.warn);
+        }
+
+        saveStoredSolicitudes([]);
+        window._fichaPadronDniActivo = '';
+        if (typeof renderModuloComercializador === 'function') renderModuloComercializador();
+        if (typeof renderModuloMutualPropias === 'function') renderModuloMutualPropias();
+        if (typeof renderModuloMutual === 'function') renderModuloMutual();
+        if (typeof buscarPadronFichasAsociados === 'function') buscarPadronFichasAsociados();
+        const detEl = document.getElementById('fichaAsociadoDetalleContainer');
+        if (detEl) {
+          detEl.innerHTML = '<div style="padding:2.5rem 1.5rem;border-radius:14px;background:#f8fafc;border:1px dashed #cbd5e1;text-align:center;color:#64748b;font-size:0.86rem;">Panel limpio. Seleccioná un asociado del listado cuando se registren nuevos trámites.</div>';
+        }
+        actualizarCentroNotificaciones();
+        showToast('✅ Paneles de Gestiones y Padrón limpiados correctamente.');
+      } catch (err) {
+        console.error('Error en limpieza de datos de prueba:', err);
+        showToast('⚠️ Error durante la limpieza: ' + (err && err.message ? err.message : String(err)));
+      } finally {
+        ocultarCargando();
       }
     }
 
@@ -17016,6 +17089,8 @@ ${cierreTxt}`;
       const filtered = getListaFiltradaMutualPropias();
       const lbl = document.getElementById('lblTotalMutualPropias');
       if (lbl) lbl.textContent = filtered.length + ' solicitudes sede central';
+      const btnLimpiar = document.getElementById('btnLimpiarGestionesPruebasPropias');
+      if (btnLimpiar) btnLimpiar.style.display = (typeof esAdminAuditoria === 'function' && esAdminAuditoria()) ? 'inline-flex' : 'none';
 
       const modo = vistaModulosState.mutualPropias || 'tabla';
       if (modo === 'tabla') renderTablaMutualPropias(filtered);
@@ -17158,6 +17233,8 @@ ${cierreTxt}`;
 
       const filtered = getListaFiltradaMutual();
       const lbl = document.getElementById('lblTotalMutual'); if (lbl) lbl.textContent = filtered.length + ' solicitudes en cartera';
+      const btnLimpiar = document.getElementById('btnLimpiarGestionesPruebasComercial');
+      if (btnLimpiar) btnLimpiar.style.display = (typeof esAdminAuditoria === 'function' && esAdminAuditoria()) ? 'inline-flex' : 'none';
 
       const modo = vistaModulosState.mutual;
       if (modo === 'tabla') renderTablaMutual(filtered);
@@ -20806,9 +20883,7 @@ ${cierreTxt}`;
         const icon = isPdf ? '📄' : '🖼️';
         const rawLen = arch.base64 ? arch.base64.length : (arch.textoExtraido ? arch.textoExtraido.length : 0);
         const kb = Math.max(1, Math.round((rawLen * 0.75) / 1024));
-        const modoTxt = (arch.textoExtraido && arch.textoExtraido.length >= 40)
-          ? ' · Capa de texto PDF'
-          : (arch.renderizadoDesdePdfEscaneado ? ' · Escaneo HD JPEG 2x' : '');
+        const modoTxt = '';
         const numBadge = archivosAuditoriaCola.length > 1 ? ('<strong style="color:#1e40af;margin-right:3px;">#' + (idx + 1) + '</strong>') : '';
         return '<span class="ai-file-pill" onclick="event.stopPropagation()">' +
           '<span>' + numBadge + icon + ' <strong>' + sanitizeHTML(arch.nombre) + '</strong> (' + kb + ' KB' + modoTxt + ')</span>' +
@@ -22223,7 +22298,7 @@ ${cierreTxt}`;
                 (esAdmin ? 'Auditoría Documental y Crediticia AMMER' : 'Auditoría Documental de Recibo AMMER') +
               '</h3>' +
               (esAdmin ? '<p class="text-xs text-slate-500 font-normal mt-0.5 mb-0">' +
-                'Motor Padrón Oficial (2.076 códigos) • ' + (esPasivo ? 'Pasivos 65% afectable' : 'Activos 80% afectable') + ' · Tope Endeudamiento 41,67% Neto' +
+                'Régimen ' + (esPasivo ? 'Pasivos (65%)' : 'Activos (80%)') + ' · Tope Endeudamiento 41,67% Neto' +
               '</p>' : '') +
             '</div>' +
           '</div>' +
@@ -24477,9 +24552,9 @@ ${cierreTxt}`;
       iniciarSincronizacionPasivaBackground();
     });
   </script>
-  <script src="js/boletinER.js?v=5"></script>
-  <script src="js/auditoria20.js?v=5"></script>
-  <script src="js/fichasAsociados.js?v=5"></script>
-  <script src="js/sidecreerWidget.js?v=5"></script>
+  <script src="js/boletinER.js?v=6"></script>
+  <script src="js/auditoria20.js?v=6"></script>
+  <script src="js/fichasAsociados.js?v=6"></script>
+  <script src="js/sidecreerWidget.js?v=6"></script>
 </body>
 </html>

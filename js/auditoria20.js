@@ -224,7 +224,7 @@
     if (!ev) return;
     ev.preventDefault();
     ev.stopPropagation();
-    const dz = document.getElementById(dzId);
+    const dz = (dzId ? document.getElementById(dzId) : null) || ev.currentTarget;
     if (dz && dz.classList) dz.classList.add('drag-active');
   }
 
@@ -232,7 +232,7 @@
     if (!ev) return;
     ev.preventDefault();
     ev.stopPropagation();
-    const dz = document.getElementById(dzId);
+    const dz = (dzId ? document.getElementById(dzId) : null) || ev.currentTarget;
     if (dz && dz.classList) dz.classList.remove('drag-active');
   }
 
@@ -240,7 +240,7 @@
     if (!ev) return;
     ev.preventDefault();
     ev.stopPropagation();
-    const dz = document.getElementById(dzId);
+    const dz = (dzId ? document.getElementById(dzId) : null) || ev.currentTarget;
     if (dz && dz.classList) dz.classList.remove('drag-active');
     const files = ev.dataTransfer && ev.dataTransfer.files ? ev.dataTransfer.files : null;
     if (!files || files.length === 0) return;
@@ -324,7 +324,7 @@
     });
     const elInt = document.getElementById('resultadoIntegralAudit20');
     if (elInt) {
-      elInt.innerHTML = '<div style="padding:1.2rem;border-radius:12px;background:#f8fafc;border:1px dashed #cbd5e1;text-align:center;color:#64748b;font-size:0.82rem;">Evaluá al menos un pilar (Recibo, DNI, Domicilio, CajaJper o Boletín Oficial ER) para visualizar los semáforos y el cruce automático de identidad.</div>';
+      elInt.innerHTML = '<div style="padding:1.2rem;border-radius:12px;background:#f8fafc;border:1px dashed #cbd5e1;text-align:center;color:#64748b;font-size:0.82rem;">Evaluá la documentación en las pestañas anteriores para visualizar el dictamen consolidado.</div>';
     }
     actualizarBadgesTabsAuditoria20();
   }
@@ -332,17 +332,14 @@
   function _renderBloqueForenseAudit20(forense) {
     if (!forense) return '';
     const alertas = Array.isArray(forense.alertas) ? forense.alertas : [];
-    const meta = forense.metadatos || {};
-    const swTxt = meta.producer || meta.creator || (meta.exif && meta.exif.Software) || 'Sin software registrado';
     return '<div style="margin-top:0.75rem;padding:0.75rem 0.9rem;border-radius:10px;background:#f8fafc;border:1px solid #cbd5e1;color:#334155;font-size:0.75rem;">' +
       '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:0.4rem;font-weight:700;">' +
-        '<span>🔬 Forense de Archivos (' + sanitizeHTML(forense.tipo_archivo || 'DOC') + ') · <span style="font-weight:600;color:#475569;">Comentario informativo (a criterio del asesor)</span></span>' +
-        '<span style="font-family:monospace;font-weight:500;font-size:11px;color:#64748b;">SHA-256: ' + sanitizeHTML(String(forense.sha256 || '').slice(0, 14)) + '… · Generador: ' + sanitizeHTML(swTxt) + '</span>' +
+        '<span>🔍 Revisión de archivo · <span style="font-weight:600;color:#475569;">Comentario informativo (a criterio del asesor)</span></span>' +
       '</div>' +
       (alertas.length > 0
         ? ('<ul style="margin:0.4rem 0 0 1.1rem;padding:0;color:#334155;">' + alertas.map(a => '<li>' + sanitizeHTML(a) + '</li>').join('') + '</ul>' +
-           '<div style="margin-top:0.35rem;font-size:11px;color:#64748b;">ℹ️ Las observaciones sobre metadatos tienen carácter meramente informativo; queda a criterio del asesor tomarlas como alerta o no.</div>')
-        : '<div style="margin-top:3px;color:#475569;">Sin observaciones técnicas relevantes en metadatos EXIF/PDF.</div>') +
+           '<div style="margin-top:0.35rem;font-size:11px;color:#64748b;">ℹ️ Las observaciones sobre el archivo tienen carácter meramente informativo; queda a criterio del asesor tomarlas como alerta o no.</div>')
+        : '<div style="margin-top:3px;color:#475569;">Sin observaciones técnicas relevantes en el archivo.</div>') +
     '</div>';
   }
 
@@ -366,7 +363,7 @@
     const out = document.getElementById(outId);
     if (out) {
       out.style.display = 'block';
-      out.innerHTML = '<div style="padding:0.75rem;border-radius:10px;background:#f8fafc;border:1px solid #cbd5e1;font-size:0.78rem;">🔬 Inspeccionando estructura y metadatos EXIF/PDF...</div>';
+      out.innerHTML = '<div style="padding:0.75rem;border-radius:10px;background:#f8fafc;border:1px solid #cbd5e1;font-size:0.78rem;">🔍 Verificando propiedades del archivo...</div>';
     }
     try {
       const payload = await _leerArchivoPayloadAudit20(file);
@@ -379,7 +376,7 @@
       if (!resp.ok) throw new Error(data.detail || ('HTTP ' + resp.status));
       if (out) out.innerHTML = _renderBloqueForenseAudit20(data);
     } catch (err) {
-      if (out) out.innerHTML = '<div style="padding:0.75rem;border-radius:10px;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;font-size:0.78rem;">⚠️ Error forense: ' + sanitizeHTML(err.message || String(err)) + '</div>';
+      if (out) out.innerHTML = '<div style="padding:0.75rem;border-radius:10px;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;font-size:0.78rem;">⚠️ Error verificando metadatos: ' + sanitizeHTML(err.message || String(err)) + '</div>';
     }
   }
 
@@ -395,10 +392,10 @@
     const btn = document.getElementById('btnValidarDniAudit20');
     const dniEsp = String((document.getElementById('inputDniEsperadoAudit20') || {}).value || '').replace(/\D/g, '').trim();
 
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ Analizando DNI + MRZ...'; }
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Analizando DNI...'; }
     if (out) {
       out.style.display = 'block';
-      out.innerHTML = '<div style="padding:0.85rem;border-radius:10px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;font-size:0.78rem;font-weight:600;">⏳ Ejecutando extracción IA Vision + verificación ICAO 9303 MRZ + análisis forense...</div>';
+      out.innerHTML = '<div style="padding:0.85rem;border-radius:10px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;font-size:0.78rem;font-weight:600;">⏳ Analizando documento de identidad...</div>';
     }
 
     try {
@@ -419,7 +416,6 @@
       const ext = data.datos_extraidos || {};
       const det = data.validacion_determinista || {};
       const mrz = det.mrz || {};
-      const ren = data.renaper || {};
       const evIa = data.evaluacion_ia || {};
       const motivos = Array.isArray(data.motivos) ? data.motivos : [];
 
@@ -442,13 +438,13 @@
             (v ? 'background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;' : 'background:#fff1f2;color:#9f1239;border:1px solid #fecdd3;') + '">' +
             (v ? '✔' : '✖') + ' ' + sanitizeHTML(k) + '</span>'
           ).join(' ')
-        : '<span style="font-size:0.74rem;color:#64748b;">MRZ no detectado (si subiste solo el frente, agregá o unificá el dorso para validar checksums ICAO 9303).</span>';
+        : '<span style="font-size:0.74rem;color:#64748b;">No se detectó el código de lectura del dorso (si subiste solo el frente, podés unificar frente y dorso).</span>';
 
       out.innerHTML =
         '<div style="padding:0.9rem 1rem;border-radius:12px;' + hdrStyle + '">' +
           '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0.5rem;">' +
             '<div style="font-size:0.9rem;font-weight:800;">' + (ok ? '✅' : '⛔') + ' Dictamen DNI: ' + sanitizeHTML(data.dictamen_final || 'REVISION_MANUAL') + '</div>' +
-            (data.discrepancia_ia_vs_reglas ? '<span style="padding:2px 9px;border-radius:9999px;font-size:11px;font-weight:800;background:#7f1d1d;color:#ffffff;">⚠️ Discrepancia IA vs. Reglas Python</span>' : '') +
+            (data.discrepancia_ia_vs_reglas ? '<span style="padding:2px 9px;border-radius:9999px;font-size:11px;font-weight:800;background:#7f1d1d;color:#ffffff;">⚠️ Revisión manual sugerida</span>' : '') +
           '</div>' +
           '<ul style="margin:0.45rem 0 0 1.15rem;padding:0;font-size:0.76rem;">' + motivos.map(m => '<li>' + sanitizeHTML(m) + '</li>').join('') + '</ul>' +
         '</div>' +
@@ -457,12 +453,11 @@
           '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">DNI / CUIL</div><div style="font-weight:800;font-family:monospace;color:#0f172a;">' + sanitizeHTML(det.dni_extraido || '—') + (ext.cuil ? (' · ' + sanitizeHTML(ext.cuil)) : '') + '</div></div>' +
           '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Vencimiento / Vigencia</div><div style="font-weight:800;color:#0f172a;">' + sanitizeHTML(det.fecha_vencimiento_iso || 'No visible') + (det.dni_vigente === true ? ' (Vigente)' : (det.dni_vigente === false ? ' (VENCIDO)' : '')) + '</div></div>' +
           '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Domicilio DNI</div><div style="font-weight:700;color:#0f172a;">' + sanitizeHTML(ext.domicilio_dni || 'No visible (requiere dorso)') + '</div></div>' +
-          '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">RENAPER</div><div style="font-weight:700;color:#334155;">' + sanitizeHTML(ren.estado || 'PENDIENTE_CREDENCIALES') + '</div></div>' +
         '</div>' +
         '<div style="margin-top:0.75rem;padding:0.7rem 0.85rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;">' +
-          '<div style="font-size:0.74rem;font-weight:800;color:#0f172a;margin-bottom:5px;">🔐 Verificación Criptográfica MRZ ICAO 9303:</div>' +
+          '<div style="font-size:0.74rem;font-weight:800;color:#0f172a;margin-bottom:5px;">🔐 Verificación del Código de Dorso:</div>' +
           '<div style="display:flex;flex-wrap:wrap;gap:0.4rem;">' + checksMrzHtml + '</div>' +
-          (evIa.observacionesIA ? ('<div style="margin-top:6px;font-size:0.73rem;color:#475569;"><strong>🤖 Visión IA:</strong> ' + sanitizeHTML(evIa.observacionesIA) + '</div>') : '') +
+          (evIa.observacionesIA ? ('<div style="margin-top:6px;font-size:0.73rem;color:#475569;"><strong>Observaciones:</strong> ' + sanitizeHTML(evIa.observacionesIA) + '</div>') : '') +
         '</div>' +
         _renderBloqueForenseAudit20(data.forense);
     } catch (err) {
@@ -489,7 +484,7 @@
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Validando domicilio...'; }
     if (out) {
       out.style.display = 'block';
-      out.innerHTML = '<div style="padding:0.85rem;border-radius:10px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;font-size:0.78rem;font-weight:600;">⏳ Analizando fecha de emisión (&le; 60 días), titularidad/terceros, constancia policial y metadatos...</div>';
+      out.innerHTML = '<div style="padding:0.85rem;border-radius:10px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;font-size:0.78rem;font-weight:600;">⏳ Validando comprobante de domicilio...</div>';
     }
 
     try {
@@ -530,14 +525,14 @@
         : (det.es_titular_solicitante === true
           ? 'Titular directo coincide con solicitante'
           : (det.tercero_autorizado_por_domicilio === true
-            ? 'Tercero autorizado (domicilio coincide con DNI)'
-            : (det.es_titular_solicitante === false ? 'Tercero NO validado con DNI' : 'Sin titular para contrastar')));
+            ? 'Domicilio coincide con DNI del solicitante'
+            : (det.es_titular_solicitante === false ? 'Titular distinto al solicitante' : 'Sin titular para contrastar')));
 
       out.innerHTML =
         '<div style="padding:0.9rem 1rem;border-radius:12px;' + hdrStyle + '">' +
           '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0.5rem;">' +
             '<div style="font-size:0.9rem;font-weight:800;">' + (ok ? '✅' : '⛔') + ' Dictamen Domicilio: ' + sanitizeHTML(data.dictamen_final || 'RECHAZADO') + ' · [' + sanitizeHTML(data.documento_tipo || 'DOMICILIO') + ']</div>' +
-            (data.discrepancia_ia_vs_reglas ? '<span style="padding:2px 9px;border-radius:9999px;font-size:11px;font-weight:800;background:#7f1d1d;color:#ffffff;">⚠️ Discrepancia IA vs. Reglas Python</span>' : '') +
+            (data.discrepancia_ia_vs_reglas ? '<span style="padding:2px 9px;border-radius:9999px;font-size:11px;font-weight:800;background:#7f1d1d;color:#ffffff;">⚠️ Revisión manual sugerida</span>' : '') +
           '</div>' +
           '<ul style="margin:0.45rem 0 0 1.15rem;padding:0;font-size:0.76rem;">' + motivos.map(m => '<li>' + sanitizeHTML(m) + '</li>').join('') + '</ul>' +
         '</div>' +
@@ -546,9 +541,9 @@
           '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Titular en Comprobante</div><div style="font-weight:800;color:#0f172a;">' + sanitizeHTML(ext.titular || '—') + '</div></div>' +
           '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Emisión y Antigüedad</div><div style="font-weight:800;color:' + (vigenteEmision ? '#065f46' : '#9f1239') + ';">' + sanitizeHTML((det.fecha_emision_iso || 'N/D') + ' · ' + diasTxt) + '</div></div>' +
           '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Domicilio Detectado</div><div style="font-weight:700;color:#0f172a;">' + sanitizeHTML([ext.domicilio_completo, ext.localidad].filter(Boolean).join(', ') || '—') + '</div></div>' +
-          '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Regla Titularidad / 3ros</div><div style="font-weight:700;color:#0f172a;">' + sanitizeHTML(titularStatus) + '</div></div>' +
+          '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Titularidad del Comprobante</div><div style="font-weight:700;color:#0f172a;">' + sanitizeHTML(titularStatus) + '</div></div>' +
         '</div>' +
-        (evIa.observacionesIA ? ('<div style="margin-top:0.65rem;padding:0.6rem 0.8rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;font-size:0.73rem;color:#475569;"><strong>🤖 Visión IA:</strong> ' + sanitizeHTML(evIa.observacionesIA) + '</div>') : '') +
+        (evIa.observacionesIA ? ('<div style="margin-top:0.65rem;padding:0.6rem 0.8rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;font-size:0.73rem;color:#475569;"><strong>Observaciones:</strong> ' + sanitizeHTML(evIa.observacionesIA) + '</div>') : '') +
         _renderBloqueForenseAudit20(data.forense);
     } catch (err) {
       if (out) out.innerHTML = '<div style="padding:0.85rem;border-radius:10px;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;font-size:0.78rem;">⚠️ Error validando domicilio: ' + sanitizeHTML(err.message || String(err)) + '</div>';

@@ -43,7 +43,7 @@
             badge.style.borderColor = '#fde68a';
           }
         } else {
-          badge.textContent = data.tablas_pendientes ? 'Requiere ejecutar SQL v2 en Supabase' : 'Índice no disponible';
+          badge.textContent = data.tablas_pendientes ? 'Índice pendiente de inicialización' : 'Índice no disponible';
           badge.style.background = '#fff1f2';
           badge.style.color = '#9f1239';
           badge.style.borderColor = '#fecdd3';
@@ -77,13 +77,13 @@
       }
     } catch (_) {
       if (badge) {
-        badge.textContent = 'Conectando con Render...';
+        badge.textContent = 'Conectando con el servicio...';
         badge.style.background = '#f1f5f9';
         badge.style.color = '#64748b';
         badge.style.borderColor = '#cbd5e1';
       }
       if (progBox && progBox.style.display === 'block') {
-        progBox.textContent = '⏳ Render está reiniciando o completando un deploy. Reintentando conexión automáticamente...';
+        progBox.textContent = '⏳ Reconectando con el servidor del índice. Reintentando automáticamente...';
         if (!_boletinPollTimer) {
           _boletinPollTimer = setTimeout(() => {
             _boletinPollTimer = null;
@@ -102,7 +102,7 @@
     const progBox = document.getElementById('boletinSyncProgressBox');
     if (progBox) {
       progBox.style.display = 'block';
-      progBox.textContent = '⏳ Iniciando indexación de Boletines Oficiales en Render...';
+      progBox.textContent = '⏳ Iniciando indexación de Boletines Oficiales...';
     }
     try {
       const body = ultimosDias > 0
@@ -122,7 +122,7 @@
     } catch (err) {
       if (progBox) {
         progBox.style.display = 'block';
-        progBox.textContent = '⚠️ Render no respondió aún (puede estar reiniciando o despertando). Reintentá en 15 segundos.';
+        progBox.textContent = '⚠️ El servicio demoró en responder. Reintentá en unos segundos.';
       }
     }
   }

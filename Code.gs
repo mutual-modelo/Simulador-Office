@@ -1584,7 +1584,36 @@ function eliminarSolicitudBackend(payload) {
   }
 }
 
-function limpiarDatosPruebaBackend(payload) {
+const CLEANUP_KEY_SALT_DEFAULT_ = '7e4a1ad11cf627a2b016ac8ab626e12e';
+const CLEANUP_KEY_HASH_DEFAULT_ = '9362828837d52f41da1f9e50b956912c0475216b27c1fc251d2acde79c555a9d';
+const CLEANUP_KEY_ROUNDS_ = 2500;
+
+function timingSafeEqualHex_(a, b) {
+  if (!a || !b || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= (a.charCodeAt(i) ^ b.charCodeAt(i));
+  }
+  return diff === 0;
+}
+
+function verificarClaveLimpiezaGas_(claveIngresada) {
+  const clave = String(claveIngresada || '').trim();
+  if (!clave) return false;
+  const props = PropertiesService.getScriptProperties();
+  const customHash = String(props.getProperty('CLEANUP_KEY_HASH') || '').trim().toLowerCase();
+  const customSalt = String(props.getProperty('CLEANUP_KEY_SALT') || CLEANUP_KEY_SALT_DEFAULT_).trim();
+  const expectedHash = customHash || CLEANUP_KEY_HASH_DEFAULT_;
+  const rounds = Number(props.getProperty('CLEANUP_KEY_ROUNDS') || CLEANUP_KEY_ROUNDS_) || CLEANUP_KEY_ROUNDS_;
+
+  let actual = hashSha256Hex_(customSalt + ':' + clave);
+  for (let r = 1; r < rounds; r++) {
+    actual = hashSha256Hex_(customSalt + ':' + actual);
+  }
+  return timingSafeEqualHex_(actual.toLowerCase(), expectedHash);
+}
+
+function limpiarDatosPruebaBackend(payload, omitirClavePorEditor) {
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
@@ -1592,6 +1621,12 @@ function limpiarDatosPruebaBackend(payload) {
     const rol = String(usuarioActivo.rol || (payload && payload.rol) || '').trim().toLowerCase();
     if (rol && rol !== 'admin' && rol !== 'administrador') {
       return { ok: false, error: 'Acceso restringido: esta acción requiere rol Admin.' };
+    }
+    if (omitirClavePorEditor !== true) {
+      const clave = (payload && (payload.securityKey || payload.claveSeguridad || payload.clave)) || '';
+      if (!verificarClaveLimpiezaGas_(clave)) {
+        return { ok: false, error: 'Clave de seguridad incorrecta o faltante para limpiar datos de prueba.' };
+      }
     }
 
     const limpiarSolicitudes = !payload || payload.limpiarSolicitudes !== false;
@@ -1657,7 +1692,7 @@ function limpiarDatosPruebaCompleto() {
     limpiarSolicitudes: true,
     limpiarPadron: true,
     incluirDrive: true
-  });
+  }, true);
 }
 
 function reasignarAnalistaBackend(payload) {

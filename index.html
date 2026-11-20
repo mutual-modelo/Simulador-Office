@@ -6671,6 +6671,43 @@
     </div>
   </div>
 
+  <!-- MODAL 2D: AUTORIZACIÓN CON CLAVE DE SEGURIDAD PARA LIMPIAR PRUEBAS -->
+  <div id="modalLimpiarPruebasSeguridad" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
+    <div class="modal-window" style="max-width: 460px;">
+      <div class="modal-header-bar" style="background:#fff1f2;border-bottom:1px solid #fecdd3;">
+        <div class="modal-header-title" style="color:#9f1239;display:flex;align-items:center;gap:6px;">
+          <span style="font-size:1.05rem;">🔒</span>
+          <span style="font-weight:700;font-size:0.9rem;">Clave de Seguridad — Limpiar Pruebas</span>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="cerrarModal('modalLimpiarPruebasSeguridad')">&times;</button>
+      </div>
+      <div class="modal-body-scroll" style="padding:1.25rem;">
+        <p style="font-size:0.84rem;color:#334155;margin:0 0 0.75rem 0;line-height:1.5;">
+          Esta acción eliminará todas las gestiones de prueba, registros del Padrón de Asociados y subcarpetas temporales en Drive. Los usuarios del sistema y boletines oficiales se mantienen intactos.
+        </p>
+        <div style="margin-bottom:0.75rem;">
+          <label for="inputClaveLimpiarPruebas" style="display:block;font-size:0.76rem;font-weight:700;color:#475569;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;">
+            Clave de autorización
+          </label>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input type="password" id="inputClaveLimpiarPruebas" autocomplete="new-password" placeholder="Ingresá la clave de seguridad"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();ejecutarLimpiarDatosPruebaConfirmado();}"
+              style="flex:1;padding:0.55rem 0.75rem;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.9rem;color:#0f172a;background:#ffffff;outline:none;"/>
+            <button type="button" id="btnToggleClaveLimpiar" onclick="toggleVisibilidadClaveLimpiarPruebas()" title="Mostrar u ocultar clave"
+              style="padding:0.52rem 0.7rem;border:1.5px solid #cbd5e1;border-radius:8px;background:#f8fafc;cursor:pointer;font-size:0.9rem;">👁️</button>
+          </div>
+        </div>
+        <div id="limpiarPruebasErrorBox" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:8px;padding:0.6rem 0.75rem;font-size:0.78rem;font-weight:600;line-height:1.4;"></div>
+      </div>
+      <div class="flex items-center justify-end gap-2 p-3 bg-slate-50 border-t border-slate-200">
+        <button type="button" class="btn-modal-cancel" onclick="cerrarModal('modalLimpiarPruebasSeguridad')">Cancelar</button>
+        <button type="button" id="btnConfirmarLimpiarPruebas" onclick="ejecutarLimpiarDatosPruebaConfirmado()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-xs shadow-xs transition-colors cursor-pointer" style="background-color:#e11d48;border:1px solid #be123c;color:#ffffff;">
+          <span>🧹 Confirmar y Limpiar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL 3: GESTIÓN RESOLUCIÓN MUTUAL -->
   <div id="modalGestionMutual" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
     <div class="modal-window modal-large">
@@ -16587,7 +16624,16 @@ ${cierreTxt}`;
       }
     }
 
-    async function limpiarDatosPruebaSistema(scope = 'all') {
+    function toggleVisibilidadClaveLimpiarPruebas() {
+      const inp = document.getElementById('inputClaveLimpiarPruebas');
+      const btn = document.getElementById('btnToggleClaveLimpiar');
+      if (!inp) return;
+      const esPass = inp.type === 'password';
+      inp.type = esPass ? 'text' : 'password';
+      if (btn) btn.textContent = esPass ? '🙈' : '👁️';
+    }
+
+    function limpiarDatosPruebaSistema(scope = 'all') {
       const sess = (typeof getSession === 'function') ? getSession() : null;
       const rolLower = String((sess && (sess.rol || sess.role)) || '').trim().toLowerCase();
       if (rolLower !== 'admin' && rolLower !== 'administrador') {
@@ -16595,32 +16641,102 @@ ${cierreTxt}`;
         return;
       }
 
-      if (!confirm('¿Confirmás eliminar todas las gestiones de prueba, registros del Padrón y carpetas de prueba en Drive? Los paneles quedarán completamente limpios.')) {
+      window._limpiarPruebasScopePendiente = scope || 'all';
+      const inp = document.getElementById('inputClaveLimpiarPruebas');
+      const errBox = document.getElementById('limpiarPruebasErrorBox');
+      const btn = document.getElementById('btnConfirmarLimpiarPruebas');
+      const btnToggle = document.getElementById('btnToggleClaveLimpiar');
+      if (inp) {
+        inp.value = '';
+        inp.type = 'password';
+      }
+      if (btnToggle) btnToggle.textContent = '👁️';
+      if (errBox) {
+        errBox.style.display = 'none';
+        errBox.textContent = '';
+      }
+      if (btn) btn.disabled = false;
+
+      if (typeof abrirModal === 'function') {
+        abrirModal('modalLimpiarPruebasSeguridad');
+        setTimeout(() => { if (inp) inp.focus(); }, 80);
+      }
+    }
+
+    async function ejecutarLimpiarDatosPruebaConfirmado() {
+      const sess = (typeof getSession === 'function') ? getSession() : null;
+      const rolLower = String((sess && (sess.rol || sess.role)) || '').trim().toLowerCase();
+      if (rolLower !== 'admin' && rolLower !== 'administrador') {
+        showToast('⛔ Solo usuarios con rol Admin pueden limpiar datos de prueba.');
         return;
       }
 
-      mostrarCargando('Limpiando datos de prueba...', 'Vaciando Gestiones, Padrón y archivos temporales');
+      const scope = window._limpiarPruebasScopePendiente || 'all';
+      const inp = document.getElementById('inputClaveLimpiarPruebas');
+      const errBox = document.getElementById('limpiarPruebasErrorBox');
+      const btn = document.getElementById('btnConfirmarLimpiarPruebas');
+      const claveIngresada = String((inp && inp.value) || '').trim();
+
+      const mostrarErrorModal = (msg) => {
+        if (errBox) {
+          errBox.textContent = msg;
+          errBox.style.display = 'block';
+        }
+        if (inp) {
+          inp.focus();
+          inp.select();
+        }
+      };
+
+      if (!claveIngresada) {
+        mostrarErrorModal('⚠️ Debés ingresar la clave de seguridad para habilitar la limpieza.');
+        return;
+      }
+
+      if (errBox) {
+        errBox.style.display = 'none';
+        errBox.textContent = '';
+      }
+      if (btn) btn.disabled = true;
+
+      mostrarCargando('Validando clave y limpiando...', 'Verificando autorización y vaciando paneles');
       try {
-        try { localStorage.removeItem(STORAGE_SOLICITUDES_KEY); } catch (_) {}
-        if (window.estadoApp) window.estadoApp.solicitudes = [];
+        let verificadoBackend = false;
 
         if (typeof RENDER_API_URL === 'string' && RENDER_API_URL.startsWith('http')) {
           const respSupa = await fetchConTimeout(`${RENDER_API_URL}/api/admin/limpiar-pruebas`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Cleanup-Key': claveIngresada
+            },
             body: JSON.stringify({
               limpiarSolicitudes: scope === 'all' || scope === 'solicitudes',
-              limpiarPadron: scope === 'all' || scope === 'padron'
+              limpiarPadron: scope === 'all' || scope === 'padron',
+              securityKey: claveIngresada
             })
-          }, 25000).catch(() => null);
-          if (respSupa && !respSupa.ok) {
-            const errJson = await respSupa.json().catch(() => ({}));
-            console.warn('Limpieza Supabase avisó:', errJson.detail || respSupa.status);
+          }, 45000).catch(() => null);
+
+          if (!respSupa) {
+            mostrarErrorModal('⚠️ No se pudo conectar con el servidor para verificar la clave de seguridad. Intentá nuevamente en unos segundos.');
+            return;
           }
+
+          if (!respSupa.ok) {
+            const errJson = await respSupa.json().catch(() => ({}));
+            const detalle = errJson.detail || (respSupa.status === 403 || respSupa.status === 401
+              ? 'Clave de seguridad incorrecta o sesión no autorizada.'
+              : ('Error HTTP ' + respSupa.status));
+            if (inp) inp.value = '';
+            mostrarErrorModal('❌ ' + detalle);
+            return;
+          }
+
+          verificadoBackend = true;
         }
 
         if (typeof APPS_SCRIPT_URL === 'string' && APPS_SCRIPT_URL.startsWith('http')) {
-          await fetchConTimeout(APPS_SCRIPT_URL, {
+          const respGas = await fetchConTimeout(APPS_SCRIPT_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({
@@ -16628,13 +16744,37 @@ ${cierreTxt}`;
               limpiarSolicitudes: scope === 'all' || scope === 'solicitudes',
               limpiarPadron: scope === 'all' || scope === 'padron',
               incluirDrive: true,
+              securityKey: claveIngresada,
               usuarioActivo: sess
             })
-          }, 25000).catch(console.warn);
+          }, 30000).catch(() => null);
+
+          if (respGas && respGas.ok) {
+            const gasJson = await respGas.json().catch(() => null);
+            if (gasJson && gasJson.ok === false) {
+              if (!verificadoBackend) {
+                if (inp) inp.value = '';
+                mostrarErrorModal('❌ ' + (gasJson.error || 'Clave de seguridad incorrecta.'));
+                return;
+              }
+              showToast('⚠️ Aviso Sheets/Drive: ' + (gasJson.error || 'No se pudo completar limpieza en Apps Script'));
+            }
+          } else if (!verificadoBackend) {
+            mostrarErrorModal('⚠️ No se pudo verificar la clave en el servidor.');
+            return;
+          }
+        } else if (!verificadoBackend) {
+          mostrarErrorModal('⚠️ No hay servidor configurado para validar la clave.');
+          return;
         }
 
+        try { localStorage.removeItem(STORAGE_SOLICITUDES_KEY); } catch (_) {}
+        if (window.estadoApp) window.estadoApp.solicitudes = [];
         saveStoredSolicitudes([]);
         window._fichaPadronDniActivo = '';
+        if (inp) inp.value = '';
+        if (typeof cerrarModal === 'function') cerrarModal('modalLimpiarPruebasSeguridad');
+
         if (typeof renderModuloComercializador === 'function') renderModuloComercializador();
         if (typeof renderModuloMutualPropias === 'function') renderModuloMutualPropias();
         if (typeof renderModuloMutual === 'function') renderModuloMutual();
@@ -16647,8 +16787,9 @@ ${cierreTxt}`;
         showToast('✅ Paneles de Gestiones y Padrón limpiados correctamente.');
       } catch (err) {
         console.error('Error en limpieza de datos de prueba:', err);
-        showToast('⚠️ Error durante la limpieza: ' + (err && err.message ? err.message : String(err)));
+        mostrarErrorModal('⚠️ Error durante la limpieza: ' + (err && err.message ? err.message : String(err)));
       } finally {
+        if (btn) btn.disabled = false;
         ocultarCargando();
       }
     }

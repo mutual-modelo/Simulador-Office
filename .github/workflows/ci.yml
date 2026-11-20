@@ -14,6 +14,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - uses: oven-sh/setup-bun@v2
       - name: Validar sintaxis JS embebida en index.html y JSON del padrón
         run: |
           python3 - <<'PY'
@@ -37,7 +38,7 @@ jobs:
                   sys.exit(f"Error de sintaxis JS en script inline #{i}")
           print(f"Scripts inline válidos: {len(scripts)}")
           PY
-      - name: Instalar dependencias y verificar build Vite
+      - name: Instalar dependencias con Bun y verificar build Vite
         run: |
-          npm install --no-audit --no-fund
-          npm run build
+          bun install --frozen-lockfile
+          bun run build

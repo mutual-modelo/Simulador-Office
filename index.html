@@ -1540,6 +1540,116 @@
     .faq-badge-prov { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
     .faq-badge-mun { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
 
+    /* Reproductor de Videotutoriales en Centro de Ayuda */
+    .wiki-video-theater {
+      grid-column: 1 / -1;
+      background: #0f172a;
+      border-radius: 14px;
+      border: 1px solid #1e293b;
+      overflow: hidden;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.16);
+    }
+    .wiki-video-theater-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.65rem;
+      padding: 0.75rem 1rem;
+      background: linear-gradient(135deg, #0f2d4a 0%, #135596 100%);
+      color: #ffffff;
+    }
+    .wiki-video-theater-title {
+      font-size: 0.86rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .wiki-video-theater-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .wiki-video-ctrl-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.7rem;
+      border-radius: 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s ease;
+    }
+    .wiki-video-ctrl-btn:hover {
+      background: rgba(255, 255, 255, 0.24);
+      color: #ffffff;
+    }
+    .wiki-video-frame-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      max-height: 440px;
+      background: #020617;
+    }
+    .wiki-video-frame-wrap:fullscreen,
+    .wiki-video-frame-wrap:-webkit-full-screen {
+      max-height: none;
+      width: 100vw;
+      height: 100vh;
+    }
+    .wiki-video-frame-wrap iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+    .wiki-video-card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 0.65rem;
+    }
+    .wiki-video-mini-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.32rem 0.65rem;
+      border-radius: 7px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #0f2d4a;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    .wiki-video-mini-btn:hover {
+      background: #eff6ff;
+      border-color: #93c5fd;
+      color: #135596;
+    }
+    .wiki-video-mini-btn.is-primary {
+      background: #135596;
+      border-color: #135596;
+      color: #ffffff;
+    }
+    .wiki-video-mini-btn.is-primary:hover {
+      background: #0f4477;
+      color: #ffffff;
+    }
+    .wiki-video-card.is-playing {
+      border-color: #135596;
+      box-shadow: 0 0 0 2px rgba(19, 85, 150, 0.18);
+    }
+
     .wiki-empty-search {
       padding: 2.4rem 1.2rem;
       text-align: center;
@@ -6782,11 +6892,11 @@
           <svg class="wiki-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
-          <input type="text" id="input-buscar-faq" class="wiki-search-input" placeholder="Buscar por tema, código o trámite (ej: QR, SAGE, 366, 80 años, biometría, CBU)..." oninput="filtrarFAQ(_activeFaqCategory)"/>
+          <input type="text" id="input-buscar-faq" class="wiki-search-input" placeholder="Buscar por tema, código o trámite (ej: Sidecreer, Plan 3, Vikingo, QR, SAGE, video, 60 días)..." oninput="filtrarFAQ(_activeFaqCategory)"/>
           <button type="button" id="btnFaqClearSearch" class="wiki-search-clear-btn" style="display:none;" onclick="limpiarBusquedaFaq()" title="Limpiar búsqueda">&times;</button>
         </div>
         <div class="wiki-search-meta-row">
-          <span id="faqResultsCount" class="faq-results-counter">Mostrando 20 resultados</span>
+          <span id="faqResultsCount" class="faq-results-counter">Mostrando 32 resultados</span>
           <span class="faq-search-hint">Mutual Modelo • AMMER · Guía Operativa Oficial</span>
         </div>
       </div>
@@ -6807,6 +6917,17 @@
           >
             <span>⭐</span>
             <span>Todas las Guías</span>
+          </button>
+
+          <!-- Videos Tutoriales -->
+          <button
+            type="button"
+            onclick="filtrarFAQPorCategoria('videos', this)"
+            class="btn-categoria-faq inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/80 transition-all whitespace-nowrap"
+            data-cat="videos"
+          >
+            <span>🎬</span>
+            <span>Videos Tutoriales</span>
           </button>
 
           <!-- 2. Requisitos y Haberes -->
@@ -6874,10 +6995,21 @@
             <span>📑</span>
             <span>6. Legajos, Estados &amp; Pagos</span>
           </button>
+
+          <!-- 8. Convenio Sidecreer & Vikingo -->
+          <button
+            type="button"
+            onclick="filtrarFAQPorCategoria('sidecreer', this)"
+            class="btn-categoria-faq inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/80 transition-all whitespace-nowrap"
+            data-cat="sidecreer"
+          >
+            <span>🟣</span>
+            <span>7. Convenio Sidecreer &amp; Vikingo</span>
+          </button>
         </div>
       </div>
 
-      <!-- CUERPO DE LA WIKI: 6 CATEGORÍAS EN GRILLA DE 2 COLUMNAS -->
+      <!-- CUERPO DE LA WIKI -->
       <div class="wiki-body" id="wikiBody">
 
         <!-- MENSAJE DE ESTADO VACÍO (SIN RESULTADOS) -->
@@ -6885,6 +7017,104 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           <h4>No se encontraron respuestas</h4>
           <p id="faqNoResultsMsg">No encontramos ninguna coincidencia para tu búsqueda. Intenta con otra palabra clave o selecciona "Todas las Guías".</p>
+        </div>
+
+        <!-- CATEGORÍA VIDEOS: VIDEOTUTORIALES INTEGRADOS -->
+        <div class="faq-category-block grid grid-cols-1 lg:grid-cols-2 gap-4" data-category="videos">
+          <div class="faq-category-header">
+            <span>🎬</span>
+            <span>Videotutoriales Operativos — Plataforma &amp; Convenio Sidecreer</span>
+          </div>
+
+          <div id="wikiVideoTheaterBox" class="wiki-video-theater">
+            <div class="wiki-video-theater-head">
+              <div class="wiki-video-theater-title">
+                <span>▶️</span>
+                <span id="wikiVideoCurrentTitle">1. Acceso y Simulador de Ayudas Económicas</span>
+              </div>
+              <div class="wiki-video-theater-actions">
+                <button type="button" onclick="pantallaCompletaVideoWiki()" class="wiki-video-ctrl-btn" title="Ver reproductor en pantalla completa">
+                  <span>⛶ Pantalla completa</span>
+                </button>
+                <a id="wikiVideoOpenNewTab" href="https://drive.google.com/file/d/1y5sKmW3nzdwRA96i8-PvyybPiUYR99OM/view" target="_blank" rel="noopener noreferrer" class="wiki-video-ctrl-btn" title="Abrir video en una pestaña nueva">
+                  <span>↗ Abrir en pestaña nueva</span>
+                </a>
+              </div>
+            </div>
+            <div id="wikiVideoPlayerFrameWrap" class="wiki-video-frame-wrap">
+              <iframe id="wikiVideoPlayerIframe" src="about:blank" title="Videotutorial Mutual Modelo" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+            </div>
+          </div>
+
+          <details class="faq-item wiki-video-card is-playing group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="videos" data-video-id="1y5sKmW3nzdwRA96i8-PvyybPiUYR99OM" open>
+            <summary>
+              <span><span class="faq-badge faq-badge-sim">VIDEO 1</span> Acceso y Simulador de Ayudas Económicas</span>
+            </summary>
+            <div class="faq-answer">
+              <p>Ingreso a la plataforma web, selección de línea (FEDEM, QUAD Municipales, Convenio Sidecreer), cálculo por Cuota Objetivo, tabla comparativa de plazos y plantilla de WhatsApp.</p>
+              <div class="wiki-video-card-actions">
+                <button type="button" onclick="seleccionarVideoCentroAyuda('1y5sKmW3nzdwRA96i8-PvyybPiUYR99OM', '1. Acceso y Simulador de Ayudas Económicas', true)" class="wiki-video-mini-btn is-primary">▶ Ver aquí</button>
+                <button type="button" onclick="abrirVideoPantallaCompletaWiki('1y5sKmW3nzdwRA96i8-PvyybPiUYR99OM', '1. Acceso y Simulador de Ayudas Económicas')" class="wiki-video-mini-btn">⛶ Pantalla completa</button>
+                <a href="https://drive.google.com/file/d/1y5sKmW3nzdwRA96i8-PvyybPiUYR99OM/view" target="_blank" rel="noopener noreferrer" class="wiki-video-mini-btn">↗ Pestaña nueva</a>
+              </div>
+            </div>
+          </details>
+
+          <details class="faq-item wiki-video-card group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="videos" data-video-id="1HTEnperK1CM5zkwttU0mV1VYKhdwUABr">
+            <summary>
+              <span><span class="faq-badge faq-badge-ai">VIDEO 2</span> Auditoría Documental IA (Recibos, DNI, Domicilio, CajaJper, Boletín)</span>
+            </summary>
+            <div class="faq-answer">
+              <p>Uso del módulo Auditoría IA para carga de recibos, validación de DNI frente/dorso, constancias/boletas de domicilio, consulta previsional CajaJper y Boletín Oficial de Entre Ríos.</p>
+              <div class="wiki-video-card-actions">
+                <button type="button" onclick="seleccionarVideoCentroAyuda('1HTEnperK1CM5zkwttU0mV1VYKhdwUABr', '2. Auditoría Documental IA', true)" class="wiki-video-mini-btn is-primary">▶ Ver aquí</button>
+                <button type="button" onclick="abrirVideoPantallaCompletaWiki('1HTEnperK1CM5zkwttU0mV1VYKhdwUABr', '2. Auditoría Documental IA')" class="wiki-video-mini-btn">⛶ Pantalla completa</button>
+                <a href="https://drive.google.com/file/d/1HTEnperK1CM5zkwttU0mV1VYKhdwUABr/view" target="_blank" rel="noopener noreferrer" class="wiki-video-mini-btn">↗ Pestaña nueva</a>
+              </div>
+            </div>
+          </details>
+
+          <details class="faq-item wiki-video-card group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="videos" data-video-id="1LkVJUuWxIjVmTl3yxWS9vZ3DvadAn4S9">
+            <summary>
+              <span><span class="faq-badge faq-badge-fedem">VIDEO 3</span> Mis Gestiones y Carga de Nueva Solicitud</span>
+            </summary>
+            <div class="faq-answer">
+              <p>Bandeja de gestiones (Tabla, Kanban, Calendario), alta digital con + Nueva Solicitud, adjunto de documentación obligatoria, seguimiento de estados y chat interno por expediente.</p>
+              <div class="wiki-video-card-actions">
+                <button type="button" onclick="seleccionarVideoCentroAyuda('1LkVJUuWxIjVmTl3yxWS9vZ3DvadAn4S9', '3. Mis Gestiones y Carga de Solicitudes', true)" class="wiki-video-mini-btn is-primary">▶ Ver aquí</button>
+                <button type="button" onclick="abrirVideoPantallaCompletaWiki('1LkVJUuWxIjVmTl3yxWS9vZ3DvadAn4S9', '3. Mis Gestiones y Carga de Solicitudes')" class="wiki-video-mini-btn">⛶ Pantalla completa</button>
+                <a href="https://drive.google.com/file/d/1LkVJUuWxIjVmTl3yxWS9vZ3DvadAn4S9/view" target="_blank" rel="noopener noreferrer" class="wiki-video-mini-btn">↗ Pestaña nueva</a>
+              </div>
+            </div>
+          </details>
+
+          <details class="faq-item wiki-video-card group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="videos" data-video-id="14RbYEms8oSZK0-nqz3x_BOkRdv262cvG">
+            <summary>
+              <span><span class="faq-badge faq-badge-pad">VIDEO 4</span> Centro de Ayuda / Wiki y Buscador de Guías</span>
+            </summary>
+            <div class="faq-answer">
+              <p>Cómo buscar rápidamente requisitos, instructivos, códigos de descuento y guías operativas dentro del menú Centro de Ayuda.</p>
+              <div class="wiki-video-card-actions">
+                <button type="button" onclick="seleccionarVideoCentroAyuda('14RbYEms8oSZK0-nqz3x_BOkRdv262cvG', '4. Uso del Centro de Ayuda / Wiki', true)" class="wiki-video-mini-btn is-primary">▶ Ver aquí</button>
+                <button type="button" onclick="abrirVideoPantallaCompletaWiki('14RbYEms8oSZK0-nqz3x_BOkRdv262cvG', '4. Uso del Centro de Ayuda / Wiki')" class="wiki-video-mini-btn">⛶ Pantalla completa</button>
+                <a href="https://drive.google.com/file/d/14RbYEms8oSZK0-nqz3x_BOkRdv262cvG/view" target="_blank" rel="noopener noreferrer" class="wiki-video-mini-btn">↗ Pestaña nueva</a>
+              </div>
+            </div>
+          </details>
+
+          <details class="faq-item wiki-video-card group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="videos" data-video-id="1cBeeJ4P0Yu8qknqy8O5WurpbqRLrjof8">
+            <summary>
+              <span><span class="faq-badge faq-badge-side">VIDEO 5</span> Tutorial Convenio Sidecreer (Operatoria Completa)</span>
+            </summary>
+            <div class="faq-answer">
+              <p>Recorrido audiovisual completo de la operatoria de Ayudas Económicas por Convenio Tarjeta Sidecreer (video tutorial completo 1120).</p>
+              <div class="wiki-video-card-actions">
+                <button type="button" onclick="seleccionarVideoCentroAyuda('1cBeeJ4P0Yu8qknqy8O5WurpbqRLrjof8', '5. Tutorial Convenio Sidecreer (Operatoria Completa)', true)" class="wiki-video-mini-btn is-primary">▶ Ver aquí</button>
+                <button type="button" onclick="abrirVideoPantallaCompletaWiki('1cBeeJ4P0Yu8qknqy8O5WurpbqRLrjof8', '5. Tutorial Convenio Sidecreer (Operatoria Completa)')" class="wiki-video-mini-btn">⛶ Pantalla completa</button>
+                <a href="https://drive.google.com/file/d/1cBeeJ4P0Yu8qknqy8O5WurpbqRLrjof8/view" target="_blank" rel="noopener noreferrer" class="wiki-video-mini-btn">↗ Pestaña nueva</a>
+              </div>
+            </div>
+          </details>
         </div>
 
         <!-- CATEGORÍA 1: REQUISITOS INICIALES Y VALIDACIÓN DEL RECIBO DE SUELDO -->
@@ -7056,22 +7286,24 @@
               <span><span class="faq-badge faq-badge-side">MARGEN NEGATIVO</span> 13. ¿Qué se informa al solicitante si el análisis arroja cupo o margen negativo?</span>
             </summary>
             <div class="faq-answer">
-              <p>Se le notifica formalmente que <strong>no cuenta con cupo disponible por el mes en curso</strong> y se le solicita comunicarse el mes siguiente para reevaluar su situación con la nueva liquidación de haberes actualizada.</p>
+              <p>Primeramente se evalúa si corresponde otorgar la ayuda económica por recibo de haberes (código <strong>FEDEM</strong> o <strong>CUAD</strong>). Si no dispone de cupo en recibo, se le puede ofrecer la alternativa por <strong>Convenio Tarjeta Sidecreer</strong> (cobrando la Cuota Social por recibo FEDEM/CUAD o por Sidecreer según corresponda).</p>
+              <p>Si tampoco aplica canal alternativo, se le notifica formalmente que <strong>no cuenta con cupo disponible por el mes en curso</strong> y se le solicita comunicarse el mes siguiente con su nueva liquidación.</p>
             </div>
           </details>
 
           <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="cuota_social">
             <summary>
-              <span><span class="faq-badge faq-badge-side">MARGEN POSITIVO</span> 14. ¿Cuál es la documentación completa a exigir cuando el margen es positivo?</span>
+              <span><span class="faq-badge faq-badge-side">MARGEN POSITIVO</span> 14. ¿Cuál es la documentación completa a exigir al solicitante?</span>
             </summary>
             <div class="faq-answer">
               <ul>
-                <li>Recibo de sueldo en formato <strong>PDF original</strong>.</li>
-                <li>Fotografía nítida de <strong>DNI frente y dorso</strong>.</li>
+                <li>Recibo de sueldo actual en formato <strong>PDF original</strong>.</li>
+                <li>Fotografía nítida de <strong>DNI frente y dorso</strong> (corroborando que no esté vencido).</li>
                 <li>Número de <strong>celular propio y alternativo</strong>.</li>
-                <li>Constancia de <strong>CUIL</strong> y correo electrónico en uso.</li>
+                <li>Número/Constancia de <strong>CUIL</strong> y correo electrónico en uso.</li>
                 <li>Constancia oficial de <strong>CBU bancario</strong>.</li>
-                <li>Factura de servicio a su nombre o Certificado de Vecindad con fecha de emisión no mayor a <strong>2 meses</strong>.</li>
+                <li>Factura de servicio o Constancia Policial con fecha de emisión no mayor a <strong>60 días</strong> (las relaciones entre vigencia y vencimiento varían según el servicio).</li>
+                <li><strong>Si opera por Convenio Sidecreer:</strong> además, foto frente y dorso de la <strong>Tarjeta Sidecreer</strong> (verificando los 16 dígitos), <strong>último resumen de tarjeta</strong> y <strong>captura de pantalla del disponible</strong> consultado con Sidecreer.</li>
               </ul>
             </div>
           </details>
@@ -7126,11 +7358,11 @@
 
           <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="circuitos">
             <summary>
-              <span><span class="faq-badge faq-badge-ai">BIOMETRÍA &amp; ESTADOS</span> 19. ¿Cómo funciona el circuito de validación biométrica y cambio de estados?</span>
+              <span><span class="faq-badge faq-badge-ai">BIOMETRÍA &amp; ESTADOS</span> 19. ¿Cómo funciona el circuito de estados en Mis Gestiones, Vikingo y validación Metamap?</span>
             </summary>
             <div class="faq-answer">
-              <p>Cuando el legajo está conforme, se remite un enlace por correo al titular para la <strong>validación biométrica de identidad</strong>, pasando el trámite a estado <strong>ENVIADO</strong>.</p>
-              <p>Una vez validado y confirmado por la Mutual, pasa a estado <strong>AUTORIZADO</strong> para liquidación. Una vez transferidos los fondos, el estado definitivo pasa a <strong>ENTREGADO</strong> o <strong>LIQUIDADO</strong>.</p>
+              <p>En <strong>Mis Gestiones</strong> podés filtrar por línea y seguir los estados: <strong>Pendiente 🟡</strong>, <strong>En Análisis 🔵</strong>, <strong>Observado 🟠</strong>, <strong>Aprobado 🟢</strong>, <strong>Liquidado 🟢</strong> y <strong>Rechazado 🔴</strong>, usando el chat interno de la ficha ante cualquier consulta.</p>
+              <p>Tras aprobar la operación en Vikingo (<em>Administrador de Aprobaciones &gt; Cbtes. Pend. de Aprobar &gt; Acciones &gt; Aprobar</em>), el sistema envía automáticamente un correo electrónico al asociado con el enlace para completar su <strong>validación de identidad en METAMAP</strong>. Confirmada y liquidada la transferencia, el trámite pasa a estado definitivo <strong>ENTREGADO / LIQUIDADO</strong>.</p>
             </div>
           </details>
 
@@ -7147,6 +7379,121 @@
                 <li><strong>Declaración Jurada UIF Resolución 192 (PEP)</strong></li>
               </ul>
               <p>Al cierre, se adjunta el <strong>comprobante de transferencia bancaria oficial</strong>.</p>
+            </div>
+          </details>
+        </div>
+
+        <!-- CATEGORÍA 7: CONVENIO TARJETA SIDECREER, CALCULADOR WEB Y SISTEMA VIKINGO -->
+        <div class="faq-category-block grid grid-cols-1 lg:grid-cols-2 gap-4" data-category="sidecreer">
+          <div class="faq-category-header">
+            <span>🟣</span>
+            <span>7. Convenio Tarjeta Sidecreer, Calculador Web &amp; Sistema Vikingo</span>
+          </div>
+
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="sidecreer">
+            <summary>
+              <span><span class="faq-badge faq-badge-side">DISPONIBLE SIDECREER</span> 21. ¿Cómo consultar el disponible en cuotas de Tarjeta Sidecreer y qué pedir inicialmente?</span>
+            </summary>
+            <div class="faq-answer">
+              <p>Cuando la persona solicita Ayuda Económica por Sidecreer (Asistente Alba o canal comercial), se deben pedir los <strong>16 dígitos de su Tarjeta Sidecreer</strong>.</p>
+              <ul>
+                <li>Agendar el WhatsApp oficial de Sidecreer: <strong>3435 309-272</strong>.</li>
+                <li>Elegir <strong>Opción 1: Conocer Disponible</strong> e ingresar los <strong>16 dígitos sin espacios en blanco</strong>.</li>
+                <li>Tomar <strong>captura de pantalla del disponible</strong> obtenido para adjuntar al legajo digital.</li>
+                <li>Con ese disponible en cuotas, simular la oferta en el Calculador eligiendo la línea <strong>Convenio Sidecreer</strong>.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="sidecreer">
+            <summary>
+              <span><span class="faq-badge faq-badge-mun">CRITERIOS SIDECREER</span> 22. ¿Qué límites y restricciones rigen para Convenio Sidecreer?</span>
+            </summary>
+            <div class="faq-answer">
+              <ul>
+                <li><strong>Suplentes de Salud:</strong> otorgar un plazo máximo de hasta <strong>18 cuotas</strong>.</li>
+                <li><strong>Quiebra:</strong> si la persona presenta quiebra, <strong>NO se otorga</strong> la ayuda económica.</li>
+                <li><strong>Verificación tarjeta:</strong> corroborar que los 16 dígitos de la foto frente/dorso de la tarjeta coincidan con los informados al consultar el disponible y adjuntar la captura del disponible.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="sidecreer">
+            <summary>
+              <span><span class="faq-badge faq-badge-side">PORTAL DE PAGOS</span> 23. ¿Cómo generar el Link de Pago y autorizar la operación en Sidecreer (Plan 3)?</span>
+            </summary>
+            <div class="faq-answer">
+              <p>Ingresar al portal oficial de pagos de Sidecreer (<code>pagos.sidecreer.com.ar</code>) con las credenciales institucionales de la Mutual y elegir <strong>ENVIAR LINK DE PAGO</strong>:</p>
+              <ul>
+                <li><strong>Referencia:</strong> <code>AYUDA ECONOMICA</code></li>
+                <li><strong>Código PRODUCTO/SERVICIO:</strong> <code>SIDECREER</code> · <strong>Nombre:</strong> cantidad de cuotas.</li>
+                <li><strong>Importe:</strong> <code>Monto de Cuota × Cantidad de Cuotas</code> (obtenido del Calculador AMMER).</li>
+                <li><strong>Vigencia del link:</strong> máximo <strong>24 hs</strong>.</li>
+                <li><strong>Correo inicial:</strong> cargar el <strong>correo del Comercial (NO el del asociado)</strong> para recibir el link (o buscarlo en <strong>LINKS ENVIADOS</strong>).</li>
+                <li>Al abrir el link, completar los datos personales y el <strong>email del asociado</strong> para su comprobante, presionar <strong>PAGAR</strong>, elegir <strong>SIEMPRE PLAN 3</strong> y el plan de cuotas acordado.</li>
+                <li><strong>Importante:</strong> hacer <strong>UN SOLO CLIC</strong> en Pagar y luego Aceptar para evitar operaciones duplicadas.</li>
+                <li>Finalmente, ir a <strong>MIS OPERACIONES</strong> (un solo clic) y verificar resultado <strong>AUTORIZADO</strong>. Si figura <strong>RECHAZADO</strong>, revalidar disponible, datos de tarjeta, Plan 3 y cuotas.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="sidecreer">
+            <summary>
+              <span><span class="faq-badge faq-badge-sim">CALCULADOR &amp; GESTIONES</span> 24. ¿Cómo usar el Calculador AMMER y cargar la solicitud en Mis Gestiones?</span>
+            </summary>
+            <div class="faq-answer">
+              <p><strong>En el Simulador:</strong></p>
+              <ul>
+                <li>Seleccionar línea (ej. <strong>Convenio Sidecreer</strong>), modo <strong>Cuota Objetivo</strong> (fijando la cuota máxima que el asociado puede abonar) y elegir plazo (6, 12, 18, 24, 36 o 48 meses).</li>
+                <li>Revisar el panel derecho: <strong>Monto de la Cuota</strong>, <strong>Monto a Entregar Neto</strong>, <strong>Total Ayuda Económica</strong> e <strong>Importe Solicitado</strong>; hacer clic en cualquier fila de la tabla de planes para comparar plazos y usar la <strong>Plantilla de WhatsApp</strong>.</li>
+              </ul>
+              <p><strong>En Mis Gestiones:</strong> visualizar casos en vista Tabla (sugerido), Kanban o Calendario, presionar <strong>+ Nueva Solicitud</strong>, completar datos personales/laborales, fijar línea/importe neto/plazo, adjuntar documentación obligatoria y presionar <strong>Registrar Solicitud en Servidor</strong>.</p>
+            </div>
+          </details>
+
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="sidecreer">
+            <summary>
+              <span><span class="faq-badge faq-badge-vik">VIKINGO ALTA</span> 25. ¿Cómo dar de alta a un nuevo Asociado Sidecreer en el sistema Vikingo?</span>
+            </summary>
+            <div class="faq-answer">
+              <p>Si la persona aún no pertenece a la Mutual, ir a <strong>Gestión &gt; Socios &gt; Admin. de Afiliados &gt; Hoja Blanca (Nuevo)</strong>:</p>
+              <ul>
+                <li>Seleccionar <strong>Sexo</strong> + <strong>DNI</strong> + <code>ENTER</code> (autocompleta CUIL). Cargar datos personales en <strong>MAYÚSCULAS</strong> y localidad desde los tres puntos.</li>
+                <li><strong>Domicilio:</strong> sin puntos ni comas (<code>0</code> si no tiene número), localidad, Clasificación <strong>PARTICULAR</strong> + <strong>PREDETERMINADO</strong> &gt; Aceptar.</li>
+                <li><strong>Teléfono:</strong> sin <code>0</code> ni <code>15</code>. <strong>Email:</strong> en <strong>MINÚSCULA</strong>.</li>
+                <li><strong>Afiliado &gt; Datos Afiliado:</strong> Categoría <code>ADH. SIDECREER</code> &gt; Aceptar.</li>
+                <li><strong>Convenios:</strong> seleccionar <code>CONVENIO SIDECREER</code>, pulsar Hoja Blanca y cargar los datos de la tarjeta en la celda <strong>VALOR</strong> &gt; Aceptar.</li>
+                <li><strong>Servicios:</strong> Concepto <code>CUOTA SOCIAL</code> (tres puntos + Enter), importe tildado en <strong>FUNCIÓN EXTERNA</strong> (arroja <code>$9.200,00</code> predeterminado), Convenio <code>CONVENIO SIDECREER</code>, Texto <code>CUOTA SOCIAL</code> &gt; Aceptar.</li>
+                <li><strong>Cuentas:</strong> se crea automáticamente &gt; Aceptar. <strong>Bancos:</strong> Hoja Blanca, buscar banco, tildar <strong>PREDETERMINADO</strong>, ingresar <strong>CBU + Enter</strong> &gt; Aceptar y Aceptar ficha completa.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="sidecreer">
+            <summary>
+              <span><span class="faq-badge faq-badge-vik">CUOTA SOCIAL (3 VARIANTES)</span> 26. ¿Cómo configurar la Cuota Social si el asociado opera por Sidecreer, FEDEM o Municipalidad?</span>
+            </summary>
+            <div class="faq-answer">
+              <p>Si el asociado ya existe en Vikingo, corroborar datos y aplicar la variante que corresponda en su ficha de Afiliado:</p>
+              <ul>
+                <li><strong>Variante 1 — Convenio + Cuota Social por SIDECREER:</strong> todo configurado por Convenio Sidecreer (aplica también para asociados de <strong>Municipalidad de San Benito</strong>).</li>
+                <li><strong>Variante 2 — Convenio SIDECREER + Cuota Social por FEDEM</strong> (empleados activos/pasivos provinciales sin cupo en recibo para AY EC): en Servicios tildar importe <strong>MANUAL</strong>, dar alta en sistema FEDEM para descuento por recibo, y en <em>Lanzador de Consultas &gt; Solicitud de Adhesión Sólo a Servicios</em> (ej. Proveeduría) cambiar Tema a <em>Mutuales – Documentación a Firmar por Asociados</em> y descargar/hacer firmar <strong>solo los 3 primeros documentos</strong>, corroborando la leyenda en CRM.</li>
+                <li><strong>Variante 3 — Convenio SIDECREER + Cuota Social por MUNICIPALIDAD PARANÁ:</strong> en Servicios tildar importe <strong>MANUAL</strong>, dar alta en sistema <strong>CUAD</strong>, hacer firmar el <strong>Alta CUAD</strong> y descargar desde Vikingo (botón <strong>Listado</strong>) la <strong>Ficha de Alta Completa</strong> y la <strong>DDJJ Solicitud de Fondos - PEP</strong>.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="faq-item group bg-white border border-slate-200 rounded-xl hover:border-blue-300 shadow-2xs" data-categoria="sidecreer">
+            <summary>
+              <span><span class="faq-badge faq-badge-vik">VIKINGO CRÉDITO</span> 27. ¿Cómo cargar la Ayuda Económica Sidecreer en Vikingo y aprobarla para Metamap?</span>
+            </summary>
+            <div class="faq-answer">
+              <ul>
+                <li>Ir a <strong>Créditos &gt; Préstamos Ordinarios</strong> y buscar al asociado con los tres puntos por Apellido y Nombre.</li>
+                <li>Completar: <strong>Convenio:</strong> <code>SIDECREER</code> · <strong>Canal:</strong> <code>Legajo Digital</code> · <strong>Fecha de Vencimiento:</strong> la indicada por el sistema cada mes · <strong>Línea de Crédito:</strong> <code>SIDECREER</code>.</li>
+                <li>En <strong>Importe Solicitado</strong> (campo anaranjado), ingresar el monto calculado por el <strong>Simulador/Calculador AMMER</strong> y en <strong>Tasa Serv</strong> seleccionar el plan elegido por el asociado &gt; <strong>ACEPTAR</strong>.</li>
+                <li><strong>Aprobación y Metamap:</strong> ir a <strong>Créditos &gt; Comprobantes &gt; Administrador de Aprobaciones</strong>, en <em>Clientes</em> elegir <strong>Cbtes. Pend. de Aprobar</strong>, seleccionar el trámite y hacer clic en <strong>Acciones &gt; Aprobar</strong>. El sistema enviará automáticamente al email del asociado el link de validación de identidad en <strong>METAMAP</strong>.</li>
+              </ul>
             </div>
           </details>
         </div>
@@ -10493,6 +10840,66 @@ ${cierreTxt}`;
       return document.querySelectorAll('#contenedor-categorias-faq .btn-categoria-faq, #faqPillsBar .wiki-pill-btn');
     }
 
+    let _wikiActiveVideoId = '1y5sKmW3nzdwRA96i8-PvyybPiUYR99OM';
+    let _wikiActiveVideoTitle = '1. Acceso y Simulador de Ayudas Económicas';
+
+    function seleccionarVideoCentroAyuda(videoId, titulo, autoScroll = true) {
+      const idClean = String(videoId || '').replace(/[^A-Za-z0-9_-]/g, '').trim();
+      if (!idClean) return;
+      _wikiActiveVideoId = idClean;
+      _wikiActiveVideoTitle = String(titulo || 'Videotutorial Mutual Modelo');
+
+      const iframe = document.getElementById('wikiVideoPlayerIframe');
+      const titleEl = document.getElementById('wikiVideoCurrentTitle');
+      const newTabEl = document.getElementById('wikiVideoOpenNewTab');
+      const targetPreviewUrl = 'https://drive.google.com/file/d/' + encodeURIComponent(idClean) + '/preview';
+      const targetViewUrl = 'https://drive.google.com/file/d/' + encodeURIComponent(idClean) + '/view';
+
+      if (iframe && iframe.getAttribute('data-loaded-id') !== idClean) {
+        iframe.src = targetPreviewUrl;
+        iframe.setAttribute('data-loaded-id', idClean);
+      }
+      if (titleEl) titleEl.textContent = _wikiActiveVideoTitle;
+      if (newTabEl) newTabEl.href = targetViewUrl;
+
+      document.querySelectorAll('.wiki-video-card').forEach(card => {
+        const cardVid = card.getAttribute('data-video-id');
+        card.classList.toggle('is-playing', cardVid === idClean);
+      });
+
+      if (autoScroll) {
+        const box = document.getElementById('wikiVideoTheaterBox');
+        if (box && typeof box.scrollIntoView === 'function') {
+          box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+    }
+
+    function pantallaCompletaVideoWiki() {
+      const wrap = document.getElementById('wikiVideoPlayerFrameWrap');
+      if (!wrap) return;
+      const reqFs = wrap.requestFullscreen || wrap.webkitRequestFullscreen || wrap.mozRequestFullScreen || wrap.msRequestFullscreen;
+      if (typeof reqFs === 'function') {
+        try {
+          const p = reqFs.call(wrap);
+          if (p && typeof p.catch === 'function') {
+            p.catch(() => window.open('https://drive.google.com/file/d/' + encodeURIComponent(_wikiActiveVideoId) + '/view', '_blank', 'noopener,noreferrer'));
+          }
+          return;
+        } catch (_) {}
+      }
+      window.open('https://drive.google.com/file/d/' + encodeURIComponent(_wikiActiveVideoId) + '/view', '_blank', 'noopener,noreferrer');
+    }
+
+    function abrirVideoPantallaCompletaWiki(videoId, titulo) {
+      seleccionarVideoCentroAyuda(videoId, titulo, true);
+      setTimeout(() => pantallaCompletaVideoWiki(), 80);
+    }
+
+    window.seleccionarVideoCentroAyuda = seleccionarVideoCentroAyuda;
+    window.pantallaCompletaVideoWiki = pantallaCompletaVideoWiki;
+    window.abrirVideoPantallaCompletaWiki = abrirVideoPantallaCompletaWiki;
+
     function abrirModalFaqWiki() {
       const modal = document.getElementById('modalFaqWiki') || document.getElementById('modal-faq');
       if (modal) {
@@ -10504,11 +10911,20 @@ ${cierreTxt}`;
         }
         const btnTodas = document.querySelector('#contenedor-categorias-faq .btn-categoria-faq[data-cat="todas"], #faqPillsBar .wiki-pill-btn[data-cat="todas"]');
         filtrarFAQPorCategoria('todas', btnTodas);
+        seleccionarVideoCentroAyuda(_wikiActiveVideoId, _wikiActiveVideoTitle, false);
         if (inp) setTimeout(() => inp.focus(), 150);
       }
     }
 
     function cerrarModalFaqWiki() {
+      if (document.fullscreenElement && typeof document.exitFullscreen === 'function') {
+        try { document.exitFullscreen(); } catch (_) {}
+      }
+      const iframe = document.getElementById('wikiVideoPlayerIframe');
+      if (iframe) {
+        iframe.src = 'about:blank';
+        iframe.removeAttribute('data-loaded-id');
+      }
       const modal = document.getElementById('modalFaqWiki') || document.getElementById('modal-faq');
       if (modal) {
         if (modal.id) cerrarModal(modal.id);

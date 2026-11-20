@@ -3283,6 +3283,46 @@
     .critical-alerts-box{background:#fff1f2;border:1px solid #fecdd3;border-radius:8px;padding:.75rem;margin-bottom:1rem}
     .critical-alerts-box h4{font-size:.72rem;font-weight:800;color:#9f1239;margin-bottom:.35rem;display:flex;align-items:center;gap:4px}
 
+    /* AUDITORÍA IA 2.0 & PADRÓN Y FICHAS — SISTEMA DE BOTONES Y CAMPOS */
+    .audit20-actions{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem}
+    .audit20-btn{display:inline-flex;align-items:center;justify-content:center;gap:.42rem;height:38px;padding:0 .95rem;border-radius:10px;border:1px solid #cbd5e1;background:#ffffff;color:#1e293b;font-family:var(--font-sans);font-size:.78rem;font-weight:700;letter-spacing:.01em;cursor:pointer;text-decoration:none;white-space:nowrap;box-shadow:0 1px 2px rgba(15,23,42,.06);transition:transform .12s ease,background-color .15s ease,border-color .15s ease,box-shadow .15s ease}
+    .audit20-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 10px rgba(15,23,42,.1)}
+    .audit20-btn:active:not(:disabled){transform:translateY(0)}
+    .audit20-btn:disabled{opacity:.6;cursor:not-allowed}
+    .audit20-btn:focus-visible{outline:2px solid #135596;outline-offset:2px}
+    .audit20-btn--lg{height:42px;padding:0 1.15rem;font-size:.8rem}
+    .audit20-btn--emerald{background:#047857;border-color:#065f46;color:#ffffff;box-shadow:0 2px 8px rgba(4,120,87,.22)}
+    .audit20-btn--emerald:hover:not(:disabled){background:#065f46;color:#ffffff}
+    .audit20-btn--navy{background:#0f2744;border-color:#0f2744;color:#ffffff;box-shadow:0 2px 8px rgba(15,39,68,.22)}
+    .audit20-btn--navy:hover:not(:disabled){background:#1e3a5f;color:#ffffff}
+    .audit20-btn--primary{background:#135596;border-color:#135596;color:#ffffff;box-shadow:0 2px 8px rgba(19,85,150,.24)}
+    .audit20-btn--primary:hover:not(:disabled){background:#0f457a;color:#ffffff}
+    .audit20-btn--indigo{background:#eef2ff;border-color:#c7d2fe;color:#3730a3}
+    .audit20-btn--indigo:hover:not(:disabled){background:#e0e7ff;border-color:#a5b4fc;color:#312e81}
+    .audit20-btn--secondary{background:#ffffff;border-color:#cbd5e1;color:#334155}
+    .audit20-btn--secondary:hover:not(:disabled){background:#f8fafc;border-color:#94a3b8;color:#0f172a}
+    .audit20-pill-tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:800;letter-spacing:.02em}
+    .audit20-tabs-bar{display:flex;flex-wrap:wrap;gap:.45rem;padding:.5rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:1rem}
+    .audit20-tab-btn{display:inline-flex;align-items:center;gap:.45rem;height:36px;padding:0 .85rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:.77rem;font-weight:700;cursor:pointer;transition:all .15s ease;white-space:nowrap}
+    .audit20-tab-btn:hover{border-color:#94a3b8;background:#f8fafc;color:#0f172a}
+    .audit20-tab-btn.is-active{background:#0f2744;border-color:#0f2744;color:#ffffff;box-shadow:0 2px 6px rgba(15,39,68,.2)}
+    .audit20-card{background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:1.25rem;box-shadow:0 1px 4px rgba(15,23,42,.03)}
+    .audit20-card-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem;border-bottom:1px solid #f1f5f9;padding-bottom:.8rem;margin-bottom:1rem}
+    .audit20-card-title{margin:0;font-size:.96rem;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+    .audit20-card-sub{margin:4px 0 0 0;font-size:.76rem;color:#64748b;line-height:1.45}
+    .audit20-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.85rem;margin-bottom:.95rem;align-items:end}
+    .audit20-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+    .audit20-label{font-size:.73rem;font-weight:700;color:#334155;letter-spacing:.01em}
+    .audit20-input,.audit20-select{width:100%;height:42px;padding:0 .85rem;border-radius:10px;border:1.5px solid #cbd5e1;background:#ffffff;color:#0f172a;font-size:.83rem;font-family:var(--font-sans);outline:none;transition:border-color .15s ease,box-shadow .15s ease}
+    .audit20-input.is-mono{font-family:var(--font-mono);letter-spacing:.02em}
+    .audit20-input:focus,.audit20-select:focus{border-color:#135596;box-shadow:0 0 0 3px rgba(19,85,150,.14)}
+    .audit20-input::placeholder{color:#94a3b8}
+    .audit20-file-input{width:100%;height:42px;padding:5px 8px;border-radius:10px;border:1.5px dashed #94a3b8;background:#f8fafc;color:#334155;font-size:.77rem;cursor:pointer;display:flex;align-items:center;transition:border-color .15s ease,background-color .15s ease}
+    .audit20-file-input:hover{border-color:#135596;background:#eff6ff}
+    .audit20-file-input::file-selector-button{height:30px;padding:0 11px;margin-right:10px;border:1px solid #cbd5e1;border-radius:7px;background:#ffffff;color:#0f2744;font-size:.73rem;font-weight:700;cursor:pointer;transition:background-color .15s ease}
+    .audit20-file-input::file-selector-button:hover{background:#f1f5f9}
+
+
     /* APARTADO EJECUTIVO EN FICHA DE EXPEDIENTE (EXCLUSIVO ANALISTAS) */
     .ai-executive-audit-card{background:#ffffff;border:1px solid #bfdbfe;border-radius:12px;padding:1rem;margin-bottom:1.15rem;box-shadow:0 4px 16px rgba(19,85,150,0.06)}
     .ai-executive-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding-bottom:.65rem;border-bottom:1px solid #e2e8f0;margin-bottom:.85rem}
@@ -4576,55 +4616,57 @@
         <div id="wrapperMutualAuditoria">
           <div class="ai-audit-hub">
             <div class="ai-audit-header">
-              <div>
+              <div style="flex:1 1 360px;min-width:260px;">
                 <div class="ai-audit-title" style="display:flex;align-items:center;gap:0.55rem;flex-wrap:wrap;">
                   <span>Auditoría IA 2.0 — Control Documental y Crediticio AMMER</span>
-                  <span style="display:inline-flex;align-items:center;padding:2px 9px;border-radius:9999px;font-size:11px;font-weight:800;background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;">Dual-Control IA + Determinista</span>
+                  <span class="audit20-pill-tag" style="background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;">Dual-Control IA + Determinista</span>
                 </div>
                 <div class="ai-audit-desc">
                   Recibos de Haberes ER · DNI &amp; MRZ ICAO 9303 · Domicilio / Constancia Policial (&le; 45 días) · CajaJper (Jubilaciones) · Boletín Oficial ER · Consolidación Integral
                 </div>
               </div>
-              <div style="display:flex;gap:0.45rem;align-items:center;flex-wrap:wrap;">
-                <button type="button" id="btnGuardarFichaAudit20" onclick="guardarValidacionesEnFichaAsociado()" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-emerald-700 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold tracking-wide transition-all duration-150 cursor-pointer shadow-sm whitespace-nowrap">
-                  <span>💾 Guardar en Ficha</span>
+              <div class="audit20-actions">
+                <button type="button" id="btnGuardarFichaAudit20" onclick="guardarValidacionesEnFichaAsociado()" class="audit20-btn audit20-btn--emerald">
+                  <span>💾 Guardar Auditoría en Ficha</span>
                 </button>
-                <button type="button" onclick="abrirFichaHistoricaAsociado()" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold tracking-wide transition-all duration-150 cursor-pointer shadow-sm whitespace-nowrap">
-                  <span>🗂️ Ver Ficha</span>
+                <button type="button" onclick="abrirFichaHistoricaAsociado()" class="audit20-btn audit20-btn--secondary">
+                  <span>🗂️ Abrir Ficha Histórica</span>
                 </button>
-                <button type="button" id="btnIrTabConsolidadoHeader" onclick="cambiarTabAuditoria20('integral')" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 text-xs font-bold tracking-wide transition-all duration-150 cursor-pointer shadow-sm whitespace-nowrap">
-                  <span>🛡️ Consolidado</span>
+                <button type="button" id="btnIrTabConsolidadoHeader" onclick="cambiarTabAuditoria20('integral')" class="audit20-btn audit20-btn--indigo">
+                  <span>🛡️ Resumen Consolidado</span>
                   <span id="badgeResumenHeaderAuditoria20" style="padding:1px 7px;border-radius:9999px;font-size:10px;font-weight:800;background:#ffffff;color:#475569;border:1px solid #cbd5e1;">SIN DATOS</span>
                 </button>
-                <button type="button" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold tracking-wide transition-all duration-150 cursor-pointer shadow-sm whitespace-nowrap" onclick="limpiarPanelAuditoria()">Limpiar Todo</button>
+                <button type="button" onclick="limpiarPanelAuditoria()" class="audit20-btn audit20-btn--secondary">
+                  <span>↺ Reiniciar Auditoría</span>
+                </button>
               </div>
             </div>
 
             <!-- Menú de Navegación Auditoría IA 2.0 -->
-            <div id="audit20TabsNav" role="tablist" aria-label="Módulos de Auditoría IA 2.0" style="display:flex;flex-wrap:wrap;gap:0.45rem;padding:0.55rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:1rem;">
-              <button type="button" role="tab" data-audit-tab="recibo" onclick="cambiarTabAuditoria20('recibo')" class="audit20-tab-btn" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.48rem 0.85rem;border-radius:9px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all .15s;">
+            <div id="audit20TabsNav" role="tablist" aria-label="Módulos de Auditoría IA 2.0" class="audit20-tabs-bar">
+              <button type="button" role="tab" aria-selected="true" data-audit-tab="recibo" onclick="cambiarTabAuditoria20('recibo')" class="audit20-tab-btn is-active">
                 <span>🧾 Recibo de Haberes</span>
-                <span id="tabBadgeAuditRecibo" style="font-size:10px;padding:1px 6px;border-radius:9999px;background:rgba(255,255,255,0.2);color:#ffffff;">—</span>
+                <span id="tabBadgeAuditRecibo" style="font-size:10px;padding:1px 6px;border-radius:9999px;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;">—</span>
               </button>
-              <button type="button" role="tab" data-audit-tab="dni" onclick="cambiarTabAuditoria20('dni')" class="audit20-tab-btn" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.48rem 0.85rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all .15s;">
-                <span>🪪 DNI &amp; MRZ</span>
-                <span id="tabBadgeAuditDni" style="font-size:10px;padding:1px 6px;border-radius:9999px;background:#f1f5f9;color:#64748b;">—</span>
+              <button type="button" role="tab" aria-selected="false" data-audit-tab="dni" onclick="cambiarTabAuditoria20('dni')" class="audit20-tab-btn">
+                <span>🪪 Validar DNI</span>
+                <span id="tabBadgeAuditDni" style="font-size:10px;padding:1px 6px;border-radius:9999px;background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;">—</span>
               </button>
-              <button type="button" role="tab" data-audit-tab="domicilio" onclick="cambiarTabAuditoria20('domicilio')" class="audit20-tab-btn" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.48rem 0.85rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all .15s;">
-                <span>🏠 Domicilio / Policial</span>
-                <span id="tabBadgeAuditDomicilio" style="font-size:10px;padding:1px 6px;border-radius:9999px;background:#f1f5f9;color:#64748b;">—</span>
+              <button type="button" role="tab" aria-selected="false" data-audit-tab="domicilio" onclick="cambiarTabAuditoria20('domicilio')" class="audit20-tab-btn">
+                <span>🏠 Domicilio y Policial</span>
+                <span id="tabBadgeAuditDomicilio" style="font-size:10px;padding:1px 6px;border-radius:9999px;background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;">—</span>
               </button>
-              <button type="button" role="tab" data-audit-tab="cajajper" onclick="cambiarTabAuditoria20('cajajper')" class="audit20-tab-btn" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.48rem 0.85rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all .15s;">
-                <span>🏛️ CajaJper (Jubilaciones)</span>
-                <span id="tabBadgeAuditCajaJper" style="font-size:10px;padding:1px 6px;border-radius:9999px;background:#f1f5f9;color:#64748b;">—</span>
+              <button type="button" role="tab" aria-selected="false" data-audit-tab="cajajper" onclick="cambiarTabAuditoria20('cajajper')" class="audit20-tab-btn">
+                <span>🏛️ Expediente CajaJper</span>
+                <span id="tabBadgeAuditCajaJper" style="font-size:10px;padding:1px 6px;border-radius:9999px;background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;">—</span>
               </button>
-              <button type="button" role="tab" data-audit-tab="boletin" onclick="cambiarTabAuditoria20('boletin')" class="audit20-tab-btn" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.48rem 0.85rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all .15s;">
+              <button type="button" role="tab" aria-selected="false" data-audit-tab="boletin" onclick="cambiarTabAuditoria20('boletin')" class="audit20-tab-btn">
                 <span>📰 Boletín Oficial ER</span>
-                <span id="tabBadgeAuditBoletin" style="font-size:10px;padding:1px 6px;border-radius:9999px;background:#f1f5f9;color:#64748b;">—</span>
+                <span id="tabBadgeAuditBoletin" style="font-size:10px;padding:1px 6px;border-radius:9999px;background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;">—</span>
               </button>
-              <button type="button" role="tab" data-audit-tab="integral" onclick="cambiarTabAuditoria20('integral')" class="audit20-tab-btn" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.48rem 0.85rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all .15s;">
-                <span>🛡️ Tablero Consolidado</span>
-                <span id="tabBadgeAuditIntegral" style="font-size:10px;padding:1px 6px;border-radius:9999px;background:#f1f5f9;color:#64748b;">—</span>
+              <button type="button" role="tab" aria-selected="false" data-audit-tab="integral" onclick="cambiarTabAuditoria20('integral')" class="audit20-tab-btn">
+                <span>🛡️ Dictamen Final</span>
+                <span id="tabBadgeAuditIntegral" style="font-size:10px;padding:1px 6px;border-radius:9999px;background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;">—</span>
               </button>
             </div>
 
@@ -4686,32 +4728,32 @@
 
             <!-- PANEL 2: VALIDADOR MIXTO DNI + MRZ + FORENSE -->
             <div id="audit20PanelDni" class="audit20-panel" style="display:none;">
-              <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:1.25rem;">
-                <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;border-bottom:1px solid #f1f5f9;padding-bottom:0.75rem;margin-bottom:1rem;">
+              <div class="audit20-card">
+                <div class="audit20-card-head">
                   <div>
-                    <h3 style="margin:0;font-size:0.98rem;font-weight:800;color:#0f172a;">🪪 Auditoría Mixta de DNI Argentino (Visión IA + ICAO 9303 MRZ + Forense)</h3>
-                    <p style="margin:4px 0 0 0;font-size:0.76rem;color:#64748b;">Verifica vigencia, dígitos verificadores del código óptico MRZ dorso, cruce frente vs. dorso, metadatos EXIF/PDF y estado RENAPER-ready.</p>
+                    <h3 class="audit20-card-title">🪪 Auditoría Mixta de DNI Argentino (Visión IA + ICAO 9303 MRZ + Forense)</h3>
+                    <p class="audit20-card-sub">Verifica vigencia, dígitos verificadores del código óptico MRZ dorso, cruce frente vs. dorso, metadatos EXIF/PDF y estado RENAPER-ready.</p>
                   </div>
-                  <span style="padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700;background:#f8fafc;color:#475569;border:1px solid #cbd5e1;">RENAPER: Conector listo</span>
+                  <span class="audit20-pill-tag" style="background:#f8fafc;color:#475569;border:1px solid #cbd5e1;">RENAPER: Conector listo</span>
                 </div>
 
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0.75rem;margin-bottom:0.85rem;">
-                  <div>
-                    <label for="inputDniEsperadoAudit20" style="display:block;font-size:0.73rem;font-weight:700;color:#334155;margin-bottom:4px;">DNI esperado del asociado (opcional)</label>
-                    <input id="inputDniEsperadoAudit20" type="text" inputmode="numeric" placeholder="Ej: 40838259 (contrasta frente y MRZ)" style="width:100%;padding:0.52rem 0.75rem;border-radius:10px;border:1px solid #cbd5e1;font-size:0.82rem;font-family:ui-monospace,monospace;" />
+                <div class="audit20-form-grid">
+                  <div class="audit20-field">
+                    <label for="inputDniEsperadoAudit20" class="audit20-label">DNI esperado del asociado (opcional)</label>
+                    <input id="inputDniEsperadoAudit20" type="text" inputmode="numeric" placeholder="Ej: 40838259 (contrasta frente y MRZ)" class="audit20-input is-mono" />
                   </div>
-                  <div>
-                    <label for="fileInputDniAudit20" style="display:block;font-size:0.73rem;font-weight:700;color:#334155;margin-bottom:4px;">Imagen o PDF del DNI (frente o frente+dorso)</label>
-                    <input id="fileInputDniAudit20" type="file" accept="application/pdf,image/*" onchange="ejecutarValidacionDniAudit20(this.files[0])" style="width:100%;padding:0.42rem 0.65rem;border-radius:10px;border:1px dashed #94a3b8;background:#f8fafc;font-size:0.78rem;cursor:pointer;" />
+                  <div class="audit20-field">
+                    <label for="fileInputDniAudit20" class="audit20-label">Imagen o PDF del DNI (frente o frente+dorso)</label>
+                    <input id="fileInputDniAudit20" type="file" accept="application/pdf,image/*" onchange="ejecutarValidacionDniAudit20(this.files[0])" class="audit20-file-input" />
                   </div>
                 </div>
 
-                <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;">
-                  <button type="button" id="btnValidarDniAudit20" onclick="ejecutarValidacionDniAudit20()" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.55rem 1.05rem;border-radius:10px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;">
-                    <span>🪪 Validar DNI (IA + MRZ + Forense)</span>
+                <div class="audit20-actions">
+                  <button type="button" id="btnValidarDniAudit20" onclick="ejecutarValidacionDniAudit20()" class="audit20-btn audit20-btn--navy audit20-btn--lg">
+                    <span>🪪 Auditar DNI</span>
                   </button>
-                  <button type="button" onclick="inspeccionarSoloForenseAudit20('dni')" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.52rem 0.9rem;border-radius:10px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.76rem;font-weight:600;cursor:pointer;">
-                    <span>🔬 Solo Forense de Archivo</span>
+                  <button type="button" onclick="inspeccionarSoloForenseAudit20('dni')" class="audit20-btn audit20-btn--secondary audit20-btn--lg">
+                    <span>🔬 Verificar Metadatos</span>
                   </button>
                 </div>
 
@@ -4721,37 +4763,39 @@
 
             <!-- PANEL 3: VALIDADOR MIXTO DOMICILIO / CONSTANCIA POLICIAL ≤ 45 DÍAS -->
             <div id="audit20PanelDomicilio" class="audit20-panel" style="display:none;">
-              <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:1.25rem;">
-                <div style="border-bottom:1px solid #f1f5f9;padding-bottom:0.75rem;margin-bottom:1rem;">
-                  <h3 style="margin:0;font-size:0.98rem;font-weight:800;color:#0f172a;">🏠 Validación de Domicilio &amp; Constancia Policial (&le; 45 días)</h3>
-                  <p style="margin:4px 0 0 0;font-size:0.76rem;color:#64748b;">Control determinista de antigüedad máxima 45 días (boletas de servicio o certificado policial de domicilio) y regla de 3ros (acepta boleta a nombre de tercero solo si coincide exactamente con el domicilio del DNI).</p>
-                </div>
-
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem;margin-bottom:0.85rem;">
+              <div class="audit20-card">
+                <div class="audit20-card-head">
                   <div>
-                    <label for="inputDomNombreAudit20" style="display:block;font-size:0.73rem;font-weight:700;color:#334155;margin-bottom:4px;">Apellido y Nombre del solicitante</label>
-                    <input id="inputDomNombreAudit20" type="text" placeholder="Ej: LOZA FRANCISCO ADRIEL" style="width:100%;padding:0.52rem 0.75rem;border-radius:10px;border:1px solid #cbd5e1;font-size:0.8rem;" />
-                  </div>
-                  <div>
-                    <label for="inputDomDniAudit20" style="display:block;font-size:0.73rem;font-weight:700;color:#334155;margin-bottom:4px;">DNI del solicitante</label>
-                    <input id="inputDomDniAudit20" type="text" inputmode="numeric" placeholder="Ej: 40838259" style="width:100%;padding:0.52rem 0.75rem;border-radius:10px;border:1px solid #cbd5e1;font-size:0.8rem;font-family:ui-monospace,monospace;" />
-                  </div>
-                  <div>
-                    <label for="inputDomDirDniAudit20" style="display:block;font-size:0.73rem;font-weight:700;color:#334155;margin-bottom:4px;">Domicilio en el DNI (para regla 3ros)</label>
-                    <input id="inputDomDirDniAudit20" type="text" placeholder="Ej: Av. Ramírez 1450, Paraná" style="width:100%;padding:0.52rem 0.75rem;border-radius:10px;border:1px solid #cbd5e1;font-size:0.8rem;" />
-                  </div>
-                  <div>
-                    <label for="fileInputDomAudit20" style="display:block;font-size:0.73rem;font-weight:700;color:#334155;margin-bottom:4px;">Boleta de servicio o Constancia Policial</label>
-                    <input id="fileInputDomAudit20" type="file" accept="application/pdf,image/*" onchange="ejecutarValidacionDomicilioAudit20(this.files[0])" style="width:100%;padding:0.42rem 0.65rem;border-radius:10px;border:1px dashed #94a3b8;background:#f8fafc;font-size:0.78rem;cursor:pointer;" />
+                    <h3 class="audit20-card-title">🏠 Validación de Domicilio &amp; Constancia Policial (&le; 45 días)</h3>
+                    <p class="audit20-card-sub">Control determinista de antigüedad máxima 45 días (boletas de servicio o certificado policial de domicilio) y regla de 3ros (acepta boleta a nombre de tercero solo si coincide exactamente con el domicilio del DNI).</p>
                   </div>
                 </div>
 
-                <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;">
-                  <button type="button" id="btnValidarDomAudit20" onclick="ejecutarValidacionDomicilioAudit20()" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.55rem 1.05rem;border-radius:10px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;">
-                    <span>🏠 Validar Comprobante (&le; 45 días)</span>
+                <div class="audit20-form-grid">
+                  <div class="audit20-field">
+                    <label for="inputDomNombreAudit20" class="audit20-label">Apellido y Nombre del solicitante</label>
+                    <input id="inputDomNombreAudit20" type="text" placeholder="Ej: LOZA FRANCISCO ADRIEL" class="audit20-input" />
+                  </div>
+                  <div class="audit20-field">
+                    <label for="inputDomDniAudit20" class="audit20-label">DNI del solicitante</label>
+                    <input id="inputDomDniAudit20" type="text" inputmode="numeric" placeholder="Ej: 40838259" class="audit20-input is-mono" />
+                  </div>
+                  <div class="audit20-field">
+                    <label for="inputDomDirDniAudit20" class="audit20-label">Domicilio en el DNI (para regla 3ros)</label>
+                    <input id="inputDomDirDniAudit20" type="text" placeholder="Ej: Av. Ramírez 1450, Paraná" class="audit20-input" />
+                  </div>
+                  <div class="audit20-field">
+                    <label for="fileInputDomAudit20" class="audit20-label">Boleta de servicio o Constancia Policial</label>
+                    <input id="fileInputDomAudit20" type="file" accept="application/pdf,image/*" onchange="ejecutarValidacionDomicilioAudit20(this.files[0])" class="audit20-file-input" />
+                  </div>
+                </div>
+
+                <div class="audit20-actions">
+                  <button type="button" id="btnValidarDomAudit20" onclick="ejecutarValidacionDomicilioAudit20()" class="audit20-btn audit20-btn--navy audit20-btn--lg">
+                    <span>🏠 Validar Domicilio</span>
                   </button>
-                  <button type="button" onclick="inspeccionarSoloForenseAudit20('domicilio')" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.52rem 0.9rem;border-radius:10px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.76rem;font-weight:600;cursor:pointer;">
-                    <span>🔬 Solo Forense de Archivo</span>
+                  <button type="button" onclick="inspeccionarSoloForenseAudit20('domicilio')" class="audit20-btn audit20-btn--secondary audit20-btn--lg">
+                    <span>🔬 Verificar Metadatos</span>
                   </button>
                 </div>
 
@@ -4761,37 +4805,39 @@
 
             <!-- PANEL 4: CAJAJPER (GESTIONES EN CURSO DE JUBILACIONES) -->
             <div id="audit20PanelCajaJper" class="audit20-panel" style="display:none;">
-              <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:1.25rem;">
-                <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;border-bottom:1px solid #f1f5f9;padding-bottom:0.75rem;margin-bottom:1rem;">
+              <div class="audit20-card">
+                <div class="audit20-card-head">
                   <div>
-                    <h3 style="margin:0;font-size:0.98rem;font-weight:800;color:#0f172a;">🏛️ Consulta Caja de Jubilaciones y Pensiones ER (CajaJper)</h3>
-                    <p style="margin:4px 0 0 0;font-size:0.76rem;color:#64748b;">Verifica trámites previsionales en curso por DNI o NUC y alerta posibles transiciones de agente ACTIVO a PASIVO (JU_).</p>
+                    <h3 class="audit20-card-title">🏛️ Consulta Caja de Jubilaciones y Pensiones ER (CajaJper)</h3>
+                    <p class="audit20-card-sub">Verifica trámites previsionales en curso por DNI o NUC y alerta posibles transiciones de agente ACTIVO a PASIVO (JU_).</p>
                   </div>
-                  <a href="https://www.cajajper.gov.ar/secciones/servicios/expedientes/index.php" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.42rem 0.85rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.75rem;font-weight:600;text-decoration:none;">
-                    <span>↗ Portal Oficial CajaJper</span>
+                  <a href="https://www.cajajper.gov.ar/secciones/servicios/expedientes/index.php" target="_blank" rel="noopener noreferrer" class="audit20-btn audit20-btn--secondary">
+                    <span>↗ Ir a CajaJper</span>
                   </a>
                 </div>
 
-                <div style="display:flex;flex-wrap:wrap;gap:0.6rem;align-items:flex-end;">
-                  <div style="flex:1 1 200px;">
-                    <label for="inputCajaJperDniAudit20" style="display:block;font-size:0.73rem;font-weight:700;color:#334155;margin-bottom:4px;">DNI (sin puntos)</label>
-                    <input id="inputCajaJperDniAudit20" type="text" inputmode="numeric" placeholder="Ej: 18071072" onkeydown="if(event.key==='Enter'){event.preventDefault();consultarCajaJperAudit20();}" style="width:100%;padding:0.55rem 0.8rem;border-radius:10px;border:1px solid #cbd5e1;font-size:0.84rem;font-family:ui-monospace,monospace;" />
+                <div class="audit20-form-grid">
+                  <div class="audit20-field">
+                    <label for="inputCajaJperDniAudit20" class="audit20-label">DNI (sin puntos)</label>
+                    <input id="inputCajaJperDniAudit20" type="text" inputmode="numeric" placeholder="Ej: 18071072" onkeydown="if(event.key==='Enter'){event.preventDefault();consultarCajaJperAudit20();}" class="audit20-input is-mono" />
                   </div>
-                  <div style="flex:1 1 180px;">
-                    <label for="inputCajaJperNucAudit20" style="display:block;font-size:0.73rem;font-weight:700;color:#334155;margin-bottom:4px;">NUC (opcional)</label>
-                    <input id="inputCajaJperNucAudit20" type="text" inputmode="numeric" placeholder="Número Único de Caja" onkeydown="if(event.key==='Enter'){event.preventDefault();consultarCajaJperAudit20();}" style="width:100%;padding:0.55rem 0.8rem;border-radius:10px;border:1px solid #cbd5e1;font-size:0.84rem;font-family:ui-monospace,monospace;" />
+                  <div class="audit20-field">
+                    <label for="inputCajaJperNucAudit20" class="audit20-label">NUC (opcional)</label>
+                    <input id="inputCajaJperNucAudit20" type="text" inputmode="numeric" placeholder="Número Único de Caja" onkeydown="if(event.key==='Enter'){event.preventDefault();consultarCajaJperAudit20();}" class="audit20-input is-mono" />
                   </div>
-                  <div style="flex:0 1 180px;">
-                    <label for="selectCajaJperTipoReciboAudit20" style="display:block;font-size:0.73rem;font-weight:700;color:#334155;margin-bottom:4px;">Condición del recibo</label>
-                    <select id="selectCajaJperTipoReciboAudit20" style="width:100%;padding:0.55rem 0.75rem;border-radius:10px;border:1px solid #cbd5e1;font-size:0.82rem;background:#ffffff;">
+                  <div class="audit20-field">
+                    <label for="selectCajaJperTipoReciboAudit20" class="audit20-label">Condición del recibo</label>
+                    <select id="selectCajaJperTipoReciboAudit20" class="audit20-select">
                       <option value="">Auto (según recibo)</option>
                       <option value="ACTIVO">ACTIVO</option>
                       <option value="PASIVO">PASIVO</option>
                     </select>
                   </div>
-                  <button type="button" id="btnConsultarCajaJperAudit20" onclick="consultarCajaJperAudit20()" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.58rem 1.05rem;border-radius:10px;border:1px solid #135596;background:#135596;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;">
-                    <span>🔍 Consultar Expediente</span>
-                  </button>
+                  <div class="audit20-field" style="justify-content:flex-end;">
+                    <button type="button" id="btnConsultarCajaJperAudit20" onclick="consultarCajaJperAudit20()" class="audit20-btn audit20-btn--primary audit20-btn--lg" style="width:100%;">
+                      <span>🔍 Buscar Trámite</span>
+                    </button>
+                  </div>
                 </div>
 
                 <div id="resultadoCajaJperAudit20" style="display:none;margin-top:1rem;"></div>
@@ -4800,35 +4846,36 @@
 
             <!-- PANEL 5: BOLETÍN OFICIAL DE ENTRE RÍOS (ETAPA 1 PRESERVADO) -->
             <div id="audit20PanelBoletin" class="audit20-panel" style="display:none;">
-              <div id="panelBoletinOficialER" class="bg-white border border-slate-200/90 rounded-2xl shadow-sm p-5 font-sans antialiased" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:1.25rem;">
-                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 mb-4" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;border-bottom:1px solid #f1f5f9;padding-bottom:0.75rem;margin-bottom:1rem;">
+              <div id="panelBoletinOficialER" class="audit20-card font-sans antialiased">
+                <div class="audit20-card-head">
                   <div>
-                    <h3 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight m-0 flex items-center gap-2 flex-wrap" style="margin:0;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;font-size:0.95rem;font-weight:800;color:#0f172a;">
+                    <h3 class="audit20-card-title">
                       <span>📰 Consulta Boletín Oficial de Entre Ríos</span>
-                      <span id="badgeEstadoIndiceBoletin" style="display:inline-flex;align-items:center;padding:2px 9px;border-radius:9999px;font-size:11px;font-weight:700;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;">Verificando índice...</span>
+                      <span id="badgeEstadoIndiceBoletin" class="audit20-pill-tag" style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;">Verificando índice...</span>
                     </h3>
-                    <p class="text-xs text-slate-500 mt-1 mb-0" style="font-size:0.76rem;color:#64748b;margin:4px 0 0 0;">
+                    <p class="audit20-card-sub">
                       Búsqueda por DNI o CUIL en ediciones oficiales (designaciones, retiros, recursos, embargos y edictos).
                     </p>
                   </div>
-                  <div id="wrapAdminSyncBoletin" style="display:none;align-items:center;gap:0.5rem;flex-wrap:wrap;">
-                    <button type="button" onclick="sincronizarBoletinOficialAuditoria(30)" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.45rem 0.85rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.75rem;font-weight:600;cursor:pointer;box-shadow:0 1px 2px rgba(15,23,42,0.05);">↻ Sincronizar últimos 30 días</button>
-                    <button type="button" onclick="sincronizarBoletinOficialAuditoria(0)" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.45rem 0.9rem;border-radius:9px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.75rem;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(15,39,68,0.2);" title="Indexa todas las ediciones históricas desde Diciembre 2003 en segundo plano">📚 Indexar Histórico 2003–2026</button>
+                  <div id="wrapAdminSyncBoletin" class="audit20-actions" style="display:none;">
+                    <button type="button" onclick="sincronizarBoletinOficialAuditoria(30)" class="audit20-btn audit20-btn--secondary">↻ Sincronizar 30 días</button>
+                    <button type="button" onclick="sincronizarBoletinOficialAuditoria(0)" class="audit20-btn audit20-btn--navy" title="Indexa todas las ediciones históricas desde Diciembre 2003 en segundo plano">📚 Indexar 2003–2026</button>
                   </div>
                 </div>
 
-                <div style="display:flex;flex-wrap:wrap;align-items:center;gap:0.55rem;">
+                <div style="display:flex;flex-wrap:wrap;align-items:center;gap:0.6rem;">
                   <input id="inputBoletinDniConsulta"
                          type="text"
                          inputmode="numeric"
                          placeholder="Ingresá DNI o CUIL (ej: 18071072 o 20-18071072-3)"
                          onkeydown="if(event.key==='Enter'){event.preventDefault();consultarBoletinOficialAuditoria();}"
-                         style="flex:1 1 280px;min-width:260px;padding:0.55rem 0.85rem;border-radius:10px;border:1px solid #cbd5e1;font-size:0.84rem;font-family:ui-monospace,monospace;background:#ffffff;color:#0f172a;outline:none;" />
-                  <button type="button" id="btnConsultarBoletinER" onclick="consultarBoletinOficialAuditoria()" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.55rem 1rem;border-radius:10px;border:1px solid #135596;background:#135596;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;box-shadow:0 2px 6px rgba(19,85,150,0.22);">
-                    <span>🔍 Consultar Boletín</span>
+                         class="audit20-input is-mono"
+                         style="flex:1 1 280px;min-width:240px;" />
+                  <button type="button" id="btnConsultarBoletinER" onclick="consultarBoletinOficialAuditoria()" class="audit20-btn audit20-btn--primary audit20-btn--lg">
+                    <span>🔍 Buscar en Boletín</span>
                   </button>
-                  <a id="btnAbrirDateasRespaldo" href="https://www.dateas.com/es/docs/boletin-oficial-provincia-de-entre-rios" target="_blank" rel="noopener noreferrer" onclick="actualizarLinkDateasBoletin()" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.55rem 0.9rem;border-radius:10px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.76rem;font-weight:600;text-decoration:none;">
-                    <span>↗ Ver en Dateas</span>
+                  <a id="btnAbrirDateasRespaldo" href="https://www.dateas.com/es/docs/boletin-oficial-provincia-de-entre-rios" target="_blank" rel="noopener noreferrer" onclick="actualizarLinkDateasBoletin()" class="audit20-btn audit20-btn--secondary audit20-btn--lg">
+                    <span>↗ Consultar en Dateas</span>
                   </a>
                 </div>
 
@@ -4839,18 +4886,18 @@
 
             <!-- PANEL 6: TABLERO CONSOLIDADO DUAL-CONTROL -->
             <div id="audit20PanelIntegral" class="audit20-panel" style="display:none;">
-              <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:1.25rem;">
-                <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;border-bottom:1px solid #f1f5f9;padding-bottom:0.75rem;margin-bottom:1rem;">
+              <div class="audit20-card">
+                <div class="audit20-card-head">
                   <div>
-                    <h3 style="margin:0;font-size:0.98rem;font-weight:800;color:#0f172a;">🛡️ Tablero Consolidado Dual-Control (Cruce Multidocumento)</h3>
-                    <p style="margin:4px 0 0 0;font-size:0.76rem;color:#64748b;">Cruza identidad, domicilio, vigencia documental, Boletín Oficial ER y gestiones en CajaJper para emitir el dictamen maestro.</p>
+                    <h3 class="audit20-card-title">🛡️ Dictamen Final Dual-Control (Cruce Multidocumento)</h3>
+                    <p class="audit20-card-sub">Cruza identidad, domicilio, vigencia documental, Boletín Oficial ER y gestiones en CajaJper para emitir el dictamen maestro.</p>
                   </div>
-                  <div style="display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center;">
-                    <button type="button" id="btnRecalcularConsolidadoAudit20" onclick="ejecutarAuditoriaIntegralAudit20()" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.52rem 1rem;border-radius:10px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;">
-                      <span>↻ Recalcular Dictamen Maestro</span>
+                  <div class="audit20-actions">
+                    <button type="button" id="btnRecalcularConsolidadoAudit20" onclick="ejecutarAuditoriaIntegralAudit20()" class="audit20-btn audit20-btn--navy audit20-btn--lg">
+                      <span>↻ Actualizar Dictamen</span>
                     </button>
-                    <button type="button" onclick="guardarValidacionesEnFichaAsociado()" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.52rem 1rem;border-radius:10px;border:1px solid #065f46;background:#065f46;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;">
-                      <span>💾 Guardar Todo en Ficha</span>
+                    <button type="button" onclick="guardarValidacionesEnFichaAsociado()" class="audit20-btn audit20-btn--emerald audit20-btn--lg">
+                      <span>💾 Guardar Ficha Completa</span>
                     </button>
                   </div>
                 </div>
@@ -4870,22 +4917,22 @@
       <!-- VISTA PRINCIPAL: PADRÓN Y FICHAS HISTÓRICAS DE ASOCIADOS (ETAPA 4) -->
       <section id="view-ficha-asociado" class="app-view">
         <div style="max-width:1280px;margin:0 auto;padding:0.5rem 0 2rem 0;">
-          <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:1.25rem;box-shadow:0 2px 10px rgba(15,23,42,0.04);">
-            <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0.75rem;border-bottom:1px solid #f1f5f9;padding-bottom:0.9rem;margin-bottom:1rem;">
+          <div class="audit20-card">
+            <div class="audit20-card-head">
               <div>
-                <h2 style="margin:0;font-size:1.1rem;font-weight:800;color:#0f172a;">🗂️ Padrón y Fichas Históricas de Asociados</h2>
-                <p style="margin:4px 0 0 0;font-size:0.77rem;color:#64748b;">Historial documental inmutable en Supabase (DNI, Domicilio/Policial, Recibos, CajaJper, Boletín ER y Solicitudes).</p>
+                <h2 style="margin:0;font-size:1.08rem;font-weight:800;color:#0f172a;">🗂️ Padrón y Fichas Históricas de Asociados</h2>
+                <p class="audit20-card-sub">Historial documental inmutable en Supabase (DNI, Domicilio/Policial, Recibos, CajaJper, Boletín ER y Solicitudes).</p>
               </div>
-              <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;">
-                <input id="inputBuscarFichaPadron" type="text" placeholder="Buscar por DNI o Apellido/Nombre..." onkeydown="if(event.key==='Enter'){event.preventDefault();buscarPadronFichasAsociados();}" style="min-width:240px;padding:0.5rem 0.85rem;border-radius:10px;border:1px solid #cbd5e1;font-size:0.82rem;" />
-                <select id="selectFiltroEstadoFichaPadron" onchange="buscarPadronFichasAsociados()" style="padding:0.5rem 0.75rem;border-radius:10px;border:1px solid #cbd5e1;font-size:0.8rem;background:#ffffff;">
+              <div class="audit20-actions">
+                <input id="inputBuscarFichaPadron" type="text" placeholder="Buscar por DNI o Apellido/Nombre..." onkeydown="if(event.key==='Enter'){event.preventDefault();buscarPadronFichasAsociados();}" class="audit20-input" style="min-width:250px;width:auto;" />
+                <select id="selectFiltroEstadoFichaPadron" onchange="buscarPadronFichasAsociados()" class="audit20-select" style="width:auto;min-width:170px;">
                   <option value="TODOS">Todos los perfiles</option>
                   <option value="APTO">APTO</option>
                   <option value="OBSERVADO">OBSERVADO</option>
                   <option value="RECHAZADO">RECHAZADO</option>
                   <option value="PENDIENTE">PENDIENTE</option>
                 </select>
-                <button type="button" onclick="buscarPadronFichasAsociados()" style="padding:0.52rem 0.95rem;border-radius:10px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;">🔍 Buscar</button>
+                <button type="button" onclick="buscarPadronFichasAsociados()" class="audit20-btn audit20-btn--navy audit20-btn--lg">🔍 Filtrar Padrón</button>
               </div>
             </div>
 
@@ -21963,7 +22010,7 @@ ${cierreTxt}`;
           resBox.innerHTML = '<div class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800">⚠️ Error consultando Boletín Oficial: ' + sanitizeHTML(err && err.message ? err.message : String(err)) + '</div>';
         }
       } finally {
-        if (btn) { btn.disabled = false; btn.innerHTML = '<span>🔍 Consultar Boletín</span>'; }
+        if (btn) { btn.disabled = false; btn.innerHTML = '<span>🔍 Buscar en Boletín</span>'; }
       }
     }
 
@@ -23567,9 +23614,8 @@ ${cierreTxt}`;
 
       document.querySelectorAll('#audit20TabsNav .audit20-tab-btn').forEach(btn => {
         const activo = btn.getAttribute('data-audit-tab') === key;
-        btn.style.background = activo ? '#0f2744' : '#ffffff';
-        btn.style.color = activo ? '#ffffff' : '#334155';
-        btn.style.borderColor = activo ? '#0f2744' : '#cbd5e1';
+        btn.classList.toggle('is-active', activo);
+        btn.setAttribute('aria-selected', activo ? 'true' : 'false');
       });
 
       if (key === 'boletin' && typeof cargarEstadoBoletinOficialAuditoria === 'function') {
@@ -23828,7 +23874,7 @@ ${cierreTxt}`;
       } catch (err) {
         if (out) out.innerHTML = '<div style="padding:0.85rem;border-radius:10px;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;font-size:0.78rem;">⚠️ Error validando DNI: ' + sanitizeHTML(err.message || String(err)) + '</div>';
       } finally {
-        if (btn) { btn.disabled = false; btn.innerHTML = '<span>🪪 Validar DNI (IA + MRZ + Forense)</span>'; }
+        if (btn) { btn.disabled = false; btn.innerHTML = '<span>🪪 Auditar DNI</span>'; }
       }
     }
 
@@ -23911,7 +23957,7 @@ ${cierreTxt}`;
       } catch (err) {
         if (out) out.innerHTML = '<div style="padding:0.85rem;border-radius:10px;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;font-size:0.78rem;">⚠️ Error validando domicilio: ' + sanitizeHTML(err.message || String(err)) + '</div>';
       } finally {
-        if (btn) { btn.disabled = false; btn.innerHTML = '<span>🏠 Validar Comprobante (&le; 45 días)</span>'; }
+        if (btn) { btn.disabled = false; btn.innerHTML = '<span>🏠 Validar Domicilio</span>'; }
       }
     }
 
@@ -24012,7 +24058,7 @@ ${cierreTxt}`;
       } catch (err) {
         if (out) out.innerHTML = '<div style="padding:0.85rem;border-radius:10px;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;font-size:0.78rem;">⚠️ Error consultando CajaJper: ' + sanitizeHTML(err.message || String(err)) + '</div>';
       } finally {
-        if (btn) { btn.disabled = false; btn.innerHTML = '<span>🔍 Consultar Expediente</span>'; }
+        if (btn) { btn.disabled = false; btn.innerHTML = '<span>🔍 Buscar Trámite</span>'; }
       }
     }
 
@@ -24117,7 +24163,7 @@ ${cierreTxt}`;
         }
         return null;
       } finally {
-        if (btn && !silencioso) { btn.disabled = false; btn.innerHTML = '<span>↻ Recalcular Dictamen Maestro</span>'; }
+        if (btn && !silencioso) { btn.disabled = false; btn.innerHTML = '<span>↻ Actualizar Dictamen</span>'; }
       }
     }
 
@@ -24218,7 +24264,7 @@ ${cierreTxt}`;
         showToast('⚠️ Error guardando ficha: ' + (err.message || String(err)));
         return false;
       } finally {
-        if (btnGuardar) { btnGuardar.disabled = false; btnGuardar.textContent = '💾 Guardar en Ficha'; }
+        if (btnGuardar) { btnGuardar.disabled = false; btnGuardar.innerHTML = '<span>💾 Guardar Auditoría en Ficha</span>'; }
       }
     }
 

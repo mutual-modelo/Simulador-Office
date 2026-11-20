@@ -4630,6 +4630,43 @@
 
             <!-- Pantalla de Resultados en 3 Bloques (Oculto hasta procesar exitosamente) -->
             <div id="aiAuditResultadosContainer" style="display:none;"></div>
+
+            <!-- Panel Consulta Boletín Oficial de Entre Ríos (Etapa 1) -->
+            <div id="panelBoletinOficialER" class="bg-white border border-slate-200/90 rounded-2xl shadow-sm p-5 mt-5 font-sans antialiased">
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3 mb-4">
+                <div>
+                  <h3 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight m-0 flex items-center gap-2">
+                    <span>📰 Consulta Boletín Oficial de Entre Ríos</span>
+                    <span id="badgeEstadoIndiceBoletin" class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">Verificando índice...</span>
+                  </h3>
+                  <p class="text-xs text-slate-500 mt-0.5 mb-0">
+                    Búsqueda por DNI o CUIL en ediciones oficiales (designaciones, retiros, recursos, embargos y edictos).
+                  </p>
+                </div>
+                <div id="wrapAdminSyncBoletin" style="display:none;" class="flex items-center gap-2 flex-wrap">
+                  <button type="button" onclick="sincronizarBoletinOficialAuditoria(30)" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold cursor-pointer">↻ Sincronizar últimos 30 días</button>
+                  <button type="button" onclick="sincronizarBoletinOficialAuditoria(0)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold cursor-pointer" title="Indexa todas las ediciones históricas desde Diciembre 2003 en segundo plano">📚 Indexar Histórico 2003–2026</button>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2">
+                <input id="inputBoletinDniConsulta"
+                       type="text"
+                       inputmode="numeric"
+                       placeholder="Ingresá DNI o CUIL (ej: 18071072 o 20-18071072-3)"
+                       onkeydown="if(event.key==='Enter'){event.preventDefault();consultarBoletinOficialAuditoria();}"
+                       class="flex-1 min-w-[240px] px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-mono bg-white text-slate-900 focus:outline-none focus:border-indigo-500" />
+                <button type="button" id="btnConsultarBoletinER" onclick="consultarBoletinOficialAuditoria()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm cursor-pointer">
+                  <span>🔍 Consultar Boletín</span>
+                </button>
+                <a id="btnAbrirDateasRespaldo" href="https://www.dateas.com/es/docs/boletin-oficial-provincia-de-entre-rios" target="_blank" rel="noopener noreferrer" onclick="actualizarLinkDateasBoletin()" class="inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold no-underline">
+                  <span>↗ Ver en Dateas</span>
+                </a>
+              </div>
+
+              <div id="boletinSyncProgressBox" style="display:none;" class="mt-3 p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-xs text-indigo-900"></div>
+              <div id="resultadoBoletinOficialER" class="mt-4" style="display:none;"></div>
+            </div>
           </div>
         </div>
       </section>
@@ -8997,6 +9034,9 @@ ${cierreTxt}`;
       }
       if (viewId === 'view-simulador') {
         renderApp();
+      }
+      if (viewId === 'vistaAuditoriaIA' && typeof cargarEstadoBoletinOficialAuditoria === 'function') {
+        cargarEstadoBoletinOficialAuditoria();
       }
     }
 
@@ -19954,6 +19994,11 @@ ${cierreTxt}`;
       if (loadBar) loadBar.style.display = 'none';
       const loaderIA = document.getElementById('loader-auditoria-ia');
       if (loaderIA) loaderIA.classList.add('hidden');
+      const inpBol = document.getElementById('inputBoletinDniConsulta');
+      if (inpBol) inpBol.value = '';
+      const resBol = document.getElementById('resultadoBoletinOficialER');
+      if (resBol) { resBol.style.display = 'none'; resBol.innerHTML = ''; }
+      if (typeof actualizarLinkDateasBoletin === 'function') actualizarLinkDateasBoletin();
       showToast('Panel de auditoría reiniciado.');
     }
 
@@ -21441,10 +21486,212 @@ ${cierreTxt}`;
 
       container.innerHTML = html;
       container.style.display = 'block';
+      try {
+        const dniExtraido = String(r.dni || rec.dni || d.dni || payload.dni || '').replace(/\D/g, '').trim();
+        const inpBol = document.getElementById('inputBoletinDniConsulta');
+        if (dniExtraido && inpBol && !inpBol.value.trim()) {
+          inpBol.value = dniExtraido;
+          actualizarLinkDateasBoletin();
+        }
+      } catch (_) {}
       if (typeof container.scrollIntoView === 'function') {
         container.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
       return audit;
+    }
+
+    let _boletinPollTimer = null;
+    function actualizarLinkDateasBoletin() {
+      const inp = document.getElementById('inputBoletinDniConsulta');
+      const link = document.getElementById('btnAbrirDateasRespaldo');
+      if (!link) return;
+      const digits = String(inp ? inp.value : '').replace(/\D/g, '');
+      const dni = (digits.length === 11) ? digits.slice(2, 10) : digits;
+      if (dni.length >= 6) {
+        link.href = 'https://www.dateas.com/es/docs/search?text=' + encodeURIComponent(dni) + '&pcountry=AR&publication=boletin-oficial-provincia-de-entre-rios&from-date=&to-date=';
+      } else {
+        link.href = 'https://www.dateas.com/es/docs/boletin-oficial-provincia-de-entre-rios';
+      }
+    }
+
+    async function cargarEstadoBoletinOficialAuditoria() {
+      const wrapAdmin = document.getElementById('wrapAdminSyncBoletin');
+      if (wrapAdmin) {
+        wrapAdmin.style.display = esAdminAuditoria() ? 'flex' : 'none';
+      }
+      const badge = document.getElementById('badgeEstadoIndiceBoletin');
+      const progBox = document.getElementById('boletinSyncProgressBox');
+      try {
+        const resp = await fetchConTimeout(`${RENDER_API_URL}/api/boletin/estado`, { method: 'GET' }, 10000);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+        if (badge) {
+          if (data.ok) {
+            const tot = Number(data.total_boletines || 0);
+            if (tot > 0) {
+              badge.textContent = tot + ' ediciones (' + (data.fecha_primera || '') + ' → ' + (data.fecha_ultima || '') + ')';
+              badge.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200';
+            } else {
+              badge.textContent = '0 ediciones indexadas';
+              badge.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200';
+            }
+          } else {
+            badge.textContent = data.tablas_pendientes ? 'Requiere ejecutar SQL v2 en Supabase' : 'Índice no disponible';
+            badge.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200';
+          }
+        }
+        const sync = data.sync || {};
+        if (progBox) {
+          if (sync.running) {
+            progBox.style.display = 'block';
+            progBox.innerHTML = '⏳ <strong>Indexación en curso:</strong> ' + sanitizeHTML(sync.mensaje || 'Procesando...') +
+              ' (Procesados: ' + (sync.procesados || 0) + ' / ' + (sync.total_objetivo || 0) + ', Nuevos: ' + (sync.nuevos || 0) + ')';
+            if (!_boletinPollTimer) {
+              _boletinPollTimer = setTimeout(() => {
+                _boletinPollTimer = null;
+                cargarEstadoBoletinOficialAuditoria();
+              }, 4000);
+            }
+          } else {
+            progBox.style.display = 'none';
+          }
+        }
+      } catch (_) {
+        if (badge) {
+          badge.textContent = 'Pendiente deploy en Render';
+          badge.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-500 border border-slate-200';
+        }
+      }
+    }
+
+    async function sincronizarBoletinOficialAuditoria(ultimosDias = 30) {
+      if (!esAdminAuditoria()) {
+        showToast('Solo el rol Admin puede lanzar sincronizaciones del índice.');
+        return;
+      }
+      const progBox = document.getElementById('boletinSyncProgressBox');
+      if (progBox) {
+        progBox.style.display = 'block';
+        progBox.textContent = '⏳ Iniciando indexación de Boletines Oficiales en Render...';
+      }
+      try {
+        const body = ultimosDias > 0
+          ? { ultimos_dias: ultimosDias, solo_faltantes: true, concurrency: 5 }
+          : { desde: '2003-12', solo_faltantes: true, concurrency: 5 };
+        const resp = await fetchConTimeout(`${RENDER_API_URL}/api/boletin/sincronizar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        }, 15000);
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || data.ok === false) {
+          throw new Error(data.detail || data.mensaje || ('HTTP ' + resp.status));
+        }
+        showToast(data.mensaje || 'Sincronización iniciada.');
+        cargarEstadoBoletinOficialAuditoria();
+      } catch (err) {
+        if (progBox) {
+          progBox.style.display = 'block';
+          progBox.textContent = '⚠️ No se pudo iniciar la sincronización: ' + (err && err.message ? err.message : String(err));
+        }
+      }
+    }
+
+    async function consultarBoletinOficialAuditoria(docOverride) {
+      const inp = document.getElementById('inputBoletinDniConsulta');
+      const resBox = document.getElementById('resultadoBoletinOficialER');
+      const btn = document.getElementById('btnConsultarBoletinER');
+      const rawVal = docOverride !== undefined ? String(docOverride) : String(inp ? inp.value : '');
+      const cleanDigits = rawVal.replace(/\D/g, '');
+      if (inp && docOverride !== undefined) inp.value = rawVal;
+      actualizarLinkDateasBoletin();
+
+      if (cleanDigits.length < 7) {
+        showToast('Ingresá un DNI o CUIL válido (al menos 7 dígitos).');
+        return;
+      }
+
+      if (btn) { btn.disabled = true; btn.textContent = 'Consultando...'; }
+      if (resBox) {
+        resBox.style.display = 'block';
+        resBox.innerHTML = '<div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600">⏳ Buscando DNI/CUIL ' + sanitizeHTML(cleanDigits) + ' en el índice del Boletín Oficial de Entre Ríos...</div>';
+      }
+
+      try {
+        const resp = await fetchConTimeout(`${RENDER_API_URL}/api/boletin/consultar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ documento: cleanDigits, incluir_resumen_ia: true })
+        }, 25000);
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          throw new Error(data.detail || data.mensaje || ('HTTP ' + resp.status));
+        }
+
+        if (data.ok === false) {
+          resBox.innerHTML =
+            '<div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900">' +
+              '<strong>⚠️ ' + sanitizeHTML(data.mensaje || 'Índice no listo') + '</strong>' +
+              (data.url_dateas ? (' <a href="' + sanitizeHTML(data.url_dateas) + '" target="_blank" rel="noopener noreferrer" class="underline font-semibold ml-1">Consultar en Dateas ↗</a>') : '') +
+            '</div>';
+          return;
+        }
+
+        const lista = Array.isArray(data.resultados) ? data.resultados : [];
+        if (lista.length === 0) {
+          resBox.innerHTML =
+            '<div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 flex flex-wrap items-center justify-between gap-2">' +
+              '<div><strong>✅ Sin menciones registradas</strong> · ' + sanitizeHTML(data.mensaje || '') + '</div>' +
+              (data.url_dateas ? ('<a href="' + sanitizeHTML(data.url_dateas) + '" target="_blank" rel="noopener noreferrer" class="text-emerald-800 underline font-semibold">Verificar en Dateas ↗</a>') : '') +
+            '</div>';
+          return;
+        }
+
+        const headerCls = data.tiene_alerta_critica
+          ? 'bg-rose-50 border-rose-200 text-rose-900'
+          : 'bg-amber-50 border-amber-200 text-amber-900';
+        const iconTxt = data.tiene_alerta_critica ? '🚨' : '📄';
+
+        const resumenHtml = data.resumen_ia
+          ? '<div class="mt-2 p-2.5 rounded-lg bg-white/80 border border-slate-200/80 text-xs text-slate-800 leading-relaxed"><strong>🤖 Resumen IA:</strong> ' + sanitizeHTML(data.resumen_ia) + '</div>'
+          : '';
+
+        const itemsHtml = lista.map(item => {
+          const badgeCat = item.categoria && item.categoria.includes('Alerta')
+            ? 'bg-rose-100 text-rose-800 border-rose-200'
+            : (item.categoria && item.categoria.includes('Sucesor')
+              ? 'bg-amber-100 text-amber-800 border-amber-200'
+              : 'bg-indigo-50 text-indigo-800 border-indigo-200');
+          return '<div class="p-3 rounded-xl border border-slate-200 bg-slate-50/70">' +
+            '<div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">' +
+              '<div class="flex items-center gap-2 flex-wrap">' +
+                '<span class="font-mono text-xs font-bold text-slate-900">' + sanitizeHTML(item.fecha || '') + '</span>' +
+                (item.numero_edicion ? ('<span class="text-[11px] font-mono text-slate-500">Boletín Nº ' + sanitizeHTML(item.numero_edicion) + '</span>') : '') +
+                '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ' + badgeCat + '">' + sanitizeHTML(item.categoria || 'Mención') + '</span>' +
+                '<span class="text-[11px] text-slate-500">Pág. ' + sanitizeHTML(String(item.pagina || 1)) + '</span>' +
+              '</div>' +
+              (item.url_pdf_pagina ? ('<a href="' + sanitizeHTML(item.url_pdf_pagina) + '" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-indigo-700 text-[11px] font-semibold no-underline">Abrir PDF oficial ↗</a>') : '') +
+            '</div>' +
+            '<p class="text-xs text-slate-700 m-0 leading-relaxed">...' + sanitizeHTML(item.fragmento || '') + '...</p>' +
+          '</div>';
+        }).join('');
+
+        resBox.innerHTML =
+          '<div class="p-3.5 rounded-xl border mb-3 ' + headerCls + '">' +
+            '<div class="flex flex-wrap items-center justify-between gap-2">' +
+              '<div class="text-xs font-bold">' + iconTxt + ' ' + sanitizeHTML(data.mensaje || '') + '</div>' +
+              (data.url_dateas ? ('<a href="' + sanitizeHTML(data.url_dateas) + '" target="_blank" rel="noopener noreferrer" class="text-xs underline font-semibold">Contrastar en Dateas ↗</a>') : '') +
+            '</div>' +
+            resumenHtml +
+          '</div>' +
+          '<div class="space-y-2.5 max-h-96 overflow-y-auto pr-1">' + itemsHtml + '</div>';
+      } catch (err) {
+        if (resBox) {
+          resBox.innerHTML = '<div class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800">⚠️ Error consultando Boletín Oficial: ' + sanitizeHTML(err && err.message ? err.message : String(err)) + '</div>';
+        }
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<span>🔍 Consultar Boletín</span>'; }
+      }
     }
 
     function renderizarAuditoriaExitosa(rawJSON) {
@@ -22873,6 +23120,10 @@ ${cierreTxt}`;
     window.asociarExpedienteAuditoria = asociarExpedienteAuditoria;
     window.abrirAuditoriaModalExpediente = abrirAuditoriaModalExpediente;
     window.limpiarPanelAuditoria = limpiarPanelAuditoria;
+    window.consultarBoletinOficialAuditoria = consultarBoletinOficialAuditoria;
+    window.sincronizarBoletinOficialAuditoria = sincronizarBoletinOficialAuditoria;
+    window.cargarEstadoBoletinOficialAuditoria = cargarEstadoBoletinOficialAuditoria;
+    window.actualizarLinkDateasBoletin = actualizarLinkDateasBoletin;
     window.ejecutarAuditoriaDocumentalIA = ejecutarAuditoriaDocumentalIA;
     window.aplicarDatosExtraidosAlExpediente = aplicarDatosExtraidosAlExpediente;
     window.registrarDictamenEnChatAuditoria = registrarDictamenEnChatAuditoria;

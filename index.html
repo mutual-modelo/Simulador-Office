@@ -7660,9 +7660,6 @@
 
 {planes}
 
-📌 *Requisitos Generales:* Recibo de haberes, DNI y CBU.
-📲 ¡Consultanos para iniciar tu solicitud en el acto!
-
 En caso de estar interesado y *para poder avanzar con la gestión* online, por favor indique el plan y *envíe* lo que se le solicita a continuación:
 {requisitos}
 
@@ -7770,7 +7767,7 @@ Aguardo su respuesta. Muchas gracias.
         }).join('\n');
       }
 
-      const bloquePlanesConEncabezado = `${encabezadoModalidad}\n\n${listaPlanesTexto}`.trim();
+      const bloquePlanesConEncabezado = listaPlanesTexto.trim();
       const requisitosCondicionales = obtenerRequisitosPorLinea(lineaAyuda);
       const lineaLegible = obtenerNombreLineaLegibleWA(lineaAyuda);
       const nombreLimpio = String(nombreAsociado || '').trim();
@@ -7813,25 +7810,16 @@ Aguardo su respuesta. Muchas gracias.
       if (verNorm === 'resumida') {
         return `${saludoInicial} Te compartimos la cotización de *Mutual Modelo* (${lineaLegible}):
 
-${encabezadoModalidad}
-
 ${listaPlanesTexto}
 
 📌 *Requisitos para avanzar:*
-${requisitosCondicionales}
-
-📲 ¡Respondé este mensaje indicando el plan elegido para iniciar tu solicitud en el acto!`;
+${requisitosCondicionales}`;
       }
 
       // Plantilla Base Oficial AMMER (por defecto)
       return `${saludoInicial} Te compartimos la simulación oficial de la Mutual Modelo:
 
-${encabezadoModalidad}
-
 ${listaPlanesTexto}
-
-📌 *Requisitos Generales:* Recibo de haberes, DNI y CBU.
-📲 ¡Consultanos para iniciar tu solicitud en el acto!
 
 En caso de estar interesado y *para poder avanzar con la gestión* online, por favor indique el plan y *envíe* lo que se le solicita a continuación:
 ${requisitosCondicionales}
@@ -8511,9 +8499,6 @@ Aguardo su respuesta. Muchas gracias.`;
         txtRaw.value = `${introTxt}
 
 {planes}
-
-📌 *Requisitos Generales:* Recibo de haberes, DNI y CBU.
-📲 ¡Consultanos para iniciar tu solicitud en el acto!
 
 En caso de estar interesado y *para poder avanzar con la gestión* online, por favor indique el plan y *envíe* lo que se le solicita a continuación:
 {requisitos}

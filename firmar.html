@@ -6,6 +6,8 @@
   <title>Firma Electrónica Segura — Mutual Modelo (AMMER)</title>
   <meta name="description" content="Portal guiado paso a paso para firmar documentos electrónicos de forma segura ante AMMER."/>
   <meta name="theme-color" content="#0f2744"/>
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="apple-touch-icon" href="favicon.png"/>
   <style>
     :root {
       --navy: #0f2744;
@@ -151,8 +153,7 @@
       border-radius: 6px;
       background: #ffffff;
       box-shadow: 0 2px 8px rgba(15, 23, 42, 0.14);
-      max-width: 100%;
-      height: auto;
+      max-width: none;
     }
 
     /* Botones claros y cómodos sin desperdiciar alto vertical */
@@ -237,6 +238,40 @@
       border-radius: 9999px;
       background: #dcfce7;
       color: #166534;
+    }
+
+    .dni-cam-live-box {
+      display: none;
+      text-align: center;
+    }
+
+    .dni-cam-frame {
+      position: relative;
+      width: min(370px, 100%);
+      aspect-ratio: 16 / 10;
+      max-height: 235px;
+      margin: 0.35rem auto 0.65rem;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 3px solid var(--navy);
+      background: #0f172a;
+      box-shadow: 0 6px 18px rgba(15, 39, 68, 0.18);
+    }
+
+    .dni-cam-frame video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .dni-cam-guide {
+      position: absolute;
+      inset: 10%;
+      border: 2.5px dashed rgba(255, 255, 255, 0.88);
+      border-radius: 10px;
+      pointer-events: none;
+      box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.28);
     }
 
     /* Consejos biométricos compactos */
@@ -672,23 +707,26 @@
         <div id="pdfPaginasContainer"></div>
       </section>
 
-      <!-- PASO 2 (OPCIONAL): FOTOS DEL DNI (PERMITE CÁMARA O GALERÍA) -->
+      <!-- PASO 2 (OPCIONAL): FOTOS DEL DNI (CÁMARA DIRECTA; GALERÍA TRAS 3 FALLOS) -->
       <section class="card wizard-step-pane" id="paneStepDni" style="display:none;">
         <h1 class="step-heading">🪪 Fotos de tu DNI</h1>
-        <p class="step-lead">Podés sacar la foto ahora o elegir una que ya tengas guardada en tu galería.</p>
+        <p class="step-lead" id="dniStepLead">Sacá una foto clara del frente y del dorso de tu DNI usando tu cámara.</p>
 
-        <div class="dni-grid">
+        <div id="dniGaleriaHabilitadaBanner" class="alert alert-warn" style="display:none;margin-bottom:0.65rem;">
+          ⚠️ Luego de 3 intentos fallidos con la cámara o el validador, ya habilitamos el botón <strong>🖼️ Galería</strong> por si preferís elegir las fotos guardadas en tu dispositivo.
+        </div>
+
+        <div class="dni-grid" id="dniCardsGrid">
           <div class="dni-card" id="cardDniFrente">
             <div class="dni-title">1. Frente del DNI *</div>
             <div class="dni-hint">El lado donde está tu foto y tu número</div>
             <img id="imgPrevDniFrente" class="dni-preview" alt="Foto del frente del DNI"/>
             <div id="lblStatusDniFrente" class="dni-status-pill">✓ Foto guardada</div>
             <div style="display:flex;gap:0.4rem;width:100%;flex-wrap:wrap;">
-              <label class="btn btn-primary btn-sm" style="flex:1;cursor:pointer;min-height:40px;">
+              <button type="button" id="btnAbrirCamaraDniFrente" class="btn btn-primary btn-sm" style="flex:1;min-height:40px;">
                 <span id="txtBtnDniFrente">📷 Cámara</span>
-                <input type="file" id="inpDniFrenteCam" accept="image/*" capture="environment" style="display:none;"/>
-              </label>
-              <label class="btn btn-secondary btn-sm" style="flex:1;cursor:pointer;min-height:40px;">
+              </button>
+              <label id="lblBtnDniFrenteGal" class="btn btn-secondary btn-sm dni-gal-fallback" style="flex:1;cursor:pointer;min-height:40px;display:none;">
                 <span>🖼️ Galería</span>
                 <input type="file" id="inpDniFrenteGal" accept="image/*" style="display:none;"/>
               </label>
@@ -701,15 +739,32 @@
             <img id="imgPrevDniDorso" class="dni-preview" alt="Foto del dorso del DNI"/>
             <div id="lblStatusDniDorso" class="dni-status-pill">✓ Foto guardada</div>
             <div style="display:flex;gap:0.4rem;width:100%;flex-wrap:wrap;">
-              <label class="btn btn-primary btn-sm" style="flex:1;cursor:pointer;min-height:40px;">
+              <button type="button" id="btnAbrirCamaraDniDorso" class="btn btn-primary btn-sm" style="flex:1;min-height:40px;">
                 <span id="txtBtnDniDorso">📷 Cámara</span>
-                <input type="file" id="inpDniDorsoCam" accept="image/*" capture="environment" style="display:none;"/>
-              </label>
-              <label class="btn btn-secondary btn-sm" style="flex:1;cursor:pointer;min-height:40px;">
+              </button>
+              <label id="lblBtnDniDorsoGal" class="btn btn-secondary btn-sm dni-gal-fallback" style="flex:1;cursor:pointer;min-height:40px;display:none;">
                 <span>🖼️ Galería</span>
                 <input type="file" id="inpDniDorsoGal" accept="image/*" style="display:none;"/>
               </label>
             </div>
+          </div>
+        </div>
+
+        <div id="dniCameraLiveBox" class="dni-cam-live-box">
+          <div id="lblDniCamTitulo" style="font-weight:800;font-size:0.98rem;color:var(--navy);">
+            Encuadrá el frente de tu DNI dentro del recuadro
+          </div>
+          <div class="dni-cam-frame">
+            <video id="videoDniCapture" autoplay playsinline muted></video>
+            <div class="dni-cam-guide" aria-hidden="true"></div>
+          </div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;max-width:370px;margin:0 auto;">
+            <button type="button" id="btnCapturarFotoDni" class="btn btn-success" style="flex:1;min-width:170px;">
+              📸 Sacar foto
+            </button>
+            <button type="button" id="btnCancelarCamaraDni" class="btn btn-secondary">
+              Volver
+            </button>
           </div>
         </div>
       </section>
@@ -905,7 +960,7 @@
         docInfo: null,
         pdfB64Actual: '',
         pdfFirmadoB64: '',
-        pdfZoomScale: 1.4,
+        pdfZoomPct: 100,
         steps: [],
         currentStepIdx: 0,
         gps: { lat: null, lng: null, accuracy: null, status: 'pending' },
@@ -915,6 +970,10 @@
         requierePinOtp: false,
         ekycValidado: false,
         ekycStream: null,
+        dniCamStream: null,
+        dniCamTarget: '',
+        dniFallosHabilitarGaleria: 0,
+        galeriaDniHabilitada: false,
         mediaRecorder: null,
         recordedVideoUrl: '',
         grabandoAhora: false,
@@ -1093,12 +1152,45 @@
           btnNext.textContent = isLastPreSign && !appState.ekycValidado ? 'Verificar y Continuar →' : 'Continuar →';
         }
 
+        detenerCamaraEkyc();
         if (stepKey !== 'selfie') {
-          detenerCamaraEkyc();
           detenerVozGuia();
         }
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function registrarFalloDniParaGaleria(mensajeBase, mostrarAvisoPaso = true) {
+        if (appState.galeriaDniHabilitada) {
+          if (mostrarAvisoPaso && mensajeBase) mostrarErrorEnPaso(mensajeBase);
+          return;
+        }
+        appState.dniFallosHabilitarGaleria += 1;
+        const intentos = appState.dniFallosHabilitarGaleria;
+        if (intentos >= 3) {
+          appState.galeriaDniHabilitada = true;
+          const b1 = document.getElementById('lblBtnDniFrenteGal');
+          const b2 = document.getElementById('lblBtnDniDorsoGal');
+          const banner = document.getElementById('dniGaleriaHabilitadaBanner');
+          const lead = document.getElementById('dniStepLead');
+          if (b1) b1.style.display = 'inline-flex';
+          if (b2) b2.style.display = 'inline-flex';
+          if (banner) banner.style.display = 'block';
+          if (lead) lead.textContent = 'Podés usar la cámara o elegir una foto guardada en tu galería.';
+          if (mostrarAvisoPaso) {
+            const stepActual = appState.steps[appState.currentStepIdx];
+            if (stepActual === 'dni') {
+              mostrarErrorEnPaso(`${mensajeBase} Ya habilitamos el botón "🖼️ Galería" abajo para que puedas subir las fotos de tu DNI.`);
+            } else {
+              mostrarErrorEnPaso(`${mensajeBase} Si el inconveniente es con las fotos del DNI, al volver al paso anterior ya tenés habilitada la opción "🖼️ Galería".`);
+            }
+          }
+        } else if (mostrarAvisoPaso && mensajeBase) {
+          const restantes = 3 - intentos;
+          mostrarErrorEnPaso(
+            `${mensajeBase} (Intento ${intentos} de 3 · si falla ${restantes === 1 ? '1 vez más' : `${restantes} veces más`} habilitaremos la carga desde galería.)`
+          );
+        }
       }
 
       async function ejecutarValidacionEkycEnServidor() {
@@ -1121,11 +1213,13 @@
             }),
           });
           const resJson = await resp.json();
-          if (!resp.ok) throw new Error(resJson.detail || `Error HTTP ${resp.status}`);
+          if (!resp.ok || resJson.ok === false) {
+            throw new Error(resJson.detail || resJson.message || `Error HTTP ${resp.status}`);
+          }
           mostrarResultadoEkyc(resJson);
           return true;
         } catch (err) {
-          mostrarErrorEnPaso('No pudimos validar tu identidad: ' + err.message);
+          registrarFalloDniParaGaleria('No pudimos validar tu identidad: ' + err.message, true);
           return false;
         } finally {
           btnNext.disabled = false;
@@ -1237,22 +1331,51 @@
       async function renderizarPdfEnMovil(b64) {
         const cont = document.getElementById('pdfPaginasContainer');
         if (!cont || !window.pdfjsLib) return;
-        cont.innerHTML = '<div style="text-align:center;padding:1.5rem;font-size:0.95rem;color:#475569;">Cargando páginas del documento...</div>';
+        const mySeq = (appState._pdfRenderSeq || 0) + 1;
+        appState._pdfRenderSeq = mySeq;
+
+        if (!cont.querySelector('canvas')) {
+          cont.innerHTML = '<div style="text-align:center;padding:1.5rem;font-size:0.95rem;color:#475569;">Cargando páginas del documento...</div>';
+        }
         try {
           const doc = await window.pdfjsLib.getDocument({ data: b64ToBytes(b64), disableWorker: true }).promise;
-          cont.innerHTML = '';
+          if (appState._pdfRenderSeq !== mySeq) return;
+          const availW = Math.max(240, (cont.clientWidth || Math.min(720, window.innerWidth - 52)) - 24);
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          const zoomFactor = (appState.pdfZoomPct || 100) / 100;
+          const frag = document.createDocumentFragment();
+
           for (let i = 1; i <= doc.numPages; i++) {
             const page = await doc.getPage(i);
-            const vp = page.getViewport({ scale: appState.pdfZoomScale });
+            if (appState._pdfRenderSeq !== mySeq) return;
+            const vp1 = page.getViewport({ scale: 1 });
+            const baseScale = availW / (vp1.width || 595);
+            const displayScale = Math.max(0.35, baseScale * zoomFactor);
+            const vpCss = page.getViewport({ scale: displayScale });
+            const vpRender = page.getViewport({ scale: displayScale * dpr });
+
             const canvas = document.createElement('canvas');
-            canvas.width = vp.width;
-            canvas.height = vp.height;
-            await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
-            cont.appendChild(canvas);
+            canvas.width = Math.max(1, Math.floor(vpRender.width));
+            canvas.height = Math.max(1, Math.floor(vpRender.height));
+            canvas.style.width = `${Math.max(1, Math.floor(vpCss.width))}px`;
+            canvas.style.height = `${Math.max(1, Math.floor(vpCss.height))}px`;
+            await page.render({ canvasContext: canvas.getContext('2d'), viewport: vpRender }).promise;
+            if (appState._pdfRenderSeq !== mySeq) return;
+            frag.appendChild(canvas);
           }
+
+          cont.innerHTML = '';
+          cont.appendChild(frag);
+
+          const pct = Math.round(appState.pdfZoomPct || 100);
           const lblZ = document.getElementById('lblPdfZoomPct');
-          if (lblZ) lblZ.textContent = `${Math.round((appState.pdfZoomScale / 1.4) * 100)}%`;
+          if (lblZ) lblZ.textContent = `${pct}%`;
+          const btnMas = document.getElementById('btnPdfZoomMas');
+          const btnMenos = document.getElementById('btnPdfZoomMenos');
+          if (btnMas) btnMas.disabled = pct >= 240;
+          if (btnMenos) btnMenos.disabled = pct <= 60;
         } catch (_err) {
+          if (appState._pdfRenderSeq !== mySeq) return;
           cont.innerHTML = '<div style="padding:1.2rem;font-size:0.95rem;color:#334155;">Usá el botón <strong>Guardar copia para leer</strong> para abrir el PDF en tu dispositivo.</div>';
         }
       }
@@ -1372,6 +1495,22 @@
       // ============================================================
       // CÁMARA EKYC + VIDEO GUIADO + AUDIO + DNI SIN FALSAS ALERTAS
       // ============================================================
+      function detenerCamaraDni() {
+        if (appState.dniCamStream) {
+          try {
+            appState.dniCamStream.getTracks().forEach((t) => t.stop());
+          } catch (_e) {}
+          appState.dniCamStream = null;
+        }
+        appState.dniCamTarget = '';
+        const vid = document.getElementById('videoDniCapture');
+        if (vid) vid.srcObject = null;
+        const box = document.getElementById('dniCameraLiveBox');
+        const grid = document.getElementById('dniCardsGrid');
+        if (box) box.style.display = 'none';
+        if (grid) grid.style.display = 'grid';
+      }
+
       function detenerCamaraEkyc() {
         if (appState.mediaRecorder && appState.mediaRecorder.state !== 'inactive') {
           try { appState.mediaRecorder.stop(); } catch (_) {}
@@ -1386,6 +1525,7 @@
         }
         const vid = document.getElementById('videoSelfieLiveness');
         if (vid) vid.srcObject = null;
+        detenerCamaraDni();
       }
 
       function redimensionarArchivoImagen(file, maxLado) {
@@ -1489,7 +1629,129 @@
           if (done) done.style.display = 'block';
         }
 
-        const bindDniInput = (inpId, imgId, cardId, lblId, btnTxtId, key, labelBtnReintento) => {
+        const guardarFotoDni = async (lado, b64) => {
+          const isFrente = lado === 'frente';
+          const key = isFrente ? 'dniFrente' : 'dniDorso';
+          const imgId = isFrente ? 'imgPrevDniFrente' : 'imgPrevDniDorso';
+          const cardId = isFrente ? 'cardDniFrente' : 'cardDniDorso';
+          const lblId = isFrente ? 'lblStatusDniFrente' : 'lblStatusDniDorso';
+          const btnTxtId = isFrente ? 'txtBtnDniFrente' : 'txtBtnDniDorso';
+
+          appState.ekycImgs[key] = b64;
+          appState.ekycValidado = false;
+
+          const img = document.getElementById(imgId);
+          if (img) { img.src = b64; img.style.display = 'block'; }
+          const card = document.getElementById(cardId);
+          if (card) card.classList.add('captured');
+          const btnTxt = document.getElementById(btnTxtId);
+          if (btnTxt) btnTxt.textContent = '📷 Sacar otra';
+
+          const lbl = document.getElementById(lblId);
+          if (lbl) {
+            lbl.style.display = 'inline-block';
+            lbl.textContent = '✓ Foto lista';
+          }
+
+          // Buscamos PDF417 silenciosamente en FRENTE y DORSO (sin mostrar alertas falsas si el dorso no tiene código de barras)
+          const encontro417 = await intentarLeerPdf417Silencioso(b64);
+          if (encontro417 && lbl) {
+            lbl.textContent = '✓ Foto lista y datos leídos';
+          }
+        };
+
+        const abrirCamaraDni = async (lado) => {
+          mostrarErrorEnPaso('');
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            registrarFalloDniParaGaleria('No pudimos abrir la cámara en este dispositivo o navegador.', true);
+            return;
+          }
+          try {
+            detenerCamaraEkyc();
+            let stream = null;
+            try {
+              stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+                audio: false,
+              });
+            } catch (eConstraint) {
+              if (eConstraint && (eConstraint.name === 'OverconstrainedError' || eConstraint.name === 'NotFoundError')) {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+              } else {
+                throw eConstraint;
+              }
+            }
+            const vTrack = stream.getVideoTracks && stream.getVideoTracks()[0];
+            const trackLbl = String((vTrack && vTrack.label) || '').toLowerCase();
+            if (/obs[\s_-]?virtual|virtual\s?cam|manycam|snap\s?cam|camtwist|splitcam|xsplit|youcam/i.test(trackLbl)) {
+              stream.getTracks().forEach((t) => t.stop());
+              registrarFalloDniParaGaleria('Por seguridad no se permiten cámaras virtuales o simuladas.', true);
+              return;
+            }
+            appState.dniCamStream = stream;
+            appState.dniCamTarget = lado;
+            const vid = document.getElementById('videoDniCapture');
+            if (vid) vid.srcObject = stream;
+            const titulo = document.getElementById('lblDniCamTitulo');
+            if (titulo) {
+              titulo.textContent = lado === 'frente'
+                ? 'Encuadrá el FRENTE de tu DNI dentro del recuadro'
+                : 'Encuadrá el DORSO de tu DNI dentro del recuadro';
+            }
+            const grid = document.getElementById('dniCardsGrid');
+            const box = document.getElementById('dniCameraLiveBox');
+            if (grid) grid.style.display = 'none';
+            if (box) box.style.display = 'block';
+          } catch (err) {
+            detenerCamaraDni();
+            registrarFalloDniParaGaleria('No pudimos abrir la cámara (' + err.message + ').', true);
+          }
+        };
+
+        const btnCamFrente = document.getElementById('btnAbrirCamaraDniFrente');
+        const btnCamDorso = document.getElementById('btnAbrirCamaraDniDorso');
+        const btnCaptDni = document.getElementById('btnCapturarFotoDni');
+        const btnCancDni = document.getElementById('btnCancelarCamaraDni');
+
+        if (btnCamFrente && !btnCamFrente.dataset.bound) {
+          btnCamFrente.dataset.bound = '1';
+          btnCamFrente.addEventListener('click', () => abrirCamaraDni('frente'));
+        }
+        if (btnCamDorso && !btnCamDorso.dataset.bound) {
+          btnCamDorso.dataset.bound = '1';
+          btnCamDorso.addEventListener('click', () => abrirCamaraDni('dorso'));
+        }
+        if (btnCaptDni && !btnCaptDni.dataset.bound) {
+          btnCaptDni.dataset.bound = '1';
+          btnCaptDni.addEventListener('click', async () => {
+            const vid = document.getElementById('videoDniCapture');
+            const target = appState.dniCamTarget || 'frente';
+            if (!vid || !appState.dniCamStream) return;
+            try {
+              const vw = vid.videoWidth || 1280;
+              const vh = vid.videoHeight || 720;
+              const scale = Math.min(1, 1600 / Math.max(vw, vh));
+              const c = document.createElement('canvas');
+              c.width = Math.max(1, Math.round(vw * scale));
+              c.height = Math.max(1, Math.round(vh * scale));
+              c.getContext('2d').drawImage(vid, 0, 0, c.width, c.height);
+              const b64 = c.toDataURL('image/jpeg', 0.88);
+              detenerCamaraDni();
+              await guardarFotoDni(target, b64);
+            } catch (err) {
+              detenerCamaraDni();
+              registrarFalloDniParaGaleria('No pudimos capturar la foto (' + err.message + ').', true);
+            }
+          });
+        }
+        if (btnCancDni && !btnCancDni.dataset.bound) {
+          btnCancDni.dataset.bound = '1';
+          btnCancDni.addEventListener('click', () => {
+            detenerCamaraDni();
+          });
+        }
+
+        const bindDniGalInput = (inpId, lado) => {
           const inp = document.getElementById(inpId);
           if (!inp || inp.dataset.bound) return;
           inp.dataset.bound = '1';
@@ -1498,38 +1760,16 @@
             if (!file) return;
             mostrarErrorEnPaso('');
             try {
-              const b64 = await redimensionarArchivoImagen(file, 1280);
-              appState.ekycImgs[key] = b64;
-              appState.ekycValidado = false;
-
-              const img = document.getElementById(imgId);
-              if (img) { img.src = b64; img.style.display = 'block'; }
-              const card = document.getElementById(cardId);
-              if (card) card.classList.add('captured');
-              const btnTxt = document.getElementById(btnTxtId);
-              if (btnTxt) btnTxt.textContent = labelBtnReintento;
-
-              const lbl = document.getElementById(lblId);
-              if (lbl) {
-                lbl.style.display = 'inline-block';
-                lbl.textContent = '✓ Foto lista';
-              }
-
-              // Buscamos PDF417 silenciosamente en FRENTE y DORSO (sin mostrar alertas falsas si el dorso no tiene código de barras)
-              const encontro417 = await intentarLeerPdf417Silencioso(b64);
-              if (encontro417 && lbl) {
-                lbl.textContent = '✓ Foto lista y datos leídos';
-              }
+              const b64 = await redimensionarArchivoImagen(file, 1400);
+              await guardarFotoDni(lado, b64);
             } catch (e) {
-              mostrarErrorEnPaso('No pudimos leer esa foto. Probá sacarla de nuevo: ' + e.message);
+              mostrarErrorEnPaso('No pudimos leer esa foto. Probá elegir otra: ' + e.message);
             }
           });
         };
 
-        bindDniInput('inpDniFrenteCam', 'imgPrevDniFrente', 'cardDniFrente', 'lblStatusDniFrente', 'txtBtnDniFrente', 'dniFrente', '📷 Cámara');
-        bindDniInput('inpDniFrenteGal', 'imgPrevDniFrente', 'cardDniFrente', 'lblStatusDniFrente', 'txtBtnDniFrente', 'dniFrente', '📷 Cámara');
-        bindDniInput('inpDniDorsoCam', 'imgPrevDniDorso', 'cardDniDorso', 'lblStatusDniDorso', 'txtBtnDniDorso', 'dniDorso', '📷 Cámara');
-        bindDniInput('inpDniDorsoGal', 'imgPrevDniDorso', 'cardDniDorso', 'lblStatusDniDorso', 'txtBtnDniDorso', 'dniDorso', '📷 Cámara');
+        bindDniGalInput('inpDniFrenteGal', 'frente');
+        bindDniGalInput('inpDniDorsoGal', 'dorso');
 
         // Botones de guía por voz
         const btnTestAudio = document.getElementById('btnProbarAudioGuia');
@@ -1896,14 +2136,18 @@
       document.getElementById('btnWizardPrev').addEventListener('click', retrocederPaso);
 
       document.getElementById('btnPdfZoomMas').addEventListener('click', async () => {
-        if (!appState.pdfB64Actual || appState.pdfZoomScale >= 2.4) return;
-        appState.pdfZoomScale = Number((appState.pdfZoomScale + 0.25).toFixed(2));
+        if (!appState.pdfB64Actual || appState.pdfZoomPct >= 240) return;
+        appState.pdfZoomPct = Math.min(240, (appState.pdfZoomPct || 100) + 20);
+        const lblZ = document.getElementById('lblPdfZoomPct');
+        if (lblZ) lblZ.textContent = `${appState.pdfZoomPct}%`;
         await renderizarPdfEnMovil(appState.pdfB64Actual);
       });
 
       document.getElementById('btnPdfZoomMenos').addEventListener('click', async () => {
-        if (!appState.pdfB64Actual || appState.pdfZoomScale <= 0.9) return;
-        appState.pdfZoomScale = Number((appState.pdfZoomScale - 0.25).toFixed(2));
+        if (!appState.pdfB64Actual || appState.pdfZoomPct <= 60) return;
+        appState.pdfZoomPct = Math.max(60, (appState.pdfZoomPct || 100) - 20);
+        const lblZ = document.getElementById('lblPdfZoomPct');
+        if (lblZ) lblZ.textContent = `${appState.pdfZoomPct}%`;
         await renderizarPdfEnMovil(appState.pdfB64Actual);
       });
 

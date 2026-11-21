@@ -3893,7 +3893,7 @@
           <span class="sidebar-nav-label sidebar-text">Auditoría IA</span>
           <span class="sidebar-text" style="margin-left:auto;background:rgba(99,102,241,0.2);color:#a5b4fc;border:1px solid rgba(99,102,241,0.35);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:0.03em;flex-shrink:0;">2.0</span>
         </button>
-        <button type="button" id="btnNavFirmasAmmer" class="sidebar-nav-item" data-view="vistaFirmasAMMER" data-tooltip="Firmas AMMER" onclick="cambiarVistaPrincipal('firmas-ammer')">
+        <button type="button" id="btnNavFirmasAmmer" class="sidebar-nav-item" data-view="vistaFirmasAMMER" data-tooltip="Firmas AMMER" onclick="cambiarVistaPrincipal('firmas-ammer')" style="display:none;">
           <span class="sidebar-nav-icon" style="color:#34d399;">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
@@ -6787,7 +6787,7 @@
       <div class="modal-footer-bar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
         <div id="footerCicloVidaFicha"></div>
         <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
-          <button type="button" id="btnExportarExpedienteZip" onclick="exportarExpedienteCompletoZip()" style="display:inline-flex;align-items:center;gap:6px;padding:0.5rem 0.9rem;border-radius:8px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.8rem;font-weight:700;cursor:pointer;">📦 Expediente .ZIP</button>
+          <button type="button" id="btnExportarExpedienteZip" onclick="exportarExpedienteCompletoZip()" style="display:none;align-items:center;gap:6px;padding:0.5rem 0.9rem;border-radius:8px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.8rem;font-weight:700;cursor:pointer;">📦 Expediente .ZIP</button>
           <button type="button" class="btn-restore" onclick="cerrarModal('modalFichaCompleta')">Cerrar Expediente</button>
         </div>
       </div>
@@ -10084,8 +10084,15 @@ ${cierreTxt}`;
       if (viewId === 'vistaAuditoriaIA' && typeof cargarEstadoBoletinOficialAuditoria === 'function') {
         cargarEstadoBoletinOficialAuditoria();
       }
-      if (viewId === 'vistaFirmasAMMER' && typeof window.initFirmasAmmerView === 'function') {
-        window.initFirmasAmmerView();
+      if (viewId === 'vistaFirmasAMMER') {
+        if (!tieneAccesoFirmasAmmer(sess)) {
+          showToast('⛔ Acceso restringido: Firmas AMMER solo está habilitado para rol Admin.');
+          cambiarPestana('view-simulador');
+          return;
+        }
+        if (typeof window.initFirmasAmmerView === 'function') {
+          window.initFirmasAmmerView();
+        }
       }
       if (viewId === 'view-ficha-asociado') {
         if (!tieneAccesoPadronFichas(sess)) {
@@ -10105,6 +10112,13 @@ ${cierreTxt}`;
       return rol === 'analista' || rol === 'admin' || rol === 'administrador';
     }
     window.tieneAccesoPadronFichas = tieneAccesoPadronFichas;
+
+    function tieneAccesoFirmasAmmer(sessObj) {
+      const s = sessObj || getSession();
+      const rol = String((s && (s.rol || s.role)) || '').trim().toLowerCase();
+      return rol === 'admin' || rol === 'administrador';
+    }
+    window.tieneAccesoFirmasAmmer = tieneAccesoFirmasAmmer;
 
     function checkAuthAndInit() {
       const session = getSession();
@@ -10160,6 +10174,7 @@ ${cierreTxt}`;
       const isCollapsed = sidebar ? sidebar.classList.contains('w-20') : false;
       const textCls = 'sidebar-text' + (isCollapsed ? ' hidden' : '');
       const puedeVerPadronFichas = tieneAccesoPadronFichas(session);
+      const puedeVerFirmasAmmer = tieneAccesoFirmasAmmer(session);
 
       const navBody = document.getElementById('sidebarNavBody');
       if (navBody) {
@@ -10192,7 +10207,9 @@ ${cierreTxt}`;
             '<span class="sidebar-nav-icon">' + iconSimulador + '</span>' +
             '<span class="sidebar-nav-label ' + textCls + '">Simulador</span></button>';
           html += itemAuditoriaIA;
-          html += itemFirmasAmmer;
+          if (puedeVerFirmasAmmer) {
+            html += itemFirmasAmmer;
+          }
           if (puedeVerPadronFichas) {
             html += itemPadronFichas;
           }
@@ -10211,7 +10228,6 @@ ${cierreTxt}`;
             '<span class="sidebar-nav-icon">' + iconSimulador + '</span>' +
             '<span class="sidebar-nav-label ' + textCls + '">Simulador</span></button>';
           html += itemAuditoriaIA;
-          html += itemFirmasAmmer;
           html += '<button type="button" class="sidebar-nav-item" data-view="view-comercializador" data-tooltip="' + tabName + '" onclick="cambiarPestana(\'view-comercializador\')">' +
             '<span class="sidebar-nav-icon">' + iconGestiones + '</span>' +
             '<span class="sidebar-nav-label ' + textCls + '">' + tabName + '</span></button>';
@@ -14396,6 +14412,12 @@ ${cierreTxt}`;
       }
       window._fichaExpedienteActivoObj = s;
       window._fichaExpedienteActivoId = idActivo;
+      const btnZip = document.getElementById('btnExportarExpedienteZip');
+      if (btnZip) {
+        btnZip.style.display = (typeof tieneAccesoFirmasAmmer === 'function' && tieneAccesoFirmasAmmer(session))
+          ? 'inline-flex'
+          : 'none';
+      }
 
       const tituloExpediente = idDef ? ('Expediente ' + idDef) : ('Expediente ' + idProv);
       const tituloHtml = '<span class="text-lg font-bold font-mono text-slate-900">' + sanitizeHTML(tituloExpediente) + '</span> <span class="text-base font-semibold text-slate-800">— ' + sanitizeHTML(nombreSocio) + '</span>';
@@ -24901,6 +24923,6 @@ ${cierreTxt}`;
   <script src="js/auditoria20.js?v=6"></script>
   <script src="js/fichasAsociados.js?v=6"></script>
   <script src="js/sidecreerWidget.js?v=10"></script>
-  <script src="js/firmasAmmer.js?v=1"></script>
+  <script src="js/firmasAmmer.js?v=2"></script>
 </body>
 </html>

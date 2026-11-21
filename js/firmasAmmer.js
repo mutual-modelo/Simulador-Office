@@ -90,8 +90,8 @@
   }
 
   function esAdminOAnalista() {
-    if (typeof tieneAccesoPadronFichas === 'function') {
-      return !!tieneAccesoPadronFichas();
+    if (typeof tieneAccesoFirmasAmmer === 'function') {
+      return !!tieneAccesoFirmasAmmer();
     }
     return false;
   }

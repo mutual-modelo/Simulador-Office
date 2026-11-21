@@ -2,35 +2,47 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>Firma Electrónica Segura — AMMER</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Firma Electrónica Segura — Mutual Modelo (AMMER)</title>
+  <meta name="description" content="Portal guiado paso a paso para firmar documentos electrónicos de forma segura ante AMMER."/>
   <meta name="theme-color" content="#0f2744"/>
   <style>
     :root {
       --navy: #0f2744;
-      --blue: #1e3a8a;
-      --accent: #0ea5e9;
+      --blue: #163a63;
+      --accent: #0284c7;
       --ok: #15803d;
+      --ok-bg: #ecfdf5;
+      --ok-border: #86efac;
+      --warn-bg: #fffbeb;
+      --warn-border: #fde68a;
+      --warn-text: #92400e;
       --bg: #f1f5f9;
       --card: #ffffff;
       --border: #cbd5e1;
       --text: #0f172a;
-      --muted: #64748b;
+      --muted: #475569;
     }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.45;
+      line-height: 1.5;
+      font-size: 16px;
+      padding-bottom: 98px; /* espacio para la barra fija inferior */
     }
+
     header {
-      background: linear-gradient(135deg, #0f2744 0%, #1e3a8a 100%);
+      background: linear-gradient(135deg, #0a1628 0%, #0f2744 60%, #163a63 100%);
       color: #ffffff;
-      padding: 1rem 1.15rem;
-      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.22);
+      padding: 0.95rem 1.15rem;
+      box-shadow: 0 3px 14px rgba(15, 23, 42, 0.22);
     }
+
     .header-inner {
       max-width: 780px;
       margin: 0 auto;
@@ -40,96 +52,381 @@
       gap: 0.75rem;
       flex-wrap: wrap;
     }
-    .brand-title { font-size: 1.05rem; font-weight: 800; letter-spacing: 0.01em; }
-    .brand-sub { font-size: 0.75rem; color: #bae6fd; margin-top: 2px; }
+
+    .brand-title { font-size: 1.08rem; font-weight: 800; letter-spacing: 0.01em; }
+    .brand-sub { font-size: 0.82rem; color: #cbd5e1; margin-top: 2px; }
+
     .badge-ssl {
-      font-size: 0.72rem;
+      font-size: 0.78rem;
       font-weight: 700;
-      padding: 4px 10px;
+      padding: 5px 11px;
       border-radius: 9999px;
       background: rgba(255, 255, 255, 0.14);
       border: 1px solid rgba(255, 255, 255, 0.28);
+      white-space: nowrap;
     }
+
     main {
       max-width: 780px;
-      margin: 1rem auto 2.5rem auto;
-      padding: 0 0.85rem;
+      margin: 1rem auto 1.5rem auto;
+      padding: 0 0.9rem;
       display: flex;
       flex-direction: column;
-      gap: 0.9rem;
+      gap: 1rem;
     }
+
     .card {
       background: var(--card);
       border: 1px solid #e2e8f0;
-      border-radius: 14px;
-      padding: 1rem;
-      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      border-radius: 18px;
+      padding: 1.25rem;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
     }
-    .card h2 {
-      margin: 0 0 0.65rem 0;
-      font-size: 0.95rem;
+
+    .step-heading {
+      margin: 0 0 0.35rem 0;
+      font-size: 1.25rem;
       font-weight: 800;
       color: var(--navy);
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      line-height: 1.28;
     }
+
+    .step-lead {
+      margin: 0 0 1rem 0;
+      font-size: 0.98rem;
+      color: var(--muted);
+    }
+
     .meta-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 0.55rem;
-      font-size: 0.82rem;
+      grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+      gap: 0.65rem;
+      font-size: 0.92rem;
     }
+
     .meta-item {
       background: #f8fafc;
       border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 0.45rem 0.65rem;
+      border-radius: 12px;
+      padding: 0.65rem 0.85rem;
     }
-    .meta-lbl { font-size: 0.68rem; font-weight: 700; color: var(--muted); text-transform: uppercase; }
-    .meta-val { font-weight: 700; color: var(--text); margin-top: 2px; word-break: break-word; }
-    .hash-box {
-      margin-top: 0.65rem;
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 0.7rem;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 0.45rem 0.65rem;
-      color: #334155;
-      word-break: break-all;
+
+    .meta-lbl { font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em; }
+    .meta-val { font-size: 0.98rem; font-weight: 700; color: var(--text); margin-top: 3px; word-break: break-word; }
+
+    .pdf-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      margin: 1rem 0 0.7rem 0;
     }
+
+    .zoom-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 11px;
+      padding: 4px;
+    }
+
     #pdfPaginasContainer {
       background: #e2e8f0;
-      border-radius: 10px;
-      padding: 0.65rem;
-      max-height: 520px;
-      overflow-y: auto;
-    }
-    #pdfPaginasContainer canvas {
-      width: 100%;
-      height: auto;
-      display: block;
-      margin: 0 auto 0.65rem auto;
-      border-radius: 6px;
-      background: #ffffff;
-      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.14);
-    }
-    .sig-pad-wrap {
-      border: 2px dashed #94a3b8;
       border-radius: 12px;
+      padding: 0.75rem;
+      max-height: 58vh;
+      min-height: 260px;
+      overflow: auto;
+    }
+
+    #pdfPaginasContainer canvas {
+      display: block;
+      margin: 0 auto 0.75rem auto;
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: 0 3px 10px rgba(15, 23, 42, 0.14);
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Botones accesibles para adultos mayores */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 48px;
+      padding: 0.75rem 1.2rem;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 1rem;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: transform 0.12s ease, background-color 0.15s ease, opacity 0.15s ease;
+      text-decoration: none;
+    }
+
+    .btn:active { transform: scale(0.99); }
+    .btn:disabled { opacity: 0.52; cursor: not-allowed; }
+    .btn-sm { min-height: 38px; padding: 0.42rem 0.8rem; font-size: 0.88rem; border-radius: 9px; }
+
+    .btn-primary { background: var(--navy); color: #ffffff; box-shadow: 0 3px 10px rgba(15, 39, 68, 0.22); }
+    .btn-primary:hover:not(:disabled) { background: var(--blue); }
+    .btn-secondary { background: #ffffff; color: #1e293b; border-color: #cbd5e1; }
+    .btn-secondary:hover:not(:disabled) { background: #f8fafc; }
+    .btn-success { background: #15803d; color: #ffffff; box-shadow: 0 3px 10px rgba(21, 128, 61, 0.24); }
+    .btn-success:hover:not(:disabled) { background: #166534; }
+
+    /* DNI capture cards */
+    .dni-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+
+    .dni-card {
+      background: #f8fafc;
+      border: 2px solid #cbd5e1;
+      border-radius: 16px;
+      padding: 1rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.65rem;
+      transition: border-color 0.2s ease, background-color 0.2s ease;
+    }
+
+    .dni-card.captured {
+      border-color: #22c55e;
+      background: #f0fdf4;
+    }
+
+    .dni-title {
+      font-size: 1.02rem;
+      font-weight: 800;
+      color: var(--navy);
+    }
+
+    .dni-hint {
+      font-size: 0.86rem;
+      color: var(--muted);
+    }
+
+    .dni-preview {
+      display: none;
+      width: 100%;
+      max-height: 175px;
+      object-fit: contain;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+    }
+
+    .dni-status-pill {
+      display: none;
+      font-size: 0.86rem;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    /* Consejos biométricos inspirados en Mi Argentina / eKYC */
+    .tips-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .tip-item {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 0.8rem 1rem;
+    }
+
+    .tip-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #e0f2fe;
+      border: 2px solid #bae6fd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .tip-title { font-size: 1rem; font-weight: 800; color: var(--navy); }
+    .tip-desc { font-size: 0.88rem; color: var(--muted); margin-top: 2px; }
+
+    .audio-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+      background: #eff6ff;
+      border: 1.5px solid #93c5fd;
+      border-radius: 14px;
+      padding: 0.85rem 1rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Cámara ovalada + Avatar guía animado */
+    .liveness-stage-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.45rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .liveness-seg {
+      height: 8px;
+      border-radius: 9999px;
+      background: #e2e8f0;
+      transition: background-color 0.25s ease;
+    }
+    .liveness-seg.active { background: #0284c7; }
+    .liveness-seg.done { background: #16a34a; }
+
+    .guide-avatar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      background: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 16px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.95rem;
+    }
+
+    .guide-avatar-circle {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: #e0f2fe;
+      border: 2px solid #0284c7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .guide-cue-title {
+      font-size: 1.12rem;
+      font-weight: 800;
+      color: var(--navy);
+      line-height: 1.25;
+    }
+
+    .guide-cue-sub {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    @keyframes headNodTurn {
+      0%, 100% { transform: translateX(0px) rotate(0deg); }
+      35% { transform: translateX(-7px) rotate(-6deg); }
+      70% { transform: translateX(7px) rotate(6deg); }
+    }
+    @keyframes headGentleSmile {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .anim-turn { animation: headNodTurn 2s ease-in-out infinite; transform-origin: center; }
+    .anim-smile { animation: headGentleSmile 1.6s ease-in-out infinite; transform-origin: center; }
+
+    .oval-camera-frame {
+      position: relative;
+      width: 270px;
+      height: 330px;
+      max-width: 82vw;
+      margin: 0 auto 0.9rem auto;
+      border-radius: 50% / 46%;
+      overflow: hidden;
+      border: 5px solid #0284c7;
+      background: #0f172a;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.22);
+      transition: border-color 0.25s ease;
+    }
+
+    .oval-camera-frame.recording { border-color: #f59e0b; }
+    .oval-camera-frame.success { border-color: #16a34a; }
+
+    .oval-camera-frame video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+      display: block;
+    }
+
+    .rec-pill {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.78);
+      color: #ffffff;
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 4px 11px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .rec-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #ef4444;
+      animation: pulseRec 1s infinite;
+    }
+    @keyframes pulseRec { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+    .video-preview-player {
+      width: 240px;
+      max-width: 100%;
+      border-radius: 14px;
+      border: 2px solid #16a34a;
+      background: #0f172a;
+      display: block;
+      margin: 0 auto 0.75rem auto;
+    }
+
+    /* Firma manuscrita amplia */
+    .sig-pad-wrap {
+      border: 2.5px dashed #64748b;
+      border-radius: 14px;
       background: #f8fafc;
       position: relative;
       overflow: hidden;
       touch-action: none;
     }
+
     #canvasFirmaMovil {
       width: 100%;
-      height: 190px;
+      height: 220px;
       display: block;
       cursor: crosshair;
       touch-action: none;
     }
+
     .sig-hint {
       position: absolute;
       inset: 0;
@@ -137,60 +434,135 @@
       align-items: center;
       justify-content: center;
       pointer-events: none;
-      color: #94a3b8;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 0.65rem 1.05rem;
-      border-radius: 10px;
+      color: #64748b;
+      font-size: 1rem;
       font-weight: 700;
-      font-size: 0.88rem;
-      cursor: pointer;
-      border: 1px solid transparent;
-      transition: opacity 0.15s ease;
+      text-align: center;
+      padding: 1rem;
     }
-    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
-    .btn-primary { background: #0f2744; color: #ffffff; width: 100%; font-size: 0.96rem; padding: 0.85rem 1rem; }
-    .btn-secondary { background: #ffffff; color: #334155; border-color: #cbd5e1; }
-    .btn-success { background: #15803d; color: #ffffff; width: 100%; }
+
     .consent-label {
       display: flex;
       align-items: flex-start;
-      gap: 0.6rem;
+      gap: 0.75rem;
       background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      border-radius: 10px;
-      padding: 0.75rem;
-      font-size: 0.82rem;
+      border: 1.5px solid #93c5fd;
+      border-radius: 14px;
+      padding: 0.95rem;
+      font-size: 0.95rem;
       color: #1e3a8a;
       cursor: pointer;
-      margin: 0.75rem 0;
+      margin: 1rem 0;
     }
-    .consent-label input { margin-top: 3px; width: 18px; height: 18px; flex-shrink: 0; }
+
+    .consent-label input {
+      margin-top: 2px;
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      accent-color: #0f2744;
+      cursor: pointer;
+    }
+
     .alert {
-      border-radius: 10px;
-      padding: 0.85rem 1rem;
-      font-size: 0.86rem;
+      border-radius: 12px;
+      padding: 0.95rem 1.05rem;
+      font-size: 0.95rem;
       font-weight: 600;
     }
-    .alert-err { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
-    .alert-ok { background: #dcfce7; border: 1px solid #86efac; color: #166534; }
+
+    .alert-err { background: #fef2f2; border: 1.5px solid #fecaca; color: #b91c1c; }
+    .alert-ok { background: #dcfce7; border: 1.5px solid #86efac; color: #166534; }
+    .alert-warn { background: #fffbeb; border: 1.5px solid #fde68a; color: #92400e; }
+
     .geo-pill {
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      font-size: 0.74rem;
+      font-size: 0.8rem;
       font-weight: 700;
-      padding: 3px 9px;
+      padding: 4px 10px;
       border-radius: 9999px;
       background: #f1f5f9;
       color: #475569;
       border: 1px solid #cbd5e1;
+    }
+
+    .hash-box {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.74rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 0.65rem 0.8rem;
+      color: #334155;
+      word-break: break-all;
+    }
+
+    /* Barra fija inferior de progreso paso a paso */
+    .wizard-bottom-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 500;
+      background: #ffffff;
+      border-top: 1px solid #cbd5e1;
+      box-shadow: 0 -6px 24px rgba(15, 23, 42, 0.12);
+    }
+
+    .wizard-progress-track {
+      width: 100%;
+      height: 6px;
+      background: #e2e8f0;
+      overflow: hidden;
+    }
+
+    .wizard-progress-fill {
+      height: 100%;
+      width: 25%;
+      background: linear-gradient(90deg, #0284c7 0%, #16a34a 100%);
+      transition: width 0.35s ease;
+    }
+
+    .wizard-bar-inner {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 0.65rem 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.65rem;
+    }
+
+    .wizard-step-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 110px;
+    }
+
+    .wizard-step-count {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: var(--navy);
+    }
+
+    .wizard-step-name {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .wizard-bar-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+    }
+
+    @media (max-width: 560px) {
+      .wizard-bar-inner { flex-wrap: wrap; }
+      .wizard-bar-actions { width: 100%; }
+      .wizard-bar-actions .btn { flex: 1; }
     }
   </style>
 </head>
@@ -199,186 +571,294 @@
     <div class="header-inner">
       <div>
         <div class="brand-title">Asociación Mutual Modelo de Entre Ríos (AMMER)</div>
-        <div class="brand-sub">Portal de Firma Electrónica y Trazabilidad Legal · Ley 25.506</div>
+        <div class="brand-sub">Portal de Firma Electrónica Guiada · Ley 25.506</div>
       </div>
-      <div class="badge-ssl">🔒 Enlace Seguro SHA-256</div>
+      <div class="badge-ssl">🔒 Conexión Segura</div>
     </div>
   </header>
 
   <main>
-    <div id="estadoCargaBox" class="card" style="text-align:center;padding:2rem 1rem;">
-      <div style="font-size:1.4rem;margin-bottom:0.4rem;">⏳</div>
-      <div style="font-weight:700;color:#0f2744;">Verificando documento seguro...</div>
-      <div style="font-size:0.8rem;color:#64748b;margin-top:4px;">Cargando información de tu trámite en AMMER</div>
+    <div id="estadoCargaBox" class="card" style="text-align:center;padding:2.4rem 1.2rem;">
+      <div style="font-size:2rem;margin-bottom:0.5rem;">⏳</div>
+      <div style="font-size:1.12rem;font-weight:800;color:#0f2744;">Cargando tu documento...</div>
+      <div style="font-size:0.92rem;color:#475569;margin-top:4px;">Por favor esperá un momento</div>
     </div>
 
     <div id="errorBox" class="alert alert-err" style="display:none;"></div>
 
-    <div id="esperaTurnoBox" class="card" style="display:none;text-align:center;padding:1.5rem 1.1rem;">
-      <div style="font-size:2rem;margin-bottom:0.4rem;">⏳</div>
-      <div style="font-weight:800;font-size:1rem;color:#0f2744;margin-bottom:0.45rem;">Turno de Firma en Espera</div>
-      <div id="lblEsperaTurnoDesc" style="font-size:0.84rem;color:#475569;line-height:1.5;margin-bottom:1rem;"></div>
-      <button type="button" onclick="window.location.reload()" class="btn btn-secondary" style="width:auto;margin:0 auto;">🔄 Comprobar si ya se habilitó mi turno</button>
+    <div id="esperaTurnoBox" class="card" style="display:none;text-align:center;padding:1.8rem 1.2rem;">
+      <div style="font-size:2.3rem;margin-bottom:0.5rem;">⏳</div>
+      <div style="font-weight:800;font-size:1.15rem;color:#0f2744;margin-bottom:0.5rem;">Aguardando tu turno para firmar</div>
+      <div id="lblEsperaTurnoDesc" style="font-size:0.95rem;color:#475569;line-height:1.55;margin-bottom:1.15rem;"></div>
+      <button type="button" onclick="window.location.reload()" class="btn btn-secondary">🔄 Comprobar si ya es mi turno</button>
     </div>
 
+    <!-- PANTALLA FINAL: DOCUMENTO YA FIRMADO -->
     <div id="confirmacionFirmadoBox" class="card" style="display:none;">
-      <div id="alertEstadoFirmado" class="alert alert-ok" style="margin-bottom:0.85rem;">
-        ✅ <strong>¡Documento firmado electrónicamente con éxito!</strong><br/>
-        <span style="font-weight:500;font-size:0.82rem;">Ya podés descargar tu copia con la Hoja Anexa de Evidencia y hashes criptográficos SHA-256.</span>
+      <div id="alertEstadoFirmado" class="alert alert-ok" style="margin-bottom:1rem;font-size:1rem;">
+        ✅ <strong>¡Listo! Tu documento fue firmado con éxito.</strong><br/>
+        <span style="font-weight:500;font-size:0.92rem;">Podés descargar tu copia firmada con el botón verde de abajo.</span>
       </div>
-      <div class="meta-grid" style="margin-bottom:0.75rem;">
+      <div class="meta-grid" style="margin-bottom:1rem;">
         <div class="meta-item"><div class="meta-lbl">Documento</div><div class="meta-val" id="resDocNombre">-</div></div>
-        <div class="meta-item"><div class="meta-lbl">Fecha Firma (UTC)</div><div class="meta-val" id="resFechaFirma">-</div></div>
+        <div class="meta-item"><div class="meta-lbl">Fecha y hora</div><div class="meta-val" id="resFechaFirma">-</div></div>
       </div>
-      <div class="hash-box" style="margin-bottom:0.85rem;">
-        <strong>SHA-256 Original:</strong> <span id="resHashOrig">-</span><br/>
-        <strong>SHA-256 Firmado + Evidencia:</strong> <span id="resHashFirmado">-</span>
-        <div id="resTsaStatusLine" style="margin-top:4px;display:none;"></div>
-        <div id="resPadesStatusLine" style="margin-top:4px;display:none;"></div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:0.55rem;">
-        <button type="button" id="btnDescargarCopiaFirmada" class="btn btn-success">
-          ⬇️ Descargar PDF Firmado + Evidencia Legal
+      <div style="display:flex;flex-direction:column;gap:0.75rem;margin-bottom:0.85rem;">
+        <button type="button" id="btnDescargarCopiaFirmada" class="btn btn-success" style="width:100%;">
+          ⬇️ Descargar mi PDF Firmado
         </button>
-        <a id="lnkPortalVerificacionQr" href="#" target="_blank" rel="noopener" class="btn btn-secondary" style="display:none;text-decoration:none;text-align:center;">
-          🔍 Verificar Autenticidad en Portal Público (QR)
+        <a id="lnkPortalVerificacionQr" href="#" target="_blank" rel="noopener" class="btn btn-secondary" style="display:none;width:100%;">
+          🔍 Verificar validez del documento
         </a>
       </div>
+      <details style="margin-top:0.5rem;">
+        <summary style="cursor:pointer;font-size:0.84rem;font-weight:700;color:#475569;">Ver comprobantes técnicos de respaldo</summary>
+        <div class="hash-box" style="margin-top:0.55rem;">
+          <strong>SHA-256 Original:</strong> <span id="resHashOrig">-</span><br/>
+          <strong>SHA-256 Firmado + Evidencia:</strong> <span id="resHashFirmado">-</span>
+          <div id="resTsaStatusLine" style="margin-top:4px;display:none;"></div>
+          <div id="resPadesStatusLine" style="margin-top:4px;display:none;"></div>
+        </div>
+      </details>
     </div>
 
-    <div id="contenidoFirmaWrap" style="display:none;flex-direction:column;gap:0.9rem;">
-      <section class="card">
-        <h2>📄 1. Datos del Documento a Firmar</h2>
-        <div id="docPaqueteBanner" style="display:none;margin-bottom:0.65rem;padding:0.6rem 0.78rem;border-radius:8px;background:#eff6ff;border:1px solid #bfdbfe;font-size:0.79rem;font-weight:700;color:#1e3a8a;line-height:1.45;"></div>
-        <div id="docProgresoMultifirma" style="display:none;margin-bottom:0.65rem;padding:0.55rem 0.75rem;border-radius:8px;background:#fffbeb;border:1px solid #fde68a;font-size:0.8rem;font-weight:700;color:#92400e;"></div>
+    <!-- ============================================================
+         ASISTENTE PASO A PASO (WIZARD POR PANTALLAS)
+         ============================================================ -->
+    <div id="contenidoFirmaWrap" style="display:none;flex-direction:column;gap:1rem;">
+      <div id="wizardStepErrorBanner" class="alert alert-err" style="display:none;"></div>
+
+      <!-- PASO 1: REVISAR EL DOCUMENTO -->
+      <section class="card wizard-step-pane" id="paneStepDoc" style="display:none;">
+        <h1 class="step-heading">📄 Leé tu documento</h1>
+        <p class="step-lead">Revisá tus datos y el texto del documento. Cuando estés listo, tocá <strong>Continuar</strong> abajo.</p>
+
+        <div id="docPaqueteBanner" style="display:none;margin-bottom:0.8rem;padding:0.75rem 0.9rem;border-radius:12px;background:#eff6ff;border:1px solid #bfdbfe;font-size:0.9rem;font-weight:700;color:#1e3a8a;"></div>
+        <div id="docProgresoMultifirma" style="display:none;margin-bottom:0.8rem;padding:0.75rem 0.9rem;border-radius:12px;background:#fffbeb;border:1px solid #fde68a;font-size:0.9rem;font-weight:700;color:#92400e;"></div>
+
         <div class="meta-grid">
           <div class="meta-item"><div class="meta-lbl">Documento</div><div class="meta-val" id="docTitulo">-</div></div>
-          <div class="meta-item"><div class="meta-lbl">Rol / Firmante</div><div class="meta-val" id="docFirmante">-</div></div>
+          <div class="meta-item"><div class="meta-lbl">Firmante</div><div class="meta-val" id="docFirmante">-</div></div>
           <div class="meta-item"><div class="meta-lbl">DNI</div><div class="meta-val" id="docDni">-</div></div>
-          <div class="meta-item"><div class="meta-lbl">Vigencia Enlace</div><div class="meta-val" id="docExpira">-</div></div>
+          <div class="meta-item"><div class="meta-lbl">Válido hasta</div><div class="meta-val" id="docExpira">-</div></div>
         </div>
-        <div id="docPrestamoResumen" class="meta-grid" style="margin-top:0.55rem;display:none;"></div>
-        <div class="hash-box">
-          <strong>Integridad Original (SHA-256):</strong> <span id="docHashOriginal">-</span>
-        </div>
-      </section>
+        <div id="docPrestamoResumen" class="meta-grid" style="margin-top:0.65rem;display:none;"></div>
 
-      <section class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.65rem;">
-          <h2 style="margin:0;">👁️ 2. Revisá el Documento Completo</h2>
-          <button type="button" id="btnDescargarPreviaPdf" class="btn btn-secondary" style="padding:0.35rem 0.7rem;font-size:0.76rem;">
-            ⬇️ Descargar para leer
+        <div class="pdf-toolbar">
+          <div class="zoom-group" aria-label="Tamaño de lectura del documento">
+            <button type="button" id="btnPdfZoomMenos" class="btn btn-secondary btn-sm">🔍 −</button>
+            <span id="lblPdfZoomPct" style="font-size:0.86rem;font-weight:800;padding:0 6px;color:#0f2744;">100%</span>
+            <button type="button" id="btnPdfZoomMas" class="btn btn-secondary btn-sm">🔍 + Agrandar</button>
+          </div>
+          <button type="button" id="btnDescargarPreviaPdf" class="btn btn-secondary btn-sm">
+            ⬇️ Guardar copia para leer
           </button>
         </div>
+
         <div id="pdfPaginasContainer"></div>
       </section>
 
-      <section class="card" id="seccionEkycValidacion" style="display:none;">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.55rem;">
-          <h2 style="margin:0;">🪪 2B. Validación de Identidad y Biometría</h2>
-          <span id="badgeEstadoEkyc" class="geo-pill">Pendiente de verificación</span>
+      <!-- PASO 2 (OPCIONAL): FOTOS DEL DNI -->
+      <section class="card wizard-step-pane" id="paneStepDni" style="display:none;">
+        <h1 class="step-heading">🪪 Sacá fotos de tu DNI</h1>
+        <p class="step-lead">Apoyá tu DNI sobre una mesa bien iluminada y sacá una foto de frente y otra de la parte de atrás.</p>
+
+        <div class="dni-grid">
+          <div class="dni-card" id="cardDniFrente">
+            <div class="dni-title">1. Frente del DNI *</div>
+            <div class="dni-hint">El lado donde está tu foto y tu número</div>
+            <img id="imgPrevDniFrente" class="dni-preview" alt="Foto del frente del DNI"/>
+            <div id="lblStatusDniFrente" class="dni-status-pill">✓ Foto guardada</div>
+            <label class="btn btn-primary" style="width:100%;cursor:pointer;">
+              <span id="txtBtnDniFrente">📷 Sacar foto del Frente</span>
+              <input type="file" id="inpDniFrenteCam" accept="image/*" capture="environment" style="display:none;"/>
+            </label>
+          </div>
+
+          <div class="dni-card" id="cardDniDorso">
+            <div class="dni-title">2. Dorso (atrás) del DNI *</div>
+            <div class="dni-hint">El lado donde figuran tu domicilio y huella</div>
+            <img id="imgPrevDniDorso" class="dni-preview" alt="Foto del dorso del DNI"/>
+            <div id="lblStatusDniDorso" class="dni-status-pill">✓ Foto guardada</div>
+            <label class="btn btn-primary" style="width:100%;cursor:pointer;">
+              <span id="txtBtnDniDorso">📷 Sacar foto del Dorso</span>
+              <input type="file" id="inpDniDorsoCam" accept="image/*" capture="environment" style="display:none;"/>
+            </label>
+          </div>
         </div>
-        <div style="font-size:0.8rem;color:#475569;margin-bottom:0.75rem;">
-          Para proteger tu identidad, este documento solicita validar tu identidad antes de firmar.
+      </section>
+
+      <!-- PASO 3 (OPCIONAL): VALIDACIÓN FACIAL GUIADA CON VIDEO, AVATAR Y AUDIO -->
+      <section class="card wizard-step-pane" id="paneStepSelfie" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.35rem;">
+          <h1 class="step-heading" style="margin:0;">🤳 Validamos tu identidad</h1>
+          <span id="badgeEstadoEkyc" class="geo-pill">Pendiente</span>
         </div>
 
-        <div id="bloqueEkycDni" style="display:none;margin-bottom:0.85rem;">
-          <div style="font-size:0.82rem;font-weight:800;color:#0f2744;margin-bottom:0.45rem;">1) Fotos de tu DNI (Frente y Dorso con cámara trasera)</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0.65rem;">
-            <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.65rem;text-align:center;">
-              <div style="font-size:0.74rem;font-weight:700;color:#334155;margin-bottom:6px;">DNI FRENTE *</div>
-              <img id="imgPrevDniFrente" alt="Preview DNI Frente" style="display:none;width:100%;max-height:130px;object-fit:contain;border-radius:6px;margin-bottom:6px;"/>
-              <label class="btn btn-secondary" style="padding:0.42rem 0.7rem;font-size:0.78rem;width:100%;cursor:pointer;">
-                📷 Capturar Frente
-                <input type="file" id="inpDniFrenteCam" accept="image/*" capture="environment" style="display:none;"/>
-              </label>
-            </div>
-            <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.65rem;text-align:center;">
-              <div style="font-size:0.74rem;font-weight:700;color:#334155;margin-bottom:6px;">DNI DORSO *</div>
-              <img id="imgPrevDniDorso" alt="Preview DNI Dorso" style="display:none;width:100%;max-height:130px;object-fit:contain;border-radius:6px;margin-bottom:6px;"/>
-              <div id="lblPdf417Status" style="display:none;font-size:0.7rem;font-weight:700;margin-bottom:6px;"></div>
-              <label class="btn btn-secondary" style="padding:0.42rem 0.7rem;font-size:0.78rem;width:100%;cursor:pointer;">
-                📷 Capturar Dorso
-                <input type="file" id="inpDniDorsoCam" accept="image/*" capture="environment" style="display:none;"/>
-              </label>
-            </div>
-          </div>
-        </div>
+        <!-- SUBPANTALLA 3A: CONSEJOS CLAROS (ANTES DE PRENDER LA CÁMARA) -->
+        <div id="selfieIntroView">
+          <p class="step-lead">Vamos a grabar un video corto de unos segundos para confirmar que sos vos. Seguí estas recomendaciones:</p>
 
-        <div id="bloqueEkycSelfie" style="display:none;margin-bottom:0.85rem;">
-          <div style="font-size:0.82rem;font-weight:800;color:#0f2744;margin-bottom:0.4rem;">2) Selfie Biométrica + Prueba de Vida (Cámara frontal)</div>
-          <div id="lblRetoLiveness" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;border-radius:8px;padding:0.5rem 0.7rem;font-size:0.78rem;font-weight:700;margin-bottom:0.55rem;">
-            Desafío: Mirá de frente, luego sonreí levemente y mové un poco la cabeza.
+          <div class="tips-list">
+            <div class="tip-item">
+              <div class="tip-avatar" aria-hidden="true">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
+              </div>
+              <div>
+                <div class="tip-title">Buscá un lugar bien iluminado</div>
+                <div class="tip-desc">Que la luz dé de frente a tu cara, sin ventanas detrás tuyo.</div>
+              </div>
+            </div>
+
+            <div class="tip-item">
+              <div class="tip-avatar" aria-hidden="true">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><circle cx="12" cy="9" r="5"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>
+              </div>
+              <div>
+                <div class="tip-title">Sin anteojos ni gorra</div>
+                <div class="tip-desc">Despejá tu frente y asegurate de que se vean bien tus ojos.</div>
+              </div>
+            </div>
+
+            <div class="tip-item">
+              <div class="tip-avatar" aria-hidden="true">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2"/><circle cx="12" cy="18" r="1"/></svg>
+              </div>
+              <div>
+                <div class="tip-title">Sostené el teléfono a la altura de tu cara</div>
+                <div class="tip-desc">Mirá derecho hacia la pantalla y seguí las indicaciones.</div>
+              </div>
+            </div>
           </div>
-          <div id="selfieLiveWrap" style="display:none;position:relative;max-width:340px;margin:0 auto 0.65rem auto;border-radius:12px;overflow:hidden;border:2px solid #0f2744;background:#0f172a;">
-            <video id="videoSelfieLiveness" autoplay playsinline muted style="width:100%;display:block;transform:scaleX(-1);"></video>
-            <div style="position:absolute;inset:14% 22%;border:2.5px dashed rgba(255,255,255,0.85);border-radius:50%;pointer-events:none;"></div>
+
+          <div class="audio-banner">
+            <div>
+              <div style="font-weight:800;color:#0f2744;font-size:0.96rem;">🔊 Guía por voz</div>
+              <div style="font-size:0.86rem;color:#334155;">Subí el volumen para escuchar cada indicación mientras grabás.</div>
+            </div>
+            <div style="display:flex;gap:0.45rem;flex-wrap:wrap;">
+              <button type="button" id="btnProbarAudioGuia" class="btn btn-secondary btn-sm">🔈 Probar sonido</button>
+              <button type="button" id="btnToggleAudioGuia" class="btn btn-secondary btn-sm">🔊 Voz: Activada</button>
+            </div>
           </div>
-          <div id="selfiePreviewRow" style="display:none;justify-content:center;gap:0.65rem;flex-wrap:wrap;margin-bottom:0.55rem;">
-            <img id="imgPrevSelfie1" alt="Selfie neutral" style="width:120px;height:120px;object-fit:cover;border-radius:10px;border:2px solid #16a34a;"/>
-            <img id="imgPrevSelfie2" alt="Selfie desafío" style="width:120px;height:120px;object-fit:cover;border-radius:10px;border:2px solid #0ea5e9;"/>
-          </div>
-          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-            <button type="button" id="btnAbrirCamaraSelfie" class="btn btn-secondary" style="flex:1;min-width:180px;">
-              🤳 Abrir Cámara Frontal
+
+          <div style="display:flex;flex-direction:column;gap:0.65rem;">
+            <button type="button" id="btnAbrirCamaraSelfie" class="btn btn-success" style="width:100%;font-size:1.06rem;">
+              🎥 Comenzar video guiado
             </button>
-            <button type="button" id="btnTomarSelfieLiveness" class="btn btn-primary" style="display:none;flex:1;min-width:180px;padding:0.6rem;">
-              📸 Capturar y Validar Vida
-            </button>
-            <label class="btn btn-secondary" style="flex:1;min-width:160px;cursor:pointer;font-size:0.8rem;">
-              📁 Alternativa: Foto Cámara
+            <label class="btn btn-secondary" style="width:100%;cursor:pointer;font-size:0.92rem;">
+              📷 Si no funciona la cámara en vivo, sacá una foto aquí
               <input type="file" id="inpSelfieFallbackCam" accept="image/*" capture="user" style="display:none;"/>
             </label>
           </div>
         </div>
 
-        <button type="button" id="btnVerificarIdentidadEkyc" class="btn btn-primary" style="background:#1e3a8a;padding:0.72rem;font-size:0.9rem;">
-          🔍 Verificar Identidad Ahora
-        </button>
-        <div id="ekycResultadoBox" style="display:none;margin-top:0.65rem;"></div>
-      </section>
+        <!-- SUBPANTALLA 3B: CÁMARA EN VIVO CON ÓVALO + AVATAR ANIMADO + AUDIO -->
+        <div id="selfieLiveView" style="display:none;">
+          <div class="liveness-stage-bar" aria-hidden="true">
+            <div class="liveness-seg" id="livSeg1"></div>
+            <div class="liveness-seg" id="livSeg2"></div>
+            <div class="liveness-seg" id="livSeg3"></div>
+          </div>
 
-      <section class="card" id="seccionTrazarFirma">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.6rem;">
-          <h2 style="margin:0;">✍️ 3. Trazá tu Firma Manuscrita</h2>
-          <span id="badgeEstadoGeo" class="geo-pill">📍 Solicitando ubicación...</span>
+          <div class="guide-avatar-wrap">
+            <div class="guide-avatar-circle" id="guideAvatarSvg"></div>
+            <div style="flex:1;min-width:160px;">
+              <div class="guide-cue-title" id="lblGuideCueTitle">Ubicá tu rostro dentro del óvalo</div>
+              <div class="guide-cue-sub" id="lblGuideCueSub">Cuando estés listo, tocá "Iniciar grabación".</div>
+            </div>
+            <button type="button" id="btnAudioLiveMute" class="btn btn-secondary btn-sm" title="Activar o silenciar voz">🔊</button>
+          </div>
+
+          <div class="oval-camera-frame" id="ovalCameraFrame">
+            <video id="videoSelfieLiveness" autoplay playsinline muted></video>
+            <div class="rec-pill" id="recStatusPill" style="display:none;">
+              <span class="rec-dot"></span>
+              <span id="txtRecTimer">Grabando 1/3</span>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:0.65rem;flex-wrap:wrap;justify-content:center;">
+            <button type="button" id="btnIniciarGrabacionGuiada" class="btn btn-success" style="flex:1;min-width:220px;font-size:1.05rem;">
+              ▶️ Iniciar grabación guiada
+            </button>
+            <button type="button" id="btnCancelarCamaraLive" class="btn btn-secondary">Volver</button>
+          </div>
         </div>
 
+        <!-- SUBPANTALLA 3C: VIDEO GRABADO / RESULTADO -->
+        <div id="selfieDoneView" style="display:none;text-align:center;">
+          <video id="videoSelfiePreview" class="video-preview-player" controls playsinline muted style="display:none;"></video>
+          <div id="selfieFallbackPreviewWrap" style="display:none;margin-bottom:0.85rem;">
+            <img id="imgPrevSelfie1" alt="Selfie capturada" style="width:165px;height:165px;object-fit:cover;border-radius:50%;border:4px solid #16a34a;"/>
+          </div>
+          <div id="ekycResultadoBox" class="alert alert-ok" style="text-align:left;margin-bottom:0.9rem;"></div>
+          <button type="button" id="btnReintentarSelfie" class="btn btn-secondary">
+            🔄 Volver a grabar el video
+          </button>
+        </div>
+      </section>
+
+      <!-- PASO FINAL: FIRMAR EL DOCUMENTO -->
+      <section class="card wizard-step-pane" id="paneStepSign" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.35rem;">
+          <h1 class="step-heading" style="margin:0;">✍️ Dibujá tu firma</h1>
+          <span id="badgeEstadoGeo" class="geo-pill">📍 Ubicación</span>
+        </div>
+        <p class="step-lead">Hacé tu firma con el dedo dentro del recuadro gris y después confirmá al final.</p>
+
         <div class="sig-pad-wrap">
-          <div id="sigHintText" class="sig-hint">Dibujá tu firma aquí con el dedo o mouse</div>
+          <div id="sigHintText" class="sig-hint">✏️ Dibujá tu firma acá con el dedo o el mouse</div>
           <canvas id="canvasFirmaMovil"></canvas>
         </div>
 
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.55rem;gap:0.5rem;">
-          <span id="lblTrazosInfo" style="font-size:0.75rem;color:#64748b;">Sin trazo capturado aún</span>
-          <button type="button" id="btnLimpiarFirma" class="btn btn-secondary" style="padding:0.4rem 0.75rem;font-size:0.78rem;">
-            🧹 Limpiar firma
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.65rem;gap:0.5rem;flex-wrap:wrap;">
+          <span id="lblTrazosInfo" style="font-size:0.88rem;font-weight:600;color:#475569;">Todavía no dibujaste tu firma</span>
+          <button type="button" id="btnLimpiarFirma" class="btn btn-secondary btn-sm">
+            🧹 Borrar y firmar de nuevo
           </button>
         </div>
 
-        <div id="boxPinOtpFirma" style="display:none;margin:0.75rem 0;padding:0.8rem;border-radius:10px;background:#f5f3ff;border:1px solid #ddd6fe;">
-          <label for="inpPinOtpFirma" style="display:block;font-size:0.82rem;font-weight:800;color:#5b21b6;margin-bottom:4px;">
-            🔐 Código de Seguridad 2FA (4 dígitos)
+        <div id="boxPinOtpFirma" style="display:none;margin:1rem 0;padding:1rem;border-radius:14px;background:#f5f3ff;border:1.5px solid #c4b5fd;">
+          <label for="inpPinOtpFirma" style="display:block;font-size:0.96rem;font-weight:800;color:#5b21b6;margin-bottom:4px;">
+            🔐 Código de seguridad de 4 números
           </label>
-          <div style="font-size:0.74rem;color:#6d28d9;margin-bottom:0.45rem;">
-            Ingresá el PIN numérico de 4 dígitos que te enviamos junto con este enlace por WhatsApp.
+          <div style="font-size:0.88rem;color:#6d28d9;margin-bottom:0.6rem;">
+            Escribí el código de 4 números que te enviamos por WhatsApp junto con este enlace.
           </div>
-          <input type="text" id="inpPinOtpFirma" inputmode="numeric" maxlength="4" autocomplete="one-time-code" placeholder="0000" style="width:140px;padding:0.55rem 0.75rem;border:1.5px solid #a78bfa;border-radius:8px;font-size:1.15rem;font-weight:800;letter-spacing:6px;text-align:center;color:#4c1d95;background:#ffffff;"/>
+          <input type="text" id="inpPinOtpFirma" inputmode="numeric" maxlength="4" autocomplete="one-time-code" placeholder="0000" style="width:170px;padding:0.65rem 0.85rem;border:2px solid #8b5cf6;border-radius:10px;font-size:1.35rem;font-weight:800;letter-spacing:8px;text-align:center;color:#4c1d95;background:#ffffff;"/>
         </div>
 
         <label class="consent-label">
           <input type="checkbox" id="chkConsentimientoLegal"/>
           <span>
-            Declaro haber leído íntegramente el documento precedente, confirmo que los datos consignados son correctos y otorgo mi <strong>firma electrónica</strong> conforme a la Ley 25.506, autorizando el registro de fecha/hora, IP, trazo manuscrito y hash criptográfico como evidencia.
+            Confirmo que leí el documento, que mis datos son correctos y otorgo mi <strong>firma electrónica</strong> conforme a la Ley 25.506.
           </span>
         </label>
 
-        <button type="button" id="btnConfirmarFirmar" class="btn btn-primary">
+        <button type="button" id="btnConfirmarFirmar" class="btn btn-success" style="width:100%;font-size:1.08rem;min-height:54px;">
           ✅ Confirmar y Firmar Documento
         </button>
       </section>
     </div>
   </main>
+
+  <!-- BARRA INFERIOR FIJA DE AVANCE POR PASOS -->
+  <div id="wizardBottomBar" class="wizard-bottom-bar" style="display:none;">
+    <div class="wizard-progress-track">
+      <div class="wizard-progress-fill" id="wizardProgressFill"></div>
+    </div>
+    <div class="wizard-bar-inner">
+      <div class="wizard-step-info">
+        <span class="wizard-step-count" id="lblWizardStepCount">Paso 1 de 3</span>
+        <span class="wizard-step-name" id="lblWizardStepName">Revisar documento</span>
+      </div>
+      <div class="wizard-bar-actions">
+        <button type="button" id="btnWizardPrev" class="btn btn-secondary">← Volver</button>
+        <button type="button" id="btnWizardNext" class="btn btn-primary">Continuar →</button>
+      </div>
+    </div>
+  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
@@ -402,6 +882,9 @@
         docInfo: null,
         pdfB64Actual: '',
         pdfFirmadoB64: '',
+        pdfZoomScale: 1.4,
+        steps: [],
+        currentStepIdx: 0,
         gps: { lat: null, lng: null, accuracy: null, status: 'pending' },
         gpsObligatorio: false,
         requiereDni: false,
@@ -409,13 +892,24 @@
         requierePinOtp: false,
         ekycValidado: false,
         ekycStream: null,
-        retoLiveness: 'Sonreí levemente y mové un poco la cabeza hacia la derecha',
+        mediaRecorder: null,
+        recordedVideoUrl: '',
+        grabandoAhora: false,
+        vozHabilitada: true,
+        retoLiveness: 'Mirá al centro, sonreí suavemente y girá un poco la cabeza',
         ekycImgs: { dniFrente: '', dniDorso: '', selfie1: '', selfie2: '', pdf417Raw: '' },
         drawing: false,
         hasInk: false,
         startTime: null,
         puntosTotales: 0,
         trazos: 0,
+      };
+
+      const STEP_META = {
+        doc: { paneId: 'paneStepDoc', label: 'Revisar documento' },
+        dni: { paneId: 'paneStepDni', label: 'Fotos de tu DNI' },
+        selfie: { paneId: 'paneStepSelfie', label: 'Validación facial' },
+        sign: { paneId: 'paneStepSign', label: 'Firmar documento' },
       };
 
       function escHtml(v) {
@@ -429,11 +923,219 @@
 
       function showErr(msg) {
         document.getElementById('estadoCargaBox').style.display = 'none';
+        document.getElementById('wizardBottomBar').style.display = 'none';
         const eb = document.getElementById('errorBox');
         eb.textContent = msg;
         eb.style.display = 'block';
       }
 
+      function mostrarErrorEnPaso(msg) {
+        const el = document.getElementById('wizardStepErrorBanner');
+        if (!el) return;
+        if (!msg) {
+          el.style.display = 'none';
+          el.textContent = '';
+          return;
+        }
+        el.textContent = '⚠️ ' + msg;
+        el.style.display = 'block';
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      // ============================================================
+      // SÍNTESIS DE VOZ EN ESPAÑOL (GUÍA POR AUDIO PARA ADULTOS MAYORES)
+      // ============================================================
+      function hablarGuia(texto) {
+        if (!appState.vozHabilitada) return;
+        if (!('speechSynthesis' in window) || typeof window.SpeechSynthesisUtterance !== 'function') return;
+        try {
+          window.speechSynthesis.cancel();
+          const utt = new SpeechSynthesisUtterance(String(texto || ''));
+          const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+          const vozEs = voices.find((v) => /es[-_]?AR/i.test(v.lang))
+            || voices.find((v) => /es[-_](419|UY|ES|MX)/i.test(v.lang))
+            || voices.find((v) => /^es/i.test(v.lang));
+          if (vozEs) utt.voice = vozEs;
+          utt.lang = (vozEs && vozEs.lang) || 'es-AR';
+          utt.rate = 0.92;
+          utt.pitch = 1.0;
+          utt.volume = 1.0;
+          window.speechSynthesis.speak(utt);
+        } catch (_e) {}
+      }
+
+      function detenerVozGuia() {
+        try {
+          if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        } catch (_e) {}
+      }
+
+      function actualizarBotonesVoz() {
+        const btn1 = document.getElementById('btnToggleAudioGuia');
+        const btn2 = document.getElementById('btnAudioLiveMute');
+        if (btn1) btn1.textContent = appState.vozHabilitada ? '🔊 Voz: Activada' : '🔇 Voz: Silenciada';
+        if (btn2) btn2.textContent = appState.vozHabilitada ? '🔊' : '🔇';
+      }
+
+      // Avatares SVG animados que muestran el gesto a imitar
+      function setGuideAvatar(tipo) {
+        const box = document.getElementById('guideAvatarSvg');
+        if (!box) return;
+        if (tipo === 'smile') {
+          box.innerHTML = `
+            <svg class="anim-smile" width="56" height="56" viewBox="0 0 64 64" fill="none">
+              <circle cx="32" cy="32" r="22" fill="#fde68a" stroke="#0f2744" stroke-width="2.5"/>
+              <path d="M22 27 Q24.5 23 27 27" stroke="#0f2744" stroke-width="2.6" stroke-linecap="round"/>
+              <path d="M37 27 Q39.5 23 42 27" stroke="#0f2744" stroke-width="2.6" stroke-linecap="round"/>
+              <path d="M23 39 Q32 47 41 39" stroke="#15803d" stroke-width="3" stroke-linecap="round" fill="none"/>
+            </svg>`;
+        } else if (tipo === 'turn') {
+          box.innerHTML = `
+            <svg class="anim-turn" width="56" height="56" viewBox="0 0 64 64" fill="none">
+              <circle cx="32" cy="32" r="22" fill="#fde68a" stroke="#0f2744" stroke-width="2.5"/>
+              <circle cx="25" cy="27" r="2.5" fill="#0f2744"/>
+              <circle cx="39" cy="27" r="2.5" fill="#0f2744"/>
+              <path d="M26 39 Q32 42 38 39" stroke="#0f2744" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M9 32 L15 27 M9 32 L15 37" stroke="#0284c7" stroke-width="2.6" stroke-linecap="round"/>
+              <path d="M55 32 L49 27 M55 32 L49 37" stroke="#0284c7" stroke-width="2.6" stroke-linecap="round"/>
+            </svg>`;
+        } else {
+          box.innerHTML = `
+            <svg width="56" height="56" viewBox="0 0 64 64" fill="none">
+              <circle cx="32" cy="32" r="22" fill="#fde68a" stroke="#0f2744" stroke-width="2.5"/>
+              <circle cx="24" cy="27" r="2.6" fill="#0f2744"/>
+              <circle cx="40" cy="27" r="2.6" fill="#0f2744"/>
+              <path d="M26 39 Q32 42 38 39" stroke="#0f2744" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>`;
+        }
+      }
+
+      // ============================================================
+      // NAVEGACIÓN POR PASOS (WIZARD)
+      // ============================================================
+      function renderStepActual() {
+        mostrarErrorEnPaso('');
+        const stepKey = appState.steps[appState.currentStepIdx];
+        const total = appState.steps.length;
+        const num = appState.currentStepIdx + 1;
+
+        document.querySelectorAll('.wizard-step-pane').forEach((p) => { p.style.display = 'none'; });
+        const meta = STEP_META[stepKey];
+        if (meta) {
+          const pane = document.getElementById(meta.paneId);
+          if (pane) pane.style.display = 'block';
+        }
+
+        const bar = document.getElementById('wizardBottomBar');
+        bar.style.display = 'block';
+        document.getElementById('lblWizardStepCount').textContent = `Paso ${num} de ${total}`;
+        document.getElementById('lblWizardStepName').textContent = meta ? meta.label : '';
+        document.getElementById('wizardProgressFill').style.width = `${Math.round((num / total) * 100)}%`;
+
+        const btnPrev = document.getElementById('btnWizardPrev');
+        const btnNext = document.getElementById('btnWizardNext');
+        btnPrev.style.display = num > 1 ? 'inline-flex' : 'none';
+
+        if (stepKey === 'sign') {
+          btnNext.style.display = 'none';
+          // Recalcular tamaño real del canvas ahora que el paso es visible
+          requestAnimationFrame(() => {
+            if (typeof window.__resizeFirmaCanvas === 'function') window.__resizeFirmaCanvas();
+          });
+        } else {
+          btnNext.style.display = 'inline-flex';
+          const isLastPreSign = (appState.steps[appState.currentStepIdx + 1] === 'sign') && (stepKey === 'dni' || stepKey === 'selfie');
+          btnNext.textContent = isLastPreSign && !appState.ekycValidado ? 'Verificar y Continuar →' : 'Continuar →';
+        }
+
+        if (stepKey !== 'selfie') {
+          detenerCamaraEkyc();
+          detenerVozGuia();
+        }
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      async function ejecutarValidacionEkycEnServidor() {
+        const btnNext = document.getElementById('btnWizardNext');
+        const origTxt = btnNext.textContent;
+        btnNext.disabled = true;
+        btnNext.textContent = '⏳ Verificando identidad...';
+
+        try {
+          const resp = await fetch(`${API_BASE}/api/firmas/public/${encodeURIComponent(token)}/validar-identidad`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              dniFrenteBase64: appState.ekycImgs.dniFrente || null,
+              dniDorsoBase64: appState.ekycImgs.dniDorso || null,
+              selfieBase64: appState.ekycImgs.selfie1 || null,
+              selfieDesafioBase64: appState.ekycImgs.selfie2 || null,
+              retoLiveness: appState.retoLiveness,
+              pdf417Raw: appState.ekycImgs.pdf417Raw || null,
+            }),
+          });
+          const resJson = await resp.json();
+          if (!resp.ok) throw new Error(resJson.detail || `Error HTTP ${resp.status}`);
+          mostrarResultadoEkyc(resJson);
+          return true;
+        } catch (err) {
+          mostrarErrorEnPaso('No pudimos validar tu identidad: ' + err.message);
+          return false;
+        } finally {
+          btnNext.disabled = false;
+          btnNext.textContent = origTxt;
+        }
+      }
+
+      async function avanzarPaso() {
+        mostrarErrorEnPaso('');
+        const stepKey = appState.steps[appState.currentStepIdx];
+
+        if (stepKey === 'dni') {
+          if (!appState.ekycValidado && (!appState.ekycImgs.dniFrente || !appState.ekycImgs.dniDorso)) {
+            mostrarErrorEnPaso('Por favor sacá ambas fotos de tu DNI (frente y dorso) para poder continuar.');
+            return;
+          }
+          // Si no pide selfie y aún no validó eKYC en servidor, validarlo ahora
+          if (!appState.requiereSelfie && !appState.ekycValidado) {
+            const ok = await ejecutarValidacionEkycEnServidor();
+            if (!ok) return;
+          }
+        }
+
+        if (stepKey === 'selfie') {
+          if (appState.grabandoAhora) {
+            mostrarErrorEnPaso('Esperá unos segundos a que termine la grabación guiada.');
+            return;
+          }
+          if (!appState.ekycValidado && !appState.ekycImgs.selfie1) {
+            mostrarErrorEnPaso('Tocá "Comenzar video guiado" (o subí una foto) para validar tu rostro antes de continuar.');
+            return;
+          }
+          if (!appState.ekycValidado) {
+            const ok = await ejecutarValidacionEkycEnServidor();
+            if (!ok) return;
+          }
+        }
+
+        if (appState.currentStepIdx < appState.steps.length - 1) {
+          appState.currentStepIdx += 1;
+          renderStepActual();
+        }
+      }
+
+      function retrocederPaso() {
+        if (appState.grabandoAhora) return;
+        if (appState.currentStepIdx > 0) {
+          appState.currentStepIdx -= 1;
+          renderStepActual();
+        }
+      }
+
+      // ============================================================
+      // UTILIDADES DE PDF Y DESCARGA
+      // ============================================================
       function b64ToBytes(b64) {
         const clean = String(b64 || '').replace(/^data:[^;]+;base64,/, '');
         const bin = atob(clean);
@@ -457,7 +1159,7 @@
         const badge = document.getElementById('badgeEstadoGeo');
         if (!navigator.geolocation) {
           appState.gps.status = 'unsupported';
-          if (badge) badge.textContent = '📍 GPS no disponible';
+          if (badge) badge.textContent = '📍 Ubicación opcional';
           return;
         }
         navigator.geolocation.getCurrentPosition(
@@ -469,7 +1171,7 @@
               status: 'ok',
             };
             if (badge) {
-              badge.textContent = `📍 GPS verificado (±${Math.round(appState.gps.accuracy)}m)`;
+              badge.textContent = '📍 Ubicación confirmada';
               badge.style.background = '#dcfce7';
               badge.style.color = '#166534';
               badge.style.borderColor = '#86efac';
@@ -478,7 +1180,7 @@
           () => {
             appState.gps.status = 'denied';
             if (badge) {
-              badge.textContent = appState.gpsObligatorio ? '⚠️ GPS requerido por plantilla' : '📍 Ubicación opcional omitida';
+              badge.textContent = appState.gpsObligatorio ? '⚠️ Ubicación requerida' : '📍 Ubicación omitida';
               badge.style.background = appState.gpsObligatorio ? '#fef2f2' : '#f1f5f9';
               badge.style.color = appState.gpsObligatorio ? '#b91c1c' : '#475569';
             }
@@ -490,24 +1192,29 @@
       async function renderizarPdfEnMovil(b64) {
         const cont = document.getElementById('pdfPaginasContainer');
         if (!cont || !window.pdfjsLib) return;
-        cont.innerHTML = '<div style="text-align:center;padding:1rem;font-size:0.82rem;color:#475569;">Renderizando páginas...</div>';
+        cont.innerHTML = '<div style="text-align:center;padding:1.5rem;font-size:0.95rem;color:#475569;">Cargando páginas del documento...</div>';
         try {
           const doc = await window.pdfjsLib.getDocument({ data: b64ToBytes(b64), disableWorker: true }).promise;
           cont.innerHTML = '';
           for (let i = 1; i <= doc.numPages; i++) {
             const page = await doc.getPage(i);
-            const vp = page.getViewport({ scale: 1.4 });
+            const vp = page.getViewport({ scale: appState.pdfZoomScale });
             const canvas = document.createElement('canvas');
             canvas.width = vp.width;
             canvas.height = vp.height;
             await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
             cont.appendChild(canvas);
           }
+          const lblZ = document.getElementById('lblPdfZoomPct');
+          if (lblZ) lblZ.textContent = `${Math.round((appState.pdfZoomScale / 1.4) * 100)}%`;
         } catch (_err) {
-          cont.innerHTML = '<div style="padding:1rem;font-size:0.82rem;color:#475569;">Usá el botón superior <strong>Descargar para leer</strong> para abrir el PDF en tu dispositivo.</div>';
+          cont.innerHTML = '<div style="padding:1.2rem;font-size:0.95rem;color:#334155;">Usá el botón <strong>Guardar copia para leer</strong> para abrir el PDF en tu dispositivo.</div>';
         }
       }
 
+      // ============================================================
+      // PAD DE FIRMA MANUSCRITA
+      // ============================================================
       function setupSignaturePad() {
         const canvas = document.getElementById('canvasFirmaMovil');
         const hint = document.getElementById('sigHintText');
@@ -516,16 +1223,24 @@
 
         function resizeCanvas() {
           const rect = canvas.getBoundingClientRect();
+          if (!rect.width || !rect.height) return;
+          const prevData = appState.hasInk ? canvas.toDataURL() : null;
           const ratio = Math.max(window.devicePixelRatio || 1, 1);
           canvas.width = Math.max(300, Math.floor(rect.width * ratio));
-          canvas.height = Math.max(180, Math.floor(rect.height * ratio));
+          canvas.height = Math.max(200, Math.floor(rect.height * ratio));
           ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
           ctx.strokeStyle = '#0f172a';
-          ctx.lineWidth = 2.6;
+          ctx.lineWidth = 3.0;
           ctx.lineCap = 'round';
           ctx.lineJoin = 'round';
+          if (prevData) {
+            const img = new Image();
+            img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
+            img.src = prevData;
+          }
         }
-        resizeCanvas();
+        window.__resizeFirmaCanvas = resizeCanvas;
+        window.addEventListener('resize', resizeCanvas);
 
         function getPt(ev) {
           const r = canvas.getBoundingClientRect();
@@ -552,7 +1267,7 @@
           ctx.stroke();
           appState.hasInk = true;
           appState.puntosTotales += 1;
-          if (lblInfo) lblInfo.textContent = `Firma capturada (${appState.puntosTotales} puntos biométricos)`;
+          if (lblInfo) lblInfo.textContent = '✓ Firma dibujada correctamente';
         }
 
         function onUp() {
@@ -573,150 +1288,75 @@
           appState.trazos = 0;
           appState.startTime = null;
           if (hint) hint.style.display = 'flex';
-          if (lblInfo) lblInfo.textContent = 'Sin trazo capturado aún';
+          if (lblInfo) lblInfo.textContent = 'Todavía no dibujaste tu firma';
         });
       }
 
+      // ============================================================
+      // PANTALLA FINAL CONFIRMADA
+      // ============================================================
       function mostrarPantallaFirmado(data) {
+        detenerCamaraEkyc();
+        detenerVozGuia();
         document.getElementById('estadoCargaBox').style.display = 'none';
         document.getElementById('contenidoFirmaWrap').style.display = 'none';
+        document.getElementById('wizardBottomBar').style.display = 'none';
         document.getElementById('confirmacionFirmadoBox').style.display = 'block';
+
         const alertBox = document.getElementById('alertEstadoFirmado');
         const btnDown = document.getElementById('btnDescargarCopiaFirmada');
         if (data.estado === 'PARCIAL') {
           if (alertBox) {
-            alertBox.innerHTML = `🕒 <strong>¡Tu firma fue registrada (${data.firmas_completadas || 1} de ${data.firmas_requeridas || 2} firmantes)!</strong><br/>` +
-              `<span style="font-weight:500;font-size:0.82rem;">El documento quedará finalizado con la Hoja Anexa de Evidencia completa en cuanto firmen las personas restantes.</span>`;
+            alertBox.innerHTML = `🕒 <strong>¡Tu firma quedó registrada (${data.firmas_completadas || 1} de ${data.firmas_requeridas || 2} personas)!</strong><br/>` +
+              `<span style="font-weight:500;font-size:0.92rem;">El trámite se completará en cuanto firmen las demás personas. Ya podés descargar tu constancia parcial.</span>`;
           }
-          if (btnDown) btnDown.textContent = '⬇️ Descargar PDF Parcial (con tu firma estampada)';
+          if (btnDown) btnDown.textContent = '⬇️ Descargar copia con tu firma';
         }
         document.getElementById('resDocNombre').textContent = (appState.docInfo && appState.docInfo.plantilla_nombre) || 'Documento AMMER';
-        document.getElementById('resFechaFirma').textContent = data.firmado_en || '-';
+        let fechaPretty = data.firmado_en || '-';
+        try {
+          if (data.firmado_en) {
+            fechaPretty = new Date(data.firmado_en).toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) + ' hs';
+          }
+        } catch (_) {}
+        document.getElementById('resFechaFirma').textContent = fechaPretty;
         document.getElementById('resHashOrig').textContent = data.hash_sha256_original || '-';
         document.getElementById('resHashFirmado').textContent = data.hash_sha256_firmado || '(Pendiente de cierre total de firmas)';
+
         const tsaLine = document.getElementById('resTsaStatusLine');
         if (tsaLine && data.tsa_rfc3161) {
           tsaLine.style.display = 'block';
-          if (data.tsa_rfc3161.ok) {
-            tsaLine.innerHTML = `<strong>Sello Tiempo RFC 3161:</strong> ✅ Sellado por ${escHtml(data.tsa_rfc3161.tsa_url || 'TSA')} (${escHtml(data.tsa_rfc3161.gen_time || 'UTC')})`;
-          } else {
-            tsaLine.innerHTML = `<strong>Sello Tiempo RFC 3161:</strong> 📋 Evidencia local (${escHtml(data.tsa_rfc3161.status || 'FALLBACK')})`;
-          }
+          tsaLine.innerHTML = data.tsa_rfc3161.ok
+            ? `<strong>Sello Tiempo RFC 3161:</strong> ✅ Sellado por ${escHtml(data.tsa_rfc3161.tsa_url || 'TSA')}`
+            : `<strong>Sello Tiempo RFC 3161:</strong> 📋 Evidencia local (${escHtml(data.tsa_rfc3161.status || 'FALLBACK')})`;
         }
         const padesLine = document.getElementById('resPadesStatusLine');
         if (padesLine && data.pades_info) {
           padesLine.style.display = 'block';
-          if (data.pades_info.ok) {
-            padesLine.innerHTML = `<strong>Firma Criptográfica PDF PAdES (.p12):</strong> 🔏 Sellado (${escHtml(data.pades_info.subject_cn || 'AMMER')})`;
-          } else {
-            padesLine.innerHTML = `<strong>Firma Criptográfica PDF PAdES (.p12):</strong> 📋 ${escHtml(data.pades_info.status || 'Sin sello PAdES')}`;
-          }
+          padesLine.innerHTML = data.pades_info.ok
+            ? `<strong>Firma Criptográfica PAdES (.p12):</strong> 🔏 Sellado (${escHtml(data.pades_info.subject_cn || 'AMMER')})`
+            : `<strong>Firma Criptográfica PAdES (.p12):</strong> 📋 ${escHtml(data.pades_info.status || 'Sin sello')}`;
         }
         const lnkVerif = document.getElementById('lnkPortalVerificacionQr');
         if (lnkVerif && data.estado === 'FIRMADO' && (data.solicitud_id || (appState.docInfo && appState.docInfo.solicitud_id))) {
           const sid = data.solicitud_id || appState.docInfo.solicitud_id;
           const hPref = String(data.hash_sha256_original || '').slice(0, 16);
           lnkVerif.href = `verificar.html?id=${encodeURIComponent(sid)}&h=${encodeURIComponent(hPref)}`;
-          lnkVerif.style.display = 'block';
+          lnkVerif.style.display = 'inline-flex';
         }
         appState.pdfFirmadoB64 = data.pdfBase64 || appState.pdfB64Actual;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
-      async function inicializar() {
-        if (!token) {
-          showErr('Enlace inválido: falta el token de firma en la URL.');
-          return;
-        }
-        try {
-          const resp = await fetch(`${API_BASE}/api/firmas/public/${encodeURIComponent(token)}`);
-          const data = await resp.json();
-          if (!resp.ok) {
-            throw new Error(data.detail || `Error HTTP ${resp.status}`);
-          }
-          appState.docInfo = data;
-          appState.pdfB64Actual = data.pdfBase64;
-          appState.gpsObligatorio = Boolean((data.validaciones_requeridas || {}).gps_obligatorio);
-
-          if (data.bloqueado_por_orden) {
-            document.getElementById('estadoCargaBox').style.display = 'none';
-            const espBox = document.getElementById('esperaTurnoBox');
-            const espDesc = document.getElementById('lblEsperaTurnoDesc');
-            if (espDesc && data.aguardando_firmante) {
-              espDesc.innerHTML = `Este documento utiliza <strong>firma secuencial en orden estricto</strong> (tu turno es #${escHtml(data.orden_firma || 2)}).<br/>Primero debe completar su firma: <strong>${escHtml(data.aguardando_firmante.etiqueta || 'Firmante previo')} (${escHtml(data.aguardando_firmante.nombre_enmascarado || '-')})</strong>.<br/>Apenas finalice, este mismo enlace se habilitará automáticamente.`;
-            }
-            if (espBox) espBox.style.display = 'block';
-            return;
-          }
-
-          if (data.estado === 'FIRMADO' || data.firmado_por_mi) {
-            mostrarPantallaFirmado(data);
-            return;
-          }
-
-          document.getElementById('estadoCargaBox').style.display = 'none';
-          document.getElementById('contenidoFirmaWrap').style.display = 'flex';
-          document.getElementById('docTitulo').textContent = data.plantilla_nombre || 'Documento AMMER';
-          document.getElementById('docFirmante').textContent = `${data.nombre_solicitante || '-'} (${data.firmante_etiqueta || 'Firmante'})`;
-          document.getElementById('docDni').textContent = data.dni_solicitante || '-';
-          document.getElementById('docExpira').textContent = data.expira_en ? new Date(data.expira_en).toLocaleString('es-AR') : '24 hs';
-          document.getElementById('docHashOriginal').textContent = data.hash_sha256_original || '-';
-
-          if (data.es_paquete && Array.isArray(data.paquete_resumen) && data.paquete_resumen.length > 1) {
-            const paqEl = document.getElementById('docPaqueteBanner');
-            if (paqEl) {
-              const itemsTxt = data.paquete_resumen.map((d, i) => `${i + 1}. ${d.nombre} (${d.paginas || 1} pág.)`).join(' · ');
-              paqEl.style.display = 'block';
-              paqEl.innerHTML = `📦 <strong>Sobre de ${data.paquete_resumen.length} documentos unificados:</strong> ${escHtml(itemsTxt)}<br/><span style="font-weight:500;">Validás tu identidad y firmás UNA sola vez: tu firma se estampa automáticamente en todos.</span>`;
-            }
-          }
-
-          if (data.grupo_progreso && data.grupo_progreso.requeridos > 1) {
-            const progEl = document.getElementById('docProgresoMultifirma');
-            if (progEl) {
-              progEl.style.display = 'block';
-              const seqTxt = data.grupo_progreso.orden_secuencial ? ' (Orden secuencial)' : '';
-              progEl.textContent = `👥 Documento de múltiples firmas${seqTxt}: ${data.grupo_progreso.completados} de ${data.grupo_progreso.requeridos} firma(s) completada(s) hasta ahora.`;
-            }
-          }
-
-      const prest = (data.datos_resumen && data.datos_resumen.prestamo) || {};
-          if (prest.monto || prest.cuotas) {
-            const boxP = document.getElementById('docPrestamoResumen');
-            boxP.style.display = 'grid';
-            boxP.innerHTML = `
-              <div class="meta-item"><div class="meta-lbl">Línea</div><div class="meta-val">${escHtml(prest.lineaNombre || '-')}</div></div>
-              <div class="meta-item"><div class="meta-lbl">Monto Neto</div><div class="meta-val">$ ${Number(prest.monto || 0).toLocaleString('es-AR')}</div></div>
-              <div class="meta-item"><div class="meta-lbl">Plan de Cuotas</div><div class="meta-val">${escHtml(prest.cuotas || '-')} cuotas${prest.valorCuota ? ' de $ ' + Number(prest.valorCuota).toLocaleString('es-AR') : ''}</div></div>
-            `;
-          }
-
-          const valsReq = data.validaciones_requeridas || {};
-          appState.requiereDni = Boolean(valsReq.dni_frente_dorso);
-          appState.requiereSelfie = Boolean(valsReq.selfie_liveness);
-          appState.requierePinOtp = Boolean(valsReq.requiere_pin_otp);
-          if (appState.requierePinOtp) {
-            const boxPin = document.getElementById('boxPinOtpFirma');
-            if (boxPin) boxPin.style.display = 'block';
-          }
-          if (appState.requiereDni || appState.requiereSelfie) {
-            setupSeccionEkyc(data);
-          }
-
-          solicitarGpsEnSegundoPlano();
-          setupSignaturePad();
-          await renderizarPdfEnMovil(data.pdfBase64);
-        } catch (err) {
-          showErr('No pudimos abrir tu documento: ' + err.message);
-        }
-      }
-
-      const RETOS_LIVENESS = [
-        'Mirá al centro, luego sonreí levemente y girá un poco la cabeza.',
-        'Mirá al frente, luego parpadeá dos veces e incliná la cabeza.',
-        'Mirá a la cámara y levantá levemente el mentón al segundo aviso.',
-      ];
-
+      // ============================================================
+      // CÁMARA EKYC + VIDEO GUIADO + AUDIO + DNI SIN FALSAS ALERTAS
+      // ============================================================
       function detenerCamaraEkyc() {
+        if (appState.mediaRecorder && appState.mediaRecorder.state !== 'inactive') {
+          try { appState.mediaRecorder.stop(); } catch (_) {}
+        }
+        appState.mediaRecorder = null;
+        appState.grabandoAhora = false;
         if (appState.ekycStream) {
           try {
             appState.ekycStream.getTracks().forEach((t) => t.stop());
@@ -725,12 +1365,6 @@
         }
         const vid = document.getElementById('videoSelfieLiveness');
         if (vid) vid.srcObject = null;
-        const liveWrap = document.getElementById('selfieLiveWrap');
-        if (liveWrap) liveWrap.style.display = 'none';
-        const btnTomar = document.getElementById('btnTomarSelfieLiveness');
-        if (btnTomar) btnTomar.style.display = 'none';
-        const btnAbrir = document.getElementById('btnAbrirCamaraSelfie');
-        if (btnAbrir) btnAbrir.style.display = 'inline-flex';
       }
 
       function redimensionarArchivoImagen(file, maxLado) {
@@ -754,134 +1388,180 @@
         });
       }
 
+      // Calcula diferencia promedio de brillo entre 2 dataURLs para comprobar movimiento real en el video
+      function medirMovimientoEntreFrames(b64A, b64B) {
+        return new Promise((resolve) => {
+          if (!b64A || !b64B) return resolve(0);
+          const imA = new Image();
+          const imB = new Image();
+          let loaded = 0;
+          const onBoth = () => {
+            loaded += 1;
+            if (loaded < 2) return;
+            try {
+              const w = 64, h = 64;
+              const cA = document.createElement('canvas'); cA.width = w; cA.height = h;
+              const cB = document.createElement('canvas'); cB.width = w; cB.height = h;
+              const ctxA = cA.getContext('2d'); ctxA.drawImage(imA, 0, 0, w, h);
+              const ctxB = cB.getContext('2d'); ctxB.drawImage(imB, 0, 0, w, h);
+              const dA = ctxA.getImageData(0, 0, w, h).data;
+              const dB = ctxB.getImageData(0, 0, w, h).data;
+              let diffSum = 0;
+              for (let i = 0; i < dA.length; i += 4) {
+                diffSum += Math.abs(dA[i] - dB[i]) + Math.abs(dA[i + 1] - dB[i + 1]) + Math.abs(dA[i + 2] - dB[i + 2]);
+              }
+              const pct = (diffSum / (w * h * 3 * 255)) * 100;
+              resolve(pct);
+            } catch (_) {
+              resolve(5);
+            }
+          };
+          imA.onload = onBoth; imA.onerror = () => resolve(5);
+          imB.onload = onBoth; imB.onerror = () => resolve(5);
+          imA.src = b64A;
+          imB.src = b64B;
+        });
+      }
+
       function mostrarResultadoEkyc(res) {
         const box = document.getElementById('ekycResultadoBox');
         const badge = document.getElementById('badgeEstadoEkyc');
         const esOk = res.estado_ekyc === 'APROBADO';
         if (badge) {
-          badge.textContent = esOk ? '✅ Identidad Verificada' : `📋 eKYC: ${res.estado_ekyc || 'CAPTURADO'}`;
-          badge.style.background = esOk ? '#dcfce7' : '#fef3c7';
-          badge.style.color = esOk ? '#166534' : '#92400e';
-          badge.style.borderColor = esOk ? '#86efac' : '#fde68a';
+          badge.textContent = esOk ? '✅ Identidad validada' : '✓ Captura registrada';
+          badge.style.background = '#dcfce7';
+          badge.style.color = '#166534';
+          badge.style.borderColor = '#86efac';
         }
         if (box) {
-          const fm = res.face_match_pct != null ? `Coincidencia Facial: <strong>${res.face_match_pct}%</strong>` : 'Capturas registradas con SHA-256';
-          const liv = res.liveness_ok === false ? '⚠️ Prueba de vida observada' : 'Prueba de vida OK';
-          const dniTx = (res.dni_extraido && res.dni_extraido.dni) ? ` · DNI leído: <strong>${escHtml(res.dni_extraido.dni)}</strong>` : '';
-          const bo = res.boletin_oficial_er;
-          const boTx = (bo && bo.consultado)
-            ? ` · Boletín Oficial ER: <strong>${bo.encontrado ? (bo.total_resultados + ' mención(es)') : 'Sin alertas'}</strong>`
-            : '';
-          const alertasTx = (res.alertas && res.alertas.length) ? `<div style="margin-top:4px;font-size:0.76rem;font-weight:500;">${res.alertas.map((a) => '• ' + escHtml(a)).join('<br/>')}</div>` : '';
-          box.className = 'alert ' + (esOk ? 'alert-ok' : '');
-          if (!esOk) {
-            box.style.background = '#fffbeb';
-            box.style.border = '1px solid #fde68a';
-            box.style.color = '#92400e';
-          }
+          box.className = 'alert alert-ok';
           box.style.display = 'block';
-          box.innerHTML = `<strong>${esOk ? '✅ Validación eKYC Aprobada' : 'ℹ️ Evidencia eKYC Registrada'}</strong><br/><span style="font-size:0.8rem;font-weight:500;">${fm} · ${liv}${dniTx}${boTx}</span>${alertasTx}`;
+          box.innerHTML = esOk
+            ? '<strong>✅ ¡Tu identidad fue validada correctamente!</strong><br/><span style="font-size:0.9rem;font-weight:500;">Ya podés avanzar al último paso para firmar.</span>'
+            : '<strong>✅ Evidencia recibida correctamente</strong><br/><span style="font-size:0.9rem;font-weight:500;">Tu video y fotos quedaron guardados de forma segura para continuar con tu firma.</span>';
         }
         appState.ekycValidado = true;
       }
 
-      function setupSeccionEkyc(data) {
-        const sec = document.getElementById('seccionEkycValidacion');
-        if (sec) sec.style.display = 'block';
-        if (appState.requiereDni) {
-          const bDni = document.getElementById('bloqueEkycDni');
-          if (bDni) bDni.style.display = 'block';
-        }
-        if (appState.requiereSelfie) {
-          const bSelf = document.getElementById('bloqueEkycSelfie');
-          if (bSelf) bSelf.style.display = 'block';
-          appState.retoLiveness = RETOS_LIVENESS[Math.floor(Math.random() * RETOS_LIVENESS.length)];
-          const lblReto = document.getElementById('lblRetoLiveness');
-          if (lblReto) lblReto.textContent = 'Desafío de vida: ' + appState.retoLiveness;
-        }
+      async function intentarLeerPdf417Silencioso(b64) {
+        if (appState.ekycImgs.pdf417Raw) return true;
+        try {
+          if (window.ZXing && typeof window.ZXing.BrowserPDF417Reader === 'function') {
+            const reader = new window.ZXing.BrowserPDF417Reader();
+            const res417 = await reader.decodeFromImageUrl(b64);
+            const rawTxt = res417 && (res417.text || (typeof res417.getText === 'function' ? res417.getText() : ''));
+            if (rawTxt && String(rawTxt).includes('@')) {
+              appState.ekycImgs.pdf417Raw = String(rawTxt);
+              return true;
+            }
+          }
+        } catch (_) {}
+        return false;
+      }
 
+      function setupSeccionEkyc(data) {
         if (data.ekyc_completado && data.ekyc_resumen) {
           mostrarResultadoEkyc(data.ekyc_resumen);
+          const intro = document.getElementById('selfieIntroView');
+          const done = document.getElementById('selfieDoneView');
+          if (intro) intro.style.display = 'none';
+          if (done) done.style.display = 'block';
         }
 
-        const bindDniInput = (inpId, imgId, key) => {
+        const bindDniInput = (inpId, imgId, cardId, lblId, btnTxtId, key, labelBtnReintento) => {
           const inp = document.getElementById(inpId);
           if (!inp || inp.dataset.bound) return;
           inp.dataset.bound = '1';
           inp.addEventListener('change', async (ev) => {
             const file = ev.target.files && ev.target.files[0];
             if (!file) return;
+            mostrarErrorEnPaso('');
             try {
               const b64 = await redimensionarArchivoImagen(file, 1280);
               appState.ekycImgs[key] = b64;
+              appState.ekycValidado = false;
+
               const img = document.getElementById(imgId);
               if (img) { img.src = b64; img.style.display = 'block'; }
-              if (key === 'dniDorso') {
-                appState.ekycImgs.pdf417Raw = '';
-                const lbl417 = document.getElementById('lblPdf417Status');
-                if (lbl417) {
-                  lbl417.style.display = 'block';
-                  lbl417.style.color = '#64748b';
-                  lbl417.textContent = '🔍 Buscando código de barras PDF417...';
-                }
-                try {
-                  if (window.ZXing && typeof window.ZXing.BrowserPDF417Reader === 'function') {
-                    const reader = new window.ZXing.BrowserPDF417Reader();
-                    const res417 = await reader.decodeFromImageUrl(b64);
-                    const rawTxt = res417 && (res417.text || (typeof res417.getText === 'function' ? res417.getText() : ''));
-                    if (rawTxt && String(rawTxt).includes('@')) {
-                      appState.ekycImgs.pdf417Raw = String(rawTxt);
-                      if (lbl417) {
-                        lbl417.style.color = '#15803d';
-                        lbl417.textContent = '📊 Código PDF417 leído correctamente';
-                      }
-                    } else if (lbl417) {
-                      lbl417.style.color = '#b45309';
-                      lbl417.textContent = 'ℹ️ Código de barras no detectado en cliente (se validará por IA/OCR)';
-                    }
-                  } else if (lbl417) {
-                    lbl417.style.display = 'none';
-                  }
-                } catch (_) {
-                  if (lbl417) {
-                    lbl417.style.color = '#b45309';
-                    lbl417.textContent = 'ℹ️ Código de barras poco nítido (se validará por IA/OCR en servidor)';
-                  }
-                }
+              const card = document.getElementById(cardId);
+              if (card) card.classList.add('captured');
+              const btnTxt = document.getElementById(btnTxtId);
+              if (btnTxt) btnTxt.textContent = labelBtnReintento;
+
+              const lbl = document.getElementById(lblId);
+              if (lbl) {
+                lbl.style.display = 'inline-block';
+                lbl.textContent = '✓ Foto lista';
+              }
+
+              // Buscamos PDF417 silenciosamente en FRENTE y DORSO (sin mostrar alertas falsas si el dorso no tiene código de barras)
+              const encontro417 = await intentarLeerPdf417Silencioso(b64);
+              if (encontro417 && lbl) {
+                lbl.textContent = '✓ Foto lista y datos leídos';
               }
             } catch (e) {
-              alert('No pudimos procesar la foto: ' + e.message);
+              mostrarErrorEnPaso('No pudimos leer esa foto. Probá sacarla de nuevo: ' + e.message);
             }
           });
         };
-        bindDniInput('inpDniFrenteCam', 'imgPrevDniFrente', 'dniFrente');
-        bindDniInput('inpDniDorsoCam', 'imgPrevDniDorso', 'dniDorso');
 
+        bindDniInput('inpDniFrenteCam', 'imgPrevDniFrente', 'cardDniFrente', 'lblStatusDniFrente', 'txtBtnDniFrente', 'dniFrente', '🔄 Cambiar foto del Frente');
+        bindDniInput('inpDniDorsoCam', 'imgPrevDniDorso', 'cardDniDorso', 'lblStatusDniDorso', 'txtBtnDniDorso', 'dniDorso', '🔄 Cambiar foto del Dorso');
+
+        // Botones de guía por voz
+        const btnTestAudio = document.getElementById('btnProbarAudioGuia');
+        if (btnTestAudio && !btnTestAudio.dataset.bound) {
+          btnTestAudio.dataset.bound = '1';
+          btnTestAudio.addEventListener('click', () => {
+            appState.vozHabilitada = true;
+            actualizarBotonesVoz();
+            hablarGuia('Hola. La guía por voz funciona bien. Cuando estés listo, tocá el botón verde Comenzar video guiado.');
+          });
+        }
+
+        const toggleVoz = () => {
+          appState.vozHabilitada = !appState.vozHabilitada;
+          if (!appState.vozHabilitada) detenerVozGuia();
+          actualizarBotonesVoz();
+        };
+        const b1 = document.getElementById('btnToggleAudioGuia');
+        const b2 = document.getElementById('btnAudioLiveMute');
+        if (b1 && !b1.dataset.bound) { b1.dataset.bound = '1'; b1.addEventListener('click', toggleVoz); }
+        if (b2 && !b2.dataset.bound) { b2.dataset.bound = '1'; b2.addEventListener('click', toggleVoz); }
+
+        // Alternativa foto simple si cámara live no está disponible
         const inpFallback = document.getElementById('inpSelfieFallbackCam');
         if (inpFallback && !inpFallback.dataset.bound) {
           inpFallback.dataset.bound = '1';
           inpFallback.addEventListener('change', async (ev) => {
             const file = ev.target.files && ev.target.files[0];
             if (!file) return;
+            mostrarErrorEnPaso('');
             const b64 = await redimensionarArchivoImagen(file, 800);
             appState.ekycImgs.selfie1 = b64;
             appState.ekycImgs.selfie2 = '';
-            const row = document.getElementById('selfiePreviewRow');
-            const i1 = document.getElementById('imgPrevSelfie1');
-            const i2 = document.getElementById('imgPrevSelfie2');
-            if (i1) i1.src = b64;
-            if (i2) i2.style.display = 'none';
-            if (row) row.style.display = 'flex';
+            appState.ekycValidado = false;
+            document.getElementById('selfieIntroView').style.display = 'none';
+            document.getElementById('selfieLiveView').style.display = 'none';
+            document.getElementById('selfieDoneView').style.display = 'block';
+            document.getElementById('videoSelfiePreview').style.display = 'none';
+            document.getElementById('selfieFallbackPreviewWrap').style.display = 'block';
+            document.getElementById('imgPrevSelfie1').src = b64;
+            const box = document.getElementById('ekycResultadoBox');
+            box.className = 'alert alert-ok';
+            box.style.display = 'block';
+            box.innerHTML = '<strong>✓ Foto guardada</strong><br/><span style="font-size:0.9rem;font-weight:500;">Tocá <strong>Verificar y Continuar</strong> abajo para validar tu identidad.</span>';
           });
         }
 
+        // Abrir cámara frontal en vivo
         const btnAbrir = document.getElementById('btnAbrirCamaraSelfie');
-        const btnTomar = document.getElementById('btnTomarSelfieLiveness');
         if (btnAbrir && !btnAbrir.dataset.bound) {
           btnAbrir.dataset.bound = '1';
           btnAbrir.addEventListener('click', async () => {
+            mostrarErrorEnPaso('');
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-              alert('Tu navegador no permite cámara en vivo. Usá "Alternativa: Foto Cámara".');
+              mostrarErrorEnPaso('Tu navegador no permite abrir la cámara en vivo. Usá la opción "sacá una foto aquí".');
               return;
             }
             try {
@@ -893,112 +1573,329 @@
               appState.ekycStream = stream;
               const vid = document.getElementById('videoSelfieLiveness');
               vid.srcObject = stream;
-              document.getElementById('selfieLiveWrap').style.display = 'block';
-              btnAbrir.style.display = 'none';
-              btnTomar.style.display = 'inline-flex';
+
+              document.getElementById('selfieIntroView').style.display = 'none';
+              document.getElementById('selfieDoneView').style.display = 'none';
+              document.getElementById('selfieLiveView').style.display = 'block';
+              document.getElementById('ovalCameraFrame').className = 'oval-camera-frame';
+              document.getElementById('recStatusPill').style.display = 'none';
+              document.getElementById('livSeg1').className = 'liveness-seg';
+              document.getElementById('livSeg2').className = 'liveness-seg';
+              document.getElementById('livSeg3').className = 'liveness-seg';
+              setGuideAvatar('center');
+              document.getElementById('lblGuideCueTitle').textContent = 'Ubicá tu cara dentro del óvalo';
+              document.getElementById('lblGuideCueSub').textContent = 'Cuando te veas bien, tocá el botón verde "Iniciar grabación guiada".';
+              hablarGuia('Ubicá tu cara dentro del óvalo y tocá el botón verde Iniciar grabación guiada.');
             } catch (err) {
-              alert('No se pudo abrir la cámara frontal (' + err.message + '). Podés usar "Alternativa: Foto Cámara".');
+              mostrarErrorEnPaso('No pudimos acceder a la cámara (' + err.message + '). Podés usar la opción "sacá una foto aquí".');
             }
           });
         }
 
-        if (btnTomar && !btnTomar.dataset.bound) {
-          btnTomar.dataset.bound = '1';
-          btnTomar.addEventListener('click', async () => {
+        const btnCancelarLive = document.getElementById('btnCancelarCamaraLive');
+        if (btnCancelarLive && !btnCancelarLive.dataset.bound) {
+          btnCancelarLive.dataset.bound = '1';
+          btnCancelarLive.addEventListener('click', () => {
+            detenerCamaraEkyc();
+            detenerVozGuia();
+            document.getElementById('selfieLiveView').style.display = 'none';
+            document.getElementById('selfieIntroView').style.display = 'block';
+          });
+        }
+
+        // Grabación de VIDEO guiado en 3 etapas con audio + animación
+        const btnGrabar = document.getElementById('btnIniciarGrabacionGuiada');
+        if (btnGrabar && !btnGrabar.dataset.bound) {
+          btnGrabar.dataset.bound = '1';
+          btnGrabar.addEventListener('click', async () => {
             const vid = document.getElementById('videoSelfieLiveness');
-            if (!vid || !vid.videoWidth) return;
+            if (!vid || !appState.ekycStream || appState.grabandoAhora) return;
+            mostrarErrorEnPaso('');
+            appState.grabandoAhora = true;
+            btnGrabar.disabled = true;
+            document.getElementById('btnCancelarCamaraLive').disabled = true;
+            document.getElementById('ovalCameraFrame').className = 'oval-camera-frame recording';
+            document.getElementById('recStatusPill').style.display = 'inline-flex';
+
             const captureFrame = () => {
               const c = document.createElement('canvas');
-              c.width = vid.videoWidth;
-              c.height = vid.videoHeight;
+              c.width = vid.videoWidth || 640;
+              c.height = vid.videoHeight || 480;
               c.getContext('2d').drawImage(vid, 0, 0, c.width, c.height);
-              return c.toDataURL('image/jpeg', 0.8);
+              return c.toDataURL('image/jpeg', 0.82);
             };
-            btnTomar.disabled = true;
-            btnTomar.textContent = '⏳ Capturando... ¡Ahora cumplí el gesto!';
-            appState.ekycImgs.selfie1 = captureFrame();
-            await new Promise((r) => setTimeout(r, 1150));
-            appState.ekycImgs.selfie2 = captureFrame();
-            detenerCamaraEkyc();
-            btnTomar.disabled = false;
-            btnTomar.textContent = '📸 Capturar y Validar Vida';
 
-            const row = document.getElementById('selfiePreviewRow');
-            const i1 = document.getElementById('imgPrevSelfie1');
-            const i2 = document.getElementById('imgPrevSelfie2');
-            if (i1) i1.src = appState.ekycImgs.selfie1;
-            if (i2) { i2.src = appState.ekycImgs.selfie2; i2.style.display = 'block'; }
-            if (row) row.style.display = 'flex';
+            const chunks = [];
+            let recorderDonePromise = Promise.resolve('');
+            if (typeof window.MediaRecorder === 'function') {
+              try {
+                const mimePref = ['video/webm;codecs=vp8', 'video/webm', 'video/mp4']
+                  .find((m) => typeof MediaRecorder.isTypeSupported === 'function' && MediaRecorder.isTypeSupported(m)) || '';
+                const rec = mimePref
+                  ? new MediaRecorder(appState.ekycStream, { mimeType: mimePref, videoBitsPerSecond: 200000 })
+                  : new MediaRecorder(appState.ekycStream);
+                appState.mediaRecorder = rec;
+                rec.ondataavailable = (ev) => {
+                  if (ev.data && ev.data.size > 0) chunks.push(ev.data);
+                };
+                recorderDonePromise = new Promise((resolve) => {
+                  rec.onstop = () => {
+                    try {
+                      if (chunks.length) {
+                        const blob = new Blob(chunks, { type: rec.mimeType || 'video/webm' });
+                        if (appState.recordedVideoUrl) URL.revokeObjectURL(appState.recordedVideoUrl);
+                        appState.recordedVideoUrl = URL.createObjectURL(blob);
+                        resolve(appState.recordedVideoUrl);
+                        return;
+                      }
+                    } catch (_) {}
+                    resolve('');
+                  };
+                });
+                rec.start(250);
+              } catch (_e) {}
+            }
+
+            const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+            // ETAPA 1/3: Mirá de frente
+            document.getElementById('livSeg1').className = 'liveness-seg active';
+            document.getElementById('txtRecTimer').textContent = 'Grabando · Paso 1 de 3';
+            setGuideAvatar('center');
+            document.getElementById('lblGuideCueTitle').textContent = '1) Mirá de frente a la cámara';
+            document.getElementById('lblGuideCueSub').textContent = 'Mantené tu rostro quieto en el centro un instante...';
+            hablarGuia('Paso 1. Mirá de frente a la cámara.');
+            await sleep(2300);
+            const frameNeutral = captureFrame();
+            document.getElementById('livSeg1').className = 'liveness-seg done';
+
+            // ETAPA 2/3: Sonreí suavemente
+            document.getElementById('livSeg2').className = 'liveness-seg active';
+            document.getElementById('txtRecTimer').textContent = 'Grabando · Paso 2 de 3';
+            setGuideAvatar('smile');
+            document.getElementById('lblGuideCueTitle').textContent = '2) Ahora sonreí suavemente';
+            document.getElementById('lblGuideCueSub').textContent = 'Imitá la carita sonriente mientras seguimos grabando...';
+            hablarGuia('Paso 2. Ahora sonreí suavemente.');
+            await sleep(2300);
+            const frameSonrisa = captureFrame();
+            document.getElementById('livSeg2').className = 'liveness-seg done';
+
+            // ETAPA 3/3: Mové suave la cabeza
+            document.getElementById('livSeg3').className = 'liveness-seg active';
+            document.getElementById('txtRecTimer').textContent = 'Grabando · Paso 3 de 3';
+            setGuideAvatar('turn');
+            document.getElementById('lblGuideCueTitle').textContent = '3) Girá un poquito la cabeza y volvé';
+            document.getElementById('lblGuideCueSub').textContent = 'Un movimiento suave hacia un costado...';
+            hablarGuia('Paso 3. Girá un poquito la cabeza hacia un costado y volvé al centro.');
+            await sleep(2400);
+            const frameGiro = captureFrame();
+            document.getElementById('livSeg3').className = 'liveness-seg done';
+
+            if (appState.mediaRecorder && appState.mediaRecorder.state !== 'inactive') {
+              try { appState.mediaRecorder.stop(); } catch (_) {}
+            }
+            const videoUrl = await recorderDonePromise;
+            detenerCamaraEkyc();
+
+            btnGrabar.disabled = false;
+            document.getElementById('btnCancelarCamaraLive').disabled = false;
+
+            const diff12 = await medirMovimientoEntreFrames(frameNeutral, frameSonrisa);
+            const diff13 = await medirMovimientoEntreFrames(frameNeutral, frameGiro);
+            const frameDesafioFinal = (diff13 >= diff12) ? frameGiro : frameSonrisa;
+            const maxMov = Math.max(diff12, diff13);
+
+            if (maxMov < 0.25) {
+              hablarGuia('No pudimos notar el movimiento. Tocá Comenzar video guiado para intentar de nuevo.');
+              document.getElementById('selfieLiveView').style.display = 'none';
+              document.getElementById('selfieIntroView').style.display = 'block';
+              mostrarErrorEnPaso('No detectamos movimiento en el video o había poca luz. Probá acercándote a la luz e imitá el gesto cuando lo indique la pantalla.');
+              return;
+            }
+
+            appState.ekycImgs.selfie1 = frameNeutral;
+            appState.ekycImgs.selfie2 = frameDesafioFinal;
+            appState.ekycValidado = false;
+            appState.retoLiveness = 'Video guiado en 3 etapas: mirar al frente, sonreír suavemente y girar levemente la cabeza';
+
+            document.getElementById('selfieLiveView').style.display = 'none';
+            document.getElementById('selfieDoneView').style.display = 'block';
+
+            const vidPrev = document.getElementById('videoSelfiePreview');
+            const fbWrap = document.getElementById('selfieFallbackPreviewWrap');
+            if (videoUrl && vidPrev) {
+              vidPrev.src = videoUrl;
+              vidPrev.style.display = 'block';
+              if (fbWrap) fbWrap.style.display = 'none';
+            } else {
+              if (vidPrev) vidPrev.style.display = 'none';
+              if (fbWrap) fbWrap.style.display = 'block';
+              document.getElementById('imgPrevSelfie1').src = frameNeutral;
+            }
+
+            const box = document.getElementById('ekycResultadoBox');
+            box.className = 'alert alert-ok';
+            box.style.display = 'block';
+            box.innerHTML = '<strong>✅ ¡Video de prueba de vida grabado correctamente!</strong><br/><span style="font-size:0.9rem;font-weight:500;">Ahora tocá <strong>Verificar y Continuar →</strong> abajo para avanzar a tu firma.</span>';
+            hablarGuia('Perfecto, ya grabamos tu video. Tocá el botón continuar para pasar a tu firma.');
           });
         }
 
-        const btnVal = document.getElementById('btnVerificarIdentidadEkyc');
-        if (btnVal && !btnVal.dataset.bound) {
-          btnVal.dataset.bound = '1';
-          btnVal.addEventListener('click', async () => {
-            if (appState.requiereDni && (!appState.ekycImgs.dniFrente || !appState.ekycImgs.dniDorso)) {
-              alert('Por favor capturá ambas fotos de tu DNI (Frente y Dorso).');
-              return;
-            }
-            if (appState.requiereSelfie && !appState.ekycImgs.selfie1) {
-              alert('Por favor completá la captura de tu Selfie biométrica antes de validar.');
-              return;
-            }
-            btnVal.disabled = true;
-            btnVal.textContent = '⏳ Analizando documento, biometría y prueba de vida...';
-            try {
-              const resp = await fetch(`${API_BASE}/api/firmas/public/${encodeURIComponent(token)}/validar-identidad`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  dniFrenteBase64: appState.ekycImgs.dniFrente || null,
-                  dniDorsoBase64: appState.ekycImgs.dniDorso || null,
-                  selfieBase64: appState.ekycImgs.selfie1 || null,
-                  selfieDesafioBase64: appState.ekycImgs.selfie2 || null,
-                  retoLiveness: appState.retoLiveness,
-                  pdf417Raw: appState.ekycImgs.pdf417Raw || null,
-                }),
-              });
-              const resJson = await resp.json();
-              if (!resp.ok) throw new Error(resJson.detail || `Error HTTP ${resp.status}`);
-              mostrarResultadoEkyc(resJson);
-            } catch (err) {
-              alert('Error validando identidad: ' + err.message);
-            } finally {
-              btnVal.disabled = false;
-              btnVal.textContent = '🔍 Verificar Identidad Ahora';
-            }
+        const btnReintentar = document.getElementById('btnReintentarSelfie');
+        if (btnReintentar && !btnReintentar.dataset.bound) {
+          btnReintentar.dataset.bound = '1';
+          btnReintentar.addEventListener('click', () => {
+            appState.ekycImgs.selfie1 = '';
+            appState.ekycImgs.selfie2 = '';
+            appState.ekycValidado = false;
+            document.getElementById('selfieDoneView').style.display = 'none';
+            document.getElementById('selfieIntroView').style.display = 'block';
           });
         }
       }
 
+      // ============================================================
+      // INICIALIZACIÓN DEL PORTAL
+      // ============================================================
+      async function inicializar() {
+        if (!token) {
+          showErr('Enlace inválido: falta el código del documento en la dirección.');
+          return;
+        }
+        try {
+          const resp = await fetch(`${API_BASE}/api/firmas/public/${encodeURIComponent(token)}`);
+          const data = await resp.json();
+          if (!resp.ok) {
+            throw new Error(data.detail || `Error HTTP ${resp.status}`);
+          }
+          appState.docInfo = data;
+          appState.pdfB64Actual = data.pdfBase64;
+          appState.gpsObligatorio = Boolean((data.validaciones_requeridas || {}).gps_obligatorio);
+
+          if (data.bloqueado_por_orden) {
+            document.getElementById('estadoCargaBox').style.display = 'none';
+            const espBox = document.getElementById('esperaTurnoBox');
+            const espDesc = document.getElementById('lblEsperaTurnoDesc');
+            if (espDesc && data.aguardando_firmante) {
+              espDesc.innerHTML = `Tu turno de firma es el #${escHtml(data.orden_firma || 2)}.<br/>Primero debe firmar: <strong>${escHtml(data.aguardando_firmante.etiqueta || 'Firmante previo')} (${escHtml(data.aguardando_firmante.nombre_enmascarado || '-')})</strong>.<br/>En cuanto esa persona termine, podrás firmar usando este mismo enlace.`;
+            }
+            if (espBox) espBox.style.display = 'block';
+            return;
+          }
+
+          if (data.estado === 'FIRMADO' || data.firmado_por_mi) {
+            mostrarPantallaFirmado(data);
+            return;
+          }
+
+          document.getElementById('estadoCargaBox').style.display = 'none';
+          document.getElementById('contenidoFirmaWrap').style.display = 'flex';
+          document.getElementById('docTitulo').textContent = data.plantilla_nombre || 'Documento AMMER';
+          document.getElementById('docFirmante').textContent = `${data.nombre_solicitante || '-'} (${data.firmante_etiqueta || 'Titular'})`;
+          document.getElementById('docDni').textContent = data.dni_solicitante || '-';
+          document.getElementById('docExpira').textContent = data.expira_en ? new Date(data.expira_en).toLocaleDateString('es-AR') : 'Vigente';
+
+          if (data.es_paquete && Array.isArray(data.paquete_resumen) && data.paquete_resumen.length > 1) {
+            const paqEl = document.getElementById('docPaqueteBanner');
+            if (paqEl) {
+              const itemsTxt = data.paquete_resumen.map((d, i) => `${i + 1}. ${d.nombre}`).join(' · ');
+              paqEl.style.display = 'block';
+              paqEl.innerHTML = `📦 <strong>${data.paquete_resumen.length} documentos unidos:</strong> ${escHtml(itemsTxt)}<br/><span style="font-weight:500;">Firmás una sola vez y vale para todos.</span>`;
+            }
+          }
+
+          if (data.grupo_progreso && data.grupo_progreso.requeridos > 1) {
+            const progEl = document.getElementById('docProgresoMultifirma');
+            if (progEl) {
+              progEl.style.display = 'block';
+              progEl.textContent = `👥 Documento compartido: ya firmaron ${data.grupo_progreso.completados} de ${data.grupo_progreso.requeridos} personas.`;
+            }
+          }
+
+          const prest = (data.datos_resumen && data.datos_resumen.prestamo) || {};
+          if (prest.monto || prest.cuotas) {
+            const boxP = document.getElementById('docPrestamoResumen');
+            boxP.style.display = 'grid';
+            boxP.innerHTML = `
+              <div class="meta-item"><div class="meta-lbl">Línea</div><div class="meta-val">${escHtml(prest.lineaNombre || '-')}</div></div>
+              <div class="meta-item"><div class="meta-lbl">Monto Neto</div><div class="meta-val">$ ${Number(prest.monto || 0).toLocaleString('es-AR')}</div></div>
+              <div class="meta-item"><div class="meta-lbl">Plan de Cuotas</div><div class="meta-val">${escHtml(prest.cuotas || '-')} cuotas${prest.valorCuota ? ' de $ ' + Number(prest.valorCuota).toLocaleString('es-AR') : ''}</div></div>
+            `;
+          }
+
+          const valsReq = data.validaciones_requeridas || {};
+          appState.requiereDni = Boolean(valsReq.dni_frente_dorso);
+          appState.requiereSelfie = Boolean(valsReq.selfie_liveness);
+          appState.requierePinOtp = Boolean(valsReq.requiere_pin_otp);
+
+          // Construir lista dinámica de pasos
+          appState.steps = ['doc'];
+          if (appState.requiereDni) appState.steps.push('dni');
+          if (appState.requiereSelfie) appState.steps.push('selfie');
+          appState.steps.push('sign');
+          appState.currentStepIdx = 0;
+
+          if (appState.requierePinOtp) {
+            const boxPin = document.getElementById('boxPinOtpFirma');
+            if (boxPin) boxPin.style.display = 'block';
+          }
+          if (appState.requiereDni || appState.requiereSelfie) {
+            setupSeccionEkyc(data);
+          }
+
+          solicitarGpsEnSegundoPlano();
+          setupSignaturePad();
+          renderStepActual();
+          await renderizarPdfEnMovil(data.pdfBase64);
+        } catch (err) {
+          showErr('No pudimos abrir tu documento: ' + err.message);
+        }
+      }
+
+      // Controles globales del asistente y zoom PDF
+      document.getElementById('btnWizardNext').addEventListener('click', avanzarPaso);
+      document.getElementById('btnWizardPrev').addEventListener('click', retrocederPaso);
+
+      document.getElementById('btnPdfZoomMas').addEventListener('click', async () => {
+        if (!appState.pdfB64Actual || appState.pdfZoomScale >= 2.4) return;
+        appState.pdfZoomScale = Number((appState.pdfZoomScale + 0.25).toFixed(2));
+        await renderizarPdfEnMovil(appState.pdfB64Actual);
+      });
+
+      document.getElementById('btnPdfZoomMenos').addEventListener('click', async () => {
+        if (!appState.pdfB64Actual || appState.pdfZoomScale <= 0.9) return;
+        appState.pdfZoomScale = Number((appState.pdfZoomScale - 0.25).toFixed(2));
+        await renderizarPdfEnMovil(appState.pdfB64Actual);
+      });
+
       document.getElementById('btnDescargarPreviaPdf').addEventListener('click', () => {
-        if (appState.pdfB64Actual) descargarPdf(appState.pdfB64Actual, 'Documento_AMMER_Revision.pdf');
+        if (appState.pdfB64Actual) descargarPdf(appState.pdfB64Actual, 'Documento_AMMER_Lectura.pdf');
       });
 
       document.getElementById('btnDescargarCopiaFirmada').addEventListener('click', () => {
         if (appState.pdfFirmadoB64) {
           const nom = String((appState.docInfo && appState.docInfo.plantilla_nombre) || 'AMMER').replace(/[^a-zA-Z0-9_-]+/g, '_');
-          descargarPdf(appState.pdfFirmadoB64, `${nom}_FIRMADO_EVIDENCIA.pdf`);
+          descargarPdf(appState.pdfFirmadoB64, `${nom}_FIRMADO.pdf`);
         }
       });
 
       document.getElementById('btnConfirmarFirmar').addEventListener('click', async () => {
+        mostrarErrorEnPaso('');
         const chk = document.getElementById('chkConsentimientoLegal');
         if ((appState.requiereDni || appState.requiereSelfie) && !appState.ekycValidado) {
-          alert('Primero completá y verificá tu identidad (DNI / Selfie) en el paso 2B antes de firmar.');
+          mostrarErrorEnPaso('Antes de firmar debés completar la verificación de identidad.');
           return;
         }
         if (!appState.hasInk || appState.puntosTotales < 5) {
-          alert('Por favor trazá tu firma manuscrita dentro del recuadro antes de continuar.');
+          mostrarErrorEnPaso('Por favor dibujá tu firma dentro del recuadro antes de confirmar.');
           return;
         }
         if (!chk.checked) {
-          alert('Debés tildar la casilla de consentimiento legal para confirmar tu firma.');
+          mostrarErrorEnPaso('Por favor marcá la casilla azul que dice "Confirmo que leí el documento" para finalizar.');
           return;
         }
         if (appState.gpsObligatorio && appState.gps.lat == null) {
-          alert('Este documento requiere habilitar la ubicación GPS en tu navegador para poder firmar.');
+          mostrarErrorEnPaso('Este trámite pide activar la ubicación de tu dispositivo para poder firmar.');
           solicitarGpsEnSegundoPlano();
           return;
         }
@@ -1007,7 +1904,7 @@
           const inpPin = document.getElementById('inpPinOtpFirma');
           pinOtpVal = String((inpPin && inpPin.value) || '').replace(/\D/g, '');
           if (pinOtpVal.length !== 4) {
-            alert('Ingresá el código PIN 2FA de 4 dígitos que recibiste por WhatsApp.');
+            mostrarErrorEnPaso('Escribí los 4 números del código de seguridad que recibiste por WhatsApp.');
             if (inpPin) inpPin.focus();
             return;
           }
@@ -1015,7 +1912,7 @@
 
         const btn = document.getElementById('btnConfirmarFirmar');
         btn.disabled = true;
-        btn.textContent = '⏳ Sellando documento y generando evidencia SHA-256...';
+        btn.textContent = '⏳ Guardando tu firma, por favor esperá...';
 
         try {
           const canvas = document.getElementById('canvasFirmaMovil');
@@ -1048,13 +1945,16 @@
           }
           mostrarPantallaFirmado(data);
         } catch (err) {
-          alert('No se pudo completar la firma: ' + err.message);
+          mostrarErrorEnPaso('No se pudo guardar tu firma: ' + err.message);
           btn.disabled = false;
           btn.textContent = '✅ Confirmar y Firmar Documento';
         }
       });
 
-      window.addEventListener('beforeunload', detenerCamaraEkyc);
+      window.addEventListener('beforeunload', () => {
+        detenerCamaraEkyc();
+        detenerVozGuia();
+      });
       window.addEventListener('DOMContentLoaded', inicializar);
     })();
   </script>

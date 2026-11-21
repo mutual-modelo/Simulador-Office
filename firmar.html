@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Firma Electrónica Segura — AMMER</title>
+  <meta name="theme-color" content="#0f2744"/>
+  <style>
+    :root {
+      --navy: #0f2744;
+      --blue: #1e3a8a;
+      --accent: #0ea5e9;
+      --ok: #15803d;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --border: #cbd5e1;
+      --text: #0f172a;
+      --muted: #64748b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    header {
+      background: linear-gradient(135deg, #0f2744 0%, #1e3a8a 100%);
+      color: #ffffff;
+      padding: 1rem 1.15rem;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.22);
+    }
+    .header-inner {
+      max-width: 780px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .brand-title { font-size: 1.05rem; font-weight: 800; letter-spacing: 0.01em; }
+    .brand-sub { font-size: 0.75rem; color: #bae6fd; margin-top: 2px; }
+    .badge-ssl {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+    }
+    main {
+      max-width: 780px;
+      margin: 1rem auto 2.5rem auto;
+      padding: 0 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 1rem;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    }
+    .card h2 {
+      margin: 0 0 0.65rem 0;
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 0.55rem;
+      font-size: 0.82rem;
+    }
+    .meta-item {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.45rem 0.65rem;
+    }
+    .meta-lbl { font-size: 0.68rem; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+    .meta-val { font-weight: 700; color: var(--text); margin-top: 2px; word-break: break-word; }
+    .hash-box {
+      margin-top: 0.65rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.7rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.45rem 0.65rem;
+      color: #334155;
+      word-break: break-all;
+    }
+    #pdfPaginasContainer {
+      background: #e2e8f0;
+      border-radius: 10px;
+      padding: 0.65rem;
+      max-height: 520px;
+      overflow-y: auto;
+    }
+    #pdfPaginasContainer canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto 0.65rem auto;
+      border-radius: 6px;
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.14);
+    }
+    .sig-pad-wrap {
+      border: 2px dashed #94a3b8;
+      border-radius: 12px;
+      background: #f8fafc;
+      position: relative;
+      overflow: hidden;
+      touch-action: none;
+    }
+    #canvasFirmaMovil {
+      width: 100%;
+      height: 190px;
+      display: block;
+      cursor: crosshair;
+      touch-action: none;
+    }
+    .sig-hint {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      color: #94a3b8;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 0.65rem 1.05rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: opacity 0.15s ease;
+    }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-primary { background: #0f2744; color: #ffffff; width: 100%; font-size: 0.96rem; padding: 0.85rem 1rem; }
+    .btn-secondary { background: #ffffff; color: #334155; border-color: #cbd5e1; }
+    .btn-success { background: #15803d; color: #ffffff; width: 100%; }
+    .consent-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 0.75rem;
+      font-size: 0.82rem;
+      color: #1e3a8a;
+      cursor: pointer;
+      margin: 0.75rem 0;
+    }
+    .consent-label input { margin-top: 3px; width: 18px; height: 18px; flex-shrink: 0; }
+    .alert {
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      font-size: 0.86rem;
+      font-weight: 600;
+    }
+    .alert-err { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
+    .alert-ok { background: #dcfce7; border: 1px solid #86efac; color: #166534; }
+    .geo-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 9999px;
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div>
+        <div class="brand-title">Asociación Mutual Modelo de Entre Ríos (AMMER)</div>
+        <div class="brand-sub">Portal de Firma Electrónica y Trazabilidad Legal · Ley 25.506</div>
+      </div>
+      <div class="badge-ssl">🔒 Enlace Seguro SHA-256</div>
+    </div>
+  </header>
+
+  <main>
+    <div id="estadoCargaBox" class="card" style="text-align:center;padding:2rem 1rem;">
+      <div style="font-size:1.4rem;margin-bottom:0.4rem;">⏳</div>
+      <div style="font-weight:700;color:#0f2744;">Verificando documento seguro...</div>
+      <div style="font-size:0.8rem;color:#64748b;margin-top:4px;">Cargando información de tu trámite en AMMER</div>
+    </div>
+
+    <div id="errorBox" class="alert alert-err" style="display:none;"></div>
+
+    <div id="confirmacionFirmadoBox" class="card" style="display:none;">
+      <div class="alert alert-ok" style="margin-bottom:0.85rem;">
+        ✅ <strong>¡Documento firmado electrónicamente con éxito!</strong><br/>
+        <span style="font-weight:500;font-size:0.82rem;">Ya podés descargar tu copia con la Hoja Anexa de Evidencia y hashes criptográficos SHA-256.</span>
+      </div>
+      <div class="meta-grid" style="margin-bottom:0.75rem;">
+        <div class="meta-item"><div class="meta-lbl">Documento</div><div class="meta-val" id="resDocNombre">-</div></div>
+        <div class="meta-item"><div class="meta-lbl">Fecha Firma (UTC)</div><div class="meta-val" id="resFechaFirma">-</div></div>
+      </div>
+      <div class="hash-box" style="margin-bottom:0.85rem;">
+        <strong>SHA-256 Original:</strong> <span id="resHashOrig">-</span><br/>
+        <strong>SHA-256 Firmado + Evidencia:</strong> <span id="resHashFirmado">-</span>
+      </div>
+      <button type="button" id="btnDescargarCopiaFirmada" class="btn btn-success">
+        ⬇️ Descargar PDF Firmado + Evidencia Legal
+      </button>
+    </div>
+
+    <div id="contenidoFirmaWrap" style="display:none;flex-direction:column;gap:0.9rem;">
+      <section class="card">
+        <h2>📄 1. Datos del Documento a Firmar</h2>
+        <div class="meta-grid">
+          <div class="meta-item"><div class="meta-lbl">Documento</div><div class="meta-val" id="docTitulo">-</div></div>
+          <div class="meta-item"><div class="meta-lbl">Titular / Firmante</div><div class="meta-val" id="docFirmante">-</div></div>
+          <div class="meta-item"><div class="meta-lbl">DNI</div><div class="meta-val" id="docDni">-</div></div>
+          <div class="meta-item"><div class="meta-lbl">Vigencia Enlace</div><div class="meta-val" id="docExpira">-</div></div>
+        </div>
+        <div id="docPrestamoResumen" class="meta-grid" style="margin-top:0.55rem;display:none;"></div>
+        <div class="hash-box">
+          <strong>Integridad Original (SHA-256):</strong> <span id="docHashOriginal">-</span>
+        </div>
+      </section>
+
+      <section class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.65rem;">
+          <h2 style="margin:0;">👁️ 2. Revisá el Documento Completo</h2>
+          <button type="button" id="btnDescargarPreviaPdf" class="btn btn-secondary" style="padding:0.35rem 0.7rem;font-size:0.76rem;">
+            ⬇️ Descargar para leer
+          </button>
+        </div>
+        <div id="pdfPaginasContainer"></div>
+      </section>
+
+      <section class="card" id="seccionTrazarFirma">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.6rem;">
+          <h2 style="margin:0;">✍️ 3. Trazá tu Firma Manuscrita</h2>
+          <span id="badgeEstadoGeo" class="geo-pill">📍 Solicitando ubicación...</span>
+        </div>
+
+        <div class="sig-pad-wrap">
+          <div id="sigHintText" class="sig-hint">Dibujá tu firma aquí con el dedo o mouse</div>
+          <canvas id="canvasFirmaMovil"></canvas>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.55rem;gap:0.5rem;">
+          <span id="lblTrazosInfo" style="font-size:0.75rem;color:#64748b;">Sin trazo capturado aún</span>
+          <button type="button" id="btnLimpiarFirma" class="btn btn-secondary" style="padding:0.4rem 0.75rem;font-size:0.78rem;">
+            🧹 Limpiar firma
+          </button>
+        </div>
+
+        <label class="consent-label">
+          <input type="checkbox" id="chkConsentimientoLegal"/>
+          <span>
+            Declaro haber leído íntegramente el documento precedente, confirmo que los datos consignados son correctos y otorgo mi <strong>firma electrónica</strong> conforme a la Ley 25.506, autorizando el registro de fecha/hora, IP, trazo manuscrito y hash criptográfico como evidencia.
+          </span>
+        </label>
+
+        <button type="button" id="btnConfirmarFirmar" class="btn btn-primary">
+          ✅ Confirmar y Firmar Documento
+        </button>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const API_BASE = 'https://ammer-auditor-api.onrender.com';
+      const WORKER_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      if (window.pdfjsLib) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER_SRC;
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const token = (params.get('t') || '').trim();
+      const idempotencyKey = (window.crypto && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : ('idem-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+
+      const appState = {
+        docInfo: null,
+        pdfB64Actual: '',
+        pdfFirmadoB64: '',
+        gps: { lat: null, lng: null, accuracy: null, status: 'pending' },
+        gpsObligatorio: false,
+        drawing: false,
+        hasInk: false,
+        startTime: null,
+        puntosTotales: 0,
+        trazos: 0,
+      };
+
+      function showErr(msg) {
+        document.getElementById('estadoCargaBox').style.display = 'none';
+        const eb = document.getElementById('errorBox');
+        eb.textContent = msg;
+        eb.style.display = 'block';
+      }
+
+      function b64ToBytes(b64) {
+        const clean = String(b64 || '').replace(/^data:[^;]+;base64,/, '');
+        const bin = atob(clean);
+        const out = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+        return out;
+      }
+
+      function descargarPdf(b64, filename) {
+        const blob = new Blob([b64ToBytes(b64)], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+      }
+
+      function solicitarGpsEnSegundoPlano() {
+        const badge = document.getElementById('badgeEstadoGeo');
+        if (!navigator.geolocation) {
+          appState.gps.status = 'unsupported';
+          if (badge) badge.textContent = '📍 GPS no disponible';
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            appState.gps = {
+              lat: Number(pos.coords.latitude.toFixed(6)),
+              lng: Number(pos.coords.longitude.toFixed(6)),
+              accuracy: Number((pos.coords.accuracy || 0).toFixed(1)),
+              status: 'ok',
+            };
+            if (badge) {
+              badge.textContent = `📍 GPS verificado (±${Math.round(appState.gps.accuracy)}m)`;
+              badge.style.background = '#dcfce7';
+              badge.style.color = '#166534';
+              badge.style.borderColor = '#86efac';
+            }
+          },
+          () => {
+            appState.gps.status = 'denied';
+            if (badge) {
+              badge.textContent = appState.gpsObligatorio ? '⚠️ GPS requerido por plantilla' : '📍 Ubicación opcional omitida';
+              badge.style.background = appState.gpsObligatorio ? '#fef2f2' : '#f1f5f9';
+              badge.style.color = appState.gpsObligatorio ? '#b91c1c' : '#475569';
+            }
+          },
+          { enableHighAccuracy: true, timeout: 9000, maximumAge: 60000 }
+        );
+      }
+
+      async function renderizarPdfEnMovil(b64) {
+        const cont = document.getElementById('pdfPaginasContainer');
+        if (!cont || !window.pdfjsLib) return;
+        cont.innerHTML = '<div style="text-align:center;padding:1rem;font-size:0.82rem;color:#475569;">Renderizando páginas...</div>';
+        try {
+          const doc = await window.pdfjsLib.getDocument({ data: b64ToBytes(b64) }).promise;
+          cont.innerHTML = '';
+          for (let i = 1; i <= doc.numPages; i++) {
+            const page = await doc.getPage(i);
+            const vp = page.getViewport({ scale: 1.4 });
+            const canvas = document.createElement('canvas');
+            canvas.width = vp.width;
+            canvas.height = vp.height;
+            await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+            cont.appendChild(canvas);
+          }
+        } catch (_err) {
+          cont.innerHTML = '<div style="padding:1rem;font-size:0.82rem;color:#475569;">Usá el botón superior <strong>Descargar para leer</strong> para abrir el PDF en tu dispositivo.</div>';
+        }
+      }
+
+      function setupSignaturePad() {
+        const canvas = document.getElementById('canvasFirmaMovil');
+        const hint = document.getElementById('sigHintText');
+        const lblInfo = document.getElementById('lblTrazosInfo');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+          const rect = canvas.getBoundingClientRect();
+          const ratio = Math.max(window.devicePixelRatio || 1, 1);
+          canvas.width = Math.max(300, Math.floor(rect.width * ratio));
+          canvas.height = Math.max(180, Math.floor(rect.height * ratio));
+          ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 2.6;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+        }
+        resizeCanvas();
+
+        function getPt(ev) {
+          const r = canvas.getBoundingClientRect();
+          const src = ev.touches ? ev.touches[0] : ev;
+          return { x: src.clientX - r.left, y: src.clientY - r.top };
+        }
+
+        function onDown(ev) {
+          ev.preventDefault();
+          appState.drawing = true;
+          if (!appState.startTime) appState.startTime = Date.now();
+          appState.trazos += 1;
+          const p = getPt(ev);
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          if (hint) hint.style.display = 'none';
+        }
+
+        function onMove(ev) {
+          if (!appState.drawing) return;
+          ev.preventDefault();
+          const p = getPt(ev);
+          ctx.lineTo(p.x, p.y);
+          ctx.stroke();
+          appState.hasInk = true;
+          appState.puntosTotales += 1;
+          if (lblInfo) lblInfo.textContent = `Firma capturada (${appState.puntosTotales} puntos biométricos)`;
+        }
+
+        function onUp() {
+          appState.drawing = false;
+        }
+
+        canvas.addEventListener('mousedown', onDown);
+        canvas.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+        canvas.addEventListener('touchstart', onDown, { passive: false });
+        canvas.addEventListener('touchmove', onMove, { passive: false });
+        window.addEventListener('touchend', onUp);
+
+        document.getElementById('btnLimpiarFirma').addEventListener('click', () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          appState.hasInk = false;
+          appState.puntosTotales = 0;
+          appState.trazos = 0;
+          appState.startTime = null;
+          if (hint) hint.style.display = 'flex';
+          if (lblInfo) lblInfo.textContent = 'Sin trazo capturado aún';
+        });
+      }
+
+      function mostrarPantallaFirmado(data) {
+        document.getElementById('estadoCargaBox').style.display = 'none';
+        document.getElementById('contenidoFirmaWrap').style.display = 'none';
+        document.getElementById('confirmacionFirmadoBox').style.display = 'block';
+        document.getElementById('resDocNombre').textContent = (appState.docInfo && appState.docInfo.plantilla_nombre) || 'Documento AMMER';
+        document.getElementById('resFechaFirma').textContent = data.firmado_en || '-';
+        document.getElementById('resHashOrig').textContent = data.hash_sha256_original || '-';
+        document.getElementById('resHashFirmado').textContent = data.hash_sha256_firmado || '-';
+        appState.pdfFirmadoB64 = data.pdfBase64 || appState.pdfB64Actual;
+      }
+
+      async function inicializar() {
+        if (!token) {
+          showErr('Enlace inválido: falta el token de firma en la URL.');
+          return;
+        }
+        try {
+          const resp = await fetch(`${API_BASE}/api/firmas/public/${encodeURIComponent(token)}`);
+          const data = await resp.json();
+          if (!resp.ok) {
+            throw new Error(data.detail || `Error HTTP ${resp.status}`);
+          }
+          appState.docInfo = data;
+          appState.pdfB64Actual = data.pdfBase64;
+          appState.gpsObligatorio = Boolean((data.validaciones_requeridas || {}).gps_obligatorio);
+
+          if (data.estado === 'FIRMADO') {
+            mostrarPantallaFirmado(data);
+            return;
+          }
+
+          document.getElementById('estadoCargaBox').style.display = 'none';
+          document.getElementById('contenidoFirmaWrap').style.display = 'flex';
+          document.getElementById('docTitulo').textContent = data.plantilla_nombre || 'Documento AMMER';
+          document.getElementById('docFirmante').textContent = data.nombre_solicitante || '-';
+          document.getElementById('docDni').textContent = data.dni_solicitante || '-';
+          document.getElementById('docExpira').textContent = data.expira_en ? new Date(data.expira_en).toLocaleString('es-AR') : '24 hs';
+          document.getElementById('docHashOriginal').textContent = data.hash_sha256_original || '-';
+
+      function escHtml(v) {
+        return String(v == null ? '' : v)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      const prest = (data.datos_resumen && data.datos_resumen.prestamo) || {};
+          if (prest.monto || prest.cuotas) {
+            const boxP = document.getElementById('docPrestamoResumen');
+            boxP.style.display = 'grid';
+            boxP.innerHTML = `
+              <div class="meta-item"><div class="meta-lbl">Línea</div><div class="meta-val">${escHtml(prest.lineaNombre || '-')}</div></div>
+              <div class="meta-item"><div class="meta-lbl">Monto Neto</div><div class="meta-val">$ ${Number(prest.monto || 0).toLocaleString('es-AR')}</div></div>
+              <div class="meta-item"><div class="meta-lbl">Plan de Cuotas</div><div class="meta-val">${escHtml(prest.cuotas || '-')} cuotas${prest.valorCuota ? ' de $ ' + Number(prest.valorCuota).toLocaleString('es-AR') : ''}</div></div>
+            `;
+          }
+
+          solicitarGpsEnSegundoPlano();
+          setupSignaturePad();
+          await renderizarPdfEnMovil(data.pdfBase64);
+        } catch (err) {
+          showErr('No pudimos abrir tu documento: ' + err.message);
+        }
+      }
+
+      document.getElementById('btnDescargarPreviaPdf').addEventListener('click', () => {
+        if (appState.pdfB64Actual) descargarPdf(appState.pdfB64Actual, 'Documento_AMMER_Revision.pdf');
+      });
+
+      document.getElementById('btnDescargarCopiaFirmada').addEventListener('click', () => {
+        if (appState.pdfFirmadoB64) {
+          const nom = String((appState.docInfo && appState.docInfo.plantilla_nombre) || 'AMMER').replace(/[^a-zA-Z0-9_-]+/g, '_');
+          descargarPdf(appState.pdfFirmadoB64, `${nom}_FIRMADO_EVIDENCIA.pdf`);
+        }
+      });
+
+      document.getElementById('btnConfirmarFirmar').addEventListener('click', async () => {
+        const chk = document.getElementById('chkConsentimientoLegal');
+        if (!appState.hasInk || appState.puntosTotales < 5) {
+          alert('Por favor trazá tu firma manuscrita dentro del recuadro antes de continuar.');
+          return;
+        }
+        if (!chk.checked) {
+          alert('Debés tildar la casilla de consentimiento legal para confirmar tu firma.');
+          return;
+        }
+        if (appState.gpsObligatorio && appState.gps.lat == null) {
+          alert('Este documento requiere habilitar la ubicación GPS en tu navegador para poder firmar.');
+          solicitarGpsEnSegundoPlano();
+          return;
+        }
+
+        const btn = document.getElementById('btnConfirmarFirmar');
+        btn.disabled = true;
+        btn.textContent = '⏳ Sellando documento y generando evidencia SHA-256...';
+
+        try {
+          const canvas = document.getElementById('canvasFirmaMovil');
+          const firmaPng = canvas.toDataURL('image/png');
+          const duracionMs = appState.startTime ? (Date.now() - appState.startTime) : 0;
+
+          const resp = await fetch(`${API_BASE}/api/firmas/public/${encodeURIComponent(token)}/firmar`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Idempotency-Key': idempotencyKey,
+            },
+            body: JSON.stringify({
+              firmaPngBase64: firmaPng,
+              consentimientoAceptado: true,
+              geoLatitud: appState.gps.lat,
+              geoLongitud: appState.gps.lng,
+              geoPrecisionMetros: appState.gps.accuracy,
+              telemetriaTrazo: {
+                puntos_totales: appState.puntosTotales,
+                trazos: appState.trazos,
+                duracion_ms: duracionMs,
+              },
+            }),
+          });
+          const data = await resp.json();
+          if (!resp.ok) {
+            throw new Error(data.detail || `Error HTTP ${resp.status}`);
+          }
+          mostrarPantallaFirmado(data);
+        } catch (err) {
+          alert('No se pudo completar la firma: ' + err.message);
+          btn.disabled = false;
+          btn.textContent = '✅ Confirmar y Firmar Documento';
+        }
+      });
+
+      window.addEventListener('DOMContentLoaded', inicializar);
+    })();
+  </script>
+</body>
+</html>

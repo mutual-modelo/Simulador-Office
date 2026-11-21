@@ -2735,7 +2735,7 @@
     if (!modal) {
       modal = document.createElement('div');
       modal.id = 'modalGuiaRenaperEjemplar';
-      modal.style.cssText = 'position:fixed;bottom:18px;left:18px;z-index:99999;max-width:405px;width:calc(100vw - 32px);background:#ffffff;border:2px solid #0284c7;border-radius:14px;box-shadow:0 18px 40px rgba(15,23,42,0.28);padding:1rem;font-family:inherit;';
+      modal.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:99999;max-width:405px;width:calc(100vw - 32px);background:#ffffff;border:2px solid #0284c7;border-radius:14px;box-shadow:0 18px 40px rgba(15,23,42,0.28);padding:1rem;font-family:inherit;';
       document.body.appendChild(modal);
     }
 

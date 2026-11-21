@@ -5178,17 +5178,18 @@
 
       <!-- VISTA: FIRMAS AMMER (FASE 1: PLANTILLAS PDF, ENLACE MÓVIL Y TRAZABILIDAD) -->
       <section id="vistaFirmasAMMER" class="app-view">
-        <div class="main-panel" style="padding:1.25rem;display:flex;flex-direction:column;gap:1rem;">
-          <div style="background:linear-gradient(135deg,#0f2744 0%,#1e3a8a 100%);color:#ffffff;border-radius:14px;padding:1.15rem 1.35rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.85rem;">
+        <div class="main-panel" style="padding:1.25rem;display:flex;flex-direction:column;gap:0.9rem;">
+          <div style="background:linear-gradient(135deg,#0f2744 0%,#1e3a8a 100%);color:#ffffff;border-radius:14px;padding:1.1rem 1.35rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;">
             <div>
               <div style="font-size:1.05rem;font-weight:800;letter-spacing:0.01em;">✍️ Firmas AMMER — Firma Electrónica y Gestión de Plantillas PDF</div>
-              <div style="font-size:0.8rem;color:#cbd5e1;margin-top:3px;">Completá solicitudes PDF sin resaltados, enviá enlaces móviles 24hs con evidencia SHA-256 + GPS y exportá el legajo completo en .ZIP.</div>
+              <div style="font-size:0.8rem;color:#cbd5e1;margin-top:3px;">Completá solicitudes PDF sin resaltados, enviá enlaces móviles 24hs con evidencia SHA-256 + GPS, sello institucional PNG, múltiples firmantes y exportación .ZIP.</div>
             </div>
-            <div style="display:flex;gap:0.45rem;flex-wrap:wrap;">
-              <button type="button" id="btnTabFirma_generar" onclick="cambiarTabFirmas('generar')" style="padding:0.48rem 0.9rem;border-radius:8px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.8rem;font-weight:700;cursor:pointer;">✉️ Generar y Enviar a Firma</button>
-              <button type="button" id="btnTabFirma_bandeja" onclick="cambiarTabFirmas('bandeja')" style="padding:0.48rem 0.9rem;border-radius:8px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.8rem;font-weight:700;cursor:pointer;">📂 Bandeja de Evidencia</button>
-              <button type="button" id="btnTabFirma_editor" onclick="cambiarTabFirmas('editor')" style="display:none;padding:0.48rem 0.9rem;border-radius:8px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.8rem;font-weight:700;cursor:pointer;">🎨 Editor Visual de Plantillas PDF</button>
-            </div>
+          </div>
+
+          <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:12px;padding:0.45rem;display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center;box-shadow:0 1px 3px rgba(15,23,42,0.05);">
+            <button type="button" id="btnTabFirma_generar" onclick="cambiarTabFirmas('generar')" style="padding:0.52rem 1rem;border-radius:8px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.82rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">✉️ Generar y Enviar a Firma</button>
+            <button type="button" id="btnTabFirma_bandeja" onclick="cambiarTabFirmas('bandeja')" style="padding:0.52rem 1rem;border-radius:8px;border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;font-size:0.82rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">📂 Bandeja de Evidencia</button>
+            <button type="button" id="btnTabFirma_editor" onclick="cambiarTabFirmas('editor')" style="display:none;padding:0.52rem 1rem;border-radius:8px;border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;font-size:0.82rem;font-weight:700;cursor:pointer;align-items:center;gap:6px;">🎨 Editor Visual de Plantillas PDF</button>
           </div>
 
           <!-- SUB-PANEL 1: GENERAR Y ENVIAR A FIRMA -->
@@ -5207,12 +5208,42 @@
                   </div>
                 </div>
                 <div>
-                  <label style="display:block;font-size:0.76rem;font-weight:800;color:#334155;margin-bottom:4px;">3. WhatsApp del Asociado (para apertura 1-a-1)</label>
+                  <label style="display:block;font-size:0.76rem;font-weight:800;color:#334155;margin-bottom:4px;">3. WhatsApp Principal (opcional si hay varios firmantes)</label>
                   <input type="text" id="inpFirmaTelefonoWa" placeholder="Ej: 3434123456 (sin 0 ni 15)" style="width:100%;padding:0.52rem 0.65rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.84rem;"/>
                 </div>
               </div>
 
               <div id="firmaValidacionesResumen" style="display:flex;gap:0.4rem;flex-wrap:wrap;"></div>
+
+              <!-- CARGA DE SELLO OFICIAL INSTITUCIONAL (PNG) -->
+              <div id="firmaSelloInstitucionalWrap" style="display:none;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:0.8rem 0.95rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;">
+                  <div style="flex:1;min-width:240px;">
+                    <div style="font-size:0.8rem;font-weight:800;color:#5b21b6;margin-bottom:3px;">🏛️ Sello Oficial Institucional (Imagen PNG transparente)</div>
+                    <div style="font-size:0.73rem;color:#6d28d9;margin-bottom:0.45rem;">Esta plantilla incluye espacio para el sello oficial de Mutual Modelo. Subilo en PNG (podés recordarlo en este navegador para futuros usos).</div>
+                    <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+                      <input type="file" id="inpFirmaSelloPngFile" accept="image/png,image/*" onchange="onArchivoSelloPngSeleccionado(event)" style="font-size:0.78rem;"/>
+                      <label style="display:flex;align-items:center;gap:4px;font-size:0.74rem;font-weight:600;color:#4c1d95;cursor:pointer;">
+                        <input type="checkbox" id="chkRecordarSelloOficial" checked/> Recordar sello en navegador
+                      </label>
+                      <button type="button" onclick="limpiarSelloPngOficial()" style="padding:2px 8px;border-radius:6px;border:1px solid #c4b5fd;background:#ffffff;color:#5b21b6;font-size:0.72rem;font-weight:700;cursor:pointer;">🗑️ Quitar sello</button>
+                    </div>
+                  </div>
+                  <div id="previewSelloPngBox" style="width:96px;height:66px;border:1px dashed #a78bfa;border-radius:8px;background:#ffffff;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:0.7rem;color:#7c3aed;text-align:center;padding:4px;">Sin sello</div>
+                </div>
+              </div>
+
+              <!-- FIRMANTES REQUERIDOS (1 O MÁS PERSONAS) -->
+              <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0.85rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.55rem;">
+                  <div>
+                    <div style="font-size:0.8rem;font-weight:800;color:#0f172a;">👥 Firmantes requeridos antes de completar el documento</div>
+                    <div style="font-size:0.72rem;color:#64748b;">Si el documento lleva 2 o más firmas, cada persona recibe su propio link y el archivo recién se marca <strong>FIRMADO</strong> cuando firman todas.</div>
+                  </div>
+                  <button type="button" onclick="agregarFirmanteGenerador()" style="padding:0.35rem 0.7rem;border-radius:7px;border:1px solid #0f2744;background:#ffffff;color:#0f2744;font-size:0.74rem;font-weight:700;cursor:pointer;">➕ Sumar Firmante</button>
+                </div>
+                <div id="firmaMultifirmantesContainer" style="display:flex;flex-direction:column;gap:0.5rem;"></div>
+              </div>
 
               <div>
                 <div style="font-size:0.78rem;font-weight:800;color:#1e293b;margin-bottom:0.45rem;">Datos que se estamparán sobre el PDF (podés editar cualquiera antes de emitir):</div>
@@ -5233,30 +5264,21 @@
               <div style="display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center;">
                 <button type="button" onclick="previsualizarPdfGenerado(false)" style="padding:0.58rem 1rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;font-size:0.84rem;font-weight:700;cursor:pointer;">👁️ Previsualizar PDF Completo</button>
                 <button type="button" onclick="descargarUltimoPreviewPdfFirma()" style="padding:0.58rem 1rem;border-radius:9px;border:1px solid #cbd5e1;background:#f8fafc;color:#334155;font-size:0.84rem;font-weight:700;cursor:pointer;">⬇️ Descargar PDF Generado</button>
-                <button type="button" onclick="generarEnlaceFirmaMovil()" style="padding:0.62rem 1.15rem;border-radius:9px;border:1px solid #059669;background:#059669;color:#ffffff;font-size:0.86rem;font-weight:800;cursor:pointer;margin-left:auto;">🔗 Generar Enlace de Firma Móvil (24hs)</button>
+                <button type="button" onclick="generarEnlaceFirmaMovil()" style="padding:0.62rem 1.15rem;border-radius:9px;border:1px solid #059669;background:#059669;color:#ffffff;font-size:0.86rem;font-weight:800;cursor:pointer;margin-left:auto;">🔗 Generar Enlace(s) de Firma Móvil (24hs)</button>
               </div>
 
               <div id="firmaEnlaceGeneradoBox" style="display:none;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:12px;padding:1rem;">
-                <div style="font-size:0.88rem;font-weight:800;color:#065f46;margin-bottom:0.5rem;">✅ ¡Enlace único de firma generado con vigencia de 24 horas!</div>
-                <div style="font-size:0.74rem;color:#047857;margin-bottom:0.55rem;">Hash SHA-256 original: <span id="lblFirmaHashOriginal" class="font-mono">-</span></div>
-                <div style="display:flex;gap:0.45rem;flex-wrap:wrap;margin-bottom:0.65rem;">
-                  <input type="text" id="txtEnlaceFirmaGenerado" readonly style="flex:1;min-width:240px;padding:0.48rem 0.65rem;border:1px solid #6ee7b7;border-radius:8px;background:#ffffff;font-size:0.8rem;color:#0f172a;"/>
-                  <button type="button" onclick="copiarEnlaceFirmaGenerado()" style="padding:0.48rem 0.85rem;border-radius:8px;border:1px solid #047857;background:#ffffff;color:#047857;font-size:0.8rem;font-weight:700;cursor:pointer;">📋 Copiar Enlace</button>
-                </div>
-                <label style="display:block;font-size:0.74rem;font-weight:700;color:#065f46;margin-bottom:4px;">Mensaje listo para enviar manualmente por WhatsApp (sin envíos masivos / riesgo cero de bloqueo):</label>
-                <textarea id="txtMensajeWhatsAppFirma" rows="4" style="width:100%;padding:0.55rem;border:1px solid #6ee7b7;border-radius:8px;font-size:0.8rem;background:#ffffff;color:#0f172a;margin-bottom:0.55rem;"></textarea>
-                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                  <button type="button" onclick="copiarMensajeWhatsAppFirma()" style="padding:0.48rem 0.9rem;border-radius:8px;border:1px solid #047857;background:#ffffff;color:#047857;font-size:0.8rem;font-weight:700;cursor:pointer;">📋 Copiar Mensaje</button>
-                  <button type="button" onclick="abrirWhatsAppConMensajeFirma()" style="padding:0.48rem 0.95rem;border-radius:8px;border:1px solid #16a34a;background:#16a34a;color:#ffffff;font-size:0.8rem;font-weight:700;cursor:pointer;">💬 Abrir Chat WhatsApp</button>
-                </div>
+                <div style="font-size:0.88rem;font-weight:800;color:#065f46;margin-bottom:0.35rem;">✅ ¡Solicitud(es) de firma generada(s) con vigencia de 24 horas!</div>
+                <div style="font-size:0.74rem;color:#047857;margin-bottom:0.65rem;">Hash SHA-256 original: <span id="lblFirmaHashOriginal" class="font-mono">-</span></div>
+                <div id="firmaEnlacesListaContainer" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
               </div>
 
               <div id="firmaPreviewPdfWrap" style="display:none;background:#e2e8f0;border-radius:12px;padding:0.85rem;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.65rem;">
-                  <span style="font-size:0.82rem;font-weight:800;color:#0f172a;">Vista Previa del PDF Estampado (sin resaltados amarillos)</span>
+                  <span style="font-size:0.82rem;font-weight:800;color:#0f172a;">Vista Previa del PDF Estampado</span>
                   <button type="button" onclick="document.getElementById('firmaPreviewPdfWrap').style.display='none'" style="padding:2px 8px;border-radius:6px;border:1px solid #94a3b8;background:#ffffff;font-size:0.74rem;cursor:pointer;">Ocultar</button>
                 </div>
-                <div id="firmaPreviewPaginasContainer" style="max-height:540px;overflow-y:auto;"></div>
+                <div id="firmaPreviewPaginasContainer" style="max-height:560px;overflow-y:auto;"></div>
               </div>
             </div>
           </div>
@@ -5286,12 +5308,12 @@
             </div>
           </div>
 
-          <!-- SUB-PANEL 3: EDITOR VISUAL DE PLANTILLAS PDF (ADMIN / ANALISTA) -->
+          <!-- SUB-PANEL 3: EDITOR VISUAL DE PLANTILLAS PDF (ADMIN) -->
           <div id="panelFirmas_editor" style="display:none;">
             <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:1.1rem;display:flex;flex-direction:column;gap:0.9rem;">
               <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:0.75rem;background:#f8fafc;padding:0.85rem;border-radius:10px;border:1px solid #e2e8f0;">
                 <div>
-                  <label style="display:block;font-size:0.74rem;font-weight:800;color:#334155;margin-bottom:4px;">Subir nuevo PDF plantilla (detecta resaltados en amarillo):</label>
+                  <label style="display:block;font-size:0.74rem;font-weight:800;color:#334155;margin-bottom:4px;">Subir nuevo PDF plantilla (detecta resaltados y previsualiza al instante):</label>
                   <input type="file" id="inpPlantillaPdfFile" accept="application/pdf" onchange="onArchivoPdfPlantillaSeleccionado(event)" style="width:100%;font-size:0.8rem;"/>
                 </div>
                 <div>
@@ -5324,18 +5346,22 @@
               <div style="display:flex;gap:1rem;flex-wrap:wrap;background:#eff6ff;padding:0.65rem 0.85rem;border-radius:10px;border:1px solid #bfdbfe;font-size:0.78rem;font-weight:600;color:#1e3a8a;">
                 <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="chkValFirmaOlografa" checked/> ✍️ Firma Ológrafa</label>
                 <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="chkValTaparResaltados" checked/> 🧹 Quitar resaltados amarillos</label>
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="chkValRequiereSelloPng"/> 🏛️ Solicitar Sello Institucional (PNG)</label>
                 <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="chkValGpsObligatorio"/> 📍 GPS Obligatorio</label>
                 <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="chkValDniFrenteDorso"/> 🪪 Solicitar DNI (Fase 2)</label>
                 <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="chkValSelfieLiveness"/> 🤳 Selfie Liveness (Fase 2)</label>
               </div>
 
-              <div style="display:grid;grid-template-columns:minmax(320px,1.45fr) minmax(260px,1fr);gap:1rem;align-items:start;">
+              <div id="lblEditorEstadoPdf" style="display:none;font-size:0.78rem;font-weight:600;padding:0.45rem 0.75rem;border-radius:8px;background:#f8fafc;border:1px solid #cbd5e1;color:#334155;"></div>
+
+              <div style="display:grid;grid-template-columns:minmax(340px,1.5fr) minmax(270px,1fr);gap:1rem;align-items:start;">
                 <!-- LIENZO PDF INTERACTIVO -->
                 <div style="background:#cbd5e1;border-radius:12px;padding:0.75rem;">
                   <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.45rem;margin-bottom:0.6rem;">
-                    <div style="display:flex;gap:0.35rem;">
-                      <button type="button" onclick="activarModoClickAgregarCampo('texto')" style="padding:0.35rem 0.65rem;border-radius:7px;border:1px solid #d97706;background:#fffbeb;color:#b45309;font-size:0.74rem;font-weight:700;cursor:pointer;">➕ Marcar Campo Texto</button>
-                      <button type="button" onclick="activarModoClickAgregarCampo('firma')" style="padding:0.35rem 0.65rem;border-radius:7px;border:1px solid #047857;background:#ecfdf5;color:#065f46;font-size:0.74rem;font-weight:700;cursor:pointer;">✍️ Marcar Caja Firma</button>
+                    <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
+                      <button type="button" onclick="activarModoClickAgregarCampo('texto')" style="padding:0.36rem 0.65rem;border-radius:7px;border:1px solid #d97706;background:#fffbeb;color:#b45309;font-size:0.74rem;font-weight:700;cursor:pointer;">➕ Marcar Campo Texto</button>
+                      <button type="button" onclick="activarModoClickAgregarCampo('firma')" style="padding:0.36rem 0.65rem;border-radius:7px;border:1px solid #047857;background:#ecfdf5;color:#065f46;font-size:0.74rem;font-weight:700;cursor:pointer;">✍️ Marcar Caja Firma</button>
+                      <button type="button" onclick="activarModoClickAgregarCampo('sello')" style="padding:0.36rem 0.65rem;border-radius:7px;border:1px solid #6d28d9;background:#f5f3ff;color:#5b21b6;font-size:0.74rem;font-weight:700;cursor:pointer;">🏛️ Marcar Caja Sello PNG</button>
                     </div>
                     <div style="display:flex;align-items:center;gap:0.35rem;">
                       <button type="button" onclick="cambiarPaginaEditor(-1)" style="padding:2px 8px;border-radius:6px;border:1px solid #64748b;background:#ffffff;font-size:0.75rem;cursor:pointer;">◀</button>
@@ -5343,7 +5369,7 @@
                       <button type="button" onclick="cambiarPaginaEditor(1)" style="padding:2px 8px;border-radius:6px;border:1px solid #64748b;background:#ffffff;font-size:0.75rem;cursor:pointer;">▶</button>
                     </div>
                   </div>
-                  <div style="overflow:auto;max-height:700px;text-align:center;">
+                  <div style="overflow:auto;max-height:740px;text-align:center;">
                     <div style="position:relative;display:inline-block;box-shadow:0 4px 16px rgba(15,23,42,0.2);">
                       <canvas id="canvasEditorPlantillaPdf" style="display:block;max-width:100%;height:auto;background:#ffffff;"></canvas>
                       <div id="overlayCamposPlantilla" style="position:absolute;inset:0;"></div>
@@ -24923,6 +24949,6 @@ ${cierreTxt}`;
   <script src="js/auditoria20.js?v=6"></script>
   <script src="js/fichasAsociados.js?v=6"></script>
   <script src="js/sidecreerWidget.js?v=10"></script>
-  <script src="js/firmasAmmer.js?v=2"></script>
+  <script src="js/firmasAmmer.js?v=3"></script>
 </body>
 </html>

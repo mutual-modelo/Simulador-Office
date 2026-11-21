@@ -3,6 +3,7 @@
 
   const PDFJS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
   const PDFJS_WORKER_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const LS_SELLO_KEY = 'AMMER_SELLO_OFICIAL_PNG';
 
   const ORIGENES_CAMPO = [
     { group: 'Solicitante', value: 'solicitante.nombre', label: 'Solicitante: Apellido y Nombre' },
@@ -32,6 +33,14 @@
     { group: 'Expediente y Fecha', value: 'fecha.anio', label: 'Fecha Hoy: Año (AAAA)' },
     { group: 'Otros', value: 'manual', label: 'Texto Manual / Fijo o a Completar al Emitir' },
     { group: 'Otros', value: 'firma', label: 'Caja de Firma Ológrafa Manuscrita' },
+    { group: 'Otros', value: 'sello_institucional', label: 'Caja de Sello Oficial Institucional (PNG)' },
+  ];
+
+  const FIRMANTES_DISPONIBLES = [
+    { clave: 'firmante_1', label: 'Firmante 1 (Principal / Asociado / Comercio)' },
+    { clave: 'firmante_2', label: 'Firmante 2 (Co-titular / Representante AMMER)' },
+    { clave: 'firmante_3', label: 'Firmante 3 (Tercero / Garante / Testigo)' },
+    { clave: 'firmante_4', label: 'Firmante 4 (Adicional)' },
   ];
 
   const state = {
@@ -40,18 +49,22 @@
     plantillas: [],
     solicitudesFirma: [],
     selectedPlantillaGenerar: null,
-    ultimoEnlaceGenerado: '',
+    selloPngBase64: '',
+    firmantesGenerar: [
+      { clave: 'firmante_1', etiqueta: 'Titular / Asociado', nombre: '', dni: '', telefono: '' },
+    ],
     ultimoPdfPreviewB64: '',
     editor: {
       plantillaId: null,
       pdfBase64: '',
       pdfDoc: null,
+      _loadedB64: '',
       archivoNombre: '',
       totalPages: 1,
       currentPage: 1,
       campos: [],
       selectedFieldId: null,
-      addModeTipo: null, // 'texto' | 'firma' | null
+      addModeTipo: null, // 'texto' | 'firma' | 'sello' | null
     },
     canvasFirmaPrueba: {
       drawing: false,
@@ -122,6 +135,12 @@
     return state.pdfjsPromise;
   }
 
+  async function cargarDocumentoPdfJs(bytes) {
+    const pdfjs = await asegurarPdfJs();
+    // disableWorker: true evita fallos por política Same-Origin al cargar workers desde CDN en GitHub Pages
+    return pdfjs.getDocument({ data: bytes, disableWorker: true }).promise;
+  }
+
   async function apiFetchJson(path, opts) {
     const url = getApiBase() + path;
     const headers = Object.assign(
@@ -174,9 +193,37 @@
         const idx = res.indexOf(',');
         resolve(idx >= 0 ? res.slice(idx + 1) : res);
       };
-      reader.onerror = () => reject(new Error('No se pudo leer el archivo PDF'));
+      reader.onerror = () => reject(new Error('No se pudo leer el archivo'));
       reader.readAsDataURL(file);
     });
+  }
+
+  function setEstadoEditorPdf(msg, tipo) {
+    const el = document.getElementById('lblEditorEstadoPdf');
+    if (!el) return;
+    if (!msg) {
+      el.style.display = 'none';
+      return;
+    }
+    el.style.display = 'block';
+    el.textContent = msg;
+    if (tipo === 'ok') {
+      el.style.background = '#dcfce7';
+      el.style.borderColor = '#86efac';
+      el.style.color = '#166534';
+    } else if (tipo === 'warn') {
+      el.style.background = '#fffbeb';
+      el.style.borderColor = '#fde68a';
+      el.style.color = '#92400e';
+    } else if (tipo === 'err') {
+      el.style.background = '#fef2f2';
+      el.style.borderColor = '#fecaca';
+      el.style.color = '#b91c1c';
+    } else {
+      el.style.background = '#eff6ff';
+      el.style.borderColor = '#bfdbfe';
+      el.style.color = '#1e3a8a';
+    }
   }
 
   function getExpedientesLocales() {
@@ -223,7 +270,6 @@
       manuales: {},
     };
 
-    // Sobrescrituras manuales editadas en la pantalla Generar
     const manualInputs = document.querySelectorAll('[data-firma-campo-valor]');
     manualInputs.forEach((inp) => {
       const cid = inp.getAttribute('data-firma-campo-valor');
@@ -234,7 +280,8 @@
 
   function resolverPreviewLocal(campo, ctx) {
     if (!campo) return '';
-    if (campo.tipo === 'firma') return '[Firma manuscrita al pie]';
+    if (campo.tipo === 'firma') return '[Firma manuscrita]';
+    if (campo.tipo === 'sello') return '[Sello Oficial PNG]';
     const origen = String(campo.origen_campo || 'manual');
     const now = new Date();
     if (origen === 'fecha.hoy') return now.toLocaleDateString('es-AR');
@@ -258,20 +305,74 @@
       const btn = document.getElementById('btnTabFirma_' + k);
       const pnl = document.getElementById('panelFirmas_' + k);
       if (btn) {
+        if (k === 'editor' && !esAdminOAnalista()) {
+          btn.style.display = 'none';
+        } else {
+          btn.style.display = 'inline-flex';
+        }
         btn.classList.toggle('active', k === tabKey);
         if (k === tabKey) {
           btn.style.background = '#0f2744';
           btn.style.color = '#ffffff';
           btn.style.borderColor = '#0f2744';
+          btn.style.boxShadow = '0 2px 6px rgba(15,39,68,0.22)';
         } else {
-          btn.style.background = '#ffffff';
-          btn.style.color = '#334155';
+          btn.style.background = '#f8fafc';
+          btn.style.color = '#1e293b';
           btn.style.borderColor = '#cbd5e1';
+          btn.style.boxShadow = 'none';
         }
       }
       if (pnl) pnl.style.display = k === tabKey ? 'block' : 'none';
     });
     if (tabKey === 'bandeja') cargarBandejaFirmas();
+  }
+
+  // ==================== SELLO PNG OFICIAL ====================
+  function cargarSelloGuardado() {
+    try {
+      const saved = localStorage.getItem(LS_SELLO_KEY) || '';
+      if (saved) state.selloPngBase64 = saved;
+    } catch (_e) {}
+    renderPreviewSelloPng();
+  }
+
+  function renderPreviewSelloPng() {
+    const box = document.getElementById('previewSelloPngBox');
+    if (!box) return;
+    if (state.selloPngBase64) {
+      const src = state.selloPngBase64.startsWith('data:')
+        ? state.selloPngBase64
+        : ('data:image/png;base64,' + state.selloPngBase64);
+      box.innerHTML = `<img src="${src}" alt="Sello Oficial AMMER" style="max-width:100%;max-height:100%;object-fit:contain;"/>`;
+    } else {
+      box.textContent = 'Sin sello';
+    }
+  }
+
+  async function onArchivoSelloPngSeleccionado(ev) {
+    const file = ev.target && ev.target.files && ev.target.files[0];
+    if (!file) return;
+    try {
+      const b64 = await fileToBase64(file);
+      state.selloPngBase64 = b64;
+      const chk = document.getElementById('chkRecordarSelloOficial');
+      if (chk && chk.checked) {
+        try { localStorage.setItem(LS_SELLO_KEY, b64); } catch (_e) {}
+      }
+      renderPreviewSelloPng();
+      notify('Sello oficial PNG cargado correctamente.', 'success');
+    } catch (err) {
+      notify('Error leyendo imagen de sello: ' + err.message, 'error');
+    }
+  }
+
+  function limpiarSelloPngOficial() {
+    state.selloPngBase64 = '';
+    try { localStorage.removeItem(LS_SELLO_KEY); } catch (_e) {}
+    const inp = document.getElementById('inpFirmaSelloPngFile');
+    if (inp) inp.value = '';
+    renderPreviewSelloPng();
   }
 
   // ==================== GENERAR / ENVIAR A FIRMA ====================
@@ -317,10 +418,38 @@
     renderCamposCompletarFormulario();
   }
 
+  function derivarFirmantesDePlantilla(tpl) {
+    const campos = (tpl && Array.isArray(tpl.campos_json)) ? tpl.campos_json : [];
+    const encontrados = [];
+    const vistos = new Set();
+    campos.forEach((c) => {
+      if (String(c.tipo || '').toLowerCase() !== 'firma') return;
+      const clave = String(c.firmante_clave || 'firmante_1');
+      if (vistos.has(clave)) return;
+      vistos.add(clave);
+      encontrados.push({
+        clave,
+        etiqueta: c.firmante_etiqueta || c.etiqueta || (clave === 'firmante_1' ? 'Titular / Asociado' : `Firmante ${encontrados.length + 1}`),
+        nombre: '',
+        dni: '',
+        telefono: '',
+      });
+    });
+    if (encontrados.length === 0) {
+      encontrados.push({ clave: 'firmante_1', etiqueta: 'Titular / Asociado', nombre: '', dni: '', telefono: '' });
+    }
+    return encontrados;
+  }
+
   function onPlantillaGenerarChange() {
     const sel = document.getElementById('selFirmaPlantilla');
     const pid = sel ? sel.value : '';
     state.selectedPlantillaGenerar = state.plantillas.find((p) => p.id === pid) || null;
+    if (state.selectedPlantillaGenerar) {
+      state.firmantesGenerar = derivarFirmantesDePlantilla(state.selectedPlantillaGenerar);
+    } else {
+      state.firmantesGenerar = [{ clave: 'firmante_1', etiqueta: 'Titular / Asociado', nombre: '', dni: '', telefono: '' }];
+    }
     renderCamposCompletarFormulario();
   }
 
@@ -331,43 +460,112 @@
     return getExpedientesLocales().find((s) => String(s.id) === String(id)) || null;
   }
 
+  function agregarFirmanteGenerador() {
+    const idx = state.firmantesGenerar.length + 1;
+    state.firmantesGenerar.push({
+      clave: `firmante_${idx}`,
+      etiqueta: `Firmante ${idx}`,
+      nombre: '',
+      dni: '',
+      telefono: '',
+    });
+    renderFirmantesGenerar();
+  }
+
+  function eliminarFirmanteGenerador(idx) {
+    if (state.firmantesGenerar.length <= 1) return;
+    state.firmantesGenerar.splice(idx, 1);
+    renderFirmantesGenerar();
+  }
+
+  function actualizarDatoFirmanteGenerador(idx, prop, val) {
+    if (state.firmantesGenerar[idx]) {
+      state.firmantesGenerar[idx][prop] = val;
+    }
+  }
+
+  function renderFirmantesGenerar(ctxOpt) {
+    const cont = document.getElementById('firmaMultifirmantesContainer');
+    if (!cont) return;
+    const ctx = ctxOpt || construirContextoDesdeExpediente(getExpedienteSeleccionadoEnGenerador());
+    if (state.firmantesGenerar[0]) {
+      if (!state.firmantesGenerar[0].nombre && ctx.solicitante.nombre) state.firmantesGenerar[0].nombre = ctx.solicitante.nombre;
+      if (!state.firmantesGenerar[0].dni && ctx.solicitante.dni) state.firmantesGenerar[0].dni = ctx.solicitante.dni;
+      if (!state.firmantesGenerar[0].telefono && ctx.solicitante.telefono) state.firmantesGenerar[0].telefono = ctx.solicitante.telefono;
+    }
+
+    cont.innerHTML = state.firmantesGenerar.map((f, idx) => `
+      <div style="display:grid;grid-template-columns:minmax(130px,1fr) minmax(150px,1.2fr) minmax(110px,0.8fr) minmax(120px,0.9fr) auto;gap:0.45rem;align-items:end;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:0.5rem;">
+        <div>
+          <label style="display:block;font-size:0.68rem;font-weight:700;color:#475569;">Rol / Etiqueta (${escHtml(f.clave)})</label>
+          <input type="text" value="${escHtml(f.etiqueta)}" oninput="window.actualizarDatoFirmanteGenerador(${idx}, 'etiqueta', this.value)" style="width:100%;padding:0.35rem 0.45rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.78rem;"/>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.68rem;font-weight:700;color:#475569;">Nombre completo</label>
+          <input type="text" value="${escHtml(f.nombre)}" oninput="window.actualizarDatoFirmanteGenerador(${idx}, 'nombre', this.value)" placeholder="Nombre y Apellido" style="width:100%;padding:0.35rem 0.45rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.78rem;"/>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.68rem;font-weight:700;color:#475569;">DNI</label>
+          <input type="text" value="${escHtml(f.dni)}" oninput="window.actualizarDatoFirmanteGenerador(${idx}, 'dni', this.value)" placeholder="Sin puntos" style="width:100%;padding:0.35rem 0.45rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.78rem;"/>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.68rem;font-weight:700;color:#475569;">WhatsApp</label>
+          <input type="text" value="${escHtml(f.telefono)}" oninput="window.actualizarDatoFirmanteGenerador(${idx}, 'telefono', this.value)" placeholder="3434..." style="width:100%;padding:0.35rem 0.45rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.78rem;"/>
+        </div>
+        <div>
+          ${state.firmantesGenerar.length > 1
+            ? `<button type="button" onclick="window.eliminarFirmanteGenerador(${idx})" title="Quitar firmante" style="padding:0.35rem 0.55rem;border-radius:6px;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;font-size:0.75rem;cursor:pointer;">🗑️</button>`
+            : '<span style="font-size:0.72rem;color:#94a3b8;padding:0 4px;">#1</span>'}
+        </div>
+      </div>
+    `).join('');
+  }
+
   function renderCamposCompletarFormulario() {
     const cont = document.getElementById('firmaCamposGenerarContainer');
     const badgeVal = document.getElementById('firmaValidacionesResumen');
+    const selloWrap = document.getElementById('firmaSelloInstitucionalWrap');
     if (!cont) return;
 
     const tpl = state.selectedPlantillaGenerar;
+    const exp = getExpedienteSeleccionadoEnGenerador();
+    const ctx = construirContextoDesdeExpediente(exp);
+    renderFirmantesGenerar(ctx);
+
     if (!tpl) {
-      cont.innerHTML = '<div style="padding:1.25rem;text-align:center;color:#64748b;font-size:0.84rem;background:#f8fafc;border-radius:10px;border:1px dashed #cbd5e1;">Seleccioná una plantilla arriba (o cargá tus PDFs en el <strong>Editor Visual</strong> si todavía no creaste ninguna).</div>';
+      if (selloWrap) selloWrap.style.display = 'none';
+      cont.innerHTML = '<div style="padding:1.25rem;text-align:center;color:#64748b;font-size:0.84rem;background:#f8fafc;border-radius:10px;border:1px dashed #cbd5e1;">Seleccioná una plantilla arriba (o cargá tus PDFs en el <strong>Editor Visual de Plantillas PDF</strong> si todavía no creaste ninguna).</div>';
       if (badgeVal) badgeVal.innerHTML = '';
       return;
     }
 
-    const exp = getExpedienteSeleccionadoEnGenerador();
-    const ctx = construirContextoDesdeExpediente(exp);
     const campos = Array.isArray(tpl.campos_json) ? tpl.campos_json : [];
     const vals = tpl.validaciones_json || {};
+    const usaSello = Boolean(vals.requiere_sello_png) || campos.some((c) => String(c.tipo || '').toLowerCase() === 'sello');
+    if (selloWrap) selloWrap.style.display = usaSello ? 'block' : 'none';
+    renderPreviewSelloPng();
 
     if (badgeVal) {
       const chips = [];
+      chips.push(`👥 ${state.firmantesGenerar.length} ${state.firmantesGenerar.length === 1 ? 'firmante' : 'firmantes requeridos'}`);
+      if (usaSello) chips.push('🏛️ Sello Institucional PNG');
       if (vals.firma_olografa !== false) chips.push('✍️ Firma manuscrita');
       if (vals.gps_obligatorio) chips.push('📍 GPS');
       if (vals.tapar_resaltados !== false) chips.push('🧹 Limpia resaltados amarillos');
-      if (vals.dni_frente_dorso) chips.push('🪪 DNI (Próx. Fase 2)');
-      if (vals.selfie_liveness) chips.push('🤳 Selfie Liveness (Próx. Fase 2)');
+      if (vals.dni_frente_dorso) chips.push('🪪 DNI (Fase 2)');
+      if (vals.selfie_liveness) chips.push('🤳 Selfie Liveness (Fase 2)');
       badgeVal.innerHTML = chips.map((c) => `<span style="font-size:0.72rem;font-weight:700;padding:3px 9px;border-radius:9999px;background:#eff6ff;color:#1e3a8a;border:1px solid #bfdbfe;">${escHtml(c)}</span>`).join(' ');
     }
 
-    // Sincronizar telefono whatsapp
     const inpWa = document.getElementById('inpFirmaTelefonoWa');
     if (inpWa && ctx.solicitante.telefono) inpWa.value = ctx.solicitante.telefono;
 
-    if (campos.length === 0) {
-      cont.innerHTML = '<div style="padding:0.85rem;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:0.82rem;color:#92400e;">Esta plantilla no tiene campos configurados aún. Podés marcarlos en el Editor Visual.</div>';
+    const camposEditables = campos.filter((c) => c.tipo !== 'firma' && c.tipo !== 'sello');
+    if (camposEditables.length === 0) {
+      cont.innerHTML = '<div style="padding:0.85rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:0.82rem;color:#475569;">Esta plantilla no tiene campos de texto editables (solo cajas de firma/sello).</div>';
       return;
     }
 
-    const camposEditables = campos.filter((c) => c.tipo !== 'firma');
     cont.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:0.65rem;">' +
       camposEditables.map((c) => {
         const val = resolverPreviewLocal(c, ctx);
@@ -403,6 +601,7 @@
           plantilla_id: tpl.id,
           contexto: ctx,
           firmaPngBase64: firmaPrueba,
+          selloPngBase64: state.selloPngBase64 || null,
           incluir_hoja_evidencia: Boolean(firmaPrueba),
           quitar_resaltados: (tpl.validaciones_json || {}).tapar_resaltados !== false,
         }),
@@ -422,17 +621,16 @@
     if (!cont) return;
     cont.innerHTML = '<div style="padding:1rem;text-align:center;color:#64748b;font-size:0.82rem;">Renderizando páginas PDF...</div>';
     try {
-      const pdfjs = await asegurarPdfJs();
-      const doc = await pdfjs.getDocument({ data: base64ToUint8Array(b64) }).promise;
+      const doc = await cargarDocumentoPdfJs(base64ToUint8Array(b64));
       cont.innerHTML = '';
       for (let i = 1; i <= doc.numPages; i++) {
         const page = await doc.getPage(i);
-        const vp = page.getViewport({ scale: 1.15 });
+        const vp = page.getViewport({ scale: 1.2 });
         const canvas = document.createElement('canvas');
         canvas.width = vp.width;
         canvas.height = vp.height;
         canvas.style.width = '100%';
-        canvas.style.maxWidth = '640px';
+        canvas.style.maxWidth = '660px';
         canvas.style.display = 'block';
         canvas.style.margin = '0 auto 0.75rem auto';
         canvas.style.borderRadius = '8px';
@@ -451,13 +649,27 @@
       notify('Seleccioná una plantilla PDF primero.', 'warning');
       return;
     }
+    const vals = tpl.validaciones_json || {};
+    if (vals.requiere_sello_png && !state.selloPngBase64) {
+      notify('Esta plantilla requiere subir la imagen PNG del Sello Oficial Institucional antes de generar el enlace.', 'warning');
+      return;
+    }
+
     const exp = getExpedienteSeleccionadoEnGenerador();
     const ctx = construirContextoDesdeExpediente(exp);
     const inpWa = document.getElementById('inpFirmaTelefonoWa');
     const telWa = (inpWa && inpWa.value.trim()) || ctx.solicitante.telefono || '';
     const baseFirma = new URL('firmar.html', window.location.href).href.split('?')[0];
 
-    notify('Generando enlace cifrado de firma 24hs...', 'info');
+    const firmantesPayload = state.firmantesGenerar.map((f, idx) => ({
+      clave: f.clave || `firmante_${idx + 1}`,
+      etiqueta: f.etiqueta || `Firmante ${idx + 1}`,
+      nombre: f.nombre || (idx === 0 ? (ctx.solicitante.nombre || 'Asociado/a') : `Firmante ${idx + 1}`),
+      dni: f.dni || (idx === 0 ? (ctx.solicitante.dni || '') : ''),
+      telefono: f.telefono || (idx === 0 ? telWa : ''),
+    }));
+
+    notify('Generando enlace(s) seguro(s) de firma 24hs...', 'info');
     try {
       const res = await apiFetchJson('/api/firmas/solicitudes', {
         method: 'POST',
@@ -465,30 +677,51 @@
           plantilla_id: tpl.id,
           plantilla_nombre: tpl.nombre,
           expediente_id: exp ? String(exp.id_definitivo || exp.id_provisorio || exp.id) : null,
-          dni_solicitante: ctx.solicitante.dni || '',
-          nombre_solicitante: ctx.solicitante.nombre || 'Asociado/a',
-          telefono_whatsapp: telWa,
+          dni_solicitante: firmantesPayload[0].dni || ctx.solicitante.dni || '',
+          nombre_solicitante: firmantesPayload[0].nombre || ctx.solicitante.nombre || 'Asociado/a',
+          telefono_whatsapp: firmantesPayload[0].telefono || telWa,
           contexto: ctx,
-          quitar_resaltados: (tpl.validaciones_json || {}).tapar_resaltados !== false,
+          selloPngBase64: state.selloPngBase64 || null,
+          firmantes: firmantesPayload,
+          quitar_resaltados: vals.tapar_resaltados !== false,
           base_url_firma: baseFirma,
         }),
       });
-      state.ultimoEnlaceGenerado = res.url_firma;
+
       state.ultimoPdfPreviewB64 = res.pdfBase64 || '';
-
       const box = document.getElementById('firmaEnlaceGeneradoBox');
-      const inpUrl = document.getElementById('txtEnlaceFirmaGenerado');
-      const txtMsg = document.getElementById('txtMensajeWhatsAppFirma');
       const lblHash = document.getElementById('lblFirmaHashOriginal');
-
-      if (inpUrl) inpUrl.value = res.url_firma;
+      const listCont = document.getElementById('firmaEnlacesListaContainer');
       if (lblHash) lblHash.textContent = res.hash_sha256_original || '-';
-      if (txtMsg) {
-        const nom = ctx.solicitante.nombre || 'Estimado/a';
-        txtMsg.value = `Hola ${nom}, te compartimos desde Asociación Mutual Modelo de Entre Ríos (AMMER) el enlace seguro para revisar y firmar "${tpl.nombre}":\n\n${res.url_firma}\n\nEste link es personal y tiene vigencia de 24 horas.`;
+
+      const enlaces = Array.isArray(res.enlaces_firmantes) && res.enlaces_firmantes.length > 0
+        ? res.enlaces_firmantes
+        : [{ etiqueta: 'Firmante 1', nombre: firmantesPayload[0].nombre, telefono: telWa, url_firma: res.url_firma }];
+
+      if (listCont) {
+        listCont.innerHTML = enlaces.map((item, idx) => {
+          const msg = `Hola ${item.nombre || 'Estimado/a'}, te compartimos desde Asociación Mutual Modelo de Entre Ríos (AMMER) el enlace seguro para revisar y firmar "${tpl.nombre}" (${item.etiqueta || 'Firmante'}):\n\n${item.url_firma}\n\nEste enlace es personal y tiene vigencia de 24 horas.`;
+          return `
+            <div style="background:#ffffff;border:1px solid #a7f3d0;border-radius:10px;padding:0.8rem;">
+              <div style="font-size:0.8rem;font-weight:800;color:#065f46;margin-bottom:0.4rem;">
+                👤 ${escHtml(item.etiqueta || `Firmante ${idx + 1}`)}: ${escHtml(item.nombre || '-')}
+                ${item.dni ? `<span style="font-weight:500;color:#047857;">(DNI ${escHtml(item.dni)})</span>` : ''}
+              </div>
+              <div style="display:flex;gap:0.45rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+                <input type="text" id="txtEnlaceFirmante_${idx}" readonly value="${escHtml(item.url_firma)}" style="flex:1;min-width:220px;padding:0.42rem 0.6rem;border:1px solid #6ee7b7;border-radius:7px;background:#f8fafc;font-size:0.78rem;color:#0f172a;"/>
+                <button type="button" onclick="window.copiarInputPorId('txtEnlaceFirmante_${idx}', 'Enlace de firma')" style="padding:0.42rem 0.8rem;border-radius:7px;border:1px solid #047857;background:#ffffff;color:#047857;font-size:0.76rem;font-weight:700;cursor:pointer;">📋 Copiar Enlace</button>
+              </div>
+              <textarea id="txtMsgWaFirmante_${idx}" rows="3" style="width:100%;padding:0.45rem;border:1px solid #6ee7b7;border-radius:7px;font-size:0.76rem;background:#ffffff;color:#0f172a;margin-bottom:0.45rem;">${escHtml(msg)}</textarea>
+              <div style="display:flex;gap:0.45rem;flex-wrap:wrap;">
+                <button type="button" onclick="window.copiarInputPorId('txtMsgWaFirmante_${idx}', 'Mensaje WhatsApp')" style="padding:0.4rem 0.78rem;border-radius:7px;border:1px solid #047857;background:#ffffff;color:#047857;font-size:0.76rem;font-weight:700;cursor:pointer;">📋 Copiar Mensaje</button>
+                <button type="button" onclick="window.abrirWhatsAppFirmante('${escHtml(item.telefono || telWa)}', 'txtMsgWaFirmante_${idx}')" style="padding:0.4rem 0.85rem;border-radius:7px;border:1px solid #16a34a;background:#16a34a;color:#ffffff;font-size:0.76rem;font-weight:700;cursor:pointer;">💬 Abrir Chat WhatsApp</button>
+              </div>
+            </div>
+          `;
+        }).join('');
       }
       if (box) box.style.display = 'block';
-      notify('Enlace de firma generado con éxito.', 'success');
+      notify(`Se generaron ${enlaces.length} enlace(s) de firma correctamente.`, 'success');
     } catch (err) {
       notify('Error al generar enlace de firma: ' + err.message, 'error');
     }
@@ -502,9 +735,14 @@
     );
   }
 
-  function abrirWhatsAppConMensajeFirma() {
-    const msg = (document.getElementById('txtMensajeWhatsAppFirma') || {}).value || '';
-    let tel = String((document.getElementById('inpFirmaTelefonoWa') || {}).value || '').replace(/\D/g, '');
+  function copiarInputPorId(elId, desc) {
+    const el = document.getElementById(elId);
+    if (el) copiarTextoSeguro(el.value, desc || 'Texto');
+  }
+
+  function abrirWhatsAppFirmante(telRaw, textareaId) {
+    const msg = (document.getElementById(textareaId) || {}).value || '';
+    let tel = String(telRaw || '').replace(/\D/g, '');
     if (tel && !tel.startsWith('54')) {
       tel = '549' + tel.replace(/^0+/, '');
     }
@@ -542,6 +780,7 @@
       const est = String(r.estado || 'PENDIENTE').toUpperCase();
       let bg = '#fef3c7', col = '#92400e';
       if (est === 'FIRMADO') { bg = '#dcfce7'; col = '#166534'; }
+      else if (est === 'PARCIAL') { bg = '#ffedd5'; col = '#9a3412'; }
       else if (est === 'LEIDO') { bg = '#dbeafe'; col = '#1e40af'; }
 
       const gpsHtml = (r.geo_latitud != null && r.geo_longitud != null)
@@ -549,6 +788,9 @@
         : '<span style="color:#94a3b8;font-size:0.72rem;">Sin GPS</span>';
 
       const shaShort = (r.hash_sha256_firmado || r.hash_sha256_original || '').slice(0, 14);
+      const tipoDescarga = (est === 'FIRMADO' || est === 'PARCIAL') ? 'firmado' : 'original';
+      const labelDescarga = est === 'FIRMADO' ? 'Firmado + Evidencia' : (est === 'PARCIAL' ? 'PDF Parcial' : 'Original');
+
       return `
         <tr style="border-bottom:1px solid #e2e8f0;">
           <td style="padding:0.65rem 0.6rem;font-size:0.8rem;">
@@ -568,8 +810,8 @@
             <div>IP: ${escHtml(r.ip_origen || '-')} · ${gpsHtml}</div>
           </td>
           <td style="padding:0.65rem 0.6rem;text-align:right;white-space:nowrap;">
-            <button type="button" onclick="window.descargarPdfSolicitudFirma('${escHtml(r.id)}', '${est === 'FIRMADO' ? 'firmado' : 'original'}')" style="padding:0.32rem 0.65rem;border-radius:6px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.74rem;font-weight:700;cursor:pointer;">
-              ⬇️ ${est === 'FIRMADO' ? 'Firmado + Evidencia' : 'Original'}
+            <button type="button" onclick="window.descargarPdfSolicitudFirma('${escHtml(r.id)}', '${tipoDescarga}')" style="padding:0.32rem 0.65rem;border-radius:6px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.74rem;font-weight:700;cursor:pointer;">
+              ⬇️ ${labelDescarga}
             </button>
           </td>
         </tr>
@@ -596,42 +838,70 @@
       notify('El archivo debe ser un PDF válido.', 'warning');
       return;
     }
-    notify('Analizando estructura y resaltados amarillos del PDF...', 'info');
+
+    setEstadoEditorPdf(`⏳ Cargando vista previa local de "${file.name}"...`, 'info');
+    let b64 = '';
     try {
-      const b64 = await fileToBase64(file);
+      b64 = await fileToBase64(file);
       state.editor.plantillaId = null;
       state.editor.pdfBase64 = b64;
+      state.editor._loadedB64 = '';
+      state.editor.pdfDoc = null;
       state.editor.archivoNombre = file.name;
       state.editor.currentPage = 1;
-
-      const analisis = await apiFetchJson('/api/firmas/plantillas/analizar-pdf', {
-        method: 'POST',
-        body: JSON.stringify({ pdfBase64: b64 }),
-      });
-      state.editor.campos = Array.isArray(analisis.campos_detectados) ? analisis.campos_detectados : [];
-      state.editor.totalPages = analisis.paginas || 1;
-      state.editor.selectedFieldId = state.editor.campos[0] ? state.editor.campos[0].id : null;
+      state.editor.campos = [];
+      state.editor.selectedFieldId = null;
 
       const inpNom = document.getElementById('inpEditPlantillaNombre');
       if (inpNom && !inpNom.value.trim()) {
         inpNom.value = file.name.replace(/\.pdf$/i, '').replace(/[_-]+/g, ' ');
       }
-      await cargarPdfEnCanvasEditor(b64, state.editor.currentPage);
+
+      // 1. Renderizar primero el PDF localmente en canvas para que SIEMPRE sea visible al instante
+      await cargarPdfEnCanvasEditor(b64, 1);
       renderInspectorCamposEditor();
-      notify(`PDF cargado: se detectaron ${state.editor.campos.length} campos resaltados automáticamente.`, 'success');
-    } catch (err) {
-      notify('Error analizando PDF: ' + err.message, 'error');
+      setEstadoEditorPdf(`📄 PDF renderizado (${state.editor.totalPages} pág.). Buscando resaltados amarillos automáticamente en el servidor...`, 'info');
+    } catch (errRender) {
+      setEstadoEditorPdf(`⚠️ No se pudo renderizar vista previa en canvas (${errRender.message}).`, 'err');
+      notify('Error renderizando PDF local: ' + errRender.message, 'error');
+      return;
+    }
+
+    // 2. Detectar resaltados amarillos en segundo plano sin bloquear el canvas si el PDF es en blanco o falla red
+    try {
+      const analisis = await apiFetchJson('/api/firmas/plantillas/analizar-pdf', {
+        method: 'POST',
+        body: JSON.stringify({ pdfBase64: b64 }),
+      });
+      const detectados = Array.isArray(analisis.campos_detectados) ? analisis.campos_detectados : [];
+      state.editor.campos = detectados;
+      state.editor.totalPages = analisis.paginas || state.editor.totalPages || 1;
+      state.editor.selectedFieldId = detectados[0] ? detectados[0].id : null;
+      renderCajasOverlayEditor();
+      renderInspectorCamposEditor();
+
+      if (detectados.length > 0) {
+        setEstadoEditorPdf(`✅ Se detectaron ${detectados.length} campos resaltados automáticamente. También podés agregar cajas de Texto, Firma o Sello PNG arriba del lienzo.`, 'ok');
+        notify(`PDF listo: se detectaron ${detectados.length} campos resaltados.`, 'success');
+      } else {
+        setEstadoEditorPdf('ℹ️ Este PDF no tiene resaltados amarillos (campos en blanco). Usá los botones "➕ Marcar Campo Texto", "✍️ Marcar Caja Firma" y "🏛️ Marcar Caja Sello PNG" para hacer clic donde quieras estampar.', 'warn');
+        notify('PDF cargado. Hacé clic en los botones superiores para marcar campos y firmas.', 'info');
+      }
+    } catch (errAn) {
+      setEstadoEditorPdf(`⚠️ PDF cargado en pantalla, pero el analizador automático no pudo responder (${errAn.message}). Podés marcar los campos y cajas de firma manualmente sobre el lienzo.`, 'warn');
     }
   }
 
   async function cargarPlantillaEnEditor(plantillaId) {
     if (!plantillaId) return;
-    notify('Descargando plantilla PDF para editar...', 'info');
+    setEstadoEditorPdf('⏳ Descargando plantilla guardada...', 'info');
     try {
       const res = await apiFetchJson(`/api/firmas/plantillas/${encodeURIComponent(plantillaId)}/pdf`, { method: 'GET' });
       const tpl = res.plantilla || {};
       state.editor.plantillaId = tpl.id;
       state.editor.pdfBase64 = res.pdfBase64;
+      state.editor._loadedB64 = '';
+      state.editor.pdfDoc = null;
       state.editor.archivoNombre = tpl.archivo_nombre || 'plantilla.pdf';
       state.editor.totalPages = tpl.paginas || 1;
       state.editor.currentPage = 1;
@@ -645,15 +915,17 @@
       setVal('inpEditPlantillaDesc', tpl.descripcion || '');
       const vals = tpl.validaciones_json || {};
       setChk('chkValFirmaOlografa', vals.firma_olografa !== false);
-      setChk('chkValGpsObligatorio', vals.gps_obligatorio);
       setChk('chkValTaparResaltados', vals.tapar_resaltados !== false);
+      setChk('chkValRequiereSelloPng', vals.requiere_sello_png);
+      setChk('chkValGpsObligatorio', vals.gps_obligatorio);
       setChk('chkValDniFrenteDorso', vals.dni_frente_dorso);
       setChk('chkValSelfieLiveness', vals.selfie_liveness);
 
       await cargarPdfEnCanvasEditor(res.pdfBase64, 1);
       renderInspectorCamposEditor();
-      notify('Plantilla cargada en el Editor Visual.', 'success');
+      setEstadoEditorPdf(`✅ Plantilla "${tpl.nombre}" cargada para edición (${state.editor.campos.length} campos).`, 'ok');
     } catch (err) {
+      setEstadoEditorPdf(`❌ Error cargando plantilla: ${err.message}`, 'err');
       notify('Error cargando plantilla: ' + err.message, 'error');
     }
   }
@@ -662,9 +934,8 @@
     const canvas = document.getElementById('canvasEditorPlantillaPdf');
     const lblPag = document.getElementById('lblEditorPaginaActual');
     if (!canvas || !b64) return;
-    const pdfjs = await asegurarPdfJs();
     if (!state.editor.pdfDoc || state.editor._loadedB64 !== b64) {
-      state.editor.pdfDoc = await pdfjs.getDocument({ data: base64ToUint8Array(b64) }).promise;
+      state.editor.pdfDoc = await cargarDocumentoPdfJs(base64ToUint8Array(b64));
       state.editor._loadedB64 = b64;
       state.editor.totalPages = state.editor.pdfDoc.numPages || 1;
     }
@@ -689,30 +960,76 @@
   }
 
   function activarModoClickAgregarCampo(tipo) {
+    if (!state.editor.pdfBase64) {
+      notify('Primero subí o seleccioná un PDF plantilla arriba para visualizarlo.', 'warning');
+      return;
+    }
     state.editor.addModeTipo = tipo;
     const overlay = document.getElementById('overlayCamposPlantilla');
     if (overlay) overlay.style.cursor = tipo ? 'crosshair' : 'default';
     if (tipo === 'firma') notify('Hacé clic en el PDF donde querés ubicar la caja de Firma Manuscrita.', 'info');
+    else if (tipo === 'sello') notify('Hacé clic en el PDF donde querés estampar el Sello Oficial PNG.', 'info');
     else if (tipo === 'texto') notify('Hacé clic en el PDF donde querés colocar el nuevo campo.', 'info');
   }
 
   function agregarCampoEnCoords(xPct, yPct, tipo) {
     const id = 'cmp_' + Date.now().toString(36) + '_' + Math.floor(Math.random() * 100);
     const esFirma = tipo === 'firma';
-    const nuevo = {
-      id,
-      etiqueta: esFirma ? 'Firma del Solicitante' : 'Campo nuevo',
-      tipo: esFirma ? 'firma' : 'texto',
-      origen_campo: esFirma ? 'firma' : 'manual',
-      valor_manual: '',
-      pagina: state.editor.currentPage,
-      x_pct: Math.max(0.01, Math.min(0.85, Number(xPct.toFixed(4)))),
-      y_pct: Math.max(0.01, Math.min(0.92, Number(yPct.toFixed(4)))),
-      w_pct: esFirma ? 0.28 : 0.24,
-      h_pct: esFirma ? 0.08 : 0.028,
-      font_size: 10,
-      cubrir_fondo: !esFirma,
-    };
+    const esSello = tipo === 'sello';
+    let nuevo;
+    if (esFirma) {
+      const firmasExistentes = state.editor.campos.filter((x) => x.tipo === 'firma').length;
+      const numF = Math.min(4, firmasExistentes + 1);
+      nuevo = {
+        id,
+        etiqueta: numF === 1 ? 'Firma Solicitante' : `Firma ${numF}`,
+        tipo: 'firma',
+        origen_campo: 'firma',
+        firmante_clave: `firmante_${numF}`,
+        firmante_etiqueta: numF === 1 ? 'Titular / Asociado' : `Firmante ${numF}`,
+        valor_manual: '',
+        pagina: state.editor.currentPage,
+        x_pct: Math.max(0.01, Math.min(0.75, Number(xPct.toFixed(4)))),
+        y_pct: Math.max(0.01, Math.min(0.90, Number(yPct.toFixed(4)))),
+        w_pct: 0.28,
+        h_pct: 0.08,
+        font_size: 10,
+        cubrir_fondo: false,
+      };
+    } else if (esSello) {
+      nuevo = {
+        id,
+        etiqueta: 'Sello Oficial AMMER',
+        tipo: 'sello',
+        origen_campo: 'sello_institucional',
+        valor_manual: '',
+        pagina: state.editor.currentPage,
+        x_pct: Math.max(0.01, Math.min(0.80, Number(xPct.toFixed(4)))),
+        y_pct: Math.max(0.01, Math.min(0.88, Number(yPct.toFixed(4)))),
+        w_pct: 0.18,
+        h_pct: 0.11,
+        font_size: 10,
+        cubrir_fondo: false,
+      };
+      const chkSello = document.getElementById('chkValRequiereSelloPng');
+      if (chkSello) chkSello.checked = true;
+    } else {
+      nuevo = {
+        id,
+        etiqueta: 'Campo nuevo',
+        tipo: 'texto',
+        origen_campo: 'manual',
+        valor_manual: '',
+        pagina: state.editor.currentPage,
+        x_pct: Math.max(0.01, Math.min(0.80, Number(xPct.toFixed(4)))),
+        y_pct: Math.max(0.01, Math.min(0.94, Number(yPct.toFixed(4)))),
+        w_pct: 0.24,
+        h_pct: 0.028,
+        font_size: 10,
+        cubrir_fondo: true,
+      };
+    }
+
     state.editor.campos.push(nuevo);
     state.editor.selectedFieldId = id;
     state.editor.addModeTipo = null;
@@ -732,13 +1049,20 @@
       const el = document.createElement('div');
       const selected = c.id === state.editor.selectedFieldId;
       const esFirma = c.tipo === 'firma';
+      const esSello = c.tipo === 'sello' || c.origen_campo === 'sello_institucional';
       el.style.position = 'absolute';
       el.style.left = `${(c.x_pct || 0) * 100}%`;
       el.style.top = `${(c.y_pct || 0) * 100}%`;
       el.style.width = `${(c.w_pct || 0.2) * 100}%`;
       el.style.height = `${(c.h_pct || 0.03) * 100}%`;
-      el.style.border = selected ? '2px solid #2563eb' : (esFirma ? '2px dashed #059669' : '1.5px solid #d97706');
-      el.style.background = esFirma ? 'rgba(16, 185, 129, 0.16)' : (selected ? 'rgba(37, 99, 235, 0.20)' : 'rgba(245, 158, 11, 0.22)');
+
+      let borderCol = '#d97706', bgCol = 'rgba(245, 158, 11, 0.22)', tagBg = '#b45309';
+      if (esFirma) { borderCol = '#059669'; bgCol = 'rgba(16, 185, 129, 0.16)'; tagBg = '#047857'; }
+      else if (esSello) { borderCol = '#7c3aed'; bgCol = 'rgba(124, 58, 237, 0.16)'; tagBg = '#6d28d9'; }
+      if (selected) { borderCol = '#2563eb'; bgCol = 'rgba(37, 99, 235, 0.20)'; tagBg = '#1d4ed8'; }
+
+      el.style.border = `${esFirma || esSello ? '2px dashed' : (selected ? '2px solid' : '1.5px solid')} ${borderCol}`;
+      el.style.background = bgCol;
       el.style.borderRadius = '3px';
       el.style.cursor = 'move';
       el.style.boxSizing = 'border-box';
@@ -747,7 +1071,14 @@
       el.title = `${c.etiqueta} (${c.origen_campo})`;
 
       const lbl = document.createElement('span');
-      lbl.textContent = esFirma ? '✍️ ' + (c.etiqueta || 'Firma') : (c.etiqueta || c.origen_campo);
+      if (esFirma) {
+        const fc = String(c.firmante_clave || 'firmante_1').replace('firmante_', 'F');
+        lbl.textContent = `✍️ [${fc}] ${c.etiqueta || 'Firma'}`;
+      } else if (esSello) {
+        lbl.textContent = `🏛️ ${c.etiqueta || 'Sello PNG'}`;
+      } else {
+        lbl.textContent = c.etiqueta || c.origen_campo;
+      }
       lbl.style.position = 'absolute';
       lbl.style.top = '-16px';
       lbl.style.left = '0';
@@ -756,12 +1087,11 @@
       lbl.style.padding = '1px 4px';
       lbl.style.borderRadius = '3px';
       lbl.style.whiteSpace = 'nowrap';
-      lbl.style.background = selected ? '#1d4ed8' : (esFirma ? '#047857' : '#b45309');
+      lbl.style.background = tagBg;
       lbl.style.color = '#ffffff';
       lbl.style.pointerEvents = 'none';
       el.appendChild(lbl);
 
-      // Handle esquina inferior derecha para redimensionar
       const handle = document.createElement('div');
       handle.style.position = 'absolute';
       handle.style.right = '-4px';
@@ -841,19 +1171,39 @@
         ? '<span style="font-size:0.76rem;color:#64748b;">Sin campos marcados aún.</span>'
         : state.editor.campos.map((item) => {
           const act = item.id === state.editor.selectedFieldId;
-          return `<button type="button" onclick="window.seleccionarCampoEditor('${escHtml(item.id)}')" style="padding:3px 8px;border-radius:6px;border:1px solid ${act ? '#1d4ed8' : '#cbd5e1'};background:${act ? '#dbeafe' : '#ffffff'};color:${act ? '#1e3a8a' : '#334155'};font-size:0.72rem;font-weight:700;cursor:pointer;">${item.tipo === 'firma' ? '✍️ ' : ''}P${item.pagina || 1}: ${escHtml(item.etiqueta || item.id)}</button>`;
+          const ico = item.tipo === 'firma' ? '✍️ ' : (item.tipo === 'sello' ? '🏛️ ' : '');
+          return `<button type="button" onclick="window.seleccionarCampoEditor('${escHtml(item.id)}')" style="padding:3px 8px;border-radius:6px;border:1px solid ${act ? '#1d4ed8' : '#cbd5e1'};background:${act ? '#dbeafe' : '#ffffff'};color:${act ? '#1e3a8a' : '#334155'};font-size:0.72rem;font-weight:700;cursor:pointer;">${ico}P${item.pagina || 1}: ${escHtml(item.etiqueta || item.id)}</button>`;
         }).join(' ');
     }
 
     if (!cont) return;
     if (!c) {
-      cont.innerHTML = '<div style="padding:1rem;background:#f8fafc;border-radius:8px;border:1px dashed #cbd5e1;font-size:0.8rem;color:#64748b;">Hacé clic sobre un cuadro en el PDF (o agregá un campo nuevo) para configurar qué dato se completa ahí.</div>';
+      cont.innerHTML = '<div style="padding:1rem;background:#f8fafc;border-radius:8px;border:1px dashed #cbd5e1;font-size:0.8rem;color:#64748b;">Hacé clic sobre un cuadro en el PDF (o agregá un campo nuevo) para configurar qué dato o firmante se estampa ahí.</div>';
       return;
     }
 
     const optHtml = ORIGENES_CAMPO.map((o) =>
       `<option value="${escHtml(o.value)}" ${c.origen_campo === o.value ? 'selected' : ''}>${escHtml(o.label)}</option>`
     ).join('');
+
+    let extraFirmaHtml = '';
+    if (c.tipo === 'firma') {
+      const fOpts = FIRMANTES_DISPONIBLES.map((f) =>
+        `<option value="${escHtml(f.clave)}" ${(c.firmante_clave || 'firmante_1') === f.clave ? 'selected' : ''}>${escHtml(f.label)}</option>`
+      ).join('');
+      extraFirmaHtml = `
+        <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:0.55rem;display:flex;flex-direction:column;gap:0.45rem;">
+          <div>
+            <label style="font-size:0.71rem;font-weight:800;color:#065f46;">Persona asignada a esta caja de firma:</label>
+            <select onchange="window.actualizarPropCampoEditor('firmante_clave', this.value)" style="width:100%;padding:0.35rem 0.5rem;border:1px solid #6ee7b7;border-radius:6px;font-size:0.79rem;background:#ffffff;">${fOpts}</select>
+          </div>
+          <div>
+            <label style="font-size:0.71rem;font-weight:800;color:#065f46;">Etiqueta visible del firmante:</label>
+            <input type="text" value="${escHtml(c.firmante_etiqueta || c.etiqueta || 'Titular / Asociado')}" oninput="window.actualizarPropCampoEditor('firmante_etiqueta', this.value)" style="width:100%;padding:0.35rem 0.5rem;border:1px solid #6ee7b7;border-radius:6px;font-size:0.79rem;"/>
+          </div>
+        </div>
+      `;
+    }
 
     cont.innerHTML = `
       <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.8rem;display:flex;flex-direction:column;gap:0.55rem;">
@@ -867,9 +1217,10 @@
           <input type="text" id="editCampoEtiqueta" value="${escHtml(c.etiqueta || '')}" oninput="window.actualizarPropCampoEditor('etiqueta', this.value)" style="width:100%;padding:0.35rem 0.5rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.8rem;"/>
         </div>
         <div>
-          <label style="font-size:0.72rem;font-weight:700;color:#475569;">Dato del expediente a estampar</label>
+          <label style="font-size:0.72rem;font-weight:700;color:#475569;">Tipo / Dato del expediente a estampar</label>
           <select id="editCampoOrigen" onchange="window.actualizarOrigenCampoEditor(this.value)" style="width:100%;padding:0.35rem 0.5rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.8rem;background:#ffffff;">${optHtml}</select>
         </div>
+        ${extraFirmaHtml}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
           <div>
             <label style="font-size:0.72rem;font-weight:700;color:#475569;">Tamaño fuente</label>
@@ -915,6 +1266,10 @@
     c.origen_campo = origen;
     if (origen === 'firma') {
       c.tipo = 'firma';
+      c.cubrir_fondo = false;
+      if (!c.firmante_clave) c.firmante_clave = 'firmante_1';
+    } else if (origen === 'sello_institucional') {
+      c.tipo = 'sello';
       c.cubrir_fondo = false;
     } else if (origen.startsWith('fecha.')) {
       c.tipo = 'fecha';
@@ -962,8 +1317,9 @@
       campos: state.editor.campos,
       validaciones: {
         firma_olografa: chk('chkValFirmaOlografa', true),
-        gps_obligatorio: chk('chkValGpsObligatorio', false),
         tapar_resaltados: chk('chkValTaparResaltados', true),
+        requiere_sello_png: chk('chkValRequiereSelloPng', false),
+        gps_obligatorio: chk('chkValGpsObligatorio', false),
         dni_frente_dorso: chk('chkValDniFrenteDorso', false),
         selfie_liveness: chk('chkValSelfieLiveness', false),
       },
@@ -996,6 +1352,7 @@
         body: JSON.stringify({
           pdfBase64: state.editor.pdfBase64,
           campos: state.editor.campos,
+          selloPngBase64: state.selloPngBase64 || null,
           contexto: {
             expediente: { id: 'EXP-PRUEBA-001' },
             solicitante: {
@@ -1165,6 +1522,7 @@
     if (btnEditorTab) {
       btnEditorTab.style.display = esAdminOAnalista() ? 'inline-flex' : 'none';
     }
+    cargarSelloGuardado();
     setupOverlayClickListener();
     setupCanvasFirmaPrueba();
     poblarSelectorExpedientes();
@@ -1180,11 +1538,15 @@
   global.cambiarTabFirmas = cambiarTabFirmas;
   global.onPlantillaGenerarChange = onPlantillaGenerarChange;
   global.renderCamposCompletarFormulario = renderCamposCompletarFormulario;
+  global.agregarFirmanteGenerador = agregarFirmanteGenerador;
+  global.eliminarFirmanteGenerador = eliminarFirmanteGenerador;
+  global.actualizarDatoFirmanteGenerador = actualizarDatoFirmanteGenerador;
+  global.onArchivoSelloPngSeleccionado = onArchivoSelloPngSeleccionado;
+  global.limpiarSelloPngOficial = limpiarSelloPngOficial;
   global.previsualizarPdfGenerado = previsualizarPdfGenerado;
   global.generarEnlaceFirmaMovil = generarEnlaceFirmaMovil;
-  global.copiarEnlaceFirmaGenerado = () => copiarTextoSeguro((document.getElementById('txtEnlaceFirmaGenerado') || {}).value, 'Enlace de firma');
-  global.copiarMensajeWhatsAppFirma = () => copiarTextoSeguro((document.getElementById('txtMensajeWhatsAppFirma') || {}).value, 'Mensaje para WhatsApp');
-  global.abrirWhatsAppConMensajeFirma = abrirWhatsAppConMensajeFirma;
+  global.copiarInputPorId = copiarInputPorId;
+  global.abrirWhatsAppFirmante = abrirWhatsAppFirmante;
   global.descargarUltimoPreviewPdfFirma = () => {
     if (!state.ultimoPdfPreviewB64) { notify('Generá una vista previa primero.', 'warning'); return; }
     descargarBase64Pdf(state.ultimoPdfPreviewB64, 'Documento_AMMER_Completado.pdf');

@@ -215,7 +215,7 @@
     <div id="errorBox" class="alert alert-err" style="display:none;"></div>
 
     <div id="confirmacionFirmadoBox" class="card" style="display:none;">
-      <div class="alert alert-ok" style="margin-bottom:0.85rem;">
+      <div id="alertEstadoFirmado" class="alert alert-ok" style="margin-bottom:0.85rem;">
         ✅ <strong>¡Documento firmado electrónicamente con éxito!</strong><br/>
         <span style="font-weight:500;font-size:0.82rem;">Ya podés descargar tu copia con la Hoja Anexa de Evidencia y hashes criptográficos SHA-256.</span>
       </div>
@@ -235,9 +235,10 @@
     <div id="contenidoFirmaWrap" style="display:none;flex-direction:column;gap:0.9rem;">
       <section class="card">
         <h2>📄 1. Datos del Documento a Firmar</h2>
+        <div id="docProgresoMultifirma" style="display:none;margin-bottom:0.65rem;padding:0.55rem 0.75rem;border-radius:8px;background:#fffbeb;border:1px solid #fde68a;font-size:0.8rem;font-weight:700;color:#92400e;"></div>
         <div class="meta-grid">
           <div class="meta-item"><div class="meta-lbl">Documento</div><div class="meta-val" id="docTitulo">-</div></div>
-          <div class="meta-item"><div class="meta-lbl">Titular / Firmante</div><div class="meta-val" id="docFirmante">-</div></div>
+          <div class="meta-item"><div class="meta-lbl">Rol / Firmante</div><div class="meta-val" id="docFirmante">-</div></div>
           <div class="meta-item"><div class="meta-lbl">DNI</div><div class="meta-val" id="docDni">-</div></div>
           <div class="meta-item"><div class="meta-lbl">Vigencia Enlace</div><div class="meta-val" id="docExpira">-</div></div>
         </div>
@@ -384,7 +385,7 @@
         if (!cont || !window.pdfjsLib) return;
         cont.innerHTML = '<div style="text-align:center;padding:1rem;font-size:0.82rem;color:#475569;">Renderizando páginas...</div>';
         try {
-          const doc = await window.pdfjsLib.getDocument({ data: b64ToBytes(b64) }).promise;
+          const doc = await window.pdfjsLib.getDocument({ data: b64ToBytes(b64), disableWorker: true }).promise;
           cont.innerHTML = '';
           for (let i = 1; i <= doc.numPages; i++) {
             const page = await doc.getPage(i);
@@ -473,10 +474,19 @@
         document.getElementById('estadoCargaBox').style.display = 'none';
         document.getElementById('contenidoFirmaWrap').style.display = 'none';
         document.getElementById('confirmacionFirmadoBox').style.display = 'block';
+        const alertBox = document.getElementById('alertEstadoFirmado');
+        const btnDown = document.getElementById('btnDescargarCopiaFirmada');
+        if (data.estado === 'PARCIAL') {
+          if (alertBox) {
+            alertBox.innerHTML = `🕒 <strong>¡Tu firma fue registrada (${data.firmas_completadas || 1} de ${data.firmas_requeridas || 2} firmantes)!</strong><br/>` +
+              `<span style="font-weight:500;font-size:0.82rem;">El documento quedará finalizado con la Hoja Anexa de Evidencia completa en cuanto firmen las personas restantes.</span>`;
+          }
+          if (btnDown) btnDown.textContent = '⬇️ Descargar PDF Parcial (con tu firma estampada)';
+        }
         document.getElementById('resDocNombre').textContent = (appState.docInfo && appState.docInfo.plantilla_nombre) || 'Documento AMMER';
         document.getElementById('resFechaFirma').textContent = data.firmado_en || '-';
         document.getElementById('resHashOrig').textContent = data.hash_sha256_original || '-';
-        document.getElementById('resHashFirmado').textContent = data.hash_sha256_firmado || '-';
+        document.getElementById('resHashFirmado').textContent = data.hash_sha256_firmado || '(Pendiente de cierre total de firmas)';
         appState.pdfFirmadoB64 = data.pdfBase64 || appState.pdfB64Actual;
       }
 
@@ -495,7 +505,7 @@
           appState.pdfB64Actual = data.pdfBase64;
           appState.gpsObligatorio = Boolean((data.validaciones_requeridas || {}).gps_obligatorio);
 
-          if (data.estado === 'FIRMADO') {
+          if (data.estado === 'FIRMADO' || data.firmado_por_mi) {
             mostrarPantallaFirmado(data);
             return;
           }
@@ -503,10 +513,18 @@
           document.getElementById('estadoCargaBox').style.display = 'none';
           document.getElementById('contenidoFirmaWrap').style.display = 'flex';
           document.getElementById('docTitulo').textContent = data.plantilla_nombre || 'Documento AMMER';
-          document.getElementById('docFirmante').textContent = data.nombre_solicitante || '-';
+          document.getElementById('docFirmante').textContent = `${data.nombre_solicitante || '-'} (${data.firmante_etiqueta || 'Firmante'})`;
           document.getElementById('docDni').textContent = data.dni_solicitante || '-';
           document.getElementById('docExpira').textContent = data.expira_en ? new Date(data.expira_en).toLocaleString('es-AR') : '24 hs';
           document.getElementById('docHashOriginal').textContent = data.hash_sha256_original || '-';
+
+          if (data.grupo_progreso && data.grupo_progreso.requeridos > 1) {
+            const progEl = document.getElementById('docProgresoMultifirma');
+            if (progEl) {
+              progEl.style.display = 'block';
+              progEl.textContent = `👥 Documento de múltiples firmas: ${data.grupo_progreso.completados} de ${data.grupo_progreso.requeridos} firma(s) completada(s) hasta ahora.`;
+            }
+          }
 
       function escHtml(v) {
         return String(v == null ? '' : v)

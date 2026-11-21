@@ -858,6 +858,7 @@
           </td>
           <td style="padding:0.65rem 0.6rem;text-align:right;white-space:nowrap;">
             <div style="display:inline-flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;align-items:center;">
+              <button type="button" onclick="window.abrirAsistenteRenaperPorId('${escHtml(r.id)}')" title="Abrir RENAPER Mi Ejemplar con datos listos para copiar" style="padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;font-size:0.71rem;font-weight:700;cursor:pointer;">🪪 Ejemplar</button>
               <a href="${verifyUrl}" target="_blank" rel="noopener" style="padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;font-size:0.71rem;font-weight:700;text-decoration:none;">🔍 Verificar</a>
               ${tsrBtn}
               ${driveBtn}
@@ -1629,6 +1630,106 @@
     }
   }
 
+  // ==================== ASISTENTE RÁPIDO RENAPER MI EJEMPLAR ====================
+  function normalizarSexoRenaper(raw) {
+    const s = String(raw || '').trim().toUpperCase();
+    if (!s) return 'Verificar en DNI';
+    if (s.startsWith('M') || s.includes('MASC')) return 'Masculino';
+    if (s.startsWith('F') || s.includes('FEM')) return 'Femenino';
+    if (s.startsWith('X') || s.includes('BINAR')) return 'No binario';
+    return raw;
+  }
+
+  function normalizarFechaDdMmAaaa(raw) {
+    const s = String(raw || '').trim();
+    if (!s) return '';
+    const mIso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (mIso) return `${mIso[3]}/${mIso[2]}/${mIso[1]}`;
+    return s;
+  }
+
+  function abrirAsistenteRenaperMiEjemplar(datos) {
+    const info = datos || {};
+    const dniClean = String(info.dni || '').replace(/\D/g, '');
+    const sexoLabel = normalizarSexoRenaper(info.sexo);
+    const fechaNac = normalizarFechaDdMmAaaa(info.fecha_nacimiento);
+    const ejemplar = String(info.ejemplar || '').trim().toUpperCase();
+    const nombre = String(info.nombre || 'Asociado').trim();
+
+    if (dniClean) {
+      copiarTextoSeguro(dniClean, 'DNI sin puntos (listo para pegar en RENAPER)');
+    }
+    window.open('https://tramites.renaper.gob.ar/mi_ejemplar/', 'renaper_mi_ejemplar', 'width=560,height=740,noopener,noreferrer');
+
+    let modal = document.getElementById('modalGuiaRenaperEjemplar');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'modalGuiaRenaperEjemplar';
+      modal.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:99999;max-width:390px;width:calc(100vw - 32px);background:#ffffff;border:2px solid #0284c7;border-radius:14px;box-shadow:0 18px 40px rgba(15,23,42,0.28);padding:1rem;font-family:inherit;';
+      document.body.appendChild(modal);
+    }
+
+    const rowFn = (lbl, val, copyId, copiedAuto) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:0.45rem 0.6rem;margin-bottom:0.4rem;">
+        <div style="min-width:0;">
+          <div style="font-size:0.68rem;font-weight:700;color:#64748b;text-transform:uppercase;">${escHtml(lbl)}</div>
+          <div style="font-size:0.86rem;font-weight:800;color:#0f172a;word-break:break-word;">${escHtml(val || 'No informado')}${copiedAuto ? ' <span style="font-size:0.68rem;color:#059669;">(Copiado)</span>' : ''}</div>
+        </div>
+        ${copyId && val ? `<button type="button" data-copy-renaper="${escHtml(val)}" style="padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #0284c7;background:#ffffff;color:#0369a1;font-size:0.71rem;font-weight:700;cursor:pointer;flex-shrink:0;">📋 Copiar</button>` : ''}
+      </div>
+    `;
+
+    modal.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;margin-bottom:0.55rem;">
+        <div style="font-size:0.88rem;font-weight:800;color:#0f2744;">🪪 Asistente RENAPER Mi Ejemplar</div>
+        <button type="button" onclick="document.getElementById('modalGuiaRenaperEjemplar').style.display='none'" style="border:none;background:#f1f5f9;color:#334155;border-radius:6px;padding:2px 8px;font-weight:800;cursor:pointer;">✕</button>
+      </div>
+      <div style="font-size:0.75rem;color:#475569;margin-bottom:0.55rem;">Titular: <strong>${escHtml(nombre)}</strong></div>
+      ${rowFn('1. DNI (solo dígitos)', dniClean, true, Boolean(dniClean))}
+      ${rowFn('2. Sexo en DNI', sexoLabel, false, false)}
+      ${rowFn('3. Fecha de Nacimiento (DD/MM/AAAA)', fechaNac, Boolean(fechaNac), false)}
+      ${ejemplar ? rowFn('Ejemplar impreso leído (para comparar)', 'Ejemplar ' + ejemplar, false, false) : ''}
+      <div style="font-size:0.7rem;color:#475569;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:0.45rem 0.6rem;line-height:1.35;">
+        Por política de seguridad entre dominios del navegador, RENAPER no permite autocompletado externo directo. Pegá el DNI copiado, elegí Sexo/Fecha y presioná <strong>CONSULTAR</strong>.
+      </div>
+    `;
+    modal.style.display = 'block';
+    modal.querySelectorAll('[data-copy-renaper]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        copiarTextoSeguro(btn.getAttribute('data-copy-renaper') || '', 'Dato RENAPER');
+      });
+    });
+  }
+
+  function abrirAsistenteRenaperPorId(solId) {
+    const r = state.solicitudesFirma.find((x) => String(x.id) === String(solId));
+    if (!r) return;
+    const guia = r.datos_renaper_guia || {};
+    abrirAsistenteRenaperMiEjemplar({
+      nombre: r.nombre_solicitante || '-',
+      dni: guia.dni || r.dni_solicitante || '',
+      sexo: guia.sexo || '',
+      fecha_nacimiento: guia.fecha_nacimiento || '',
+      ejemplar: guia.ejemplar || '',
+    });
+  }
+
+  function abrirAsistenteRenaperDesdeFicha() {
+    const s = global._fichaExpedienteActivoObj;
+    if (!s) {
+      notify('No hay ningún expediente activo seleccionado.', 'warning');
+      return;
+    }
+    const sol = s.solicitante || {};
+    abrirAsistenteRenaperMiEjemplar({
+      nombre: sol.nombre || s.Apellido_Nombre || s.nombre || 'Asociado',
+      dni: sol.dni || s.dni || '',
+      sexo: sol.sexo || s.sexo || '',
+      fecha_nacimiento: sol.fechaNacimiento || sol.fecha_nacimiento || s.fechaNacimiento || '',
+      ejemplar: sol.ejemplar || '',
+    });
+  }
+
   // Exportar API global
   global.initFirmasAmmerView = initFirmasAmmerView;
   global.cambiarTabFirmas = cambiarTabFirmas;
@@ -1653,6 +1754,9 @@
   global.descargarPdfSolicitudFirma = descargarPdfSolicitudFirma;
   global.descargarTsrSolicitudFirma = descargarTsrSolicitudFirma;
   global.respaldarSolicitudEnDrive = respaldarSolicitudEnDrive;
+  global.abrirAsistenteRenaperMiEjemplar = abrirAsistenteRenaperMiEjemplar;
+  global.abrirAsistenteRenaperPorId = abrirAsistenteRenaperPorId;
+  global.abrirAsistenteRenaperDesdeFicha = abrirAsistenteRenaperDesdeFicha;
   global.onArchivoPdfPlantillaSeleccionado = onArchivoPdfPlantillaSeleccionado;
   global.cargarPlantillaEnEditor = cargarPlantillaEnEditor;
   global.cambiarPaginaEditor = cambiarPaginaEditor;

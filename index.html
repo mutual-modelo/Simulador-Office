@@ -5381,19 +5381,42 @@
                   <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.45rem;margin-bottom:0.6rem;">
                     <div style="display:flex;gap:0.35rem;flex-wrap:wrap;align-items:center;">
                       <button type="button" id="btnModoCampo_texto" onclick="activarModoClickAgregarCampo('texto')" style="padding:0.36rem 0.65rem;border-radius:7px;border:1px solid #d97706;background:#fffbeb;color:#b45309;font-size:0.74rem;font-weight:700;cursor:pointer;">➕ Marcar Campo Texto</button>
+                      <button type="button" id="btnModoCampo_borrador" onclick="activarModoClickAgregarCampo('borrador')" title="Coloca un recuadro blanco para tapar/eliminar texto precompleto del PDF y dejarlo vacío" style="padding:0.36rem 0.65rem;border-radius:7px;border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;font-size:0.74rem;font-weight:700;cursor:pointer;">🧹 Borrar Texto / Campo Vacío</button>
                       <button type="button" id="btnModoCampo_firma" onclick="activarModoClickAgregarCampo('firma')" style="padding:0.36rem 0.65rem;border-radius:7px;border:1px solid #047857;background:#ecfdf5;color:#065f46;font-size:0.74rem;font-weight:700;cursor:pointer;">✍️ Marcar Caja Firma</button>
                       <button type="button" id="btnModoCampo_sello" onclick="activarModoClickAgregarCampo('sello')" style="padding:0.36rem 0.65rem;border-radius:7px;border:1px solid #6d28d9;background:#f5f3ff;color:#5b21b6;font-size:0.74rem;font-weight:700;cursor:pointer;">🏛️ Marcar Caja Sello PNG</button>
+                      <button type="button" id="btnModoCampo_pan" onclick="activarModoClickAgregarCampo('pan')" title="Arrastrá sobre el PDF para desplazarlo en cualquier dirección (también podés arrastrar el fondo del PDF directamente)" style="padding:0.36rem 0.65rem;border-radius:7px;border:1px solid #475569;background:#f8fafc;color:#1e293b;font-size:0.74rem;font-weight:700;cursor:pointer;">🖐️ Desplazar PDF</button>
                       <button type="button" id="btnAnalizarPdfIaEditor" onclick="reanalizarPdfConIaEditor()" style="padding:0.36rem 0.7rem;border-radius:7px;border:1px solid #1d4ed8;background:#eff6ff;color:#1d4ed8;font-size:0.74rem;font-weight:800;cursor:pointer;">✨ Auto-detectar IA</button>
                     </div>
-                    <div style="display:flex;align-items:center;gap:0.35rem;">
-                      <button type="button" onclick="cambiarPaginaEditor(-1)" style="padding:2px 8px;border-radius:6px;border:1px solid #64748b;background:#ffffff;font-size:0.75rem;cursor:pointer;">◀</button>
-                      <span id="lblEditorPaginaActual" style="font-size:0.75rem;font-weight:700;color:#0f172a;">Página 1 de 1</span>
-                      <button type="button" onclick="cambiarPaginaEditor(1)" style="padding:2px 8px;border-radius:6px;border:1px solid #64748b;background:#ffffff;font-size:0.75rem;cursor:pointer;">▶</button>
+                    <div style="display:flex;align-items:center;gap:0.45rem;flex-wrap:wrap;">
+                      <label title="Muestra en blanco sólido los cuadros que eliminan texto previo del PDF" style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:6px;border:1px solid #94a3b8;background:#ffffff;font-size:0.72rem;font-weight:700;color:#0f172a;cursor:pointer;">
+                        <input type="checkbox" id="chkEditorVistaLimpia" onchange="toggleVistaLimpiaEditor(this.checked)"/>
+                        👁️ Vista limpia
+                      </label>
+                      <div style="display:inline-flex;align-items:center;gap:3px;background:#ffffff;border:1px solid #94a3b8;border-radius:7px;padding:2px 4px;">
+                        <button type="button" onclick="zoomEditorPdf(-0.2)" title="Alejar zoom (-)" style="padding:1px 7px;border-radius:5px;border:1px solid #cbd5e1;background:#f8fafc;color:#0f172a;font-size:0.78rem;font-weight:800;cursor:pointer;">➖</button>
+                        <select id="selEditorZoomPct" onchange="setZoomEditorPdf(parseFloat(this.value))" title="Nivel de zoom del PDF" style="border:none;background:transparent;font-size:0.74rem;font-weight:800;color:#0f172a;cursor:pointer;outline:none;">
+                          <option value="0.5">50%</option>
+                          <option value="0.75">75%</option>
+                          <option value="1" selected>100%</option>
+                          <option value="1.25">125%</option>
+                          <option value="1.5">150%</option>
+                          <option value="1.75">175%</option>
+                          <option value="2">200%</option>
+                          <option value="2.5">250%</option>
+                        </select>
+                        <button type="button" onclick="zoomEditorPdf(0.2)" title="Acercar zoom (+)" style="padding:1px 7px;border-radius:5px;border:1px solid #cbd5e1;background:#f8fafc;color:#0f172a;font-size:0.78rem;font-weight:800;cursor:pointer;">➕</button>
+                        <button type="button" onclick="ajustarZoomEditorPdf()" title="Ajustar PDF al ancho disponible" style="padding:1px 6px;border-radius:5px;border:1px solid #cbd5e1;background:#eff6ff;color:#1d4ed8;font-size:0.7rem;font-weight:700;cursor:pointer;">↔️ Ajustar</button>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:0.3rem;">
+                        <button type="button" onclick="cambiarPaginaEditor(-1)" style="padding:2px 8px;border-radius:6px;border:1px solid #64748b;background:#ffffff;font-size:0.75rem;cursor:pointer;">◀</button>
+                        <span id="lblEditorPaginaActual" style="font-size:0.75rem;font-weight:700;color:#0f172a;">Página 1 de 1</span>
+                        <button type="button" onclick="cambiarPaginaEditor(1)" style="padding:2px 8px;border-radius:6px;border:1px solid #64748b;background:#ffffff;font-size:0.75rem;cursor:pointer;">▶</button>
+                      </div>
                     </div>
                   </div>
-                  <div style="overflow:auto;max-height:740px;text-align:center;">
-                    <div style="position:relative;display:inline-block;box-shadow:0 4px 16px rgba(15,23,42,0.2);">
-                      <canvas id="canvasEditorPlantillaPdf" style="display:block;max-width:100%;height:auto;background:#ffffff;"></canvas>
+                  <div id="editorPdfScrollWrap" style="overflow:auto;max-height:740px;padding:0.75rem;background:#94a3b8;border-radius:8px;text-align:left;" title="Podés usar Ctrl + rueda del mouse para acercar/alejar y arrastrar el fondo para desplazar el PDF">
+                    <div id="editorPdfPageFrame" style="position:relative;margin:0 auto;width:fit-content;box-shadow:0 4px 16px rgba(15,23,42,0.25);">
+                      <canvas id="canvasEditorPlantillaPdf" style="display:block;background:#ffffff;"></canvas>
                       <div id="overlayCamposPlantilla" style="position:absolute;inset:0;"></div>
                     </div>
                   </div>
@@ -24983,6 +25006,6 @@ ${cierreTxt}`;
   <script src="js/auditoria20.js?v=6"></script>
   <script src="js/fichasAsociados.js?v=6"></script>
   <script src="js/sidecreerWidget.js?v=10"></script>
-  <script src="js/firmasAmmer.js?v=10"></script>
+  <script src="js/firmasAmmer.js?v=11"></script>
 </body>
 </html>

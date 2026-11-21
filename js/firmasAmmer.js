@@ -1547,7 +1547,7 @@
   }
 
   function actualizarBotonesModoEditor() {
-    ['texto', 'borrador', 'firma', 'sello'].forEach((k) => {
+    ['texto', 'borrador', 'firma', 'sello', 'pan'].forEach((k) => {
       const btn = document.getElementById('btnModoCampo_' + k);
       if (!btn) return;
       const activo = state.editor.addModeTipo === k;
@@ -1564,11 +1564,16 @@
     }
     state.editor.addModeTipo = state.editor.addModeTipo === tipo ? null : tipo;
     const overlay = document.getElementById('overlayCamposPlantilla');
-    if (overlay) overlay.style.cursor = state.editor.addModeTipo ? 'crosshair' : 'default';
+    if (overlay) {
+      overlay.style.cursor = state.editor.addModeTipo === 'pan'
+        ? 'grab'
+        : (state.editor.addModeTipo ? 'crosshair' : 'grab');
+    }
     actualizarBotonesModoEditor();
     if (state.editor.addModeTipo === 'firma') notify('Hacé clic en el PDF donde querés ubicar la caja de Firma Manuscrita.', 'info');
     else if (state.editor.addModeTipo === 'sello') notify('Hacé clic en el PDF donde querés estampar el Sello Oficial PNG.', 'info');
     else if (state.editor.addModeTipo === 'borrador') notify('Hacé clic sobre el texto precompleto del PDF que querés borrar / dejar vacío.', 'info');
+    else if (state.editor.addModeTipo === 'pan') notify('Modo desplazar activo: arrastrá sobre el PDF para moverlo en cualquier dirección.', 'info');
     else if (state.editor.addModeTipo === 'texto') notify('Hacé clic en el PDF donde querés colocar el nuevo campo.', 'info');
   }
 
@@ -1650,7 +1655,7 @@
     state.editor.selectedFieldId = id;
     state.editor.addModeTipo = null;
     const overlay = document.getElementById('overlayCamposPlantilla');
-    if (overlay) overlay.style.cursor = 'default';
+    if (overlay) overlay.style.cursor = 'grab';
     actualizarBotonesModoEditor();
     renderCajasOverlayEditor();
     renderInspectorCamposEditor();
@@ -1886,13 +1891,45 @@
     }
     if (!overlay || overlay.dataset.boundClick) return;
     overlay.dataset.boundClick = '1';
+    if (!state.editor.addModeTipo) overlay.style.cursor = 'grab';
     overlay.addEventListener('pointerdown', (ev) => {
-      if (!state.editor.addModeTipo || ev.target !== overlay) return;
-      const rect = overlay.getBoundingClientRect();
-      if (!rect.width || !rect.height) return;
-      const xPct = (ev.clientX - rect.left) / rect.width;
-      const yPct = (ev.clientY - rect.top) / rect.height;
-      agregarCampoEnCoords(xPct, yPct, state.editor.addModeTipo);
+      if (ev.button && ev.button !== 0 && ev.button !== 1) return;
+      const modo = state.editor.addModeTipo;
+      if (modo && modo !== 'pan') {
+        if (ev.target !== overlay) return;
+        const rect = overlay.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        const xPct = (ev.clientX - rect.left) / rect.width;
+        const yPct = (ev.clientY - rect.top) / rect.height;
+        agregarCampoEnCoords(xPct, yPct, modo);
+        return;
+      }
+      if (!scrollWrap) return;
+      if (modo !== 'pan' && ev.target !== overlay) return;
+      ev.preventDefault();
+      const startX = ev.clientX;
+      const startY = ev.clientY;
+      const startLeft = scrollWrap.scrollLeft;
+      const startTop = scrollWrap.scrollTop;
+      overlay.style.cursor = 'grabbing';
+      try { overlay.setPointerCapture(ev.pointerId); } catch (_e) {}
+
+      function onPanMove(mv) {
+        scrollWrap.scrollLeft = startLeft - (mv.clientX - startX);
+        scrollWrap.scrollTop = startTop - (mv.clientY - startY);
+      }
+
+      function onPanUp(upEv) {
+        overlay.style.cursor = (state.editor.addModeTipo && state.editor.addModeTipo !== 'pan') ? 'crosshair' : 'grab';
+        try { if (upEv && overlay.hasPointerCapture(upEv.pointerId)) overlay.releasePointerCapture(upEv.pointerId); } catch (_e) {}
+        overlay.removeEventListener('pointermove', onPanMove);
+        overlay.removeEventListener('pointerup', onPanUp);
+        overlay.removeEventListener('pointercancel', onPanUp);
+      }
+
+      overlay.addEventListener('pointermove', onPanMove);
+      overlay.addEventListener('pointerup', onPanUp);
+      overlay.addEventListener('pointercancel', onPanUp);
     });
 
     if (!document.body.dataset.boundEditorKeys) {
@@ -1920,7 +1957,7 @@
         }
         if (ev.key === 'Escape' && state.editor.addModeTipo) {
           state.editor.addModeTipo = null;
-          overlay.style.cursor = 'default';
+          overlay.style.cursor = 'grab';
           actualizarBotonesModoEditor();
           return;
         }

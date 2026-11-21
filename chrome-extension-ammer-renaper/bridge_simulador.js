@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const EXT_VERSION = '1.0.0';
+  const EXT_VERSION = '1.0.2';
 
   function marcarDisponible() {
     if (document.documentElement) {
@@ -26,9 +26,13 @@
       return;
     }
 
-    if (t === 'AMMER_OPEN_RENAPER_SPLIT') {
+    if (t === 'AMMER_OPEN_RENAPER_SPLIT' || t === 'AMMER_OPEN_SPLIT_URL') {
       chrome.runtime.sendMessage(
-        { action: 'OPEN_RENAPER_SPLIT', payload: ev.data.payload || {} },
+        {
+          action: t === 'AMMER_OPEN_SPLIT_URL' ? 'OPEN_SPLIT_URL' : 'OPEN_RENAPER_SPLIT',
+          url: ev.data.url || null,
+          payload: ev.data.payload || {},
+        },
         (resp) => {
           const err = chrome.runtime.lastError ? chrome.runtime.lastError.message : null;
           window.postMessage(
@@ -44,7 +48,7 @@
       return;
     }
 
-    if (t === 'AMMER_CLOSE_RENAPER_SPLIT') {
+    if (t === 'AMMER_CLOSE_RENAPER_SPLIT' || t === 'AMMER_CLOSE_SPLIT_URL') {
       chrome.runtime.sendMessage(
         { action: 'CLOSE_RENAPER_SPLIT', tabId: ev.data.tabId || null },
         (resp) => {

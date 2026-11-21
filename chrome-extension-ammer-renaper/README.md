@@ -1,6 +1,6 @@
-# Extensión Chrome AMMER — RENAPER en Pestaña Dividida
+# AMMER - Pestaña Dividida y Asistente (Extensión Chrome)
 
-Esta mini-extensión interna de **Mutual Modelo (AMMER)** habilita el modo **Pestaña Dividida nativo de Google Chrome** (*Split View*) cuando hacés clic en **🪪 Validar DNI (RENAPER)** dentro de Simulador-Office:
+Esta extensión oficial interna de **Mutual Modelo (AMMER)** habilita el modo **Pestaña Dividida nativo de Google Chrome** (*Split View*) desde Simulador-Office (como en **🪪 Validar DNI (RENAPER)** y futuras herramientas externas):
 
 - Abre `https://tramites.renaper.gob.ar/mi_ejemplar/` directamente en el panel derecho de la misma ventana de Chrome (en Chrome 155+ usa `chrome.tabs.create({ splitWithTabId })`; en versiones anteriores abre la pestaña adyacente).
 - Autocompleta automáticamente DNI, Sexo y Fecha de Nacimiento en el formulario oficial de RENAPER.

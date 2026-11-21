@@ -16,19 +16,25 @@ async function saveTabPairs(pairs) {
   } catch (_e) {}
 }
 
-async function abrirRenaperEnSplitView(senderTab, payload) {
+async function abrirEnSplitView(senderTab, payload, targetUrl) {
   const openerTabId = senderTab && senderTab.id;
   if (!openerTabId) {
     throw new Error('No se pudo identificar la pestaña de Simulador-Office.');
   }
+  const destUrl = String(targetUrl || (payload && payload.url) || RENAPER_URL).trim();
+  if (!/^https?:\/\//i.test(destUrl)) {
+    throw new Error('URL inválida para vista dividida.');
+  }
 
-  await chrome.storage.local.set({
-    ammerPendingRenaper: {
-      ...(payload || {}),
-      openerTabId,
-      ts: Date.now(),
-    },
-  });
+  if (destUrl.includes('tramites.renaper.gob.ar')) {
+    await chrome.storage.local.set({
+      ammerPendingRenaper: {
+        ...(payload || {}),
+        openerTabId,
+        ts: Date.now(),
+      },
+    });
+  }
 
   const pairs = await getTabPairs();
   const prevRenaperId = pairs[String(openerTabId)];
@@ -36,7 +42,7 @@ async function abrirRenaperEnSplitView(senderTab, payload) {
     try {
       const existing = await chrome.tabs.get(prevRenaperId);
       if (existing && existing.id) {
-        await chrome.tabs.update(existing.id, { url: RENAPER_URL, active: true });
+        await chrome.tabs.update(existing.id, { url: destUrl, active: true });
         return { ok: true, tabId: existing.id, splitUsed: Boolean(existing.splitViewId && existing.splitViewId > 0), reused: true };
       }
     } catch (_e) {
@@ -50,7 +56,7 @@ async function abrirRenaperEnSplitView(senderTab, payload) {
   // Chrome 155+: intentar abrir directamente en Split View nativo a la derecha
   try {
     newTab = await chrome.tabs.create({
-      url: RENAPER_URL,
+      url: destUrl,
       splitWithTabId: openerTabId,
       index: (senderTab.index || 0) + 1,
       active: true,
@@ -59,7 +65,7 @@ async function abrirRenaperEnSplitView(senderTab, payload) {
   } catch (_errSplitCreate) {
     // Fallback: crear pestaña adyacente y probar chrome.tabs.createSplit si existe
     newTab = await chrome.tabs.create({
-      url: RENAPER_URL,
+      url: destUrl,
       index: (senderTab.index || 0) + 1,
       active: true,
     });
@@ -145,14 +151,14 @@ chrome.tabs.onRemoved.addListener(async (closedId) => {
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!msg || typeof msg !== 'object') return false;
 
-  if (msg.action === 'OPEN_RENAPER_SPLIT') {
-    abrirRenaperEnSplitView(sender.tab, msg.payload)
+  if (msg.action === 'OPEN_RENAPER_SPLIT' || msg.action === 'OPEN_SPLIT_URL') {
+    abrirEnSplitView(sender.tab, msg.payload, msg.url)
       .then((res) => sendResponse(res))
       .catch((err) => sendResponse({ ok: false, error: err && err.message ? err.message : String(err) }));
     return true;
   }
 
-  if (msg.action === 'CLOSE_RENAPER_SPLIT') {
+  if (msg.action === 'CLOSE_RENAPER_SPLIT' || msg.action === 'CLOSE_SPLIT_URL') {
     cerrarRenaperTab(msg.tabId || null, sender.tab)
       .then((res) => sendResponse(res))
       .catch((err) => sendResponse({ ok: false, error: err && err.message ? err.message : String(err) }));

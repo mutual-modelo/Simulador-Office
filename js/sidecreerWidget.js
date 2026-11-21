@@ -63,6 +63,29 @@
     return String(str || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
+  function _getApiBase() {
+    if (typeof global.RENDER_API_URL === 'string' && global.RENDER_API_URL.startsWith('http')) {
+      return global.RENDER_API_URL;
+    }
+    if (global.CONFIG && typeof global.CONFIG.RENDER_API_URL === 'string' && global.CONFIG.RENDER_API_URL.startsWith('http')) {
+      return global.CONFIG.RENDER_API_URL;
+    }
+    try {
+      if (typeof RENDER_API_URL === 'string' && RENDER_API_URL.startsWith('http')) {
+        return RENDER_API_URL;
+      }
+    } catch (_) {}
+    return '';
+  }
+
+  function _getFetchFn() {
+    if (typeof global.fetchConTimeout === 'function') return global.fetchConTimeout;
+    try {
+      if (typeof fetchConTimeout === 'function') return fetchConTimeout;
+    } catch (_) {}
+    return null;
+  }
+
   function _abrirFallbackChatWeb(formateada, copiadoOk, motivoAviso) {
     const aviso = motivoAviso
       ? '<div style="font-size:0.71rem;color:#92400e;margin-bottom:4px;">' + _esc(motivoAviso) + '</div>'
@@ -90,11 +113,10 @@
     const formateada = (soloDigitos.match(/.{1,4}/g) || [soloDigitos]).join(' ');
     const copiadoOk = _copiarTarjetaSincrono(soloDigitos);
 
-    const apiBase = (typeof global.RENDER_API_URL === 'string' && global.RENDER_API_URL.startsWith('http'))
-      ? global.RENDER_API_URL
-      : '';
+    const apiBase = _getApiBase();
+    const fetchFn = _getFetchFn();
 
-    if (!apiBase || typeof global.fetchConTimeout !== 'function') {
+    if (!apiBase || !fetchFn) {
       let chatWin = null;
       try { chatWin = global.open(SIDECREER_CHAT_URL, '_blank', 'noopener,noreferrer'); } catch (_) {}
       _abrirFallbackChatWeb(formateada, copiadoOk, chatWin ? '' : 'Abrí el chat desde el enlace:');
@@ -110,7 +132,7 @@
     _mostrarResultadoSidecreer('warn', '⏳ Consultando saldo automático para tarjeta <strong>' + _esc(formateada) + '</strong>...');
 
     try {
-      const resp = await global.fetchConTimeout(`${apiBase}/api/sidecreer/consultar-saldo`, {
+      const resp = await fetchFn(`${apiBase}/api/sidecreer/consultar-saldo`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ numero_tarjeta: soloDigitos })
@@ -194,16 +216,27 @@
     const qrImg = document.getElementById('imgQrWhatsAppSidecreer');
     const btnDesvincular = document.getElementById('btnDesvincularWaSidecreer');
 
-    const apiBase = (typeof global.RENDER_API_URL === 'string' && global.RENDER_API_URL.startsWith('http'))
-      ? global.RENDER_API_URL
-      : '';
-    if (!apiBase || typeof global.fetchConTimeout !== 'function') return;
+    const apiBase = _getApiBase();
+    const fetchFn = _getFetchFn();
+    if (!apiBase || !fetchFn) {
+      if (badgeEl) {
+        badgeEl.textContent = '🔴 Error de configuración';
+        badgeEl.style.cssText = 'display:inline-flex;padding:4px 10px;border-radius:9999px;font-size:0.74rem;font-weight:700;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;';
+      }
+      if (infoEl) infoEl.textContent = 'No se encontró la URL del servidor API. Recargá la página con Ctrl+F5.';
+      if (qrBox) qrBox.style.display = 'none';
+      _detenerPollingQR();
+      return;
+    }
 
     try {
-      const resp = await global.fetchConTimeout(`${apiBase}/api/admin/sidecreer/whatsapp/estado`, {
+      const resp = await fetchFn(`${apiBase}/api/admin/sidecreer/whatsapp/estado`, {
         method: 'GET'
-      }, 15000);
+      }, 20000);
       const data = resp ? await resp.json().catch(() => null) : null;
+      if (!resp || !resp.ok) {
+        throw new Error((data && (data.detail || data.mensaje)) || ('El servidor API devolvió HTTP ' + (resp ? resp.status : 'sin respuesta')));
+      }
       if (!data) throw new Error('Sin respuesta del servidor.');
 
       if (data.configured === false || data.status === 'NOT_CONFIGURED') {
@@ -288,15 +321,14 @@
 
   async function desvincularWhatsAppSidecreerAdmin() {
     if (!confirm('¿Confirmás desvincular la línea WhatsApp actual y generar un nuevo código QR?')) return;
-    const apiBase = (typeof global.RENDER_API_URL === 'string' && global.RENDER_API_URL.startsWith('http'))
-      ? global.RENDER_API_URL
-      : '';
-    if (!apiBase || typeof global.fetchConTimeout !== 'function') return;
+    const apiBase = _getApiBase();
+    const fetchFn = _getFetchFn();
+    if (!apiBase || !fetchFn) return;
 
     const btn = document.getElementById('btnDesvincularWaSidecreer');
     if (btn) btn.disabled = true;
     try {
-      await global.fetchConTimeout(`${apiBase}/api/admin/sidecreer/whatsapp/desvincular`, {
+      await fetchFn(`${apiBase}/api/admin/sidecreer/whatsapp/desvincular`, {
         method: 'POST'
       }, 20000);
       if (typeof global.showToast === 'function') global.showToast('🔄 Regenerando código QR...');

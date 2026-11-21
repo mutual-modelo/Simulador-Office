@@ -556,7 +556,7 @@
   <header>
     <div class="header-inner">
       <div class="brand-wrap">
-        <div class="brand-mark" aria-hidden="true">AM</div>
+        <img src="logo-icono.png" alt="Logo AMMER" style="width:36px;height:36px;border-radius:9px;background:#ffffff;padding:2px;object-fit:contain;flex-shrink:0;"/>
         <div>
           <h1 class="brand-title">Asociación Mutual Modelo de Entre Ríos (AMMER)</h1>
           <div class="brand-sub" id="headerSubTitle">Portal Público de Verificación de Documentos</div>
@@ -1013,17 +1013,17 @@
             </div>
             <div class="pub-status-badge">✓ Válido</div>
           `;
-        } else if (est === 'ANULADO') {
+        } else if (['ANULADO', 'CANCELADO', 'DESESTIMADO', 'ELIMINADO'].includes(est)) {
           banner.className = 'pub-hero banner-err';
           banner.innerHTML = `
             <div class="pub-hero-left">
               <div class="pub-hero-icon" style="color:#b91c1c;">🚫</div>
               <div>
-                <h2 class="pub-hero-title">Documento anulado</h2>
-                <p class="pub-hero-desc">Este documento fue anulado por AMMER y carece de validez.</p>
+                <h2 class="pub-hero-title">Documento anulado / dado de baja</h2>
+                <p class="pub-hero-desc">Este documento fue cancelado o desestimado por AMMER y carece de validez.</p>
               </div>
             </div>
-            <div class="pub-status-badge">Anulado</div>
+            <div class="pub-status-badge">Sin validez</div>
           `;
         } else if (d.coincide_hash_qr === false) {
           banner.className = 'pub-hero banner-err';
@@ -1093,9 +1093,9 @@
         if (d.valido) {
           banner.className = 'banner banner-ok';
           banner.innerHTML = `<div><strong>✅ DOCUMENTO AUTÉNTICO Y FIRMADO</strong><div style="font-size:0.8rem;margin-top:2px;">Certificado íntegro registrado en AMMER bajo Ley 25.506.${d.coincide_hash_qr === true ? ' · Hash QR verificado.' : ''}</div></div><div style="font-weight:800;font-size:0.85rem;">${escHtml(est)}</div>`;
-        } else if (est === 'ANULADO') {
+        } else if (['ANULADO', 'CANCELADO', 'DESESTIMADO', 'ELIMINADO'].includes(est)) {
           banner.className = 'banner banner-err';
-          banner.innerHTML = `<div><strong>🚫 DOCUMENTO ANULADO / REVOCADO</strong><div style="font-size:0.8rem;margin-top:2px;">Esta solicitud de firma fue anulada administrativamente por AMMER y carece de validez legal.</div></div><div style="font-weight:800;">ANULADO</div>`;
+          banner.innerHTML = `<div><strong>🚫 DOCUMENTO ${escHtml(est)} / REVOCADO</strong><div style="font-size:0.8rem;margin-top:2px;">Esta solicitud de firma fue dada de baja administrativamente por AMMER y carece de validez legal.</div></div><div style="font-weight:800;">${escHtml(est)}</div>`;
         } else if (d.coincide_hash_qr === false) {
           banner.className = 'banner banner-err';
           banner.innerHTML = `<div><strong>⚠️ ALERTA DE INTEGRIDAD (HASH QR NO COINCIDE)</strong><div style="font-size:0.8rem;margin-top:2px;">El hash consultado en la URL no corresponde al documento almacenado.</div></div><div style="font-weight:800;">${escHtml(est)}</div>`;

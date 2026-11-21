@@ -5198,6 +5198,7 @@
           <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:12px;padding:0.45rem;display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center;box-shadow:0 1px 3px rgba(15,23,42,0.05);">
             <button type="button" id="btnTabFirma_generar" onclick="cambiarTabFirmas('generar')" style="padding:0.55rem 1.05rem;border-radius:8px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.82rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">✉️ Generar y Enviar a Firma</button>
             <button type="button" id="btnTabFirma_bandeja" onclick="cambiarTabFirmas('bandeja')" style="padding:0.55rem 1.05rem;border-radius:8px;border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;font-size:0.82rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">📂 Bandeja de Documentos y Evidencia</button>
+            <button type="button" id="btnTabFirma_eliminados" onclick="cambiarTabFirmas('eliminados')" style="padding:0.55rem 1.05rem;border-radius:8px;border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;font-size:0.82rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">🗑️ Eliminados / Cancelados <span id="badgeTabFirmasEliminadas" style="display:none;background:#fee2e2;color:#b91c1c;border-radius:9999px;padding:1px 7px;font-size:0.71rem;font-weight:800;">0</span></button>
             <button type="button" id="btnTabFirma_editor" onclick="cambiarTabFirmas('editor')" style="display:none;padding:0.55rem 1.05rem;border-radius:8px;border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;font-size:0.82rem;font-weight:700;cursor:pointer;align-items:center;gap:6px;">🎨 Editor Visual de Plantillas PDF</button>
           </div>
 
@@ -5332,6 +5333,37 @@
                     </tr>
                   </thead>
                   <tbody id="tbodyBandejaFirmas"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUB-PANEL 2B: ELIMINADOS / CANCELADOS / DESESTIMADOS -->
+          <div id="panelFirmas_eliminados" style="display:none;">
+            <div style="background:#ffffff;border:1px solid #fecaca;border-radius:14px;padding:1.15rem;">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.85rem;padding-bottom:0.75rem;border-bottom:1px solid #fee2e2;">
+                <div>
+                  <div style="font-size:0.95rem;font-weight:800;color:#991b1b;">🗑️ Fichas Eliminadas, Canceladas o Desestimadas</div>
+                  <div style="font-size:0.77rem;color:#64748b;margin-top:2px;">Registro auditado con código de validación por WhatsApp, nombre y apellido, usuario responsable y fecha/hora exacta de baja.</div>
+                </div>
+                <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+                  <input type="text" id="inpFiltroFirmasEliminadas" oninput="renderBandejaFirmas()" placeholder="Buscar por Asociado, DNI, Responsable o Motivo..." style="min-width:240px;padding:0.48rem 0.72rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.8rem;"/>
+                  <button type="button" onclick="cargarBandejaFirmas()" style="padding:0.48rem 0.85rem;border-radius:8px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.79rem;font-weight:700;cursor:pointer;">🔄 Actualizar</button>
+                </div>
+              </div>
+              <div style="overflow-x:auto;">
+                <table style="width:100%;border-collapse:collapse;">
+                  <thead>
+                    <tr style="background:#fef2f2;border-bottom:2px solid #fecaca;text-align:left;font-size:0.72rem;color:#991b1b;text-transform:uppercase;">
+                      <th style="padding:0.6rem 0.65rem;">Asociado / Exp.</th>
+                      <th style="padding:0.6rem 0.65rem;">Documento</th>
+                      <th style="padding:0.6rem 0.65rem;text-align:center;">Estado / Motivo</th>
+                      <th style="padding:0.6rem 0.65rem;">Eliminado / Cancelado por</th>
+                      <th style="padding:0.6rem 0.65rem;white-space:nowrap;">Fecha y Hora</th>
+                      <th style="padding:0.6rem 0.65rem;text-align:right;">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyFirmasEliminadas"></tbody>
                 </table>
               </div>
             </div>

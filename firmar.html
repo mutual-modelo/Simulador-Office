@@ -594,9 +594,12 @@
 <body>
   <header>
     <div class="header-inner">
-      <div>
-        <div class="brand-title">Mutual Modelo (AMMER) · Firma Electrónica</div>
-        <div class="brand-sub">Portal guiado paso a paso · Ley 25.506</div>
+      <div style="display:flex;align-items:center;gap:0.55rem;min-width:0;">
+        <img src="logo-icono.png" alt="Logo AMMER" style="width:28px;height:28px;border-radius:7px;background:#ffffff;padding:2px;object-fit:contain;flex-shrink:0;"/>
+        <div style="min-width:0;">
+          <div class="brand-title">Mutual Modelo (AMMER) · Firma Electrónica</div>
+          <div class="brand-sub">Portal guiado paso a paso · Ley 25.506</div>
+        </div>
       </div>
       <div class="badge-ssl">🔒 Seguro</div>
     </div>
@@ -618,33 +621,19 @@
       <button type="button" onclick="window.location.reload()" class="btn btn-secondary">🔄 Comprobar si ya es mi turno</button>
     </div>
 
-    <!-- PANTALLA FINAL: DOCUMENTO YA FIRMADO -->
+    <!-- PANTALLA FINAL: DOCUMENTO YA FIRMADO (LIMPIA PARA EL PÚBLICO) -->
     <div id="confirmacionFirmadoBox" class="card" style="display:none;">
-      <div id="alertEstadoFirmado" class="alert alert-ok" style="margin-bottom:0.85rem;font-size:0.95rem;">
+      <div id="alertEstadoFirmado" class="alert alert-ok" style="margin-bottom:0.85rem;font-size:0.98rem;">
         ✅ <strong>¡Listo! Tu documento fue firmado con éxito.</strong><br/>
-        <span style="font-weight:500;font-size:0.88rem;">Podés descargar tu copia firmada con el botón verde de abajo.</span>
+        <span style="font-weight:500;font-size:0.9rem;">Podés descargar tu copia firmada con el botón verde de abajo.</span>
       </div>
-      <div class="meta-grid" style="margin-bottom:0.85rem;">
+      <div class="meta-grid" style="margin-bottom:0.95rem;">
         <div class="meta-item"><div class="meta-lbl">Documento</div><div class="meta-val" id="resDocNombre">-</div></div>
         <div class="meta-item"><div class="meta-lbl">Fecha y hora</div><div class="meta-val" id="resFechaFirma">-</div></div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:0.55rem;margin-bottom:0.75rem;">
-        <button type="button" id="btnDescargarCopiaFirmada" class="btn btn-success" style="width:100%;">
-          ⬇️ Descargar mi PDF Firmado
-        </button>
-        <a id="lnkPortalVerificacionQr" href="#" target="_blank" rel="noopener" class="btn btn-secondary" style="display:none;width:100%;">
-          🔍 Verificar validez del documento
-        </a>
-      </div>
-      <details style="margin-top:0.4rem;">
-        <summary style="cursor:pointer;font-size:0.8rem;font-weight:700;color:#475569;">Ver comprobantes técnicos de respaldo</summary>
-        <div class="hash-box" style="margin-top:0.45rem;">
-          <strong>SHA-256 Original:</strong> <span id="resHashOrig">-</span><br/>
-          <strong>SHA-256 Firmado + Evidencia:</strong> <span id="resHashFirmado">-</span>
-          <div id="resTsaStatusLine" style="margin-top:4px;display:none;"></div>
-          <div id="resPadesStatusLine" style="margin-top:4px;display:none;"></div>
-        </div>
-      </details>
+      <button type="button" id="btnDescargarCopiaFirmada" class="btn btn-success" style="width:100%;min-height:48px;font-size:1rem;">
+        ⬇️ Descargar mi PDF Firmado
+      </button>
     </div>
 
     <!-- ============================================================
@@ -683,10 +672,10 @@
         <div id="pdfPaginasContainer"></div>
       </section>
 
-      <!-- PASO 2 (OPCIONAL): FOTOS DEL DNI -->
+      <!-- PASO 2 (OPCIONAL): FOTOS DEL DNI (PERMITE CÁMARA O GALERÍA) -->
       <section class="card wizard-step-pane" id="paneStepDni" style="display:none;">
-        <h1 class="step-heading">🪪 Sacá fotos de tu DNI</h1>
-        <p class="step-lead">Apoyá tu DNI sobre una mesa bien iluminada y sacá una foto de frente y otra de atrás.</p>
+        <h1 class="step-heading">🪪 Fotos de tu DNI</h1>
+        <p class="step-lead">Podés sacar la foto ahora o elegir una que ya tengas guardada en tu galería.</p>
 
         <div class="dni-grid">
           <div class="dni-card" id="cardDniFrente">
@@ -694,10 +683,16 @@
             <div class="dni-hint">El lado donde está tu foto y tu número</div>
             <img id="imgPrevDniFrente" class="dni-preview" alt="Foto del frente del DNI"/>
             <div id="lblStatusDniFrente" class="dni-status-pill">✓ Foto guardada</div>
-            <label class="btn btn-primary" style="width:100%;cursor:pointer;">
-              <span id="txtBtnDniFrente">📷 Sacar foto del Frente</span>
-              <input type="file" id="inpDniFrenteCam" accept="image/*" capture="environment" style="display:none;"/>
-            </label>
+            <div style="display:flex;gap:0.4rem;width:100%;flex-wrap:wrap;">
+              <label class="btn btn-primary btn-sm" style="flex:1;cursor:pointer;min-height:40px;">
+                <span id="txtBtnDniFrente">📷 Cámara</span>
+                <input type="file" id="inpDniFrenteCam" accept="image/*" capture="environment" style="display:none;"/>
+              </label>
+              <label class="btn btn-secondary btn-sm" style="flex:1;cursor:pointer;min-height:40px;">
+                <span>🖼️ Galería</span>
+                <input type="file" id="inpDniFrenteGal" accept="image/*" style="display:none;"/>
+              </label>
+            </div>
           </div>
 
           <div class="dni-card" id="cardDniDorso">
@@ -705,15 +700,21 @@
             <div class="dni-hint">El lado donde figuran tu domicilio y huella</div>
             <img id="imgPrevDniDorso" class="dni-preview" alt="Foto del dorso del DNI"/>
             <div id="lblStatusDniDorso" class="dni-status-pill">✓ Foto guardada</div>
-            <label class="btn btn-primary" style="width:100%;cursor:pointer;">
-              <span id="txtBtnDniDorso">📷 Sacar foto del Dorso</span>
-              <input type="file" id="inpDniDorsoCam" accept="image/*" capture="environment" style="display:none;"/>
-            </label>
+            <div style="display:flex;gap:0.4rem;width:100%;flex-wrap:wrap;">
+              <label class="btn btn-primary btn-sm" style="flex:1;cursor:pointer;min-height:40px;">
+                <span id="txtBtnDniDorso">📷 Cámara</span>
+                <input type="file" id="inpDniDorsoCam" accept="image/*" capture="environment" style="display:none;"/>
+              </label>
+              <label class="btn btn-secondary btn-sm" style="flex:1;cursor:pointer;min-height:40px;">
+                <span>🖼️ Galería</span>
+                <input type="file" id="inpDniDorsoGal" accept="image/*" style="display:none;"/>
+              </label>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- PASO 3 (OPCIONAL): VALIDACIÓN FACIAL GUIADA CON VIDEO, AVATAR Y AUDIO -->
+      <!-- PASO 3 (OPCIONAL): VALIDACIÓN FACIAL GUIADA SOLO POR CÁMARA EN VIVO -->
       <section class="card wizard-step-pane" id="paneStepSelfie" style="display:none;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.2rem;">
           <h1 class="step-heading" style="margin:0;">🤳 Validamos tu identidad</h1>
@@ -722,7 +723,7 @@
 
         <!-- SUBPANTALLA 3A: CONSEJOS CLAROS (ANTES DE PRENDER LA CÁMARA) -->
         <div id="selfieIntroView">
-          <p class="step-lead">Grabaremos un video corto para confirmar que sos vos:</p>
+          <p class="step-lead">Grabaremos un video guiado en vivo para confirmar que sos vos:</p>
 
           <div class="tips-list">
             <div class="tip-item">
@@ -750,8 +751,8 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2"/><circle cx="12" cy="18" r="1"/></svg>
               </div>
               <div>
-                <div class="tip-title">Teléfono a la altura de tu cara</div>
-                <div class="tip-desc">Mirá derecho hacia la pantalla y seguí la guía.</div>
+                <div class="tip-title">Teléfono o cámara a la altura de tu cara</div>
+                <div class="tip-desc">Mirá derecho y realizá cada gesto cuando la guía te avise.</div>
               </div>
             </div>
           </div>
@@ -767,14 +768,11 @@
             </div>
           </div>
 
-          <div style="display:flex;flex-direction:column;gap:0.45rem;">
-            <button type="button" id="btnAbrirCamaraSelfie" class="btn btn-success" style="width:100%;font-size:0.98rem;">
-              🎥 Comenzar video guiado
-            </button>
-            <label class="btn btn-secondary btn-sm" style="width:100%;cursor:pointer;min-height:38px;">
-              📷 Alternativa: sacá una foto aquí
-              <input type="file" id="inpSelfieFallbackCam" accept="image/*" capture="user" style="display:none;"/>
-            </label>
+          <button type="button" id="btnAbrirCamaraSelfie" class="btn btn-success" style="width:100%;font-size:0.98rem;">
+            🎥 Abrir cámara y comenzar video guiado
+          </button>
+          <div style="margin-top:0.5rem;font-size:0.76rem;color:#475569;text-align:center;">
+            🔒 Por seguridad, esta validación se realiza únicamente con cámara en vivo (si tu PC no tiene webcam, abrí este enlace en tu celular).
           </div>
         </div>
 
@@ -970,23 +968,45 @@
       // ============================================================
       // SÍNTESIS DE VOZ EN ESPAÑOL (GUÍA POR AUDIO PARA ADULTOS MAYORES)
       // ============================================================
+      function hablarGuiaAsync(texto) {
+        return new Promise((resolve) => {
+          const txt = String(texto || '').trim();
+          if (!txt || !appState.vozHabilitada || !('speechSynthesis' in window) || typeof window.SpeechSynthesisUtterance !== 'function') {
+            resolve();
+            return;
+          }
+          let done = false;
+          const finish = () => {
+            if (done) return;
+            done = true;
+            clearTimeout(fallbackTimer);
+            resolve();
+          };
+          const maxWaitMs = Math.min(7500, Math.max(2200, txt.length * 85));
+          const fallbackTimer = setTimeout(finish, maxWaitMs);
+          try {
+            window.speechSynthesis.cancel();
+            const utt = new SpeechSynthesisUtterance(txt);
+            const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+            const vozEs = voices.find((v) => /es[-_]?AR/i.test(v.lang))
+              || voices.find((v) => /es[-_](419|UY|ES|MX)/i.test(v.lang))
+              || voices.find((v) => /^es/i.test(v.lang));
+            if (vozEs) utt.voice = vozEs;
+            utt.lang = (vozEs && vozEs.lang) || 'es-AR';
+            utt.rate = 0.9;
+            utt.pitch = 1.0;
+            utt.volume = 1.0;
+            utt.onend = finish;
+            utt.onerror = finish;
+            window.speechSynthesis.speak(utt);
+          } catch (_e) {
+            finish();
+          }
+        });
+      }
+
       function hablarGuia(texto) {
-        if (!appState.vozHabilitada) return;
-        if (!('speechSynthesis' in window) || typeof window.SpeechSynthesisUtterance !== 'function') return;
-        try {
-          window.speechSynthesis.cancel();
-          const utt = new SpeechSynthesisUtterance(String(texto || ''));
-          const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
-          const vozEs = voices.find((v) => /es[-_]?AR/i.test(v.lang))
-            || voices.find((v) => /es[-_](419|UY|ES|MX)/i.test(v.lang))
-            || voices.find((v) => /^es/i.test(v.lang));
-          if (vozEs) utt.voice = vozEs;
-          utt.lang = (vozEs && vozEs.lang) || 'es-AR';
-          utt.rate = 0.92;
-          utt.pitch = 1.0;
-          utt.volume = 1.0;
-          window.speechSynthesis.speak(utt);
-        } catch (_e) {}
+        hablarGuiaAsync(texto);
       }
 
       function detenerVozGuia() {
@@ -1134,8 +1154,8 @@
             mostrarErrorEnPaso('Esperá unos segundos a que termine la grabación guiada.');
             return;
           }
-          if (!appState.ekycValidado && !appState.ekycImgs.selfie1) {
-            mostrarErrorEnPaso('Tocá "Comenzar video guiado" (o subí una foto) para validar tu rostro antes de continuar.');
+          if (!appState.ekycValidado && (!appState.ekycImgs.selfie1 || !appState.ekycImgs.selfie2)) {
+            mostrarErrorEnPaso('Tocá "Abrir cámara y comenzar video guiado" para validar tu rostro en vivo antes de continuar.');
             return;
           }
           if (!appState.ekycValidado) {
@@ -1333,7 +1353,7 @@
         if (data.estado === 'PARCIAL') {
           if (alertBox) {
             alertBox.innerHTML = `🕒 <strong>¡Tu firma quedó registrada (${data.firmas_completadas || 1} de ${data.firmas_requeridas || 2} personas)!</strong><br/>` +
-              `<span style="font-weight:500;font-size:0.92rem;">El trámite se completará en cuanto firmen las demás personas. Ya podés descargar tu constancia parcial.</span>`;
+              `<span style="font-weight:500;font-size:0.9rem;">El trámite se completará en cuanto firmen las demás personas. Ya podés descargar tu constancia parcial.</span>`;
           }
           if (btnDown) btnDown.textContent = '⬇️ Descargar copia con tu firma';
         }
@@ -1345,30 +1365,6 @@
           }
         } catch (_) {}
         document.getElementById('resFechaFirma').textContent = fechaPretty;
-        document.getElementById('resHashOrig').textContent = data.hash_sha256_original || '-';
-        document.getElementById('resHashFirmado').textContent = data.hash_sha256_firmado || '(Pendiente de cierre total de firmas)';
-
-        const tsaLine = document.getElementById('resTsaStatusLine');
-        if (tsaLine && data.tsa_rfc3161) {
-          tsaLine.style.display = 'block';
-          tsaLine.innerHTML = data.tsa_rfc3161.ok
-            ? `<strong>Sello Tiempo RFC 3161:</strong> ✅ Sellado por ${escHtml(data.tsa_rfc3161.tsa_url || 'TSA')}`
-            : `<strong>Sello Tiempo RFC 3161:</strong> 📋 Evidencia local (${escHtml(data.tsa_rfc3161.status || 'FALLBACK')})`;
-        }
-        const padesLine = document.getElementById('resPadesStatusLine');
-        if (padesLine && data.pades_info) {
-          padesLine.style.display = 'block';
-          padesLine.innerHTML = data.pades_info.ok
-            ? `<strong>Firma Criptográfica PAdES (.p12):</strong> 🔏 Sellado (${escHtml(data.pades_info.subject_cn || 'AMMER')})`
-            : `<strong>Firma Criptográfica PAdES (.p12):</strong> 📋 ${escHtml(data.pades_info.status || 'Sin sello')}`;
-        }
-        const lnkVerif = document.getElementById('lnkPortalVerificacionQr');
-        if (lnkVerif && data.estado === 'FIRMADO' && (data.solicitud_id || (appState.docInfo && appState.docInfo.solicitud_id))) {
-          const sid = data.solicitud_id || appState.docInfo.solicitud_id;
-          const hPref = String(data.hash_sha256_original || '').slice(0, 16);
-          lnkVerif.href = `verificar.html?id=${encodeURIComponent(sid)}&h=${encodeURIComponent(hPref)}`;
-          lnkVerif.style.display = 'inline-flex';
-        }
         appState.pdfFirmadoB64 = data.pdfBase64 || appState.pdfB64Actual;
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -1530,8 +1526,10 @@
           });
         };
 
-        bindDniInput('inpDniFrenteCam', 'imgPrevDniFrente', 'cardDniFrente', 'lblStatusDniFrente', 'txtBtnDniFrente', 'dniFrente', '🔄 Cambiar foto del Frente');
-        bindDniInput('inpDniDorsoCam', 'imgPrevDniDorso', 'cardDniDorso', 'lblStatusDniDorso', 'txtBtnDniDorso', 'dniDorso', '🔄 Cambiar foto del Dorso');
+        bindDniInput('inpDniFrenteCam', 'imgPrevDniFrente', 'cardDniFrente', 'lblStatusDniFrente', 'txtBtnDniFrente', 'dniFrente', '📷 Cámara');
+        bindDniInput('inpDniFrenteGal', 'imgPrevDniFrente', 'cardDniFrente', 'lblStatusDniFrente', 'txtBtnDniFrente', 'dniFrente', '📷 Cámara');
+        bindDniInput('inpDniDorsoCam', 'imgPrevDniDorso', 'cardDniDorso', 'lblStatusDniDorso', 'txtBtnDniDorso', 'dniDorso', '📷 Cámara');
+        bindDniInput('inpDniDorsoGal', 'imgPrevDniDorso', 'cardDniDorso', 'lblStatusDniDorso', 'txtBtnDniDorso', 'dniDorso', '📷 Cámara');
 
         // Botones de guía por voz
         const btnTestAudio = document.getElementById('btnProbarAudioGuia');
@@ -1540,7 +1538,7 @@
           btnTestAudio.addEventListener('click', () => {
             appState.vozHabilitada = true;
             actualizarBotonesVoz();
-            hablarGuia('Hola. La guía por voz funciona bien. Cuando estés listo, tocá el botón verde Comenzar video guiado.');
+            hablarGuia('Hola. La guía por voz funciona bien. Cuando estés listo, tocá el botón verde Abrir cámara y comenzar video guiado.');
           });
         }
 
@@ -1554,39 +1552,14 @@
         if (b1 && !b1.dataset.bound) { b1.dataset.bound = '1'; b1.addEventListener('click', toggleVoz); }
         if (b2 && !b2.dataset.bound) { b2.dataset.bound = '1'; b2.addEventListener('click', toggleVoz); }
 
-        // Alternativa foto simple si cámara live no está disponible
-        const inpFallback = document.getElementById('inpSelfieFallbackCam');
-        if (inpFallback && !inpFallback.dataset.bound) {
-          inpFallback.dataset.bound = '1';
-          inpFallback.addEventListener('change', async (ev) => {
-            const file = ev.target.files && ev.target.files[0];
-            if (!file) return;
-            mostrarErrorEnPaso('');
-            const b64 = await redimensionarArchivoImagen(file, 800);
-            appState.ekycImgs.selfie1 = b64;
-            appState.ekycImgs.selfie2 = '';
-            appState.ekycValidado = false;
-            document.getElementById('selfieIntroView').style.display = 'none';
-            document.getElementById('selfieLiveView').style.display = 'none';
-            document.getElementById('selfieDoneView').style.display = 'block';
-            document.getElementById('videoSelfiePreview').style.display = 'none';
-            document.getElementById('selfieFallbackPreviewWrap').style.display = 'block';
-            document.getElementById('imgPrevSelfie1').src = b64;
-            const box = document.getElementById('ekycResultadoBox');
-            box.className = 'alert alert-ok';
-            box.style.display = 'block';
-            box.innerHTML = '<strong>✓ Foto guardada</strong><br/><span style="font-size:0.9rem;font-weight:500;">Tocá <strong>Verificar y Continuar</strong> abajo para validar tu identidad.</span>';
-          });
-        }
-
-        // Abrir cámara frontal en vivo
+        // Abrir cámara frontal en vivo (STRICT: nunca permite subir foto desde galería en selfie)
         const btnAbrir = document.getElementById('btnAbrirCamaraSelfie');
         if (btnAbrir && !btnAbrir.dataset.bound) {
           btnAbrir.dataset.bound = '1';
           btnAbrir.addEventListener('click', async () => {
             mostrarErrorEnPaso('');
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-              mostrarErrorEnPaso('Tu navegador no permite abrir la cámara en vivo. Usá la opción "sacá una foto aquí".');
+              mostrarErrorEnPaso('Tu navegador o computadora no dispone de cámara en vivo compatible. Por seguridad, abrí este mismo enlace desde un celular con cámara frontal.');
               return;
             }
             try {
@@ -1595,6 +1568,13 @@
                 video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
                 audio: false,
               });
+              const vTrack = stream.getVideoTracks && stream.getVideoTracks()[0];
+              const trackLbl = String((vTrack && vTrack.label) || '').toLowerCase();
+              if (/obs[\s_-]?virtual|virtual\s?cam|manycam|snap\s?cam|camtwist|splitcam|xsplit|youcam/i.test(trackLbl)) {
+                stream.getTracks().forEach((t) => t.stop());
+                mostrarErrorEnPaso('Por seguridad no se permiten cámaras virtuales o simuladas. Usá la cámara física de tu teléfono o computadora.');
+                return;
+              }
               appState.ekycStream = stream;
               const vid = document.getElementById('videoSelfieLiveness');
               vid.srcObject = stream;
@@ -1610,9 +1590,9 @@
               setGuideAvatar('center');
               document.getElementById('lblGuideCueTitle').textContent = 'Ubicá tu cara dentro del óvalo';
               document.getElementById('lblGuideCueSub').textContent = 'Cuando te veas bien, tocá el botón verde "Iniciar grabación guiada".';
-              hablarGuia('Ubicá tu cara dentro del óvalo y tocá el botón verde Iniciar grabación guiada.');
+              hablarGuia('Ubicá tu cara dentro del óvalo y tocá Iniciar grabación guiada.');
             } catch (err) {
-              mostrarErrorEnPaso('No pudimos acceder a la cámara (' + err.message + '). Podés usar la opción "sacá una foto aquí".');
+              mostrarErrorEnPaso('No pudimos acceder a la cámara en vivo (' + err.message + '). Por seguridad no se admiten fotos de archivo en este paso; habilitá el permiso de cámara o abrí el enlace en tu celular.');
             }
           });
         }
@@ -1628,7 +1608,7 @@
           });
         }
 
-        // Grabación de VIDEO guiado en 3 etapas con audio + animación
+        // Grabación de VIDEO guiado en 3 etapas esperando audio completo + cuenta regresiva visible
         const btnGrabar = document.getElementById('btnIniciarGrabacionGuiada');
         if (btnGrabar && !btnGrabar.dataset.bound) {
           btnGrabar.dataset.bound = '1';
@@ -1682,38 +1662,65 @@
             }
 
             const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+            const cueEl = document.getElementById('lblGuideCueTitle');
+            const subEl = document.getElementById('lblGuideCueSub');
+            const timerEl = document.getElementById('txtRecTimer');
 
-            // ETAPA 1/3: Mirá de frente
+            const ejecutarEtapaConTiempo = async (etapaLabel, textoVoz, segundosPostVoz, onSample) => {
+              timerEl.textContent = `${etapaLabel} · Escuchá...`;
+              subEl.textContent = 'Escuchá la indicación con atención...';
+              await hablarGuiaAsync(textoVoz);
+              for (let s = segundosPostVoz; s >= 1; s--) {
+                if (!appState.grabandoAhora) return;
+                timerEl.textContent = `${etapaLabel} · ${s}s`;
+                subEl.textContent = `¡Realizá el gesto ahora! Tiempo restante: ${s} seg.`;
+                await sleep(500);
+                if (typeof onSample === 'function') onSample();
+                await sleep(500);
+                if (typeof onSample === 'function') onSample();
+              }
+            };
+
+            // ETAPA 1/3: Mirá de frente (espera fin de voz + 2 seg tranquilos)
             document.getElementById('livSeg1').className = 'liveness-seg active';
-            document.getElementById('txtRecTimer').textContent = 'Grabando · Paso 1 de 3';
             setGuideAvatar('center');
-            document.getElementById('lblGuideCueTitle').textContent = '1) Mirá de frente a la cámara';
-            document.getElementById('lblGuideCueSub').textContent = 'Mantené tu rostro quieto en el centro un instante...';
-            hablarGuia('Paso 1. Mirá de frente a la cámara.');
-            await sleep(2300);
+            cueEl.textContent = '1) Mirá de frente dentro del óvalo';
+            await ejecutarEtapaConTiempo(
+              'Paso 1/3',
+              'Paso 1. Mirá de frente a la cámara dentro del óvalo.',
+              2,
+              null
+            );
+            if (!appState.grabandoAhora) return;
             const frameNeutral = captureFrame();
             document.getElementById('livSeg1').className = 'liveness-seg done';
 
-            // ETAPA 2/3: Sonreí suavemente
+            // ETAPA 2/3: Sonreí suavemente (espera fin de voz + 3 seg completos)
             document.getElementById('livSeg2').className = 'liveness-seg active';
-            document.getElementById('txtRecTimer').textContent = 'Grabando · Paso 2 de 3';
             setGuideAvatar('smile');
-            document.getElementById('lblGuideCueTitle').textContent = '2) Ahora sonreí suavemente';
-            document.getElementById('lblGuideCueSub').textContent = 'Imitá la carita sonriente mientras seguimos grabando...';
-            hablarGuia('Paso 2. Ahora sonreí suavemente.');
-            await sleep(2300);
-            const frameSonrisa = captureFrame();
+            cueEl.textContent = '2) Sonreí suavemente a la cámara';
+            const muestrasSonrisa = [];
+            await ejecutarEtapaConTiempo(
+              'Paso 2/3',
+              'Paso 2. Ahora sonreí suavemente mirando a la cámara.',
+              3,
+              () => { muestrasSonrisa.push(captureFrame()); }
+            );
+            if (!appState.grabandoAhora) return;
             document.getElementById('livSeg2').className = 'liveness-seg done';
 
-            // ETAPA 3/3: Mové suave la cabeza
+            // ETAPA 3/3: Girá despacio la cabeza hacia un costado y volvé (espera fin de voz + 4 seg completos)
             document.getElementById('livSeg3').className = 'liveness-seg active';
-            document.getElementById('txtRecTimer').textContent = 'Grabando · Paso 3 de 3';
             setGuideAvatar('turn');
-            document.getElementById('lblGuideCueTitle').textContent = '3) Girá un poquito la cabeza y volvé';
-            document.getElementById('lblGuideCueSub').textContent = 'Un movimiento suave hacia un costado...';
-            hablarGuia('Paso 3. Girá un poquito la cabeza hacia un costado y volvé al centro.');
-            await sleep(2400);
-            const frameGiro = captureFrame();
+            cueEl.textContent = '3) Girá un poquito la cabeza y volvé';
+            const muestrasGiro = [];
+            await ejecutarEtapaConTiempo(
+              'Paso 3/3',
+              'Paso 3. Girá despacio tu cabeza hacia un costado y volvé al centro.',
+              4,
+              () => { muestrasGiro.push(captureFrame()); }
+            );
+            if (!appState.grabandoAhora) return;
             document.getElementById('livSeg3').className = 'liveness-seg done';
 
             if (appState.mediaRecorder && appState.mediaRecorder.state !== 'inactive') {
@@ -1725,23 +1732,30 @@
             btnGrabar.disabled = false;
             document.getElementById('btnCancelarCamaraLive').disabled = false;
 
-            const diff12 = await medirMovimientoEntreFrames(frameNeutral, frameSonrisa);
-            const diff13 = await medirMovimientoEntreFrames(frameNeutral, frameGiro);
-            const frameDesafioFinal = (diff13 >= diff12) ? frameGiro : frameSonrisa;
-            const maxMov = Math.max(diff12, diff13);
+            // Seleccionar el frame con mayor movimiento real de todas las muestras durante los gestos
+            const candidatos = [...muestrasSonrisa, ...muestrasGiro];
+            let frameDesafioFinal = candidatos[candidatos.length - 1] || frameNeutral;
+            let maxMov = 0;
+            for (const cand of candidatos) {
+              const d = await medirMovimientoEntreFrames(frameNeutral, cand);
+              if (d > maxMov) {
+                maxMov = d;
+                frameDesafioFinal = cand;
+              }
+            }
 
-            if (maxMov < 0.25) {
-              hablarGuia('No pudimos notar el movimiento. Tocá Comenzar video guiado para intentar de nuevo.');
+            if (maxMov < 0.55) {
+              hablarGuia('No pudimos notar el movimiento de tu rostro. Intentemos de nuevo con calma y buena luz.');
               document.getElementById('selfieLiveView').style.display = 'none';
               document.getElementById('selfieIntroView').style.display = 'block';
-              mostrarErrorEnPaso('No detectamos movimiento en el video o había poca luz. Probá acercándote a la luz e imitá el gesto cuando lo indique la pantalla.');
+              mostrarErrorEnPaso('No notamos el movimiento de tu rostro durante la grabación. Asegurate de tener buena luz de frente y realizá el gesto cuando la cuenta regresiva te avise.');
               return;
             }
 
             appState.ekycImgs.selfie1 = frameNeutral;
             appState.ekycImgs.selfie2 = frameDesafioFinal;
             appState.ekycValidado = false;
-            appState.retoLiveness = 'Video guiado en 3 etapas: mirar al frente, sonreír suavemente y girar levemente la cabeza';
+            appState.retoLiveness = 'Video guiado en vivo (3 etapas con audio sincronizado y muestreo multi-cuadro)';
 
             document.getElementById('selfieLiveView').style.display = 'none';
             document.getElementById('selfieDoneView').style.display = 'block';
@@ -1761,7 +1775,7 @@
             const box = document.getElementById('ekycResultadoBox');
             box.className = 'alert alert-ok';
             box.style.display = 'block';
-            box.innerHTML = '<strong>✅ ¡Video de prueba de vida grabado correctamente!</strong><br/><span style="font-size:0.9rem;font-weight:500;">Ahora tocá <strong>Verificar y Continuar →</strong> abajo para avanzar a tu firma.</span>';
+            box.innerHTML = '<strong>✅ ¡Video de prueba de vida grabado correctamente!</strong><br/><span style="font-size:0.9rem;font-weight:500;">Ahora tocá <strong>Verificar y Continuar →</strong> abajo para pasar a tu firma.</span>';
             hablarGuia('Perfecto, ya grabamos tu video. Tocá el botón continuar para pasar a tu firma.');
           });
         }

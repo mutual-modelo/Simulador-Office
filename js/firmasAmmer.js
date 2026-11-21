@@ -343,7 +343,7 @@
 
   // ==================== CAMBIO DE SUBTABS ====================
   function cambiarTabFirmas(tabKey) {
-    const tabs = ['generar', 'bandeja', 'editor'];
+    const tabs = ['generar', 'bandeja', 'eliminados', 'editor'];
     tabs.forEach((k) => {
       const btn = document.getElementById('btnTabFirma_' + k);
       const pnl = document.getElementById('panelFirmas_' + k);
@@ -355,9 +355,9 @@
         }
         btn.classList.toggle('active', k === tabKey);
         if (k === tabKey) {
-          btn.style.background = '#0f2744';
+          btn.style.background = k === 'eliminados' ? '#991b1b' : '#0f2744';
           btn.style.color = '#ffffff';
-          btn.style.borderColor = '#0f2744';
+          btn.style.borderColor = k === 'eliminados' ? '#991b1b' : '#0f2744';
           btn.style.boxShadow = '0 2px 6px rgba(15,39,68,0.22)';
         } else {
           btn.style.background = '#f8fafc';
@@ -368,7 +368,7 @@
       }
       if (pnl) pnl.style.display = k === tabKey ? 'block' : 'none';
     });
-    if (tabKey === 'bandeja') cargarBandejaFirmas();
+    if (tabKey === 'bandeja' || tabKey === 'eliminados') cargarBandejaFirmas();
   }
 
   // ==================== SELLO PNG OFICIAL ====================
@@ -1031,116 +1031,205 @@
     }
   }
 
+  const ESTADOS_BAJA_FIRMA = ['ANULADO', 'CANCELADO', 'DESESTIMADO', 'ELIMINADO'];
+
+  function esSolicitudEnBaja(r) {
+    const est = String((r && r.estado) || '').trim().toUpperCase();
+    return ESTADOS_BAJA_FIRMA.includes(est);
+  }
+
+  function formatearFechaHoraAr(isoStr) {
+    if (!isoStr) return '-';
+    const dt = new Date(isoStr);
+    if (Number.isNaN(dt.getTime())) return String(isoStr);
+    try {
+      return dt.toLocaleString('es-AR', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }) + ' hs';
+    } catch (_) {
+      return String(isoStr).slice(0, 16).replace('T', ' ');
+    }
+  }
+
   function renderBandejaFirmas() {
     const tbody = document.getElementById('tbodyBandejaFirmas');
-    if (!tbody) return;
-    const q = String((document.getElementById('inpFiltroBandejaFirmas') || {}).value || '').trim().toLowerCase();
-    const filtradas = state.solicitudesFirma.filter((r) => {
-      if (!q) return true;
-      return `${r.nombre_solicitante || ''} ${r.dni_solicitante || ''} ${r.expediente_id || ''} ${r.plantilla_nombre || ''} ${r.estado || ''}`.toLowerCase().includes(q);
-    });
-    if (filtradas.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="padding:1.5rem;text-align:center;color:#64748b;">No hay solicitudes de firma registradas aún.</td></tr>';
-      return;
+    const tbodyElim = document.getElementById('tbodyFirmasEliminadas');
+    const badgeElim = document.getElementById('badgeTabFirmasEliminadas');
+
+    const activasAll = state.solicitudesFirma.filter((r) => !esSolicitudEnBaja(r));
+    const eliminadasAll = state.solicitudesFirma.filter((r) => esSolicitudEnBaja(r));
+
+    if (badgeElim) {
+      badgeElim.textContent = String(eliminadasAll.length);
+      badgeElim.style.display = eliminadasAll.length > 0 ? 'inline-block' : 'none';
     }
-    tbody.innerHTML = filtradas.map((r) => {
-      const est = String(r.estado || 'PENDIENTE').toUpperCase();
-      let bg = '#fef3c7', col = '#92400e';
-      if (est === 'FIRMADO') { bg = '#dcfce7'; col = '#166534'; }
-      else if (est === 'PARCIAL') { bg = '#ffedd5'; col = '#9a3412'; }
-      else if (est === 'LEIDO') { bg = '#dbeafe'; col = '#1e40af'; }
-      else if (est === 'ANULADO') { bg = '#fee2e2'; col = '#b91c1c'; }
 
-      const gpsHtml = (r.geo_latitud != null && r.geo_longitud != null)
-        ? `<a href="https://maps.google.com/?q=${r.geo_latitud},${r.geo_longitud}" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline;font-size:0.72rem;">📍 Ver GPS</a>`
-        : '<span style="color:#94a3b8;font-size:0.72rem;">Sin GPS</span>';
+    if (tbody) {
+      const q = String((document.getElementById('inpFiltroBandejaFirmas') || {}).value || '').trim().toLowerCase();
+      const filtradas = activasAll.filter((r) => {
+        if (!q) return true;
+        return `${r.nombre_solicitante || ''} ${r.dni_solicitante || ''} ${r.expediente_id || ''} ${r.plantilla_nombre || ''} ${r.estado || ''}`.toLowerCase().includes(q);
+      });
+      if (filtradas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="padding:1.5rem;text-align:center;color:#64748b;">No hay solicitudes activas en bandeja.</td></tr>';
+      } else {
+        tbody.innerHTML = filtradas.map((r) => {
+          const est = String(r.estado || 'PENDIENTE').toUpperCase();
+          let bg = '#fef3c7', col = '#92400e';
+          if (est === 'FIRMADO') { bg = '#dcfce7'; col = '#166534'; }
+          else if (est === 'PARCIAL') { bg = '#ffedd5'; col = '#9a3412'; }
+          else if (est === 'LEIDO') { bg = '#dbeafe'; col = '#1e40af'; }
 
-      const shaFull = r.hash_sha256_firmado || r.hash_sha256_original || '';
-      const shaShort = shaFull.slice(0, 14);
-      const tipoDescarga = (est === 'FIRMADO' || est === 'PARCIAL') ? 'firmado' : 'original';
-      const labelDescarga = est === 'FIRMADO' ? 'Descargar PDF Firmado' : (est === 'PARCIAL' ? 'Descargar PDF Parcial' : 'Descargar PDF Original');
+          const gpsHtml = (r.geo_latitud != null && r.geo_longitud != null)
+            ? `<a href="https://maps.google.com/?q=${r.geo_latitud},${r.geo_longitud}" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline;font-size:0.72rem;">📍 Ver GPS</a>`
+            : '<span style="color:#94a3b8;font-size:0.72rem;">Sin GPS</span>';
 
-      const ek = r.ekyc_resumen || null;
-      let badgesHtml = '';
-      if (r.es_paquete) {
-        badgesHtml += `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#eef2ff;color:#3730a3;">📦 Paquete (${r.paquete_cantidad || 2} docs)</span>`;
-      }
-      if (r.orden_secuencial) {
-        badgesHtml += `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#fff7ed;color:#9a3412;">🔢 Turno ${r.orden_firma || 1}/${r.firmantes_total || 2}</span>`;
-      }
-      if (r.impacto_expediente && r.impacto_expediente.ok) {
-        badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#f0fdf4;color:#15803d;">📂 En Ficha</span>';
-      }
-      if (ek && ek.estado_ekyc) {
-        const ekCol = ek.estado_ekyc === 'APROBADO' ? '#166534' : '#b45309';
-        const ekBg = ek.estado_ekyc === 'APROBADO' ? '#dcfce7' : '#fef3c7';
-        const fmTxt = ek.face_match_pct != null ? ` · Face ${ek.face_match_pct}%` : '';
-        badgesHtml += `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:${ekBg};color:${ekCol};">🪪 eKYC ${escHtml(ek.estado_ekyc)}${escHtml(fmTxt)}</span>`;
-        if (ek.pdf417_ok) {
-          badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#ecfeff;color:#0e7490;">📊 PDF417 OK</span>';
-        }
-        const bo = ek.boletin_oficial_er;
-        if (bo && bo.consultado) {
-          const boAlert = bo.tiene_alerta_critica;
-          badgesHtml += `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:${boAlert ? '#fee2e2' : '#ecfdf5'};color:${boAlert ? '#b91c1c' : '#047857'};">${boAlert ? '⚠️ Boletín ER (' + (bo.total_resultados || 0) + ')' : '📰 Boletín ER OK'}</span>`;
-        }
-        const cj = ek.cajajper;
-        if (cj && cj.consultado) {
-          const cjTram = Number(cj.cantidad_expedientes || 0);
-          const cjAlto = cj.nivel_alerta === 'ALTO';
-          const cjBg = cjAlto ? '#fee2e2' : (cjTram > 0 ? '#fef3c7' : '#ecfdf5');
-          const cjCol = cjAlto ? '#b91c1c' : (cjTram > 0 ? '#92400e' : '#047857');
-          badgesHtml += `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:${cjBg};color:${cjCol};">${cjTram > 0 ? '🏛️ CajaJPER (' + cjTram + ' exp.)' : '🏛️ CajaJPER OK'}</span>`;
-        }
-      }
-      if (r.pin_otp_verificado) {
-        badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#f5f3ff;color:#5b21b6;">🔐 PIN 2FA OK</span>';
-      }
-      const tsa = r.tsa_resumen || null;
-      if (tsa && tsa.ok) {
-        badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#eff6ff;color:#1d4ed8;">⏱️ TSA RFC 3161</span>';
-      }
-      const pades = r.pades_resumen || null;
-      if (pades && pades.ok) {
-        badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#eef2ff;color:#3730a3;">🔏 PAdES (.p12)</span>';
-      }
+          const shaFull = r.hash_sha256_firmado || r.hash_sha256_original || '';
+          const shaShort = shaFull.slice(0, 14);
+          const tipoDescarga = (est === 'FIRMADO' || est === 'PARCIAL') ? 'firmado' : 'original';
+          const labelDescarga = est === 'FIRMADO' ? 'Descargar PDF Firmado' : (est === 'PARCIAL' ? 'Descargar PDF Parcial' : 'Descargar PDF Original');
 
-      const btnBase = 'display:inline-flex;align-items:center;gap:5px;padding:0.4rem 0.78rem;border-radius:8px;font-size:0.76rem;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;';
-      const fechaCreadaTxt = (r.created_at || '').slice(0, 16).replace('T', ' ') || '-';
-      const fechaFirmadaTxt = r.firmado_en ? r.firmado_en.slice(0, 16).replace('T', ' ') : '';
+          const ek = r.ekyc_resumen || null;
+          let badgesHtml = '';
+          if (r.es_paquete) {
+            badgesHtml += `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#eef2ff;color:#3730a3;">📦 Paquete (${r.paquete_cantidad || 2} docs)</span>`;
+          }
+          if (r.orden_secuencial) {
+            badgesHtml += `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#fff7ed;color:#9a3412;">🔢 Turno ${r.orden_firma || 1}/${r.firmantes_total || 2}</span>`;
+          }
+          if (r.impacto_expediente && r.impacto_expediente.ok) {
+            badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#f0fdf4;color:#15803d;">📂 En Ficha</span>';
+          }
+          if (ek && ek.estado_ekyc) {
+            const ekCol = ek.estado_ekyc === 'APROBADO' ? '#166534' : '#b45309';
+            const ekBg = ek.estado_ekyc === 'APROBADO' ? '#dcfce7' : '#fef3c7';
+            const fmTxt = ek.face_match_pct != null ? ` · Face ${ek.face_match_pct}%` : '';
+            badgesHtml += `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:${ekBg};color:${ekCol};">🪪 eKYC ${escHtml(ek.estado_ekyc)}${escHtml(fmTxt)}</span>`;
+            if (ek.pdf417_ok) {
+              badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#ecfeff;color:#0e7490;">📊 PDF417 OK</span>';
+            }
+            const bo = ek.boletin_oficial_er;
+            if (bo && bo.consultado) {
+              const boAlert = bo.tiene_alerta_critica;
+              badgesHtml += `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:${boAlert ? '#fee2e2' : '#ecfdf5'};color:${boAlert ? '#b91c1c' : '#047857'};">${boAlert ? '⚠️ Boletín ER (' + (bo.total_resultados || 0) + ')' : '📰 Boletín ER OK'}</span>`;
+            }
+            const cj = ek.cajajper;
+            if (cj && cj.consultado) {
+              const cjTram = Number(cj.cantidad_expedientes || 0);
+              const cjAlto = cj.nivel_alerta === 'ALTO';
+              const cjBg = cjAlto ? '#fee2e2' : (cjTram > 0 ? '#fef3c7' : '#ecfdf5');
+              const cjCol = cjAlto ? '#b91c1c' : (cjTram > 0 ? '#92400e' : '#047857');
+              badgesHtml += `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:${cjBg};color:${cjCol};">${cjTram > 0 ? '🏛️ CajaJPER (' + cjTram + ' exp.)' : '🏛️ CajaJPER OK'}</span>`;
+            }
+          }
+          if (r.pin_otp_verificado) {
+            badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#f5f3ff;color:#5b21b6;">🔐 PIN 2FA OK</span>';
+          }
+          const tsa = r.tsa_resumen || null;
+          if (tsa && tsa.ok) {
+            badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#eff6ff;color:#1d4ed8;">⏱️ TSA RFC 3161</span>';
+          }
+          const pades = r.pades_resumen || null;
+          if (pades && pades.ok) {
+            badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#eef2ff;color:#3730a3;">🔏 PAdES (.p12)</span>';
+          }
 
-      return `
-        <tr style="border-bottom:1px solid #e2e8f0;vertical-align:middle;">
-          <td style="padding:0.8rem 0.65rem;font-size:0.82rem;">
-            <div style="font-weight:800;color:#0f172a;">${escHtml(r.nombre_solicitante || '-')}</div>
-            <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">DNI ${escHtml(r.dni_solicitante || '-')} · Exp: ${escHtml(r.expediente_id || '-')}</div>
-          </td>
-          <td style="padding:0.8rem 0.65rem;font-size:0.8rem;color:#1e293b;max-width:270px;line-height:1.35;">${escHtml(r.plantilla_nombre || '-')}</td>
-          <td style="padding:0.8rem 0.65rem;text-align:center;">
-            <span style="display:inline-block;padding:3px 10px;border-radius:9999px;font-size:0.71rem;font-weight:800;background:${bg};color:${col};white-space:nowrap;">${escHtml(est)}</span>
-          </td>
-          <td style="padding:0.8rem 0.65rem;font-size:0.73rem;color:#475569;white-space:nowrap;line-height:1.5;">
-            <div>Creada: <strong>${escHtml(fechaCreadaTxt)}</strong></div>
-            ${fechaFirmadaTxt ? `<div style="color:#166534;font-weight:700;">Firmada: ${escHtml(fechaFirmadaTxt)}</div>` : ''}
-          </td>
-          <td style="padding:0.8rem 0.65rem;font-size:0.72rem;">
-            <div class="font-mono" style="color:#334155;" title="${escHtml(shaFull)}">SHA256: ${escHtml(shaShort)}…</div>
-            <div style="margin-top:2px;">IP: ${escHtml(r.ip_origen || '-')} · ${gpsHtml}</div>
-            ${badgesHtml ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;">${badgesHtml}</div>` : ''}
-          </td>
-          <td style="padding:0.8rem 0.65rem;text-align:right;white-space:nowrap;">
-            <div style="display:inline-flex;gap:6px;align-items:center;justify-content:flex-end;">
-              <button type="button" onclick="window.abrirFichaSolicitudFirma('${escHtml(r.id)}')" title="Ver ficha completa: previsualización del PDF, fotos DNI/Selfie, validaciones, historial y acciones" style="${btnBase}border:1px solid #0284c7;background:#eff6ff;color:#0369a1;font-weight:800;">
-                📋 Ver Ficha
-              </button>
-              <button type="button" onclick="window.descargarPdfSolicitudFirma('${escHtml(r.id)}', '${tipoDescarga}')" title="${escHtml(labelDescarga)}" style="${btnBase}border:1px solid #0f2744;background:#0f2744;color:#ffffff;">
-                📥 Descargar PDF
-              </button>
-            </div>
-          </td>
-        </tr>
-      `;
-    }).join('');
+          const btnBase = 'display:inline-flex;align-items:center;gap:5px;padding:0.4rem 0.78rem;border-radius:8px;font-size:0.76rem;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;';
+          const fechaCreadaTxt = (r.created_at || '').slice(0, 16).replace('T', ' ') || '-';
+          const fechaFirmadaTxt = r.firmado_en ? r.firmado_en.slice(0, 16).replace('T', ' ') : '';
+
+          return `
+            <tr style="border-bottom:1px solid #e2e8f0;vertical-align:middle;">
+              <td style="padding:0.8rem 0.65rem;font-size:0.82rem;">
+                <div style="font-weight:800;color:#0f172a;">${escHtml(r.nombre_solicitante || '-')}</div>
+                <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">DNI ${escHtml(r.dni_solicitante || '-')} · Exp: ${escHtml(r.expediente_id || '-')}</div>
+              </td>
+              <td style="padding:0.8rem 0.65rem;font-size:0.8rem;color:#1e293b;max-width:270px;line-height:1.35;">${escHtml(r.plantilla_nombre || '-')}</td>
+              <td style="padding:0.8rem 0.65rem;text-align:center;">
+                <span style="display:inline-block;padding:3px 10px;border-radius:9999px;font-size:0.71rem;font-weight:800;background:${bg};color:${col};white-space:nowrap;">${escHtml(est)}</span>
+              </td>
+              <td style="padding:0.8rem 0.65rem;font-size:0.73rem;color:#475569;white-space:nowrap;line-height:1.5;">
+                <div>Creada: <strong>${escHtml(fechaCreadaTxt)}</strong></div>
+                ${fechaFirmadaTxt ? `<div style="color:#166534;font-weight:700;">Firmada: ${escHtml(fechaFirmadaTxt)}</div>` : ''}
+              </td>
+              <td style="padding:0.8rem 0.65rem;font-size:0.72rem;">
+                <div class="font-mono" style="color:#334155;" title="${escHtml(shaFull)}">SHA256: ${escHtml(shaShort)}…</div>
+                <div style="margin-top:2px;">IP: ${escHtml(r.ip_origen || '-')} · ${gpsHtml}</div>
+                ${badgesHtml ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;">${badgesHtml}</div>` : ''}
+              </td>
+              <td style="padding:0.8rem 0.65rem;text-align:right;white-space:nowrap;">
+                <div style="display:inline-flex;gap:6px;align-items:center;justify-content:flex-end;">
+                  <button type="button" onclick="window.abrirFichaSolicitudFirma('${escHtml(r.id)}')" title="Ver ficha completa: previsualización del PDF, fotos DNI/Selfie, validaciones, historial y acciones" style="${btnBase}border:1px solid #0284c7;background:#eff6ff;color:#0369a1;font-weight:800;">
+                    📋 Ver Ficha
+                  </button>
+                  <button type="button" onclick="window.descargarPdfSolicitudFirma('${escHtml(r.id)}', '${tipoDescarga}')" title="${escHtml(labelDescarga)}" style="${btnBase}border:1px solid #0f2744;background:#0f2744;color:#ffffff;">
+                    📥 Descargar PDF
+                  </button>
+                  <button type="button" onclick="window.abrirModalBajaSolicitudFirma('${escHtml(r.id)}')" title="Cancelar, desestimar o eliminar ficha con código de validación por WhatsApp" style="${btnBase}border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;">
+                    🗑️
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    if (tbodyElim) {
+      const qE = String((document.getElementById('inpFiltroFirmasEliminadas') || {}).value || '').trim().toLowerCase();
+      const elimFiltradas = eliminadasAll.filter((r) => {
+        if (!qE) return true;
+        const br = r.baja_registro || {};
+        return `${r.nombre_solicitante || ''} ${r.dni_solicitante || ''} ${r.expediente_id || ''} ${r.plantilla_nombre || ''} ${r.estado || ''} ${br.eliminado_por_nombre || ''} ${br.eliminado_por_usuario || ''} ${br.motivo || ''}`.toLowerCase().includes(qE);
+      });
+      if (elimFiltradas.length === 0) {
+        tbodyElim.innerHTML = '<tr><td colspan="6" style="padding:1.5rem;text-align:center;color:#64748b;">No hay fichas eliminadas, canceladas o desestimadas.</td></tr>';
+      } else {
+        const btnBase = 'display:inline-flex;align-items:center;gap:5px;padding:0.38rem 0.74rem;border-radius:8px;font-size:0.75rem;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;';
+        tbodyElim.innerHTML = elimFiltradas.map((r) => {
+          const est = String(r.estado || 'DESESTIMADO').toUpperCase();
+          const br = r.baja_registro || {};
+          const nomResp = br.eliminado_por_nombre || '-';
+          const usrResp = br.eliminado_por_usuario ? `@${br.eliminado_por_usuario}` : '';
+          const fechaBajaTxt = br.fecha_baja ? formatearFechaHoraAr(br.fecha_baja) : (br.fecha_baja_ar || formatearFechaHoraAr(r.created_at));
+          const motivoTxt = br.motivo ? `<div style="font-size:0.71rem;color:#475569;margin-top:3px;max-width:220px;white-space:normal;">${escHtml(br.motivo)}</div>` : '';
+          const waMask = br.telefono_validacion ? `<div style="font-size:0.7rem;color:#047857;margin-top:2px;">📲 WA validado: ${escHtml(br.telefono_validacion)}</div>` : '';
+          return `
+            <tr style="border-bottom:1px solid #fee2e2;vertical-align:middle;background:#fffafa;">
+              <td style="padding:0.75rem 0.65rem;font-size:0.82rem;">
+                <div style="font-weight:800;color:#0f172a;">${escHtml(r.nombre_solicitante || '-')}</div>
+                <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">DNI ${escHtml(r.dni_solicitante || '-')} · Exp: ${escHtml(r.expediente_id || '-')}</div>
+              </td>
+              <td style="padding:0.75rem 0.65rem;font-size:0.79rem;color:#334155;max-width:240px;line-height:1.35;">${escHtml(r.plantilla_nombre || '-')}</td>
+              <td style="padding:0.75rem 0.65rem;text-align:center;">
+                <span style="display:inline-block;padding:3px 10px;border-radius:9999px;font-size:0.71rem;font-weight:800;background:#fee2e2;color:#991b1b;white-space:nowrap;">${escHtml(est)}</span>
+                ${motivoTxt}
+              </td>
+              <td style="padding:0.75rem 0.65rem;font-size:0.79rem;color:#0f172a;">
+                <div style="font-weight:800;">${escHtml(nomResp)}</div>
+                ${usrResp ? `<div style="font-size:0.72rem;color:#475569;font-weight:700;">Usuario: ${escHtml(usrResp)}</div>` : ''}
+                ${waMask}
+              </td>
+              <td style="padding:0.75rem 0.65rem;font-size:0.76rem;color:#334155;white-space:nowrap;font-weight:700;">
+                ${escHtml(fechaBajaTxt)}
+              </td>
+              <td style="padding:0.75rem 0.65rem;text-align:right;white-space:nowrap;">
+                <button type="button" onclick="window.abrirFichaSolicitudFirma('${escHtml(r.id)}')" style="${btnBase}border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;">
+                  📋 Ver Ficha
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
   }
 
   const fichaModalState = {
@@ -1337,14 +1426,14 @@
     const tsrBtn = r.tiene_tsr
       ? `<button type="button" onclick="window.descargarTsrSolicitudFirma('${escHtml(r.id)}')" style="${btnCls}border:1px solid #c7d2fe;background:#eef2ff;color:#3730a3;">⏱️ Sello Hora (.tsr)</button>`
       : '';
-    const recordarWaBtn = (r.telefono_whatsapp && est !== 'FIRMADO' && est !== 'ANULADO')
+    const recordarWaBtn = (r.telefono_whatsapp && !esSolicitudEnBaja(r) && est !== 'FIRMADO')
       ? `<button type="button" onclick="window.notificarWhatsappSolicitud('${escHtml(r.id)}', 'recordatorio')" style="${btnCls}border:1px solid #86efac;background:#f0fdf4;color:#15803d;">📲 Recordar WhatsApp</button>`
       : '';
-    const renovarBtn = est !== 'FIRMADO'
+    const renovarBtn = (est !== 'FIRMADO' && !esSolicitudEnBaja(r))
       ? `<button type="button" onclick="window.renovarEnlaceSolicitudFirma('${escHtml(r.id)}')" style="${btnCls}border:1px solid #fcd34d;background:#fffbeb;color:#b45309;">🔄 Renovar Enlace</button>`
       : '';
-    const revocarBtn = (est !== 'FIRMADO' && est !== 'ANULADO')
-      ? `<button type="button" onclick="window.revocarSolicitudFirma('${escHtml(r.id)}').then(()=>document.getElementById('modalFichaSolicitudFirmaOverlay').style.display='none')" style="${btnCls}border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;">🚫 Anular Enlace</button>`
+    const revocarBtn = !esSolicitudEnBaja(r)
+      ? `<button type="button" onclick="window.abrirModalBajaSolicitudFirma('${escHtml(r.id)}')" style="${btnCls}border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;font-weight:800;">🗑️ Cancelar / Desestimar / Borrar</button>`
       : '';
 
     const renGuia = r.datos_renaper_guia || {};
@@ -1413,6 +1502,19 @@
       ? `<a href="${verifyUrl}&modo=tecnico" target="_blank" rel="noopener" style="${btnCls}border:1px solid #c7d2fe;background:#eef2ff;color:#3730a3;">🛡️ Validación Técnica (Admin)</a>`
       : '';
 
+    const brInfo = r.baja_registro || null;
+    const bajaBannerHtml = (esSolicitudEnBaja(r) && brInfo)
+      ? `<div style="padding:0.68rem 1.2rem;background:#fef2f2;border-bottom:1px solid #fecaca;color:#991b1b;font-size:0.8rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+          <div>
+            <strong>🗑️ Ficha ${escHtml(brInfo.accion || est)}:</strong>
+            Por <strong>${escHtml(brInfo.eliminado_por_nombre || '-')}</strong> (@${escHtml(brInfo.eliminado_por_usuario || '-')})
+            · Fecha/hora: <strong>${escHtml(brInfo.fecha_baja ? formatearFechaHoraAr(brInfo.fecha_baja) : (brInfo.fecha_baja_ar || '-'))}</strong>
+            ${brInfo.motivo ? ` · Motivo: <em>${escHtml(brInfo.motivo)}</em>` : ''}
+          </div>
+          ${brInfo.telefono_validacion ? `<span style="font-size:0.73rem;font-weight:700;background:#ffffff;border:1px solid #fecaca;padding:2px 8px;border-radius:9999px;">📲 Validado WA ${escHtml(brInfo.telefono_validacion)}</span>` : ''}
+        </div>`
+      : '';
+
     ov.innerHTML = `
       <div style="background:#ffffff;border-radius:16px;max-width:1080px;width:96vw;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(15,23,42,0.35);overflow:hidden;">
         <!-- HEADER -->
@@ -1429,6 +1531,8 @@
           </div>
           <button type="button" onclick="document.getElementById('modalFichaSolicitudFirmaOverlay').style.display='none'" style="border:none;background:rgba(255,255,255,0.18);color:#ffffff;border-radius:8px;padding:5px 11px;font-weight:800;cursor:pointer;font-size:0.9rem;">✕</button>
         </div>
+
+        ${bajaBannerHtml}
 
         <!-- BARRA DE ACCIONES -->
         <div style="padding:0.7rem 1.2rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center;">
@@ -3264,6 +3368,209 @@
     }
   }
 
+  function obtenerOperadorActualBaja_() {
+    const sess = (typeof global.getSession === 'function')
+      ? global.getSession()
+      : (global.estadoApp && global.estadoApp.usuarioActual ? global.estadoApp.usuarioActual : null);
+    const nombre = String((sess && (sess.nombre || sess.nombreCompleto)) || 'Operador AMMER').trim() || 'Operador AMMER';
+    const usuario = String((sess && (sess.usuario || sess.username || sess.id)) || 'operador').trim() || 'operador';
+    return { nombre, usuario };
+  }
+
+  function abrirModalBajaSolicitudFirma(solId) {
+    const row = state.solicitudesFirma.find((x) => String(x.id) === String(solId)) || {};
+    if (esSolicitudEnBaja(row)) {
+      notify('Esta ficha ya se encuentra en la pestaña de Eliminados / Cancelados.', 'warning');
+      return;
+    }
+
+    let ov = document.getElementById('modalBajaSolicitudFirmaOverlay');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = 'modalBajaSolicitudFirmaOverlay';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(15,23,42,0.68);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:1rem;';
+      ov.addEventListener('click', (ev) => {
+        if (ev.target === ov) ov.style.display = 'none';
+      });
+      document.body.appendChild(ov);
+    }
+
+    const op = obtenerOperadorActualBaja_();
+    let lastWa = '';
+    try { lastWa = localStorage.getItem('AMMER_LAST_WA_BAJA_NUM') || ''; } catch (_) {}
+
+    ov.innerHTML = `
+      <div style="background:#ffffff;border-radius:16px;max-width:480px;width:96vw;box-shadow:0 24px 60px rgba(15,23,42,0.38);border:1px solid #fecaca;overflow:hidden;">
+        <div style="padding:0.95rem 1.2rem;background:#991b1b;color:#ffffff;display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
+          <div style="font-weight:800;font-size:0.98rem;">🗑️ Cancelar / Desestimar / Borrar Ficha</div>
+          <button type="button" onclick="document.getElementById('modalBajaSolicitudFirmaOverlay').style.display='none'" style="border:none;background:rgba(255,255,255,0.2);color:#ffffff;border-radius:7px;padding:3px 9px;font-weight:800;cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:1.15rem 1.25rem;">
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0.7rem 0.85rem;margin-bottom:0.9rem;font-size:0.8rem;">
+            <div style="font-weight:800;color:#0f172a;">${escHtml(row.nombre_solicitante || 'Ficha seleccionada')}</div>
+            <div style="color:#475569;margin-top:2px;">DNI ${escHtml(row.dni_solicitante || '-')} · ${escHtml(row.plantilla_nombre || '-')} (${escHtml(row.estado || '-')})</div>
+            <div style="color:#0f2744;margin-top:4px;font-weight:700;">👤 Responsable que quedará registrado: ${escHtml(op.nombre)} (@${escHtml(op.usuario)})</div>
+          </div>
+
+          <div id="bajaStep1Wrap">
+            <div style="margin-bottom:0.7rem;">
+              <label style="display:block;font-size:0.76rem;font-weight:800;color:#334155;margin-bottom:4px;">Tipo de baja / acción *</label>
+              <select id="selBajaAccionTipo" style="width:100%;padding:0.52rem 0.7rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.84rem;background:#ffffff;color:#0f172a;font-weight:700;">
+                <option value="DESESTIMADO">Desestimar ficha (sin curso)</option>
+                <option value="CANCELADO">Cancelar solicitud</option>
+                <option value="ELIMINADO">Eliminar / Borrar ficha</option>
+              </select>
+            </div>
+            <div style="margin-bottom:0.7rem;">
+              <label style="display:block;font-size:0.76rem;font-weight:800;color:#334155;margin-bottom:4px;">Número de WhatsApp para enviar código de validación *</label>
+              <input type="tel" id="inpBajaWaTelefono" value="${escHtml(lastWa)}" placeholder="Ej: 3434123456 (sin 0 ni 15)" style="width:100%;padding:0.55rem 0.72rem;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.86rem;"/>
+              <div style="font-size:0.71rem;color:#64748b;margin-top:3px;">Se generará un código automático de 6 dígitos y se enviará a este WhatsApp para autorizar la baja.</div>
+            </div>
+            <div style="margin-bottom:0.9rem;">
+              <label style="display:block;font-size:0.76rem;font-weight:800;color:#334155;margin-bottom:4px;">Motivo / Observación (opcional)</label>
+              <input type="text" id="inpBajaMotivo" maxlength="250" placeholder="Ej: Datos erróneos, operación desistida por asociado..." style="width:100%;padding:0.52rem 0.72rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.83rem;"/>
+            </div>
+            <div id="bajaErrBox1" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:8px;padding:0.55rem 0.75rem;font-size:0.79rem;font-weight:600;margin-bottom:0.75rem;"></div>
+            <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+              <button type="button" onclick="document.getElementById('modalBajaSolicitudFirmaOverlay').style.display='none'" style="padding:0.52rem 0.9rem;border-radius:8px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.82rem;font-weight:700;cursor:pointer;">Cancelar</button>
+              <button type="button" id="btnBajaEnviarOtpWa" style="padding:0.55rem 1.05rem;border-radius:8px;border:none;background:#0f766e;color:#ffffff;font-size:0.83rem;font-weight:800;cursor:pointer;">📲 Enviar Código por WhatsApp</button>
+            </div>
+          </div>
+
+          <div id="bajaStep2Wrap" style="display:none;">
+            <div id="bajaOtpInfoBanner" style="background:#ecfdf5;border:1px solid #86efac;color:#166534;border-radius:10px;padding:0.65rem 0.85rem;font-size:0.8rem;font-weight:700;margin-bottom:0.85rem;"></div>
+            <div id="bajaWaFallbackWrap" style="display:none;margin-bottom:0.85rem;">
+              <a id="lnkBajaWaManual" href="#" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:0.48rem 0.85rem;border-radius:8px;background:#16a34a;color:#ffffff;font-size:0.8rem;font-weight:800;text-decoration:none;">💬 Abrir WhatsApp Web para enviar código</a>
+            </div>
+            <div style="margin-bottom:0.85rem;">
+              <label style="display:block;font-size:0.78rem;font-weight:800;color:#0f172a;margin-bottom:5px;">Ingresá el código de 6 dígitos enviado por WhatsApp *</label>
+              <input type="text" id="inpBajaOtpCodigo" inputmode="numeric" maxlength="6" placeholder="000000" style="width:100%;padding:0.65rem 0.85rem;border:2px solid #0f2744;border-radius:10px;font-size:1.35rem;font-weight:800;letter-spacing:8px;text-align:center;color:#0f172a;"/>
+            </div>
+            <div id="bajaErrBox2" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:8px;padding:0.55rem 0.75rem;font-size:0.79rem;font-weight:600;margin-bottom:0.75rem;"></div>
+            <div style="display:flex;gap:0.5rem;justify-content:space-between;flex-wrap:wrap;">
+              <button type="button" id="btnBajaVolverStep1" style="padding:0.52rem 0.85rem;border-radius:8px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.8rem;font-weight:700;cursor:pointer;">← Reenviar / Cambiar WA</button>
+              <button type="button" id="btnBajaConfirmarFinal" style="padding:0.55rem 1.05rem;border-radius:8px;border:none;background:#991b1b;color:#ffffff;font-size:0.83rem;font-weight:800;cursor:pointer;">✅ Validar Código y Confirmar Baja</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    ov.style.display = 'flex';
+
+    const btnEnviar = document.getElementById('btnBajaEnviarOtpWa');
+    const btnConfirmar = document.getElementById('btnBajaConfirmarFinal');
+    const btnVolver = document.getElementById('btnBajaVolverStep1');
+
+    if (btnEnviar) {
+      btnEnviar.addEventListener('click', async () => {
+        const tel = String((document.getElementById('inpBajaWaTelefono') || {}).value || '').trim();
+        const accion = String((document.getElementById('selBajaAccionTipo') || {}).value || 'DESESTIMADO').trim();
+        const motivo = String((document.getElementById('inpBajaMotivo') || {}).value || '').trim();
+        const err1 = document.getElementById('bajaErrBox1');
+        err1.style.display = 'none';
+
+        if (tel.replace(/\D/g, '').length < 8) {
+          err1.textContent = 'Ingresá un número de WhatsApp válido (mínimo 8 dígitos).';
+          err1.style.display = 'block';
+          return;
+        }
+
+        try { localStorage.setItem('AMMER_LAST_WA_BAJA_NUM', tel); } catch (_) {}
+
+        btnEnviar.disabled = true;
+        btnEnviar.textContent = '⏳ Generando y enviando código...';
+        try {
+          const res = await apiFetchJson(`/api/firmas/solicitudes/${encodeURIComponent(solId)}/baja/solicitar-codigo`, {
+            method: 'POST',
+            body: JSON.stringify({
+              telefono_whatsapp: tel,
+              accion,
+              motivo,
+              operador_nombre: op.nombre,
+              operador_usuario: op.usuario,
+            }),
+          });
+          document.getElementById('bajaStep1Wrap').style.display = 'none';
+          document.getElementById('bajaStep2Wrap').style.display = 'block';
+          const infoEl = document.getElementById('bajaOtpInfoBanner');
+          const fbWrap = document.getElementById('bajaWaFallbackWrap');
+          const lnkWa = document.getElementById('lnkBajaWaManual');
+          if (res.enviado_por_bot) {
+            infoEl.textContent = `✓ Código de 6 dígitos enviado por el Bot WhatsApp AMMER al ${res.telefono_enmascarado || tel}. Vence en ${res.expira_minutos || 10} min.`;
+            fbWrap.style.display = 'none';
+          } else {
+            infoEl.textContent = `⚠️ Bot WhatsApp desconectado (${res.motivo || 'envío manual'}). Usá el botón verde de abajo para enviarte el código por WhatsApp Web al ${res.telefono_enmascarado || tel}:`;
+            if (res.wa_link && lnkWa) {
+              lnkWa.href = res.wa_link;
+              fbWrap.style.display = 'block';
+            }
+          }
+          setTimeout(() => {
+            const cEl = document.getElementById('inpBajaOtpCodigo');
+            if (cEl) cEl.focus();
+          }, 80);
+        } catch (err) {
+          err1.textContent = err.message || 'No se pudo generar el código por WhatsApp.';
+          err1.style.display = 'block';
+        } finally {
+          btnEnviar.disabled = false;
+          btnEnviar.textContent = '📲 Enviar Código por WhatsApp';
+        }
+      });
+    }
+
+    if (btnVolver) {
+      btnVolver.addEventListener('click', () => {
+        document.getElementById('bajaErrBox2').style.display = 'none';
+        document.getElementById('bajaStep2Wrap').style.display = 'none';
+        document.getElementById('bajaStep1Wrap').style.display = 'block';
+      });
+    }
+
+    if (btnConfirmar) {
+      btnConfirmar.addEventListener('click', async () => {
+        const codigo = String((document.getElementById('inpBajaOtpCodigo') || {}).value || '').replace(/\D/g, '');
+        const accion = String((document.getElementById('selBajaAccionTipo') || {}).value || 'DESESTIMADO').trim();
+        const motivo = String((document.getElementById('inpBajaMotivo') || {}).value || '').trim();
+        const err2 = document.getElementById('bajaErrBox2');
+        err2.style.display = 'none';
+
+        if (codigo.length !== 6) {
+          err2.textContent = 'Ingresá el código de 6 dígitos recibido en tu WhatsApp.';
+          err2.style.display = 'block';
+          return;
+        }
+
+        btnConfirmar.disabled = true;
+        btnConfirmar.textContent = '⏳ Validando código...';
+        try {
+          const res = await apiFetchJson(`/api/firmas/solicitudes/${encodeURIComponent(solId)}/baja/confirmar`, {
+            method: 'POST',
+            body: JSON.stringify({
+              codigo,
+              accion,
+              motivo,
+              operador_nombre: op.nombre,
+              operador_usuario: op.usuario,
+            }),
+          });
+          ov.style.display = 'none';
+          const fichaOv = document.getElementById('modalFichaSolicitudFirmaOverlay');
+          if (fichaOv) fichaOv.style.display = 'none';
+          notify(`Ficha movida a Eliminados / Cancelados (${res.estado}) por ${op.nombre} (@${op.usuario}).`, 'success');
+          await cargarBandejaFirmas();
+        } catch (err) {
+          err2.textContent = err.message || 'Código inválido o vencido.';
+          err2.style.display = 'block';
+        } finally {
+          btnConfirmar.disabled = false;
+          btnConfirmar.textContent = '✅ Validar Código y Confirmar Baja';
+        }
+      });
+    }
+  }
+
   async function enviarAFirmaDesdeFicha() {
     const expId = global._fichaExpedienteActivoId || (global._fichaExpedienteActivoObj && global._fichaExpedienteActivoObj.id);
     if (typeof global.cerrarModal === 'function') global.cerrarModal('modalFichaCompleta');
@@ -3377,6 +3684,7 @@
   global.cambiarTabFichaSolicitudModal = cambiarTabFichaSolicitudModal;
   global.zoomFichaPdfModal = zoomFichaPdfModal;
   global.revocarSolicitudFirma = revocarSolicitudFirma;
+  global.abrirModalBajaSolicitudFirma = abrirModalBajaSolicitudFirma;
   global.enviarAFirmaDesdeFicha = enviarAFirmaDesdeFicha;
   global.abrirModalCertificadoPades = abrirModalCertificadoPades;
   global.abrirAsistenteRenaperMiEjemplar = abrirAsistenteRenaperMiEjemplar;

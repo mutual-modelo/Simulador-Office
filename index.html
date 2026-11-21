@@ -3846,7 +3846,16 @@
                   <button type="button" class="btn-toggle-eye" onclick="togglePasswordVisibility('loginClave', this)">👁️</button>
                 </div>
               </div>
-              <button type="submit" id="btnLoginSubmit" class="btn-primary-action" style="margin-top:0.5rem;">Iniciar Sesión 🔐</button>
+              <div style="display:flex;flex-direction:column;gap:0.4rem;margin:0.25rem 0 0.5rem 0;">
+                <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.84rem;color:var(--text-secondary,#475569);cursor:pointer;user-select:none;">
+                  <input type="checkbox" id="chkLoginSoloSesionNavegador" style="width:15px;height:15px;accent-color:var(--primary-color,#0f766e);cursor:pointer;" />
+                  <span>🔒 Cerrar sesión al cerrar el navegador (PC compartida)</span>
+                </label>
+                <div style="font-size:0.76rem;color:var(--text-muted,#64748b);line-height:1.3;">
+                  ⏱️ Por seguridad, la sesión se cierra automáticamente tras <strong>1 hora</strong> de inactividad.
+                </div>
+              </div>
+              <button type="submit" id="btnLoginSubmit" class="btn-primary-action" style="margin-top:0.25rem;">Iniciar Sesión 🔐</button>
             </form>
           </div>
         </div>
@@ -8229,7 +8238,11 @@
         return;
       }
       try { sessionStorage.setItem(AUTH_TOKEN_STORAGE_KEY, clean); } catch (_) {}
-      try { localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, clean); } catch (_) {}
+      if (typeof esSoloSesionNavegador === 'function' && esSoloSesionNavegador()) {
+        try { localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY); } catch (_) {}
+      } else {
+        try { localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, clean); } catch (_) {}
+      }
     }
 
     async function fetchConTimeout(url, options = {}, timeoutMs = 90000) {
@@ -8268,8 +8281,23 @@
           }
         }
         const resp = await fetch(url, fetchOpts);
-        if (resp && resp.status === 401 && RENDER_API_URL && urlStr.startsWith(RENDER_API_URL) && !urlStr.includes('/api/auth/login')) {
+        if (
+          resp &&
+          resp.status === 401 &&
+          RENDER_API_URL &&
+          urlStr.startsWith(RENDER_API_URL) &&
+          !urlStr.includes('/api/auth/login') &&
+          !urlStr.includes('/api/config/estado')
+        ) {
           setApiAuthToken(null);
+          if (typeof handleLogout === 'function' && typeof getSession === 'function' && getSession() && !window._cerrandoSesionPorExpiracion) {
+            window._cerrandoSesionPorExpiracion = true;
+            try {
+              handleLogout('🔒 Tu sesión expiró o dejó de ser válida. Iniciá sesión nuevamente.');
+            } finally {
+              window._cerrandoSesionPorExpiracion = false;
+            }
+          }
         }
         return resp;
       } finally {
@@ -9816,15 +9844,294 @@ ${cierreTxt}`;
       };
     }
 
+    const SESSION_INACTIVITY_TIMEOUT_MS = 60 * 60 * 1000; // 1 hora
+    const SESSION_INACTIVITY_WARNING_MS = 55 * 60 * 1000; // Aviso 5 minutos antes
+    const SESSION_LAST_ACTIVITY_KEY = 'AMMER_LAST_ACTIVITY_TS';
+    const SESSION_SHARED_PC_KEY = 'AMMER_SOLO_SESION_NAVEGADOR';
+    const SESSION_LOGOUT_BROADCAST_KEY = 'AMMER_SESSION_LOGOUT_AT';
+    const SESSION_SLIDING_REFRESH_MS = 30 * 60 * 1000; // Renovar token cada 30 min de uso activo
+    const SESSION_ME_CHECK_INTERVAL_MS = 5 * 60 * 1000; // Validar contra /api/auth/me cada 5 min
+
+    window._inactivityMonitorIniciado = window._inactivityMonitorIniciado || false;
+    window._inactivityIntervalId = window._inactivityIntervalId || null;
+    window._inactivityWarningVisible = false;
+    window._ultimaEscrituraActividadTs = 0;
+    window._ultimoChequeoAuthMeTs = window._ultimoChequeoAuthMeTs || 0;
+    window._ultimoRefreshTokenTs = window._ultimoRefreshTokenTs || 0;
+
+    function esSoloSesionNavegador() {
+      try {
+        return sessionStorage.getItem(SESSION_SHARED_PC_KEY) === '1';
+      } catch (_) {
+        return false;
+      }
+    }
+    window.esSoloSesionNavegador = esSoloSesionNavegador;
+
+    function establecerModoSoloSesionNavegador(activo) {
+      try {
+        if (activo) {
+          sessionStorage.setItem(SESSION_SHARED_PC_KEY, '1');
+          localStorage.removeItem('sesion_mutual');
+          localStorage.removeItem('AMMER_AUTH_SESSION');
+          localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+        } else {
+          sessionStorage.removeItem(SESSION_SHARED_PC_KEY);
+        }
+      } catch (_) {}
+    }
+
+    function obtenerUltimoTimestampActividad() {
+      let maxTs = 0;
+      const ahora = Date.now();
+      try {
+        const sVal = Number(sessionStorage.getItem(SESSION_LAST_ACTIVITY_KEY) || 0);
+        if (Number.isFinite(sVal) && sVal > maxTs && sVal <= ahora + 60000) maxTs = sVal;
+      } catch (_) {}
+      if (!esSoloSesionNavegador()) {
+        try {
+          const lVal = Number(localStorage.getItem(SESSION_LAST_ACTIVITY_KEY) || 0);
+          if (Number.isFinite(lVal) && lVal > maxTs && lVal <= ahora + 60000) maxTs = lVal;
+        } catch (_) {}
+      }
+      return maxTs;
+    }
+
+    function registrarActividadSesion(forzar = false) {
+      if (!forzar && window._inactivityWarningVisible) return;
+      const ahora = Date.now();
+      if (!forzar && window._ultimaEscrituraActividadTs && (ahora - window._ultimaEscrituraActividadTs) < 10000) {
+        return;
+      }
+      window._ultimaEscrituraActividadTs = ahora;
+      try { sessionStorage.setItem(SESSION_LAST_ACTIVITY_KEY, String(ahora)); } catch (_) {}
+      if (!esSoloSesionNavegador()) {
+        try { localStorage.setItem(SESSION_LAST_ACTIVITY_KEY, String(ahora)); } catch (_) {}
+      }
+    }
+
+    function estaSesionExpiradaPorInactividad() {
+      const lastTs = obtenerUltimoTimestampActividad();
+      if (!lastTs) return false;
+      return (Date.now() - lastTs) >= SESSION_INACTIVITY_TIMEOUT_MS;
+    }
+
+    function limpiarAlmacenamientoSesionCompleto_() {
+      _memoriaSesionActiva = null;
+      _memoriaApiAuthToken = null;
+      if (window.estadoApp) window.estadoApp.usuarioActual = null;
+      try { sessionStorage.removeItem('sesion_mutual'); sessionStorage.removeItem('AMMER_AUTH_SESSION'); } catch (_) {}
+      try { localStorage.removeItem('sesion_mutual'); localStorage.removeItem('AMMER_AUTH_SESSION'); } catch (_) {}
+      try { sessionStorage.removeItem(AUTH_TOKEN_STORAGE_KEY); } catch (_) {}
+      try { localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY); } catch (_) {}
+      try { sessionStorage.removeItem(SESSION_LAST_ACTIVITY_KEY); } catch (_) {}
+      try { localStorage.removeItem(SESSION_LAST_ACTIVITY_KEY); } catch (_) {}
+      try { sessionStorage.removeItem(SESSION_SHARED_PC_KEY); } catch (_) {}
+    }
+
+    function cerrarModalAvisoInactividad() {
+      window._inactivityWarningVisible = false;
+      const existing = document.getElementById('modalAvisoInactividadSesion');
+      if (existing) existing.remove();
+    }
+
+    async function renovarSesionActivaUsuario() {
+      cerrarModalAvisoInactividad();
+      registrarActividadSesion(true);
+      await intentarRenovarTokenSilencioso_(true);
+      if (typeof showToast === 'function') {
+        showToast('✓ Sesión extendida por 60 minutos más.');
+      }
+    }
+    window.renovarSesionActivaUsuario = renovarSesionActivaUsuario;
+
+    async function intentarRenovarTokenSilencioso_(forzar = false) {
+      if (!RENDER_API_URL || !RENDER_API_URL.startsWith('http')) return false;
+      const tok = (typeof getApiAuthToken === 'function') ? getApiAuthToken() : null;
+      if (!tok) return false;
+      const ahora = Date.now();
+      if (!forzar && window._ultimoRefreshTokenTs && (ahora - window._ultimoRefreshTokenTs) < SESSION_SLIDING_REFRESH_MS) {
+        return false;
+      }
+      if (window._renovandoTokenEnCurso) return false;
+      window._renovandoTokenEnCurso = true;
+      try {
+        const resp = await fetchConTimeout(`${RENDER_API_URL}/api/auth/refresh`, { method: 'POST' }, 10000);
+        if (resp && resp.ok) {
+          const data = await resp.json().catch(() => null);
+          if (data && data.token) {
+            setApiAuthToken(data.token);
+            window._ultimoRefreshTokenTs = Date.now();
+            window._ultimoChequeoAuthMeTs = Date.now();
+            return true;
+          }
+        }
+      } catch (_) {
+      } finally {
+        window._renovandoTokenEnCurso = false;
+      }
+      return false;
+    }
+
+    function mostrarModalAvisoInactividad(msRestantes) {
+      if (document.getElementById('modalAvisoInactividadSesion')) {
+        actualizarCuentaRegresivaAviso_(msRestantes);
+        return;
+      }
+      window._inactivityWarningVisible = true;
+      const overlay = document.createElement('div');
+      overlay.id = 'modalAvisoInactividadSesion';
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,0.72);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:1rem;';
+      overlay.innerHTML = `
+        <div role="dialog" aria-modal="true" style="background:#ffffff;color:#0f172a;border-radius:16px;max-width:430px;width:100%;padding:1.5rem;box-shadow:0 24px 60px rgba(15,23,42,0.35);border:1px solid #e2e8f0;text-align:center;">
+          <div style="width:52px;height:52px;margin:0 auto 0.85rem auto;border-radius:50%;background:#fef3c7;color:#d97706;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">⏳</div>
+          <h3 style="margin:0 0 0.45rem 0;font-size:1.12rem;font-weight:700;color:#0f172a;">¿Seguís ahí? Tu sesión está por cerrarse</h3>
+          <p style="margin:0 0 0.9rem 0;font-size:0.9rem;color:#475569;line-height:1.45;">
+            Por seguridad, cerraremos la sesión tras 1 hora de inactividad. Tiempo restante:
+          </p>
+          <div id="txtCuentaRegresivaInactividad" style="font-size:1.65rem;font-weight:800;font-variant-numeric:tabular-nums;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:0.45rem 0.75rem;margin-bottom:1.1rem;">05:00</div>
+          <div style="display:flex;gap:0.65rem;justify-content:center;flex-wrap:wrap;">
+            <button type="button" onclick="renovarSesionActivaUsuario()" style="flex:1;min-width:150px;background:#0f766e;color:#fff;border:none;border-radius:10px;padding:0.7rem 1rem;font-weight:600;font-size:0.92rem;cursor:pointer;">✓ Seguir conectado</button>
+            <button type="button" onclick="handleLogout('🔒 Sesión cerrada por el usuario.')" style="flex:1;min-width:140px;background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;border-radius:10px;padding:0.7rem 1rem;font-weight:600;font-size:0.92rem;cursor:pointer;">🔒 Cerrar ahora</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      actualizarCuentaRegresivaAviso_(msRestantes);
+    }
+
+    function actualizarCuentaRegresivaAviso_(msRestantes) {
+      const el = document.getElementById('txtCuentaRegresivaInactividad');
+      if (!el) return;
+      const totalSeg = Math.max(0, Math.ceil(msRestantes / 1000));
+      const mins = String(Math.floor(totalSeg / 60)).padStart(2, '0');
+      const segs = String(totalSeg % 60).padStart(2, '0');
+      el.textContent = `${mins}:${segs}`;
+    }
+
+    function verificarEstadoInactividadSesion() {
+      const sesionActual = getSession();
+      if (!sesionActual) {
+        cerrarModalAvisoInactividad();
+        if (window._motivoCierreAutomaticoPendiente) {
+          const msg = window._motivoCierreAutomaticoPendiente;
+          window._motivoCierreAutomaticoPendiente = null;
+          checkAuthAndInit();
+          if (typeof showToast === 'function') showToast(msg);
+        }
+        return;
+      }
+
+      const lastTs = obtenerUltimoTimestampActividad();
+      if (!lastTs) {
+        registrarActividadSesion(true);
+        return;
+      }
+
+      const inactivoMs = Date.now() - lastTs;
+      if (inactivoMs >= SESSION_INACTIVITY_TIMEOUT_MS) {
+        handleLogout('🔒 Sesión cerrada automáticamente tras 1 hora de inactividad.');
+        return;
+      }
+
+      if (inactivoMs >= SESSION_INACTIVITY_WARNING_MS) {
+        mostrarModalAvisoInactividad(SESSION_INACTIVITY_TIMEOUT_MS - inactivoMs);
+      } else {
+        if (window._inactivityWarningVisible) {
+          cerrarModalAvisoInactividad();
+        }
+        if (inactivoMs < 60000) {
+          intentarRenovarTokenSilencioso_(false);
+        }
+      }
+
+      if (
+        RENDER_API_URL &&
+        RENDER_API_URL.startsWith('http') &&
+        !window._checkingAuthMeSync &&
+        (Date.now() - (window._ultimoChequeoAuthMeTs || 0)) >= SESSION_ME_CHECK_INTERVAL_MS
+      ) {
+        validarSesionServidorEnBackground_();
+      }
+    }
+
+    function validarSesionServidorEnBackground_() {
+      if (!RENDER_API_URL || !RENDER_API_URL.startsWith('http') || window._checkingAuthMeSync) return;
+      window._checkingAuthMeSync = true;
+      window._ultimoChequeoAuthMeTs = Date.now();
+      fetchConTimeout(`${RENDER_API_URL}/api/auth/me`, { method: 'GET' }, 10000)
+        .then(resp => {
+          if (resp && resp.status === 401 && !window._cerrandoSesionPorExpiracion) {
+            handleLogout('⚠️ Sesión desactualizada por seguridad. Iniciá sesión nuevamente.');
+          }
+        })
+        .catch(() => {})
+        .finally(() => { window._checkingAuthMeSync = false; });
+    }
+
+    function iniciarMonitorInactividadSesion() {
+      if (window._inactivityMonitorIniciado) return;
+      window._inactivityMonitorIniciado = true;
+
+      const onUserActivity = () => {
+        if (!getSession()) return;
+        registrarActividadSesion(false);
+      };
+
+      ['pointerdown', 'keydown', 'scroll', 'wheel', 'touchstart', 'mousemove'].forEach(evtName => {
+        window.addEventListener(evtName, onUserActivity, { passive: true });
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          verificarEstadoInactividadSesion();
+        }
+      });
+      window.addEventListener('focus', () => {
+        verificarEstadoInactividadSesion();
+      });
+
+      window.addEventListener('storage', (ev) => {
+        if (!ev) return;
+        if (ev.key === SESSION_LOGOUT_BROADCAST_KEY && ev.newValue) {
+          cerrarModalAvisoInactividad();
+          limpiarAlmacenamientoSesionCompleto_();
+          checkAuthAndInit();
+          if (typeof showToast === 'function') {
+            showToast('🔒 La sesión fue cerrada en otra pestaña.');
+          }
+          return;
+        }
+        if (ev.key === SESSION_LAST_ACTIVITY_KEY && ev.newValue && window._inactivityWarningVisible) {
+          const newTs = Number(ev.newValue || 0);
+          if (Number.isFinite(newTs) && (Date.now() - newTs) < SESSION_INACTIVITY_WARNING_MS) {
+            cerrarModalAvisoInactividad();
+          }
+        }
+      });
+
+      if (window._inactivityIntervalId) clearInterval(window._inactivityIntervalId);
+      window._inactivityIntervalId = setInterval(() => {
+        verificarEstadoInactividadSesion();
+      }, 1000);
+    }
+
     function getSession() {
+      if (estaSesionExpiradaPorInactividad()) {
+        limpiarAlmacenamientoSesionCompleto_();
+        window._motivoCierreAutomaticoPendiente = '🔒 Sesión cerrada automáticamente tras 1 hora de inactividad.';
+        return null;
+      }
       if (_memoriaSesionActiva) {
         if (window.estadoApp) window.estadoApp.usuarioActual = _memoriaSesionActiva;
+        if (!obtenerUltimoTimestampActividad()) registrarActividadSesion(true);
         return _memoriaSesionActiva;
       }
       if (window.estadoApp && window.estadoApp.usuarioActual) {
         const memNorm = normalizarObjetoSesionUsuario_(window.estadoApp.usuarioActual);
         if (memNorm) {
           _memoriaSesionActiva = memNorm;
+          if (!obtenerUltimoTimestampActividad()) registrarActividadSesion(true);
           return memNorm;
         }
       }
@@ -9848,6 +10155,7 @@ ${cierreTxt}`;
         }
         _memoriaSesionActiva = s;
         if (window.estadoApp) window.estadoApp.usuarioActual = s;
+        if (!obtenerUltimoTimestampActividad()) registrarActividadSesion(true);
         return s;
       } catch (e) {
         return null;
@@ -9881,17 +10189,31 @@ ${cierreTxt}`;
         sessionStorage.setItem('sesion_mutual', serialized);
         sessionStorage.setItem('AMMER_AUTH_SESSION', serialized);
       } catch (_) {}
-      try {
-        localStorage.setItem('sesion_mutual', serialized);
-        localStorage.setItem('AMMER_AUTH_SESSION', serialized);
-      } catch (_) {}
+      if (esSoloSesionNavegador()) {
+        try { localStorage.removeItem('sesion_mutual'); localStorage.removeItem('AMMER_AUTH_SESSION'); } catch (_) {}
+      } else {
+        try {
+          localStorage.setItem('sesion_mutual', serialized);
+          localStorage.setItem('AMMER_AUTH_SESSION', serialized);
+        } catch (_) {}
+      }
     }
 
-    function handleLogout() {
-      setApiAuthToken(null);
-      setSession(null);
+    function handleLogout(motivoPersonalizado) {
+      cerrarModalAvisoInactividad();
+      window._motivoCierreAutomaticoPendiente = null;
+      window._ultimoChequeoAuthMeTs = 0;
+      window._ultimoRefreshTokenTs = 0;
+      limpiarAlmacenamientoSesionCompleto_();
+      const loginClaveEl = document.getElementById('loginClave');
+      if (loginClaveEl) loginClaveEl.value = '';
+      try {
+        localStorage.setItem(SESSION_LOGOUT_BROADCAST_KEY, String(Date.now()));
+      } catch (_) {}
       checkAuthAndInit();
-      showToast('Sesión finalizada de forma segura');
+      showToast(typeof motivoPersonalizado === 'string' && motivoPersonalizado.trim()
+        ? motivoPersonalizado.trim()
+        : 'Sesión finalizada de forma segura');
     }
 
     async function handleLoginSubmit(e) {
@@ -9906,6 +10228,9 @@ ${cierreTxt}`;
 
       // Rate limiting local anti-spam
       if (!checkSubmitCooldown('btnLoginSubmit', 2500)) return;
+
+      const chkSoloNav = document.getElementById('chkLoginSoloSesionNavegador');
+      establecerModoSoloSesionNavegador(Boolean(chkSoloNav && chkSoloNav.checked));
 
       const userVal = document.getElementById('loginUsuario')?.value?.trim().toLowerCase();
       const passVal = document.getElementById('loginClave')?.value;
@@ -9987,7 +10312,13 @@ ${cierreTxt}`;
           window.estadoApp.usuarios = [];
         }
         window._cloudSyncInicialEjecutado = false;
+        window._motivoCierreAutomaticoPendiente = null;
+        window._ultimoChequeoAuthMeTs = Date.now();
+        window._ultimoRefreshTokenTs = Date.now();
+        registrarActividadSesion(true);
         setSession(loggedUser);
+        const loginClaveEl = document.getElementById('loginClave');
+        if (loginClaveEl) loginClaveEl.value = '';
         const sess = getSession() || normalizarObjetoSesionUsuario_(loggedUser);
         checkAuthAndInit();
         await cargarSolicitudesDesdeNube(false);
@@ -10210,32 +10541,36 @@ ${cierreTxt}`;
       const appLayout = document.getElementById('appLayout');
 
       if (!session) {
+        cerrarModalAvisoInactividad();
         if (window.estadoApp) window.estadoApp.usuarioActual = null;
         if (appLayout) appLayout.style.display = 'none';
         if (loginWrapper) loginWrapper.style.display = 'block';
         cambiarPestana('view-login');
+        if (window._motivoCierreAutomaticoPendiente) {
+          const msgPend = window._motivoCierreAutomaticoPendiente;
+          window._motivoCierreAutomaticoPendiente = null;
+          setTimeout(() => {
+            if (typeof showToast === 'function') showToast(msgPend);
+          }, 150);
+        }
         return;
+      }
+
+      if (typeof iniciarMonitorInactividadSesion === 'function') {
+        iniciarMonitorInactividadSesion();
       }
 
       if (window.estadoApp) window.estadoApp.usuarioActual = session;
       if (loginWrapper) loginWrapper.style.display = 'none';
       if (appLayout) appLayout.style.display = 'flex';
 
-      if (typeof RENDER_API_URL === 'string' && RENDER_API_URL.startsWith('http') && typeof getApiAuthToken === 'function' && !getApiAuthToken() && !window._checkingAuthMeSync) {
-        window._checkingAuthMeSync = true;
-        fetchConTimeout(`${RENDER_API_URL}/api/auth/me`, { method: 'GET' }, 10000)
-          .then(resp => {
-            if (resp && resp.status === 401) {
-              setApiAuthToken(null);
-              setSession(null);
-              if (typeof showToast === 'function') {
-                showToast('⚠️ Sesión desactualizada por seguridad. Iniciá sesión nuevamente.');
-              }
-              checkAuthAndInit();
-            }
-          })
-          .catch(() => {})
-          .finally(() => { window._checkingAuthMeSync = false; });
+      if (
+        typeof RENDER_API_URL === 'string' &&
+        RENDER_API_URL.startsWith('http') &&
+        !window._checkingAuthMeSync &&
+        (Date.now() - (window._ultimoChequeoAuthMeTs || 0)) >= SESSION_ME_CHECK_INTERVAL_MS
+      ) {
+        validarSesionServidorEnBackground_();
       }
 
       // Actualizar tarjeta de perfil en el pie de la Sidebar

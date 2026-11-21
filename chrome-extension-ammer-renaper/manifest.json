@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "AMMER - RENAPER Pestaña Dividida y Asistente",
+  "version": "1.0.0",
+  "description": "Abre Mi Ejemplar (RENAPER) en el modo pestaña dividida de Chrome a la derecha desde Simulador-Office, autocompleta los datos y permite cerrarla con un clic.",
+  "permissions": [
+    "tabs",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://tramites.renaper.gob.ar/*",
+    "https://mutual-modelo.github.io/*",
+    "http://localhost:*/*",
+    "http://127.0.0.1:*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://mutual-modelo.github.io/Simulador-Office/*",
+        "http://localhost:*/*",
+        "http://127.0.0.1:*/*"
+      ],
+      "js": [
+        "bridge_simulador.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://tramites.renaper.gob.ar/*"
+      ],
+      "js": [
+        "renaper_helper.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

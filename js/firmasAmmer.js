@@ -2568,7 +2568,132 @@
     return s;
   }
 
+  const renaperAssistState = {
+    winRef: null,
+    extTabId: null,
+    extSplitUsed: false,
+    mode: 'none', // 'extension' | 'popup' | 'none'
+    abierta: false,
+    pollTimer: null,
+    listenerBound: false,
+    lastDatos: null,
+  };
+
+  function actualizarUiEstadoRenaperModal() {
+    const stBox = document.getElementById('boxEstadoVentanaRenaper');
+    const btnCerrar = document.getElementById('btnCerrarVentanaRenaperModal');
+    const btnReabrir = document.getElementById('btnReabrirVentanaRenaperModal');
+    if (!stBox) return;
+
+    if (renaperAssistState.abierta) {
+      stBox.style.background = '#dcfce7';
+      stBox.style.borderColor = '#86efac';
+      stBox.style.color = '#166534';
+      stBox.innerHTML = renaperAssistState.mode === 'extension'
+        ? (renaperAssistState.extSplitUsed
+          ? '🟢 <strong>Pestaña dividida Chrome activa</strong> a la derecha (autocompletado habilitado).'
+          : '🟢 <strong>Pestaña RENAPER abierta</strong> con asistente AMMER.')
+        : '🟢 <strong>Ventana RENAPER abierta a la derecha</strong>. Al finalizar, cerrala con un clic abajo.';
+      if (btnCerrar) btnCerrar.style.display = 'inline-flex';
+      if (btnReabrir) btnReabrir.style.display = 'none';
+    } else {
+      stBox.style.background = '#f1f5f9';
+      stBox.style.borderColor = '#cbd5e1';
+      stBox.style.color = '#475569';
+      stBox.innerHTML = '⚪ Consulta RENAPER cerrada.';
+      if (btnCerrar) btnCerrar.style.display = 'none';
+      if (btnReabrir) btnReabrir.style.display = 'inline-flex';
+    }
+  }
+
+  function bindRenaperBridgeListeners() {
+    if (renaperAssistState.listenerBound) return;
+    renaperAssistState.listenerBound = true;
+    global.addEventListener('message', (ev) => {
+      if (ev.source !== global || !ev.data || typeof ev.data !== 'object') return;
+      if (ev.data.type === 'AMMER_RENAPER_OPENED') {
+        if (ev.data.ok) {
+          renaperAssistState.mode = 'extension';
+          renaperAssistState.extTabId = ev.data.tabId || null;
+          renaperAssistState.extSplitUsed = !!ev.data.splitUsed;
+          renaperAssistState.abierta = true;
+          actualizarUiEstadoRenaperModal();
+        } else if (renaperAssistState.lastDatos) {
+          abrirPopupRenaperDerechaFallback(renaperAssistState.lastDatos);
+        }
+      } else if (ev.data.type === 'AMMER_RENAPER_CLOSED') {
+        renaperAssistState.abierta = false;
+        renaperAssistState.extTabId = null;
+        actualizarUiEstadoRenaperModal();
+      }
+    });
+  }
+
+  function abrirPopupRenaperDerechaFallback(payload) {
+    const scr = global.screen || {};
+    const aLeft = Number(scr.availLeft != null ? scr.availLeft : 0);
+    const aTop = Number(scr.availTop != null ? scr.availTop : 0);
+    const aW = Number(scr.availWidth || global.innerWidth || 1280);
+    const aH = Number(scr.availHeight || global.innerHeight || 760);
+    const wPopup = Math.max(480, Math.floor(aW * 0.49));
+    const hPopup = Math.max(580, aH - 20);
+    const leftPopup = aLeft + Math.max(0, aW - wPopup);
+    const features = `popup=yes,left=${leftPopup},top=${aTop},width=${wPopup},height=${hPopup},resizable=yes,scrollbars=yes`;
+
+    let win = null;
+    try {
+      win = global.open('https://tramites.renaper.gob.ar/mi_ejemplar/', 'renaper_mi_ejemplar', features);
+    } catch (_e) {}
+
+    if (win) {
+      renaperAssistState.winRef = win;
+      renaperAssistState.mode = 'popup';
+      renaperAssistState.abierta = true;
+      try { win.focus(); } catch (_e) {}
+
+      if (renaperAssistState.pollTimer) clearInterval(renaperAssistState.pollTimer);
+      renaperAssistState.pollTimer = setInterval(() => {
+        if (!renaperAssistState.winRef || renaperAssistState.winRef.closed) {
+          clearInterval(renaperAssistState.pollTimer);
+          renaperAssistState.pollTimer = null;
+          renaperAssistState.winRef = null;
+          renaperAssistState.abierta = false;
+          actualizarUiEstadoRenaperModal();
+        }
+      }, 650);
+    } else {
+      renaperAssistState.abierta = false;
+      notify('El navegador bloqueó la ventana emergente de RENAPER. Permití popups para este sitio o usá la extensión Chrome.', 'warning');
+    }
+    actualizarUiEstadoRenaperModal();
+  }
+
+  function cerrarVentanaRenaperMiEjemplar() {
+    if (renaperAssistState.pollTimer) {
+      clearInterval(renaperAssistState.pollTimer);
+      renaperAssistState.pollTimer = null;
+    }
+    if (renaperAssistState.mode === 'extension') {
+      try {
+        global.postMessage(
+          { type: 'AMMER_CLOSE_RENAPER_SPLIT', tabId: renaperAssistState.extTabId || null },
+          global.location.origin
+        );
+      } catch (_e) {}
+    }
+    if (renaperAssistState.winRef && !renaperAssistState.winRef.closed) {
+      try { renaperAssistState.winRef.close(); } catch (_e) {}
+    }
+    renaperAssistState.winRef = null;
+    renaperAssistState.extTabId = null;
+    renaperAssistState.abierta = false;
+    actualizarUiEstadoRenaperModal();
+    const modal = document.getElementById('modalGuiaRenaperEjemplar');
+    if (modal) modal.style.display = 'none';
+  }
+
   function abrirAsistenteRenaperMiEjemplar(datos) {
+    bindRenaperBridgeListeners();
     const info = datos || {};
     const dniClean = String(info.dni || '').replace(/\D/g, '');
     const sexoLabel = normalizarSexoRenaper(info.sexo);
@@ -2576,16 +2701,41 @@
     const ejemplar = String(info.ejemplar || '').trim().toUpperCase();
     const nombre = String(info.nombre || 'Asociado').trim();
 
+    const payloadExt = {
+      nombre,
+      dni: dniClean,
+      sexo: sexoLabel,
+      fecha_nacimiento: fechaNac,
+      ejemplar,
+    };
+    renaperAssistState.lastDatos = info;
+
     if (dniClean) {
       copiarTextoSeguro(dniClean, 'DNI sin puntos (listo para pegar en RENAPER)');
     }
-    window.open('https://tramites.renaper.gob.ar/mi_ejemplar/', 'renaper_mi_ejemplar', 'width=560,height=740,noopener,noreferrer');
+
+    const tieneExt = Boolean(
+      document.documentElement &&
+      document.documentElement.dataset &&
+      document.documentElement.dataset.ammerSplitExt
+    );
+
+    if (tieneExt) {
+      renaperAssistState.mode = 'extension';
+      renaperAssistState.abierta = true;
+      global.postMessage(
+        { type: 'AMMER_OPEN_RENAPER_SPLIT', payload: payloadExt, requestId: String(Date.now()) },
+        global.location.origin
+      );
+    } else {
+      abrirPopupRenaperDerechaFallback(payloadExt);
+    }
 
     let modal = document.getElementById('modalGuiaRenaperEjemplar');
     if (!modal) {
       modal = document.createElement('div');
       modal.id = 'modalGuiaRenaperEjemplar';
-      modal.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:99999;max-width:390px;width:calc(100vw - 32px);background:#ffffff;border:2px solid #0284c7;border-radius:14px;box-shadow:0 18px 40px rgba(15,23,42,0.28);padding:1rem;font-family:inherit;';
+      modal.style.cssText = 'position:fixed;bottom:18px;left:18px;z-index:99999;max-width:405px;width:calc(100vw - 32px);background:#ffffff;border:2px solid #0284c7;border-radius:14px;box-shadow:0 18px 40px rgba(15,23,42,0.28);padding:1rem;font-family:inherit;';
       document.body.appendChild(modal);
     }
 
@@ -2599,21 +2749,39 @@
       </div>
     `;
 
+    const extHintHtml = tieneExt
+      ? ''
+      : `
+        <details style="margin-top:0.5rem;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:0.45rem 0.6rem;font-size:0.71rem;color:#334155;">
+          <summary style="cursor:pointer;font-weight:700;color:#0f2744;">🧩 ¿Querés usar Pestaña Dividida nativa de Chrome + Autocompletado?</summary>
+          <div style="margin-top:0.4rem;line-height:1.4;">
+            1. <a href="downloads/ammer-renaper-split-view-ext.zip" download style="color:#1d4ed8;font-weight:700;text-decoration:underline;">Descargá la extensión AMMER (.zip)</a> y descomprimila.<br/>
+            2. En Chrome abrí <code>chrome://extensions</code>, activá <strong>Modo de desarrollador</strong> y tocá <strong>Cargar descomprimida</strong>.<br/>
+            3. Recargá esta página (<code>F5</code>). Desde Chrome 155 abre RENAPER en pestaña dividida real y completa el formulario solo.
+          </div>
+        </details>
+      `;
+
     modal.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;margin-bottom:0.55rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;margin-bottom:0.45rem;">
         <div style="font-size:0.88rem;font-weight:800;color:#0f2744;">🪪 Asistente RENAPER Mi Ejemplar</div>
-        <button type="button" onclick="document.getElementById('modalGuiaRenaperEjemplar').style.display='none'" style="border:none;background:#f1f5f9;color:#334155;border-radius:6px;padding:2px 8px;font-weight:800;cursor:pointer;">✕</button>
+        <button type="button" onclick="document.getElementById('modalGuiaRenaperEjemplar').style.display='none'" title="Ocultar asistente" style="border:none;background:#f1f5f9;color:#334155;border-radius:6px;padding:2px 8px;font-weight:800;cursor:pointer;">✕</button>
       </div>
-      <div style="font-size:0.75rem;color:#475569;margin-bottom:0.55rem;">Titular: <strong>${escHtml(nombre)}</strong></div>
+      <div id="boxEstadoVentanaRenaper" style="font-size:0.73rem;border:1px solid #86efac;border-radius:8px;padding:0.42rem 0.6rem;margin-bottom:0.5rem;line-height:1.35;"></div>
+      <div style="font-size:0.75rem;color:#475569;margin-bottom:0.5rem;">Titular: <strong>${escHtml(nombre)}</strong></div>
       ${rowFn('1. DNI (solo dígitos)', dniClean, true, Boolean(dniClean))}
       ${rowFn('2. Sexo en DNI', sexoLabel, false, false)}
       ${rowFn('3. Fecha de Nacimiento (DD/MM/AAAA)', fechaNac, Boolean(fechaNac), false)}
       ${ejemplar ? rowFn('Ejemplar impreso leído (para comparar)', 'Ejemplar ' + ejemplar, false, false) : ''}
-      <div style="font-size:0.7rem;color:#475569;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:0.45rem 0.6rem;line-height:1.35;">
-        Por política de seguridad entre dominios del navegador, RENAPER no permite autocompletado externo directo. Pegá el DNI copiado, elegí Sexo/Fecha y presioná <strong>CONSULTAR</strong>.
+      <div style="display:flex;gap:0.45rem;margin-top:0.55rem;flex-wrap:wrap;">
+        <button type="button" id="btnCerrarVentanaRenaperModal" onclick="window.cerrarVentanaRenaperMiEjemplar()" style="flex:1;justify-content:center;align-items:center;gap:5px;padding:0.5rem 0.8rem;border-radius:8px;border:1px solid #dc2626;background:#dc2626;color:#ffffff;font-size:0.78rem;font-weight:800;cursor:pointer;">✕ Cerrar RENAPER y terminar</button>
+        <button type="button" id="btnReabrirVentanaRenaperModal" onclick="window.abrirAsistenteRenaperMiEjemplar(window._ultimoPayloadRenaperModal)" style="display:none;flex:1;justify-content:center;align-items:center;gap:5px;padding:0.5rem 0.8rem;border-radius:8px;border:1px solid #0284c7;background:#0284c7;color:#ffffff;font-size:0.78rem;font-weight:800;cursor:pointer;">↗️ Reabrir RENAPER</button>
       </div>
+      ${extHintHtml}
     `;
+    global._ultimoPayloadRenaperModal = info;
     modal.style.display = 'block';
+    actualizarUiEstadoRenaperModal();
     modal.querySelectorAll('[data-copy-renaper]').forEach((btn) => {
       btn.addEventListener('click', () => {
         copiarTextoSeguro(btn.getAttribute('data-copy-renaper') || '', 'Dato RENAPER');
@@ -2848,6 +3016,7 @@
   global.enviarAFirmaDesdeFicha = enviarAFirmaDesdeFicha;
   global.abrirModalCertificadoPades = abrirModalCertificadoPades;
   global.abrirAsistenteRenaperMiEjemplar = abrirAsistenteRenaperMiEjemplar;
+  global.cerrarVentanaRenaperMiEjemplar = cerrarVentanaRenaperMiEjemplar;
   global.abrirAsistenteRenaperPorId = abrirAsistenteRenaperPorId;
   global.abrirAsistenteRenaperDesdeFicha = abrirAsistenteRenaperDesdeFicha;
   global.onArchivoPdfPlantillaSeleccionado = onArchivoPdfPlantillaSeleccionado;

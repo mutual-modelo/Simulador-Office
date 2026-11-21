@@ -5360,10 +5360,11 @@
                 <!-- LIENZO PDF INTERACTIVO -->
                 <div style="background:#cbd5e1;border-radius:12px;padding:0.75rem;">
                   <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.45rem;margin-bottom:0.6rem;">
-                    <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
-                      <button type="button" onclick="activarModoClickAgregarCampo('texto')" style="padding:0.36rem 0.65rem;border-radius:7px;border:1px solid #d97706;background:#fffbeb;color:#b45309;font-size:0.74rem;font-weight:700;cursor:pointer;">➕ Marcar Campo Texto</button>
-                      <button type="button" onclick="activarModoClickAgregarCampo('firma')" style="padding:0.36rem 0.65rem;border-radius:7px;border:1px solid #047857;background:#ecfdf5;color:#065f46;font-size:0.74rem;font-weight:700;cursor:pointer;">✍️ Marcar Caja Firma</button>
-                      <button type="button" onclick="activarModoClickAgregarCampo('sello')" style="padding:0.36rem 0.65rem;border-radius:7px;border:1px solid #6d28d9;background:#f5f3ff;color:#5b21b6;font-size:0.74rem;font-weight:700;cursor:pointer;">🏛️ Marcar Caja Sello PNG</button>
+                    <div style="display:flex;gap:0.35rem;flex-wrap:wrap;align-items:center;">
+                      <button type="button" id="btnModoCampo_texto" onclick="activarModoClickAgregarCampo('texto')" style="padding:0.36rem 0.65rem;border-radius:7px;border:1px solid #d97706;background:#fffbeb;color:#b45309;font-size:0.74rem;font-weight:700;cursor:pointer;">➕ Marcar Campo Texto</button>
+                      <button type="button" id="btnModoCampo_firma" onclick="activarModoClickAgregarCampo('firma')" style="padding:0.36rem 0.65rem;border-radius:7px;border:1px solid #047857;background:#ecfdf5;color:#065f46;font-size:0.74rem;font-weight:700;cursor:pointer;">✍️ Marcar Caja Firma</button>
+                      <button type="button" id="btnModoCampo_sello" onclick="activarModoClickAgregarCampo('sello')" style="padding:0.36rem 0.65rem;border-radius:7px;border:1px solid #6d28d9;background:#f5f3ff;color:#5b21b6;font-size:0.74rem;font-weight:700;cursor:pointer;">🏛️ Marcar Caja Sello PNG</button>
+                      <button type="button" id="btnAnalizarPdfIaEditor" onclick="reanalizarPdfConIaEditor()" style="padding:0.36rem 0.7rem;border-radius:7px;border:1px solid #1d4ed8;background:#eff6ff;color:#1d4ed8;font-size:0.74rem;font-weight:800;cursor:pointer;">✨ Auto-detectar IA</button>
                     </div>
                     <div style="display:flex;align-items:center;gap:0.35rem;">
                       <button type="button" onclick="cambiarPaginaEditor(-1)" style="padding:2px 8px;border-radius:6px;border:1px solid #64748b;background:#ffffff;font-size:0.75rem;cursor:pointer;">◀</button>
@@ -8165,6 +8166,13 @@
       } catch (_) {}
       return null;
     }
+
+    function getAuthHeaders() {
+      const tok = getApiAuthToken();
+      return tok ? { 'Authorization': 'Bearer ' + tok } : {};
+    }
+    window.getAuthHeaders = getAuthHeaders;
+    window.getApiAuthToken = getApiAuthToken;
 
     function setApiAuthToken(token) {
       const clean = (token && typeof token === 'string') ? token.trim() : '';
@@ -24956,6 +24964,6 @@ ${cierreTxt}`;
   <script src="js/auditoria20.js?v=6"></script>
   <script src="js/fichasAsociados.js?v=6"></script>
   <script src="js/sidecreerWidget.js?v=10"></script>
-  <script src="js/firmasAmmer.js?v=7"></script>
+  <script src="js/firmasAmmer.js?v=8"></script>
 </body>
 </html>

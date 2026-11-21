@@ -141,11 +141,29 @@
     return pdfjs.getDocument({ data: bytes, disableWorker: true }).promise;
   }
 
+  function obtenerAuthHeaders() {
+    if (typeof global.getAuthHeaders === 'function') {
+      const h = global.getAuthHeaders();
+      if (h && (h.Authorization || h.authorization)) return h;
+    }
+    let tok = '';
+    if (typeof global.getApiAuthToken === 'function') {
+      tok = global.getApiAuthToken() || '';
+    }
+    if (!tok) {
+      try { tok = sessionStorage.getItem('AMMER_API_TOKEN') || ''; } catch (_e) {}
+    }
+    if (!tok) {
+      try { tok = localStorage.getItem('AMMER_API_TOKEN') || ''; } catch (_e) {}
+    }
+    return tok ? { Authorization: `Bearer ${tok}` } : {};
+  }
+
   async function apiFetchJson(path, opts) {
     const url = getApiBase() + path;
     const headers = Object.assign(
       { 'Content-Type': 'application/json' },
-      typeof getAuthHeaders === 'function' ? getAuthHeaders() : {},
+      obtenerAuthHeaders(),
       (opts && opts.headers) || {}
     );
     const resp = await fetch(url, Object.assign({}, opts || {}, { headers }));
@@ -156,6 +174,11 @@
       data = null;
     }
     if (!resp.ok) {
+      if (resp.status === 401 && typeof global.setApiAuthToken === 'function') {
+        // Limpiar token inválido/expirado si existía para forzar re-login limpio
+        const tokActual = obtenerAuthHeaders().Authorization;
+        if (tokActual) global.setApiAuthToken(null);
+      }
       throw new Error((data && (data.detail || data.message)) || `Error HTTP ${resp.status}`);
     }
     return data;
@@ -385,6 +408,9 @@
     } catch (err) {
       console.warn('Error cargando plantillas de firma:', err);
       state.plantillas = [];
+      if (String(err && err.message || '').toLowerCase().includes('autentic') || String(err && err.message || '').toLowerCase().includes('sesi')) {
+        notify(err.message, 'warning');
+      }
     }
 
     if (selGen) {
@@ -903,10 +929,8 @@
   async function descargarTsrSolicitudFirma(solId) {
     try {
       notify('Descargando sello temporal RFC 3161 (.tsr)...', 'info');
-      const headers = {};
-      const token = (typeof global.getSession === 'function' && global.getSession() && (global.getSession().token || global.getSession().sessionToken)) || '';
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-      const resp = await fetch(`${API_BASE}/api/firmas/solicitudes/${encodeURIComponent(solId)}/tsa.tsr`, { headers });
+      const headers = obtenerAuthHeaders();
+      const resp = await fetch(`${getApiBase()}/api/firmas/solicitudes/${encodeURIComponent(solId)}/tsa.tsr`, { headers });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const blob = await resp.blob();
       const url = URL.createObjectURL(blob);
@@ -943,6 +967,106 @@
   }
 
   // ==================== EDITOR VISUAL DE PLANTILLAS PDF ====================
+  async function capturarSnapshotsPaginasPdfJs(pdfDoc, maxPaginas) {
+    const out = [];
+    if (!pdfDoc) return out;
+    const total = Math.min(maxPaginas || 4, pdfDoc.numPages || 1);
+    for (let i = 1; i <= total; i++) {
+      try {
+        const page = await pdfDoc.getPage(i);
+        const vp = page.getViewport({ scale: 1.05 });
+        const tmpCanvas = document.createElement('canvas');
+        tmpCanvas.width = vp.width;
+        tmpCanvas.height = vp.height;
+        await page.render({ canvasContext: tmpCanvas.getContext('2d'), viewport: vp }).promise;
+        const dataUrl = tmpCanvas.toDataURL('image/jpeg', 0.72);
+        out.push({ pagina: i, imageBase64: dataUrl });
+      } catch (_e) {
+        // Ignorar página si falla snapshot y continuar con análisis geométrico
+      }
+    }
+    return out;
+  }
+
+  async function ejecutarAnalisisPdfServidor(b64, esManual) {
+    const btnIa = document.getElementById('btnAnalizarPdfIaEditor');
+    if (btnIa) {
+      btnIa.disabled = true;
+      btnIa.textContent = '⏳ Analizando PDF...';
+    }
+    try {
+      const imgs = await capturarSnapshotsPaginasPdfJs(state.editor.pdfDoc, 4);
+      const analisis = await apiFetchJson('/api/firmas/plantillas/analizar-pdf', {
+        method: 'POST',
+        body: JSON.stringify({
+          pdfBase64: b64,
+          usarIa: true,
+          paginasImagenesBase64: imgs,
+        }),
+      });
+      const detectados = Array.isArray(analisis.campos_detectados) ? analisis.campos_detectados : [];
+      state.editor.totalPages = analisis.paginas || state.editor.totalPages || 1;
+      return { analisis, detectados };
+    } finally {
+      if (btnIa) {
+        btnIa.disabled = false;
+        btnIa.textContent = '✨ Auto-detectar IA';
+      }
+    }
+  }
+
+  async function reanalizarPdfConIaEditor() {
+    if (!state.editor.pdfBase64) {
+      notify('Primero subí o seleccioná una plantilla PDF para analizar.', 'warning');
+      return;
+    }
+    let reemplazar = true;
+    if (state.editor.campos.length > 0) {
+      reemplazar = global.confirm(
+        `Ya tenés ${state.editor.campos.length} campo(s) marcado(s).\n\n` +
+        'Aceptar = Reemplazar con los detectados automáticamente.\n' +
+        'Cancelar = Mantener los actuales y agregar solo los nuevos sin solapar.'
+      );
+    }
+    setEstadoEditorPdf('⏳ Analizando estructura y campos del PDF con reglas + IA...', 'info');
+    try {
+      const { analisis, detectados } = await ejecutarAnalisisPdfServidor(state.editor.pdfBase64, true);
+      if (reemplazar) {
+        state.editor.campos = detectados;
+      } else {
+        const existentes = state.editor.campos.slice();
+        detectados.forEach((n) => {
+          const cx = (n.x_pct || 0) + (n.w_pct || 0) * 0.5;
+          const cy = (n.y_pct || 0) + (n.h_pct || 0) * 0.5;
+          const dup = existentes.some((ex) =>
+            Number(ex.pagina || 1) === Number(n.pagina || 1) &&
+            Math.abs(((ex.x_pct || 0) + (ex.w_pct || 0) * 0.5) - cx) < 0.045 &&
+            Math.abs(((ex.y_pct || 0) + (ex.h_pct || 0) * 0.5) - cy) < 0.035
+          );
+          if (!dup) {
+            n.id = 'cmp_' + Date.now().toString(36) + '_' + Math.floor(Math.random() * 1000);
+            existentes.push(n);
+          }
+        });
+        state.editor.campos = existentes;
+      }
+      state.editor.selectedFieldId = state.editor.campos[0] ? state.editor.campos[0].id : null;
+      renderCajasOverlayEditor();
+      renderInspectorCamposEditor();
+
+      const viaIa = analisis.ia_usada ? ' (incluye análisis visual IA)' : ' (reglas geométricas PDF)';
+      if (detectados.length > 0) {
+        setEstadoEditorPdf(`✅ Se detectaron ${detectados.length} campos automáticamente${viaIa}. Arrastralos, editalos o quitalos libremente.`, 'ok');
+        notify(`Auto-detección completada: ${detectados.length} campo(s).`, 'success');
+      } else {
+        setEstadoEditorPdf('ℹ️ No se encontraron campos vacíos ni líneas de firma automáticas. Usá los botones superiores para marcarlos manualmente.', 'warn');
+      }
+    } catch (err) {
+      setEstadoEditorPdf(`⚠️ No se pudo ejecutar el análisis automático (${err.message}). Podés marcar los campos manualmente.`, 'warn');
+      notify('Error analizando PDF: ' + err.message, 'error');
+    }
+  }
+
   async function onArchivoPdfPlantillaSeleccionado(ev) {
     const file = ev.target && ev.target.files && ev.target.files[0];
     if (!file) return;
@@ -972,31 +1096,29 @@
       // 1. Renderizar primero el PDF localmente en canvas para que SIEMPRE sea visible al instante
       await cargarPdfEnCanvasEditor(b64, 1);
       renderInspectorCamposEditor();
-      setEstadoEditorPdf(`📄 PDF renderizado (${state.editor.totalPages} pág.). Buscando resaltados amarillos automáticamente en el servidor...`, 'info');
+      setEstadoEditorPdf(`📄 PDF renderizado (${state.editor.totalPages} pág.). Analizando campos, espacios en blanco y firmas...`, 'info');
     } catch (errRender) {
       setEstadoEditorPdf(`⚠️ No se pudo renderizar vista previa en canvas (${errRender.message}).`, 'err');
       notify('Error renderizando PDF local: ' + errRender.message, 'error');
       return;
     }
 
-    // 2. Detectar resaltados amarillos en segundo plano sin bloquear el canvas si el PDF es en blanco o falla red
+    // 2. Detectar resaltados, AcroForm, reglas geométricas e IA en segundo plano sin bloquear el lienzo
     try {
-      const analisis = await apiFetchJson('/api/firmas/plantillas/analizar-pdf', {
-        method: 'POST',
-        body: JSON.stringify({ pdfBase64: b64 }),
-      });
-      const detectados = Array.isArray(analisis.campos_detectados) ? analisis.campos_detectados : [];
+      const { analisis, detectados } = await ejecutarAnalisisPdfServidor(b64, false);
       state.editor.campos = detectados;
-      state.editor.totalPages = analisis.paginas || state.editor.totalPages || 1;
       state.editor.selectedFieldId = detectados[0] ? detectados[0].id : null;
       renderCajasOverlayEditor();
       renderInspectorCamposEditor();
 
+      const modoTxt = analisis.ia_usada
+        ? ' mediante análisis IA + reglas'
+        : (analisis.metodo_analisis === 'highlights' ? ' desde resaltados amarillos' : ' por análisis automático de espacios y firmas');
       if (detectados.length > 0) {
-        setEstadoEditorPdf(`✅ Se detectaron ${detectados.length} campos resaltados automáticamente. También podés agregar cajas de Texto, Firma o Sello PNG arriba del lienzo.`, 'ok');
-        notify(`PDF listo: se detectaron ${detectados.length} campos resaltados.`, 'success');
+        setEstadoEditorPdf(`✅ Se detectaron ${detectados.length} campos${modoTxt}. Podés arrastrarlos, redimensionarlos, editarlos o quitarlos libremente.`, 'ok');
+        notify(`PDF listo: ${detectados.length} campo(s) detectado(s).`, 'success');
       } else {
-        setEstadoEditorPdf('ℹ️ Este PDF no tiene resaltados amarillos (campos en blanco). Usá los botones "➕ Marcar Campo Texto", "✍️ Marcar Caja Firma" y "🏛️ Marcar Caja Sello PNG" para hacer clic donde quieras estampar.', 'warn');
+        setEstadoEditorPdf('ℹ️ No se detectaron espacios automáticamente en este PDF. Usá "➕ Marcar Campo Texto", "✍️ Marcar Caja Firma" o "✨ Auto-detectar IA".', 'warn');
         notify('PDF cargado. Hacé clic en los botones superiores para marcar campos y firmas.', 'info');
       }
     } catch (errAn) {
@@ -1072,17 +1194,29 @@
     }
   }
 
+  function actualizarBotonesModoEditor() {
+    ['texto', 'firma', 'sello'].forEach((k) => {
+      const btn = document.getElementById('btnModoCampo_' + k);
+      if (!btn) return;
+      const activo = state.editor.addModeTipo === k;
+      btn.style.outline = activo ? '2.5px solid #1d4ed8' : 'none';
+      btn.style.outlineOffset = activo ? '1px' : '0';
+      btn.style.transform = activo ? 'translateY(-1px)' : 'none';
+    });
+  }
+
   function activarModoClickAgregarCampo(tipo) {
     if (!state.editor.pdfBase64) {
       notify('Primero subí o seleccioná un PDF plantilla arriba para visualizarlo.', 'warning');
       return;
     }
-    state.editor.addModeTipo = tipo;
+    state.editor.addModeTipo = state.editor.addModeTipo === tipo ? null : tipo;
     const overlay = document.getElementById('overlayCamposPlantilla');
-    if (overlay) overlay.style.cursor = tipo ? 'crosshair' : 'default';
-    if (tipo === 'firma') notify('Hacé clic en el PDF donde querés ubicar la caja de Firma Manuscrita.', 'info');
-    else if (tipo === 'sello') notify('Hacé clic en el PDF donde querés estampar el Sello Oficial PNG.', 'info');
-    else if (tipo === 'texto') notify('Hacé clic en el PDF donde querés colocar el nuevo campo.', 'info');
+    if (overlay) overlay.style.cursor = state.editor.addModeTipo ? 'crosshair' : 'default';
+    actualizarBotonesModoEditor();
+    if (state.editor.addModeTipo === 'firma') notify('Hacé clic en el PDF donde querés ubicar la caja de Firma Manuscrita.', 'info');
+    else if (state.editor.addModeTipo === 'sello') notify('Hacé clic en el PDF donde querés estampar el Sello Oficial PNG.', 'info');
+    else if (state.editor.addModeTipo === 'texto') notify('Hacé clic en el PDF donde querés colocar el nuevo campo.', 'info');
   }
 
   function agregarCampoEnCoords(xPct, yPct, tipo) {
@@ -1148,8 +1282,64 @@
     state.editor.addModeTipo = null;
     const overlay = document.getElementById('overlayCamposPlantilla');
     if (overlay) overlay.style.cursor = 'default';
+    actualizarBotonesModoEditor();
     renderCajasOverlayEditor();
     renderInspectorCamposEditor();
+  }
+
+  function obtenerEstilosCajaCampo(c, selected) {
+    const esFirma = c.tipo === 'firma';
+    const esSello = c.tipo === 'sello' || c.origen_campo === 'sello_institucional';
+    let borderCol = '#d97706', bgCol = 'rgba(245, 158, 11, 0.22)', tagBg = '#b45309';
+    if (esFirma) { borderCol = '#059669'; bgCol = 'rgba(16, 185, 129, 0.16)'; tagBg = '#047857'; }
+    else if (esSello) { borderCol = '#7c3aed'; bgCol = 'rgba(124, 58, 237, 0.16)'; tagBg = '#6d28d9'; }
+    if (selected) { borderCol = '#2563eb'; bgCol = 'rgba(37, 99, 235, 0.22)'; tagBg = '#1d4ed8'; }
+    const borderStyle = (esFirma || esSello) ? '2px dashed' : (selected ? '2px solid' : '1.5px solid');
+    return { border: `${borderStyle} ${borderCol}`, bgCol, tagBg, esFirma, esSello };
+  }
+
+  function obtenerTextoEtiquetaCaja(c) {
+    if (c.tipo === 'firma') {
+      const fc = String(c.firmante_clave || 'firmante_1').replace('firmante_', 'F');
+      return `✍️ [${fc}] ${c.etiqueta || 'Firma'}`;
+    }
+    if (c.tipo === 'sello' || c.origen_campo === 'sello_institucional') {
+      return `🏛️ ${c.etiqueta || 'Sello PNG'}`;
+    }
+    return c.etiqueta || c.origen_campo || 'Campo';
+  }
+
+  function actualizarEstiloSeleccionOverlay() {
+    const overlay = document.getElementById('overlayCamposPlantilla');
+    if (!overlay) return;
+    overlay.querySelectorAll('[data-field-id]').forEach((node) => {
+      const cid = node.getAttribute('data-field-id');
+      const c = state.editor.campos.find((x) => x.id === cid);
+      if (!c) return;
+      const sel = cid === state.editor.selectedFieldId;
+      const st = obtenerEstilosCajaCampo(c, sel);
+      node.style.border = st.border;
+      node.style.background = st.bgCol;
+      node.style.zIndex = sel ? '25' : '10';
+      const lbl = node.querySelector('.campo-tag-lbl');
+      if (lbl) lbl.style.background = st.tagBg;
+    });
+    const lista = document.getElementById('editorListaCamposResumen');
+    if (lista) {
+      lista.querySelectorAll('[data-pill-id]').forEach((btn) => {
+        const act = btn.getAttribute('data-pill-id') === state.editor.selectedFieldId;
+        btn.style.borderColor = act ? '#1d4ed8' : '#cbd5e1';
+        btn.style.background = act ? '#dbeafe' : '#ffffff';
+        btn.style.color = act ? '#1e3a8a' : '#334155';
+      });
+    }
+  }
+
+  function actualizarCoordsBadgeInspector(c) {
+    const badge = document.getElementById('lblEditorCampoCoords');
+    if (badge && c) {
+      badge.textContent = `X: ${(Number(c.x_pct || 0) * 100).toFixed(1)}% · Y: ${(Number(c.y_pct || 0) * 100).toFixed(1)}% · Ancho: ${(Number(c.w_pct || 0) * 100).toFixed(1)}% · Alto: ${(Number(c.h_pct || 0) * 100).toFixed(1)}%`;
+    }
   }
 
   function renderCajasOverlayEditor() {
@@ -1157,41 +1347,32 @@
     if (!overlay) return;
     overlay.innerHTML = '';
 
+    const frag = document.createDocumentFragment();
     const camposPag = state.editor.campos.filter((c) => Number(c.pagina || 1) === state.editor.currentPage);
     camposPag.forEach((c) => {
       const el = document.createElement('div');
+      el.setAttribute('data-field-id', c.id);
       const selected = c.id === state.editor.selectedFieldId;
-      const esFirma = c.tipo === 'firma';
-      const esSello = c.tipo === 'sello' || c.origen_campo === 'sello_institucional';
+      const st = obtenerEstilosCajaCampo(c, selected);
+
       el.style.position = 'absolute';
       el.style.left = `${(c.x_pct || 0) * 100}%`;
       el.style.top = `${(c.y_pct || 0) * 100}%`;
       el.style.width = `${(c.w_pct || 0.2) * 100}%`;
       el.style.height = `${(c.h_pct || 0.03) * 100}%`;
-
-      let borderCol = '#d97706', bgCol = 'rgba(245, 158, 11, 0.22)', tagBg = '#b45309';
-      if (esFirma) { borderCol = '#059669'; bgCol = 'rgba(16, 185, 129, 0.16)'; tagBg = '#047857'; }
-      else if (esSello) { borderCol = '#7c3aed'; bgCol = 'rgba(124, 58, 237, 0.16)'; tagBg = '#6d28d9'; }
-      if (selected) { borderCol = '#2563eb'; bgCol = 'rgba(37, 99, 235, 0.20)'; tagBg = '#1d4ed8'; }
-
-      el.style.border = `${esFirma || esSello ? '2px dashed' : (selected ? '2px solid' : '1.5px solid')} ${borderCol}`;
-      el.style.background = bgCol;
+      el.style.border = st.border;
+      el.style.background = st.bgCol;
       el.style.borderRadius = '3px';
-      el.style.cursor = 'move';
+      el.style.cursor = 'grab';
       el.style.boxSizing = 'border-box';
       el.style.userSelect = 'none';
-      el.style.zIndex = selected ? '20' : '10';
+      el.style.touchAction = 'none';
+      el.style.zIndex = selected ? '25' : '10';
       el.title = `${c.etiqueta} (${c.origen_campo})`;
 
       const lbl = document.createElement('span');
-      if (esFirma) {
-        const fc = String(c.firmante_clave || 'firmante_1').replace('firmante_', 'F');
-        lbl.textContent = `✍️ [${fc}] ${c.etiqueta || 'Firma'}`;
-      } else if (esSello) {
-        lbl.textContent = `🏛️ ${c.etiqueta || 'Sello PNG'}`;
-      } else {
-        lbl.textContent = c.etiqueta || c.origen_campo;
-      }
+      lbl.className = 'campo-tag-lbl';
+      lbl.textContent = obtenerTextoEtiquetaCaja(c);
       lbl.style.position = 'absolute';
       lbl.style.top = '-16px';
       lbl.style.left = '0';
@@ -1200,31 +1381,39 @@
       lbl.style.padding = '1px 4px';
       lbl.style.borderRadius = '3px';
       lbl.style.whiteSpace = 'nowrap';
-      lbl.style.background = tagBg;
+      lbl.style.background = st.tagBg;
       lbl.style.color = '#ffffff';
       lbl.style.pointerEvents = 'none';
       el.appendChild(lbl);
 
       const handle = document.createElement('div');
+      handle.setAttribute('data-resize-handle', '1');
       handle.style.position = 'absolute';
-      handle.style.right = '-4px';
-      handle.style.bottom = '-4px';
-      handle.style.width = '10px';
-      handle.style.height = '10px';
+      handle.style.right = '-5px';
+      handle.style.bottom = '-5px';
+      handle.style.width = '12px';
+      handle.style.height = '12px';
       handle.style.background = '#1d4ed8';
       handle.style.border = '1.5px solid #ffffff';
-      handle.style.borderRadius = '2px';
+      handle.style.borderRadius = '3px';
       handle.style.cursor = 'nwse-resize';
+      handle.style.touchAction = 'none';
       el.appendChild(handle);
 
-      el.addEventListener('mousedown', (ev) => {
+      el.addEventListener('pointerdown', (ev) => {
+        if (ev.button && ev.button !== 0) return;
         ev.stopPropagation();
+
+        // Actualizar selección SIN destruir el DOM (mantiene el elemento vivo durante el drag a 60fps)
+        const cambioSel = state.editor.selectedFieldId !== c.id;
         state.editor.selectedFieldId = c.id;
-        renderCajasOverlayEditor();
-        renderInspectorCamposEditor();
+        actualizarEstiloSeleccionOverlay();
+        if (cambioSel) renderInspectorCamposEditor();
 
         const rect = overlay.getBoundingClientRect();
-        const isResize = ev.target === handle;
+        if (!rect.width || !rect.height) return;
+
+        const isResize = ev.target === handle || (ev.target && ev.target.getAttribute('data-resize-handle') === '1');
         const startX = ev.clientX;
         const startY = ev.clientY;
         const origXPct = c.x_pct;
@@ -1232,46 +1421,113 @@
         const origWPct = c.w_pct;
         const origHPct = c.h_pct;
 
-        function onMove(mv) {
-          const dx = (mv.clientX - startX) / rect.width;
-          const dy = (mv.clientY - startY) / rect.height;
+        el.style.cursor = isResize ? 'nwse-resize' : 'grabbing';
+        try { el.setPointerCapture(ev.pointerId); } catch (_e) {}
+
+        let rafId = null;
+        let lastMove = null;
+
+        function aplicarFrame() {
+          rafId = null;
+          if (!lastMove) return;
+          const dx = (lastMove.clientX - startX) / rect.width;
+          const dy = (lastMove.clientY - startY) / rect.height;
           if (isResize) {
             c.w_pct = Math.max(0.03, Math.min(1 - c.x_pct, Number((origWPct + dx).toFixed(4))));
             c.h_pct = Math.max(0.015, Math.min(1 - c.y_pct, Number((origHPct + dy).toFixed(4))));
+            el.style.width = `${c.w_pct * 100}%`;
+            el.style.height = `${c.h_pct * 100}%`;
           } else {
             c.x_pct = Math.max(0, Math.min(1 - c.w_pct, Number((origXPct + dx).toFixed(4))));
             c.y_pct = Math.max(0, Math.min(1 - c.h_pct, Number((origYPct + dy).toFixed(4))));
+            el.style.left = `${c.x_pct * 100}%`;
+            el.style.top = `${c.y_pct * 100}%`;
           }
-          el.style.left = `${c.x_pct * 100}%`;
-          el.style.top = `${c.y_pct * 100}%`;
-          el.style.width = `${c.w_pct * 100}%`;
-          el.style.height = `${c.h_pct * 100}%`;
+          actualizarCoordsBadgeInspector(c);
         }
 
-        function onUp() {
-          window.removeEventListener('mousemove', onMove);
-          window.removeEventListener('mouseup', onUp);
-          renderInspectorCamposEditor();
+        function onMove(mv) {
+          lastMove = { clientX: mv.clientX, clientY: mv.clientY };
+          if (rafId === null) {
+            rafId = window.requestAnimationFrame(aplicarFrame);
+          }
         }
-        window.addEventListener('mousemove', onMove);
-        window.addEventListener('mouseup', onUp);
+
+        function onUp(upEv) {
+          if (rafId !== null) {
+            window.cancelAnimationFrame(rafId);
+            aplicarFrame();
+          }
+          el.style.cursor = 'grab';
+          try { if (upEv && el.hasPointerCapture(upEv.pointerId)) el.releasePointerCapture(upEv.pointerId); } catch (_e) {}
+          el.removeEventListener('pointermove', onMove);
+          el.removeEventListener('pointerup', onUp);
+          el.removeEventListener('pointercancel', onUp);
+          actualizarCoordsBadgeInspector(c);
+        }
+
+        el.addEventListener('pointermove', onMove);
+        el.addEventListener('pointerup', onUp);
+        el.addEventListener('pointercancel', onUp);
       });
 
-      overlay.appendChild(el);
+      frag.appendChild(el);
     });
+    overlay.appendChild(frag);
   }
 
   function setupOverlayClickListener() {
     const overlay = document.getElementById('overlayCamposPlantilla');
     if (!overlay || overlay.dataset.boundClick) return;
     overlay.dataset.boundClick = '1';
-    overlay.addEventListener('mousedown', (ev) => {
+    overlay.addEventListener('pointerdown', (ev) => {
       if (!state.editor.addModeTipo || ev.target !== overlay) return;
       const rect = overlay.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
       const xPct = (ev.clientX - rect.left) / rect.width;
       const yPct = (ev.clientY - rect.top) / rect.height;
       agregarCampoEnCoords(xPct, yPct, state.editor.addModeTipo);
     });
+
+    if (!document.body.dataset.boundEditorKeys) {
+      document.body.dataset.boundEditorKeys = '1';
+      document.addEventListener('keydown', (ev) => {
+        const pnl = document.getElementById('panelFirmas_editor');
+        if (!pnl || pnl.style.display === 'none') return;
+        const tag = (ev.target && ev.target.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+
+        if (ev.key === 'Escape' && state.editor.addModeTipo) {
+          state.editor.addModeTipo = null;
+          overlay.style.cursor = 'default';
+          actualizarBotonesModoEditor();
+          return;
+        }
+        const c = state.editor.campos.find((x) => x.id === state.editor.selectedFieldId);
+        if (!c || Number(c.pagina || 1) !== state.editor.currentPage) return;
+
+        const step = ev.shiftKey ? 0.01 : 0.0025;
+        let moved = false;
+        if (ev.key === 'ArrowLeft') { c.x_pct = Math.max(0, Number((c.x_pct - step).toFixed(4))); moved = true; }
+        else if (ev.key === 'ArrowRight') { c.x_pct = Math.min(1 - c.w_pct, Number((c.x_pct + step).toFixed(4))); moved = true; }
+        else if (ev.key === 'ArrowUp') { c.y_pct = Math.max(0, Number((c.y_pct - step).toFixed(4))); moved = true; }
+        else if (ev.key === 'ArrowDown') { c.y_pct = Math.min(1 - c.h_pct, Number((c.y_pct + step).toFixed(4))); moved = true; }
+        else if (ev.key === 'Delete' || ev.key === 'Backspace') {
+          ev.preventDefault();
+          eliminarCampoEditor(c.id);
+          return;
+        }
+        if (moved) {
+          ev.preventDefault();
+          const boxEl = overlay.querySelector(`[data-field-id="${CSS.escape(c.id)}"]`);
+          if (boxEl) {
+            boxEl.style.left = `${c.x_pct * 100}%`;
+            boxEl.style.top = `${c.y_pct * 100}%`;
+          }
+          actualizarCoordsBadgeInspector(c);
+        }
+      });
+    }
   }
 
   function renderInspectorCamposEditor() {
@@ -1285,13 +1541,13 @@
         : state.editor.campos.map((item) => {
           const act = item.id === state.editor.selectedFieldId;
           const ico = item.tipo === 'firma' ? '✍️ ' : (item.tipo === 'sello' ? '🏛️ ' : '');
-          return `<button type="button" onclick="window.seleccionarCampoEditor('${escHtml(item.id)}')" style="padding:3px 8px;border-radius:6px;border:1px solid ${act ? '#1d4ed8' : '#cbd5e1'};background:${act ? '#dbeafe' : '#ffffff'};color:${act ? '#1e3a8a' : '#334155'};font-size:0.72rem;font-weight:700;cursor:pointer;">${ico}P${item.pagina || 1}: ${escHtml(item.etiqueta || item.id)}</button>`;
+          return `<button type="button" data-pill-id="${escHtml(item.id)}" onclick="window.seleccionarCampoEditor('${escHtml(item.id)}')" style="padding:3px 8px;border-radius:6px;border:1px solid ${act ? '#1d4ed8' : '#cbd5e1'};background:${act ? '#dbeafe' : '#ffffff'};color:${act ? '#1e3a8a' : '#334155'};font-size:0.72rem;font-weight:700;cursor:pointer;">${ico}P${item.pagina || 1}: ${escHtml(item.etiqueta || item.id)}</button>`;
         }).join(' ');
     }
 
     if (!cont) return;
     if (!c) {
-      cont.innerHTML = '<div style="padding:1rem;background:#f8fafc;border-radius:8px;border:1px dashed #cbd5e1;font-size:0.8rem;color:#64748b;">Hacé clic sobre un cuadro en el PDF (o agregá un campo nuevo) para configurar qué dato o firmante se estampa ahí.</div>';
+      cont.innerHTML = '<div style="padding:1rem;background:#f8fafc;border-radius:8px;border:1px dashed #cbd5e1;font-size:0.8rem;color:#64748b;">Hacé clic sobre un cuadro en el PDF (o agregá un campo nuevo) para configurar qué dato o firmante se estampa ahí. Podés usar las flechas del teclado para ajustar posición con precisión.</div>';
       return;
     }
 
@@ -1318,11 +1574,21 @@
       `;
     }
 
+    const fuenteBadge = c.fuente === 'ia_gemini'
+      ? '<span style="font-size:0.66rem;padding:1px 6px;border-radius:9999px;background:#e0e7ff;color:#3730a3;font-weight:700;">✨ IA</span>'
+      : (c.fuente === 'regla' ? '<span style="font-size:0.66rem;padding:1px 6px;border-radius:9999px;background:#fef3c7;color:#92400e;font-weight:700;">📐 Regla PDF</span>' : '');
+
     cont.innerHTML = `
       <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.8rem;display:flex;flex-direction:column;gap:0.55rem;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <strong style="font-size:0.82rem;color:#0f172a;">Campo: ${escHtml(c.id)} (Pág. ${c.pagina || 1})</strong>
-          <button type="button" onclick="window.eliminarCampoEditor('${escHtml(c.id)}')" style="padding:2px 8px;border-radius:6px;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;font-size:0.72rem;font-weight:700;cursor:pointer;">🗑️ Quitar</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.35rem;flex-wrap:wrap;">
+          <strong style="font-size:0.82rem;color:#0f172a;">Campo: ${escHtml(c.id)} (Pág. ${c.pagina || 1}) ${fuenteBadge}</strong>
+          <div style="display:flex;gap:0.3rem;">
+            <button type="button" onclick="window.duplicarCampoEditor('${escHtml(c.id)}')" style="padding:2px 8px;border-radius:6px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-size:0.72rem;font-weight:700;cursor:pointer;">📋 Duplicar</button>
+            <button type="button" onclick="window.eliminarCampoEditor('${escHtml(c.id)}')" style="padding:2px 8px;border-radius:6px;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;font-size:0.72rem;font-weight:700;cursor:pointer;">🗑️ Quitar</button>
+          </div>
+        </div>
+        <div id="lblEditorCampoCoords" style="font-size:0.69rem;color:#475569;font-family:monospace;background:#ffffff;padding:3px 6px;border-radius:5px;border:1px solid #e2e8f0;">
+          X: ${(Number(c.x_pct || 0) * 100).toFixed(1)}% · Y: ${(Number(c.y_pct || 0) * 100).toFixed(1)}% · Ancho: ${(Number(c.w_pct || 0) * 100).toFixed(1)}% · Alto: ${(Number(c.h_pct || 0) * 100).toFixed(1)}%
         </div>
         ${c.texto_referencia ? `<div style="font-size:0.71rem;color:#64748b;background:#fffbeb;padding:4px 6px;border-radius:5px;border:1px solid #fde68a;">Texto detectado en plantilla: "${escHtml(c.texto_referencia)}"</div>` : ''}
         <div>
@@ -1361,7 +1627,7 @@
     if (Number(c.pagina || 1) !== state.editor.currentPage && state.editor.pdfBase64) {
       cargarPdfEnCanvasEditor(state.editor.pdfBase64, Number(c.pagina || 1));
     } else {
-      renderCajasOverlayEditor();
+      actualizarEstiloSeleccionOverlay();
     }
     renderInspectorCamposEditor();
   }
@@ -1370,7 +1636,22 @@
     const c = state.editor.campos.find((x) => x.id === state.editor.selectedFieldId);
     if (!c) return;
     c[prop] = val;
-    renderCajasOverlayEditor();
+
+    // Actualización puntual en DOM sin destruir ni reconstruir todo el overlay
+    const overlay = document.getElementById('overlayCamposPlantilla');
+    if (overlay) {
+      const box = overlay.querySelector(`[data-field-id="${CSS.escape(c.id)}"]`);
+      if (box) {
+        const lbl = box.querySelector('.campo-tag-lbl');
+        if (lbl) lbl.textContent = obtenerTextoEtiquetaCaja(c);
+        box.title = `${c.etiqueta || ''} (${c.origen_campo || ''})`;
+      }
+    }
+    const pill = document.querySelector(`#editorListaCamposResumen [data-pill-id="${CSS.escape(c.id)}"]`);
+    if (pill) {
+      const ico = c.tipo === 'firma' ? '✍️ ' : (c.tipo === 'sello' ? '🏛️ ' : '');
+      pill.textContent = `${ico}P${c.pagina || 1}: ${c.etiqueta || c.id}`;
+    }
   }
 
   function actualizarOrigenCampoEditor(origen) {
@@ -1389,6 +1670,20 @@
     } else {
       c.tipo = 'texto';
     }
+    renderCajasOverlayEditor();
+    renderInspectorCamposEditor();
+  }
+
+  function duplicarCampoEditor(cid) {
+    const orig = state.editor.campos.find((x) => x.id === cid);
+    if (!orig) return;
+    const copia = JSON.parse(JSON.stringify(orig));
+    copia.id = 'cmp_' + Date.now().toString(36) + '_' + Math.floor(Math.random() * 100);
+    copia.x_pct = Math.min(1 - (copia.w_pct || 0.2), Number(((orig.x_pct || 0) + 0.03).toFixed(4)));
+    copia.y_pct = Math.min(1 - (copia.h_pct || 0.03), Number(((orig.y_pct || 0) + 0.03).toFixed(4)));
+    copia.etiqueta = (orig.etiqueta || 'Campo') + ' (copia)';
+    state.editor.campos.push(copia);
+    state.editor.selectedFieldId = copia.id;
     renderCajasOverlayEditor();
     renderInspectorCamposEditor();
   }
@@ -1595,7 +1890,7 @@
     try {
       const headers = Object.assign(
         { 'Content-Type': 'application/json' },
-        typeof getAuthHeaders === 'function' ? getAuthHeaders() : {}
+        obtenerAuthHeaders()
       );
       const resp = await fetch(getApiBase() + '/api/expedientes/exportar-zip', {
         method: 'POST',
@@ -1944,12 +2239,14 @@
   global.abrirAsistenteRenaperPorId = abrirAsistenteRenaperPorId;
   global.abrirAsistenteRenaperDesdeFicha = abrirAsistenteRenaperDesdeFicha;
   global.onArchivoPdfPlantillaSeleccionado = onArchivoPdfPlantillaSeleccionado;
+  global.reanalizarPdfConIaEditor = reanalizarPdfConIaEditor;
   global.cargarPlantillaEnEditor = cargarPlantillaEnEditor;
   global.cambiarPaginaEditor = cambiarPaginaEditor;
   global.activarModoClickAgregarCampo = activarModoClickAgregarCampo;
   global.seleccionarCampoEditor = seleccionarCampoEditor;
   global.actualizarPropCampoEditor = actualizarPropCampoEditor;
   global.actualizarOrigenCampoEditor = actualizarOrigenCampoEditor;
+  global.duplicarCampoEditor = duplicarCampoEditor;
   global.eliminarCampoEditor = eliminarCampoEditor;
   global.guardarPlantillaDesdeEditor = guardarPlantillaDesdeEditor;
   global.probarEstampadoEditor = probarEstampadoEditor;

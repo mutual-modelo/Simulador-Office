@@ -2635,7 +2635,7 @@
     const aTop = Number(scr.availTop != null ? scr.availTop : 0);
     const aW = Number(scr.availWidth || global.innerWidth || 1280);
     const aH = Number(scr.availHeight || global.innerHeight || 760);
-    const wPopup = Math.max(480, Math.floor(aW * 0.49));
+    const wPopup = Math.max(390, Math.floor(aW * 0.30));
     const hPopup = Math.max(580, aH - 20);
     const leftPopup = aLeft + Math.max(0, aW - wPopup);
     const features = `popup=yes,left=${leftPopup},top=${aTop},width=${wPopup},height=${hPopup},resizable=yes,scrollbars=yes`;

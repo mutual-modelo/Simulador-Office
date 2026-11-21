@@ -281,6 +281,7 @@
         if (d.con_sello_institucional) chips.push({ bg: '#f5f3ff', col: '#5b21b6', txt: '🏛️ Sello Institucional PNG' });
         if (d.ekyc_verificado) chips.push({ bg: '#dcfce7', col: '#166534', txt: `🪪 eKYC Verificado${d.ekyc_face_match_pct != null ? ' (' + d.ekyc_face_match_pct + '%)' : ''}` });
         if (d.boletin_oficial_consultado) chips.push({ bg: '#ecfdf5', col: '#047857', txt: '📰 Cruce Boletín Oficial ER' });
+        if (d.cajajper_consultado) chips.push({ bg: '#f0fdf4', col: '#166534', txt: '🏛️ Cruce CajaJPER ER' });
         if (d.tsa_rfc3161 && d.tsa_rfc3161.ok) chips.push({ bg: '#eff6ff', col: '#1d4ed8', txt: '⏱️ Sello Temporal TSA RFC 3161' });
         if (d.drive_respaldado) chips.push({ bg: '#f0fdf4', col: '#15803d', txt: '☁️ Respaldo Inmutable en Drive' });
 

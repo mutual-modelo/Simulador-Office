@@ -810,6 +810,14 @@
           const boAlert = bo.tiene_alerta_critica;
           badgesHtml += `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:${boAlert ? '#fee2e2' : '#ecfdf5'};color:${boAlert ? '#b91c1c' : '#047857'};">${boAlert ? '⚠️ Boletín ER (' + (bo.total_resultados || 0) + ')' : '📰 Boletín ER OK'}</span>`;
         }
+        const cj = ek.cajajper;
+        if (cj && cj.consultado) {
+          const cjTram = Number(cj.cantidad_expedientes || 0);
+          const cjAlto = cj.nivel_alerta === 'ALTO';
+          const cjBg = cjAlto ? '#fee2e2' : (cjTram > 0 ? '#fef3c7' : '#ecfdf5');
+          const cjCol = cjAlto ? '#b91c1c' : (cjTram > 0 ? '#92400e' : '#047857');
+          badgesHtml += `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:${cjBg};color:${cjCol};">${cjTram > 0 ? '🏛️ CajaJPER (' + cjTram + ' exp.)' : '🏛️ CajaJPER OK'}</span>`;
+        }
       }
       if (r.pin_otp_verificado) {
         badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#f5f3ff;color:#5b21b6;">🔐 PIN 2FA OK</span>';

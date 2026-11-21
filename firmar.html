@@ -227,6 +227,7 @@
         <strong>SHA-256 Original:</strong> <span id="resHashOrig">-</span><br/>
         <strong>SHA-256 Firmado + Evidencia:</strong> <span id="resHashFirmado">-</span>
         <div id="resTsaStatusLine" style="margin-top:4px;display:none;"></div>
+        <div id="resPadesStatusLine" style="margin-top:4px;display:none;"></div>
       </div>
       <div style="display:flex;flex-direction:column;gap:0.55rem;">
         <button type="button" id="btnDescargarCopiaFirmada" class="btn btn-success">
@@ -287,6 +288,7 @@
             <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.65rem;text-align:center;">
               <div style="font-size:0.74rem;font-weight:700;color:#334155;margin-bottom:6px;">DNI DORSO *</div>
               <img id="imgPrevDniDorso" alt="Preview DNI Dorso" style="display:none;width:100%;max-height:130px;object-fit:contain;border-radius:6px;margin-bottom:6px;"/>
+              <div id="lblPdf417Status" style="display:none;font-size:0.7rem;font-weight:700;margin-bottom:6px;"></div>
               <label class="btn btn-secondary" style="padding:0.42rem 0.7rem;font-size:0.78rem;width:100%;cursor:pointer;">
                 📷 Capturar Dorso
                 <input type="file" id="inpDniDorsoCam" accept="image/*" capture="environment" style="display:none;"/>
@@ -371,6 +373,7 @@
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
   <script>
     (function () {
       'use strict';
@@ -399,13 +402,22 @@
         ekycValidado: false,
         ekycStream: null,
         retoLiveness: 'Sonreí levemente y mové un poco la cabeza hacia la derecha',
-        ekycImgs: { dniFrente: '', dniDorso: '', selfie1: '', selfie2: '' },
+        ekycImgs: { dniFrente: '', dniDorso: '', selfie1: '', selfie2: '', pdf417Raw: '' },
         drawing: false,
         hasInk: false,
         startTime: null,
         puntosTotales: 0,
         trazos: 0,
       };
+
+      function escHtml(v) {
+        return String(v == null ? '' : v)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
 
       function showErr(msg) {
         document.getElementById('estadoCargaBox').style.display = 'none';
@@ -583,6 +595,15 @@
             tsaLine.innerHTML = `<strong>Sello Tiempo RFC 3161:</strong> 📋 Evidencia local (${escHtml(data.tsa_rfc3161.status || 'FALLBACK')})`;
           }
         }
+        const padesLine = document.getElementById('resPadesStatusLine');
+        if (padesLine && data.pades_info) {
+          padesLine.style.display = 'block';
+          if (data.pades_info.ok) {
+            padesLine.innerHTML = `<strong>Firma Criptográfica PDF PAdES (.p12):</strong> 🔏 Sellado (${escHtml(data.pades_info.subject_cn || 'AMMER')})`;
+          } else {
+            padesLine.innerHTML = `<strong>Firma Criptográfica PDF PAdES (.p12):</strong> 📋 ${escHtml(data.pades_info.status || 'Sin sello PAdES')}`;
+          }
+        }
         const lnkVerif = document.getElementById('lnkPortalVerificacionQr');
         if (lnkVerif && data.estado === 'FIRMADO' && (data.solicitud_id || (appState.docInfo && appState.docInfo.solicitud_id))) {
           const sid = data.solicitud_id || appState.docInfo.solicitud_id;
@@ -628,15 +649,6 @@
               progEl.textContent = `👥 Documento de múltiples firmas: ${data.grupo_progreso.completados} de ${data.grupo_progreso.requeridos} firma(s) completada(s) hasta ahora.`;
             }
           }
-
-      function escHtml(v) {
-        return String(v == null ? '' : v)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#39;');
-      }
 
       const prest = (data.datos_resumen && data.datos_resumen.prestamo) || {};
           if (prest.monto || prest.cuotas) {
@@ -775,6 +787,39 @@
               appState.ekycImgs[key] = b64;
               const img = document.getElementById(imgId);
               if (img) { img.src = b64; img.style.display = 'block'; }
+              if (key === 'dniDorso') {
+                appState.ekycImgs.pdf417Raw = '';
+                const lbl417 = document.getElementById('lblPdf417Status');
+                if (lbl417) {
+                  lbl417.style.display = 'block';
+                  lbl417.style.color = '#64748b';
+                  lbl417.textContent = '🔍 Buscando código de barras PDF417...';
+                }
+                try {
+                  if (window.ZXing && typeof window.ZXing.BrowserPDF417Reader === 'function') {
+                    const reader = new window.ZXing.BrowserPDF417Reader();
+                    const res417 = await reader.decodeFromImageUrl(b64);
+                    const rawTxt = res417 && (res417.text || (typeof res417.getText === 'function' ? res417.getText() : ''));
+                    if (rawTxt && String(rawTxt).includes('@')) {
+                      appState.ekycImgs.pdf417Raw = String(rawTxt);
+                      if (lbl417) {
+                        lbl417.style.color = '#15803d';
+                        lbl417.textContent = '📊 Código PDF417 leído correctamente';
+                      }
+                    } else if (lbl417) {
+                      lbl417.style.color = '#b45309';
+                      lbl417.textContent = 'ℹ️ Código de barras no detectado en cliente (se validará por IA/OCR)';
+                    }
+                  } else if (lbl417) {
+                    lbl417.style.display = 'none';
+                  }
+                } catch (_) {
+                  if (lbl417) {
+                    lbl417.style.color = '#b45309';
+                    lbl417.textContent = 'ℹ️ Código de barras poco nítido (se validará por IA/OCR en servidor)';
+                  }
+                }
+              }
             } catch (e) {
               alert('No pudimos procesar la foto: ' + e.message);
             }
@@ -882,6 +927,7 @@
                   selfieBase64: appState.ekycImgs.selfie1 || null,
                   selfieDesafioBase64: appState.ekycImgs.selfie2 || null,
                   retoLiveness: appState.retoLiveness,
+                  pdf417Raw: appState.ekycImgs.pdf417Raw || null,
                 }),
               });
               const resJson = await resp.json();

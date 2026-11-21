@@ -5288,6 +5288,7 @@
             <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:1.1rem;">
               <div style="display:flex;justify-content:space-between;align-items:center;gap:0.6rem;flex-wrap:wrap;margin-bottom:0.85rem;">
                 <input type="text" id="inpFiltroBandejaFirmas" oninput="renderBandejaFirmas()" placeholder="Filtrar por Nombre, DNI, Expediente, Documento o Estado..." style="flex:1;min-width:240px;padding:0.5rem 0.7rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;"/>
+                <button type="button" onclick="abrirModalCertificadoPades()" style="padding:0.5rem 0.85rem;border-radius:8px;border:1px solid #4338ca;background:#eef2ff;color:#3730a3;font-size:0.8rem;font-weight:700;cursor:pointer;">🔐 Certificado PAdES (.p12)</button>
                 <button type="button" onclick="cargarBandejaFirmas()" style="padding:0.5rem 0.85rem;border-radius:8px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.8rem;font-weight:700;cursor:pointer;">🔄 Actualizar Bandeja</button>
               </div>
               <div style="overflow-x:auto;">
@@ -6815,6 +6816,7 @@
         <div id="footerCicloVidaFicha"></div>
         <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
           <button type="button" id="btnVerificarEjemplarRenaperFicha" onclick="if (typeof window.abrirAsistenteRenaperDesdeFicha === 'function') window.abrirAsistenteRenaperDesdeFicha()" style="display:inline-flex;align-items:center;gap:6px;padding:0.5rem 0.85rem;border-radius:8px;border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;font-size:0.8rem;font-weight:700;cursor:pointer;">🪪 Mi Ejemplar RENAPER</button>
+          <button type="button" id="btnEnviarAFirmaDesdeFicha" onclick="if (typeof window.enviarAFirmaDesdeFicha === 'function') window.enviarAFirmaDesdeFicha()" style="display:none;align-items:center;gap:6px;padding:0.5rem 0.9rem;border-radius:8px;border:1px solid #059669;background:#059669;color:#ffffff;font-size:0.8rem;font-weight:700;cursor:pointer;">✍️ Enviar a Firma AMMER</button>
           <button type="button" id="btnExportarExpedienteZip" onclick="exportarExpedienteCompletoZip()" style="display:none;align-items:center;gap:6px;padding:0.5rem 0.9rem;border-radius:8px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.8rem;font-weight:700;cursor:pointer;">📦 Expediente .ZIP</button>
           <button type="button" class="btn-restore" onclick="cerrarModal('modalFichaCompleta')">Cerrar Expediente</button>
         </div>
@@ -14441,10 +14443,13 @@ ${cierreTxt}`;
       window._fichaExpedienteActivoObj = s;
       window._fichaExpedienteActivoId = idActivo;
       const btnZip = document.getElementById('btnExportarExpedienteZip');
+      const esAdminFirma = (typeof tieneAccesoFirmasAmmer === 'function' && tieneAccesoFirmasAmmer(session));
       if (btnZip) {
-        btnZip.style.display = (typeof tieneAccesoFirmasAmmer === 'function' && tieneAccesoFirmasAmmer(session))
-          ? 'inline-flex'
-          : 'none';
+        btnZip.style.display = esAdminFirma ? 'inline-flex' : 'none';
+      }
+      const btnFirmaFicha = document.getElementById('btnEnviarAFirmaDesdeFicha');
+      if (btnFirmaFicha) {
+        btnFirmaFicha.style.display = esAdminFirma ? 'inline-flex' : 'none';
       }
 
       const tituloExpediente = idDef ? ('Expediente ' + idDef) : ('Expediente ' + idProv);
@@ -24951,6 +24956,6 @@ ${cierreTxt}`;
   <script src="js/auditoria20.js?v=6"></script>
   <script src="js/fichasAsociados.js?v=6"></script>
   <script src="js/sidecreerWidget.js?v=10"></script>
-  <script src="js/firmasAmmer.js?v=6"></script>
+  <script src="js/firmasAmmer.js?v=7"></script>
 </body>
 </html>

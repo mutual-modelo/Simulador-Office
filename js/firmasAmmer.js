@@ -788,6 +788,7 @@
       if (est === 'FIRMADO') { bg = '#dcfce7'; col = '#166534'; }
       else if (est === 'PARCIAL') { bg = '#ffedd5'; col = '#9a3412'; }
       else if (est === 'LEIDO') { bg = '#dbeafe'; col = '#1e40af'; }
+      else if (est === 'ANULADO') { bg = '#fee2e2'; col = '#b91c1c'; }
 
       const gpsHtml = (r.geo_latitud != null && r.geo_longitud != null)
         ? `<a href="https://maps.google.com/?q=${r.geo_latitud},${r.geo_longitud}" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline;font-size:0.72rem;">📍 Ver GPS</a>`
@@ -805,6 +806,9 @@
         const ekBg = ek.estado_ekyc === 'APROBADO' ? '#dcfce7' : '#fef3c7';
         const fmTxt = ek.face_match_pct != null ? ` · Face ${ek.face_match_pct}%` : '';
         badgesHtml += `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:${ekBg};color:${ekCol};">🪪 eKYC ${escHtml(ek.estado_ekyc)}${escHtml(fmTxt)}</span>`;
+        if (ek.pdf417_ok) {
+          badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#ecfeff;color:#0e7490;">📊 PDF417 OK</span>';
+        }
         const bo = ek.boletin_oficial_er;
         if (bo && bo.consultado) {
           const boAlert = bo.tiene_alerta_critica;
@@ -826,6 +830,10 @@
       if (tsa && tsa.ok) {
         badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#eff6ff;color:#1d4ed8;">⏱️ TSA RFC 3161</span>';
       }
+      const pades = r.pades_resumen || null;
+      if (pades && pades.ok) {
+        badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#eef2ff;color:#3730a3;">🔏 PAdES (.p12)</span>';
+      }
 
       const verifyUrl = `verificar.html?id=${encodeURIComponent(r.id)}&h=${encodeURIComponent((r.hash_sha256_original || '').slice(0, 16))}`;
       const driveBtn = r.drive_file_url
@@ -835,6 +843,12 @@
           : '');
       const tsrBtn = r.tiene_tsr
         ? `<button type="button" onclick="window.descargarTsrSolicitudFirma('${escHtml(r.id)}')" style="padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #4338ca;background:#eef2ff;color:#3730a3;font-size:0.71rem;font-weight:700;cursor:pointer;">⏱️ .TSR</button>`
+        : '';
+      const renovarBtn = est !== 'FIRMADO'
+        ? `<button type="button" onclick="window.renovarEnlaceSolicitudFirma('${escHtml(r.id)}')" title="Emitir nuevo enlace con 24h de vigencia" style="padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #d97706;background:#fffbeb;color:#b45309;font-size:0.71rem;font-weight:700;cursor:pointer;">🔄 Renovar</button>`
+        : '';
+      const revocarBtn = (est !== 'FIRMADO' && est !== 'ANULADO')
+        ? `<button type="button" onclick="window.revocarSolicitudFirma('${escHtml(r.id)}')" title="Anular este enlace de firma" style="padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #ef4444;background:#fef2f2;color:#b91c1c;font-size:0.71rem;font-weight:700;cursor:pointer;">🚫 Anular</button>`
         : '';
 
       return `
@@ -858,7 +872,10 @@
           </td>
           <td style="padding:0.65rem 0.6rem;text-align:right;white-space:nowrap;">
             <div style="display:inline-flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;align-items:center;">
+              <button type="button" onclick="window.verBitacoraEventosFirma('${escHtml(r.id)}')" title="Ver bitácora forense de eventos" style="padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #64748b;background:#f8fafc;color:#334155;font-size:0.71rem;font-weight:700;cursor:pointer;">🕵️ Eventos</button>
               <button type="button" onclick="window.abrirAsistenteRenaperPorId('${escHtml(r.id)}')" title="Abrir RENAPER Mi Ejemplar con datos listos para copiar" style="padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;font-size:0.71rem;font-weight:700;cursor:pointer;">🪪 Ejemplar</button>
+              ${renovarBtn}
+              ${revocarBtn}
               <a href="${verifyUrl}" target="_blank" rel="noopener" style="padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;font-size:0.71rem;font-weight:700;text-decoration:none;">🔍 Verificar</a>
               ${tsrBtn}
               ${driveBtn}
@@ -1730,6 +1747,170 @@
     });
   }
 
+  // ==================== FASE 4: BITÁCORA, RENOVAR, REVOCAR, FICHA & PADES ====================
+  function ensureModalFase4Firmas(titleHtml, bodyHtml) {
+    let ov = document.getElementById('modalFase4FirmasOverlay');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = 'modalFase4FirmasOverlay';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(15,23,42,0.55);display:flex;align-items:center;justify-content:center;padding:1rem;';
+      document.body.appendChild(ov);
+    }
+    ov.innerHTML = `
+      <div style="background:#ffffff;border-radius:14px;max-width:660px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 24px 50px rgba(15,23,42,0.3);overflow:hidden;">
+        <div style="padding:0.9rem 1.1rem;background:#0f2744;color:#ffffff;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-weight:800;font-size:0.95rem;">${titleHtml}</div>
+          <button type="button" onclick="document.getElementById('modalFase4FirmasOverlay').style.display='none'" style="border:none;background:rgba(255,255,255,0.16);color:#ffffff;border-radius:6px;padding:3px 9px;font-weight:800;cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:1rem 1.1rem;overflow-y:auto;">${bodyHtml}</div>
+      </div>
+    `;
+    ov.style.display = 'flex';
+  }
+
+  async function verBitacoraEventosFirma(solId) {
+    try {
+      notify('Cargando bitácora forense...', 'info');
+      const data = await apiFetchJson(`/api/firmas/solicitudes/${encodeURIComponent(solId)}/eventos`, { method: 'GET' });
+      const evs = Array.isArray(data.eventos) ? data.eventos : [];
+      const rowsHtml = evs.length === 0
+        ? '<div style="padding:1rem;text-align:center;color:#64748b;">No hay eventos registrados todavía para esta solicitud.</div>'
+        : evs.map((ev) => `
+          <div style="border-left:3px solid #1d4ed8;background:#f8fafc;border-radius:6px;padding:0.55rem 0.75rem;margin-bottom:0.55rem;">
+            <div style="display:flex;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;">
+              <strong style="color:#0f2744;font-size:0.82rem;">${escHtml(ev.evento || '-')}</strong>
+              <span style="font-size:0.72rem;color:#475569;">${escHtml((ev.created_at || '').slice(0, 19).replace('T', ' '))} UTC</span>
+            </div>
+            <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">IP: ${escHtml(ev.ip_origen || '-')} · UA: ${escHtml((ev.user_agent || '-').slice(0, 75))}</div>
+            ${ev.detalle_json ? `<pre style="margin:0.35rem 0 0;padding:0.4rem;background:#ffffff;border:1px solid #e2e8f0;border-radius:5px;font-size:0.68rem;overflow-x:auto;color:#334155;">${escHtml(JSON.stringify(ev.detalle_json, null, 2))}</pre>` : ''}
+          </div>
+        `).join('');
+      ensureModalFase4Firmas(`🕵️ Bitácora Forense (${escHtml(solId.slice(0, 8))})`, rowsHtml);
+    } catch (err) {
+      notify('Error consultando bitácora: ' + err.message, 'error');
+    }
+  }
+
+  async function renovarEnlaceSolicitudFirma(solId) {
+    try {
+      notify('Generando nuevo enlace válido por 24 horas...', 'info');
+      const res = await apiFetchJson(`/api/firmas/solicitudes/${encodeURIComponent(solId)}/renovar`, {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+      const pinNote = res.pin_otp ? `\n\n🔐 Tu nuevo PIN de seguridad para confirmar la firma es: *${res.pin_otp}*` : '';
+      const msg = `Hola ${res.nombre_solicitante || 'Estimado/a'}, te reenviamos desde Asociación Mutual Modelo de Entre Ríos (AMMER) el nuevo enlace seguro para firmar "${res.plantilla_nombre || 'Documento'}":\n\n${res.url_firma}${pinNote}\n\nVigencia: 24 horas.`;
+      ensureModalFase4Firmas('🔄 Enlace Renovado (24hs)', `
+        <div style="font-size:0.82rem;color:#166534;background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:0.6rem 0.8rem;margin-bottom:0.75rem;font-weight:700;">
+          ✅ Enlace anterior invalidado. Ya podés compartir el nuevo link por WhatsApp.
+        </div>
+        ${res.pin_otp ? `<div style="margin-bottom:0.6rem;padding:0.45rem 0.7rem;border-radius:8px;background:#f5f3ff;border:1px solid #ddd6fe;color:#5b21b6;font-weight:800;font-size:0.84rem;">🔐 Nuevo PIN 2FA: <span class="font-mono">${escHtml(res.pin_otp)}</span></div>` : ''}
+        <div style="display:flex;gap:0.45rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+          <input type="text" id="txtEnlaceRenovadoModal" readonly value="${escHtml(res.url_firma)}" style="flex:1;min-width:220px;padding:0.45rem 0.6rem;border:1px solid #cbd5e1;border-radius:7px;font-size:0.78rem;"/>
+          <button type="button" onclick="window.copiarInputPorId('txtEnlaceRenovadoModal', 'Nuevo enlace')" style="padding:0.45rem 0.8rem;border-radius:7px;border:1px solid #047857;background:#ffffff;color:#047857;font-size:0.76rem;font-weight:700;cursor:pointer;">📋 Copiar</button>
+        </div>
+        <textarea id="txtMsgWaRenovadoModal" rows="4" style="width:100%;padding:0.45rem;border:1px solid #cbd5e1;border-radius:7px;font-size:0.78rem;margin-bottom:0.6rem;">${escHtml(msg)}</textarea>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+          <button type="button" onclick="window.copiarInputPorId('txtMsgWaRenovadoModal', 'Mensaje WhatsApp')" style="padding:0.45rem 0.85rem;border-radius:7px;border:1px solid #0f2744;background:#ffffff;color:#0f2744;font-size:0.78rem;font-weight:700;cursor:pointer;">📋 Copiar Mensaje</button>
+          <button type="button" onclick="window.abrirWhatsAppFirmante('${escHtml(res.telefono_whatsapp || '')}', 'txtMsgWaRenovadoModal')" style="padding:0.45rem 0.9rem;border-radius:7px;border:1px solid #16a34a;background:#16a34a;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;">💬 Abrir WhatsApp</button>
+        </div>
+      `);
+      await cargarBandejaFirmas();
+    } catch (err) {
+      notify('Error renovando enlace: ' + err.message, 'error');
+    }
+  }
+
+  async function revocarSolicitudFirma(solId) {
+    if (!global.confirm('¿Seguro que querés ANULAR esta solicitud de firma? El enlace actual dejará de funcionar inmediatamente.')) return;
+    try {
+      await apiFetchJson(`/api/firmas/solicitudes/${encodeURIComponent(solId)}/revocar`, { method: 'POST' });
+      notify('Solicitud de firma anulada correctamente.', 'success');
+      await cargarBandejaFirmas();
+    } catch (err) {
+      notify('Error anulando solicitud: ' + err.message, 'error');
+    }
+  }
+
+  async function enviarAFirmaDesdeFicha() {
+    const expId = global._fichaExpedienteActivoId || (global._fichaExpedienteActivoObj && global._fichaExpedienteActivoObj.id);
+    if (typeof global.cerrarModal === 'function') global.cerrarModal('modalFichaCompleta');
+    if (typeof global.cambiarPestana === 'function') global.cambiarPestana('firmasAmmer');
+    await initFirmasAmmerView();
+    cambiarTabFirmas('generar');
+    if (expId) {
+      const sel = document.getElementById('selFirmaExpediente');
+      if (sel) {
+        sel.value = String(expId);
+        renderCamposCompletarFormulario();
+      }
+    }
+  }
+
+  async function abrirModalCertificadoPades() {
+    try {
+      notify('Consultando estado de certificado PAdES (.p12)...', 'info');
+      const st = await apiFetchJson('/api/firmas/pades/estado', { method: 'GET' });
+      const c = st.certificado || {};
+      const body = `
+        <div style="font-size:0.82rem;color:#334155;margin-bottom:0.85rem;line-height:1.45;">
+          Cada documento completado recibe un sello criptográfico <strong>PAdES (.p12)</strong> embebido dentro del PDF para detectar alteraciones en Adobe Reader.
+          Hoy está operando en modo: <strong style="color:#3730a3;">${escHtml(st.modo || '-')}</strong>
+        </div>
+        <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.75rem;font-size:0.78rem;margin-bottom:0.85rem;">
+          <div><strong>Titular (CN):</strong> ${escHtml(c.subject_cn || '-')}</div>
+          <div><strong>Emisor:</strong> ${escHtml(c.issuer_cn || '-')}</div>
+          <div><strong>Tipo:</strong> ${c.autofirmado ? 'Autofirmado institucional gratuito' : 'Certificado externo / Autoridad Certificante'}</div>
+          <div class="font-mono" style="margin-top:4px;word-break:break-all;"><strong>Huella SHA-256:</strong> ${escHtml(c.fingerprint_sha256 || '-')}</div>
+        </div>
+        <div style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:0.75rem;margin-bottom:0.75rem;">
+          <div style="font-size:0.78rem;font-weight:800;color:#3730a3;margin-bottom:4px;">Generar .p12 autofirmado estable para fijar en Render</div>
+          <div style="font-size:0.73rem;color:#4338ca;margin-bottom:0.55rem;">Si querés mantener exactamente la misma huella entre reinicios o cuando contrates un certificado AATL/licenciado, configurá <code>PADES_P12_BASE64</code> y <code>PADES_P12_PASSWORD</code> en Render.</div>
+          <button type="button" id="btnGenerarP12Modal" style="padding:0.45rem 0.9rem;border-radius:8px;border:1px solid #4338ca;background:#4338ca;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;">🔐 Generar y Descargar .p12 + Base64</button>
+          <div id="boxResultadoGenP12" style="display:none;margin-top:0.65rem;"></div>
+        </div>
+      `;
+      ensureModalFase4Firmas('🔐 Certificado Criptográfico PDF PAdES (.p12)', body);
+      const btnGen = document.getElementById('btnGenerarP12Modal');
+      if (btnGen) {
+        btnGen.addEventListener('click', async () => {
+          btnGen.disabled = true;
+          btnGen.textContent = '⏳ Generando RSA-2048 PKCS#12...';
+          try {
+            const g = await apiFetchJson('/api/firmas/pades/generar-p12', { method: 'POST', body: JSON.stringify({}) });
+            const rawBin = atob(g.p12Base64);
+            const arr = new Uint8Array(rawBin.length);
+            for (let i = 0; i < rawBin.length; i++) arr[i] = rawBin.charCodeAt(i);
+            const url = URL.createObjectURL(new Blob([arr], { type: 'application/x-pkcs12' }));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'AMMER_PAdES_Institucional.p12';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            const outBox = document.getElementById('boxResultadoGenP12');
+            if (outBox) {
+              outBox.style.display = 'block';
+              outBox.innerHTML = `
+                <div style="font-size:0.74rem;color:#166534;font-weight:700;margin-bottom:4px;">✅ Descargado AMMER_PAdES_Institucional.p12 (Clave: <code>ammer-pades-2026</code>)</div>
+                <textarea id="txtP12Base64Out" rows="3" readonly style="width:100%;font-size:0.68rem;padding:0.4rem;border:1px solid #cbd5e1;border-radius:6px;margin-bottom:4px;">${escHtml(g.p12Base64)}</textarea>
+                <button type="button" onclick="window.copiarInputPorId('txtP12Base64Out', 'PADES_P12_BASE64')" style="padding:0.3rem 0.7rem;border-radius:6px;border:1px solid #0f2744;background:#ffffff;color:#0f2744;font-size:0.72rem;font-weight:700;cursor:pointer;">📋 Copiar PADES_P12_BASE64</button>
+              `;
+            }
+          } catch (e) {
+            notify('Error generando .p12: ' + e.message, 'error');
+          } finally {
+            btnGen.disabled = false;
+            btnGen.textContent = '🔐 Generar y Descargar .p12 + Base64';
+          }
+        });
+      }
+    } catch (err) {
+      notify('Error consultando PAdES: ' + err.message, 'error');
+    }
+  }
+
   // Exportar API global
   global.initFirmasAmmerView = initFirmasAmmerView;
   global.cambiarTabFirmas = cambiarTabFirmas;
@@ -1754,6 +1935,11 @@
   global.descargarPdfSolicitudFirma = descargarPdfSolicitudFirma;
   global.descargarTsrSolicitudFirma = descargarTsrSolicitudFirma;
   global.respaldarSolicitudEnDrive = respaldarSolicitudEnDrive;
+  global.verBitacoraEventosFirma = verBitacoraEventosFirma;
+  global.renovarEnlaceSolicitudFirma = renovarEnlaceSolicitudFirma;
+  global.revocarSolicitudFirma = revocarSolicitudFirma;
+  global.enviarAFirmaDesdeFicha = enviarAFirmaDesdeFicha;
+  global.abrirModalCertificadoPades = abrirModalCertificadoPades;
   global.abrirAsistenteRenaperMiEjemplar = abrirAsistenteRenaperMiEjemplar;
   global.abrirAsistenteRenaperPorId = abrirAsistenteRenaperPorId;
   global.abrirAsistenteRenaperDesdeFicha = abrirAsistenteRenaperDesdeFicha;

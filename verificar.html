@@ -262,6 +262,9 @@
         if (d.valido) {
           banner.className = 'banner banner-ok';
           banner.innerHTML = `<div><strong>✅ DOCUMENTO AUTÉNTICO Y FIRMADO</strong><div style="font-size:0.8rem;margin-top:2px;">Certificado íntegro registrado en AMMER bajo Ley 25.506.${d.coincide_hash_qr === true ? ' · Hash QR verificado.' : ''}</div></div><div style="font-weight:800;font-size:0.85rem;">${escHtml(est)}</div>`;
+        } else if (est === 'ANULADO') {
+          banner.className = 'banner banner-err';
+          banner.innerHTML = `<div><strong>🚫 DOCUMENTO ANULADO / REVOCADO</strong><div style="font-size:0.8rem;margin-top:2px;">Esta solicitud de firma fue anulada administrativamente por AMMER y carece de validez legal.</div></div><div style="font-weight:800;">ANULADO</div>`;
         } else if (d.coincide_hash_qr === false) {
           banner.className = 'banner banner-err';
           banner.innerHTML = `<div><strong>⚠️ ALERTA DE INTEGRIDAD (HASH QR NO COINCIDE)</strong><div style="font-size:0.8rem;margin-top:2px;">El hash consultado en la URL no corresponde al documento almacenado.</div></div><div style="font-weight:800;">${escHtml(est)}</div>`;
@@ -280,21 +283,28 @@
         const chips = [];
         if (d.con_sello_institucional) chips.push({ bg: '#f5f3ff', col: '#5b21b6', txt: '🏛️ Sello Institucional PNG' });
         if (d.ekyc_verificado) chips.push({ bg: '#dcfce7', col: '#166534', txt: `🪪 eKYC Verificado${d.ekyc_face_match_pct != null ? ' (' + d.ekyc_face_match_pct + '%)' : ''}` });
+        if (d.pdf417_verificado) chips.push({ bg: '#e0f2fe', col: '#0369a1', txt: '📊 PDF417 DNI Verificado' });
         if (d.boletin_oficial_consultado) chips.push({ bg: '#ecfdf5', col: '#047857', txt: '📰 Cruce Boletín Oficial ER' });
         if (d.cajajper_consultado) chips.push({ bg: '#f0fdf4', col: '#166534', txt: '🏛️ Cruce CajaJPER ER' });
+        if (d.pades_info && d.pades_info.ok) chips.push({ bg: '#eef2ff', col: '#3730a3', txt: '🔏 Sello Criptográfico PDF PAdES (.p12)' });
         if (d.tsa_rfc3161 && d.tsa_rfc3161.ok) chips.push({ bg: '#eff6ff', col: '#1d4ed8', txt: '⏱️ Sello Temporal TSA RFC 3161' });
         if (d.drive_respaldado) chips.push({ bg: '#f0fdf4', col: '#15803d', txt: '☁️ Respaldo Inmutable en Drive' });
 
         document.getElementById('vBadges').innerHTML = chips.map((c) => `<span class="badge-chip" style="background:${c.bg};color:${c.col};">${escHtml(c.txt)}</span>`).join('');
 
         const tsaDiv = document.getElementById('vTsaInfo');
-        if (d.tsa_rfc3161 && d.tsa_rfc3161.ok) {
-          tsaDiv.innerHTML = `<strong>Sello Tiempo RFC 3161:</strong> VÁLIDO · Autoridad: ${escHtml(d.tsa_rfc3161.tsa_url || '-')} · Hora TSA: ${escHtml(d.tsa_rfc3161.gen_time || 'UTC')}`;
-        } else if (d.tsa_rfc3161) {
-          tsaDiv.innerHTML = `<strong>Sello Tiempo RFC 3161:</strong> ${escHtml(d.tsa_rfc3161.status || 'No emitido')}`;
-        } else {
-          tsaDiv.innerHTML = '';
+        const infoLines = [];
+        if (d.pades_info && d.pades_info.ok) {
+          const modoLbl = d.pades_info.autofirmado ? 'Certificado PKCS#12 Institucional Autofirmado' : 'Certificado PKCS#12 Externo';
+          const fp = d.pades_info.fingerprint_sha256 ? String(d.pades_info.fingerprint_sha256).slice(0, 16) + '...' : '-';
+          infoLines.push(`<strong>Firma Criptográfica PAdES (.p12):</strong> VÁLIDA (${escHtml(modoLbl)}) · Titular: ${escHtml(d.pades_info.subject_cn || 'AMMER')} · Huella SHA-256: <span class="font-mono">${escHtml(fp)}</span>`);
         }
+        if (d.tsa_rfc3161 && d.tsa_rfc3161.ok) {
+          infoLines.push(`<strong>Sello Tiempo RFC 3161:</strong> VÁLIDO · Autoridad: ${escHtml(d.tsa_rfc3161.tsa_url || '-')} · Hora TSA: ${escHtml(d.tsa_rfc3161.gen_time || 'UTC')}`);
+        } else if (d.tsa_rfc3161) {
+          infoLines.push(`<strong>Sello Tiempo RFC 3161:</strong> ${escHtml(d.tsa_rfc3161.status || 'No emitido')}`);
+        }
+        tsaDiv.innerHTML = infoLines.join('<br/>');
 
         const tbody = document.getElementById('vTablaFirmantes');
         tbody.innerHTML = (d.firmantes || []).map((f) => `

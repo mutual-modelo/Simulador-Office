@@ -31,16 +31,16 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.5;
-      font-size: 16px;
-      padding-bottom: 98px; /* espacio para la barra fija inferior */
+      line-height: 1.4;
+      font-size: 15px;
+      padding-bottom: 66px; /* espacio compacto para la barra fija inferior */
     }
 
     header {
       background: linear-gradient(135deg, #0a1628 0%, #0f2744 60%, #163a63 100%);
       color: #ffffff;
-      padding: 0.95rem 1.15rem;
-      box-shadow: 0 3px 14px rgba(15, 23, 42, 0.22);
+      padding: 0.5rem 0.9rem;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.2);
     }
 
     .header-inner {
@@ -49,120 +49,123 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 0.75rem;
-      flex-wrap: wrap;
+      gap: 0.5rem;
+      flex-wrap: nowrap;
     }
 
-    .brand-title { font-size: 1.08rem; font-weight: 800; letter-spacing: 0.01em; }
-    .brand-sub { font-size: 0.82rem; color: #cbd5e1; margin-top: 2px; }
+    .brand-title { font-size: 0.96rem; font-weight: 800; letter-spacing: 0.01em; line-height: 1.2; }
+    .brand-sub { font-size: 0.72rem; color: #cbd5e1; margin-top: 1px; line-height: 1.2; }
 
     .badge-ssl {
-      font-size: 0.78rem;
+      font-size: 0.72rem;
       font-weight: 700;
-      padding: 5px 11px;
+      padding: 3px 9px;
       border-radius: 9999px;
       background: rgba(255, 255, 255, 0.14);
       border: 1px solid rgba(255, 255, 255, 0.28);
       white-space: nowrap;
+      flex-shrink: 0;
     }
 
     main {
       max-width: 780px;
-      margin: 1rem auto 1.5rem auto;
-      padding: 0 0.9rem;
+      margin: 0.55rem auto 0.75rem auto;
+      padding: 0 0.65rem;
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      gap: 0.6rem;
     }
 
     .card {
       background: var(--card);
       border: 1px solid #e2e8f0;
-      border-radius: 18px;
-      padding: 1.25rem;
-      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+      border-radius: 14px;
+      padding: 0.9rem 1rem;
+      box-shadow: 0 3px 12px rgba(15, 23, 42, 0.05);
     }
 
     .step-heading {
-      margin: 0 0 0.35rem 0;
-      font-size: 1.25rem;
+      margin: 0 0 0.2rem 0;
+      font-size: 1.12rem;
       font-weight: 800;
       color: var(--navy);
-      line-height: 1.28;
+      line-height: 1.22;
     }
 
     .step-lead {
-      margin: 0 0 1rem 0;
-      font-size: 0.98rem;
+      margin: 0 0 0.65rem 0;
+      font-size: 0.88rem;
       color: var(--muted);
+      line-height: 1.35;
     }
 
     .meta-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
-      gap: 0.65rem;
-      font-size: 0.92rem;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 0.45rem;
+      font-size: 0.86rem;
     }
 
     .meta-item {
       background: #f8fafc;
       border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 0.65rem 0.85rem;
+      border-radius: 9px;
+      padding: 0.42rem 0.65rem;
     }
 
-    .meta-lbl { font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em; }
-    .meta-val { font-size: 0.98rem; font-weight: 700; color: var(--text); margin-top: 3px; word-break: break-word; }
+    .meta-lbl { font-size: 0.66rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em; }
+    .meta-val { font-size: 0.88rem; font-weight: 700; color: var(--text); margin-top: 1px; word-break: break-word; }
 
     .pdf-toolbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 0.55rem;
-      margin: 1rem 0 0.7rem 0;
+      gap: 0.45rem;
+      margin: 0.6rem 0 0.5rem 0;
     }
 
     .zoom-group {
       display: inline-flex;
       align-items: center;
-      gap: 0.35rem;
+      gap: 0.25rem;
       background: #f1f5f9;
       border: 1px solid #cbd5e1;
-      border-radius: 11px;
-      padding: 4px;
+      border-radius: 9px;
+      padding: 3px;
     }
 
     #pdfPaginasContainer {
       background: #e2e8f0;
-      border-radius: 12px;
-      padding: 0.75rem;
-      max-height: 58vh;
-      min-height: 260px;
+      border-radius: 10px;
+      padding: 0.55rem;
+      height: calc(100dvh - 320px);
+      min-height: 210px;
+      max-height: 58dvh;
       overflow: auto;
     }
 
     #pdfPaginasContainer canvas {
       display: block;
-      margin: 0 auto 0.75rem auto;
-      border-radius: 8px;
+      margin: 0 auto 0.55rem auto;
+      border-radius: 6px;
       background: #ffffff;
-      box-shadow: 0 3px 10px rgba(15, 23, 42, 0.14);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.14);
       max-width: 100%;
       height: auto;
     }
 
-    /* Botones accesibles para adultos mayores */
+    /* Botones claros y cómodos sin desperdiciar alto vertical */
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      min-height: 48px;
-      padding: 0.75rem 1.2rem;
-      border-radius: 12px;
+      gap: 6px;
+      min-height: 42px;
+      padding: 0.55rem 0.95rem;
+      border-radius: 10px;
       font-weight: 800;
-      font-size: 1rem;
+      font-size: 0.94rem;
       cursor: pointer;
       border: 1.5px solid transparent;
       transition: transform 0.12s ease, background-color 0.15s ease, opacity 0.15s ease;
@@ -171,32 +174,32 @@
 
     .btn:active { transform: scale(0.99); }
     .btn:disabled { opacity: 0.52; cursor: not-allowed; }
-    .btn-sm { min-height: 38px; padding: 0.42rem 0.8rem; font-size: 0.88rem; border-radius: 9px; }
+    .btn-sm { min-height: 34px; padding: 0.32rem 0.65rem; font-size: 0.82rem; border-radius: 8px; }
 
-    .btn-primary { background: var(--navy); color: #ffffff; box-shadow: 0 3px 10px rgba(15, 39, 68, 0.22); }
+    .btn-primary { background: var(--navy); color: #ffffff; box-shadow: 0 2px 8px rgba(15, 39, 68, 0.2); }
     .btn-primary:hover:not(:disabled) { background: var(--blue); }
     .btn-secondary { background: #ffffff; color: #1e293b; border-color: #cbd5e1; }
     .btn-secondary:hover:not(:disabled) { background: #f8fafc; }
-    .btn-success { background: #15803d; color: #ffffff; box-shadow: 0 3px 10px rgba(21, 128, 61, 0.24); }
+    .btn-success { background: #15803d; color: #ffffff; box-shadow: 0 2px 8px rgba(21, 128, 61, 0.22); }
     .btn-success:hover:not(:disabled) { background: #166534; }
 
     /* DNI capture cards */
     .dni-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 0.65rem;
     }
 
     .dni-card {
       background: #f8fafc;
       border: 2px solid #cbd5e1;
-      border-radius: 16px;
-      padding: 1rem;
+      border-radius: 13px;
+      padding: 0.72rem;
       text-align: center;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.65rem;
+      gap: 0.45rem;
       transition: border-color 0.2s ease, background-color 0.2s ease;
     }
 
@@ -206,92 +209,93 @@
     }
 
     .dni-title {
-      font-size: 1.02rem;
+      font-size: 0.96rem;
       font-weight: 800;
       color: var(--navy);
     }
 
     .dni-hint {
-      font-size: 0.86rem;
+      font-size: 0.8rem;
       color: var(--muted);
     }
 
     .dni-preview {
       display: none;
       width: 100%;
-      max-height: 175px;
+      max-height: 115px;
       object-fit: contain;
-      border-radius: 10px;
+      border-radius: 8px;
       border: 1px solid #cbd5e1;
       background: #ffffff;
     }
 
     .dni-status-pill {
       display: none;
-      font-size: 0.86rem;
+      font-size: 0.78rem;
       font-weight: 700;
-      padding: 5px 12px;
+      padding: 3px 10px;
       border-radius: 9999px;
       background: #dcfce7;
       color: #166534;
     }
 
-    /* Consejos biométricos inspirados en Mi Argentina / eKYC */
+    /* Consejos biométricos compactos */
     .tips-list {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
-      margin-bottom: 1.1rem;
+      gap: 0.45rem;
+      margin-bottom: 0.65rem;
     }
 
     .tip-item {
       display: flex;
       align-items: center;
-      gap: 0.9rem;
+      gap: 0.68rem;
       background: #f8fafc;
       border: 1px solid #e2e8f0;
-      border-radius: 14px;
-      padding: 0.8rem 1rem;
+      border-radius: 11px;
+      padding: 0.52rem 0.75rem;
     }
 
     .tip-avatar {
-      width: 56px;
-      height: 56px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       background: #e0f2fe;
-      border: 2px solid #bae6fd;
+      border: 1.5px solid #bae6fd;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
     }
+    .tip-avatar svg { width: 22px; height: 22px; }
 
-    .tip-title { font-size: 1rem; font-weight: 800; color: var(--navy); }
-    .tip-desc { font-size: 0.88rem; color: var(--muted); margin-top: 2px; }
+    .tip-title { font-size: 0.92rem; font-weight: 800; color: var(--navy); line-height: 1.2; }
+    .tip-desc { font-size: 0.8rem; color: var(--muted); margin-top: 1px; line-height: 1.25; }
 
     .audio-banner {
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 0.7rem;
+      gap: 0.5rem;
       background: #eff6ff;
       border: 1.5px solid #93c5fd;
-      border-radius: 14px;
-      padding: 0.85rem 1rem;
-      margin-bottom: 1rem;
+      border-radius: 11px;
+      padding: 0.55rem 0.75rem;
+      margin-bottom: 0.65rem;
     }
 
     /* Cámara ovalada + Avatar guía animado */
     .liveness-stage-bar {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 0.45rem;
-      margin-bottom: 0.9rem;
+      gap: 0.35rem;
+      margin-bottom: 0.55rem;
     }
 
     .liveness-seg {
-      height: 8px;
+      height: 6px;
       border-radius: 9999px;
       background: #e2e8f0;
       transition: background-color 0.25s ease;
@@ -302,17 +306,17 @@
     .guide-avatar-wrap {
       display: flex;
       align-items: center;
-      gap: 0.9rem;
+      gap: 0.68rem;
       background: #f8fafc;
       border: 1.5px solid #cbd5e1;
-      border-radius: 16px;
-      padding: 0.75rem 1rem;
-      margin-bottom: 0.95rem;
+      border-radius: 12px;
+      padding: 0.5rem 0.75rem;
+      margin-bottom: 0.6rem;
     }
 
     .guide-avatar-circle {
-      width: 72px;
-      height: 72px;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
       background: #e0f2fe;
       border: 2px solid #0284c7;
@@ -322,18 +326,20 @@
       flex-shrink: 0;
       overflow: hidden;
     }
+    .guide-avatar-circle svg { width: 42px; height: 42px; }
 
     .guide-cue-title {
-      font-size: 1.12rem;
+      font-size: 0.98rem;
       font-weight: 800;
       color: var(--navy);
-      line-height: 1.25;
+      line-height: 1.2;
     }
 
     .guide-cue-sub {
-      font-size: 0.9rem;
+      font-size: 0.8rem;
       color: var(--muted);
-      margin-top: 3px;
+      margin-top: 2px;
+      line-height: 1.25;
     }
 
     @keyframes headNodTurn {
@@ -350,15 +356,16 @@
 
     .oval-camera-frame {
       position: relative;
-      width: 270px;
-      height: 330px;
-      max-width: 82vw;
-      margin: 0 auto 0.9rem auto;
+      width: 215px;
+      height: 260px;
+      max-height: 44dvh;
+      max-width: 72vw;
+      margin: 0 auto 0.65rem auto;
       border-radius: 50% / 46%;
       overflow: hidden;
-      border: 5px solid #0284c7;
+      border: 4px solid #0284c7;
       background: #0f172a;
-      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.22);
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.2);
       transition: border-color 0.25s ease;
     }
 
@@ -375,24 +382,24 @@
 
     .rec-pill {
       position: absolute;
-      top: 12px;
+      top: 10px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.78);
+      background: rgba(15, 23, 42, 0.8);
       color: #ffffff;
-      font-size: 0.78rem;
+      font-size: 0.72rem;
       font-weight: 800;
-      padding: 4px 11px;
+      padding: 3px 9px;
       border-radius: 9999px;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       white-space: nowrap;
     }
 
     .rec-dot {
-      width: 9px;
-      height: 9px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: #ef4444;
       animation: pulseRec 1s infinite;
@@ -400,19 +407,20 @@
     @keyframes pulseRec { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
 
     .video-preview-player {
-      width: 240px;
+      width: 195px;
+      max-height: 35dvh;
       max-width: 100%;
-      border-radius: 14px;
+      border-radius: 12px;
       border: 2px solid #16a34a;
       background: #0f172a;
       display: block;
-      margin: 0 auto 0.75rem auto;
+      margin: 0 auto 0.55rem auto;
     }
 
-    /* Firma manuscrita amplia */
+    /* Firma manuscrita ajustada al viewport */
     .sig-pad-wrap {
-      border: 2.5px dashed #64748b;
-      border-radius: 14px;
+      border: 2px dashed #64748b;
+      border-radius: 12px;
       background: #f8fafc;
       position: relative;
       overflow: hidden;
@@ -421,7 +429,7 @@
 
     #canvasFirmaMovil {
       width: 100%;
-      height: 220px;
+      height: 165px;
       display: block;
       cursor: crosshair;
       touch-action: none;
@@ -435,39 +443,40 @@
       justify-content: center;
       pointer-events: none;
       color: #64748b;
-      font-size: 1rem;
+      font-size: 0.92rem;
       font-weight: 700;
       text-align: center;
-      padding: 1rem;
+      padding: 0.75rem;
     }
 
     .consent-label {
       display: flex;
       align-items: flex-start;
-      gap: 0.75rem;
+      gap: 0.65rem;
       background: #eff6ff;
       border: 1.5px solid #93c5fd;
-      border-radius: 14px;
-      padding: 0.95rem;
-      font-size: 0.95rem;
+      border-radius: 11px;
+      padding: 0.65rem 0.8rem;
+      font-size: 0.86rem;
       color: #1e3a8a;
       cursor: pointer;
-      margin: 1rem 0;
+      margin: 0.65rem 0;
+      line-height: 1.35;
     }
 
     .consent-label input {
       margin-top: 2px;
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
       flex-shrink: 0;
       accent-color: #0f2744;
       cursor: pointer;
     }
 
     .alert {
-      border-radius: 12px;
-      padding: 0.95rem 1.05rem;
-      font-size: 0.95rem;
+      border-radius: 10px;
+      padding: 0.7rem 0.9rem;
+      font-size: 0.88rem;
       font-weight: 600;
     }
 
@@ -478,10 +487,10 @@
     .geo-pill {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      font-size: 0.8rem;
+      gap: 4px;
+      font-size: 0.74rem;
       font-weight: 700;
-      padding: 4px 10px;
+      padding: 3px 9px;
       border-radius: 9999px;
       background: #f1f5f9;
       color: #475569;
@@ -490,16 +499,16 @@
 
     .hash-box {
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       background: #f8fafc;
       border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 0.65rem 0.8rem;
+      border-radius: 9px;
+      padding: 0.55rem 0.7rem;
       color: #334155;
       word-break: break-all;
     }
 
-    /* Barra fija inferior de progreso paso a paso */
+    /* Barra fija inferior compacta (siempre en 1 sola fila) */
     .wizard-bottom-bar {
       position: fixed;
       left: 0;
@@ -508,12 +517,12 @@
       z-index: 500;
       background: #ffffff;
       border-top: 1px solid #cbd5e1;
-      box-shadow: 0 -6px 24px rgba(15, 23, 42, 0.12);
+      box-shadow: 0 -4px 18px rgba(15, 23, 42, 0.1);
     }
 
     .wizard-progress-track {
       width: 100%;
-      height: 6px;
+      height: 4px;
       background: #e2e8f0;
       overflow: hidden;
     }
@@ -528,41 +537,57 @@
     .wizard-bar-inner {
       max-width: 780px;
       margin: 0 auto;
-      padding: 0.65rem 0.9rem;
+      padding: 0.42rem 0.75rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 0.65rem;
+      gap: 0.5rem;
+      flex-wrap: nowrap;
     }
 
     .wizard-step-info {
       display: flex;
       flex-direction: column;
-      min-width: 110px;
+      min-width: 0;
+      flex: 1;
     }
 
     .wizard-step-count {
-      font-size: 0.92rem;
+      font-size: 0.84rem;
       font-weight: 800;
       color: var(--navy);
+      line-height: 1.15;
+      white-space: nowrap;
     }
 
     .wizard-step-name {
-      font-size: 0.78rem;
+      font-size: 0.72rem;
       color: var(--muted);
       font-weight: 600;
+      line-height: 1.15;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .wizard-bar-actions {
       display: flex;
       align-items: center;
-      gap: 0.55rem;
+      gap: 0.4rem;
+      flex-shrink: 0;
     }
 
-    @media (max-width: 560px) {
-      .wizard-bar-inner { flex-wrap: wrap; }
-      .wizard-bar-actions { width: 100%; }
-      .wizard-bar-actions .btn { flex: 1; }
+    .wizard-bar-actions .btn {
+      min-height: 38px;
+      padding: 0.4rem 0.82rem;
+      font-size: 0.88rem;
+      border-radius: 9px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 480px) {
+      .brand-sub { display: none; }
+      #pdfPaginasContainer { height: calc(100dvh - 300px); }
     }
   </style>
 </head>
@@ -570,40 +595,40 @@
   <header>
     <div class="header-inner">
       <div>
-        <div class="brand-title">Asociación Mutual Modelo de Entre Ríos (AMMER)</div>
-        <div class="brand-sub">Portal de Firma Electrónica Guiada · Ley 25.506</div>
+        <div class="brand-title">Mutual Modelo (AMMER) · Firma Electrónica</div>
+        <div class="brand-sub">Portal guiado paso a paso · Ley 25.506</div>
       </div>
-      <div class="badge-ssl">🔒 Conexión Segura</div>
+      <div class="badge-ssl">🔒 Seguro</div>
     </div>
   </header>
 
   <main>
-    <div id="estadoCargaBox" class="card" style="text-align:center;padding:2.4rem 1.2rem;">
-      <div style="font-size:2rem;margin-bottom:0.5rem;">⏳</div>
-      <div style="font-size:1.12rem;font-weight:800;color:#0f2744;">Cargando tu documento...</div>
-      <div style="font-size:0.92rem;color:#475569;margin-top:4px;">Por favor esperá un momento</div>
+    <div id="estadoCargaBox" class="card" style="text-align:center;padding:2rem 1rem;">
+      <div style="font-size:1.8rem;margin-bottom:0.4rem;">⏳</div>
+      <div style="font-size:1.05rem;font-weight:800;color:#0f2744;">Cargando tu documento...</div>
+      <div style="font-size:0.88rem;color:#475569;margin-top:3px;">Por favor esperá un momento</div>
     </div>
 
     <div id="errorBox" class="alert alert-err" style="display:none;"></div>
 
-    <div id="esperaTurnoBox" class="card" style="display:none;text-align:center;padding:1.8rem 1.2rem;">
-      <div style="font-size:2.3rem;margin-bottom:0.5rem;">⏳</div>
-      <div style="font-weight:800;font-size:1.15rem;color:#0f2744;margin-bottom:0.5rem;">Aguardando tu turno para firmar</div>
-      <div id="lblEsperaTurnoDesc" style="font-size:0.95rem;color:#475569;line-height:1.55;margin-bottom:1.15rem;"></div>
+    <div id="esperaTurnoBox" class="card" style="display:none;text-align:center;padding:1.5rem 1rem;">
+      <div style="font-size:2rem;margin-bottom:0.4rem;">⏳</div>
+      <div style="font-weight:800;font-size:1.08rem;color:#0f2744;margin-bottom:0.45rem;">Aguardando tu turno para firmar</div>
+      <div id="lblEsperaTurnoDesc" style="font-size:0.9rem;color:#475569;line-height:1.5;margin-bottom:1rem;"></div>
       <button type="button" onclick="window.location.reload()" class="btn btn-secondary">🔄 Comprobar si ya es mi turno</button>
     </div>
 
     <!-- PANTALLA FINAL: DOCUMENTO YA FIRMADO -->
     <div id="confirmacionFirmadoBox" class="card" style="display:none;">
-      <div id="alertEstadoFirmado" class="alert alert-ok" style="margin-bottom:1rem;font-size:1rem;">
+      <div id="alertEstadoFirmado" class="alert alert-ok" style="margin-bottom:0.85rem;font-size:0.95rem;">
         ✅ <strong>¡Listo! Tu documento fue firmado con éxito.</strong><br/>
-        <span style="font-weight:500;font-size:0.92rem;">Podés descargar tu copia firmada con el botón verde de abajo.</span>
+        <span style="font-weight:500;font-size:0.88rem;">Podés descargar tu copia firmada con el botón verde de abajo.</span>
       </div>
-      <div class="meta-grid" style="margin-bottom:1rem;">
+      <div class="meta-grid" style="margin-bottom:0.85rem;">
         <div class="meta-item"><div class="meta-lbl">Documento</div><div class="meta-val" id="resDocNombre">-</div></div>
         <div class="meta-item"><div class="meta-lbl">Fecha y hora</div><div class="meta-val" id="resFechaFirma">-</div></div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:0.75rem;margin-bottom:0.85rem;">
+      <div style="display:flex;flex-direction:column;gap:0.55rem;margin-bottom:0.75rem;">
         <button type="button" id="btnDescargarCopiaFirmada" class="btn btn-success" style="width:100%;">
           ⬇️ Descargar mi PDF Firmado
         </button>
@@ -611,9 +636,9 @@
           🔍 Verificar validez del documento
         </a>
       </div>
-      <details style="margin-top:0.5rem;">
-        <summary style="cursor:pointer;font-size:0.84rem;font-weight:700;color:#475569;">Ver comprobantes técnicos de respaldo</summary>
-        <div class="hash-box" style="margin-top:0.55rem;">
+      <details style="margin-top:0.4rem;">
+        <summary style="cursor:pointer;font-size:0.8rem;font-weight:700;color:#475569;">Ver comprobantes técnicos de respaldo</summary>
+        <div class="hash-box" style="margin-top:0.45rem;">
           <strong>SHA-256 Original:</strong> <span id="resHashOrig">-</span><br/>
           <strong>SHA-256 Firmado + Evidencia:</strong> <span id="resHashFirmado">-</span>
           <div id="resTsaStatusLine" style="margin-top:4px;display:none;"></div>
@@ -625,16 +650,16 @@
     <!-- ============================================================
          ASISTENTE PASO A PASO (WIZARD POR PANTALLAS)
          ============================================================ -->
-    <div id="contenidoFirmaWrap" style="display:none;flex-direction:column;gap:1rem;">
+    <div id="contenidoFirmaWrap" style="display:none;flex-direction:column;gap:0.6rem;">
       <div id="wizardStepErrorBanner" class="alert alert-err" style="display:none;"></div>
 
       <!-- PASO 1: REVISAR EL DOCUMENTO -->
       <section class="card wizard-step-pane" id="paneStepDoc" style="display:none;">
         <h1 class="step-heading">📄 Leé tu documento</h1>
-        <p class="step-lead">Revisá tus datos y el texto del documento. Cuando estés listo, tocá <strong>Continuar</strong> abajo.</p>
+        <p class="step-lead">Revisá tus datos y el documento. Luego tocá <strong>Continuar</strong>.</p>
 
-        <div id="docPaqueteBanner" style="display:none;margin-bottom:0.8rem;padding:0.75rem 0.9rem;border-radius:12px;background:#eff6ff;border:1px solid #bfdbfe;font-size:0.9rem;font-weight:700;color:#1e3a8a;"></div>
-        <div id="docProgresoMultifirma" style="display:none;margin-bottom:0.8rem;padding:0.75rem 0.9rem;border-radius:12px;background:#fffbeb;border:1px solid #fde68a;font-size:0.9rem;font-weight:700;color:#92400e;"></div>
+        <div id="docPaqueteBanner" style="display:none;margin-bottom:0.55rem;padding:0.55rem 0.75rem;border-radius:10px;background:#eff6ff;border:1px solid #bfdbfe;font-size:0.84rem;font-weight:700;color:#1e3a8a;"></div>
+        <div id="docProgresoMultifirma" style="display:none;margin-bottom:0.55rem;padding:0.55rem 0.75rem;border-radius:10px;background:#fffbeb;border:1px solid #fde68a;font-size:0.84rem;font-weight:700;color:#92400e;"></div>
 
         <div class="meta-grid">
           <div class="meta-item"><div class="meta-lbl">Documento</div><div class="meta-val" id="docTitulo">-</div></div>
@@ -642,16 +667,16 @@
           <div class="meta-item"><div class="meta-lbl">DNI</div><div class="meta-val" id="docDni">-</div></div>
           <div class="meta-item"><div class="meta-lbl">Válido hasta</div><div class="meta-val" id="docExpira">-</div></div>
         </div>
-        <div id="docPrestamoResumen" class="meta-grid" style="margin-top:0.65rem;display:none;"></div>
+        <div id="docPrestamoResumen" class="meta-grid" style="margin-top:0.45rem;display:none;"></div>
 
         <div class="pdf-toolbar">
           <div class="zoom-group" aria-label="Tamaño de lectura del documento">
             <button type="button" id="btnPdfZoomMenos" class="btn btn-secondary btn-sm">🔍 −</button>
-            <span id="lblPdfZoomPct" style="font-size:0.86rem;font-weight:800;padding:0 6px;color:#0f2744;">100%</span>
+            <span id="lblPdfZoomPct" style="font-size:0.82rem;font-weight:800;padding:0 5px;color:#0f2744;">100%</span>
             <button type="button" id="btnPdfZoomMas" class="btn btn-secondary btn-sm">🔍 + Agrandar</button>
           </div>
           <button type="button" id="btnDescargarPreviaPdf" class="btn btn-secondary btn-sm">
-            ⬇️ Guardar copia para leer
+            ⬇️ Guardar copia
           </button>
         </div>
 
@@ -661,7 +686,7 @@
       <!-- PASO 2 (OPCIONAL): FOTOS DEL DNI -->
       <section class="card wizard-step-pane" id="paneStepDni" style="display:none;">
         <h1 class="step-heading">🪪 Sacá fotos de tu DNI</h1>
-        <p class="step-lead">Apoyá tu DNI sobre una mesa bien iluminada y sacá una foto de frente y otra de la parte de atrás.</p>
+        <p class="step-lead">Apoyá tu DNI sobre una mesa bien iluminada y sacá una foto de frente y otra de atrás.</p>
 
         <div class="dni-grid">
           <div class="dni-card" id="cardDniFrente">
@@ -690,64 +715,64 @@
 
       <!-- PASO 3 (OPCIONAL): VALIDACIÓN FACIAL GUIADA CON VIDEO, AVATAR Y AUDIO -->
       <section class="card wizard-step-pane" id="paneStepSelfie" style="display:none;">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.35rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.2rem;">
           <h1 class="step-heading" style="margin:0;">🤳 Validamos tu identidad</h1>
           <span id="badgeEstadoEkyc" class="geo-pill">Pendiente</span>
         </div>
 
         <!-- SUBPANTALLA 3A: CONSEJOS CLAROS (ANTES DE PRENDER LA CÁMARA) -->
         <div id="selfieIntroView">
-          <p class="step-lead">Vamos a grabar un video corto de unos segundos para confirmar que sos vos. Seguí estas recomendaciones:</p>
+          <p class="step-lead">Grabaremos un video corto para confirmar que sos vos:</p>
 
           <div class="tips-list">
             <div class="tip-item">
               <div class="tip-avatar" aria-hidden="true">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
               </div>
               <div>
                 <div class="tip-title">Buscá un lugar bien iluminado</div>
-                <div class="tip-desc">Que la luz dé de frente a tu cara, sin ventanas detrás tuyo.</div>
+                <div class="tip-desc">Luz de frente a tu cara, sin ventanas detrás tuyo.</div>
               </div>
             </div>
 
             <div class="tip-item">
               <div class="tip-avatar" aria-hidden="true">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><circle cx="12" cy="9" r="5"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><circle cx="12" cy="9" r="5"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>
               </div>
               <div>
                 <div class="tip-title">Sin anteojos ni gorra</div>
-                <div class="tip-desc">Despejá tu frente y asegurate de que se vean bien tus ojos.</div>
+                <div class="tip-desc">Despejá tu frente y asegurate de que se vean tus ojos.</div>
               </div>
             </div>
 
             <div class="tip-item">
               <div class="tip-avatar" aria-hidden="true">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2"/><circle cx="12" cy="18" r="1"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2"/><circle cx="12" cy="18" r="1"/></svg>
               </div>
               <div>
-                <div class="tip-title">Sostené el teléfono a la altura de tu cara</div>
-                <div class="tip-desc">Mirá derecho hacia la pantalla y seguí las indicaciones.</div>
+                <div class="tip-title">Teléfono a la altura de tu cara</div>
+                <div class="tip-desc">Mirá derecho hacia la pantalla y seguí la guía.</div>
               </div>
             </div>
           </div>
 
           <div class="audio-banner">
             <div>
-              <div style="font-weight:800;color:#0f2744;font-size:0.96rem;">🔊 Guía por voz</div>
-              <div style="font-size:0.86rem;color:#334155;">Subí el volumen para escuchar cada indicación mientras grabás.</div>
+              <div style="font-weight:800;color:#0f2744;font-size:0.88rem;">🔊 Guía por voz</div>
+              <div style="font-size:0.78rem;color:#334155;">Subí el volumen para escuchar los pasos.</div>
             </div>
-            <div style="display:flex;gap:0.45rem;flex-wrap:wrap;">
-              <button type="button" id="btnProbarAudioGuia" class="btn btn-secondary btn-sm">🔈 Probar sonido</button>
+            <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
+              <button type="button" id="btnProbarAudioGuia" class="btn btn-secondary btn-sm">🔈 Probar</button>
               <button type="button" id="btnToggleAudioGuia" class="btn btn-secondary btn-sm">🔊 Voz: Activada</button>
             </div>
           </div>
 
-          <div style="display:flex;flex-direction:column;gap:0.65rem;">
-            <button type="button" id="btnAbrirCamaraSelfie" class="btn btn-success" style="width:100%;font-size:1.06rem;">
+          <div style="display:flex;flex-direction:column;gap:0.45rem;">
+            <button type="button" id="btnAbrirCamaraSelfie" class="btn btn-success" style="width:100%;font-size:0.98rem;">
               🎥 Comenzar video guiado
             </button>
-            <label class="btn btn-secondary" style="width:100%;cursor:pointer;font-size:0.92rem;">
-              📷 Si no funciona la cámara en vivo, sacá una foto aquí
+            <label class="btn btn-secondary btn-sm" style="width:100%;cursor:pointer;min-height:38px;">
+              📷 Alternativa: sacá una foto aquí
               <input type="file" id="inpSelfieFallbackCam" accept="image/*" capture="user" style="display:none;"/>
             </label>
           </div>
@@ -763,7 +788,7 @@
 
           <div class="guide-avatar-wrap">
             <div class="guide-avatar-circle" id="guideAvatarSvg"></div>
-            <div style="flex:1;min-width:160px;">
+            <div style="flex:1;min-width:140px;">
               <div class="guide-cue-title" id="lblGuideCueTitle">Ubicá tu rostro dentro del óvalo</div>
               <div class="guide-cue-sub" id="lblGuideCueSub">Cuando estés listo, tocá "Iniciar grabación".</div>
             </div>
@@ -778,8 +803,8 @@
             </div>
           </div>
 
-          <div style="display:flex;gap:0.65rem;flex-wrap:wrap;justify-content:center;">
-            <button type="button" id="btnIniciarGrabacionGuiada" class="btn btn-success" style="flex:1;min-width:220px;font-size:1.05rem;">
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;">
+            <button type="button" id="btnIniciarGrabacionGuiada" class="btn btn-success" style="flex:1;min-width:190px;">
               ▶️ Iniciar grabación guiada
             </button>
             <button type="button" id="btnCancelarCamaraLive" class="btn btn-secondary">Volver</button>
@@ -789,11 +814,11 @@
         <!-- SUBPANTALLA 3C: VIDEO GRABADO / RESULTADO -->
         <div id="selfieDoneView" style="display:none;text-align:center;">
           <video id="videoSelfiePreview" class="video-preview-player" controls playsinline muted style="display:none;"></video>
-          <div id="selfieFallbackPreviewWrap" style="display:none;margin-bottom:0.85rem;">
-            <img id="imgPrevSelfie1" alt="Selfie capturada" style="width:165px;height:165px;object-fit:cover;border-radius:50%;border:4px solid #16a34a;"/>
+          <div id="selfieFallbackPreviewWrap" style="display:none;margin-bottom:0.6rem;">
+            <img id="imgPrevSelfie1" alt="Selfie capturada" style="width:120px;height:120px;object-fit:cover;border-radius:50%;border:3px solid #16a34a;"/>
           </div>
-          <div id="ekycResultadoBox" class="alert alert-ok" style="text-align:left;margin-bottom:0.9rem;"></div>
-          <button type="button" id="btnReintentarSelfie" class="btn btn-secondary">
+          <div id="ekycResultadoBox" class="alert alert-ok" style="text-align:left;margin-bottom:0.65rem;"></div>
+          <button type="button" id="btnReintentarSelfie" class="btn btn-secondary btn-sm">
             🔄 Volver a grabar el video
           </button>
         </div>
@@ -801,32 +826,32 @@
 
       <!-- PASO FINAL: FIRMAR EL DOCUMENTO -->
       <section class="card wizard-step-pane" id="paneStepSign" style="display:none;">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.35rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.2rem;">
           <h1 class="step-heading" style="margin:0;">✍️ Dibujá tu firma</h1>
           <span id="badgeEstadoGeo" class="geo-pill">📍 Ubicación</span>
         </div>
-        <p class="step-lead">Hacé tu firma con el dedo dentro del recuadro gris y después confirmá al final.</p>
+        <p class="step-lead">Hacé tu firma dentro del recuadro gris y confirmá abajo.</p>
 
         <div class="sig-pad-wrap">
           <div id="sigHintText" class="sig-hint">✏️ Dibujá tu firma acá con el dedo o el mouse</div>
           <canvas id="canvasFirmaMovil"></canvas>
         </div>
 
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.65rem;gap:0.5rem;flex-wrap:wrap;">
-          <span id="lblTrazosInfo" style="font-size:0.88rem;font-weight:600;color:#475569;">Todavía no dibujaste tu firma</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.45rem;gap:0.45rem;flex-wrap:wrap;">
+          <span id="lblTrazosInfo" style="font-size:0.82rem;font-weight:600;color:#475569;">Todavía no dibujaste tu firma</span>
           <button type="button" id="btnLimpiarFirma" class="btn btn-secondary btn-sm">
-            🧹 Borrar y firmar de nuevo
+            🧹 Borrar firma
           </button>
         </div>
 
-        <div id="boxPinOtpFirma" style="display:none;margin:1rem 0;padding:1rem;border-radius:14px;background:#f5f3ff;border:1.5px solid #c4b5fd;">
-          <label for="inpPinOtpFirma" style="display:block;font-size:0.96rem;font-weight:800;color:#5b21b6;margin-bottom:4px;">
+        <div id="boxPinOtpFirma" style="display:none;margin:0.6rem 0;padding:0.68rem 0.85rem;border-radius:11px;background:#f5f3ff;border:1.5px solid #c4b5fd;">
+          <label for="inpPinOtpFirma" style="display:block;font-size:0.88rem;font-weight:800;color:#5b21b6;margin-bottom:3px;">
             🔐 Código de seguridad de 4 números
           </label>
-          <div style="font-size:0.88rem;color:#6d28d9;margin-bottom:0.6rem;">
-            Escribí el código de 4 números que te enviamos por WhatsApp junto con este enlace.
+          <div style="font-size:0.8rem;color:#6d28d9;margin-bottom:0.4rem;">
+            Escribí el código de 4 números que te enviamos por WhatsApp.
           </div>
-          <input type="text" id="inpPinOtpFirma" inputmode="numeric" maxlength="4" autocomplete="one-time-code" placeholder="0000" style="width:170px;padding:0.65rem 0.85rem;border:2px solid #8b5cf6;border-radius:10px;font-size:1.35rem;font-weight:800;letter-spacing:8px;text-align:center;color:#4c1d95;background:#ffffff;"/>
+          <input type="text" id="inpPinOtpFirma" inputmode="numeric" maxlength="4" autocomplete="one-time-code" placeholder="0000" style="width:150px;padding:0.45rem 0.7rem;border:2px solid #8b5cf6;border-radius:9px;font-size:1.2rem;font-weight:800;letter-spacing:7px;text-align:center;color:#4c1d95;background:#ffffff;"/>
         </div>
 
         <label class="consent-label">
@@ -836,7 +861,7 @@
           </span>
         </label>
 
-        <button type="button" id="btnConfirmarFirmar" class="btn btn-success" style="width:100%;font-size:1.08rem;min-height:54px;">
+        <button type="button" id="btnConfirmarFirmar" class="btn btn-success" style="width:100%;font-size:1rem;min-height:46px;">
           ✅ Confirmar y Firmar Documento
         </button>
       </section>

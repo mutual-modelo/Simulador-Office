@@ -4021,6 +4021,30 @@
               </div>
             </div>
 
+            <!-- CONSULTA DE DISPONIBLE - CONVENIO SIDECREER (PRIMERO AL SELECCIONAR SIDECREER) -->
+            <div id="sidecreerConsultaCard" style="display:none;margin-top:0;margin-bottom:0.85rem;padding:0.9rem 0.95rem;background:#ffffff;border:1px solid #cbd5e1;border-radius:10px;box-shadow:0 1px 4px rgba(15,23,42,0.05);">
+              <div style="font-size:0.8rem;font-weight:800;color:#0f172a;margin-bottom:0.55rem;display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;">
+                <span>💳 Consulta de Disponible - Convenio Sidecreer</span>
+                <button type="button" id="btnAdminConfigWhatsAppSidecreer" onclick="abrirModalAdminWhatsAppSidecreer()" title="Vincular o revisar estado de línea WhatsApp (Admin)" style="display:none;align-items:center;gap:4px;padding:0.22rem 0.55rem;border-radius:6px;border:1px solid #bbf7d0;background:#f0fdf4;color:#166534;font-size:0.68rem;font-weight:700;cursor:pointer;">
+                  📱 WhatsApp QR
+                </button>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                <label for="input-tarjeta-sidecreer" class="form-label" style="margin-bottom:0;"><span>Nro de Tarjeta</span></label>
+                <div class="currency-input-wrap">
+                  <span class="currency-prefix" style="font-size:1rem;left:0.75rem;">💳</span>
+                  <input type="text" id="input-tarjeta-sidecreer" class="sidecreer-card-input" inputmode="numeric" autocomplete="off" maxlength="19" placeholder="0000 0000 0000 0000"/>
+                </div>
+                <button type="button" id="btn-consultar-sidecreer" style="margin-top:0.1rem;width:100%;padding:0.6rem 0.9rem;border-radius:8px;border:1px solid var(--color-brand-blue);background:var(--color-brand-blue);color:#ffffff;font-family:var(--font-sans);font-size:0.82rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 3px 8px rgba(19,85,150,0.22);transition:background-color 0.15s ease;">
+                  <span>🔍 Consultar</span>
+                </button>
+              </div>
+              <div style="margin-top:0.6rem;padding:0.5rem 0.65rem;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid var(--color-brand-blue);border-radius:6px;font-size:0.72rem;line-height:1.45;color:#475569;">
+                Ingresá los dígitos de la tarjeta y presioná <strong>Consultar</strong> para obtener el disponible en cuotas y contado (con respaldo al chat web si la línea está pendiente de vinculación).
+              </div>
+              <div id="sidecreer-resultado-box" style="display:none;margin-top:0.6rem;padding:0.55rem 0.7rem;border-radius:8px;font-size:0.75rem;line-height:1.45;"></div>
+            </div>
+
             <!-- 2. Selector de Modo -->
             <div class="form-group">
               <label class="form-label"><span>Modo de Entrada</span></label>
@@ -4078,36 +4102,14 @@
                 </svg>
                 <span>Convenio Municipal opera exclusivamente en 12 y 24 cuotas.</span>
               </div>
-              <!-- CONSULTA DE DISPONIBLE - CONVENIO SIDECREER -->
-              <div id="sidecreerConsultaCard" style="display:none;margin-top:0.85rem;padding:0.9rem 0.95rem;background:#ffffff;border:1px solid #cbd5e1;border-radius:10px;box-shadow:0 1px 4px rgba(15,23,42,0.05);">
-                <div style="font-size:0.8rem;font-weight:800;color:#0f172a;margin-bottom:0.55rem;display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;">
-                  <span>💳 Consulta de Disponible - Convenio Sidecreer</span>
-                  <button type="button" id="btnAdminConfigWhatsAppSidecreer" onclick="abrirModalAdminWhatsAppSidecreer()" title="Vincular o revisar estado de línea WhatsApp (Admin)" style="display:none;align-items:center;gap:4px;padding:0.22rem 0.55rem;border-radius:6px;border:1px solid #bbf7d0;background:#f0fdf4;color:#166534;font-size:0.68rem;font-weight:700;cursor:pointer;">
-                    📱 WhatsApp QR
-                  </button>
-                </div>
-                <div style="display:flex;flex-direction:column;gap:0.5rem;">
-                  <label for="input-tarjeta-sidecreer" class="form-label" style="margin-bottom:0;"><span>Nro de Tarjeta</span></label>
-                  <div class="currency-input-wrap">
-                    <span class="currency-prefix" style="font-size:1rem;left:0.75rem;">💳</span>
-                    <input type="text" id="input-tarjeta-sidecreer" class="sidecreer-card-input" inputmode="numeric" autocomplete="off" maxlength="19" placeholder="0000 0000 0000 0000"/>
-                  </div>
-                  <button type="button" id="btn-consultar-sidecreer" style="margin-top:0.1rem;width:100%;padding:0.6rem 0.9rem;border-radius:8px;border:1px solid var(--color-brand-blue);background:var(--color-brand-blue);color:#ffffff;font-family:var(--font-sans);font-size:0.82rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 3px 8px rgba(19,85,150,0.22);transition:background-color 0.15s ease;">
-                    <span>🔍 Consultar</span>
-                  </button>
-                </div>
-                <div style="margin-top:0.6rem;padding:0.5rem 0.65rem;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid var(--color-brand-blue);border-radius:6px;font-size:0.72rem;line-height:1.45;color:#475569;">
-                  Ingresá los dígitos de la tarjeta y presioná <strong>Consultar</strong> para obtener el disponible en cuotas y contado (con respaldo al chat web si la línea está pendiente de vinculación).
-                </div>
-                <div id="sidecreer-resultado-box" style="display:none;margin-top:0.6rem;padding:0.55rem 0.7rem;border-radius:8px;font-size:0.75rem;line-height:1.45;"></div>
+            </div>
+
+            <!-- RECUADRO DE DISCLAIMER FORMAL OBLIGATORIO -->
+            <div class="simulador-disclaimer-box" style="margin-top:0.85rem;padding:0.75rem 0.85rem;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid var(--color-brand-blue);border-radius:6px;font-size:0.68rem;line-height:1.45;color:#475569;">
+              <div style="font-weight:700;color:#1e293b;margin-bottom:3px;display:flex;align-items:center;gap:4px;">
+                <span>⚖️ Aviso Legal y Condiciones de Simulación</span>
               </div>
-              <!-- RECUADRO DE DISCLAIMER FORMAL OBLIGATORIO -->
-              <div class="simulador-disclaimer-box" style="margin-top:0.85rem;padding:0.75rem 0.85rem;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid var(--color-brand-blue);border-radius:6px;font-size:0.68rem;line-height:1.45;color:#475569;">
-                <div style="font-weight:700;color:#1e293b;margin-bottom:3px;display:flex;align-items:center;gap:4px;">
-                  <span>⚖️ Aviso Legal y Condiciones de Simulación</span>
-                </div>
-                <p style="margin:0;">El presente simulador es una herramienta de carácter meramente informativo y orientativo, basada en los datos ingresados por el asociado. El resultado obtenido no constituye oferta vinculante, aceptación de solicitud ni compromiso de otorgamiento por parte de la Asociación Mutual Modelo de Entre Ríos. El efectivo otorgamiento de la Ayuda Económica Mutual, su monto, tasa de servicio y plazo se encuentran sujetos al previo análisis de capacidad de pago, verificación de identidad, antigüedad societaria y cumplimiento del Reglamento de Ayuda Económica vigente aprobado por el INAES. Los valores calculados son estimativos y pueden variar según la fecha exacta de liquidación, tributos aplicables (como el Impuesto de Sellos de la Provincia de Entre Ríos e IVA, de corresponder), cuota social y seguros contratados, entre otros.</p>
-              </div>
+              <p style="margin:0;">El presente simulador es una herramienta de carácter meramente informativo y orientativo, basada en los datos ingresados por el asociado. El resultado obtenido no constituye oferta vinculante, aceptación de solicitud ni compromiso de otorgamiento por parte de la Asociación Mutual Modelo de Entre Ríos. El efectivo otorgamiento de la Ayuda Económica Mutual, su monto, tasa de servicio y plazo se encuentran sujetos al previo análisis de capacidad de pago, verificación de identidad, antigüedad societaria y cumplimiento del Reglamento de Ayuda Económica vigente aprobado por el INAES. Los valores calculados son estimativos y pueden variar según la fecha exacta de liquidación, tributos aplicables (como el Impuesto de Sellos de la Provincia de Entre Ríos e IVA, de corresponder), cuota social y seguros contratados, entre otros.</p>
             </div>
           </div>
         </div>
@@ -24733,6 +24735,6 @@ ${cierreTxt}`;
   <script src="js/boletinER.js?v=6"></script>
   <script src="js/auditoria20.js?v=6"></script>
   <script src="js/fichasAsociados.js?v=6"></script>
-  <script src="js/sidecreerWidget.js?v=8"></script>
+  <script src="js/sidecreerWidget.js?v=9"></script>
 </body>
 </html>

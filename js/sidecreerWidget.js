@@ -153,6 +153,21 @@
         const cuotasTxt = _formatearPesos(data.saldo_cuotas);
         const contadoTxt = _formatearPesos(data.saldo_contado);
         const notaCache = data.cached ? ' · caché reciente' : '';
+
+        const saldoBruto = (data.saldo_cuotas !== null && data.saldo_cuotas !== undefined && Number(data.saldo_cuotas) > 0)
+          ? Number(data.saldo_cuotas)
+          : Number(data.saldo_contado || 0);
+        const saldoSinDecimales = Math.floor(Number.isFinite(saldoBruto) ? saldoBruto : 0);
+
+        let notaAutocompletado = '';
+        if (saldoSinDecimales > 0) {
+          try {
+            if (typeof global.setModo === 'function') global.setModo('cuota');
+            if (typeof global.setQuickAmount === 'function') global.setQuickAmount(saldoSinDecimales);
+            notaAutocompletado = '<div style="font-size:0.68rem;font-weight:700;color:#065f46;margin-top:4px;">⚡ Modo cambiado a <strong>Por Cuota Objetivo</strong> y cargado con <strong>$ ' + saldoSinDecimales.toLocaleString('es-AR') + '</strong> (sin decimales).</div>';
+          } catch (_) {}
+        }
+
         _mostrarResultadoSidecreer(
           'ok',
           '<div style="font-weight:800;font-size:0.77rem;color:#065f46;margin-bottom:6px;">✅ Disponible Tarjeta ' + _esc(formateada) + '</div>' +
@@ -166,10 +181,13 @@
               '<div style="font-size:0.88rem;font-weight:800;color:#047857;font-variant-numeric:tabular-nums;">' + _esc(contadoTxt) + '</div>' +
             '</div>' +
           '</div>' +
-          '<div style="font-size:0.67rem;color:#047857;margin-top:5px;">Consulta automática vía línea institucional' + notaCache + '.</div>'
+          notaAutocompletado +
+          '<div style="font-size:0.67rem;color:#047857;margin-top:4px;">Consulta automática vía línea institucional' + notaCache + '.</div>'
         );
         if (typeof global.showToast === 'function') {
-          global.showToast('✅ Disponible Sidecreer recuperado.');
+          global.showToast(saldoSinDecimales > 0
+            ? '✅ Disponible Sidecreer recuperado y cargado en Cuota Objetivo.'
+            : '✅ Disponible Sidecreer recuperado.');
         }
         return;
       }

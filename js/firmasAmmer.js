@@ -32,6 +32,7 @@
     { group: 'Expediente y Fecha', value: 'fecha.mesNombre', label: 'Fecha Hoy: Mes en letras' },
     { group: 'Expediente y Fecha', value: 'fecha.anio', label: 'Fecha Hoy: Año (AAAA)' },
     { group: 'Otros', value: 'manual', label: 'Texto Manual / Fijo o a Completar al Emitir' },
+    { group: 'Otros', value: 'campo_vacio', label: '🧹 Limpiar / Dejar Campo Vacío (Borra texto previo del PDF)' },
     { group: 'Otros', value: 'firma', label: 'Caja de Firma Ológrafa Manuscrita' },
     { group: 'Otros', value: 'sello_institucional', label: 'Caja de Sello Oficial Institucional (PNG)' },
   ];
@@ -60,12 +61,16 @@
       pdfBase64: '',
       pdfDoc: null,
       _loadedB64: '',
+      _renderTask: null,
+      _baseViewportW: 0,
+      zoom: 1.0,
+      vistaLimpia: false,
       archivoNombre: '',
       totalPages: 1,
       currentPage: 1,
       campos: [],
       selectedFieldId: null,
-      addModeTipo: null, // 'texto' | 'firma' | 'sello' | null
+      addModeTipo: null, // 'texto' | 'borrador' | 'firma' | 'sello' | null
     },
     canvasFirmaPrueba: {
       drawing: false,
@@ -297,18 +302,27 @@
     const manualInputs = document.querySelectorAll('[data-firma-campo-valor]');
     manualInputs.forEach((inp) => {
       const cid = inp.getAttribute('data-firma-campo-valor');
-      if (cid) ctx.manuales[cid] = inp.value;
+      if (!cid) return;
+      ctx.manuales[cid] = inp.value;
+      if (inp.dataset && inp.dataset.userEdited === '1' && String(inp.value || '').trim() === '') {
+        ctx.manuales['__vacio__:' + cid] = true;
+      }
     });
     const origenInputs = document.querySelectorAll('[data-firma-origen-valor]');
     origenInputs.forEach((inp) => {
       const org = inp.getAttribute('data-firma-origen-valor');
-      if (org) ctx.manuales['origen:' + org] = inp.value;
+      if (!org) return;
+      ctx.manuales['origen:' + org] = inp.value;
+      if (inp.dataset && inp.dataset.userEdited === '1' && String(inp.value || '').trim() === '') {
+        ctx.manuales['__vacio__:origen:' + org] = true;
+      }
     });
     return ctx;
   }
 
   function resolverPreviewLocal(campo, ctx) {
     if (!campo) return '';
+    if (campo.tipo === 'borrador' || campo.origen_campo === 'campo_vacio') return '';
     if (campo.tipo === 'firma') return '[Firma manuscrita]';
     if (campo.tipo === 'sello') return '[Sello Oficial PNG]';
     const origen = String(campo.origen_campo || 'manual');
@@ -673,9 +687,11 @@
     const inpWa = document.getElementById('inpFirmaTelefonoWa');
     if (inpWa && ctx.solicitante.telefono) inpWa.value = ctx.solicitante.telefono;
 
-    const camposEditables = todosCampos.filter(({ campo }) => campo.tipo !== 'firma' && campo.tipo !== 'sello');
+    const camposEditables = todosCampos.filter(({ campo }) =>
+      campo.tipo !== 'firma' && campo.tipo !== 'sello' && campo.tipo !== 'borrador' && campo.origen_campo !== 'campo_vacio'
+    );
     if (camposEditables.length === 0) {
-      cont.innerHTML = '<div style="padding:0.85rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:0.82rem;color:#475569;">Estas plantillas no tienen campos de texto editables (solo cajas de firma/sello).</div>';
+      cont.innerHTML = '<div style="padding:0.85rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:0.82rem;color:#475569;">Estas plantillas no tienen campos de texto editables (solo zonas limpiadas, firma o sello).</div>';
       return;
     }
 
@@ -711,11 +727,23 @@
             <label style="display:block;font-size:0.71rem;font-weight:700;color:#475569;margin-bottom:3px;">
               ${escHtml(c.etiqueta || c.id)} ${alcance}
             </label>
-            <input type="text" ${attr} value="${escHtml(val)}" placeholder="Ingresar valor..." style="width:100%;padding:0.38rem 0.55rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.82rem;background:#ffffff;color:#0f172a;"/>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <input type="text" ${attr} value="${escHtml(val)}" oninput="this.dataset.userEdited='1'" placeholder="Dejar vacío o ingresar..." style="flex:1;min-width:0;padding:0.38rem 0.55rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.82rem;background:#ffffff;color:#0f172a;"/>
+              <button type="button" onclick="window.limpiarInputGenerarCampo(this)" title="Vaciar texto para dejar el campo en blanco en el PDF" style="padding:0.36rem 0.5rem;border-radius:6px;border:1px solid #cbd5e1;background:#ffffff;color:#0369a1;font-size:0.75rem;cursor:pointer;">🧹</button>
+            </div>
           </div>
         `;
       }).join('') +
       '</div>';
+  }
+
+  function limpiarInputGenerarCampo(btn) {
+    const wrap = btn && btn.parentElement;
+    const inp = wrap ? wrap.querySelector('input') : null;
+    if (!inp) return;
+    inp.value = '';
+    inp.dataset.userEdited = '1';
+    inp.focus();
   }
 
   async function previsualizarPdfGenerado(usarFirmaPrueba) {
@@ -1385,9 +1413,30 @@
     }
   }
 
+  function sincronizarSelectZoomEditor() {
+    const sel = document.getElementById('selEditorZoomPct');
+    if (!sel) return;
+    const zVal = Number((state.editor.zoom || 1.0).toFixed(2));
+    const optExist = Array.from(sel.options).find((o) => Math.abs(parseFloat(o.value) - zVal) < 0.015);
+    if (optExist) {
+      sel.value = optExist.value;
+    } else {
+      let custom = sel.querySelector('option[data-custom-zoom="1"]');
+      if (!custom) {
+        custom = document.createElement('option');
+        custom.setAttribute('data-custom-zoom', '1');
+        sel.appendChild(custom);
+      }
+      custom.value = String(zVal);
+      custom.textContent = `${Math.round(zVal * 100)}%`;
+      sel.value = custom.value;
+    }
+  }
+
   async function cargarPdfEnCanvasEditor(b64, pageNum) {
     const canvas = document.getElementById('canvasEditorPlantillaPdf');
     const lblPag = document.getElementById('lblEditorPaginaActual');
+    const frame = document.getElementById('editorPdfPageFrame');
     if (!canvas || !b64) return;
     if (!state.editor.pdfDoc || state.editor._loadedB64 !== b64) {
       state.editor.pdfDoc = await cargarDocumentoPdfJs(base64ToUint8Array(b64));
@@ -1398,11 +1447,94 @@
     state.editor.currentPage = pag;
     if (lblPag) lblPag.textContent = `Página ${pag} de ${state.editor.totalPages}`;
 
+    if (state.editor._renderTask && typeof state.editor._renderTask.cancel === 'function') {
+      try { state.editor._renderTask.cancel(); } catch (_e) {}
+      state.editor._renderTask = null;
+    }
+
     const page = await state.editor.pdfDoc.getPage(pag);
-    const vp = page.getViewport({ scale: 1.25 });
-    canvas.width = vp.width;
-    canvas.height = vp.height;
-    await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+    const zoom = Math.max(0.4, Math.min(3.0, Number(state.editor.zoom || 1.0)));
+    state.editor.zoom = zoom;
+    sincronizarSelectZoomEditor();
+
+    const baseVp = page.getViewport({ scale: 1.25 });
+    state.editor._baseViewportW = baseVp.width;
+
+    const cssScale = 1.25 * zoom;
+    const dpr = Math.min(global.devicePixelRatio || 1, 2);
+    const vpCss = page.getViewport({ scale: cssScale });
+    const vpRender = page.getViewport({ scale: cssScale * dpr });
+
+    const cssW = Math.max(120, Math.round(vpCss.width));
+    const cssH = Math.max(120, Math.round(vpCss.height));
+    canvas.width = Math.max(120, Math.round(vpRender.width));
+    canvas.height = Math.max(120, Math.round(vpRender.height));
+    canvas.style.width = `${cssW}px`;
+    canvas.style.height = `${cssH}px`;
+    if (frame) {
+      frame.style.width = `${cssW}px`;
+      frame.style.height = `${cssH}px`;
+    }
+
+    const ctx2d = canvas.getContext('2d');
+    const renderTask = page.render({ canvasContext: ctx2d, viewport: vpRender });
+    state.editor._renderTask = renderTask;
+    try {
+      await renderTask.promise;
+    } catch (errRender) {
+      if (!errRender || errRender.name !== 'RenderingCancelledException') throw errRender;
+      return;
+    } finally {
+      if (state.editor._renderTask === renderTask) state.editor._renderTask = null;
+    }
+    renderCajasOverlayEditor();
+  }
+
+  function setZoomEditorPdf(newZoom, anchorRatio) {
+    const z = Math.max(0.4, Math.min(3.0, Number(newZoom || 1.0)));
+    const prevZ = Number(state.editor.zoom || 1.0);
+    state.editor.zoom = Number(z.toFixed(2));
+    sincronizarSelectZoomEditor();
+    if (!state.editor.pdfBase64) return;
+
+    const wrap = document.getElementById('editorPdfScrollWrap');
+    let rx = 0.5, ry = 0.5;
+    if (wrap && wrap.scrollWidth > 0 && wrap.scrollHeight > 0) {
+      if (anchorRatio && typeof anchorRatio.rx === 'number') {
+        rx = anchorRatio.rx;
+        ry = anchorRatio.ry;
+      } else {
+        rx = (wrap.scrollLeft + wrap.clientWidth * 0.5) / wrap.scrollWidth;
+        ry = (wrap.scrollTop + wrap.clientHeight * 0.5) / wrap.scrollHeight;
+      }
+    }
+
+    Promise.resolve(cargarPdfEnCanvasEditor(state.editor.pdfBase64, state.editor.currentPage)).then(() => {
+      if (wrap && Math.abs(state.editor.zoom - prevZ) > 0.005) {
+        wrap.scrollLeft = Math.max(0, Math.round(rx * wrap.scrollWidth - wrap.clientWidth * 0.5));
+        wrap.scrollTop = Math.max(0, Math.round(ry * wrap.scrollHeight - wrap.clientHeight * 0.5));
+      }
+    });
+  }
+
+  function zoomEditorPdf(delta) {
+    const cur = Number(state.editor.zoom || 1.0);
+    setZoomEditorPdf(cur + Number(delta || 0));
+  }
+
+  function ajustarZoomEditorPdf() {
+    const wrap = document.getElementById('editorPdfScrollWrap');
+    const baseW = Number(state.editor._baseViewportW || 0);
+    if (!wrap || !baseW) {
+      setZoomEditorPdf(1.0);
+      return;
+    }
+    const availW = Math.max(260, wrap.clientWidth - 28);
+    setZoomEditorPdf(availW / baseW);
+  }
+
+  function toggleVistaLimpiaEditor(checked) {
+    state.editor.vistaLimpia = !!checked;
     renderCajasOverlayEditor();
   }
 
@@ -1415,7 +1547,7 @@
   }
 
   function actualizarBotonesModoEditor() {
-    ['texto', 'firma', 'sello'].forEach((k) => {
+    ['texto', 'borrador', 'firma', 'sello'].forEach((k) => {
       const btn = document.getElementById('btnModoCampo_' + k);
       if (!btn) return;
       const activo = state.editor.addModeTipo === k;
@@ -1436,6 +1568,7 @@
     actualizarBotonesModoEditor();
     if (state.editor.addModeTipo === 'firma') notify('Hacé clic en el PDF donde querés ubicar la caja de Firma Manuscrita.', 'info');
     else if (state.editor.addModeTipo === 'sello') notify('Hacé clic en el PDF donde querés estampar el Sello Oficial PNG.', 'info');
+    else if (state.editor.addModeTipo === 'borrador') notify('Hacé clic sobre el texto precompleto del PDF que querés borrar / dejar vacío.', 'info');
     else if (state.editor.addModeTipo === 'texto') notify('Hacé clic en el PDF donde querés colocar el nuevo campo.', 'info');
   }
 
@@ -1443,6 +1576,7 @@
     const id = 'cmp_' + Date.now().toString(36) + '_' + Math.floor(Math.random() * 100);
     const esFirma = tipo === 'firma';
     const esSello = tipo === 'sello';
+    const esBorrador = tipo === 'borrador';
     let nuevo;
     if (esFirma) {
       const firmasExistentes = state.editor.campos.filter((x) => x.tipo === 'firma').length;
@@ -1480,6 +1614,21 @@
       };
       const chkSello = document.getElementById('chkValRequiereSelloPng');
       if (chkSello) chkSello.checked = true;
+    } else if (esBorrador) {
+      nuevo = {
+        id,
+        etiqueta: 'Campo vacío (borra texto)',
+        tipo: 'borrador',
+        origen_campo: 'campo_vacio',
+        valor_manual: '',
+        pagina: state.editor.currentPage,
+        x_pct: Math.max(0.01, Math.min(0.80, Number(xPct.toFixed(4)))),
+        y_pct: Math.max(0.01, Math.min(0.94, Number(yPct.toFixed(4)))),
+        w_pct: 0.24,
+        h_pct: 0.032,
+        font_size: 10,
+        cubrir_fondo: true,
+      };
     } else {
       nuevo = {
         id,
@@ -1510,15 +1659,34 @@
   function obtenerEstilosCajaCampo(c, selected) {
     const esFirma = c.tipo === 'firma';
     const esSello = c.tipo === 'sello' || c.origen_campo === 'sello_institucional';
+    const esBorrador = c.tipo === 'borrador' || c.origen_campo === 'campo_vacio';
     let borderCol = '#d97706', bgCol = 'rgba(245, 158, 11, 0.22)', tagBg = '#b45309';
-    if (esFirma) { borderCol = '#059669'; bgCol = 'rgba(16, 185, 129, 0.16)'; tagBg = '#047857'; }
-    else if (esSello) { borderCol = '#7c3aed'; bgCol = 'rgba(124, 58, 237, 0.16)'; tagBg = '#6d28d9'; }
-    if (selected) { borderCol = '#2563eb'; bgCol = 'rgba(37, 99, 235, 0.22)'; tagBg = '#1d4ed8'; }
-    const borderStyle = (esFirma || esSello) ? '2px dashed' : (selected ? '2px solid' : '1.5px solid');
-    return { border: `${borderStyle} ${borderCol}`, bgCol, tagBg, esFirma, esSello };
+    if (esBorrador) {
+      borderCol = '#0284c7';
+      bgCol = 'rgba(255, 255, 255, 0.94)';
+      tagBg = '#0369a1';
+    } else if (esFirma) {
+      borderCol = '#059669'; bgCol = 'rgba(16, 185, 129, 0.16)'; tagBg = '#047857';
+    } else if (esSello) {
+      borderCol = '#7c3aed'; bgCol = 'rgba(124, 58, 237, 0.16)'; tagBg = '#6d28d9';
+    } else if (state.editor.vistaLimpia && c.cubrir_fondo !== false) {
+      bgCol = 'rgba(255, 255, 255, 0.94)';
+    }
+    if (selected) {
+      borderCol = '#2563eb';
+      tagBg = '#1d4ed8';
+      if (!esBorrador && !(state.editor.vistaLimpia && c.cubrir_fondo !== false)) {
+        bgCol = 'rgba(37, 99, 235, 0.22)';
+      }
+    }
+    const borderStyle = (esFirma || esSello || esBorrador) ? '2px dashed' : (selected ? '2px solid' : '1.5px solid');
+    return { border: `${borderStyle} ${borderCol}`, bgCol, tagBg, esFirma, esSello, esBorrador };
   }
 
   function obtenerTextoEtiquetaCaja(c) {
+    if (c.tipo === 'borrador' || c.origen_campo === 'campo_vacio') {
+      return `🧹 ${c.etiqueta || 'Campo vacío'}`;
+    }
     if (c.tipo === 'firma') {
       const fc = String(c.firmante_clave || 'firmante_1').replace('firmante_', 'F');
       return `✍️ [${fc}] ${c.etiqueta || 'Firma'}`;
@@ -1698,6 +1866,24 @@
 
   function setupOverlayClickListener() {
     const overlay = document.getElementById('overlayCamposPlantilla');
+    const scrollWrap = document.getElementById('editorPdfScrollWrap');
+    if (scrollWrap && !scrollWrap.dataset.boundWheelZoom) {
+      scrollWrap.dataset.boundWheelZoom = '1';
+      scrollWrap.addEventListener('wheel', (ev) => {
+        if (!(ev.ctrlKey || ev.metaKey)) return;
+        if (!state.editor.pdfBase64) return;
+        ev.preventDefault();
+        const rect = scrollWrap.getBoundingClientRect();
+        const rx = scrollWrap.scrollWidth > 0
+          ? (scrollWrap.scrollLeft + (ev.clientX - rect.left)) / scrollWrap.scrollWidth
+          : 0.5;
+        const ry = scrollWrap.scrollHeight > 0
+          ? (scrollWrap.scrollTop + (ev.clientY - rect.top)) / scrollWrap.scrollHeight
+          : 0.5;
+        const delta = ev.deltaY < 0 ? 0.15 : -0.15;
+        setZoomEditorPdf(Number(state.editor.zoom || 1.0) + delta, { rx, ry });
+      }, { passive: false });
+    }
     if (!overlay || overlay.dataset.boundClick) return;
     overlay.dataset.boundClick = '1';
     overlay.addEventListener('pointerdown', (ev) => {
@@ -1717,6 +1903,21 @@
         const tag = (ev.target && ev.target.tagName || '').toLowerCase();
         if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
 
+        if (ev.key === '+' || ev.key === '=') {
+          ev.preventDefault();
+          zoomEditorPdf(0.2);
+          return;
+        }
+        if (ev.key === '-' || ev.key === '_') {
+          ev.preventDefault();
+          zoomEditorPdf(-0.2);
+          return;
+        }
+        if (ev.key === '0' && (ev.ctrlKey || ev.metaKey)) {
+          ev.preventDefault();
+          setZoomEditorPdf(1.0);
+          return;
+        }
         if (ev.key === 'Escape' && state.editor.addModeTipo) {
           state.editor.addModeTipo = null;
           overlay.style.cursor = 'default';
@@ -1760,20 +1961,24 @@
         ? '<span style="font-size:0.76rem;color:#64748b;">Sin campos marcados aún.</span>'
         : state.editor.campos.map((item) => {
           const act = item.id === state.editor.selectedFieldId;
-          const ico = item.tipo === 'firma' ? '✍️ ' : (item.tipo === 'sello' ? '🏛️ ' : '');
+          const ico = (item.tipo === 'borrador' || item.origen_campo === 'campo_vacio')
+            ? '🧹 '
+            : (item.tipo === 'firma' ? '✍️ ' : (item.tipo === 'sello' ? '🏛️ ' : ''));
           return `<button type="button" data-pill-id="${escHtml(item.id)}" onclick="window.seleccionarCampoEditor('${escHtml(item.id)}')" style="padding:3px 8px;border-radius:6px;border:1px solid ${act ? '#1d4ed8' : '#cbd5e1'};background:${act ? '#dbeafe' : '#ffffff'};color:${act ? '#1e3a8a' : '#334155'};font-size:0.72rem;font-weight:700;cursor:pointer;">${ico}P${item.pagina || 1}: ${escHtml(item.etiqueta || item.id)}</button>`;
         }).join(' ');
     }
 
     if (!cont) return;
     if (!c) {
-      cont.innerHTML = '<div style="padding:1rem;background:#f8fafc;border-radius:8px;border:1px dashed #cbd5e1;font-size:0.8rem;color:#64748b;">Hacé clic sobre un cuadro en el PDF (o agregá un campo nuevo) para configurar qué dato o firmante se estampa ahí. Podés usar las flechas del teclado para ajustar posición con precisión.</div>';
+      cont.innerHTML = '<div style="padding:1rem;background:#f8fafc;border-radius:8px;border:1px dashed #cbd5e1;font-size:0.8rem;color:#64748b;">Hacé clic sobre un cuadro en el PDF (o agregá un campo nuevo) para configurar qué dato o firmante se estampa ahí. Podés usar las flechas del teclado para ajustar posición con precisión o <strong>Ctrl + rueda</strong> para hacer zoom.</div>';
       return;
     }
 
     const optHtml = ORIGENES_CAMPO.map((o) =>
       `<option value="${escHtml(o.value)}" ${c.origen_campo === o.value ? 'selected' : ''}>${escHtml(o.label)}</option>`
     ).join('');
+
+    const esBorrador = c.tipo === 'borrador' || c.origen_campo === 'campo_vacio';
 
     let extraFirmaHtml = '';
     if (c.tipo === 'firma') {
@@ -1798,11 +2003,21 @@
       ? '<span style="font-size:0.66rem;padding:1px 6px;border-radius:9999px;background:#e0e7ff;color:#3730a3;font-weight:700;">✨ IA</span>'
       : (c.fuente === 'regla' ? '<span style="font-size:0.66rem;padding:1px 6px;border-radius:9999px;background:#fef3c7;color:#92400e;font-weight:700;">📐 Regla PDF</span>' : '');
 
+    const textoPrevBox = c.texto_referencia
+      ? `<div style="font-size:0.71rem;color:#64748b;background:#fffbeb;padding:4px 6px;border-radius:5px;border:1px solid #fde68a;display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
+           <span>Texto previo detectado: "${escHtml(c.texto_referencia)}"</span>
+           ${!esBorrador ? `<button type="button" onclick="window.convertirCampoSoloBorradorEditor('${escHtml(c.id)}', true)" style="padding:2px 6px;border-radius:5px;border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;font-size:0.69rem;font-weight:700;cursor:pointer;">🧹 Borrar y dejar vacío</button>` : ''}
+         </div>`
+      : '';
+
     cont.innerHTML = `
       <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.8rem;display:flex;flex-direction:column;gap:0.55rem;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:0.35rem;flex-wrap:wrap;">
           <strong style="font-size:0.82rem;color:#0f172a;">Campo: ${escHtml(c.id)} (Pág. ${c.pagina || 1}) ${fuenteBadge}</strong>
-          <div style="display:flex;gap:0.3rem;">
+          <div style="display:flex;gap:0.3rem;flex-wrap:wrap;">
+            ${esBorrador
+              ? `<button type="button" onclick="window.convertirCampoSoloBorradorEditor('${escHtml(c.id)}', false)" style="padding:2px 8px;border-radius:6px;border:1px solid #d97706;background:#fffbeb;color:#b45309;font-size:0.72rem;font-weight:700;cursor:pointer;">✏️ Hacer rellenable</button>`
+              : `<button type="button" onclick="window.convertirCampoSoloBorradorEditor('${escHtml(c.id)}', true)" title="Elimina el texto previo del PDF sin pedir texto nuevo" style="padding:2px 8px;border-radius:6px;border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;font-size:0.72rem;font-weight:700;cursor:pointer;">🧹 Dejar vacío</button>`}
             <button type="button" onclick="window.duplicarCampoEditor('${escHtml(c.id)}')" style="padding:2px 8px;border-radius:6px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-size:0.72rem;font-weight:700;cursor:pointer;">📋 Duplicar</button>
             <button type="button" onclick="window.eliminarCampoEditor('${escHtml(c.id)}')" style="padding:2px 8px;border-radius:6px;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;font-size:0.72rem;font-weight:700;cursor:pointer;">🗑️ Quitar</button>
           </div>
@@ -1810,7 +2025,7 @@
         <div id="lblEditorCampoCoords" style="font-size:0.69rem;color:#475569;font-family:monospace;background:#ffffff;padding:3px 6px;border-radius:5px;border:1px solid #e2e8f0;">
           X: ${(Number(c.x_pct || 0) * 100).toFixed(1)}% · Y: ${(Number(c.y_pct || 0) * 100).toFixed(1)}% · Ancho: ${(Number(c.w_pct || 0) * 100).toFixed(1)}% · Alto: ${(Number(c.h_pct || 0) * 100).toFixed(1)}%
         </div>
-        ${c.texto_referencia ? `<div style="font-size:0.71rem;color:#64748b;background:#fffbeb;padding:4px 6px;border-radius:5px;border:1px solid #fde68a;">Texto detectado en plantilla: "${escHtml(c.texto_referencia)}"</div>` : ''}
+        ${textoPrevBox}
         <div>
           <label style="font-size:0.72rem;font-weight:700;color:#475569;">Etiqueta visible</label>
           <input type="text" id="editCampoEtiqueta" value="${escHtml(c.etiqueta || '')}" oninput="window.actualizarPropCampoEditor('etiqueta', this.value)" style="width:100%;padding:0.35rem 0.5rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.8rem;"/>
@@ -1820,24 +2035,66 @@
           <select id="editCampoOrigen" onchange="window.actualizarOrigenCampoEditor(this.value)" style="width:100%;padding:0.35rem 0.5rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.8rem;background:#ffffff;">${optHtml}</select>
         </div>
         ${extraFirmaHtml}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+        ${esBorrador ? `
+          <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:0.55rem 0.65rem;font-size:0.74rem;color:#0369a1;line-height:1.4;">
+            🧹 <strong>Modo Campo Vacío activo:</strong> al generar o firmar el PDF, todo texto precompleto (o campo previo) cubierto por este recuadro se borrará en blanco sin escribir nada encima. Podés convertirlo en rellenable en cualquier momento.
+          </div>
+        ` : `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+            <div>
+              <label style="font-size:0.72rem;font-weight:700;color:#475569;">Tamaño fuente</label>
+              <input type="number" min="6" max="18" step="0.5" value="${Number(c.font_size || 10)}" oninput="window.actualizarPropCampoEditor('font_size', parseFloat(this.value) || 10)" style="width:100%;padding:0.35rem 0.5rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.8rem;"/>
+            </div>
+            <div style="display:flex;align-items:flex-end;padding-bottom:4px;">
+              <label style="display:flex;align-items:center;gap:5px;font-size:0.75rem;font-weight:600;color:#334155;cursor:pointer;" title="Blanquea el texto previo que hubiera debajo en el PDF base">
+                <input type="checkbox" ${c.cubrir_fondo !== false ? 'checked' : ''} onchange="window.actualizarPropCampoEditor('cubrir_fondo', this.checked)"/>
+                🧹 Eliminar texto previo (fondo blanco)
+              </label>
+            </div>
+          </div>
           <div>
-            <label style="font-size:0.72rem;font-weight:700;color:#475569;">Tamaño fuente</label>
-            <input type="number" min="6" max="18" step="0.5" value="${Number(c.font_size || 10)}" oninput="window.actualizarPropCampoEditor('font_size', parseFloat(this.value) || 10)" style="width:100%;padding:0.35rem 0.5rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.8rem;"/>
+            <label style="font-size:0.72rem;font-weight:700;color:#475569;">Valor por defecto / texto fijo (opcional)</label>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <input type="text" id="editCampoValorManual" value="${escHtml(c.valor_manual || '')}" oninput="window.actualizarPropCampoEditor('valor_manual', this.value)" style="flex:1;min-width:0;padding:0.35rem 0.5rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.8rem;" placeholder="Se usa si el dato es manual"/>
+              <button type="button" onclick="window.vaciarValorCampoEditor('${escHtml(c.id)}')" title="Borrar texto precompleto y dejar este campo vacío para completar" style="padding:0.35rem 0.55rem;border-radius:6px;border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;font-size:0.73rem;font-weight:700;cursor:pointer;white-space:nowrap;">🧹 Vaciar</button>
+            </div>
           </div>
-          <div style="display:flex;align-items:flex-end;padding-bottom:4px;">
-            <label style="display:flex;align-items:center;gap:5px;font-size:0.75rem;font-weight:600;color:#334155;cursor:pointer;">
-              <input type="checkbox" ${c.cubrir_fondo !== false ? 'checked' : ''} onchange="window.actualizarPropCampoEditor('cubrir_fondo', this.checked)"/>
-              Tapar fondo en blanco
-            </label>
-          </div>
-        </div>
-        <div>
-          <label style="font-size:0.72rem;font-weight:700;color:#475569;">Valor por defecto / texto fijo (opcional)</label>
-          <input type="text" value="${escHtml(c.valor_manual || '')}" oninput="window.actualizarPropCampoEditor('valor_manual', this.value)" style="width:100%;padding:0.35rem 0.5rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.8rem;" placeholder="Se usa si el dato es manual"/>
-        </div>
+        `}
       </div>
     `;
+  }
+
+  function vaciarValorCampoEditor(cid) {
+    const c = state.editor.campos.find((x) => x.id === (cid || state.editor.selectedFieldId));
+    if (!c) return;
+    c.valor_manual = '';
+    c.cubrir_fondo = true;
+    if (c.tipo !== 'firma' && c.tipo !== 'sello' && c.tipo !== 'borrador') {
+      c.origen_campo = 'manual';
+      c.tipo = 'texto';
+    }
+    renderCajasOverlayEditor();
+    renderInspectorCamposEditor();
+    notify('Campo vaciado y con fondo blanco activado para reemplazar texto previo.', 'success');
+  }
+
+  function convertirCampoSoloBorradorEditor(cid, hacerBorrador) {
+    const c = state.editor.campos.find((x) => x.id === (cid || state.editor.selectedFieldId));
+    if (!c) return;
+    if (hacerBorrador) {
+      c.tipo = 'borrador';
+      c.origen_campo = 'campo_vacio';
+      c.valor_manual = '';
+      c.cubrir_fondo = true;
+      if (!c.etiqueta || c.etiqueta === 'Campo nuevo') c.etiqueta = 'Campo vacío (borra texto)';
+    } else {
+      c.tipo = 'texto';
+      c.origen_campo = 'manual';
+      c.cubrir_fondo = true;
+      if (String(c.etiqueta || '').includes('Campo vacío')) c.etiqueta = 'Campo a completar';
+    }
+    renderCajasOverlayEditor();
+    renderInspectorCamposEditor();
   }
 
   function seleccionarCampoEditor(cid) {
@@ -1856,6 +2113,9 @@
     const c = state.editor.campos.find((x) => x.id === state.editor.selectedFieldId);
     if (!c) return;
     c[prop] = val;
+    if (prop === 'cubrir_fondo' && state.editor.vistaLimpia) {
+      renderCajasOverlayEditor();
+    }
 
     // Actualización puntual en DOM sin destruir ni reconstruir todo el overlay
     const overlay = document.getElementById('overlayCamposPlantilla');
@@ -1869,7 +2129,9 @@
     }
     const pill = document.querySelector(`#editorListaCamposResumen [data-pill-id="${CSS.escape(c.id)}"]`);
     if (pill) {
-      const ico = c.tipo === 'firma' ? '✍️ ' : (c.tipo === 'sello' ? '🏛️ ' : '');
+      const ico = (c.tipo === 'borrador' || c.origen_campo === 'campo_vacio')
+        ? '🧹 '
+        : (c.tipo === 'firma' ? '✍️ ' : (c.tipo === 'sello' ? '🏛️ ' : ''));
       pill.textContent = `${ico}P${c.pagina || 1}: ${c.etiqueta || c.id}`;
     }
   }
@@ -1885,10 +2147,16 @@
     } else if (origen === 'sello_institucional') {
       c.tipo = 'sello';
       c.cubrir_fondo = false;
+    } else if (origen === 'campo_vacio') {
+      c.tipo = 'borrador';
+      c.cubrir_fondo = true;
+      c.valor_manual = '';
     } else if (origen.startsWith('fecha.')) {
       c.tipo = 'fecha';
+      c.cubrir_fondo = true;
     } else {
       c.tipo = 'texto';
+      c.cubrir_fondo = true;
     }
     renderCajasOverlayEditor();
     renderInspectorCamposEditor();
@@ -2433,6 +2701,7 @@
   global.onPlantillaGenerarChange = onPlantillaGenerarChange;
   global.togglePlantillaEnPaquete = togglePlantillaEnPaquete;
   global.renderCamposCompletarFormulario = renderCamposCompletarFormulario;
+  global.limpiarInputGenerarCampo = limpiarInputGenerarCampo;
   global.agregarFirmanteGenerador = agregarFirmanteGenerador;
   global.eliminarFirmanteGenerador = eliminarFirmanteGenerador;
   global.moverOrdenFirmanteGenerador = moverOrdenFirmanteGenerador;
@@ -2466,10 +2735,16 @@
   global.reanalizarPdfConIaEditor = reanalizarPdfConIaEditor;
   global.cargarPlantillaEnEditor = cargarPlantillaEnEditor;
   global.cambiarPaginaEditor = cambiarPaginaEditor;
+  global.setZoomEditorPdf = setZoomEditorPdf;
+  global.zoomEditorPdf = zoomEditorPdf;
+  global.ajustarZoomEditorPdf = ajustarZoomEditorPdf;
+  global.toggleVistaLimpiaEditor = toggleVistaLimpiaEditor;
   global.activarModoClickAgregarCampo = activarModoClickAgregarCampo;
   global.seleccionarCampoEditor = seleccionarCampoEditor;
   global.actualizarPropCampoEditor = actualizarPropCampoEditor;
   global.actualizarOrigenCampoEditor = actualizarOrigenCampoEditor;
+  global.vaciarValorCampoEditor = vaciarValorCampoEditor;
+  global.convertirCampoSoloBorradorEditor = convertirCampoSoloBorradorEditor;
   global.duplicarCampoEditor = duplicarCampoEditor;
   global.eliminarCampoEditor = eliminarCampoEditor;
   global.guardarPlantillaDesdeEditor = guardarPlantillaDesdeEditor;

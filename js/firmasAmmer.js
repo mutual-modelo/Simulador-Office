@@ -552,8 +552,8 @@
       if (vals.firma_olografa !== false) chips.push('✍️ Firma manuscrita');
       if (vals.gps_obligatorio) chips.push('📍 GPS');
       if (vals.tapar_resaltados !== false) chips.push('🧹 Limpia resaltados amarillos');
-      if (vals.dni_frente_dorso) chips.push('🪪 DNI (Fase 2)');
-      if (vals.selfie_liveness) chips.push('🤳 Selfie Liveness (Fase 2)');
+      if (vals.dni_frente_dorso) chips.push('🪪 DNI Frente y Dorso');
+      if (vals.selfie_liveness) chips.push('🤳 Selfie Liveness + Cotejo Facial');
       badgeVal.innerHTML = chips.map((c) => `<span style="font-size:0.72rem;font-weight:700;padding:3px 9px;border-radius:9999px;background:#eff6ff;color:#1e3a8a;border:1px solid #bfdbfe;">${escHtml(c)}</span>`).join(' ');
     }
 
@@ -791,6 +791,15 @@
       const tipoDescarga = (est === 'FIRMADO' || est === 'PARCIAL') ? 'firmado' : 'original';
       const labelDescarga = est === 'FIRMADO' ? 'Firmado + Evidencia' : (est === 'PARCIAL' ? 'PDF Parcial' : 'Original');
 
+      const ek = r.ekyc_resumen || null;
+      let ekycHtml = '';
+      if (ek && ek.estado_ekyc) {
+        const ekCol = ek.estado_ekyc === 'APROBADO' ? '#166534' : '#b45309';
+        const ekBg = ek.estado_ekyc === 'APROBADO' ? '#dcfce7' : '#fef3c7';
+        const fmTxt = ek.face_match_pct != null ? ` · Face ${ek.face_match_pct}%` : '';
+        ekycHtml = `<div style="margin-top:3px;"><span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:${ekBg};color:${ekCol};">🪪 eKYC ${escHtml(ek.estado_ekyc)}${escHtml(fmTxt)}</span></div>`;
+      }
+
       return `
         <tr style="border-bottom:1px solid #e2e8f0;">
           <td style="padding:0.65rem 0.6rem;font-size:0.8rem;">
@@ -808,6 +817,7 @@
           <td style="padding:0.65rem 0.6rem;font-size:0.72rem;">
             <div class="font-mono" style="color:#334155;" title="${escHtml(r.hash_sha256_firmado || r.hash_sha256_original || '')}">SHA256: ${escHtml(shaShort)}…</div>
             <div>IP: ${escHtml(r.ip_origen || '-')} · ${gpsHtml}</div>
+            ${ekycHtml}
           </td>
           <td style="padding:0.65rem 0.6rem;text-align:right;white-space:nowrap;">
             <button type="button" onclick="window.descargarPdfSolicitudFirma('${escHtml(r.id)}', '${tipoDescarga}')" style="padding:0.32rem 0.65rem;border-radius:6px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.74rem;font-weight:700;cursor:pointer;">

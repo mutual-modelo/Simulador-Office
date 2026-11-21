@@ -258,6 +258,70 @@
         <div id="pdfPaginasContainer"></div>
       </section>
 
+      <section class="card" id="seccionEkycValidacion" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.55rem;">
+          <h2 style="margin:0;">🪪 2B. Validación de Identidad y Biometría</h2>
+          <span id="badgeEstadoEkyc" class="geo-pill">Pendiente de verificación</span>
+        </div>
+        <div style="font-size:0.8rem;color:#475569;margin-bottom:0.75rem;">
+          Para proteger tu identidad, este documento solicita validar tu identidad antes de firmar.
+        </div>
+
+        <div id="bloqueEkycDni" style="display:none;margin-bottom:0.85rem;">
+          <div style="font-size:0.82rem;font-weight:800;color:#0f2744;margin-bottom:0.45rem;">1) Fotos de tu DNI (Frente y Dorso con cámara trasera)</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0.65rem;">
+            <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.65rem;text-align:center;">
+              <div style="font-size:0.74rem;font-weight:700;color:#334155;margin-bottom:6px;">DNI FRENTE *</div>
+              <img id="imgPrevDniFrente" alt="Preview DNI Frente" style="display:none;width:100%;max-height:130px;object-fit:contain;border-radius:6px;margin-bottom:6px;"/>
+              <label class="btn btn-secondary" style="padding:0.42rem 0.7rem;font-size:0.78rem;width:100%;cursor:pointer;">
+                📷 Capturar Frente
+                <input type="file" id="inpDniFrenteCam" accept="image/*" capture="environment" style="display:none;"/>
+              </label>
+            </div>
+            <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.65rem;text-align:center;">
+              <div style="font-size:0.74rem;font-weight:700;color:#334155;margin-bottom:6px;">DNI DORSO *</div>
+              <img id="imgPrevDniDorso" alt="Preview DNI Dorso" style="display:none;width:100%;max-height:130px;object-fit:contain;border-radius:6px;margin-bottom:6px;"/>
+              <label class="btn btn-secondary" style="padding:0.42rem 0.7rem;font-size:0.78rem;width:100%;cursor:pointer;">
+                📷 Capturar Dorso
+                <input type="file" id="inpDniDorsoCam" accept="image/*" capture="environment" style="display:none;"/>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div id="bloqueEkycSelfie" style="display:none;margin-bottom:0.85rem;">
+          <div style="font-size:0.82rem;font-weight:800;color:#0f2744;margin-bottom:0.4rem;">2) Selfie Biométrica + Prueba de Vida (Cámara frontal)</div>
+          <div id="lblRetoLiveness" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;border-radius:8px;padding:0.5rem 0.7rem;font-size:0.78rem;font-weight:700;margin-bottom:0.55rem;">
+            Desafío: Mirá de frente, luego sonreí levemente y mové un poco la cabeza.
+          </div>
+          <div id="selfieLiveWrap" style="display:none;position:relative;max-width:340px;margin:0 auto 0.65rem auto;border-radius:12px;overflow:hidden;border:2px solid #0f2744;background:#0f172a;">
+            <video id="videoSelfieLiveness" autoplay playsinline muted style="width:100%;display:block;transform:scaleX(-1);"></video>
+            <div style="position:absolute;inset:14% 22%;border:2.5px dashed rgba(255,255,255,0.85);border-radius:50%;pointer-events:none;"></div>
+          </div>
+          <div id="selfiePreviewRow" style="display:none;justify-content:center;gap:0.65rem;flex-wrap:wrap;margin-bottom:0.55rem;">
+            <img id="imgPrevSelfie1" alt="Selfie neutral" style="width:120px;height:120px;object-fit:cover;border-radius:10px;border:2px solid #16a34a;"/>
+            <img id="imgPrevSelfie2" alt="Selfie desafío" style="width:120px;height:120px;object-fit:cover;border-radius:10px;border:2px solid #0ea5e9;"/>
+          </div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <button type="button" id="btnAbrirCamaraSelfie" class="btn btn-secondary" style="flex:1;min-width:180px;">
+              🤳 Abrir Cámara Frontal
+            </button>
+            <button type="button" id="btnTomarSelfieLiveness" class="btn btn-primary" style="display:none;flex:1;min-width:180px;padding:0.6rem;">
+              📸 Capturar y Validar Vida
+            </button>
+            <label class="btn btn-secondary" style="flex:1;min-width:160px;cursor:pointer;font-size:0.8rem;">
+              📁 Alternativa: Foto Cámara
+              <input type="file" id="inpSelfieFallbackCam" accept="image/*" capture="user" style="display:none;"/>
+            </label>
+          </div>
+        </div>
+
+        <button type="button" id="btnVerificarIdentidadEkyc" class="btn btn-primary" style="background:#1e3a8a;padding:0.72rem;font-size:0.9rem;">
+          🔍 Verificar Identidad Ahora
+        </button>
+        <div id="ekycResultadoBox" style="display:none;margin-top:0.65rem;"></div>
+      </section>
+
       <section class="card" id="seccionTrazarFirma">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.6rem;">
           <h2 style="margin:0;">✍️ 3. Trazá tu Firma Manuscrita</h2>
@@ -313,6 +377,12 @@
         pdfFirmadoB64: '',
         gps: { lat: null, lng: null, accuracy: null, status: 'pending' },
         gpsObligatorio: false,
+        requiereDni: false,
+        requiereSelfie: false,
+        ekycValidado: false,
+        ekycStream: null,
+        retoLiveness: 'Sonreí levemente y mové un poco la cabeza hacia la derecha',
+        ekycImgs: { dniFrente: '', dniDorso: '', selfie1: '', selfie2: '' },
         drawing: false,
         hasInk: false,
         startTime: null,
@@ -546,11 +616,242 @@
             `;
           }
 
+          const valsReq = data.validaciones_requeridas || {};
+          appState.requiereDni = Boolean(valsReq.dni_frente_dorso);
+          appState.requiereSelfie = Boolean(valsReq.selfie_liveness);
+          if (appState.requiereDni || appState.requiereSelfie) {
+            setupSeccionEkyc(data);
+          }
+
           solicitarGpsEnSegundoPlano();
           setupSignaturePad();
           await renderizarPdfEnMovil(data.pdfBase64);
         } catch (err) {
           showErr('No pudimos abrir tu documento: ' + err.message);
+        }
+      }
+
+      const RETOS_LIVENESS = [
+        'Mirá al centro, luego sonreí levemente y girá un poco la cabeza.',
+        'Mirá al frente, luego parpadeá dos veces e incliná la cabeza.',
+        'Mirá a la cámara y levantá levemente el mentón al segundo aviso.',
+      ];
+
+      function detenerCamaraEkyc() {
+        if (appState.ekycStream) {
+          try {
+            appState.ekycStream.getTracks().forEach((t) => t.stop());
+          } catch (_e) {}
+          appState.ekycStream = null;
+        }
+        const vid = document.getElementById('videoSelfieLiveness');
+        if (vid) vid.srcObject = null;
+        const liveWrap = document.getElementById('selfieLiveWrap');
+        if (liveWrap) liveWrap.style.display = 'none';
+        const btnTomar = document.getElementById('btnTomarSelfieLiveness');
+        if (btnTomar) btnTomar.style.display = 'none';
+        const btnAbrir = document.getElementById('btnAbrirCamaraSelfie');
+        if (btnAbrir) btnAbrir.style.display = 'inline-flex';
+      }
+
+      function redimensionarArchivoImagen(file, maxLado) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const img = new Image();
+            img.onload = () => {
+              const scale = Math.min(1, (maxLado || 1280) / Math.max(img.width, img.height));
+              const c = document.createElement('canvas');
+              c.width = Math.max(1, Math.round(img.width * scale));
+              c.height = Math.max(1, Math.round(img.height * scale));
+              c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+              resolve(c.toDataURL('image/jpeg', 0.84));
+            };
+            img.onerror = () => reject(new Error('Imagen no legible'));
+            img.src = reader.result;
+          };
+          reader.onerror = () => reject(new Error('No se pudo leer la foto'));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function mostrarResultadoEkyc(res) {
+        const box = document.getElementById('ekycResultadoBox');
+        const badge = document.getElementById('badgeEstadoEkyc');
+        const esOk = res.estado_ekyc === 'APROBADO';
+        if (badge) {
+          badge.textContent = esOk ? '✅ Identidad Verificada' : `📋 eKYC: ${res.estado_ekyc || 'CAPTURADO'}`;
+          badge.style.background = esOk ? '#dcfce7' : '#fef3c7';
+          badge.style.color = esOk ? '#166534' : '#92400e';
+          badge.style.borderColor = esOk ? '#86efac' : '#fde68a';
+        }
+        if (box) {
+          const fm = res.face_match_pct != null ? `Coincidencia Facial: <strong>${res.face_match_pct}%</strong>` : 'Capturas registradas con SHA-256';
+          const liv = res.liveness_ok === false ? '⚠️ Prueba de vida observada' : 'Prueba de vida OK';
+          const dniTx = (res.dni_extraido && res.dni_extraido.dni) ? ` · DNI leído: <strong>${escHtml(res.dni_extraido.dni)}</strong>` : '';
+          const alertasTx = (res.alertas && res.alertas.length) ? `<div style="margin-top:4px;font-size:0.76rem;font-weight:500;">${res.alertas.map((a) => '• ' + escHtml(a)).join('<br/>')}</div>` : '';
+          box.className = 'alert ' + (esOk ? 'alert-ok' : '');
+          if (!esOk) {
+            box.style.background = '#fffbeb';
+            box.style.border = '1px solid #fde68a';
+            box.style.color = '#92400e';
+          }
+          box.style.display = 'block';
+          box.innerHTML = `<strong>${esOk ? '✅ Validación eKYC Aprobada' : 'ℹ️ Evidencia eKYC Registrada'}</strong><br/><span style="font-size:0.8rem;font-weight:500;">${fm} · ${liv}${dniTx}</span>${alertasTx}`;
+        }
+        appState.ekycValidado = true;
+      }
+
+      function setupSeccionEkyc(data) {
+        const sec = document.getElementById('seccionEkycValidacion');
+        if (sec) sec.style.display = 'block';
+        if (appState.requiereDni) {
+          const bDni = document.getElementById('bloqueEkycDni');
+          if (bDni) bDni.style.display = 'block';
+        }
+        if (appState.requiereSelfie) {
+          const bSelf = document.getElementById('bloqueEkycSelfie');
+          if (bSelf) bSelf.style.display = 'block';
+          appState.retoLiveness = RETOS_LIVENESS[Math.floor(Math.random() * RETOS_LIVENESS.length)];
+          const lblReto = document.getElementById('lblRetoLiveness');
+          if (lblReto) lblReto.textContent = 'Desafío de vida: ' + appState.retoLiveness;
+        }
+
+        if (data.ekyc_completado && data.ekyc_resumen) {
+          mostrarResultadoEkyc(data.ekyc_resumen);
+        }
+
+        const bindDniInput = (inpId, imgId, key) => {
+          const inp = document.getElementById(inpId);
+          if (!inp || inp.dataset.bound) return;
+          inp.dataset.bound = '1';
+          inp.addEventListener('change', async (ev) => {
+            const file = ev.target.files && ev.target.files[0];
+            if (!file) return;
+            try {
+              const b64 = await redimensionarArchivoImagen(file, 1280);
+              appState.ekycImgs[key] = b64;
+              const img = document.getElementById(imgId);
+              if (img) { img.src = b64; img.style.display = 'block'; }
+            } catch (e) {
+              alert('No pudimos procesar la foto: ' + e.message);
+            }
+          });
+        };
+        bindDniInput('inpDniFrenteCam', 'imgPrevDniFrente', 'dniFrente');
+        bindDniInput('inpDniDorsoCam', 'imgPrevDniDorso', 'dniDorso');
+
+        const inpFallback = document.getElementById('inpSelfieFallbackCam');
+        if (inpFallback && !inpFallback.dataset.bound) {
+          inpFallback.dataset.bound = '1';
+          inpFallback.addEventListener('change', async (ev) => {
+            const file = ev.target.files && ev.target.files[0];
+            if (!file) return;
+            const b64 = await redimensionarArchivoImagen(file, 800);
+            appState.ekycImgs.selfie1 = b64;
+            appState.ekycImgs.selfie2 = '';
+            const row = document.getElementById('selfiePreviewRow');
+            const i1 = document.getElementById('imgPrevSelfie1');
+            const i2 = document.getElementById('imgPrevSelfie2');
+            if (i1) i1.src = b64;
+            if (i2) i2.style.display = 'none';
+            if (row) row.style.display = 'flex';
+          });
+        }
+
+        const btnAbrir = document.getElementById('btnAbrirCamaraSelfie');
+        const btnTomar = document.getElementById('btnTomarSelfieLiveness');
+        if (btnAbrir && !btnAbrir.dataset.bound) {
+          btnAbrir.dataset.bound = '1';
+          btnAbrir.addEventListener('click', async () => {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+              alert('Tu navegador no permite cámara en vivo. Usá "Alternativa: Foto Cámara".');
+              return;
+            }
+            try {
+              detenerCamaraEkyc();
+              const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+                audio: false,
+              });
+              appState.ekycStream = stream;
+              const vid = document.getElementById('videoSelfieLiveness');
+              vid.srcObject = stream;
+              document.getElementById('selfieLiveWrap').style.display = 'block';
+              btnAbrir.style.display = 'none';
+              btnTomar.style.display = 'inline-flex';
+            } catch (err) {
+              alert('No se pudo abrir la cámara frontal (' + err.message + '). Podés usar "Alternativa: Foto Cámara".');
+            }
+          });
+        }
+
+        if (btnTomar && !btnTomar.dataset.bound) {
+          btnTomar.dataset.bound = '1';
+          btnTomar.addEventListener('click', async () => {
+            const vid = document.getElementById('videoSelfieLiveness');
+            if (!vid || !vid.videoWidth) return;
+            const captureFrame = () => {
+              const c = document.createElement('canvas');
+              c.width = vid.videoWidth;
+              c.height = vid.videoHeight;
+              c.getContext('2d').drawImage(vid, 0, 0, c.width, c.height);
+              return c.toDataURL('image/jpeg', 0.8);
+            };
+            btnTomar.disabled = true;
+            btnTomar.textContent = '⏳ Capturando... ¡Ahora cumplí el gesto!';
+            appState.ekycImgs.selfie1 = captureFrame();
+            await new Promise((r) => setTimeout(r, 1150));
+            appState.ekycImgs.selfie2 = captureFrame();
+            detenerCamaraEkyc();
+            btnTomar.disabled = false;
+            btnTomar.textContent = '📸 Capturar y Validar Vida';
+
+            const row = document.getElementById('selfiePreviewRow');
+            const i1 = document.getElementById('imgPrevSelfie1');
+            const i2 = document.getElementById('imgPrevSelfie2');
+            if (i1) i1.src = appState.ekycImgs.selfie1;
+            if (i2) { i2.src = appState.ekycImgs.selfie2; i2.style.display = 'block'; }
+            if (row) row.style.display = 'flex';
+          });
+        }
+
+        const btnVal = document.getElementById('btnVerificarIdentidadEkyc');
+        if (btnVal && !btnVal.dataset.bound) {
+          btnVal.dataset.bound = '1';
+          btnVal.addEventListener('click', async () => {
+            if (appState.requiereDni && (!appState.ekycImgs.dniFrente || !appState.ekycImgs.dniDorso)) {
+              alert('Por favor capturá ambas fotos de tu DNI (Frente y Dorso).');
+              return;
+            }
+            if (appState.requiereSelfie && !appState.ekycImgs.selfie1) {
+              alert('Por favor completá la captura de tu Selfie biométrica antes de validar.');
+              return;
+            }
+            btnVal.disabled = true;
+            btnVal.textContent = '⏳ Analizando documento, biometría y prueba de vida...';
+            try {
+              const resp = await fetch(`${API_BASE}/api/firmas/public/${encodeURIComponent(token)}/validar-identidad`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  dniFrenteBase64: appState.ekycImgs.dniFrente || null,
+                  dniDorsoBase64: appState.ekycImgs.dniDorso || null,
+                  selfieBase64: appState.ekycImgs.selfie1 || null,
+                  selfieDesafioBase64: appState.ekycImgs.selfie2 || null,
+                  retoLiveness: appState.retoLiveness,
+                }),
+              });
+              const resJson = await resp.json();
+              if (!resp.ok) throw new Error(resJson.detail || `Error HTTP ${resp.status}`);
+              mostrarResultadoEkyc(resJson);
+            } catch (err) {
+              alert('Error validando identidad: ' + err.message);
+            } finally {
+              btnVal.disabled = false;
+              btnVal.textContent = '🔍 Verificar Identidad Ahora';
+            }
+          });
         }
       }
 
@@ -567,6 +868,10 @@
 
       document.getElementById('btnConfirmarFirmar').addEventListener('click', async () => {
         const chk = document.getElementById('chkConsentimientoLegal');
+        if ((appState.requiereDni || appState.requiereSelfie) && !appState.ekycValidado) {
+          alert('Primero completá y verificá tu identidad (DNI / Selfie) en el paso 2B antes de firmar.');
+          return;
+        }
         if (!appState.hasInk || appState.puntosTotales < 5) {
           alert('Por favor trazá tu firma manuscrita dentro del recuadro antes de continuar.');
           return;
@@ -621,6 +926,7 @@
         }
       });
 
+      window.addEventListener('beforeunload', detenerCamaraEkyc);
       window.addEventListener('DOMContentLoaded', inicializar);
     })();
   </script>

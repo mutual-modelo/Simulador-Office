@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verificación Pública de Firma Electrónica · AMMER</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #0f2744 60%, #1e3a8a 100%);
+      color: #ffffff;
+      padding: 1rem 1.25rem;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.2);
+    }
+    .header-inner {
+      max-width: 820px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .brand-title { font-weight: 800; font-size: 1rem; }
+    .brand-sub { font-size: 0.76rem; color: #cbd5e1; margin-top: 2px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      border: 1px solid rgba(255,255,255,0.22);
+      background: rgba(255,255,255,0.12);
+      color: #ffffff;
+    }
+    main {
+      max-width: 820px;
+      margin: 1.25rem auto 2.5rem;
+      padding: 0 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.95rem;
+    }
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 1.1rem;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    }
+    .card h2 { margin: 0 0 0.65rem; font-size: 0.96rem; color: #0f2744; }
+    .search-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .search-row input {
+      flex: 1;
+      min-width: 220px;
+      padding: 0.58rem 0.75rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 9px;
+      font-size: 0.85rem;
+    }
+    .btn {
+      border: none;
+      border-radius: 9px;
+      padding: 0.6rem 1.05rem;
+      font-weight: 800;
+      font-size: 0.84rem;
+      cursor: pointer;
+    }
+    .btn-primary { background: #0f2744; color: #ffffff; }
+    .banner {
+      border-radius: 12px;
+      padding: 0.95rem 1.05rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .banner-ok { background: #dcfce7; border: 1px solid #86efac; color: #166534; }
+    .banner-warn { background: #fef3c7; border: 1px solid #fde68a; color: #92400e; }
+    .banner-err { background: #fee2e2; border: 1px solid #fecaca; color: #b91c1c; }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+      gap: 0.55rem;
+    }
+    .meta-item {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 9px;
+      padding: 0.55rem 0.7rem;
+    }
+    .meta-lbl { font-size: 0.68rem; text-transform: uppercase; font-weight: 700; color: #64748b; }
+    .meta-val { font-size: 0.84rem; font-weight: 700; color: #0f172a; margin-top: 2px; word-break: break-word; }
+    .hash-box {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.75rem;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 9px;
+      padding: 0.65rem 0.75rem;
+      word-break: break-all;
+      color: #334155;
+      line-height: 1.5;
+    }
+    .badge-chip {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 9999px;
+      font-size: 0.73rem;
+      font-weight: 700;
+      margin: 2px 4px 2px 0;
+    }
+    .drop-zone {
+      border: 2px dashed #94a3b8;
+      border-radius: 12px;
+      padding: 1.1rem;
+      text-align: center;
+      background: #f8fafc;
+      cursor: pointer;
+    }
+    .drop-zone:hover { border-color: #1d4ed8; background: #eff6ff; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.81rem; }
+    th, td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid #e2e8f0; }
+    th { font-size: 0.72rem; text-transform: uppercase; color: #475569; background: #f8fafc; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div>
+        <div class="brand-title">Asociación Mutual Modelo de Entre Ríos (AMMER)</div>
+        <div class="brand-sub">Portal Público de Verificación Criptográfica de Firmas Electrónicas · Ley 25.506</div>
+      </div>
+      <div class="pill">🛡️ Auditoría SHA-256 + TSA RFC 3161</div>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>🔍 Consultar Certificado / ID de Solicitud</h2>
+      <div class="search-row">
+        <input type="text" id="inpVerifId" placeholder="Pegá el UUID de solicitud de firma o escaneá el QR del documento..." />
+        <input type="text" id="inpVerifHash" placeholder="Prefijo SHA-256 opcional" style="max-width:210px;" />
+        <button type="button" id="btnConsultarVerif" class="btn btn-primary">Verificar Ahora</button>
+      </div>
+    </section>
+
+    <div id="verifLoading" class="card" style="display:none;text-align:center;color:#475569;">
+      ⏳ Consultando registro criptográfico en AMMER...
+    </div>
+    <div id="verifError" class="banner banner-err" style="display:none;"></div>
+
+    <div id="verifResultWrap" style="display:none;flex-direction:column;gap:0.9rem;">
+      <div id="verifEstadoBanner" class="banner banner-ok"></div>
+
+      <section class="card">
+        <h2>📄 Datos del Documento Certificado</h2>
+        <div class="meta-grid" style="margin-bottom:0.75rem;">
+          <div class="meta-item"><div class="meta-lbl">Código Verificación</div><div class="meta-val" id="vCodigo">-</div></div>
+          <div class="meta-item"><div class="meta-lbl">Documento / Plantilla</div><div class="meta-val" id="vPlantilla">-</div></div>
+          <div class="meta-item"><div class="meta-lbl">Expediente</div><div class="meta-val" id="vExpediente">-</div></div>
+          <div class="meta-item"><div class="meta-lbl">Cierre de Firma (UTC)</div><div class="meta-val" id="vFecha">-</div></div>
+        </div>
+        <div id="vBadges" style="margin-bottom:0.75rem;"></div>
+        <div class="hash-box">
+          <strong>SHA-256 Documento Original:</strong> <span id="vHashOrig">-</span><br/>
+          <strong>SHA-256 Documento Firmado Final:</strong> <span id="vHashFirm">-</span>
+          <div id="vTsaInfo" style="margin-top:4px;"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>👥 Firmantes Registrados (Identidad Protegida)</h2>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Rol / Etiqueta</th>
+                <th>Titular (Enmascarado)</th>
+                <th>DNI</th>
+                <th>Estado</th>
+                <th>Fecha UTC</th>
+              </tr>
+            </thead>
+            <tbody id="vTablaFirmantes"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>🧪 Verificador Local SHA-256 (Sin subir tu archivo)</h2>
+        <p style="font-size:0.78rem;color:#475569;margin:0 0 0.6rem;">
+          Seleccioná el PDF firmado que tenés en tu computadora o celular. Calcularemos su huella SHA-256 localmente en tu navegador para comprobar que no sufrió ninguna modificación.
+        </p>
+        <label class="drop-zone" style="display:block;">
+          <input type="file" id="inpLocalPdfVerificar" accept="application/pdf" style="display:none;" />
+          <strong>📎 Hacé clic acá para elegir el PDF y validar su SHA-256</strong>
+          <div style="font-size:0.74rem;color:#64748b;margin-top:3px;">El cálculo ocurre 100% en tu dispositivo mediante WebCrypto API</div>
+        </label>
+        <div id="vLocalMatchResult" style="display:none;margin-top:0.75rem;"></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+      const API_BASE = 'https://ammer-auditor-api.onrender.com';
+      const params = new URLSearchParams(window.location.search);
+      const state = {
+        registro: null,
+      };
+
+      function escHtml(v) {
+        return String(v == null ? '' : v)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      async function consultar(id, h) {
+        const cleanId = String(id || '').trim();
+        if (!cleanId) return;
+        const load = document.getElementById('verifLoading');
+        const err = document.getElementById('verifError');
+        const wrap = document.getElementById('verifResultWrap');
+        load.style.display = 'block';
+        err.style.display = 'none';
+        wrap.style.display = 'none';
+        document.getElementById('vLocalMatchResult').style.display = 'none';
+
+        try {
+          const qs = h ? `?h=${encodeURIComponent(String(h).trim())}` : '';
+          const resp = await fetch(`${API_BASE}/api/firmas/verificar/${encodeURIComponent(cleanId)}${qs}`);
+          const data = await resp.json();
+          if (!resp.ok) throw new Error(data.detail || `Error HTTP ${resp.status}`);
+          state.registro = data;
+          renderResultado(data);
+        } catch (e) {
+          err.textContent = '❌ ' + e.message;
+          err.style.display = 'flex';
+        } finally {
+          load.style.display = 'none';
+        }
+      }
+
+      function renderResultado(d) {
+        const wrap = document.getElementById('verifResultWrap');
+        const banner = document.getElementById('verifEstadoBanner');
+        const est = String(d.estado || '').toUpperCase();
+        if (d.valido) {
+          banner.className = 'banner banner-ok';
+          banner.innerHTML = `<div><strong>✅ DOCUMENTO AUTÉNTICO Y FIRMADO</strong><div style="font-size:0.8rem;margin-top:2px;">Certificado íntegro registrado en AMMER bajo Ley 25.506.${d.coincide_hash_qr === true ? ' · Hash QR verificado.' : ''}</div></div><div style="font-weight:800;font-size:0.85rem;">${escHtml(est)}</div>`;
+        } else if (d.coincide_hash_qr === false) {
+          banner.className = 'banner banner-err';
+          banner.innerHTML = `<div><strong>⚠️ ALERTA DE INTEGRIDAD (HASH QR NO COINCIDE)</strong><div style="font-size:0.8rem;margin-top:2px;">El hash consultado en la URL no corresponde al documento almacenado.</div></div><div style="font-weight:800;">${escHtml(est)}</div>`;
+        } else {
+          banner.className = 'banner banner-warn';
+          banner.innerHTML = `<div><strong>🕒 DOCUMENTO EN ESTADO ${escHtml(est)}</strong><div style="font-size:0.8rem;margin-top:2px;">Aún no completó el cierre total de firmas o el enlace expiró.</div></div><div style="font-weight:800;">${escHtml(est)}</div>`;
+        }
+
+        document.getElementById('vCodigo').textContent = d.codigo_verificacion || '-';
+        document.getElementById('vPlantilla').textContent = d.plantilla_nombre || '-';
+        document.getElementById('vExpediente').textContent = d.expediente_id || '-';
+        document.getElementById('vFecha').textContent = d.firmado_en || '-';
+        document.getElementById('vHashOrig').textContent = d.hash_sha256_original || '-';
+        document.getElementById('vHashFirm').textContent = d.hash_sha256_firmado || '(Pendiente de cierre)';
+
+        const chips = [];
+        if (d.con_sello_institucional) chips.push({ bg: '#f5f3ff', col: '#5b21b6', txt: '🏛️ Sello Institucional PNG' });
+        if (d.ekyc_verificado) chips.push({ bg: '#dcfce7', col: '#166534', txt: `🪪 eKYC Verificado${d.ekyc_face_match_pct != null ? ' (' + d.ekyc_face_match_pct + '%)' : ''}` });
+        if (d.boletin_oficial_consultado) chips.push({ bg: '#ecfdf5', col: '#047857', txt: '📰 Cruce Boletín Oficial ER' });
+        if (d.tsa_rfc3161 && d.tsa_rfc3161.ok) chips.push({ bg: '#eff6ff', col: '#1d4ed8', txt: '⏱️ Sello Temporal TSA RFC 3161' });
+        if (d.drive_respaldado) chips.push({ bg: '#f0fdf4', col: '#15803d', txt: '☁️ Respaldo Inmutable en Drive' });
+
+        document.getElementById('vBadges').innerHTML = chips.map((c) => `<span class="badge-chip" style="background:${c.bg};color:${c.col};">${escHtml(c.txt)}</span>`).join('');
+
+        const tsaDiv = document.getElementById('vTsaInfo');
+        if (d.tsa_rfc3161 && d.tsa_rfc3161.ok) {
+          tsaDiv.innerHTML = `<strong>Sello Tiempo RFC 3161:</strong> VÁLIDO · Autoridad: ${escHtml(d.tsa_rfc3161.tsa_url || '-')} · Hora TSA: ${escHtml(d.tsa_rfc3161.gen_time || 'UTC')}`;
+        } else if (d.tsa_rfc3161) {
+          tsaDiv.innerHTML = `<strong>Sello Tiempo RFC 3161:</strong> ${escHtml(d.tsa_rfc3161.status || 'No emitido')}`;
+        } else {
+          tsaDiv.innerHTML = '';
+        }
+
+        const tbody = document.getElementById('vTablaFirmantes');
+        tbody.innerHTML = (d.firmantes || []).map((f) => `
+          <tr>
+            <td><strong>${escHtml(f.etiqueta || '-')}</strong></td>
+            <td>${escHtml(f.nombre_enmascarado || '-')}</td>
+            <td class="font-mono">${escHtml(f.dni_enmascarado || '-')}</td>
+            <td>${f.firmado ? '✅ Firmado' : '⏳ Pendiente'}${f.pin_2fa_verificado ? ' · 🔐 PIN 2FA' : ''}</td>
+            <td>${escHtml(f.firmado_en || '-')}</td>
+          </tr>
+        `).join('');
+
+        wrap.style.display = 'flex';
+      }
+
+      document.getElementById('btnConsultarVerif').addEventListener('click', () => {
+        consultar(document.getElementById('inpVerifId').value, document.getElementById('inpVerifHash').value);
+      });
+
+      document.getElementById('inpLocalPdfVerificar').addEventListener('change', async (ev) => {
+        const file = ev.target.files && ev.target.files[0];
+        const out = document.getElementById('vLocalMatchResult');
+        if (!file || !state.registro) return;
+        const buf = await file.arrayBuffer();
+        const digest = await crypto.subtle.digest('SHA-256', buf);
+        const hex = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+        const hFirm = String(state.registro.hash_sha256_firmado || '').toLowerCase();
+        const hOrig = String(state.registro.hash_sha256_original || '').toLowerCase();
+        out.style.display = 'block';
+        if (hFirm && hex === hFirm) {
+          out.className = 'banner banner-ok';
+          out.innerHTML = `<div><strong>✅ COINCIDE 100% CON EL DOCUMENTO FIRMADO FINAL</strong><div class="hash-box" style="margin-top:6px;">SHA-256 calculado: ${escHtml(hex)}</div></div>`;
+        } else if (hOrig && hex === hOrig) {
+          out.className = 'banner banner-warn';
+          out.innerHTML = `<div><strong>ℹ️ COINCIDE CON EL DOCUMENTO ORIGINAL (SIN FIRMAS ESTAMPADAS)</strong><div class="hash-box" style="margin-top:6px;">SHA-256 calculado: ${escHtml(hex)}</div></div>`;
+        } else {
+          out.className = 'banner banner-err';
+          out.innerHTML = `<div><strong>❌ NO COINCIDE — ARCHIVO DISTINTO O MODIFICADO</strong><div class="hash-box" style="margin-top:6px;">SHA-256 archivo local: ${escHtml(hex)}<br/>SHA-256 esperado final: ${escHtml(hFirm || hOrig || '-')}</div></div>`;
+        }
+      });
+
+      const idInit = params.get('id') || '';
+      const hInit = params.get('h') || '';
+      if (idInit) {
+        document.getElementById('inpVerifId').value = idInit;
+        document.getElementById('inpVerifHash').value = hInit;
+        consultar(idInit, hInit);
+      }
+    })();
+  </script>
+</body>
+</html>

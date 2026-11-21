@@ -554,6 +554,7 @@
       if (vals.tapar_resaltados !== false) chips.push('🧹 Limpia resaltados amarillos');
       if (vals.dni_frente_dorso) chips.push('🪪 DNI Frente y Dorso');
       if (vals.selfie_liveness) chips.push('🤳 Selfie Liveness + Cotejo Facial');
+      if (vals.requiere_pin_otp) chips.push('🔐 PIN 2FA (4 dígitos)');
       badgeVal.innerHTML = chips.map((c) => `<span style="font-size:0.72rem;font-weight:700;padding:3px 9px;border-radius:9999px;background:#eff6ff;color:#1e3a8a;border:1px solid #bfdbfe;">${escHtml(c)}</span>`).join(' ');
     }
 
@@ -700,13 +701,18 @@
 
       if (listCont) {
         listCont.innerHTML = enlaces.map((item, idx) => {
-          const msg = `Hola ${item.nombre || 'Estimado/a'}, te compartimos desde Asociación Mutual Modelo de Entre Ríos (AMMER) el enlace seguro para revisar y firmar "${tpl.nombre}" (${item.etiqueta || 'Firmante'}):\n\n${item.url_firma}\n\nEste enlace es personal y tiene vigencia de 24 horas.`;
+          const pinNote = item.pin_otp ? `\n\n🔐 Tu código PIN de seguridad para confirmar la firma es: *${item.pin_otp}*` : '';
+          const msg = `Hola ${item.nombre || 'Estimado/a'}, te compartimos desde Asociación Mutual Modelo de Entre Ríos (AMMER) el enlace seguro para revisar y firmar "${tpl.nombre}" (${item.etiqueta || 'Firmante'}):\n\n${item.url_firma}${pinNote}\n\nEste enlace es personal y tiene vigencia de 24 horas.`;
+          const pinBadge = item.pin_otp
+            ? `<div style="display:inline-flex;align-items:center;gap:6px;margin-bottom:0.45rem;padding:0.32rem 0.65rem;border-radius:8px;background:#f5f3ff;border:1px solid #ddd6fe;color:#5b21b6;font-size:0.78rem;font-weight:800;">🔐 PIN 2FA para firmar: <span class="font-mono" style="font-size:0.9rem;letter-spacing:2px;">${escHtml(item.pin_otp)}</span></div>`
+            : '';
           return `
             <div style="background:#ffffff;border:1px solid #a7f3d0;border-radius:10px;padding:0.8rem;">
               <div style="font-size:0.8rem;font-weight:800;color:#065f46;margin-bottom:0.4rem;">
                 👤 ${escHtml(item.etiqueta || `Firmante ${idx + 1}`)}: ${escHtml(item.nombre || '-')}
                 ${item.dni ? `<span style="font-weight:500;color:#047857;">(DNI ${escHtml(item.dni)})</span>` : ''}
               </div>
+              ${pinBadge}
               <div style="display:flex;gap:0.45rem;flex-wrap:wrap;margin-bottom:0.5rem;">
                 <input type="text" id="txtEnlaceFirmante_${idx}" readonly value="${escHtml(item.url_firma)}" style="flex:1;min-width:220px;padding:0.42rem 0.6rem;border:1px solid #6ee7b7;border-radius:7px;background:#f8fafc;font-size:0.78rem;color:#0f172a;"/>
                 <button type="button" onclick="window.copiarInputPorId('txtEnlaceFirmante_${idx}', 'Enlace de firma')" style="padding:0.42rem 0.8rem;border-radius:7px;border:1px solid #047857;background:#ffffff;color:#047857;font-size:0.76rem;font-weight:700;cursor:pointer;">📋 Copiar Enlace</button>
@@ -787,18 +793,41 @@
         ? `<a href="https://maps.google.com/?q=${r.geo_latitud},${r.geo_longitud}" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline;font-size:0.72rem;">📍 Ver GPS</a>`
         : '<span style="color:#94a3b8;font-size:0.72rem;">Sin GPS</span>';
 
-      const shaShort = (r.hash_sha256_firmado || r.hash_sha256_original || '').slice(0, 14);
+      const shaFull = r.hash_sha256_firmado || r.hash_sha256_original || '';
+      const shaShort = shaFull.slice(0, 14);
       const tipoDescarga = (est === 'FIRMADO' || est === 'PARCIAL') ? 'firmado' : 'original';
       const labelDescarga = est === 'FIRMADO' ? 'Firmado + Evidencia' : (est === 'PARCIAL' ? 'PDF Parcial' : 'Original');
 
       const ek = r.ekyc_resumen || null;
-      let ekycHtml = '';
+      let badgesHtml = '';
       if (ek && ek.estado_ekyc) {
         const ekCol = ek.estado_ekyc === 'APROBADO' ? '#166534' : '#b45309';
         const ekBg = ek.estado_ekyc === 'APROBADO' ? '#dcfce7' : '#fef3c7';
         const fmTxt = ek.face_match_pct != null ? ` · Face ${ek.face_match_pct}%` : '';
-        ekycHtml = `<div style="margin-top:3px;"><span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:${ekBg};color:${ekCol};">🪪 eKYC ${escHtml(ek.estado_ekyc)}${escHtml(fmTxt)}</span></div>`;
+        badgesHtml += `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:${ekBg};color:${ekCol};">🪪 eKYC ${escHtml(ek.estado_ekyc)}${escHtml(fmTxt)}</span>`;
+        const bo = ek.boletin_oficial_er;
+        if (bo && bo.consultado) {
+          const boAlert = bo.tiene_alerta_critica;
+          badgesHtml += `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:${boAlert ? '#fee2e2' : '#ecfdf5'};color:${boAlert ? '#b91c1c' : '#047857'};">${boAlert ? '⚠️ Boletín ER (' + (bo.total_resultados || 0) + ')' : '📰 Boletín ER OK'}</span>`;
+        }
       }
+      if (r.pin_otp_verificado) {
+        badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#f5f3ff;color:#5b21b6;">🔐 PIN 2FA OK</span>';
+      }
+      const tsa = r.tsa_resumen || null;
+      if (tsa && tsa.ok) {
+        badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#eff6ff;color:#1d4ed8;">⏱️ TSA RFC 3161</span>';
+      }
+
+      const verifyUrl = `verificar.html?id=${encodeURIComponent(r.id)}&h=${encodeURIComponent((r.hash_sha256_original || '').slice(0, 16))}`;
+      const driveBtn = r.drive_file_url
+        ? `<a href="${escHtml(r.drive_file_url)}" target="_blank" rel="noopener" style="display:inline-block;padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #16a34a;background:#f0fdf4;color:#15803d;font-size:0.71rem;font-weight:700;text-decoration:none;">☁️ Ver Drive</a>`
+        : (est === 'FIRMADO' && r.expediente_id
+          ? `<button type="button" onclick="window.respaldarSolicitudEnDrive('${escHtml(r.id)}')" style="padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;font-size:0.71rem;font-weight:700;cursor:pointer;">☁️ Guardar Drive</button>`
+          : '');
+      const tsrBtn = r.tiene_tsr
+        ? `<button type="button" onclick="window.descargarTsrSolicitudFirma('${escHtml(r.id)}')" style="padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #4338ca;background:#eef2ff;color:#3730a3;font-size:0.71rem;font-weight:700;cursor:pointer;">⏱️ .TSR</button>`
+        : '';
 
       return `
         <tr style="border-bottom:1px solid #e2e8f0;">
@@ -815,14 +844,19 @@
             ${r.firmado_en ? `<div style="color:#166534;font-weight:700;">Firmada: ${escHtml(r.firmado_en.slice(0, 16).replace('T', ' '))}</div>` : ''}
           </td>
           <td style="padding:0.65rem 0.6rem;font-size:0.72rem;">
-            <div class="font-mono" style="color:#334155;" title="${escHtml(r.hash_sha256_firmado || r.hash_sha256_original || '')}">SHA256: ${escHtml(shaShort)}…</div>
+            <div class="font-mono" style="color:#334155;" title="${escHtml(shaFull)}">SHA256: ${escHtml(shaShort)}…</div>
             <div>IP: ${escHtml(r.ip_origen || '-')} · ${gpsHtml}</div>
-            ${ekycHtml}
+            ${badgesHtml ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">${badgesHtml}</div>` : ''}
           </td>
           <td style="padding:0.65rem 0.6rem;text-align:right;white-space:nowrap;">
-            <button type="button" onclick="window.descargarPdfSolicitudFirma('${escHtml(r.id)}', '${tipoDescarga}')" style="padding:0.32rem 0.65rem;border-radius:6px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.74rem;font-weight:700;cursor:pointer;">
-              ⬇️ ${labelDescarga}
-            </button>
+            <div style="display:inline-flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;align-items:center;">
+              <a href="${verifyUrl}" target="_blank" rel="noopener" style="padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;font-size:0.71rem;font-weight:700;text-decoration:none;">🔍 Verificar</a>
+              ${tsrBtn}
+              ${driveBtn}
+              <button type="button" onclick="window.descargarPdfSolicitudFirma('${escHtml(r.id)}', '${tipoDescarga}')" style="padding:0.32rem 0.65rem;border-radius:6px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.74rem;font-weight:700;cursor:pointer;">
+                ⬇️ ${labelDescarga}
+              </button>
+            </div>
           </td>
         </tr>
       `;
@@ -837,6 +871,48 @@
       descargarBase64Pdf(res.pdfBase64, `${slug}_${res.tipo || 'doc'}.pdf`);
     } catch (err) {
       notify('Error descargando PDF: ' + err.message, 'error');
+    }
+  }
+
+  async function descargarTsrSolicitudFirma(solId) {
+    try {
+      notify('Descargando sello temporal RFC 3161 (.tsr)...', 'info');
+      const headers = {};
+      const token = (typeof global.getSession === 'function' && global.getSession() && (global.getSession().token || global.getSession().sessionToken)) || '';
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const resp = await fetch(`${API_BASE}/api/firmas/solicitudes/${encodeURIComponent(solId)}/tsa.tsr`, { headers });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `AMMER_TSA_${solId.slice(0, 8)}.tsr`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      notify('Error descargando .tsr: ' + err.message, 'error');
+    }
+  }
+
+  async function respaldarSolicitudEnDrive(solId) {
+    try {
+      notify('Subiendo PDF firmado al Legajo en Google Drive...', 'info');
+      const res = await apiFetchJson(`/api/firmas/solicitudes/${encodeURIComponent(solId)}/respaldar-drive`, {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+      notify('PDF respaldado correctamente en Google Drive.', 'success');
+      if (res && res.drive_file_url) {
+        const target = state.solicitudesFirma.find((x) => String(x.id) === String(solId));
+        if (target) target.drive_file_url = res.drive_file_url;
+        renderBandejaFirmas();
+      } else {
+        await cargarBandejaFirmas();
+      }
+    } catch (err) {
+      notify('No se pudo respaldar en Drive: ' + err.message, 'error');
     }
   }
 
@@ -930,6 +1006,7 @@
       setChk('chkValGpsObligatorio', vals.gps_obligatorio);
       setChk('chkValDniFrenteDorso', vals.dni_frente_dorso);
       setChk('chkValSelfieLiveness', vals.selfie_liveness);
+      setChk('chkValRequierePinOtp', vals.requiere_pin_otp);
 
       await cargarPdfEnCanvasEditor(res.pdfBase64, 1);
       renderInspectorCamposEditor();
@@ -1332,6 +1409,7 @@
         gps_obligatorio: chk('chkValGpsObligatorio', false),
         dni_frente_dorso: chk('chkValDniFrenteDorso', false),
         selfie_liveness: chk('chkValSelfieLiveness', false),
+        requiere_pin_otp: chk('chkValRequierePinOtp', false),
       },
       activa: true,
     };
@@ -1565,6 +1643,8 @@
   global.cargarBandejaFirmas = cargarBandejaFirmas;
   global.renderBandejaFirmas = renderBandejaFirmas;
   global.descargarPdfSolicitudFirma = descargarPdfSolicitudFirma;
+  global.descargarTsrSolicitudFirma = descargarTsrSolicitudFirma;
+  global.respaldarSolicitudEnDrive = respaldarSolicitudEnDrive;
   global.onArchivoPdfPlantillaSeleccionado = onArchivoPdfPlantillaSeleccionado;
   global.cargarPlantillaEnEditor = cargarPlantillaEnEditor;
   global.cambiarPaginaEditor = cambiarPaginaEditor;

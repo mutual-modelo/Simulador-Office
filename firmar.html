@@ -226,10 +226,16 @@
       <div class="hash-box" style="margin-bottom:0.85rem;">
         <strong>SHA-256 Original:</strong> <span id="resHashOrig">-</span><br/>
         <strong>SHA-256 Firmado + Evidencia:</strong> <span id="resHashFirmado">-</span>
+        <div id="resTsaStatusLine" style="margin-top:4px;display:none;"></div>
       </div>
-      <button type="button" id="btnDescargarCopiaFirmada" class="btn btn-success">
-        ⬇️ Descargar PDF Firmado + Evidencia Legal
-      </button>
+      <div style="display:flex;flex-direction:column;gap:0.55rem;">
+        <button type="button" id="btnDescargarCopiaFirmada" class="btn btn-success">
+          ⬇️ Descargar PDF Firmado + Evidencia Legal
+        </button>
+        <a id="lnkPortalVerificacionQr" href="#" target="_blank" rel="noopener" class="btn btn-secondary" style="display:none;text-decoration:none;text-align:center;">
+          🔍 Verificar Autenticidad en Portal Público (QR)
+        </a>
+      </div>
     </div>
 
     <div id="contenidoFirmaWrap" style="display:none;flex-direction:column;gap:0.9rem;">
@@ -340,6 +346,16 @@
           </button>
         </div>
 
+        <div id="boxPinOtpFirma" style="display:none;margin:0.75rem 0;padding:0.8rem;border-radius:10px;background:#f5f3ff;border:1px solid #ddd6fe;">
+          <label for="inpPinOtpFirma" style="display:block;font-size:0.82rem;font-weight:800;color:#5b21b6;margin-bottom:4px;">
+            🔐 Código de Seguridad 2FA (4 dígitos)
+          </label>
+          <div style="font-size:0.74rem;color:#6d28d9;margin-bottom:0.45rem;">
+            Ingresá el PIN numérico de 4 dígitos que te enviamos junto con este enlace por WhatsApp.
+          </div>
+          <input type="text" id="inpPinOtpFirma" inputmode="numeric" maxlength="4" autocomplete="one-time-code" placeholder="0000" style="width:140px;padding:0.55rem 0.75rem;border:1.5px solid #a78bfa;border-radius:8px;font-size:1.15rem;font-weight:800;letter-spacing:6px;text-align:center;color:#4c1d95;background:#ffffff;"/>
+        </div>
+
         <label class="consent-label">
           <input type="checkbox" id="chkConsentimientoLegal"/>
           <span>
@@ -379,6 +395,7 @@
         gpsObligatorio: false,
         requiereDni: false,
         requiereSelfie: false,
+        requierePinOtp: false,
         ekycValidado: false,
         ekycStream: null,
         retoLiveness: 'Sonreí levemente y mové un poco la cabeza hacia la derecha',
@@ -557,6 +574,22 @@
         document.getElementById('resFechaFirma').textContent = data.firmado_en || '-';
         document.getElementById('resHashOrig').textContent = data.hash_sha256_original || '-';
         document.getElementById('resHashFirmado').textContent = data.hash_sha256_firmado || '(Pendiente de cierre total de firmas)';
+        const tsaLine = document.getElementById('resTsaStatusLine');
+        if (tsaLine && data.tsa_rfc3161) {
+          tsaLine.style.display = 'block';
+          if (data.tsa_rfc3161.ok) {
+            tsaLine.innerHTML = `<strong>Sello Tiempo RFC 3161:</strong> ✅ Sellado por ${escHtml(data.tsa_rfc3161.tsa_url || 'TSA')} (${escHtml(data.tsa_rfc3161.gen_time || 'UTC')})`;
+          } else {
+            tsaLine.innerHTML = `<strong>Sello Tiempo RFC 3161:</strong> 📋 Evidencia local (${escHtml(data.tsa_rfc3161.status || 'FALLBACK')})`;
+          }
+        }
+        const lnkVerif = document.getElementById('lnkPortalVerificacionQr');
+        if (lnkVerif && data.estado === 'FIRMADO' && (data.solicitud_id || (appState.docInfo && appState.docInfo.solicitud_id))) {
+          const sid = data.solicitud_id || appState.docInfo.solicitud_id;
+          const hPref = String(data.hash_sha256_original || '').slice(0, 16);
+          lnkVerif.href = `verificar.html?id=${encodeURIComponent(sid)}&h=${encodeURIComponent(hPref)}`;
+          lnkVerif.style.display = 'block';
+        }
         appState.pdfFirmadoB64 = data.pdfBase64 || appState.pdfB64Actual;
       }
 
@@ -619,6 +652,11 @@
           const valsReq = data.validaciones_requeridas || {};
           appState.requiereDni = Boolean(valsReq.dni_frente_dorso);
           appState.requiereSelfie = Boolean(valsReq.selfie_liveness);
+          appState.requierePinOtp = Boolean(valsReq.requiere_pin_otp);
+          if (appState.requierePinOtp) {
+            const boxPin = document.getElementById('boxPinOtpFirma');
+            if (boxPin) boxPin.style.display = 'block';
+          }
           if (appState.requiereDni || appState.requiereSelfie) {
             setupSeccionEkyc(data);
           }
@@ -689,6 +727,10 @@
           const fm = res.face_match_pct != null ? `Coincidencia Facial: <strong>${res.face_match_pct}%</strong>` : 'Capturas registradas con SHA-256';
           const liv = res.liveness_ok === false ? '⚠️ Prueba de vida observada' : 'Prueba de vida OK';
           const dniTx = (res.dni_extraido && res.dni_extraido.dni) ? ` · DNI leído: <strong>${escHtml(res.dni_extraido.dni)}</strong>` : '';
+          const bo = res.boletin_oficial_er;
+          const boTx = (bo && bo.consultado)
+            ? ` · Boletín Oficial ER: <strong>${bo.encontrado ? (bo.total_resultados + ' mención(es)') : 'Sin alertas'}</strong>`
+            : '';
           const alertasTx = (res.alertas && res.alertas.length) ? `<div style="margin-top:4px;font-size:0.76rem;font-weight:500;">${res.alertas.map((a) => '• ' + escHtml(a)).join('<br/>')}</div>` : '';
           box.className = 'alert ' + (esOk ? 'alert-ok' : '');
           if (!esOk) {
@@ -697,7 +739,7 @@
             box.style.color = '#92400e';
           }
           box.style.display = 'block';
-          box.innerHTML = `<strong>${esOk ? '✅ Validación eKYC Aprobada' : 'ℹ️ Evidencia eKYC Registrada'}</strong><br/><span style="font-size:0.8rem;font-weight:500;">${fm} · ${liv}${dniTx}</span>${alertasTx}`;
+          box.innerHTML = `<strong>${esOk ? '✅ Validación eKYC Aprobada' : 'ℹ️ Evidencia eKYC Registrada'}</strong><br/><span style="font-size:0.8rem;font-weight:500;">${fm} · ${liv}${dniTx}${boTx}</span>${alertasTx}`;
         }
         appState.ekycValidado = true;
       }
@@ -885,6 +927,16 @@
           solicitarGpsEnSegundoPlano();
           return;
         }
+        let pinOtpVal = null;
+        if (appState.requierePinOtp) {
+          const inpPin = document.getElementById('inpPinOtpFirma');
+          pinOtpVal = String((inpPin && inpPin.value) || '').replace(/\D/g, '');
+          if (pinOtpVal.length !== 4) {
+            alert('Ingresá el código PIN 2FA de 4 dígitos que recibiste por WhatsApp.');
+            if (inpPin) inpPin.focus();
+            return;
+          }
+        }
 
         const btn = document.getElementById('btnConfirmarFirmar');
         btn.disabled = true;
@@ -907,6 +959,7 @@
               geoLatitud: appState.gps.lat,
               geoLongitud: appState.gps.lng,
               geoPrecisionMetros: appState.gps.accuracy,
+              pinOtp: pinOtpVal,
               telemetriaTrazo: {
                 puntos_totales: appState.puntosTotales,
                 trazos: appState.trazos,

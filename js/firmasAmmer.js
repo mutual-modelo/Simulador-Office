@@ -1105,70 +1105,425 @@
         badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#eef2ff;color:#3730a3;">🔏 PAdES (.p12)</span>';
       }
 
-      const verifyUrl = `verificar.html?id=${encodeURIComponent(r.id)}&h=${encodeURIComponent((r.hash_sha256_original || '').slice(0, 16))}`;
-      const btnBase = 'display:inline-flex;align-items:center;gap:4px;padding:0.32rem 0.62rem;border-radius:7px;font-size:0.72rem;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;';
-      const driveBtn = r.drive_file_url
-        ? `<a href="${escHtml(r.drive_file_url)}" target="_blank" rel="noopener" title="Abrir el archivo PDF guardado en Google Drive" style="${btnBase}border:1px solid #16a34a;background:#f0fdf4;color:#15803d;">☁️ Abrir en Drive</a>`
-        : (est === 'FIRMADO' && r.expediente_id
-          ? `<button type="button" onclick="window.respaldarSolicitudEnDrive('${escHtml(r.id)}')" title="Guardar copia del PDF firmado en el legajo de Google Drive" style="${btnBase}border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;">☁️ Subir a Drive</button>`
-          : '');
-      const tsrBtn = r.tiene_tsr
-        ? `<button type="button" onclick="window.descargarTsrSolicitudFirma('${escHtml(r.id)}')" title="Descargar comprobante criptográfico de fecha y hora RFC 3161 (.tsr)" style="${btnBase}border:1px solid #c7d2fe;background:#eef2ff;color:#3730a3;">⏱️ Sello Hora (.tsr)</button>`
-        : '';
-      const recordarWaBtn = (r.telefono_whatsapp && est !== 'FIRMADO' && est !== 'ANULADO')
-        ? `<button type="button" onclick="window.notificarWhatsappSolicitud('${escHtml(r.id)}', 'recordatorio')" title="Enviar recordatorio del enlace de firma por WhatsApp" style="${btnBase}border:1px solid #86efac;background:#f0fdf4;color:#15803d;">📲 Recordar WhatsApp</button>`
-        : '';
-      const renovarBtn = est !== 'FIRMADO'
-        ? `<button type="button" onclick="window.renovarEnlaceSolicitudFirma('${escHtml(r.id)}')" title="Emitir un nuevo enlace con 24h de vigencia" style="${btnBase}border:1px solid #fcd34d;background:#fffbeb;color:#b45309;">🔄 Renovar Enlace</button>`
-        : '';
-      const revocarBtn = (est !== 'FIRMADO' && est !== 'ANULADO')
-        ? `<button type="button" onclick="window.revocarSolicitudFirma('${escHtml(r.id)}')" title="Cancelar y deshabilitar este enlace de firma" style="${btnBase}border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;">🚫 Anular</button>`
-        : '';
-
+      const btnBase = 'display:inline-flex;align-items:center;gap:5px;padding:0.4rem 0.78rem;border-radius:8px;font-size:0.76rem;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;';
       const fechaCreadaTxt = (r.created_at || '').slice(0, 16).replace('T', ' ') || '-';
       const fechaFirmadaTxt = r.firmado_en ? r.firmado_en.slice(0, 16).replace('T', ' ') : '';
 
       return `
         <tr style="border-bottom:1px solid #e2e8f0;vertical-align:middle;">
-          <td style="padding:0.75rem 0.65rem;font-size:0.81rem;">
+          <td style="padding:0.8rem 0.65rem;font-size:0.82rem;">
             <div style="font-weight:800;color:#0f172a;">${escHtml(r.nombre_solicitante || '-')}</div>
             <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">DNI ${escHtml(r.dni_solicitante || '-')} · Exp: ${escHtml(r.expediente_id || '-')}</div>
           </td>
-          <td style="padding:0.75rem 0.65rem;font-size:0.8rem;color:#1e293b;max-width:260px;line-height:1.35;">${escHtml(r.plantilla_nombre || '-')}</td>
-          <td style="padding:0.75rem 0.65rem;text-align:center;">
+          <td style="padding:0.8rem 0.65rem;font-size:0.8rem;color:#1e293b;max-width:270px;line-height:1.35;">${escHtml(r.plantilla_nombre || '-')}</td>
+          <td style="padding:0.8rem 0.65rem;text-align:center;">
             <span style="display:inline-block;padding:3px 10px;border-radius:9999px;font-size:0.71rem;font-weight:800;background:${bg};color:${col};white-space:nowrap;">${escHtml(est)}</span>
           </td>
-          <td style="padding:0.75rem 0.65rem;font-size:0.73rem;color:#475569;white-space:nowrap;line-height:1.5;">
+          <td style="padding:0.8rem 0.65rem;font-size:0.73rem;color:#475569;white-space:nowrap;line-height:1.5;">
             <div>Creada: <strong>${escHtml(fechaCreadaTxt)}</strong></div>
             ${fechaFirmadaTxt ? `<div style="color:#166534;font-weight:700;">Firmada: ${escHtml(fechaFirmadaTxt)}</div>` : ''}
           </td>
-          <td style="padding:0.75rem 0.65rem;font-size:0.72rem;">
+          <td style="padding:0.8rem 0.65rem;font-size:0.72rem;">
             <div class="font-mono" style="color:#334155;" title="${escHtml(shaFull)}">SHA256: ${escHtml(shaShort)}…</div>
             <div style="margin-top:2px;">IP: ${escHtml(r.ip_origen || '-')} · ${gpsHtml}</div>
             ${badgesHtml ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;">${badgesHtml}</div>` : ''}
           </td>
-          <td style="padding:0.75rem 0.65rem;text-align:right;">
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
-              <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;align-items:center;">
-                ${driveBtn}
-                ${tsrBtn}
-                <button type="button" onclick="window.descargarPdfSolicitudFirma('${escHtml(r.id)}', '${tipoDescarga}')" title="Descargar documento PDF con evidencia y trazabilidad" style="${btnBase}border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-weight:800;">
-                  📥 ${labelDescarga}
-                </button>
-              </div>
-              <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;align-items:center;">
-                <button type="button" onclick="window.verBitacoraEventosFirma('${escHtml(r.id)}')" title="Ver historial completo de apertura, validaciones e IP de esta firma" style="${btnBase}border:1px solid #cbd5e1;background:#f8fafc;color:#334155;">📜 Historial</button>
-                <button type="button" onclick="window.abrirAsistenteRenaperPorId('${escHtml(r.id)}')" title="Abrir RENAPER Mi Ejemplar con DNI y fecha listos para copiar y validar ejemplar" style="${btnBase}border:1px solid #bae6fd;background:#f0f9ff;color:#0369a1;">🪪 Validar DNI (RENAPER)</button>
-                <a href="${verifyUrl}" target="_blank" rel="noopener" title="Abrir portal público de verificación SHA-256 e integridad del PDF" style="${btnBase}border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;">🔍 Validar Firma</a>
-                ${recordarWaBtn}
-                ${renovarBtn}
-                ${revocarBtn}
-              </div>
+          <td style="padding:0.8rem 0.65rem;text-align:right;white-space:nowrap;">
+            <div style="display:inline-flex;gap:6px;align-items:center;justify-content:flex-end;">
+              <button type="button" onclick="window.abrirFichaSolicitudFirma('${escHtml(r.id)}')" title="Ver ficha completa: previsualización del PDF, fotos DNI/Selfie, validaciones, historial y acciones" style="${btnBase}border:1px solid #0284c7;background:#eff6ff;color:#0369a1;font-weight:800;">
+                📋 Ver Ficha
+              </button>
+              <button type="button" onclick="window.descargarPdfSolicitudFirma('${escHtml(r.id)}', '${tipoDescarga}')" title="${escHtml(labelDescarga)}" style="${btnBase}border:1px solid #0f2744;background:#0f2744;color:#ffffff;">
+                📥 Descargar PDF
+              </button>
             </div>
           </td>
         </tr>
       `;
     }).join('');
+  }
+
+  const fichaModalState = {
+    solId: null,
+    tab: 'pdf',
+    pdfB64: '',
+    pdfZoom: 1.0,
+    data: null,
+  };
+
+  function ensureModalFichaSolicitudShell() {
+    let ov = document.getElementById('modalFichaSolicitudFirmaOverlay');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = 'modalFichaSolicitudFirmaOverlay';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:99997;background:rgba(15,23,42,0.6);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;padding:1rem;';
+      ov.addEventListener('click', (ev) => {
+        if (ev.target === ov) ov.style.display = 'none';
+      });
+      document.body.appendChild(ov);
+    }
+    return ov;
+  }
+
+  function ampliarFotoFichaModal(src, titulo) {
+    let vis = document.getElementById('modalZoomFotoFichaFirma');
+    if (!vis) {
+      vis = document.createElement('div');
+      vis.id = 'modalZoomFotoFichaFirma';
+      vis.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,0.86);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.25rem;';
+      vis.addEventListener('click', () => { vis.style.display = 'none'; });
+      document.body.appendChild(vis);
+    }
+    vis.innerHTML = `
+      <div style="color:#ffffff;font-weight:800;font-size:0.95rem;margin-bottom:0.65rem;">${escHtml(titulo || 'Imagen de evidencia')}</div>
+      <img src="${src}" alt="${escHtml(titulo || 'Captura')}" style="max-width:92vw;max-height:80vh;border-radius:10px;background:#ffffff;box-shadow:0 20px 45px rgba(0,0,0,0.45);object-fit:contain;"/>
+      <div style="color:#cbd5e1;font-size:0.76rem;margin-top:0.65rem;">Hacé clic en cualquier lugar para cerrar</div>
+    `;
+    vis.style.display = 'flex';
+  }
+
+  async function renderizarPdfEnFichaModal() {
+    const cont = document.getElementById('fichaModalPdfPagesWrap');
+    const lblZoom = document.getElementById('lblFichaModalPdfZoom');
+    if (!cont) return;
+    if (lblZoom) lblZoom.textContent = `${Math.round((fichaModalState.pdfZoom || 1) * 100)}%`;
+
+    if (!fichaModalState.pdfB64) {
+      cont.innerHTML = '<div style="padding:2rem;text-align:center;color:#475569;font-size:0.84rem;">No se encontró PDF disponible para previsualizar en esta solicitud.</div>';
+      return;
+    }
+
+    cont.innerHTML = '<div style="padding:1.5rem;text-align:center;color:#475569;font-size:0.84rem;">⏳ Renderizando páginas del documento PDF...</div>';
+    try {
+      const pdfDoc = await cargarDocumentoPdfJs(base64ToUint8Array(fichaModalState.pdfB64));
+      cont.innerHTML = '';
+      const scale = 1.2 * Math.max(0.5, Math.min(2.4, Number(fichaModalState.pdfZoom || 1.0)));
+      const dpr = Math.min(global.devicePixelRatio || 1, 2);
+
+      for (let i = 1; i <= pdfDoc.numPages; i++) {
+        const page = await pdfDoc.getPage(i);
+        const vpCss = page.getViewport({ scale });
+        const vpRender = page.getViewport({ scale: scale * dpr });
+
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'margin:0 auto 1rem auto;width:fit-content;background:#ffffff;border-radius:8px;box-shadow:0 3px 12px rgba(15,23,42,0.18);overflow:hidden;';
+
+        const tag = document.createElement('div');
+        tag.style.cssText = 'background:#f1f5f9;color:#475569;font-size:0.7rem;font-weight:700;padding:3px 10px;border-bottom:1px solid #cbd5e1;';
+        tag.textContent = `Página ${i} de ${pdfDoc.numPages}`;
+        wrap.appendChild(tag);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(vpRender.width);
+        canvas.height = Math.round(vpRender.height);
+        canvas.style.width = `${Math.round(vpCss.width)}px`;
+        canvas.style.height = `${Math.round(vpCss.height)}px`;
+        canvas.style.display = 'block';
+        wrap.appendChild(canvas);
+        cont.appendChild(wrap);
+
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport: vpRender }).promise;
+      }
+    } catch (err) {
+      cont.innerHTML = `<div style="padding:1.5rem;text-align:center;color:#b91c1c;font-size:0.84rem;">No se pudo previsualizar el PDF (${escHtml(err.message)}). Podés descargarlo desde el botón superior.</div>`;
+    }
+  }
+
+  function zoomFichaPdfModal(delta) {
+    const cur = Number(fichaModalState.pdfZoom || 1.0);
+    fichaModalState.pdfZoom = Math.max(0.5, Math.min(2.2, Number((cur + Number(delta || 0)).toFixed(2))));
+    renderizarPdfEnFichaModal();
+  }
+
+  function cambiarTabFichaSolicitudModal(tabKey) {
+    fichaModalState.tab = tabKey || 'pdf';
+    ['pdf', 'ekyc', 'evidencia', 'eventos'].forEach((k) => {
+      const btn = document.getElementById('btnFichaModalTab_' + k);
+      const pnl = document.getElementById('pnlFichaModalTab_' + k);
+      const act = k === fichaModalState.tab;
+      if (btn) {
+        btn.style.background = act ? '#0f2744' : '#f8fafc';
+        btn.style.color = act ? '#ffffff' : '#1e293b';
+        btn.style.borderColor = act ? '#0f2744' : '#cbd5e1';
+      }
+      if (pnl) pnl.style.display = act ? 'block' : 'none';
+    });
+    if (fichaModalState.tab === 'pdf') {
+      const wrap = document.getElementById('fichaModalPdfPagesWrap');
+      if (wrap && !wrap.querySelector('canvas')) {
+        renderizarPdfEnFichaModal();
+      }
+    }
+  }
+
+  async function abrirFichaSolicitudFirma(solId) {
+    const ov = ensureModalFichaSolicitudShell();
+    fichaModalState.solId = solId;
+    fichaModalState.tab = 'pdf';
+    fichaModalState.pdfB64 = '';
+    fichaModalState.pdfZoom = 1.0;
+
+    ov.innerHTML = `
+      <div style="background:#ffffff;border-radius:16px;max-width:1080px;width:96vw;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(15,23,42,0.35);overflow:hidden;">
+        <div style="padding:0.95rem 1.25rem;background:linear-gradient(135deg,#0f2744 0%,#1e3a8a 100%);color:#ffffff;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-weight:800;font-size:0.98rem;">📋 Cargando Ficha Completa de Firma y Evidencia...</div>
+          <button type="button" onclick="document.getElementById('modalFichaSolicitudFirmaOverlay').style.display='none'" style="border:none;background:rgba(255,255,255,0.18);color:#ffffff;border-radius:7px;padding:4px 10px;font-weight:800;cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:2.5rem;text-align:center;color:#475569;font-size:0.9rem;">⏳ Recuperando PDF, capturas biométricas, validaciones e historial forense...</div>
+      </div>
+    `;
+    ov.style.display = 'flex';
+
+    const filaLocal = state.solicitudesFirma.find((x) => String(x.id) === String(solId)) || {};
+    const estLocal = String(filaLocal.estado || 'PENDIENTE').toUpperCase();
+    const tipoPdfPref = (estLocal === 'FIRMADO' || estLocal === 'PARCIAL') ? 'firmado' : 'original';
+
+    let fichaRes = null;
+    let pdfRes = null;
+    try {
+      const [rF, rP] = await Promise.allSettled([
+        apiFetchJson(`/api/firmas/solicitudes/${encodeURIComponent(solId)}/ficha`, { method: 'GET' }),
+        apiFetchJson(`/api/firmas/solicitudes/${encodeURIComponent(solId)}/pdf?tipo=${tipoPdfPref}`, { method: 'GET' }),
+      ]);
+      if (rF.status === 'fulfilled' && rF.value && rF.value.ok) {
+        fichaRes = rF.value;
+      } else {
+        // Fallback si el endpoint /ficha aún está desplegándose: armar desde listado + eventos
+        let evsFallback = [];
+        try {
+          const evR = await apiFetchJson(`/api/firmas/solicitudes/${encodeURIComponent(solId)}/eventos`, { method: 'GET' });
+          evsFallback = evR.eventos || [];
+        } catch (_e2) {}
+        fichaRes = { ok: true, solicitud: filaLocal, ekyc: filaLocal.ekyc_resumen || null, imagenes: {}, eventos: evsFallback };
+      }
+      if (rP.status === 'fulfilled' && rP.value && rP.value.pdfBase64) {
+        pdfRes = rP.value;
+      }
+    } catch (err) {
+      ov.innerHTML = `
+        <div style="background:#ffffff;border-radius:14px;max-width:520px;width:94vw;padding:1.5rem;text-align:center;">
+          <div style="font-weight:800;color:#b91c1c;margin-bottom:0.5rem;">Error cargando Ficha</div>
+          <div style="font-size:0.84rem;color:#475569;margin-bottom:1rem;">${escHtml(err.message)}</div>
+          <button type="button" onclick="document.getElementById('modalFichaSolicitudFirmaOverlay').style.display='none'" style="padding:0.45rem 1rem;border-radius:8px;border:1px solid #cbd5e1;background:#f8fafc;font-weight:700;cursor:pointer;">Cerrar</button>
+        </div>
+      `;
+      return;
+    }
+
+    const r = fichaRes.solicitud || filaLocal;
+    const ek = fichaRes.ekyc || r.ekyc_resumen || {};
+    const imgs = fichaRes.imagenes || {};
+    const evs = Array.isArray(fichaRes.eventos) ? fichaRes.eventos : [];
+    fichaModalState.data = fichaRes;
+    fichaModalState.pdfB64 = pdfRes ? pdfRes.pdfBase64 : '';
+
+    const est = String(r.estado || 'PENDIENTE').toUpperCase();
+    let bg = '#fef3c7', col = '#92400e';
+    if (est === 'FIRMADO') { bg = '#dcfce7'; col = '#166534'; }
+    else if (est === 'PARCIAL') { bg = '#ffedd5'; col = '#9a3412'; }
+    else if (est === 'LEIDO') { bg = '#dbeafe'; col = '#1e40af'; }
+    else if (est === 'ANULADO') { bg = '#fee2e2'; col = '#b91c1c'; }
+
+    const tipoDescarga = (est === 'FIRMADO' || est === 'PARCIAL') ? 'firmado' : 'original';
+    const labelDescarga = est === 'FIRMADO' ? 'Descargar PDF Firmado' : (est === 'PARCIAL' ? 'Descargar PDF Parcial' : 'Descargar PDF Original');
+    const verifyUrl = `verificar.html?id=${encodeURIComponent(r.id)}&h=${encodeURIComponent((r.hash_sha256_original || '').slice(0, 16))}`;
+    const btnCls = 'display:inline-flex;align-items:center;gap:5px;padding:0.38rem 0.72rem;border-radius:8px;font-size:0.75rem;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;';
+
+    const driveBtn = r.drive_file_url
+      ? `<a href="${escHtml(r.drive_file_url)}" target="_blank" rel="noopener" style="${btnCls}border:1px solid #16a34a;background:#f0fdf4;color:#15803d;">☁️ Abrir en Drive</a>`
+      : (est === 'FIRMADO' && r.expediente_id
+        ? `<button type="button" onclick="window.respaldarSolicitudEnDrive('${escHtml(r.id)}').then(()=>window.abrirFichaSolicitudFirma('${escHtml(r.id)}'))" style="${btnCls}border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;">☁️ Subir a Drive</button>`
+        : '');
+    const tsrBtn = r.tiene_tsr
+      ? `<button type="button" onclick="window.descargarTsrSolicitudFirma('${escHtml(r.id)}')" style="${btnCls}border:1px solid #c7d2fe;background:#eef2ff;color:#3730a3;">⏱️ Sello Hora (.tsr)</button>`
+      : '';
+    const recordarWaBtn = (r.telefono_whatsapp && est !== 'FIRMADO' && est !== 'ANULADO')
+      ? `<button type="button" onclick="window.notificarWhatsappSolicitud('${escHtml(r.id)}', 'recordatorio')" style="${btnCls}border:1px solid #86efac;background:#f0fdf4;color:#15803d;">📲 Recordar WhatsApp</button>`
+      : '';
+    const renovarBtn = est !== 'FIRMADO'
+      ? `<button type="button" onclick="window.renovarEnlaceSolicitudFirma('${escHtml(r.id)}')" style="${btnCls}border:1px solid #fcd34d;background:#fffbeb;color:#b45309;">🔄 Renovar Enlace</button>`
+      : '';
+    const revocarBtn = (est !== 'FIRMADO' && est !== 'ANULADO')
+      ? `<button type="button" onclick="window.revocarSolicitudFirma('${escHtml(r.id)}').then(()=>document.getElementById('modalFichaSolicitudFirmaOverlay').style.display='none')" style="${btnCls}border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;">🚫 Anular Enlace</button>`
+      : '';
+
+    const renGuia = r.datos_renaper_guia || {};
+    const renArgs = JSON.stringify({
+      nombre: r.nombre_solicitante || '-',
+      dni: renGuia.dni || r.dni_solicitante || '',
+      sexo: renGuia.sexo || '',
+      fecha_nacimiento: renGuia.fecha_nacimiento || '',
+      ejemplar: renGuia.ejemplar || '',
+    }).replace(/"/g, '&quot;');
+
+    // Fotos y firma
+    const fotoCard = (titulo, b64, mimeDef, sinMsg) => {
+      if (!b64) {
+        return `
+          <div style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;padding:1rem;text-align:center;">
+            <div style="font-size:0.75rem;font-weight:800;color:#334155;margin-bottom:0.35rem;">${escHtml(titulo)}</div>
+            <div style="font-size:0.74rem;color:#94a3b8;padding:1.2rem 0;">${escHtml(sinMsg || 'No requerida / No capturada')}</div>
+          </div>
+        `;
+      }
+      const src = b64.startsWith('data:') ? b64 : `data:${mimeDef};base64,${b64}`;
+      return `
+        <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:10px;padding:0.65rem;display:flex;flex-direction:column;gap:0.4rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:0.75rem;font-weight:800;color:#0f172a;">${escHtml(titulo)}</span>
+            <button type="button" data-ampliar-foto="${escHtml(src)}" data-ampliar-titulo="${escHtml(titulo)}" style="padding:2px 7px;border-radius:5px;border:1px solid #cbd5e1;background:#f8fafc;font-size:0.69rem;font-weight:700;cursor:pointer;">🔍 Ampliar</button>
+          </div>
+          <img src="${src}" alt="${escHtml(titulo)}" style="width:100%;height:175px;object-fit:contain;background:#f8fafc;border-radius:7px;border:1px solid #e2e8f0;cursor:pointer;" data-ampliar-foto="${escHtml(src)}" data-ampliar-titulo="${escHtml(titulo)}"/>
+        </div>
+      `;
+    };
+
+    const dniEx = (ek && ek.dni_extraido) || {};
+    const bo = (ek && ek.boletin_oficial_er) || {};
+    const cj = (ek && ek.cajajper) || {};
+    const p417 = (ek && ek.pdf417) || {};
+    const tsa = r.tsa_resumen || {};
+    const pades = r.pades_resumen || {};
+    const gpsLink = (r.geo_latitud != null && r.geo_longitud != null)
+      ? `<a href="https://maps.google.com/?q=${r.geo_latitud},${r.geo_longitud}" target="_blank" rel="noopener" style="color:#1d4ed8;font-weight:700;text-decoration:underline;">📍 ${r.geo_latitud}, ${r.geo_longitud} (Abrir en Google Maps)</a>`
+      : 'No informada / Denegada';
+
+    const kpiItem = (lbl, val, bgK, colK) => `
+      <div style="background:${bgK || '#f8fafc'};border:1px solid #e2e8f0;border-radius:9px;padding:0.55rem 0.75rem;">
+        <div style="font-size:0.67rem;font-weight:700;color:#64748b;text-transform:uppercase;">${escHtml(lbl)}</div>
+        <div style="font-size:0.86rem;font-weight:800;color:${colK || '#0f172a'};margin-top:2px;word-break:break-word;">${escHtml(val || '-')}</div>
+      </div>
+    `;
+
+    const evHtml = evs.length === 0
+      ? '<div style="padding:1.5rem;text-align:center;color:#64748b;font-size:0.84rem;">No hay eventos registrados aún para esta solicitud.</div>'
+      : evs.map((ev) => `
+        <div style="border-left:3px solid #1d4ed8;background:#f8fafc;border-radius:8px;padding:0.6rem 0.85rem;margin-bottom:0.55rem;">
+          <div style="display:flex;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;">
+            <strong style="color:#0f2744;font-size:0.82rem;">${escHtml(ev.evento || '-')}</strong>
+            <span style="font-size:0.72rem;color:#475569;">${escHtml((ev.created_at || '').slice(0, 19).replace('T', ' '))} UTC</span>
+          </div>
+          <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">IP: ${escHtml(ev.ip_origen || '-')} · Navegador: ${escHtml((ev.user_agent || '-').slice(0, 90))}</div>
+          ${ev.detalle_json ? `<details style="margin-top:0.3rem;"><summary style="cursor:pointer;font-size:0.71rem;color:#1d4ed8;font-weight:700;">Ver detalle técnico</summary><pre style="margin:0.35rem 0 0;padding:0.45rem;background:#ffffff;border:1px solid #e2e8f0;border-radius:6px;font-size:0.68rem;overflow-x:auto;color:#334155;">${escHtml(JSON.stringify(ev.detalle_json, null, 2))}</pre></details>` : ''}
+        </div>
+      `).join('');
+
+    ov.innerHTML = `
+      <div style="background:#ffffff;border-radius:16px;max-width:1080px;width:96vw;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(15,23,42,0.35);overflow:hidden;">
+        <!-- HEADER -->
+        <div style="padding:0.95rem 1.25rem;background:linear-gradient(135deg,#0f2744 0%,#1e3a8a 100%);color:#ffffff;display:flex;justify-content:space-between;align-items:flex-start;gap:0.75rem;">
+          <div style="min-width:0;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-size:1.05rem;font-weight:800;">📋 Ficha de Firma: ${escHtml(r.nombre_solicitante || '-')}</span>
+              <span style="padding:2px 10px;border-radius:9999px;font-size:0.72rem;font-weight:800;background:${bg};color:${col};">${escHtml(est)}</span>
+              ${r.es_paquete ? `<span style="padding:2px 8px;border-radius:9999px;font-size:0.71rem;font-weight:700;background:#e0e7ff;color:#1e3a8a;">📦 Paquete (${r.paquete_cantidad} docs)</span>` : ''}
+            </div>
+            <div style="font-size:0.78rem;color:#cbd5e1;margin-top:4px;">
+              DNI ${escHtml(r.dni_solicitante || '-')} · Expediente: <strong>${escHtml(r.expediente_id || '-')}</strong> · Documento: <strong>${escHtml(r.plantilla_nombre || '-')}</strong>
+            </div>
+          </div>
+          <button type="button" onclick="document.getElementById('modalFichaSolicitudFirmaOverlay').style.display='none'" style="border:none;background:rgba(255,255,255,0.18);color:#ffffff;border-radius:8px;padding:5px 11px;font-weight:800;cursor:pointer;font-size:0.9rem;">✕</button>
+        </div>
+
+        <!-- BARRA DE ACCIONES -->
+        <div style="padding:0.7rem 1.2rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center;">
+          <button type="button" onclick="window.descargarPdfSolicitudFirma('${escHtml(r.id)}', '${tipoDescarga}')" style="${btnCls}border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-weight:800;">📥 ${labelDescarga}</button>
+          ${tsrBtn}
+          ${driveBtn}
+          <button type="button" onclick="window.abrirAsistenteRenaperMiEjemplar(${renArgs})" style="${btnCls}border:1px solid #bae6fd;background:#f0f9ff;color:#0369a1;">🪪 Validar DNI (RENAPER)</button>
+          <a href="${verifyUrl}" target="_blank" rel="noopener" style="${btnCls}border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;">🔍 Validar Firma (Público)</a>
+          ${recordarWaBtn}
+          ${renovarBtn}
+          ${revocarBtn}
+        </div>
+
+        <!-- PESTAÑAS INTERNAS DE LA FICHA -->
+        <div style="padding:0.55rem 1.2rem;background:#ffffff;border-bottom:1px solid #e2e8f0;display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center;">
+          <button type="button" id="btnFichaModalTab_pdf" onclick="window.cambiarTabFichaSolicitudModal('pdf')" style="${btnCls}border:1px solid #0f2744;background:#0f2744;color:#ffffff;">📑 Previsualización PDF</button>
+          <button type="button" id="btnFichaModalTab_ekyc" onclick="window.cambiarTabFichaSolicitudModal('ekyc')" style="${btnCls}border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;">🪪 Identidad, Fotos y Cruces</button>
+          <button type="button" id="btnFichaModalTab_evidencia" onclick="window.cambiarTabFichaSolicitudModal('evidencia')" style="${btnCls}border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;">🔐 Evidencia Técnica y Legal</button>
+          <button type="button" id="btnFichaModalTab_eventos" onclick="window.cambiarTabFichaSolicitudModal('eventos')" style="${btnCls}border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;">📜 Historial (${evs.length})</button>
+        </div>
+
+        <!-- CUERPO SCROLLEABLE -->
+        <div style="padding:1rem 1.25rem;overflow-y:auto;flex:1;min-height:360px;">
+          <!-- TAB 1: PDF PREVIEW -->
+          <div id="pnlFichaModalTab_pdf" style="display:block;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.65rem;">
+              <div style="font-size:0.78rem;font-weight:700;color:#334155;">
+                Visualizando: <strong style="color:#0f2744;">${pdfRes && pdfRes.tipo === 'firmado' ? 'PDF Firmado con Evidencia y Audit Trail' : 'PDF Original de la Solicitud'}</strong>
+              </div>
+              <div style="display:inline-flex;align-items:center;gap:4px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:7px;padding:2px 6px;">
+                <button type="button" onclick="window.zoomFichaPdfModal(-0.2)" style="padding:1px 8px;border-radius:5px;border:1px solid #cbd5e1;background:#ffffff;font-weight:800;cursor:pointer;">➖</button>
+                <span id="lblFichaModalPdfZoom" style="font-size:0.75rem;font-weight:800;min-width:44px;text-align:center;">100%</span>
+                <button type="button" onclick="window.zoomFichaPdfModal(0.2)" style="padding:1px 8px;border-radius:5px;border:1px solid #cbd5e1;background:#ffffff;font-weight:800;cursor:pointer;">➕</button>
+              </div>
+            </div>
+            <div id="fichaModalPdfPagesWrap" style="background:#cbd5e1;border-radius:10px;padding:0.85rem;overflow:auto;max-height:60vh;"></div>
+          </div>
+
+          <!-- TAB 2: IDENTIDAD, FOTOS & CRUCES -->
+          <div id="pnlFichaModalTab_ekyc" style="display:none;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:0.55rem;margin-bottom:1rem;">
+              ${kpiItem('Dictamen eKYC', (ek && ek.estado_ekyc) || 'Sin captura eKYC', (ek && ek.estado_ekyc === 'APROBADO') ? '#f0fdf4' : '#f8fafc', (ek && ek.estado_ekyc === 'APROBADO') ? '#166534' : '#334155')}
+              ${kpiItem('Cotejo Facial (Selfie vs DNI)', ek && ek.face_match_pct != null ? `${ek.face_match_pct}% coincidencia` : 'No ejecutado', '#eff6ff', '#1d4ed8')}
+              ${kpiItem('Prueba de Vida (Liveness)', ek && ek.liveness_ok === true ? 'Aprobada' : (ek && ek.liveness_ok === false ? 'Observada' : 'No ejecutada'))}
+              ${kpiItem('Código PDF417 DNI Dorso', p417.ok ? `Válido · Ejemplar ${p417.ejemplar || '-'}` : 'Sin lectura PDF417')}
+              ${kpiItem('Boletín Oficial Entre Ríos', bo.consultado ? (bo.tiene_alerta_critica ? `⚠️ ${bo.total_resultados || 0} alerta(s)` : `Limpio (${bo.total_resultados || 0} menc.)`) : 'No consultado', bo.tiene_alerta_critica ? '#fef2f2' : '#f0fdf4', bo.tiene_alerta_critica ? '#b91c1c' : '#166534')}
+              ${kpiItem('CajaJPER Entre Ríos', cj.consultado ? `${cj.cantidad_expedientes || 0} expediente(s)` : 'No consultado')}
+            </div>
+
+            ${(dniEx.dni || dniEx.nombre || dniEx.fecha_nacimiento) ? `
+              <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.65rem 0.85rem;margin-bottom:1rem;font-size:0.78rem;color:#334155;">
+                <strong>Datos leídos del DNI:</strong> Nombre: ${escHtml(dniEx.nombre || '-')} · DNI: ${escHtml(dniEx.dni || '-')} · Sexo: ${escHtml(dniEx.sexo || '-')} · F. Nac.: ${escHtml(dniEx.fecha_nacimiento || '-')} · Ejemplar: ${escHtml(dniEx.ejemplar || '-')} · Trámite: ${escHtml(dniEx.nro_tramite || '-')}
+              </div>
+            ` : ''}
+
+            <div style="font-size:0.8rem;font-weight:800;color:#0f172a;margin-bottom:0.5rem;">Capturas Documentales y Firma Ológrafa (clic para ampliar)</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0.75rem;">
+              ${fotoCard('🪪 DNI Frente', imgs.dni_frente_b64, 'image/jpeg', 'Sin foto DNI frente')}
+              ${fotoCard('🪪 DNI Dorso (PDF417)', imgs.dni_dorso_b64, 'image/jpeg', 'Sin foto DNI dorso')}
+              ${fotoCard('🤳 Selfie Biométrica', imgs.selfie_b64, 'image/jpeg', 'Sin captura de selfie')}
+              ${fotoCard('✍️ Firma Ológrafa Capturada', imgs.firma_png_b64, 'image/png', 'Aún sin firma manuscrita')}
+            </div>
+          </div>
+
+          <!-- TAB 3: EVIDENCIA TÉCNICA Y LEGAL -->
+          <div id="pnlFichaModalTab_evidencia" style="display:none;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0.65rem;">
+              ${kpiItem('Fecha Creación (UTC)', (r.created_at || '').slice(0, 19).replace('T', ' ') || '-')}
+              ${kpiItem('Primera Lectura (UTC)', (r.leido_en || '').slice(0, 19).replace('T', ' ') || '-')}
+              ${kpiItem('Fecha Firma (UTC)', (r.firmado_en || '').slice(0, 19).replace('T', ' ') || 'Pendiente')}
+              ${kpiItem('IP Pública del Firmante', r.ip_origen || '-')}
+              ${kpiItem('PIN / OTP WhatsApp (2FA)', r.pin_otp_verificado ? 'Verificado correctamente' : (r.pin_otp_requerido ? 'Pendiente de validar' : 'No requerido'))}
+              ${kpiItem('Puntos de Trazo Firma', r.puntos_trazo != null ? `${r.puntos_trazo} puntos` : '-')}
+              ${kpiItem('Impacto en Padrón / Ficha', (r.impacto_expediente && r.impacto_expediente.ok) ? `Impactado (${r.impacto_expediente.tipo_validacion || 'OK'})` : 'Pendiente / Sin expediente')}
+              ${kpiItem('Sello Temporal TSA RFC 3161', tsa.ok ? `${tsa.authority || 'TSA'} (${tsa.timestamp_utc || 'OK'})` : 'No emitido')}
+              ${kpiItem('Certificado Criptográfico PAdES (.p12)', pades.ok ? `${pades.subject_cn || 'AMMER'} (Emisor: ${pades.issuer_cn || '-'})` : 'No aplicado')}
+            </div>
+            <div style="margin-top:0.85rem;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.75rem 0.9rem;font-size:0.76rem;color:#334155;display:flex;flex-direction:column;gap:0.4rem;">
+              <div><strong>Geolocalización GPS:</strong> ${gpsLink}</div>
+              <div class="font-mono" style="word-break:break-all;"><strong>SHA-256 Original:</strong> ${escHtml(r.hash_sha256_original || '-')}</div>
+              <div class="font-mono" style="word-break:break-all;"><strong>SHA-256 Final Firmado:</strong> ${escHtml(r.hash_sha256_firmado || '-')}</div>
+              <div style="word-break:break-word;"><strong>Dispositivo / User-Agent:</strong> ${escHtml(r.user_agent || '-')}</div>
+            </div>
+          </div>
+
+          <!-- TAB 4: HISTORIAL -->
+          <div id="pnlFichaModalTab_eventos" style="display:none;">
+            ${evHtml}
+          </div>
+        </div>
+      </div>
+    `;
+
+    ov.querySelectorAll('[data-ampliar-foto]').forEach((el) => {
+      el.addEventListener('click', () => {
+        ampliarFotoFichaModal(el.getAttribute('data-ampliar-foto'), el.getAttribute('data-ampliar-titulo'));
+      });
+    });
+
+    await renderizarPdfEnFichaModal();
   }
 
   async function descargarPdfSolicitudFirma(solId, tipo) {
@@ -3012,6 +3367,9 @@
   global.respaldarSolicitudEnDrive = respaldarSolicitudEnDrive;
   global.verBitacoraEventosFirma = verBitacoraEventosFirma;
   global.renovarEnlaceSolicitudFirma = renovarEnlaceSolicitudFirma;
+  global.abrirFichaSolicitudFirma = abrirFichaSolicitudFirma;
+  global.cambiarTabFichaSolicitudModal = cambiarTabFichaSolicitudModal;
+  global.zoomFichaPdfModal = zoomFichaPdfModal;
   global.revocarSolicitudFirma = revocarSolicitudFirma;
   global.enviarAFirmaDesdeFicha = enviarAFirmaDesdeFicha;
   global.abrirModalCertificadoPades = abrirModalCertificadoPades;

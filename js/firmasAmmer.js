@@ -970,21 +970,21 @@
       return;
     }
     const card = (lbl, val, bg, col) => `
-      <div style="background:${bg};border:1px solid #e2e8f0;border-radius:10px;padding:0.55rem 0.75rem;">
-        <div style="font-size:0.68rem;font-weight:700;color:#475569;text-transform:uppercase;">${escHtml(lbl)}</div>
-        <div style="font-size:1.05rem;font-weight:800;color:${col};margin-top:2px;">${escHtml(val)}</div>
+      <div style="background:${bg};border:1px solid #e2e8f0;border-radius:10px;padding:0.6rem 0.8rem;">
+        <div style="font-size:0.68rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.02em;">${escHtml(lbl)}</div>
+        <div style="font-size:1.08rem;font-weight:800;color:${col};margin-top:3px;">${escHtml(val)}</div>
       </div>
     `;
     const promTxt = m.tiempo_promedio_firma_min != null
       ? (m.tiempo_promedio_firma_min >= 60 ? `${(m.tiempo_promedio_firma_min / 60).toFixed(1)} h` : `${m.tiempo_promedio_firma_min} min`)
       : '-';
     bar.innerHTML = [
-      card('Solicitudes', m.total, '#f8fafc', '#0f172a'),
-      card('Firmadas', `${m.firmadas} (${m.tasa_completitud_pct || 0}%)`, '#f0fdf4', '#166534'),
-      card('Pendientes / Parciales', (m.pendientes || 0) + (m.parciales || 0), '#fffbeb', '#b45309'),
-      card('Tiempo Prom. Firma', promTxt, '#eff6ff', '#1d4ed8'),
+      card('Total Solicitudes', m.total, '#f8fafc', '#0f172a'),
+      card('Completadas', `${m.firmadas} (${m.tasa_completitud_pct || 0}%)`, '#f0fdf4', '#166534'),
+      card('En Espera / Parciales', (m.pendientes || 0) + (m.parciales || 0), '#fffbeb', '#b45309'),
+      card('Tiempo Promedio', promTxt, '#eff6ff', '#1d4ed8'),
       card('Paquetes Multi-PDF', m.paquetes_multidoc || 0, '#f5f3ff', '#5b21b6'),
-      card('Alertas eKYC / Cruces', m.alertas_ekyc_o_cruce || 0, (m.alertas_ekyc_o_cruce > 0 ? '#fef2f2' : '#f8fafc'), (m.alertas_ekyc_o_cruce > 0 ? '#b91c1c' : '#334155')),
+      card('Alertas Identidad', m.alertas_ekyc_o_cruce || 0, (m.alertas_ekyc_o_cruce > 0 ? '#fef2f2' : '#f8fafc'), (m.alertas_ekyc_o_cruce > 0 ? '#b91c1c' : '#334155')),
     ].join('');
   }
 
@@ -1058,7 +1058,7 @@
       const shaFull = r.hash_sha256_firmado || r.hash_sha256_original || '';
       const shaShort = shaFull.slice(0, 14);
       const tipoDescarga = (est === 'FIRMADO' || est === 'PARCIAL') ? 'firmado' : 'original';
-      const labelDescarga = est === 'FIRMADO' ? 'Firmado + Evidencia' : (est === 'PARCIAL' ? 'PDF Parcial' : 'Original');
+      const labelDescarga = est === 'FIRMADO' ? 'Descargar PDF Firmado' : (est === 'PARCIAL' ? 'Descargar PDF Parcial' : 'Descargar PDF Original');
 
       const ek = r.ekyc_resumen || null;
       let badgesHtml = '';
@@ -1106,56 +1106,64 @@
       }
 
       const verifyUrl = `verificar.html?id=${encodeURIComponent(r.id)}&h=${encodeURIComponent((r.hash_sha256_original || '').slice(0, 16))}`;
+      const btnBase = 'display:inline-flex;align-items:center;gap:4px;padding:0.32rem 0.62rem;border-radius:7px;font-size:0.72rem;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;';
       const driveBtn = r.drive_file_url
-        ? `<a href="${escHtml(r.drive_file_url)}" target="_blank" rel="noopener" style="display:inline-block;padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #16a34a;background:#f0fdf4;color:#15803d;font-size:0.71rem;font-weight:700;text-decoration:none;">☁️ Ver Drive</a>`
+        ? `<a href="${escHtml(r.drive_file_url)}" target="_blank" rel="noopener" title="Abrir el archivo PDF guardado en Google Drive" style="${btnBase}border:1px solid #16a34a;background:#f0fdf4;color:#15803d;">☁️ Abrir en Drive</a>`
         : (est === 'FIRMADO' && r.expediente_id
-          ? `<button type="button" onclick="window.respaldarSolicitudEnDrive('${escHtml(r.id)}')" style="padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;font-size:0.71rem;font-weight:700;cursor:pointer;">☁️ Guardar Drive</button>`
+          ? `<button type="button" onclick="window.respaldarSolicitudEnDrive('${escHtml(r.id)}')" title="Guardar copia del PDF firmado en el legajo de Google Drive" style="${btnBase}border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;">☁️ Subir a Drive</button>`
           : '');
       const tsrBtn = r.tiene_tsr
-        ? `<button type="button" onclick="window.descargarTsrSolicitudFirma('${escHtml(r.id)}')" style="padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #4338ca;background:#eef2ff;color:#3730a3;font-size:0.71rem;font-weight:700;cursor:pointer;">⏱️ .TSR</button>`
+        ? `<button type="button" onclick="window.descargarTsrSolicitudFirma('${escHtml(r.id)}')" title="Descargar comprobante criptográfico de fecha y hora RFC 3161 (.tsr)" style="${btnBase}border:1px solid #c7d2fe;background:#eef2ff;color:#3730a3;">⏱️ Sello Hora (.tsr)</button>`
         : '';
       const recordarWaBtn = (r.telefono_whatsapp && est !== 'FIRMADO' && est !== 'ANULADO')
-        ? `<button type="button" onclick="window.notificarWhatsappSolicitud('${escHtml(r.id)}', 'recordatorio')" title="Enviar recordatorio por WhatsApp" style="padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #16a34a;background:#f0fdf4;color:#15803d;font-size:0.71rem;font-weight:700;cursor:pointer;">📲 Recordar WA</button>`
+        ? `<button type="button" onclick="window.notificarWhatsappSolicitud('${escHtml(r.id)}', 'recordatorio')" title="Enviar recordatorio del enlace de firma por WhatsApp" style="${btnBase}border:1px solid #86efac;background:#f0fdf4;color:#15803d;">📲 Recordar WhatsApp</button>`
         : '';
       const renovarBtn = est !== 'FIRMADO'
-        ? `<button type="button" onclick="window.renovarEnlaceSolicitudFirma('${escHtml(r.id)}')" title="Emitir nuevo enlace con 24h de vigencia" style="padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #d97706;background:#fffbeb;color:#b45309;font-size:0.71rem;font-weight:700;cursor:pointer;">🔄 Renovar</button>`
+        ? `<button type="button" onclick="window.renovarEnlaceSolicitudFirma('${escHtml(r.id)}')" title="Emitir un nuevo enlace con 24h de vigencia" style="${btnBase}border:1px solid #fcd34d;background:#fffbeb;color:#b45309;">🔄 Renovar Enlace</button>`
         : '';
       const revocarBtn = (est !== 'FIRMADO' && est !== 'ANULADO')
-        ? `<button type="button" onclick="window.revocarSolicitudFirma('${escHtml(r.id)}')" title="Anular este enlace de firma" style="padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #ef4444;background:#fef2f2;color:#b91c1c;font-size:0.71rem;font-weight:700;cursor:pointer;">🚫 Anular</button>`
+        ? `<button type="button" onclick="window.revocarSolicitudFirma('${escHtml(r.id)}')" title="Cancelar y deshabilitar este enlace de firma" style="${btnBase}border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;">🚫 Anular</button>`
         : '';
 
+      const fechaCreadaTxt = (r.created_at || '').slice(0, 16).replace('T', ' ') || '-';
+      const fechaFirmadaTxt = r.firmado_en ? r.firmado_en.slice(0, 16).replace('T', ' ') : '';
+
       return `
-        <tr style="border-bottom:1px solid #e2e8f0;">
-          <td style="padding:0.65rem 0.6rem;font-size:0.8rem;">
-            <strong>${escHtml(r.nombre_solicitante || '-')}</strong>
-            <div style="font-size:0.72rem;color:#64748b;">DNI ${escHtml(r.dni_solicitante || '-')} · Exp: ${escHtml(r.expediente_id || '-')}</div>
+        <tr style="border-bottom:1px solid #e2e8f0;vertical-align:middle;">
+          <td style="padding:0.75rem 0.65rem;font-size:0.81rem;">
+            <div style="font-weight:800;color:#0f172a;">${escHtml(r.nombre_solicitante || '-')}</div>
+            <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">DNI ${escHtml(r.dni_solicitante || '-')} · Exp: ${escHtml(r.expediente_id || '-')}</div>
           </td>
-          <td style="padding:0.65rem 0.6rem;font-size:0.8rem;">${escHtml(r.plantilla_nombre || '-')}</td>
-          <td style="padding:0.65rem 0.6rem;">
-            <span style="display:inline-block;padding:2px 8px;border-radius:9999px;font-size:0.71rem;font-weight:700;background:${bg};color:${col};">${escHtml(est)}</span>
+          <td style="padding:0.75rem 0.65rem;font-size:0.8rem;color:#1e293b;max-width:260px;line-height:1.35;">${escHtml(r.plantilla_nombre || '-')}</td>
+          <td style="padding:0.75rem 0.65rem;text-align:center;">
+            <span style="display:inline-block;padding:3px 10px;border-radius:9999px;font-size:0.71rem;font-weight:800;background:${bg};color:${col};white-space:nowrap;">${escHtml(est)}</span>
           </td>
-          <td style="padding:0.65rem 0.6rem;font-size:0.73rem;color:#475569;">
-            <div>Creada: ${escHtml((r.created_at || '').slice(0, 16).replace('T', ' '))}</div>
-            ${r.firmado_en ? `<div style="color:#166534;font-weight:700;">Firmada: ${escHtml(r.firmado_en.slice(0, 16).replace('T', ' '))}</div>` : ''}
+          <td style="padding:0.75rem 0.65rem;font-size:0.73rem;color:#475569;white-space:nowrap;line-height:1.5;">
+            <div>Creada: <strong>${escHtml(fechaCreadaTxt)}</strong></div>
+            ${fechaFirmadaTxt ? `<div style="color:#166534;font-weight:700;">Firmada: ${escHtml(fechaFirmadaTxt)}</div>` : ''}
           </td>
-          <td style="padding:0.65rem 0.6rem;font-size:0.72rem;">
+          <td style="padding:0.75rem 0.65rem;font-size:0.72rem;">
             <div class="font-mono" style="color:#334155;" title="${escHtml(shaFull)}">SHA256: ${escHtml(shaShort)}…</div>
-            <div>IP: ${escHtml(r.ip_origen || '-')} · ${gpsHtml}</div>
-            ${badgesHtml ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">${badgesHtml}</div>` : ''}
+            <div style="margin-top:2px;">IP: ${escHtml(r.ip_origen || '-')} · ${gpsHtml}</div>
+            ${badgesHtml ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;">${badgesHtml}</div>` : ''}
           </td>
-          <td style="padding:0.65rem 0.6rem;text-align:right;white-space:nowrap;">
-            <div style="display:inline-flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;align-items:center;">
-              <button type="button" onclick="window.verBitacoraEventosFirma('${escHtml(r.id)}')" title="Ver bitácora forense de eventos" style="padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #64748b;background:#f8fafc;color:#334155;font-size:0.71rem;font-weight:700;cursor:pointer;">🕵️ Eventos</button>
-              <button type="button" onclick="window.abrirAsistenteRenaperPorId('${escHtml(r.id)}')" title="Abrir RENAPER Mi Ejemplar con datos listos para copiar" style="padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;font-size:0.71rem;font-weight:700;cursor:pointer;">🪪 Ejemplar</button>
-              ${recordarWaBtn}
-              ${renovarBtn}
-              ${revocarBtn}
-              <a href="${verifyUrl}" target="_blank" rel="noopener" style="padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;font-size:0.71rem;font-weight:700;text-decoration:none;">🔍 Verificar</a>
-              ${tsrBtn}
-              ${driveBtn}
-              <button type="button" onclick="window.descargarPdfSolicitudFirma('${escHtml(r.id)}', '${tipoDescarga}')" style="padding:0.32rem 0.65rem;border-radius:6px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.74rem;font-weight:700;cursor:pointer;">
-                ⬇️ ${labelDescarga}
-              </button>
+          <td style="padding:0.75rem 0.65rem;text-align:right;">
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
+              <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;align-items:center;">
+                ${driveBtn}
+                ${tsrBtn}
+                <button type="button" onclick="window.descargarPdfSolicitudFirma('${escHtml(r.id)}', '${tipoDescarga}')" title="Descargar documento PDF con evidencia y trazabilidad" style="${btnBase}border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-weight:800;">
+                  📥 ${labelDescarga}
+                </button>
+              </div>
+              <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;align-items:center;">
+                <button type="button" onclick="window.verBitacoraEventosFirma('${escHtml(r.id)}')" title="Ver historial completo de apertura, validaciones e IP de esta firma" style="${btnBase}border:1px solid #cbd5e1;background:#f8fafc;color:#334155;">📜 Historial</button>
+                <button type="button" onclick="window.abrirAsistenteRenaperPorId('${escHtml(r.id)}')" title="Abrir RENAPER Mi Ejemplar con DNI y fecha listos para copiar y validar ejemplar" style="${btnBase}border:1px solid #bae6fd;background:#f0f9ff;color:#0369a1;">🪪 Validar DNI (RENAPER)</button>
+                <a href="${verifyUrl}" target="_blank" rel="noopener" title="Abrir portal público de verificación SHA-256 e integridad del PDF" style="${btnBase}border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;">🔍 Validar Firma</a>
+                ${recordarWaBtn}
+                ${renovarBtn}
+                ${revocarBtn}
+              </div>
             </div>
           </td>
         </tr>
@@ -2220,6 +2228,80 @@
     renderInspectorCamposEditor();
   }
 
+  function limpiarEditorPlantillaPdf(sinConfirmacion) {
+    const tieneCambios = Boolean(state.editor.pdfBase64 || state.editor.plantillaId || (state.editor.campos && state.editor.campos.length > 0));
+    if (tieneCambios && !sinConfirmacion) {
+      if (!global.confirm('¿Querés cancelar la edición actual y limpiar el PDF, los campos y los datos del Editor Visual?')) {
+        return;
+      }
+    }
+    if (state.editor._renderTask && typeof state.editor._renderTask.cancel === 'function') {
+      try { state.editor._renderTask.cancel(); } catch (_e) {}
+    }
+    state.editor.plantillaId = null;
+    state.editor.pdfBase64 = '';
+    state.editor.pdfDoc = null;
+    state.editor._loadedB64 = '';
+    state.editor._renderTask = null;
+    state.editor._baseViewportW = 0;
+    state.editor.zoom = 1.0;
+    state.editor.vistaLimpia = false;
+    state.editor.archivoNombre = '';
+    state.editor.totalPages = 1;
+    state.editor.currentPage = 1;
+    state.editor.campos = [];
+    state.editor.selectedFieldId = null;
+    state.editor.addModeTipo = null;
+
+    const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+    const setChk = (id, v) => { const el = document.getElementById(id); if (el) el.checked = !!v; };
+    setVal('inpPlantillaPdfFile', '');
+    setVal('selEditarPlantillaExistente', '');
+    setVal('inpEditPlantillaNombre', '');
+    setVal('selEditPlantillaCategoria', 'AUTORIZACION');
+    setVal('inpEditPlantillaDesc', '');
+    setChk('chkValFirmaOlografa', true);
+    setChk('chkValTaparResaltados', true);
+    setChk('chkValRequiereSelloPng', false);
+    setChk('chkValGpsObligatorio', false);
+    setChk('chkValDniFrenteDorso', false);
+    setChk('chkValSelfieLiveness', false);
+    setChk('chkValRequierePinOtp', false);
+    setChk('chkEditorVistaLimpia', false);
+    sincronizarSelectZoomEditor();
+
+    const lblPag = document.getElementById('lblEditorPaginaActual');
+    if (lblPag) lblPag.textContent = 'Página 1 de 1';
+    const estBox = document.getElementById('lblEditorEstadoPdf');
+    if (estBox) {
+      estBox.style.display = 'none';
+      estBox.textContent = '';
+    }
+
+    const canvas = document.getElementById('canvasEditorPlantillaPdf');
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) ctx.clearRect(0, 0, canvas.width || 0, canvas.height || 0);
+      canvas.width = 0;
+      canvas.height = 0;
+      canvas.style.width = '';
+      canvas.style.height = '';
+    }
+    const frame = document.getElementById('editorPdfPageFrame');
+    if (frame) {
+      frame.style.width = '';
+      frame.style.height = '';
+    }
+    const overlay = document.getElementById('overlayCamposPlantilla');
+    if (overlay) {
+      overlay.innerHTML = '';
+      overlay.style.cursor = 'default';
+    }
+    actualizarBotonesModoEditor();
+    renderInspectorCamposEditor();
+    notify('Editor visual limpiado. Podés subir otro PDF o seleccionar una plantilla guardada.', 'info');
+  }
+
   async function guardarPlantillaDesdeEditor() {
     const nombre = String((document.getElementById('inpEditPlantillaNombre') || {}).value || '').trim();
     const categoria = String((document.getElementById('selEditPlantillaCategoria') || {}).value || 'GENERAL');
@@ -2784,6 +2866,7 @@
   global.convertirCampoSoloBorradorEditor = convertirCampoSoloBorradorEditor;
   global.duplicarCampoEditor = duplicarCampoEditor;
   global.eliminarCampoEditor = eliminarCampoEditor;
+  global.limpiarEditorPlantillaPdf = limpiarEditorPlantillaPdf;
   global.guardarPlantillaDesdeEditor = guardarPlantillaDesdeEditor;
   global.probarEstampadoEditor = probarEstampadoEditor;
   global.exportarExpedienteCompletoZip = exportarExpedienteCompletoZip;

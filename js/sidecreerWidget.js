@@ -154,10 +154,10 @@
         const contadoTxt = _formatearPesos(data.saldo_contado);
         const notaCache = data.cached ? ' · caché reciente' : '';
 
-        const saldoBruto = (data.saldo_cuotas !== null && data.saldo_cuotas !== undefined && Number(data.saldo_cuotas) > 0)
+        const saldoCuotasNum = (data.saldo_cuotas !== null && data.saldo_cuotas !== undefined)
           ? Number(data.saldo_cuotas)
-          : Number(data.saldo_contado || 0);
-        const saldoSinDecimales = Math.floor(Number.isFinite(saldoBruto) ? saldoBruto : 0);
+          : 0;
+        const saldoSinDecimales = Math.floor(Number.isFinite(saldoCuotasNum) && saldoCuotasNum > 0 ? saldoCuotasNum : 0);
 
         let notaAutocompletado = '';
         if (saldoSinDecimales > 0) {

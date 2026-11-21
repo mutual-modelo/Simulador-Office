@@ -3,114 +3,464 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Verificación Pública de Firma Electrónica · AMMER</title>
+  <meta name="description" content="Portal oficial de verificación de documentos firmados electrónicamente de la Asociación Mutual Modelo de Entre Ríos (AMMER)." />
+  <title>Verificación de Documentos · Mutual Modelo (AMMER)</title>
   <style>
+    :root {
+      --navy-950: #0a1628;
+      --navy-900: #0f2744;
+      --navy-800: #163a63;
+      --slate-50: #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-500: #64748b;
+      --slate-600: #475569;
+      --slate-700: #334155;
+      --slate-900: #0f172a;
+      --ok-bg: #ecfdf5;
+      --ok-border: #86efac;
+      --ok-text: #166534;
+      --ok-accent: #16a34a;
+      --warn-bg: #fffbeb;
+      --warn-border: #fde68a;
+      --warn-text: #92400e;
+      --err-bg: #fef2f2;
+      --err-border: #fecaca;
+      --err-text: #b91c1c;
+    }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f1f5f9;
-      color: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(180deg, #eef2f6 0%, #f8fafc 45%, #f1f5f9 100%);
+      color: var(--slate-900);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.5;
     }
+
     header {
-      background: linear-gradient(135deg, #0f172a 0%, #0f2744 60%, #1e3a8a 100%);
+      background: linear-gradient(135deg, var(--navy-950) 0%, var(--navy-900) 58%, var(--navy-800) 100%);
       color: #ffffff;
-      padding: 1rem 1.25rem;
-      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.2);
+      padding: 1.05rem 1.25rem;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.16);
     }
+
     .header-inner {
-      max-width: 820px;
+      max-width: 860px;
       margin: 0 auto;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.9rem;
       flex-wrap: wrap;
     }
-    .brand-title { font-weight: 800; font-size: 1rem; }
-    .brand-sub { font-size: 0.76rem; color: #cbd5e1; margin-top: 2px; }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 11px;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.92rem;
+      letter-spacing: 0.04em;
+      flex-shrink: 0;
+    }
+
+    h1.brand-title {
+      margin: 0;
+      font-weight: 800;
+      font-size: 1.04rem;
+      letter-spacing: -0.01em;
+      line-height: 1.25;
+    }
+
+    .brand-sub {
+      font-size: 0.78rem;
+      color: #cbd5e1;
+      margin-top: 2px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
     .pill {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      font-size: 0.74rem;
+      gap: 6px;
+      font-size: 0.75rem;
       font-weight: 700;
-      padding: 4px 10px;
+      padding: 5px 12px;
       border-radius: 9999px;
-      border: 1px solid rgba(255,255,255,0.22);
-      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.1);
       color: #ffffff;
     }
+
+    .mode-switch {
+      display: inline-flex;
+      background: rgba(10, 22, 40, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 9999px;
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .mode-btn {
+      border: none;
+      background: transparent;
+      color: #cbd5e1;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 5px 11px;
+      border-radius: 9999px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .mode-btn.active {
+      background: #ffffff;
+      color: var(--navy-900);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+    }
+
     main {
-      max-width: 820px;
-      margin: 1.25rem auto 2.5rem;
-      padding: 0 0.9rem;
+      width: 100%;
+      max-width: 860px;
+      margin: 1.4rem auto 2rem;
+      padding: 0 1rem;
       display: flex;
       flex-direction: column;
-      gap: 0.95rem;
+      gap: 1rem;
+      flex: 1;
     }
+
     .card {
       background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 14px;
-      padding: 1.1rem;
-      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      border: 1px solid var(--slate-200);
+      border-radius: 16px;
+      padding: 1.25rem;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
     }
-    .card h2 { margin: 0 0 0.65rem; font-size: 0.96rem; color: #0f2744; }
-    .search-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+    .card h2 {
+      margin: 0 0 0.75rem;
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--navy-900);
+      letter-spacing: -0.01em;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 0.55rem;
+      flex-wrap: wrap;
+    }
+
     .search-row input {
       flex: 1;
       min-width: 220px;
-      padding: 0.58rem 0.75rem;
-      border: 1px solid #cbd5e1;
-      border-radius: 9px;
-      font-size: 0.85rem;
+      padding: 0.68rem 0.85rem;
+      border: 1px solid var(--slate-300);
+      border-radius: 10px;
+      font-size: 0.88rem;
+      color: var(--slate-900);
+      background: #ffffff;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
+
+    .search-row input:focus {
+      outline: none;
+      border-color: var(--navy-800);
+      box-shadow: 0 0 0 3px rgba(22, 58, 99, 0.12);
+    }
+
     .btn {
       border: none;
-      border-radius: 9px;
-      padding: 0.6rem 1.05rem;
-      font-weight: 800;
-      font-size: 0.84rem;
+      border-radius: 10px;
+      padding: 0.68rem 1.15rem;
+      font-weight: 700;
+      font-size: 0.86rem;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.12s ease, background-color 0.15s ease, box-shadow 0.15s ease;
     }
-    .btn-primary { background: #0f2744; color: #ffffff; }
+
+    .btn:active { transform: translateY(1px); }
+
+    .btn-primary {
+      background: var(--navy-900);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(15, 39, 68, 0.22);
+    }
+    .btn-primary:hover { background: var(--navy-800); }
+
+    .btn-ghost {
+      background: var(--slate-100);
+      color: var(--slate-700);
+      border: 1px solid var(--slate-200);
+    }
+    .btn-ghost:hover { background: var(--slate-200); }
+
     .banner {
-      border-radius: 12px;
-      padding: 0.95rem 1.05rem;
+      border-radius: 14px;
+      padding: 1.05rem 1.15rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 0.75rem;
+      gap: 0.8rem;
     }
-    .banner-ok { background: #dcfce7; border: 1px solid #86efac; color: #166534; }
-    .banner-warn { background: #fef3c7; border: 1px solid #fde68a; color: #92400e; }
-    .banner-err { background: #fee2e2; border: 1px solid #fecaca; color: #b91c1c; }
+
+    .banner-ok { background: var(--ok-bg); border: 1px solid var(--ok-border); color: var(--ok-text); }
+    .banner-warn { background: var(--warn-bg); border: 1px solid var(--warn-border); color: var(--warn-text); }
+    .banner-err { background: var(--err-bg); border: 1px solid var(--err-border); color: var(--err-text); }
+
+    /* Hero específico de la vista pública simple */
+    .pub-hero {
+      border-radius: 16px;
+      padding: 1.35rem 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
+    }
+
+    .pub-hero-left {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.95rem;
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .pub-hero-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.45rem;
+      flex-shrink: 0;
+      background: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.07);
+    }
+
+    .pub-hero-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.015em;
+      margin: 0 0 3px;
+    }
+
+    .pub-hero-desc {
+      font-size: 0.9rem;
+      margin: 0;
+      opacity: 0.95;
+    }
+
+    .pub-status-badge {
+      font-size: 0.8rem;
+      font-weight: 800;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid currentColor;
+      white-space: nowrap;
+    }
+
     .meta-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
-      gap: 0.55rem;
+      grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));
+      gap: 0.65rem;
     }
+
     .meta-item {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 9px;
-      padding: 0.55rem 0.7rem;
+      background: var(--slate-50);
+      border: 1px solid var(--slate-200);
+      border-radius: 11px;
+      padding: 0.7rem 0.85rem;
     }
-    .meta-lbl { font-size: 0.68rem; text-transform: uppercase; font-weight: 700; color: #64748b; }
-    .meta-val { font-size: 0.84rem; font-weight: 700; color: #0f172a; margin-top: 2px; word-break: break-word; }
+
+    .meta-lbl {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+      color: var(--slate-500);
+    }
+
+    .meta-val {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--slate-900);
+      margin-top: 3px;
+      word-break: break-word;
+    }
+
+    .signer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .signer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      padding: 0.8rem 0.95rem;
+      border-radius: 11px;
+      border: 1px solid var(--slate-200);
+      background: var(--slate-50);
+    }
+
+    .signer-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .signer-role {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--slate-500);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .signer-name {
+      font-size: 0.93rem;
+      font-weight: 700;
+      color: var(--slate-900);
+    }
+
+    .signer-dni {
+      font-size: 0.8rem;
+      color: var(--slate-600);
+    }
+
+    .signer-state {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 5px 11px;
+      border-radius: 9999px;
+    }
+
+    .signer-state-ok {
+      background: var(--ok-bg);
+      color: var(--ok-text);
+      border: 1px solid var(--ok-border);
+    }
+
+    .signer-state-wait {
+      background: var(--warn-bg);
+      color: var(--warn-text);
+      border: 1px solid var(--warn-border);
+    }
+
+    .drop-zone {
+      border: 2px dashed var(--slate-300);
+      border-radius: 13px;
+      padding: 1.2rem;
+      text-align: center;
+      background: var(--slate-50);
+      cursor: pointer;
+      display: block;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+    }
+    .drop-zone:hover { border-color: var(--navy-800); background: #eff6ff; }
+
+    .notice-channels {
+      background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+      border: 1px solid #bfdbfe;
+      border-radius: 14px;
+      padding: 1.05rem 1.2rem;
+      display: flex;
+      gap: 0.85rem;
+      align-items: flex-start;
+    }
+
+    .notice-channels-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: #dbeafe;
+      color: #1e40af;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      flex-shrink: 0;
+    }
+
+    .notice-channels-title {
+      font-weight: 800;
+      font-size: 0.9rem;
+      color: var(--navy-900);
+      margin-bottom: 3px;
+    }
+
+    .notice-channels-text {
+      font-size: 0.84rem;
+      color: var(--slate-700);
+      margin: 0;
+    }
+
+    .compact-query-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      padding: 0.65rem 0.95rem;
+      background: #ffffff;
+      border: 1px solid var(--slate-200);
+      border-radius: 12px;
+      font-size: 0.82rem;
+      color: var(--slate-600);
+    }
+
     .hash-box {
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 0.75rem;
-      background: #f8fafc;
-      border: 1px solid #cbd5e1;
+      background: var(--slate-50);
+      border: 1px solid var(--slate-300);
       border-radius: 9px;
-      padding: 0.65rem 0.75rem;
+      padding: 0.7rem 0.8rem;
       word-break: break-all;
-      color: #334155;
-      line-height: 1.5;
+      color: var(--slate-700);
+      line-height: 1.55;
     }
+
     .badge-chip {
       display: inline-block;
       padding: 3px 9px;
@@ -119,105 +469,319 @@
       font-weight: 700;
       margin: 2px 4px 2px 0;
     }
-    .drop-zone {
-      border: 2px dashed #94a3b8;
-      border-radius: 12px;
-      padding: 1.1rem;
-      text-align: center;
-      background: #f8fafc;
-      cursor: pointer;
-    }
-    .drop-zone:hover { border-color: #1d4ed8; background: #eff6ff; }
+
+    .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
     table { width: 100%; border-collapse: collapse; font-size: 0.81rem; }
-    th, td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid #e2e8f0; }
-    th { font-size: 0.72rem; text-transform: uppercase; color: #475569; background: #f8fafc; }
+    th, td { text-align: left; padding: 0.55rem 0.65rem; border-bottom: 1px solid var(--slate-200); }
+    th { font-size: 0.72rem; text-transform: uppercase; color: var(--slate-600); background: var(--slate-50); }
+
+    footer {
+      max-width: 860px;
+      width: 100%;
+      margin: 0 auto 1.6rem;
+      padding: 0 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      font-size: 0.78rem;
+      color: var(--slate-500);
+    }
+
+    .admin-link-btn {
+      background: transparent;
+      border: none;
+      color: var(--slate-500);
+      font-size: 0.77rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 6px;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .admin-link-btn:hover { color: var(--navy-900); background: var(--slate-200); }
+
+    /* Modal de autenticación Admin */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.68);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 9999;
+    }
+
+    .modal-card {
+      background: #ffffff;
+      border: 1px solid var(--slate-200);
+      border-radius: 16px;
+      max-width: 400px;
+      width: 100%;
+      padding: 1.45rem;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
+    }
+
+    .modal-field {
+      margin-bottom: 0.85rem;
+    }
+    .modal-field label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--slate-700);
+      margin-bottom: 0.3rem;
+    }
+    .modal-field input {
+      width: 100%;
+      padding: 0.62rem 0.78rem;
+      border: 1px solid var(--slate-300);
+      border-radius: 9px;
+      font-size: 0.88rem;
+    }
+
+    @media (max-width: 600px) {
+      .card { padding: 1rem; }
+      .pub-hero { padding: 1.1rem; }
+      .pub-hero-title { font-size: 1.04rem; }
+    }
   </style>
 </head>
 <body>
   <header>
     <div class="header-inner">
-      <div>
-        <div class="brand-title">Asociación Mutual Modelo de Entre Ríos (AMMER)</div>
-        <div class="brand-sub">Portal Público de Verificación Criptográfica de Firmas Electrónicas · Ley 25.506</div>
+      <div class="brand-wrap">
+        <div class="brand-mark" aria-hidden="true">AM</div>
+        <div>
+          <h1 class="brand-title">Asociación Mutual Modelo de Entre Ríos (AMMER)</h1>
+          <div class="brand-sub" id="headerSubTitle">Portal Público de Verificación de Documentos</div>
+        </div>
       </div>
-      <div class="pill">🛡️ Auditoría SHA-256 + TSA RFC 3161</div>
+      <div class="header-actions">
+        <div class="pill" id="headerPublicPill">✓ Consulta Oficial AMMER</div>
+        <div class="mode-switch" id="adminModeSwitch" style="display:none;">
+          <button type="button" class="mode-btn active" id="btnModePublic" onclick="window.__setVerifMode('public')">Vista Simple</button>
+          <button type="button" class="mode-btn" id="btnModeAdmin" onclick="window.__setVerifMode('admin')">🛡️ Técnica (Admin)</button>
+        </div>
+      </div>
     </div>
   </header>
 
   <main>
-    <section class="card">
-      <h2>🔍 Consultar Certificado / ID de Solicitud</h2>
-      <div class="search-row">
-        <input type="text" id="inpVerifId" placeholder="Pegá el UUID de solicitud de firma o escaneá el QR del documento..." />
-        <input type="text" id="inpVerifHash" placeholder="Prefijo SHA-256 opcional" style="max-width:210px;" />
-        <button type="button" id="btnConsultarVerif" class="btn btn-primary">Verificar Ahora</button>
-      </div>
-    </section>
-
-    <div id="verifLoading" class="card" style="display:none;text-align:center;color:#475569;">
-      ⏳ Consultando registro criptográfico en AMMER...
+    <!-- ESTADOS GLOBALES DE CARGA Y ERROR -->
+    <div id="verifLoading" class="card" style="display:none;text-align:center;color:#475569;font-weight:600;">
+      ⏳ Consultando la validez del documento...
     </div>
     <div id="verifError" class="banner banner-err" style="display:none;"></div>
 
-    <div id="verifResultWrap" style="display:none;flex-direction:column;gap:0.9rem;">
-      <div id="verifEstadoBanner" class="banner banner-ok"></div>
-
-      <section class="card">
-        <h2>📄 Datos del Documento Certificado</h2>
-        <div class="meta-grid" style="margin-bottom:0.75rem;">
-          <div class="meta-item"><div class="meta-lbl">Código Verificación</div><div class="meta-val" id="vCodigo">-</div></div>
-          <div class="meta-item"><div class="meta-lbl">Documento / Plantilla</div><div class="meta-val" id="vPlantilla">-</div></div>
-          <div class="meta-item"><div class="meta-lbl">Expediente</div><div class="meta-val" id="vExpediente">-</div></div>
-          <div class="meta-item"><div class="meta-lbl">Cierre de Firma (UTC)</div><div class="meta-val" id="vFecha">-</div></div>
-        </div>
-        <div id="vBadges" style="margin-bottom:0.75rem;"></div>
-        <div class="hash-box">
-          <strong>SHA-256 Documento Original:</strong> <span id="vHashOrig">-</span><br/>
-          <strong>SHA-256 Documento Firmado Final:</strong> <span id="vHashFirm">-</span>
-          <div id="vTsaInfo" style="margin-top:4px;"></div>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>👥 Firmantes Registrados (Identidad Protegida)</h2>
-        <div style="overflow-x:auto;">
-          <table>
-            <thead>
-              <tr>
-                <th>Rol / Etiqueta</th>
-                <th>Titular (Enmascarado)</th>
-                <th>DNI</th>
-                <th>Estado</th>
-                <th>Fecha UTC</th>
-              </tr>
-            </thead>
-            <tbody id="vTablaFirmantes"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>🧪 Verificador Local SHA-256 (Sin subir tu archivo)</h2>
-        <p style="font-size:0.78rem;color:#475569;margin:0 0 0.6rem;">
-          Seleccioná el PDF firmado que tenés en tu computadora o celular. Calcularemos su huella SHA-256 localmente en tu navegador para comprobar que no sufrió ninguna modificación.
+    <!-- =========================================================
+         VISTA PÚBLICA SIMPLIFICADA (PARA EL PÚBLICO EN GENERAL)
+         ========================================================= -->
+    <section id="publicView" style="display:flex;flex-direction:column;gap:1rem;">
+      <!-- Buscador principal (visible al entrar sin ?id= o al desplegar búsqueda) -->
+      <section class="card" id="pubSearchCard">
+        <h2>🔍 Comprobar validez de un documento</h2>
+        <p style="font-size:0.86rem;color:#475569;margin:0 0 0.8rem;">
+          Ingresá el identificador del documento o escaneá el código QR impreso en tu PDF para confirmar su validez ante la Mutual Modelo.
         </p>
-        <label class="drop-zone" style="display:block;">
-          <input type="file" id="inpLocalPdfVerificar" accept="application/pdf" style="display:none;" />
-          <strong>📎 Hacé clic acá para elegir el PDF y validar su SHA-256</strong>
-          <div style="font-size:0.74rem;color:#64748b;margin-top:3px;">El cálculo ocurre 100% en tu dispositivo mediante WebCrypto API</div>
-        </label>
-        <div id="vLocalMatchResult" style="display:none;margin-top:0.75rem;"></div>
+        <div class="search-row">
+          <input type="text" id="inpPubVerifId" placeholder="Pegá aquí el identificador o enlace QR del documento..." />
+          <button type="button" id="btnPubConsultar" class="btn btn-primary">Verificar documento</button>
+        </div>
       </section>
-    </div>
+
+      <!-- Barra compacta cuando ya hay resultado cargado -->
+      <div id="pubCompactBar" class="compact-query-bar" style="display:none;">
+        <span>Mostrando comprobación oficial del documento consultado.</span>
+        <button type="button" id="btnPubToggleOtraConsulta" class="btn btn-ghost" style="padding:0.42rem 0.85rem;font-size:0.78rem;">🔍 Consultar otro documento</button>
+      </div>
+
+      <!-- Resultado público amigable -->
+      <div id="pubResultWrap" style="display:none;flex-direction:column;gap:1rem;">
+        <div id="pubEstadoBanner" class="pub-hero banner-ok"></div>
+
+        <section class="card">
+          <h2>📄 Datos principales del documento</h2>
+          <div class="meta-grid">
+            <div class="meta-item">
+              <div class="meta-lbl">Documento</div>
+              <div class="meta-val" id="pubPlantilla">-</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-lbl">Fecha de firma</div>
+              <div class="meta-val" id="pubFecha">-</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-lbl">Código de control</div>
+              <div class="meta-val" id="pubCodigo">-</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-lbl">Referencia</div>
+              <div class="meta-val" id="pubReferencia">-</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>👥 Personas firmantes</h2>
+          <div id="pubListaFirmantes" class="signer-list"></div>
+        </section>
+
+        <section class="card">
+          <h2>📎 Comprobá si tu archivo PDF es el original</h2>
+          <p style="font-size:0.84rem;color:#475569;margin:0 0 0.75rem;">
+            Si tenés el PDF guardado en tu computadora o celular, seleccionalo acá para confirmar que no sufrió modificaciones. El archivo se revisa únicamente en tu dispositivo y no se sube a internet.
+          </p>
+          <label class="drop-zone">
+            <input type="file" id="inpPubLocalPdf" accept="application/pdf" style="display:none;" />
+            <strong style="color:#0f2744;font-size:0.9rem;">📄 Hacer clic aquí para elegir tu archivo PDF</strong>
+            <div style="font-size:0.77rem;color:#64748b;margin-top:4px;">Confirmación instantánea y privada desde tu navegador</div>
+          </label>
+          <div id="pubLocalMatchResult" style="display:none;margin-top:0.8rem;"></div>
+        </section>
+      </div>
+
+      <!-- Leyenda obligatoria de canales de comunicación para validación técnica completa -->
+      <aside class="notice-channels" aria-label="Información para validación técnica completa">
+        <div class="notice-channels-icon" aria-hidden="true">💬</div>
+        <div>
+          <div class="notice-channels-title">¿Necesitás una validación técnica más completa?</div>
+          <p class="notice-channels-text">
+            Esta pantalla ofrece una consulta simple para confirmar rápidamente la validez de tu documento. En caso de necesitar una <strong>validación técnica más completa sobre la validez del PDF</strong>, podés contactarte con la <strong>Mutual Modelo (AMMER)</strong> por sus distintos canales de comunicación.
+          </p>
+        </div>
+      </aside>
+    </section>
+
+    <!-- =========================================================
+         VISTA TÉCNICA AVANZADA (EXCLUSIVA ROL ADMIN)
+         ========================================================= -->
+    <section id="adminTechView" style="display:none;flex-direction:column;gap:0.95rem;">
+      <div class="banner" style="background:#eef2ff;border:1px solid #c7d2fe;color:#1e1b4b;padding:0.7rem 1rem;">
+        <div style="font-size:0.82rem;">
+          <strong>🛡️ Modo Auditoría Técnica (Admin):</strong> <span id="admUserInfo">Administrador verificado</span>
+        </div>
+        <div style="display:flex;gap:0.45rem;flex-wrap:wrap;">
+          <button type="button" class="btn btn-ghost" style="padding:0.38rem 0.75rem;font-size:0.75rem;background:#ffffff;" onclick="window.__setVerifMode('public')">👁️ Ver vista pública simple</button>
+          <button type="button" id="btnAdminSalirVista" class="btn btn-ghost" style="padding:0.38rem 0.75rem;font-size:0.75rem;background:#ffffff;display:none;" onclick="window.__cerrarVistaAdmin()">🚪 Salir de vista técnica</button>
+        </div>
+      </div>
+
+      <section class="card">
+        <h2>🔍 Consultar Certificado / ID de Solicitud</h2>
+        <div class="search-row">
+          <input type="text" id="inpVerifId" placeholder="Pegá el UUID de solicitud de firma o escaneá el QR del documento..." />
+          <input type="text" id="inpVerifHash" placeholder="Prefijo SHA-256 opcional" style="max-width:210px;" />
+          <button type="button" id="btnConsultarVerif" class="btn btn-primary">Verificar Ahora</button>
+        </div>
+      </section>
+
+      <div id="verifResultWrap" style="display:none;flex-direction:column;gap:0.9rem;">
+        <div id="verifEstadoBanner" class="banner banner-ok"></div>
+
+        <section class="card">
+          <h2>📄 Datos del Documento Certificado</h2>
+          <div class="meta-grid" style="margin-bottom:0.75rem;">
+            <div class="meta-item"><div class="meta-lbl">Código Verificación</div><div class="meta-val" id="vCodigo">-</div></div>
+            <div class="meta-item"><div class="meta-lbl">Documento / Plantilla</div><div class="meta-val" id="vPlantilla">-</div></div>
+            <div class="meta-item"><div class="meta-lbl">Expediente</div><div class="meta-val" id="vExpediente">-</div></div>
+            <div class="meta-item"><div class="meta-lbl">Cierre de Firma (UTC)</div><div class="meta-val" id="vFecha">-</div></div>
+          </div>
+          <div id="vBadges" style="margin-bottom:0.75rem;"></div>
+          <div class="hash-box">
+            <strong>SHA-256 Documento Original:</strong> <span id="vHashOrig">-</span><br/>
+            <strong>SHA-256 Documento Firmado Final:</strong> <span id="vHashFirm">-</span>
+            <div id="vTsaInfo" style="margin-top:4px;"></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>👥 Firmantes Registrados (Identidad Protegida)</h2>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Rol / Etiqueta</th>
+                  <th>Titular (Enmascarado)</th>
+                  <th>DNI</th>
+                  <th>Estado</th>
+                  <th>Fecha UTC</th>
+                </tr>
+              </thead>
+              <tbody id="vTablaFirmantes"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>🧪 Verificador Local SHA-256 (Sin subir tu archivo)</h2>
+          <p style="font-size:0.78rem;color:#475569;margin:0 0 0.6rem;">
+            Seleccioná el PDF firmado que tenés en tu computadora o celular. Calcularemos su huella SHA-256 localmente en tu navegador para comprobar que no sufrió ninguna modificación.
+          </p>
+          <label class="drop-zone" style="display:block;">
+            <input type="file" id="inpLocalPdfVerificar" accept="application/pdf" style="display:none;" />
+            <strong>📎 Hacé clic acá para elegir el PDF y validar su SHA-256</strong>
+            <div style="font-size:0.74rem;color:#64748b;margin-top:3px;">El cálculo ocurre 100% en tu dispositivo mediante WebCrypto API</div>
+          </label>
+          <div id="vLocalMatchResult" style="display:none;margin-top:0.75rem;"></div>
+        </section>
+      </div>
+    </section>
   </main>
+
+  <footer>
+    <span>© Asociación Mutual Modelo de Entre Ríos (AMMER)</span>
+    <button type="button" id="btnFooterAdminAccess" class="admin-link-btn" onclick="window.__abrirAccesoTecnicoAdmin()">🔐 Acceso técnico (Solo Admin)</button>
+  </footer>
+
+  <!-- MODAL DE INICIO DE SESIÓN EXCLUSIVO ADMIN PARA VISTA TÉCNICA -->
+  <div id="adminAuthModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="adminModalTitle">
+    <div class="modal-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+        <h2 id="adminModalTitle" style="margin:0;font-size:1.05rem;color:#0f2744;">🛡️ Acceso Técnico (Admin)</h2>
+        <button type="button" onclick="window.__cerrarModalAdmin()" style="border:none;background:#f1f5f9;color:#475569;border-radius:8px;padding:4px 10px;font-weight:800;cursor:pointer;">✕</button>
+      </div>
+      <p style="font-size:0.82rem;color:#475569;margin:0 0 1rem;">
+        La vista técnica criptográfica (SHA-256, PAdES, TSA RFC 3161 y eKYC) está reservada únicamente para administradores de AMMER.
+      </p>
+      <form id="formAdminTechLogin">
+        <div class="modal-field">
+          <label for="admLoginUser">Usuario Administrador</label>
+          <input type="text" id="admLoginUser" autocomplete="username" required />
+        </div>
+        <div class="modal-field">
+          <label for="admLoginPass">Contraseña</label>
+          <input type="password" id="admLoginPass" autocomplete="current-password" required />
+        </div>
+        <div id="admLoginErr" class="banner banner-err" style="display:none;padding:0.55rem 0.75rem;font-size:0.8rem;margin-bottom:0.85rem;"></div>
+        <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+          <button type="button" class="btn btn-ghost" onclick="window.__cerrarModalAdmin()">Cancelar</button>
+          <button type="submit" id="btnAdmLoginSubmit" class="btn btn-primary">Ingresar</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script>
     (function () {
       'use strict';
       const API_BASE = 'https://ammer-auditor-api.onrender.com';
+      const AUTH_TOKEN_KEY = 'AMMER_API_TOKEN';
+      const LAST_ACTIVITY_KEY = 'AMMER_LAST_ACTIVITY_TS';
+      const SESSION_IDLE_MAX_MS = 60 * 60 * 1000;
       const params = new URLSearchParams(window.location.search);
+
       const state = {
         registro: null,
+        adminUser: null,
+        adminToken: null,
+        loggedInHere: false,
+        viewMode: 'public',
       };
 
       function escHtml(v) {
@@ -229,33 +793,300 @@
           .replace(/'/g, '&#39;');
       }
 
+      function esRolAdmin(u) {
+        const rol = String((u && (u.rol || u.role)) || '').trim().toLowerCase();
+        return rol === 'admin' || rol === 'administrador';
+      }
+
+      function formatearFechaAmigableAR(iso) {
+        if (!iso || iso === '-') return 'Pendiente de firma';
+        const dt = new Date(iso);
+        if (Number.isNaN(dt.getTime())) return String(iso);
+        try {
+          const fecha = dt.toLocaleDateString('es-AR', {
+            timeZone: 'America/Argentina/Buenos_Aires',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+          });
+          const hora = dt.toLocaleTimeString('es-AR', {
+            timeZone: 'America/Argentina/Buenos_Aires',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          });
+          return `${fecha} · ${hora} hs`;
+        } catch (_) {
+          return dt.toLocaleString();
+        }
+      }
+
+      function parsearConsultaInput(rawId, rawHash) {
+        let idOut = String(rawId || '').trim();
+        let hashOut = String(rawHash || '').trim();
+        if (idOut.includes('id=')) {
+          try {
+            const urlObj = new URL(idOut.startsWith('http') ? idOut : 'https://ammer.local/' + idOut.replace(/^\?/, '?'));
+            const qId = urlObj.searchParams.get('id');
+            const qH = urlObj.searchParams.get('h');
+            if (qId) idOut = qId.trim();
+            if (qH && !hashOut) hashOut = qH.trim();
+          } catch (_) {}
+        }
+        return { id: idOut, h: hashOut };
+      }
+
+      function leerTokenAdminLocal_() {
+        try {
+          const sTok = sessionStorage.getItem('AMMER_VERIF_ADMIN_TOKEN');
+          if (sTok) return sTok.trim();
+        } catch (_) {}
+        let lastTs = 0;
+        try {
+          lastTs = Math.max(
+            Number(sessionStorage.getItem(LAST_ACTIVITY_KEY) || 0),
+            Number(localStorage.getItem(LAST_ACTIVITY_KEY) || 0)
+          );
+        } catch (_) {}
+        if (lastTs > 0 && (Date.now() - lastTs) >= SESSION_IDLE_MAX_MS) {
+          return null;
+        }
+        try {
+          const tok = sessionStorage.getItem(AUTH_TOKEN_KEY) || localStorage.getItem(AUTH_TOKEN_KEY);
+          return tok ? tok.trim() : null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      async function detectarSesionAdmin_() {
+        const tok = leerTokenAdminLocal_();
+        if (!tok) return null;
+        try {
+          const resp = await fetch(`${API_BASE}/api/auth/me`, {
+            method: 'GET',
+            headers: { Authorization: `Bearer ${tok}` },
+          });
+          if (!resp.ok) return null;
+          const data = await resp.json().catch(() => null);
+          if (data && data.ok && esRolAdmin(data.usuario)) {
+            state.adminToken = tok;
+            state.adminUser = data.usuario;
+            return data.usuario;
+          }
+        } catch (_) {}
+        return null;
+      }
+
+      function actualizarUiModo_() {
+        const isAdminVerif = Boolean(state.adminUser && esRolAdmin(state.adminUser));
+        const modeSwitch = document.getElementById('adminModeSwitch');
+        const publicPill = document.getElementById('headerPublicPill');
+        const publicView = document.getElementById('publicView');
+        const adminTechView = document.getElementById('adminTechView');
+        const btnPub = document.getElementById('btnModePublic');
+        const btnAdm = document.getElementById('btnModeAdmin');
+        const headerSub = document.getElementById('headerSubTitle');
+        const btnFooterAdm = document.getElementById('btnFooterAdminAccess');
+        const btnSalir = document.getElementById('btnAdminSalirVista');
+
+        if (!isAdminVerif) {
+          state.viewMode = 'public';
+        }
+
+        if (isAdminVerif) {
+          modeSwitch.style.display = 'inline-flex';
+          publicPill.style.display = 'none';
+          document.getElementById('admUserInfo').textContent = `${state.adminUser.nombre || state.adminUser.usuario || 'Admin'} (${state.adminUser.rol || 'Admin'})`;
+          btnFooterAdm.textContent = state.viewMode === 'admin' ? '👁️ Cambiar a vista pública simple' : '🛡️ Ir a vista técnica (Admin)';
+          if (btnSalir) btnSalir.style.display = state.loggedInHere ? 'inline-flex' : 'none';
+        } else {
+          modeSwitch.style.display = 'none';
+          publicPill.style.display = 'inline-flex';
+          btnFooterAdm.textContent = '🔐 Acceso técnico (Solo Admin)';
+        }
+
+        if (state.viewMode === 'admin' && isAdminVerif) {
+          publicView.style.display = 'none';
+          adminTechView.style.display = 'flex';
+          btnPub.classList.remove('active');
+          btnAdm.classList.add('active');
+          headerSub.textContent = 'Portal de Auditoría Criptográfica de Firmas Electrónicas · Ley 25.506 (Admin)';
+        } else {
+          publicView.style.display = 'flex';
+          adminTechView.style.display = 'none';
+          btnPub.classList.add('active');
+          btnAdm.classList.remove('active');
+          headerSub.textContent = 'Portal Público de Verificación de Documentos';
+        }
+      }
+
+      window.__setVerifMode = function (mode) {
+        if (mode === 'admin' && !(state.adminUser && esRolAdmin(state.adminUser))) {
+          window.__abrirAccesoTecnicoAdmin();
+          return;
+        }
+        state.viewMode = (mode === 'admin') ? 'admin' : 'public';
+        actualizarUiModo_();
+        if (state.registro) renderResultado(state.registro);
+      };
+
+      window.__abrirAccesoTecnicoAdmin = function () {
+        if (state.adminUser && esRolAdmin(state.adminUser)) {
+          window.__setVerifMode(state.viewMode === 'admin' ? 'public' : 'admin');
+          return;
+        }
+        const errBox = document.getElementById('admLoginErr');
+        if (errBox) errBox.style.display = 'none';
+        const modal = document.getElementById('adminAuthModal');
+        modal.style.display = 'flex';
+        setTimeout(() => {
+          const inp = document.getElementById('admLoginUser');
+          if (inp) inp.focus();
+        }, 50);
+      };
+
+      window.__cerrarModalAdmin = function () {
+        document.getElementById('adminAuthModal').style.display = 'none';
+      };
+
+      window.__cerrarVistaAdmin = function () {
+        try { sessionStorage.removeItem('AMMER_VERIF_ADMIN_TOKEN'); } catch (_) {}
+        state.adminUser = null;
+        state.adminToken = null;
+        state.loggedInHere = false;
+        window.__setVerifMode('public');
+      };
+
       async function consultar(id, h) {
-        const cleanId = String(id || '').trim();
+        const parsed = parsearConsultaInput(id, h);
+        const cleanId = parsed.id;
+        const cleanH = parsed.h;
         if (!cleanId) return;
+
+        document.getElementById('inpPubVerifId').value = cleanId;
+        document.getElementById('inpVerifId').value = cleanId;
+        document.getElementById('inpVerifHash').value = cleanH;
+
         const load = document.getElementById('verifLoading');
         const err = document.getElementById('verifError');
-        const wrap = document.getElementById('verifResultWrap');
+        const pubWrap = document.getElementById('pubResultWrap');
+        const admWrap = document.getElementById('verifResultWrap');
         load.style.display = 'block';
         err.style.display = 'none';
-        wrap.style.display = 'none';
+        pubWrap.style.display = 'none';
+        admWrap.style.display = 'none';
         document.getElementById('vLocalMatchResult').style.display = 'none';
+        document.getElementById('pubLocalMatchResult').style.display = 'none';
 
         try {
-          const qs = h ? `?h=${encodeURIComponent(String(h).trim())}` : '';
+          const qs = cleanH ? `?h=${encodeURIComponent(cleanH)}` : '';
           const resp = await fetch(`${API_BASE}/api/firmas/verificar/${encodeURIComponent(cleanId)}${qs}`);
           const data = await resp.json();
           if (!resp.ok) throw new Error(data.detail || `Error HTTP ${resp.status}`);
           state.registro = data;
           renderResultado(data);
         } catch (e) {
-          err.textContent = '❌ ' + e.message;
+          err.textContent = '❌ No se pudo verificar el documento: ' + e.message;
           err.style.display = 'flex';
+          document.getElementById('pubSearchCard').style.display = 'block';
+          document.getElementById('pubCompactBar').style.display = 'none';
         } finally {
           load.style.display = 'none';
         }
       }
 
-      function renderResultado(d) {
+      function renderVistaPublica(d) {
+        const wrap = document.getElementById('pubResultWrap');
+        const banner = document.getElementById('pubEstadoBanner');
+        const est = String(d.estado || '').toUpperCase();
+
+        if (d.valido) {
+          banner.className = 'pub-hero banner-ok';
+          banner.innerHTML = `
+            <div class="pub-hero-left">
+              <div class="pub-hero-icon" style="color:#16a34a;">✅</div>
+              <div>
+                <h2 class="pub-hero-title">Documento auténtico y válido</h2>
+                <p class="pub-hero-desc">Este documento fue emitido y firmado ante la Asociación Mutual Modelo de Entre Ríos (AMMER) y no presenta alteraciones.</p>
+              </div>
+            </div>
+            <div class="pub-status-badge">✓ Válido</div>
+          `;
+        } else if (est === 'ANULADO') {
+          banner.className = 'pub-hero banner-err';
+          banner.innerHTML = `
+            <div class="pub-hero-left">
+              <div class="pub-hero-icon" style="color:#b91c1c;">🚫</div>
+              <div>
+                <h2 class="pub-hero-title">Documento anulado</h2>
+                <p class="pub-hero-desc">Este documento fue anulado por AMMER y carece de validez.</p>
+              </div>
+            </div>
+            <div class="pub-status-badge">Anulado</div>
+          `;
+        } else if (d.coincide_hash_qr === false) {
+          banner.className = 'pub-hero banner-err';
+          banner.innerHTML = `
+            <div class="pub-hero-left">
+              <div class="pub-hero-icon" style="color:#b91c1c;">⚠️</div>
+              <div>
+                <h2 class="pub-hero-title">El código consultado no coincide</h2>
+                <p class="pub-hero-desc">Los datos del enlace o código ingresado no coinciden con el documento original registrado en AMMER.</p>
+              </div>
+            </div>
+            <div class="pub-status-badge">No válido</div>
+          `;
+        } else {
+          banner.className = 'pub-hero banner-warn';
+          banner.innerHTML = `
+            <div class="pub-hero-left">
+              <div class="pub-hero-icon" style="color:#b45309;">🕒</div>
+              <div>
+                <h2 class="pub-hero-title">Documento pendiente de finalización</h2>
+                <p class="pub-hero-desc">Este documento aún no completó todas las firmas requeridas o su enlace de firma venció.</p>
+              </div>
+            </div>
+            <div class="pub-status-badge">En proceso</div>
+          `;
+        }
+
+        document.getElementById('pubPlantilla').textContent = d.plantilla_nombre || 'Documento AMMER';
+        document.getElementById('pubFecha').textContent = d.firmado_en ? formatearFechaAmigableAR(d.firmado_en) : 'Pendiente de firma';
+        document.getElementById('pubCodigo').textContent = d.codigo_verificacion || '-';
+        const exp = (d.expediente_id && String(d.expediente_id).trim() && String(d.expediente_id).trim() !== '-')
+          ? `Expediente ${d.expediente_id}`
+          : 'Gestión digital AMMER';
+        document.getElementById('pubReferencia').textContent = exp;
+
+        const listaEl = document.getElementById('pubListaFirmantes');
+        const firmantes = Array.isArray(d.firmantes) ? d.firmantes : [];
+        if (firmantes.length === 0) {
+          listaEl.innerHTML = '<div style="font-size:0.85rem;color:#64748b;">Sin firmantes registrados aún.</div>';
+        } else {
+          listaEl.innerHTML = firmantes.map((f) => {
+            const fechaF = f.firmado && f.firmado_en ? ` · ${formatearFechaAmigableAR(f.firmado_en)}` : '';
+            return `
+              <div class="signer-row">
+                <div class="signer-main">
+                  <span class="signer-role">${escHtml(f.etiqueta || 'Firmante')}</span>
+                  <span class="signer-name">${escHtml(f.nombre_enmascarado || '-')}</span>
+                  <span class="signer-dni">DNI ${escHtml(f.dni_enmascarado || '-')}</span>
+                </div>
+                <span class="signer-state ${f.firmado ? 'signer-state-ok' : 'signer-state-wait'}">
+                  ${f.firmado ? '✓ Firmado' : '⏳ Pendiente'}${escHtml(fechaF)}
+                </span>
+              </div>
+            `;
+          }).join('');
+        }
+
+        document.getElementById('pubSearchCard').style.display = 'none';
+        document.getElementById('pubCompactBar').style.display = 'flex';
+        wrap.style.display = 'flex';
+      }
+
+      function renderVistaTecnicaAdmin(d) {
         const wrap = document.getElementById('verifResultWrap');
         const banner = document.getElementById('verifEstadoBanner');
         const est = String(d.estado || '').toUpperCase();
@@ -320,17 +1151,67 @@
         wrap.style.display = 'flex';
       }
 
+      function renderResultado(d) {
+        renderVistaPublica(d);
+        if (state.adminUser && esRolAdmin(state.adminUser)) {
+          renderVistaTecnicaAdmin(d);
+        }
+      }
+
+      async function calcularSha256Archivo(file) {
+        const buf = await file.arrayBuffer();
+        const digest = await crypto.subtle.digest('SHA-256', buf);
+        return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+      }
+
+      // Eventos de búsqueda
+      document.getElementById('btnPubConsultar').addEventListener('click', () => {
+        consultar(document.getElementById('inpPubVerifId').value, '');
+      });
+      document.getElementById('inpPubVerifId').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          consultar(document.getElementById('inpPubVerifId').value, '');
+        }
+      });
+      document.getElementById('btnPubToggleOtraConsulta').addEventListener('click', () => {
+        const card = document.getElementById('pubSearchCard');
+        const visible = card.style.display !== 'none';
+        card.style.display = visible ? 'none' : 'block';
+        if (!visible) document.getElementById('inpPubVerifId').focus();
+      });
+
       document.getElementById('btnConsultarVerif').addEventListener('click', () => {
         consultar(document.getElementById('inpVerifId').value, document.getElementById('inpVerifHash').value);
       });
 
+      // Comprobación de PDF en Vista Pública (sin tecnicismos ni hashes visibles)
+      document.getElementById('inpPubLocalPdf').addEventListener('change', async (ev) => {
+        const file = ev.target.files && ev.target.files[0];
+        const out = document.getElementById('pubLocalMatchResult');
+        if (!file || !state.registro) return;
+        const hex = await calcularSha256Archivo(file);
+        const hFirm = String(state.registro.hash_sha256_firmado || '').toLowerCase();
+        const hOrig = String(state.registro.hash_sha256_original || '').toLowerCase();
+        out.style.display = 'block';
+        if (hFirm && hex === hFirm) {
+          out.className = 'banner banner-ok';
+          out.innerHTML = '<div><strong>✅ Archivo confirmado sin modificaciones</strong><div style="font-size:0.84rem;margin-top:3px;">El PDF seleccionado coincide exactamente con el documento válido firmado en AMMER.</div></div>';
+        } else if (hOrig && hex === hOrig) {
+          out.className = 'banner banner-warn';
+          out.innerHTML = '<div><strong>ℹ️ Documento previo a la firma</strong><div style="font-size:0.84rem;margin-top:3px;">El archivo corresponde a la versión inicial del documento, antes de estampar las firmas.</div></div>';
+        } else {
+          out.className = 'banner banner-err';
+          out.innerHTML = '<div><strong>❌ El archivo no coincide</strong><div style="font-size:0.84rem;margin-top:3px;">El PDF seleccionado es distinto al documento registrado o fue modificado posteriormente.</div></div>';
+        }
+      });
+
+      // Comprobación SHA-256 en Vista Técnica Admin
       document.getElementById('inpLocalPdfVerificar').addEventListener('change', async (ev) => {
         const file = ev.target.files && ev.target.files[0];
         const out = document.getElementById('vLocalMatchResult');
         if (!file || !state.registro) return;
-        const buf = await file.arrayBuffer();
-        const digest = await crypto.subtle.digest('SHA-256', buf);
-        const hex = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+        const hex = await calcularSha256Archivo(file);
         const hFirm = String(state.registro.hash_sha256_firmado || '').toLowerCase();
         const hOrig = String(state.registro.hash_sha256_original || '').toLowerCase();
         out.style.display = 'block';
@@ -346,13 +1227,71 @@
         }
       });
 
-      const idInit = params.get('id') || '';
-      const hInit = params.get('h') || '';
-      if (idInit) {
-        document.getElementById('inpVerifId').value = idInit;
-        document.getElementById('inpVerifHash').value = hInit;
-        consultar(idInit, hInit);
-      }
+      // Login Admin dentro de verificar.html
+      document.getElementById('formAdminTechLogin').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const errBox = document.getElementById('admLoginErr');
+        const btn = document.getElementById('btnAdmLoginSubmit');
+        const userVal = document.getElementById('admLoginUser').value.trim();
+        const passVal = document.getElementById('admLoginPass').value;
+        errBox.style.display = 'none';
+        btn.disabled = true;
+        btn.textContent = 'Verificando...';
+
+        try {
+          const resp = await fetch(`${API_BASE}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuario: userVal, password: passVal, clave: passVal }),
+          });
+          const data = await resp.json().catch(() => ({}));
+          if (!resp.ok || data.ok === false || !data.usuario) {
+            throw new Error(data.detail || data.message || 'Usuario o contraseña incorrectos.');
+          }
+          if (!esRolAdmin(data.usuario)) {
+            throw new Error('Acceso técnico exclusivo para usuarios con rol Administrador.');
+          }
+          if (data.token) {
+            try { sessionStorage.setItem('AMMER_VERIF_ADMIN_TOKEN', data.token); } catch (_) {}
+          }
+          state.adminToken = data.token || null;
+          state.adminUser = data.usuario;
+          state.loggedInHere = true;
+          document.getElementById('admLoginPass').value = '';
+          window.__cerrarModalAdmin();
+          window.__setVerifMode('admin');
+        } catch (errLogin) {
+          errBox.textContent = errLogin.message || 'No se pudo iniciar sesión.';
+          errBox.style.display = 'block';
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Ingresar';
+        }
+      });
+
+      // Inicialización
+      (async function init() {
+        const idInit = params.get('id') || '';
+        const hInit = params.get('h') || '';
+        const modoSol = String(params.get('modo') || '').trim().toLowerCase();
+
+        await detectarSesionAdmin_();
+
+        if (modoSol === 'tecnico') {
+          if (state.adminUser && esRolAdmin(state.adminUser)) {
+            state.viewMode = 'admin';
+          } else {
+            state.viewMode = 'public';
+            window.__abrirAccesoTecnicoAdmin();
+          }
+        }
+
+        actualizarUiModo_();
+
+        if (idInit) {
+          consultar(idInit, hInit);
+        }
+      })();
     })();
   </script>
 </body>

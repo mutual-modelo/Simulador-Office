@@ -1408,6 +1408,11 @@
         </div>
       `).join('');
 
+    const esAdminFirmas = (typeof window.tieneAccesoFirmasAmmer === 'function') ? window.tieneAccesoFirmasAmmer() : false;
+    const verifyTechBtn = esAdminFirmas
+      ? `<a href="${verifyUrl}&modo=tecnico" target="_blank" rel="noopener" style="${btnCls}border:1px solid #c7d2fe;background:#eef2ff;color:#3730a3;">🛡️ Validación Técnica (Admin)</a>`
+      : '';
+
     ov.innerHTML = `
       <div style="background:#ffffff;border-radius:16px;max-width:1080px;width:96vw;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(15,23,42,0.35);overflow:hidden;">
         <!-- HEADER -->
@@ -1431,7 +1436,8 @@
           ${tsrBtn}
           ${driveBtn}
           <button type="button" onclick="window.abrirAsistenteRenaperMiEjemplar(${renArgs})" style="${btnCls}border:1px solid #bae6fd;background:#f0f9ff;color:#0369a1;">🪪 Validar DNI (RENAPER)</button>
-          <a href="${verifyUrl}" target="_blank" rel="noopener" style="${btnCls}border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;">🔍 Validar Firma (Público)</a>
+          <a href="${verifyUrl}" target="_blank" rel="noopener" style="${btnCls}border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;">🔍 Validación Pública</a>
+          ${verifyTechBtn}
           ${recordarWaBtn}
           ${renovarBtn}
           ${revocarBtn}

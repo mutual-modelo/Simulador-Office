@@ -214,6 +214,13 @@
 
     <div id="errorBox" class="alert alert-err" style="display:none;"></div>
 
+    <div id="esperaTurnoBox" class="card" style="display:none;text-align:center;padding:1.5rem 1.1rem;">
+      <div style="font-size:2rem;margin-bottom:0.4rem;">⏳</div>
+      <div style="font-weight:800;font-size:1rem;color:#0f2744;margin-bottom:0.45rem;">Turno de Firma en Espera</div>
+      <div id="lblEsperaTurnoDesc" style="font-size:0.84rem;color:#475569;line-height:1.5;margin-bottom:1rem;"></div>
+      <button type="button" onclick="window.location.reload()" class="btn btn-secondary" style="width:auto;margin:0 auto;">🔄 Comprobar si ya se habilitó mi turno</button>
+    </div>
+
     <div id="confirmacionFirmadoBox" class="card" style="display:none;">
       <div id="alertEstadoFirmado" class="alert alert-ok" style="margin-bottom:0.85rem;">
         ✅ <strong>¡Documento firmado electrónicamente con éxito!</strong><br/>
@@ -242,6 +249,7 @@
     <div id="contenidoFirmaWrap" style="display:none;flex-direction:column;gap:0.9rem;">
       <section class="card">
         <h2>📄 1. Datos del Documento a Firmar</h2>
+        <div id="docPaqueteBanner" style="display:none;margin-bottom:0.65rem;padding:0.6rem 0.78rem;border-radius:8px;background:#eff6ff;border:1px solid #bfdbfe;font-size:0.79rem;font-weight:700;color:#1e3a8a;line-height:1.45;"></div>
         <div id="docProgresoMultifirma" style="display:none;margin-bottom:0.65rem;padding:0.55rem 0.75rem;border-radius:8px;background:#fffbeb;border:1px solid #fde68a;font-size:0.8rem;font-weight:700;color:#92400e;"></div>
         <div class="meta-grid">
           <div class="meta-item"><div class="meta-lbl">Documento</div><div class="meta-val" id="docTitulo">-</div></div>
@@ -629,6 +637,17 @@
           appState.pdfB64Actual = data.pdfBase64;
           appState.gpsObligatorio = Boolean((data.validaciones_requeridas || {}).gps_obligatorio);
 
+          if (data.bloqueado_por_orden) {
+            document.getElementById('estadoCargaBox').style.display = 'none';
+            const espBox = document.getElementById('esperaTurnoBox');
+            const espDesc = document.getElementById('lblEsperaTurnoDesc');
+            if (espDesc && data.aguardando_firmante) {
+              espDesc.innerHTML = `Este documento utiliza <strong>firma secuencial en orden estricto</strong> (tu turno es #${escHtml(data.orden_firma || 2)}).<br/>Primero debe completar su firma: <strong>${escHtml(data.aguardando_firmante.etiqueta || 'Firmante previo')} (${escHtml(data.aguardando_firmante.nombre_enmascarado || '-')})</strong>.<br/>Apenas finalice, este mismo enlace se habilitará automáticamente.`;
+            }
+            if (espBox) espBox.style.display = 'block';
+            return;
+          }
+
           if (data.estado === 'FIRMADO' || data.firmado_por_mi) {
             mostrarPantallaFirmado(data);
             return;
@@ -642,11 +661,21 @@
           document.getElementById('docExpira').textContent = data.expira_en ? new Date(data.expira_en).toLocaleString('es-AR') : '24 hs';
           document.getElementById('docHashOriginal').textContent = data.hash_sha256_original || '-';
 
+          if (data.es_paquete && Array.isArray(data.paquete_resumen) && data.paquete_resumen.length > 1) {
+            const paqEl = document.getElementById('docPaqueteBanner');
+            if (paqEl) {
+              const itemsTxt = data.paquete_resumen.map((d, i) => `${i + 1}. ${d.nombre} (${d.paginas || 1} pág.)`).join(' · ');
+              paqEl.style.display = 'block';
+              paqEl.innerHTML = `📦 <strong>Sobre de ${data.paquete_resumen.length} documentos unificados:</strong> ${escHtml(itemsTxt)}<br/><span style="font-weight:500;">Validás tu identidad y firmás UNA sola vez: tu firma se estampa automáticamente en todos.</span>`;
+            }
+          }
+
           if (data.grupo_progreso && data.grupo_progreso.requeridos > 1) {
             const progEl = document.getElementById('docProgresoMultifirma');
             if (progEl) {
               progEl.style.display = 'block';
-              progEl.textContent = `👥 Documento de múltiples firmas: ${data.grupo_progreso.completados} de ${data.grupo_progreso.requeridos} firma(s) completada(s) hasta ahora.`;
+              const seqTxt = data.grupo_progreso.orden_secuencial ? ' (Orden secuencial)' : '';
+              progEl.textContent = `👥 Documento de múltiples firmas${seqTxt}: ${data.grupo_progreso.completados} de ${data.grupo_progreso.requeridos} firma(s) completada(s) hasta ahora.`;
             }
           }
 

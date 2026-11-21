@@ -5197,7 +5197,7 @@
             <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:1.1rem;display:flex;flex-direction:column;gap:0.95rem;">
               <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0.85rem;">
                 <div>
-                  <label style="display:block;font-size:0.76rem;font-weight:800;color:#334155;margin-bottom:4px;">1. Seleccionar Plantilla PDF AMMER</label>
+                  <label style="display:block;font-size:0.76rem;font-weight:800;color:#334155;margin-bottom:4px;">1. Plantilla PDF principal (o armá un paquete abajo)</label>
                   <select id="selFirmaPlantilla" onchange="onPlantillaGenerarChange()" style="width:100%;padding:0.52rem 0.65rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.84rem;background:#ffffff;color:#0f172a;"></select>
                 </div>
                 <div>
@@ -5208,10 +5208,23 @@
                   </div>
                 </div>
                 <div>
-                  <label style="display:block;font-size:0.76rem;font-weight:800;color:#334155;margin-bottom:4px;">3. WhatsApp Principal (opcional si hay varios firmantes)</label>
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:4px;">
+                    <label style="font-size:0.76rem;font-weight:800;color:#334155;">3. WhatsApp Principal</label>
+                    <span id="badgeEstadoBotWaFirmas" style="font-size:0.68rem;font-weight:700;padding:1px 7px;border-radius:9999px;background:#f1f5f9;color:#475569;">Bot WA: verificando...</span>
+                  </div>
                   <input type="text" id="inpFirmaTelefonoWa" placeholder="Ej: 3434123456 (sin 0 ni 15)" style="width:100%;padding:0.52rem 0.65rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.84rem;"/>
+                  <label style="display:inline-flex;align-items:center;gap:5px;font-size:0.72rem;font-weight:700;color:#065f46;margin-top:4px;cursor:pointer;">
+                    <input type="checkbox" id="chkEnviarWaAutoFirma"/> 🤖 Enviar enlace automáticamente por Bot WhatsApp al generar
+                  </label>
                 </div>
               </div>
+
+              <!-- PAQUETE / SOBRE DE MÚLTIPLES DOCUMENTOS -->
+              <details style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.65rem 0.85rem;">
+                <summary style="cursor:pointer;font-size:0.8rem;font-weight:800;color:#0f2744;">📦 Armar Paquete / Sobre de Varios PDFs (1 sola validación + 1 firma estampada en todos)</summary>
+                <div style="font-size:0.72rem;color:#475569;margin:0.4rem 0 0.5rem;">Tildá 2 o más plantillas para enviarlas juntas en un único enlace. Los campos compartidos (DNI, Nombre, CBU, Monto, etc.) se completan una sola vez.</div>
+                <div id="firmaPaquetePlantillasContainer" style="display:flex;gap:0.45rem;flex-wrap:wrap;"></div>
+              </details>
 
               <div id="firmaValidacionesResumen" style="display:flex;gap:0.4rem;flex-wrap:wrap;"></div>
 
@@ -5240,7 +5253,12 @@
                     <div style="font-size:0.8rem;font-weight:800;color:#0f172a;">👥 Firmantes requeridos antes de completar el documento</div>
                     <div style="font-size:0.72rem;color:#64748b;">Si el documento lleva 2 o más firmas, cada persona recibe su propio link y el archivo recién se marca <strong>FIRMADO</strong> cuando firman todas.</div>
                   </div>
-                  <button type="button" onclick="agregarFirmanteGenerador()" style="padding:0.35rem 0.7rem;border-radius:7px;border:1px solid #0f2744;background:#ffffff;color:#0f2744;font-size:0.74rem;font-weight:700;cursor:pointer;">➕ Sumar Firmante</button>
+                  <div style="display:flex;gap:0.55rem;align-items:center;flex-wrap:wrap;">
+                    <label style="display:inline-flex;align-items:center;gap:5px;font-size:0.74rem;font-weight:700;color:#1e3a8a;background:#eff6ff;border:1px solid #bfdbfe;padding:0.32rem 0.65rem;border-radius:7px;cursor:pointer;">
+                      <input type="checkbox" id="chkOrdenSecuencialFirma"/> 🔢 Orden secuencial estricto (#1 → #2)
+                    </label>
+                    <button type="button" onclick="agregarFirmanteGenerador()" style="padding:0.35rem 0.7rem;border-radius:7px;border:1px solid #0f2744;background:#ffffff;color:#0f2744;font-size:0.74rem;font-weight:700;cursor:pointer;">➕ Sumar Firmante</button>
+                  </div>
                 </div>
                 <div id="firmaMultifirmantesContainer" style="display:flex;flex-direction:column;gap:0.5rem;"></div>
               </div>
@@ -5286,6 +5304,7 @@
           <!-- SUB-PANEL 2: BANDEJA DE FIRMAS Y TRAZABILIDAD -->
           <div id="panelFirmas_bandeja" style="display:none;">
             <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:1.1rem;">
+              <div id="firmaMetricasBar" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0.55rem;margin-bottom:0.85rem;"></div>
               <div style="display:flex;justify-content:space-between;align-items:center;gap:0.6rem;flex-wrap:wrap;margin-bottom:0.85rem;">
                 <input type="text" id="inpFiltroBandejaFirmas" oninput="renderBandejaFirmas()" placeholder="Filtrar por Nombre, DNI, Expediente, Documento o Estado..." style="flex:1;min-width:240px;padding:0.5rem 0.7rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;"/>
                 <button type="button" onclick="abrirModalCertificadoPades()" style="padding:0.5rem 0.85rem;border-radius:8px;border:1px solid #4338ca;background:#eef2ff;color:#3730a3;font-size:0.8rem;font-weight:700;cursor:pointer;">🔐 Certificado PAdES (.p12)</button>
@@ -24964,6 +24983,6 @@ ${cierreTxt}`;
   <script src="js/auditoria20.js?v=6"></script>
   <script src="js/fichasAsociados.js?v=6"></script>
   <script src="js/sidecreerWidget.js?v=10"></script>
-  <script src="js/firmasAmmer.js?v=8"></script>
+  <script src="js/firmasAmmer.js?v=9"></script>
 </body>
 </html>

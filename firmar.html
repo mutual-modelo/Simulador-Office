@@ -240,68 +240,272 @@
       color: #166534;
     }
 
+    .dni-orient-callout {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin: 0 0 0.75rem;
+      padding: 0.68rem 0.85rem;
+      border-radius: 12px;
+      border: 1.5px solid #93c5fd;
+      background: #eff6ff;
+      color: #1e3a8a;
+      font-size: 0.9rem;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .dni-orient-callout-ico {
+      font-size: 1.45rem;
+      flex-shrink: 0;
+    }
+
     .dni-cam-live-box {
       display: none;
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100dvh;
+      z-index: 9999;
+      background: #000000;
+      overflow: hidden;
       text-align: center;
-    }
-
-    .dni-rotate-banner {
-      display: none;
-      margin: 0.35rem auto 0.45rem;
-      padding: 0.48rem 0.75rem;
-      border-radius: 10px;
-      font-size: 0.84rem;
-      font-weight: 800;
-      line-height: 1.3;
-      max-width: 620px;
-      border: 1.5px solid #f59e0b;
-      background: #fffbeb;
-      color: #92400e;
-    }
-
-    .dni-rotate-banner.ok {
-      border-color: #86efac;
-      background: #f0fdf4;
-      color: #166534;
     }
 
     .dni-cam-frame {
       position: relative;
-      width: min(620px, 100%);
-      aspect-ratio: 16 / 10;
-      max-height: 55dvh;
-      margin: 0.3rem auto 0.65rem;
-      border-radius: 14px;
+      width: 100%;
+      height: 100%;
+      background: #000000;
       overflow: hidden;
-      border: 3px solid var(--navy);
-      background: #0f172a;
-      box-shadow: 0 6px 18px rgba(15, 39, 68, 0.18);
-    }
-
-    .dni-cam-frame.is-portrait {
-      width: min(380px, 92vw);
-      aspect-ratio: 4 / 3;
-      max-height: 48dvh;
     }
 
     .dni-cam-frame video {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
     }
 
-    .dni-cam-frame.is-portrait video {
-      object-fit: contain;
+    .dni-cam-top-hud {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: max(12px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 16px max(14px, env(safe-area-inset-left));
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.35) 68%, rgba(0, 0, 0, 0) 100%);
+    }
+
+    .dni-hud-btn {
+      background: rgba(15, 23, 42, 0.72);
+      color: #ffffff;
+      border: 1.5px solid rgba(255, 255, 255, 0.38);
+      border-radius: 999px;
+      padding: 0.44rem 0.85rem;
+      font-size: 0.84rem;
+      font-weight: 700;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      min-height: 40px;
+      white-space: nowrap;
+    }
+
+    .dni-hud-btn.is-active {
+      background: #facc15;
+      color: #0f172a;
+      border-color: #fef08a;
+    }
+
+    .dni-hud-title {
+      color: #ffffff;
+      font-size: 0.94rem;
+      font-weight: 800;
+      text-align: center;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+    }
+
+    .dni-rotate-banner {
+      display: none;
+      position: absolute;
+      top: calc(max(12px, env(safe-area-inset-top)) + 52px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 4;
+      width: min(92vw, 480px);
+      margin: 0;
+      padding: 0.42rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      line-height: 1.25;
+      pointer-events: none;
+      border: 1.5px solid #fde68a;
+      background: rgba(245, 158, 11, 0.92);
+      color: #1e293b;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    }
+
+    .dni-rotate-banner.ok {
+      border-color: #86efac;
+      background: rgba(22, 163, 74, 0.9);
+      color: #ffffff;
+    }
+
+    .dni-cam-stage {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 96px 20px 132px;
+      pointer-events: none;
     }
 
     .dni-cam-guide {
-      position: absolute;
-      inset: 8%;
-      border: 2.5px dashed rgba(255, 255, 255, 0.9);
-      border-radius: 10px;
+      position: relative;
+      width: min(88vw, 560px);
+      aspect-ratio: 1.586 / 1;
+      max-height: calc(100dvh - 240px);
+      border: 3px dotted rgba(255, 255, 255, 0.96);
+      border-radius: 16px;
       pointer-events: none;
-      box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.25);
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.56);
+    }
+
+    .dni-cam-guide-label {
+      position: absolute;
+      left: 50%;
+      bottom: -2.05rem;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      color: #ffffff;
+      font-size: 0.78rem;
+      font-weight: 700;
+      background: rgba(15, 23, 42, 0.72);
+      padding: 0.22rem 0.75rem;
+      border-radius: 999px;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+    }
+
+    .dni-flash-toast {
+      display: none;
+      position: absolute;
+      bottom: 124px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+      background: rgba(15, 23, 42, 0.9);
+      color: #f8fafc;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      max-width: 90vw;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    }
+
+    .dni-cam-bottom-hud {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 16px max(18px, env(safe-area-inset-bottom));
+      background: linear-gradient(0deg, rgba(0, 0, 0, 0.84) 0%, rgba(0, 0, 0, 0.35) 68%, rgba(0, 0, 0, 0) 100%);
+    }
+
+    .dni-shutter-btn-wrap {
+      background: transparent;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.32rem;
+      color: #ffffff;
+    }
+
+    .dni-shutter-ring {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 4px solid #ffffff;
+      background: rgba(255, 255, 255, 0.22);
+      padding: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55);
+      transition: transform 0.1s ease;
+    }
+
+    .dni-shutter-btn-wrap:active .dni-shutter-ring {
+      transform: scale(0.92);
+    }
+
+    .dni-shutter-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #ffffff;
+      display: block;
+    }
+
+    .dni-shutter-caption {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #ffffff;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+    }
+
+    @media (orientation: landscape) and (max-height: 540px) {
+      .dni-rotate-banner {
+        top: calc(max(8px, env(safe-area-inset-top)) + 44px);
+        font-size: 0.74rem;
+        padding: 0.28rem 0.7rem;
+      }
+
+      .dni-cam-stage {
+        padding: 74px 118px 28px 24px;
+      }
+
+      .dni-cam-guide {
+        width: auto;
+        height: min(63dvh, 330px);
+        max-width: calc(100vw - 154px);
+        max-height: calc(100dvh - 110px);
+        aspect-ratio: 1.586 / 1;
+      }
+
+      .dni-cam-bottom-hud {
+        top: 50%;
+        right: max(14px, env(safe-area-inset-right));
+        bottom: auto;
+        left: auto;
+        transform: translateY(-50%);
+        background: none;
+        padding: 0;
+      }
+
+      .dni-flash-toast {
+        bottom: 14px;
+      }
     }
 
     /* Consejos biométricos compactos */
@@ -740,6 +944,13 @@
         <h1 class="step-heading">🪪 Fotos de tu DNI</h1>
         <p class="step-lead" id="dniStepLead">Sacá una foto clara del frente y del dorso de tu DNI usando tu cámara.</p>
 
+        <div class="dni-orient-callout">
+          <span class="dni-orient-callout-ico" aria-hidden="true">📱↻</span>
+          <span>
+            <strong>Poné tu celular en horizontal (acostado)</strong> antes de sacar las fotos para encuadrar mejor el frente y el dorso de tu DNI con máximo detalle.
+          </span>
+        </div>
+
         <div id="dniGaleriaHabilitadaBanner" class="alert alert-warn" style="display:none;margin-bottom:0.65rem;">
           ⚠️ Luego de 3 intentos fallidos con la cámara o el validador, ya habilitamos el botón <strong>🖼️ Galería</strong> por si preferís elegir las fotos guardadas en tu dispositivo.
         </div>
@@ -775,27 +986,6 @@
                 <input type="file" id="inpDniDorsoGal" accept="image/*" style="display:none;"/>
               </label>
             </div>
-          </div>
-        </div>
-
-        <div id="dniCameraLiveBox" class="dni-cam-live-box">
-          <div id="lblDniCamTitulo" style="font-weight:800;font-size:1rem;color:var(--navy);">
-            Encuadrá el frente de tu DNI dentro del recuadro
-          </div>
-          <div id="dniRotateBanner" class="dni-rotate-banner">
-            📱↻ Girá tu celular en <strong>horizontal (acostado)</strong> para aprovechar toda la cámara y capturar tu DNI con mejor detalle.
-          </div>
-          <div class="dni-cam-frame" id="dniCamFrame">
-            <video id="videoDniCapture" autoplay playsinline muted></video>
-            <div class="dni-cam-guide" aria-hidden="true"></div>
-          </div>
-          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;max-width:620px;margin:0 auto;">
-            <button type="button" id="btnCapturarFotoDni" class="btn btn-success" style="flex:1;min-width:190px;font-size:1rem;">
-              📸 Sacar foto
-            </button>
-            <button type="button" id="btnCancelarCamaraDni" class="btn btn-secondary">
-              Volver
-            </button>
           </div>
         </div>
       </section>
@@ -969,6 +1159,44 @@
     </div>
   </div>
 
+  <!-- CÁMARA EN PANTALLA COMPLETA PARA DNI (ESTILO APP DE CÁMARA) -->
+  <div id="dniCameraLiveBox" class="dni-cam-live-box" role="dialog" aria-modal="true" aria-label="Cámara para fotografiar DNI">
+    <div class="dni-cam-frame" id="dniCamFrame">
+      <video id="videoDniCapture" autoplay playsinline muted></video>
+
+      <div class="dni-cam-top-hud">
+        <button type="button" id="btnCancelarCamaraDni" class="dni-hud-btn">
+          ✕ Volver
+        </button>
+        <div id="lblDniCamTitulo" class="dni-hud-title">
+          Frente del DNI
+        </div>
+        <button type="button" id="btnToggleFlashDni" class="dni-hud-btn" aria-pressed="false">
+          🔦 Flash
+        </button>
+      </div>
+
+      <div id="dniRotateBanner" class="dni-rotate-banner">
+        📱↻ Girá tu celular en <strong>horizontal</strong> para más detalle
+      </div>
+
+      <div class="dni-cam-stage">
+        <div class="dni-cam-guide" aria-hidden="true">
+          <span class="dni-cam-guide-label">Encuadrá todo el DNI dentro del recuadro</span>
+        </div>
+      </div>
+
+      <div id="dniFlashToast" class="dni-flash-toast"></div>
+
+      <div class="dni-cam-bottom-hud">
+        <button type="button" id="btnCapturarFotoDni" class="dni-shutter-btn-wrap" aria-label="Sacar foto">
+          <span class="dni-shutter-ring"><span class="dni-shutter-inner"></span></span>
+          <span class="dni-shutter-caption">Sacar foto</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
   <script>
@@ -1003,6 +1231,7 @@
         ekycStream: null,
         dniCamStream: null,
         dniCamTarget: '',
+        dniTorchOn: false,
         dniFallosHabilitarGaleria: 0,
         galeriaDniHabilitada: false,
         mediaRecorder: null,
@@ -1527,9 +1756,36 @@
       // ============================================================
       // CÁMARA EKYC + VIDEO GUIADO + AUDIO + DNI SIN FALSAS ALERTAS
       // ============================================================
+      let dniFlashToastTimer = null;
+      function mostrarToastFlashDni(texto) {
+        const el = document.getElementById('dniFlashToast');
+        if (!el) return;
+        if (dniFlashToastTimer) {
+          clearTimeout(dniFlashToastTimer);
+          dniFlashToastTimer = null;
+        }
+        if (!texto) {
+          el.style.display = 'none';
+          el.textContent = '';
+          return;
+        }
+        el.textContent = texto;
+        el.style.display = 'block';
+        dniFlashToastTimer = setTimeout(() => {
+          el.style.display = 'none';
+        }, 2800);
+      }
+
+      function actualizarUiFlashDni(encendido) {
+        const btn = document.getElementById('btnToggleFlashDni');
+        if (!btn) return;
+        btn.classList.toggle('is-active', !!encendido);
+        btn.setAttribute('aria-pressed', encendido ? 'true' : 'false');
+        btn.textContent = encendido ? '⚡ Flash ON' : '🔦 Flash';
+      }
+
       function actualizarOrientacionCamaraDni() {
         const vid = document.getElementById('videoDniCapture');
-        const frame = document.getElementById('dniCamFrame');
         const banner = document.getElementById('dniRotateBanner');
         if (!vid || !appState.dniCamStream) return;
         const vw = vid.videoWidth || 0;
@@ -1538,17 +1794,14 @@
         const esMovilVertical = (window.innerHeight > window.innerWidth) && ((navigator.maxTouchPoints || 0) > 0 || /android|iphone|ipad|ipod/i.test(navigator.userAgent));
         const faltaGirar = esVerticalStream || esMovilVertical;
 
-        if (frame) {
-          frame.classList.toggle('is-portrait', esVerticalStream);
-        }
         if (banner) {
           banner.style.display = 'block';
           if (faltaGirar) {
             banner.className = 'dni-rotate-banner';
-            banner.innerHTML = '📱↻ <strong>Girá tu celular en horizontal (acostado)</strong> para aprovechar toda la cámara y capturar tu DNI con mejor detalle.';
+            banner.innerHTML = '📱↻ Girá tu celular en <strong>horizontal</strong> para más detalle';
           } else {
             banner.className = 'dni-rotate-banner ok';
-            banner.innerHTML = '✅ <strong>Cámara en horizontal con máxima nitidez.</strong> Encuadrá el DNI dentro del recuadro y tocá "📸 Sacar foto".';
+            banner.innerHTML = '✅ En horizontal · Encuadrá el DNI y tocá el botón';
           }
         }
       }
@@ -1563,21 +1816,29 @@
         } catch (_e) {}
         if (appState.dniCamStream) {
           try {
+            const vTrack = appState.dniCamStream.getVideoTracks && appState.dniCamStream.getVideoTracks()[0];
+            if (appState.dniTorchOn && vTrack && typeof vTrack.applyConstraints === 'function') {
+              vTrack.applyConstraints({ advanced: [{ torch: false }] }).catch(() => {});
+            }
+          } catch (_e) {}
+          try {
             appState.dniCamStream.getTracks().forEach((t) => t.stop());
           } catch (_e) {}
           appState.dniCamStream = null;
         }
+        appState.dniTorchOn = false;
         appState.dniCamTarget = '';
+        actualizarUiFlashDni(false);
+        mostrarToastFlashDni('');
+        document.body.style.overflow = '';
         const vid = document.getElementById('videoDniCapture');
         if (vid) {
           vid.onloadedmetadata = null;
           vid.srcObject = null;
         }
-        const frame = document.getElementById('dniCamFrame');
         const banner = document.getElementById('dniRotateBanner');
         const box = document.getElementById('dniCameraLiveBox');
         const grid = document.getElementById('dniCardsGrid');
-        if (frame) frame.classList.remove('is-portrait');
         if (banner) banner.style.display = 'none';
         if (box) box.style.display = 'none';
         if (grid) grid.style.display = 'grid';
@@ -1789,21 +2050,44 @@
             }
             appState.dniCamStream = stream;
             appState.dniCamTarget = lado;
+            appState.dniTorchOn = false;
+            actualizarUiFlashDni(false);
+            mostrarToastFlashDni('');
+
+            const btnFlashDni = document.getElementById('btnToggleFlashDni');
+            const actualizarDisponibilidadFlash = () => {
+              if (!btnFlashDni || !vTrack) return;
+              try {
+                const caps = typeof vTrack.getCapabilities === 'function' ? vTrack.getCapabilities() : null;
+                if (caps && Object.prototype.hasOwnProperty.call(caps, 'torch')) {
+                  btnFlashDni.dataset.torchCap = caps.torch ? '1' : '0';
+                } else {
+                  btnFlashDni.dataset.torchCap = '';
+                }
+              } catch (_e) {
+                btnFlashDni.dataset.torchCap = '';
+              }
+            };
+
             const vid = document.getElementById('videoDniCapture');
             if (vid) {
-              vid.onloadedmetadata = () => actualizarOrientacionCamaraDni();
+              vid.onloadedmetadata = () => {
+                actualizarOrientacionCamaraDni();
+                actualizarDisponibilidadFlash();
+              };
               vid.srcObject = stream;
             }
+            setTimeout(actualizarDisponibilidadFlash, 350);
+
             const titulo = document.getElementById('lblDniCamTitulo');
             if (titulo) {
-              titulo.textContent = lado === 'frente'
-                ? 'Encuadrá el FRENTE de tu DNI dentro del recuadro'
-                : 'Encuadrá el DORSO de tu DNI dentro del recuadro';
+              titulo.textContent = lado === 'frente' ? 'Frente del DNI' : 'Dorso del DNI';
             }
             const grid = document.getElementById('dniCardsGrid');
             const box = document.getElementById('dniCameraLiveBox');
             if (grid) grid.style.display = 'none';
             if (box) box.style.display = 'block';
+            document.body.style.overflow = 'hidden';
             try {
               if (screen.orientation && typeof screen.orientation.lock === 'function') {
                 screen.orientation.lock('landscape').catch(() => {});
@@ -1822,6 +2106,7 @@
         const btnCamDorso = document.getElementById('btnAbrirCamaraDniDorso');
         const btnCaptDni = document.getElementById('btnCapturarFotoDni');
         const btnCancDni = document.getElementById('btnCancelarCamaraDni');
+        const btnFlashDni = document.getElementById('btnToggleFlashDni');
 
         if (btnCamFrente && !btnCamFrente.dataset.bound) {
           btnCamFrente.dataset.bound = '1';
@@ -1830,6 +2115,27 @@
         if (btnCamDorso && !btnCamDorso.dataset.bound) {
           btnCamDorso.dataset.bound = '1';
           btnCamDorso.addEventListener('click', () => abrirCamaraDni('dorso'));
+        }
+        if (btnFlashDni && !btnFlashDni.dataset.bound) {
+          btnFlashDni.dataset.bound = '1';
+          btnFlashDni.addEventListener('click', async () => {
+            if (!appState.dniCamStream) return;
+            const vTrack = appState.dniCamStream.getVideoTracks && appState.dniCamStream.getVideoTracks()[0];
+            if (!vTrack || typeof vTrack.applyConstraints !== 'function') {
+              mostrarToastFlashDni('Tu navegador no permite controlar el flash desde la web.');
+              return;
+            }
+            const nextState = !appState.dniTorchOn;
+            try {
+              await vTrack.applyConstraints({ advanced: [{ torch: nextState }] });
+              appState.dniTorchOn = nextState;
+              actualizarUiFlashDni(nextState);
+            } catch (_err) {
+              appState.dniTorchOn = false;
+              actualizarUiFlashDni(false);
+              mostrarToastFlashDni('Esta cámara o navegador no permite activar el flash.');
+            }
+          });
         }
         if (btnCaptDni && !btnCaptDni.dataset.bound) {
           btnCaptDni.dataset.bound = '1';

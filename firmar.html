@@ -646,6 +646,26 @@
       white-space: nowrap;
     }
 
+    .dni-focus-reticle {
+      display: none;
+      position: absolute;
+      width: 66px;
+      height: 66px;
+      margin-left: -33px;
+      margin-top: -33px;
+      border: 2px solid #facc15;
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+      z-index: 3;
+      pointer-events: none;
+      animation: dniFocusPulse 0.45s ease-out;
+    }
+
+    @keyframes dniFocusPulse {
+      0% { transform: scale(1.35); opacity: 0.4; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
     @media (orientation: portrait) {
       .dni-cam-live-box.hud-rot-90 .dni-cam-hud-shell,
       .dni-cam-live-box.hud-rot-n90 .dni-cam-hud-shell {
@@ -1640,6 +1660,7 @@
   <div id="dniCameraLiveBox" class="dni-cam-live-box" role="dialog" aria-modal="true" aria-label="Cámara para fotografiar DNI">
     <div class="dni-cam-frame" id="dniCamFrame">
       <video id="videoDniCapture" autoplay playsinline muted></video>
+      <div id="dniFocusReticle" class="dni-focus-reticle" aria-hidden="true"></div>
 
       <div class="dni-cam-hud-shell" id="dniCamHudShell">
         <div class="dni-cam-top-hud">
@@ -2399,6 +2420,8 @@
           vid.onloadedmetadata = null;
           vid.srcObject = null;
         }
+        const ret = document.getElementById('dniFocusReticle');
+        if (ret) ret.style.display = 'none';
         const box = document.getElementById('dniCameraLiveBox');
         const grid = document.getElementById('dniCardsGrid');
         if (box) {
@@ -2628,6 +2651,33 @@
             actualizarUiFlashDni(false);
             mostrarToastFlashDni('');
 
+            const activarAutofocoContinuo = async (puntoNorm) => {
+              if (!vTrack || typeof vTrack.applyConstraints !== 'function') return;
+              try {
+                const caps = typeof vTrack.getCapabilities === 'function' ? vTrack.getCapabilities() : {};
+                const adv = {};
+                const modes = Array.isArray(caps && caps.focusMode) ? caps.focusMode : [];
+                if (puntoNorm && caps && caps.pointsOfInterest) {
+                  adv.pointsOfInterest = [puntoNorm];
+                }
+                if (puntoNorm && modes.includes('single-shot')) {
+                  await vTrack.applyConstraints({ advanced: [{ ...adv, focusMode: 'single-shot' }] }).catch(() => {});
+                  setTimeout(() => {
+                    if (appState.dniCamStream && modes.includes('continuous')) {
+                      vTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+                    }
+                  }, 650);
+                  return;
+                }
+                if (modes.includes('continuous')) {
+                  adv.focusMode = 'continuous';
+                }
+                if (Object.keys(adv).length) {
+                  await vTrack.applyConstraints({ advanced: [adv] }).catch(() => {});
+                }
+              } catch (_e) {}
+            };
+
             const btnFlashDni = document.getElementById('btnToggleFlashDni');
             const actualizarDisponibilidadFlash = () => {
               if (!btnFlashDni || !vTrack) return;
@@ -2648,10 +2698,14 @@
               vid.onloadedmetadata = () => {
                 actualizarOrientacionCamaraDni();
                 actualizarDisponibilidadFlash();
+                activarAutofocoContinuo(null);
               };
               vid.srcObject = stream;
             }
-            setTimeout(actualizarDisponibilidadFlash, 350);
+            setTimeout(() => {
+              actualizarDisponibilidadFlash();
+              activarAutofocoContinuo(null);
+            }, 350);
 
             const titulo = document.getElementById('lblDniCamTitulo');
             if (titulo) {
@@ -2660,15 +2714,59 @@
             const grid = document.getElementById('dniCardsGrid');
             const box = document.getElementById('dniCameraLiveBox');
             if (grid) grid.style.display = 'none';
+            appState.dniHudRot = (window.innerHeight > window.innerWidth) ? '90' : '0';
             if (box) {
               box.classList.remove('hud-rot-90', 'hud-rot-n90');
               box.style.display = 'block';
             }
-            appState.dniHudRot = '0';
             document.body.style.overflow = 'hidden';
             window.addEventListener('resize', actualizarOrientacionCamaraDni);
             window.addEventListener('orientationchange', actualizarOrientacionCamaraDni);
             actualizarOrientacionCamaraDni();
+
+            const camFrame = document.getElementById('dniCamFrame');
+            const ret = document.getElementById('dniFocusReticle');
+            if (camFrame && !camFrame.dataset.focusBound) {
+              camFrame.dataset.focusBound = '1';
+              camFrame.addEventListener('click', (ev) => {
+                if (!appState.dniCamStream) return;
+                if (ev.target && ev.target.closest && ev.target.closest('button, .dni-cam-top-hud, .dni-cam-bottom-hud')) return;
+                const rect = camFrame.getBoundingClientRect();
+                const x = Math.max(0, Math.min(1, (ev.clientX - rect.left) / (rect.width || 1)));
+                const y = Math.max(0, Math.min(1, (ev.clientY - rect.top) / (rect.height || 1)));
+                if (ret) {
+                  ret.style.left = `${ev.clientX - rect.left}px`;
+                  ret.style.top = `${ev.clientY - rect.top}px`;
+                  ret.style.display = 'block';
+                  ret.style.animation = 'none';
+                  void ret.offsetWidth;
+                  ret.style.animation = 'dniFocusPulse 0.45s ease-out';
+                  clearTimeout(appState._dniFocusHideTmr);
+                  appState._dniFocusHideTmr = setTimeout(() => { ret.style.display = 'none'; }, 1100);
+                }
+                const trk = appState.dniCamStream.getVideoTracks && appState.dniCamStream.getVideoTracks()[0];
+                if (trk && typeof trk.applyConstraints === 'function') {
+                  try {
+                    const c = typeof trk.getCapabilities === 'function' ? trk.getCapabilities() : {};
+                    const modes = Array.isArray(c && c.focusMode) ? c.focusMode : [];
+                    const adv = {};
+                    if (c && c.pointsOfInterest) adv.pointsOfInterest = [{ x, y }];
+                    if (modes.includes('single-shot')) adv.focusMode = 'single-shot';
+                    else if (modes.includes('continuous')) adv.focusMode = 'continuous';
+                    if (Object.keys(adv).length) {
+                      trk.applyConstraints({ advanced: [adv] }).catch(() => {});
+                      if (adv.focusMode === 'single-shot' && modes.includes('continuous')) {
+                        setTimeout(() => {
+                          if (appState.dniCamStream) {
+                            trk.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+                          }
+                        }, 700);
+                      }
+                    }
+                  } catch (_e) {}
+                }
+              });
+            }
           } catch (err) {
             detenerCamaraDni();
             registrarFalloDniParaGaleria('No pudimos abrir la cámara (' + err.message + ').', true);
@@ -2711,7 +2809,7 @@
         if (btnRotarHud && !btnRotarHud.dataset.bound) {
           btnRotarHud.dataset.bound = '1';
           btnRotarHud.addEventListener('click', () => {
-            appState.dniHudRot = appState.dniHudRot === '0' ? '90' : (appState.dniHudRot === '90' ? '-90' : '0');
+            appState.dniHudRot = appState.dniHudRot === '90' ? '-90' : (appState.dniHudRot === '-90' ? '0' : '90');
             actualizarOrientacionCamaraDni();
           });
         }
@@ -2742,32 +2840,77 @@
             const vid = document.getElementById('videoDniCapture');
             const target = appState.dniCamTarget || 'frente';
             if (!vid || !appState.dniCamStream) return;
+            btnCaptDni.disabled = true;
             try {
-              const vw = vid.videoWidth || 1280;
-              const vh = vid.videoHeight || 720;
-              const scale = Math.min(1, 1920 / Math.max(vw, vh));
-              const sw = Math.max(1, Math.round(vw * scale));
-              const sh = Math.max(1, Math.round(vh * scale));
+              const vTrack = appState.dniCamStream.getVideoTracks && appState.dniCamStream.getVideoTracks()[0];
+              if (vTrack && typeof vTrack.applyConstraints === 'function') {
+                try {
+                  const caps = typeof vTrack.getCapabilities === 'function' ? vTrack.getCapabilities() : {};
+                  const modes = Array.isArray(caps && caps.focusMode) ? caps.focusMode : [];
+                  if (modes.includes('single-shot')) {
+                    await vTrack.applyConstraints({ advanced: [{ focusMode: 'single-shot' }] }).catch(() => {});
+                    await new Promise((r) => setTimeout(r, 260));
+                  }
+                } catch (_e) {}
+              }
+
+              let fuenteImg = vid;
+              let iw = vid.videoWidth || 1280;
+              let ih = vid.videoHeight || 720;
+              let imgUrlObj = '';
+
+              if (vTrack && typeof window.ImageCapture === 'function') {
+                try {
+                  const ic = new window.ImageCapture(vTrack);
+                  const blob = await Promise.race([
+                    ic.takePhoto(),
+                    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 1800)),
+                  ]);
+                  if (blob && blob.size > 0) {
+                    imgUrlObj = URL.createObjectURL(blob);
+                    const loadedImg = await new Promise((res, rej) => {
+                      const im = new Image();
+                      im.onload = () => res(im);
+                      im.onerror = rej;
+                      im.src = imgUrlObj;
+                    });
+                    if (loadedImg && loadedImg.naturalWidth > 0) {
+                      fuenteImg = loadedImg;
+                      iw = loadedImg.naturalWidth;
+                      ih = loadedImg.naturalHeight;
+                    }
+                  }
+                } catch (_icErr) {}
+              }
+
+              const scale = Math.min(1, 1920 / Math.max(iw, ih));
+              const sw = Math.max(1, Math.round(iw * scale));
+              const sh = Math.max(1, Math.round(ih * scale));
               const rotManual = (window.innerHeight > window.innerWidth) ? appState.dniHudRot : '0';
               const c = document.createElement('canvas');
               const ctx = c.getContext('2d');
-              if (rotManual === '90' || rotManual === '-90') {
+              if ((rotManual === '90' || rotManual === '-90') && sw < sh) {
                 c.width = sh;
                 c.height = sw;
                 ctx.translate(c.width / 2, c.height / 2);
-                ctx.rotate(rotManual === '90' ? Math.PI / 2 : -Math.PI / 2);
-                ctx.drawImage(vid, -sw / 2, -sh / 2, sw, sh);
+                ctx.rotate(rotManual === '90' ? -Math.PI / 2 : Math.PI / 2);
+                ctx.drawImage(fuenteImg, -sw / 2, -sh / 2, sw, sh);
               } else {
                 c.width = sw;
                 c.height = sh;
-                ctx.drawImage(vid, 0, 0, sw, sh);
+                ctx.drawImage(fuenteImg, 0, 0, sw, sh);
               }
-              const b64 = c.toDataURL('image/jpeg', 0.90);
+              if (imgUrlObj) {
+                try { URL.revokeObjectURL(imgUrlObj); } catch (_e) {}
+              }
+              const b64 = c.toDataURL('image/jpeg', 0.92);
               detenerCamaraDni();
               await guardarFotoDni(target, b64);
             } catch (err) {
               detenerCamaraDni();
               registrarFalloDniParaGaleria('No pudimos capturar la foto (' + err.message + ').', true);
+            } finally {
+              btnCaptDni.disabled = false;
             }
           });
         }

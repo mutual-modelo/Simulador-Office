@@ -2210,76 +2210,226 @@
       }
 
       // ============================================================
-      // PAD DE FIRMA MANUSCRITA
+      // PAD DE FIRMA MANUSCRITA (ALTA RESOLUCIÓN + CURVAS SUAVES)
       // ============================================================
       function setupSignaturePad() {
         const canvas = document.getElementById('canvasFirmaMovil');
         const hint = document.getElementById('sigHintText');
         const lblInfo = document.getElementById('lblTrazosInfo');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { desynchronized: true }) || canvas.getContext('2d');
+
+        // Almacenamos trazos normalizados [0..1] para redibujar sin pérdida en cualquier resize/DPI
+        const strokes = [];
+        let currentStroke = null;
+        let activePointerId = null;
+        let cssW = 340;
+        let cssH = 240;
+        let pixelRatio = 3;
+        const BASE_LINE_WIDTH = 2.8;
+
+        const baseCanvas = document.createElement('canvas');
+        const baseCtx = baseCanvas.getContext('2d');
+
+        function styleCtx(targetCtx, ratio) {
+          targetCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
+          targetCtx.strokeStyle = '#0f172a';
+          targetCtx.fillStyle = '#0f172a';
+          targetCtx.lineWidth = BASE_LINE_WIDTH;
+          targetCtx.lineCap = 'round';
+          targetCtx.lineJoin = 'round';
+          targetCtx.imageSmoothingEnabled = true;
+          targetCtx.imageSmoothingQuality = 'high';
+        }
+
+        function drawSmoothStroke(targetCtx, pts) {
+          if (!pts || !pts.length) return;
+          if (pts.length === 1) {
+            const p = pts[0];
+            targetCtx.beginPath();
+            targetCtx.arc(p.x * cssW, p.y * cssH, BASE_LINE_WIDTH * 0.55, 0, Math.PI * 2);
+            targetCtx.fill();
+            return;
+          }
+          const toPx = (p) => ({ x: p.x * cssW, y: p.y * cssH });
+          const p0 = toPx(pts[0]);
+          const p1 = toPx(pts[1]);
+          targetCtx.beginPath();
+          targetCtx.moveTo(p0.x, p0.y);
+          if (pts.length === 2) {
+            targetCtx.lineTo(p1.x, p1.y);
+            targetCtx.stroke();
+            return;
+          }
+          let mid0 = { x: (p0.x + p1.x) * 0.5, y: (p0.y + p1.y) * 0.5 };
+          targetCtx.lineTo(mid0.x, mid0.y);
+          for (let i = 1; i < pts.length - 1; i++) {
+            const ctrl = toPx(pts[i]);
+            const next = toPx(pts[i + 1]);
+            const mid = { x: (ctrl.x + next.x) * 0.5, y: (ctrl.y + next.y) * 0.5 };
+            targetCtx.quadraticCurveTo(ctrl.x, ctrl.y, mid.x, mid.y);
+          }
+          const last = toPx(pts[pts.length - 1]);
+          targetCtx.lineTo(last.x, last.y);
+          targetCtx.stroke();
+        }
+
+        function rebuildBaseAndRender() {
+          baseCtx.save();
+          baseCtx.setTransform(1, 0, 0, 1, 0, 0);
+          baseCtx.clearRect(0, 0, baseCanvas.width, baseCanvas.height);
+          baseCtx.restore();
+          styleCtx(baseCtx, pixelRatio);
+          for (const st of strokes) {
+            drawSmoothStroke(baseCtx, st);
+          }
+          renderFrame();
+        }
+
+        function renderFrame() {
+          ctx.save();
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(baseCanvas, 0, 0);
+          ctx.restore();
+          if (currentStroke && currentStroke.length) {
+            styleCtx(ctx, pixelRatio);
+            drawSmoothStroke(ctx, currentStroke);
+          }
+        }
 
         function resizeCanvas() {
           const rect = canvas.getBoundingClientRect();
           if (!rect.width || !rect.height) return;
-          const prevData = appState.hasInk ? canvas.toDataURL() : null;
-          const ratio = Math.max(window.devicePixelRatio || 1, 1);
-          canvas.width = Math.max(300, Math.floor(rect.width * ratio));
-          canvas.height = Math.max(200, Math.floor(rect.height * ratio));
-          ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-          ctx.strokeStyle = '#0f172a';
-          ctx.lineWidth = 3.5;
-          ctx.lineCap = 'round';
-          ctx.lineJoin = 'round';
-          if (prevData) {
-            const img = new Image();
-            img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
-            img.src = prevData;
-          }
+          cssW = rect.width;
+          cssH = rect.height;
+          // Mínimo 3x supersampling (~350-450+ DPI en PDF) con tope seguro de memoria
+          const maxScaleByWidth = Math.max(2, 2400 / cssW);
+          pixelRatio = Math.min(Math.max(window.devicePixelRatio || 1, 3), 4, maxScaleByWidth);
+
+          const targetW = Math.max(900, Math.round(cssW * pixelRatio));
+          const targetH = Math.max(540, Math.round(cssH * pixelRatio));
+          canvas.width = targetW;
+          canvas.height = targetH;
+          baseCanvas.width = targetW;
+          baseCanvas.height = targetH;
+          styleCtx(ctx, pixelRatio);
+          styleCtx(baseCtx, pixelRatio);
+          rebuildBaseAndRender();
         }
         window.__resizeFirmaCanvas = resizeCanvas;
         window.addEventListener('resize', resizeCanvas);
 
-        function getPt(ev) {
-          const r = canvas.getBoundingClientRect();
-          const src = ev.touches ? ev.touches[0] : ev;
-          return { x: src.clientX - r.left, y: src.clientY - r.top };
+        function eventToNormPt(ev, rect) {
+          const src = ev.touches && ev.touches[0] ? ev.touches[0] : ev;
+          const xPx = Math.min(Math.max(src.clientX - rect.left, 0), rect.width);
+          const yPx = Math.min(Math.max(src.clientY - rect.top, 0), rect.height);
+          return {
+            x: rect.width > 0 ? xPx / rect.width : 0,
+            y: rect.height > 0 ? yPx / rect.height : 0,
+          };
+        }
+
+        function appendSample(pt) {
+          if (!currentStroke) return false;
+          if (currentStroke.length > 0) {
+            const prev = currentStroke[currentStroke.length - 1];
+            const dx = (pt.x - prev.x) * cssW;
+            const dy = (pt.y - prev.y) * cssH;
+            // Filtrar micro-vibraciones menores a 0.7px preservando curvas finas
+            if ((dx * dx + dy * dy) < 0.49) return false;
+          }
+          currentStroke.push(pt);
+          appState.hasInk = true;
+          appState.puntosTotales += 1;
+          return true;
         }
 
         function onDown(ev) {
+          if (ev.button !== undefined && ev.button !== 0 && ev.pointerType === 'mouse') return;
           ev.preventDefault();
+          const rect = canvas.getBoundingClientRect();
+          if (!rect.width || !rect.height) return;
+          cssW = rect.width;
+          cssH = rect.height;
+          if (ev.pointerId !== undefined && canvas.setPointerCapture) {
+            activePointerId = ev.pointerId;
+            try { canvas.setPointerCapture(ev.pointerId); } catch (_) {}
+          }
           appState.drawing = true;
           if (!appState.startTime) appState.startTime = Date.now();
           appState.trazos += 1;
-          const p = getPt(ev);
-          ctx.beginPath();
-          ctx.moveTo(p.x, p.y);
+          currentStroke = [eventToNormPt(ev, rect)];
+          appState.hasInk = true;
+          appState.puntosTotales += 1;
           if (hint) hint.style.display = 'none';
+          if (lblInfo) lblInfo.textContent = '✓ Firma dibujada correctamente';
+          renderFrame();
         }
 
         function onMove(ev) {
-          if (!appState.drawing) return;
+          if (!appState.drawing || !currentStroke) return;
+          if (activePointerId !== null && ev.pointerId !== undefined && ev.pointerId !== activePointerId) return;
           ev.preventDefault();
-          const p = getPt(ev);
-          ctx.lineTo(p.x, p.y);
-          ctx.stroke();
-          appState.hasInk = true;
-          appState.puntosTotales += 1;
-          if (lblInfo) lblInfo.textContent = '✓ Firma dibujada correctamente';
+          const rect = canvas.getBoundingClientRect();
+          if (!rect.width || !rect.height) return;
+          cssW = rect.width;
+          cssH = rect.height;
+          const coalesced = (typeof ev.getCoalescedEvents === 'function') ? ev.getCoalescedEvents() : [];
+          const samples = coalesced && coalesced.length ? coalesced : [ev];
+          let added = false;
+          for (const sample of samples) {
+            if (appendSample(eventToNormPt(sample, rect))) added = true;
+          }
+          if (added) {
+            if (lblInfo) lblInfo.textContent = '✓ Firma dibujada correctamente';
+            renderFrame();
+          }
         }
 
-        function onUp() {
+        function onUp(ev) {
+          if (!appState.drawing) return;
+          if (activePointerId !== null && ev && ev.pointerId !== undefined && ev.pointerId !== activePointerId) return;
           appState.drawing = false;
+          if (ev && ev.pointerId !== undefined && canvas.releasePointerCapture) {
+            try { canvas.releasePointerCapture(ev.pointerId); } catch (_) {}
+          }
+          activePointerId = null;
+          if (currentStroke && currentStroke.length) {
+            strokes.push(currentStroke);
+            styleCtx(baseCtx, pixelRatio);
+            drawSmoothStroke(baseCtx, currentStroke);
+            currentStroke = null;
+            renderFrame();
+          }
         }
 
-        canvas.addEventListener('mousedown', onDown);
-        canvas.addEventListener('mousemove', onMove);
-        window.addEventListener('mouseup', onUp);
-        canvas.addEventListener('touchstart', onDown, { passive: false });
-        canvas.addEventListener('touchmove', onMove, { passive: false });
-        window.addEventListener('touchend', onUp);
+        if (window.PointerEvent) {
+          canvas.addEventListener('pointerdown', onDown, { passive: false });
+          canvas.addEventListener('pointermove', onMove, { passive: false });
+          canvas.addEventListener('pointerup', onUp);
+          canvas.addEventListener('pointercancel', onUp);
+        } else {
+          canvas.addEventListener('mousedown', onDown);
+          canvas.addEventListener('mousemove', onMove);
+          window.addEventListener('mouseup', onUp);
+          canvas.addEventListener('touchstart', onDown, { passive: false });
+          canvas.addEventListener('touchmove', onMove, { passive: false });
+          window.addEventListener('touchend', onUp);
+        }
 
         document.getElementById('btnLimpiarFirma').addEventListener('click', () => {
+          strokes.length = 0;
+          currentStroke = null;
+          appState.drawing = false;
+          activePointerId = null;
+          ctx.save();
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
           ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.restore();
+          baseCtx.save();
+          baseCtx.setTransform(1, 0, 0, 1, 0, 0);
+          baseCtx.clearRect(0, 0, baseCanvas.width, baseCanvas.height);
+          baseCtx.restore();
           appState.hasInk = false;
           appState.puntosTotales = 0;
           appState.trazos = 0;

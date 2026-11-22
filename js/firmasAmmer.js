@@ -2930,56 +2930,176 @@
     const canvas = document.getElementById('canvasFirmaPruebaPresencial');
     if (!canvas || canvas.dataset.boundDraw) return;
     canvas.dataset.boundDraw = '1';
+
+    const CSS_W = 320;
+    const CSS_H = 110;
+    const DPR = 3;
+    canvas.style.width = CSS_W + 'px';
+    canvas.style.height = CSS_H + 'px';
+    canvas.style.maxWidth = '100%';
+    canvas.width = CSS_W * DPR;
+    canvas.height = CSS_H * DPR;
+
     const ctx = canvas.getContext('2d');
-    ctx.strokeStyle = '#0f172a';
-    ctx.lineWidth = 2.4;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+    const baseCanvas = document.createElement('canvas');
+    baseCanvas.width = canvas.width;
+    baseCanvas.height = canvas.height;
+    const baseCtx = baseCanvas.getContext('2d');
+
+    const strokes = [];
+    let currentStroke = null;
+    let activePointerId = null;
+    const LINE_W = 2.2;
+
+    function styleCtx(targetCtx) {
+      targetCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      targetCtx.strokeStyle = '#0f172a';
+      targetCtx.fillStyle = '#0f172a';
+      targetCtx.lineWidth = LINE_W;
+      targetCtx.lineCap = 'round';
+      targetCtx.lineJoin = 'round';
+      targetCtx.imageSmoothingEnabled = true;
+      targetCtx.imageSmoothingQuality = 'high';
+    }
+
+    function drawSmoothStroke(targetCtx, pts) {
+      if (!pts || !pts.length) return;
+      if (pts.length === 1) {
+        targetCtx.beginPath();
+        targetCtx.arc(pts[0].x, pts[0].y, LINE_W * 0.55, 0, Math.PI * 2);
+        targetCtx.fill();
+        return;
+      }
+      targetCtx.beginPath();
+      targetCtx.moveTo(pts[0].x, pts[0].y);
+      if (pts.length === 2) {
+        targetCtx.lineTo(pts[1].x, pts[1].y);
+        targetCtx.stroke();
+        return;
+      }
+      const mid0 = { x: (pts[0].x + pts[1].x) * 0.5, y: (pts[0].y + pts[1].y) * 0.5 };
+      targetCtx.lineTo(mid0.x, mid0.y);
+      for (let i = 1; i < pts.length - 1; i++) {
+        const mid = { x: (pts[i].x + pts[i + 1].x) * 0.5, y: (pts[i].y + pts[i + 1].y) * 0.5 };
+        targetCtx.quadraticCurveTo(pts[i].x, pts[i].y, mid.x, mid.y);
+      }
+      const last = pts[pts.length - 1];
+      targetCtx.lineTo(last.x, last.y);
+      targetCtx.stroke();
+    }
+
+    function renderFrame() {
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(baseCanvas, 0, 0);
+      ctx.restore();
+      if (currentStroke && currentStroke.length) {
+        styleCtx(ctx);
+        drawSmoothStroke(ctx, currentStroke);
+      }
+    }
+
+    canvas.__resetSignature = () => {
+      strokes.length = 0;
+      currentStroke = null;
+      activePointerId = null;
+      state.canvasFirmaPrueba.drawing = false;
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+      baseCtx.save();
+      baseCtx.setTransform(1, 0, 0, 1, 0, 0);
+      baseCtx.clearRect(0, 0, baseCanvas.width, baseCanvas.height);
+      baseCtx.restore();
+    };
 
     function getPos(ev) {
       const r = canvas.getBoundingClientRect();
-      const clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
-      const clientY = ev.touches ? ev.touches[0].clientY : ev.clientY;
+      const src = ev.touches && ev.touches[0] ? ev.touches[0] : ev;
       return {
-        x: ((clientX - r.left) / r.width) * canvas.width,
-        y: ((clientY - r.top) / r.height) * canvas.height,
+        x: ((src.clientX - r.left) / (r.width || CSS_W)) * CSS_W,
+        y: ((src.clientY - r.top) / (r.height || CSS_H)) * CSS_H,
       };
     }
 
     function start(ev) {
+      if (ev.button !== undefined && ev.button !== 0 && ev.pointerType === 'mouse') return;
       ev.preventDefault();
+      if (ev.pointerId !== undefined && canvas.setPointerCapture) {
+        activePointerId = ev.pointerId;
+        try { canvas.setPointerCapture(ev.pointerId); } catch (_) {}
+      }
       state.canvasFirmaPrueba.drawing = true;
-      const p = getPos(ev);
-      ctx.beginPath();
-      ctx.moveTo(p.x, p.y);
+      currentStroke = [getPos(ev)];
+      state.canvasFirmaPrueba.hasInk = true;
+      state.canvasFirmaPrueba.points++;
+      renderFrame();
     }
 
     function move(ev) {
-      if (!state.canvasFirmaPrueba.drawing) return;
+      if (!state.canvasFirmaPrueba.drawing || !currentStroke) return;
+      if (activePointerId !== null && ev.pointerId !== undefined && ev.pointerId !== activePointerId) return;
       ev.preventDefault();
-      const p = getPos(ev);
-      ctx.lineTo(p.x, p.y);
-      ctx.stroke();
-      state.canvasFirmaPrueba.hasInk = true;
-      state.canvasFirmaPrueba.points++;
+      const coalesced = (typeof ev.getCoalescedEvents === 'function') ? ev.getCoalescedEvents() : [];
+      const samples = coalesced && coalesced.length ? coalesced : [ev];
+      let added = false;
+      for (const s of samples) {
+        const p = getPos(s);
+        const prev = currentStroke[currentStroke.length - 1];
+        const dx = p.x - prev.x;
+        const dy = p.y - prev.y;
+        if ((dx * dx + dy * dy) >= 0.49) {
+          currentStroke.push(p);
+          state.canvasFirmaPrueba.hasInk = true;
+          state.canvasFirmaPrueba.points++;
+          added = true;
+        }
+      }
+      if (added) renderFrame();
     }
 
-    function stop() {
+    function stop(ev) {
+      if (!state.canvasFirmaPrueba.drawing) return;
+      if (activePointerId !== null && ev && ev.pointerId !== undefined && ev.pointerId !== activePointerId) return;
       state.canvasFirmaPrueba.drawing = false;
+      if (ev && ev.pointerId !== undefined && canvas.releasePointerCapture) {
+        try { canvas.releasePointerCapture(ev.pointerId); } catch (_) {}
+      }
+      activePointerId = null;
+      if (currentStroke && currentStroke.length) {
+        strokes.push(currentStroke);
+        styleCtx(baseCtx);
+        drawSmoothStroke(baseCtx, currentStroke);
+        currentStroke = null;
+        renderFrame();
+      }
     }
 
-    canvas.addEventListener('mousedown', start);
-    canvas.addEventListener('mousemove', move);
-    window.addEventListener('mouseup', stop);
-    canvas.addEventListener('touchstart', start, { passive: false });
-    canvas.addEventListener('touchmove', move, { passive: false });
-    window.addEventListener('touchend', stop);
+    if (window.PointerEvent) {
+      canvas.addEventListener('pointerdown', start, { passive: false });
+      canvas.addEventListener('pointermove', move, { passive: false });
+      canvas.addEventListener('pointerup', stop);
+      canvas.addEventListener('pointercancel', stop);
+    } else {
+      canvas.addEventListener('mousedown', start);
+      canvas.addEventListener('mousemove', move);
+      window.addEventListener('mouseup', stop);
+      canvas.addEventListener('touchstart', start, { passive: false });
+      canvas.addEventListener('touchmove', move, { passive: false });
+      window.addEventListener('touchend', stop);
+    }
   }
 
   function limpiarCanvasFirmaPrueba() {
     const canvas = document.getElementById('canvasFirmaPruebaPresencial');
     if (!canvas) return;
-    canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+    if (typeof canvas.__resetSignature === 'function') {
+      canvas.__resetSignature();
+    } else {
+      canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+    }
     state.canvasFirmaPrueba.hasInk = false;
     state.canvasFirmaPrueba.points = 0;
   }

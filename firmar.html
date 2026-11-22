@@ -587,6 +587,26 @@
       max-width: 90%;
     }
 
+    .dni-nativa-pill {
+      position: absolute;
+      left: max(14px, env(safe-area-inset-left));
+      bottom: max(16px, env(safe-area-inset-bottom));
+      z-index: 5;
+      background: rgba(15, 23, 42, 0.62);
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 999px;
+      padding: 0.36rem 0.72rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      white-space: nowrap;
+    }
+
     .dni-cam-bottom-hud {
       position: absolute;
       left: 0;
@@ -1692,10 +1712,15 @@
 
         <div id="dniFlashToast" class="dni-flash-toast"></div>
 
+        <label id="lblDniCamNativa" class="dni-nativa-pill" title="Abrir la cámara nativa del teléfono para máxima nitidez">
+          <span>📷 Cámara del cel</span>
+          <input type="file" id="inpDniCamNativa" accept="image/*" capture="environment" style="display:none;"/>
+        </label>
+
         <div class="dni-cam-bottom-hud">
           <button type="button" id="btnCapturarFotoDni" class="dni-shutter-btn-wrap" aria-label="Sacar foto">
             <span class="dni-shutter-ring"><span class="dni-shutter-inner"></span></span>
-            <span class="dni-shutter-caption">Sacar foto</span>
+            <span class="dni-shutter-caption" id="txtShutterDniCaption">Sacar foto</span>
           </button>
         </div>
       </div>
@@ -2458,7 +2483,7 @@
         detenerCamaraDni();
       }
 
-      function redimensionarArchivoImagen(file, maxLado) {
+      function redimensionarArchivoImagen(file, maxLado, calidad) {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => {
@@ -2469,7 +2494,7 @@
               c.width = Math.max(1, Math.round(img.width * scale));
               c.height = Math.max(1, Math.round(img.height * scale));
               c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-              resolve(c.toDataURL('image/jpeg', 0.84));
+              resolve(c.toDataURL('image/jpeg', calidad || 0.88));
             };
             img.onerror = () => reject(new Error('Imagen no legible'));
             img.src = reader.result;
@@ -2613,31 +2638,32 @@
           }
           try {
             detenerCamaraEkyc();
+            const esPortraitWin = window.innerHeight > window.innerWidth;
             const abrirStreamTrasero = async (devId) => {
               const baseVideo = devId
                 ? { deviceId: { exact: devId } }
                 : { facingMode: { ideal: 'environment' } };
+              const prefW = esPortraitWin ? 1440 : 1920;
+              const prefH = esPortraitWin ? 1920 : 1440;
               try {
                 return await navigator.mediaDevices.getUserMedia({
                   video: {
                     ...baseVideo,
-                    width: { min: 1280, ideal: 3840 },
-                    height: { min: 720, ideal: 2160 },
+                    width: { ideal: prefW },
+                    height: { ideal: prefH },
+                    resizeMode: 'none',
                   },
                   audio: false,
                 });
-              } catch (e1) {
-                if (e1 && (e1.name === 'OverconstrainedError' || e1.name === 'ConstraintNotSatisfiedError')) {
-                  try {
-                    return await navigator.mediaDevices.getUserMedia({
-                      video: { ...baseVideo, width: { ideal: 1920 }, height: { ideal: 1080 } },
-                      audio: false,
-                    });
-                  } catch (_e2) {
-                    return await navigator.mediaDevices.getUserMedia({ video: baseVideo, audio: false });
-                  }
+              } catch (_e1) {
+                try {
+                  return await navigator.mediaDevices.getUserMedia({
+                    video: { ...baseVideo, width: { ideal: 1920 }, height: { ideal: 1080 } },
+                    audio: false,
+                  });
+                } catch (_e2) {
+                  return await navigator.mediaDevices.getUserMedia({ video: baseVideo, audio: false });
                 }
-                throw e1;
               }
             };
 
@@ -2656,15 +2682,19 @@
               return;
             }
 
-            // En celulares multi-lente (Android/iPhone), evitar lentes auxiliares sin autofoco (macro / ultra-wide 0.5x)
+            // En celulares multi-lente (Samsung S20 FE / Android / iPhone), preferir siempre la lente trasera principal (camera2 0)
             try {
               const caps0 = (vTrack && typeof vTrack.getCapabilities === 'function') ? (vTrack.getCapabilities() || {}) : {};
               const settings0 = (vTrack && typeof vTrack.getSettings === 'function') ? (vTrack.getSettings() || {}) : {};
               const modos0 = Array.isArray(caps0.focusMode) ? caps0.focusMode : [];
               const maxW0 = Number((caps0.width && caps0.width.max) || 0);
-              const pareceAuxiliar = /ultra[\s_-]?wide|macro|telephoto|depth|0\.5x|camera2 [1-9]/i.test(trackLbl)
+              const yaEsPrincipal = /camera2 0\b|back triple camera|back dual camera|back camera\b/i.test(trackLbl)
+                && !/ultra|wide|macro|tele/i.test(trackLbl);
+              const pareceAuxiliar = !yaEsPrincipal && (
+                /ultra[\s_-]?wide|macro|telephoto|depth|0\.5x|camera2 [1-9]/i.test(trackLbl)
                 || (modos0.length === 0)
-                || (maxW0 > 0 && maxW0 < 1920);
+                || (maxW0 > 0 && maxW0 < 1440)
+              );
 
               if (pareceAuxiliar && typeof navigator.mediaDevices.enumerateDevices === 'function') {
                 const devs = await navigator.mediaDevices.enumerateDevices();
@@ -2673,7 +2703,7 @@
                   const l = String(d.label || '').toLowerCase();
                   if (!l || d.deviceId === settings0.deviceId) return false;
                   if (/front|user|ultra[\s_-]?wide|macro|telephoto|depth|obs|virtual/i.test(l)) return false;
-                  return /back.*camera|triple|dual|main|camera2 0|facing back|environment/i.test(l);
+                  return /camera2 0\b|back.*camera|triple|dual|main|facing back|environment/i.test(l);
                 });
                 if (candidata && candidata.deviceId) {
                   try {
@@ -2683,6 +2713,19 @@
                     vTrack = stream.getVideoTracks && stream.getVideoTracks()[0];
                     trackLbl = String((vTrack && vTrack.label) || '').toLowerCase();
                   } catch (_eSwitch) {}
+                }
+              }
+
+              // Si la pista arrancó en baja resolución (ej. 640x480), forzar máxima resolución disponible del sensor
+              if (vTrack && typeof vTrack.applyConstraints === 'function') {
+                const cNow = (typeof vTrack.getCapabilities === 'function' ? vTrack.getCapabilities() : {}) || {};
+                const sNow = (typeof vTrack.getSettings === 'function' ? vTrack.getSettings() : {}) || {};
+                const maxCapW = Number((cNow.width && cNow.width.max) || 0);
+                const maxCapH = Number((cNow.height && cNow.height.max) || 0);
+                if ((Number(sNow.width || 0) < 1000 && Number(sNow.height || 0) < 1000) && maxCapW >= 1280) {
+                  const targetW = Math.min(2560, maxCapW);
+                  const targetH = Math.min(2560, maxCapH || 1920);
+                  await vTrack.applyConstraints({ width: { ideal: targetW }, height: { ideal: targetH } }).catch(() => {});
                 }
               }
             } catch (_eEnum) {}
@@ -2775,7 +2818,7 @@
               camFrame.dataset.focusBound = '1';
               camFrame.addEventListener('click', (ev) => {
                 if (!appState.dniCamStream) return;
-                if (ev.target && ev.target.closest && ev.target.closest('button, .dni-cam-top-hud, .dni-cam-bottom-hud')) return;
+                if (ev.target && ev.target.closest && ev.target.closest('button, label, .dni-cam-top-hud, .dni-cam-bottom-hud')) return;
                 const rect = camFrame.getBoundingClientRect();
                 const x = Math.max(0, Math.min(1, (ev.clientX - rect.left) / (rect.width || 1)));
                 const y = Math.max(0, Math.min(1, (ev.clientY - rect.top) / (rect.height || 1)));
@@ -2883,6 +2926,7 @@
           btnCaptDni.dataset.bound = '1';
           btnCaptDni.addEventListener('click', async () => {
             const vid = document.getElementById('videoDniCapture');
+            const capLbl = document.getElementById('txtShutterDniCaption');
             const target = appState.dniCamTarget || 'frente';
             if (!vid || !appState.dniCamStream) return;
             btnCaptDni.disabled = true;
@@ -2891,15 +2935,18 @@
               if (vTrack && typeof vTrack.applyConstraints === 'function') {
                 try {
                   const caps = typeof vTrack.getCapabilities === 'function' ? vTrack.getCapabilities() : {};
-                  const settings = typeof vTrack.getSettings === 'function' ? vTrack.getSettings() : {};
                   const modes = Array.isArray(caps && caps.focusMode) ? caps.focusMode : [];
-                  if (settings.focusMode !== 'continuous' && modes.includes('single-shot')) {
-                    await vTrack.applyConstraints({ advanced: [{ focusMode: 'single-shot' }] }).catch(() => {});
-                    await new Promise((r) => setTimeout(r, 550));
+                  if (modes.includes('single-shot')) {
+                    if (capLbl) capLbl.textContent = 'Enfocando...';
+                    const advAf = { focusMode: 'single-shot' };
+                    if (caps && caps.pointsOfInterest) advAf.pointsOfInterest = [{ x: 0.5, y: 0.5 }];
+                    await vTrack.applyConstraints({ advanced: [advAf] }).catch(() => {});
+                    await new Promise((r) => setTimeout(r, 650));
                   }
                 } catch (_e) {}
               }
 
+              if (capLbl) capLbl.textContent = 'Capturando...';
               let fuenteImg = vid;
               let iw = vid.videoWidth || 1280;
               let ih = vid.videoHeight || 720;
@@ -2932,7 +2979,7 @@
 
                   const blob = await Promise.race([
                     tomarFotoNat(),
-                    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 2400)),
+                    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 2500)),
                   ]);
                   if (blob && blob.size > 0) {
                     imgUrlObj = URL.createObjectURL(blob);
@@ -2979,6 +3026,25 @@
               registrarFalloDniParaGaleria('No pudimos capturar la foto (' + err.message + ').', true);
             } finally {
               btnCaptDni.disabled = false;
+              if (capLbl) capLbl.textContent = 'Sacar foto';
+            }
+          });
+        }
+        const inpCamNativa = document.getElementById('inpDniCamNativa');
+        if (inpCamNativa && !inpCamNativa.dataset.bound) {
+          inpCamNativa.dataset.bound = '1';
+          inpCamNativa.addEventListener('change', async (ev) => {
+            const file = ev.target.files && ev.target.files[0];
+            ev.target.value = '';
+            if (!file) return;
+            const target = appState.dniCamTarget || 'frente';
+            try {
+              const b64 = await redimensionarArchivoImagen(file, 2400, 0.94);
+              detenerCamaraDni();
+              await guardarFotoDni(target, b64);
+            } catch (err) {
+              detenerCamaraDni();
+              registrarFalloDniParaGaleria('No pudimos leer la foto de la cámara (' + err.message + ').', true);
             }
           });
         }

@@ -2578,12 +2578,63 @@
         }
       }
 
-      async function _evaluarBarcodeConPosicion(b64, w, h) {
+      function _crearHintsZxing() {
+        try {
+          if (window.ZXing && window.ZXing.DecodeHintType) {
+            const hints = new Map();
+            hints.set(window.ZXing.DecodeHintType.TRY_HARDER, true);
+            return hints;
+          }
+        } catch (_e) {}
+        return undefined;
+      }
+
+      async function _generarVariantesBarcodeCanvas(b64) {
+        const out = [];
+        try {
+          const img = await new Promise((resolve, reject) => {
+            const i = new Image();
+            i.onload = () => resolve(i);
+            i.onerror = reject;
+            i.src = b64;
+          });
+          const w = img.naturalWidth || img.width || 0;
+          const h = img.naturalHeight || img.height || 0;
+          if (!w || !h) return out;
+          // Zonas típicas de códigos en DNI argentino: PDF417 frente (abajo-der), PDF417 dorso V1 (arriba-izq), QR dorso V3 (der)
+          const zonas = [
+            { tag: 'pdf417_frente', sx: 0.44, sy: 0.58, sw: 0.55, sh: 0.41, ox: 0.44, oy: 0.58 },
+            { tag: 'pdf417_dorso', sx: 0.01, sy: 0.02, sw: 0.58, sh: 0.46, ox: 0.01, oy: 0.02 },
+            { tag: 'qr_dorso', sx: 0.46, sy: 0.02, sw: 0.53, sh: 0.64, ox: 0.46, oy: 0.02 },
+          ];
+          const cv = document.createElement('canvas');
+          const ctx = cv.getContext('2d');
+          if (!ctx) return out;
+          for (const z of zonas) {
+            const px = Math.floor(w * z.sx);
+            const py = Math.floor(h * z.sy);
+            const pw = Math.max(80, Math.floor(w * z.sw));
+            const ph = Math.max(60, Math.floor(h * z.sh));
+            const scale = pw < 700 ? 2.0 : 1.35;
+            cv.width = Math.round(pw * scale);
+            cv.height = Math.round(ph * scale);
+            ctx.filter = 'grayscale(1) contrast(1.45) brightness(1.05)';
+            ctx.drawImage(img, px, py, pw, ph, 0, 0, cv.width, cv.height);
+            out.push({ tag: z.tag, b64: cv.toDataURL('image/png'), ox: z.ox, oy: z.oy, sw: z.sw, sh: z.sh, cw: cv.width, ch: cv.height });
+          }
+        } catch (_e) {}
+        return out;
+      }
+
+      async function _evaluarBarcodeConPosicion(b64, w, h, soloCompleto) {
         if (!window.ZXing) return { tipo: '', cy: null, cx: null };
-        const calcCentro = (res) => {
+        const hints = _crearHintsZxing();
+        const calcCentro = (res, wRef, hRef, cropMeta) => {
           try {
             const pts = res && (res.resultPoints || (typeof res.getResultPoints === 'function' ? res.getResultPoints() : null));
-            if (!Array.isArray(pts) || !pts.length) return { cx: null, cy: null };
+            if (!Array.isArray(pts) || !pts.length) {
+              return cropMeta ? { cx: cropMeta.ox + cropMeta.sw * 0.5, cy: cropMeta.oy + cropMeta.sh * 0.5 } : { cx: null, cy: null };
+            }
             let sx = 0, sy = 0, n = 0;
             for (const p of pts) {
               const px = typeof p.getX === 'function' ? p.getX() : p.x;
@@ -2591,30 +2642,49 @@
               if (Number.isFinite(px) && Number.isFinite(py)) { sx += px; sy += py; n++; }
             }
             if (!n) return { cx: null, cy: null };
-            return { cx: (sx / n) / (w || 1), cy: (sy / n) / (h || 1) };
+            const rx = (sx / n) / (wRef || 1);
+            const ry = (sy / n) / (hRef || 1);
+            if (cropMeta) {
+              return { cx: cropMeta.ox + rx * cropMeta.sw, cy: cropMeta.oy + ry * cropMeta.sh };
+            }
+            return { cx: rx, cy: ry };
           } catch (_e) { return { cx: null, cy: null }; }
         };
-        if (typeof window.ZXing.BrowserPDF417Reader === 'function') {
-          try {
-            const r417 = await new window.ZXing.BrowserPDF417Reader().decodeFromImageUrl(b64);
-            const raw = r417 && (r417.text || (typeof r417.getText === 'function' ? r417.getText() : ''));
-            if (raw && String(raw).includes('@')) {
-              if (!appState.ekycImgs.pdf417Raw) appState.ekycImgs.pdf417Raw = String(raw);
-              const { cx, cy } = calcCentro(r417);
-              return { tipo: 'pdf417', cx, cy };
-            }
-          } catch (_e) {}
-        }
-        if (typeof window.ZXing.BrowserQRCodeReader === 'function') {
-          try {
-            const rQr = await new window.ZXing.BrowserQRCodeReader().decodeFromImageUrl(b64);
-            const rawQr = rQr && (rQr.text || (typeof rQr.getText === 'function' ? rQr.getText() : ''));
-            if (rawQr && String(rawQr).trim().length >= 8) {
-              if (!appState.ekycImgs.qrRaw) appState.ekycImgs.qrRaw = String(rawQr).trim();
-              const { cx, cy } = calcCentro(rQr);
-              return { tipo: 'qr', cx, cy };
-            }
-          } catch (_e) {}
+
+        const intentarUno = async (imgUrl, wRef, hRef, cropMeta) => {
+          if (typeof window.ZXing.BrowserPDF417Reader === 'function') {
+            try {
+              const r417 = await new window.ZXing.BrowserPDF417Reader(hints).decodeFromImageUrl(imgUrl);
+              const raw = r417 && (r417.text || (typeof r417.getText === 'function' ? r417.getText() : ''));
+              if (raw && String(raw).includes('@')) {
+                if (!appState.ekycImgs.pdf417Raw) appState.ekycImgs.pdf417Raw = String(raw);
+                const { cx, cy } = calcCentro(r417, wRef, hRef, cropMeta);
+                return { tipo: 'pdf417', cx, cy };
+              }
+            } catch (_e) {}
+          }
+          if (typeof window.ZXing.BrowserQRCodeReader === 'function') {
+            try {
+              const rQr = await new window.ZXing.BrowserQRCodeReader(hints).decodeFromImageUrl(imgUrl);
+              const rawQr = rQr && (rQr.text || (typeof rQr.getText === 'function' ? rQr.getText() : ''));
+              if (rawQr && String(rawQr).trim().length >= 8) {
+                if (!appState.ekycImgs.qrRaw) appState.ekycImgs.qrRaw = String(rawQr).trim();
+                const { cx, cy } = calcCentro(rQr, wRef, hRef, cropMeta);
+                return { tipo: 'qr', cx, cy };
+              }
+            } catch (_e) {}
+          }
+          return null;
+        };
+
+        const direct = await intentarUno(b64, w, h, null);
+        if (direct) return direct;
+        if (soloCompleto) return { tipo: '', cy: null, cx: null };
+
+        const recortes = await _generarVariantesBarcodeCanvas(b64);
+        for (const rec of recortes) {
+          const hit = await intentarUno(rec.b64, rec.cw, rec.ch, rec);
+          if (hit) return hit;
         }
         return { tipo: '', cy: null, cx: null };
       }
@@ -2781,34 +2851,14 @@
       }
 
       async function intentarLeerPdf417Silencioso(b64) {
-        let leido = false;
         if (!window.ZXing) return false;
-
-        if (!appState.ekycImgs.pdf417Raw && typeof window.ZXing.BrowserPDF417Reader === 'function') {
+        if (!appState.ekycImgs.pdf417Raw || !appState.ekycImgs.qrRaw) {
           try {
-            const reader = new window.ZXing.BrowserPDF417Reader();
-            const res417 = await reader.decodeFromImageUrl(b64);
-            const rawTxt = res417 && (res417.text || (typeof res417.getText === 'function' ? res417.getText() : ''));
-            if (rawTxt && String(rawTxt).includes('@')) {
-              appState.ekycImgs.pdf417Raw = String(rawTxt);
-              leido = true;
-            }
+            const hit = await _evaluarBarcodeConPosicion(b64, 0, 0, false);
+            if (hit && hit.tipo) return true;
           } catch (_) {}
         }
-
-        if (!appState.ekycImgs.qrRaw && typeof window.ZXing.BrowserQRCodeReader === 'function') {
-          try {
-            const qrReader = new window.ZXing.BrowserQRCodeReader();
-            const resQr = await qrReader.decodeFromImageUrl(b64);
-            const rawQr = resQr && (resQr.text || (typeof resQr.getText === 'function' ? resQr.getText() : ''));
-            if (rawQr && String(rawQr).trim().length >= 8) {
-              appState.ekycImgs.qrRaw = String(rawQr).trim();
-              leido = true;
-            }
-          } catch (_) {}
-        }
-
-        return leido || Boolean(appState.ekycImgs.pdf417Raw || appState.ekycImgs.qrRaw);
+        return Boolean(appState.ekycImgs.pdf417Raw || appState.ekycImgs.qrRaw);
       }
 
       function setupSeccionEkyc(data) {

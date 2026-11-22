@@ -1424,7 +1424,7 @@
     const tipoDescarga = (est === 'FIRMADO' || est === 'PARCIAL') ? 'firmado' : 'original';
     const labelDescarga = est === 'FIRMADO' ? 'Descargar PDF Firmado' : (est === 'PARCIAL' ? 'Descargar PDF Parcial' : 'Descargar PDF Original');
     const verifyUrl = `verificar.html?id=${encodeURIComponent(r.id)}&h=${encodeURIComponent((r.hash_sha256_original || '').slice(0, 16))}`;
-    const btnCls = 'display:inline-flex;align-items:center;gap:5px;padding:0.38rem 0.72rem;border-radius:8px;font-size:0.75rem;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;';
+    const btnCls = 'display:inline-flex;align-items:center;gap:5px;padding:0.35rem 0.64rem;border-radius:8px;font-size:0.74rem;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;flex-shrink:0;';
 
     const driveBtn = r.drive_file_url
       ? `<a href="${escHtml(r.drive_file_url)}" target="_blank" rel="noopener" style="${btnCls}border:1px solid #16a34a;background:#f0fdf4;color:#15803d;">☁️ Abrir en Drive</a>`
@@ -1441,7 +1441,7 @@
       ? `<button type="button" onclick="window.renovarEnlaceSolicitudFirma('${escHtml(r.id)}')" style="${btnCls}border:1px solid #fcd34d;background:#fffbeb;color:#b45309;">🔄 Renovar Enlace</button>`
       : '';
     const revocarBtn = !esSolicitudEnBaja(r)
-      ? `<button type="button" onclick="window.abrirModalBajaSolicitudFirma('${escHtml(r.id)}')" style="${btnCls}border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;font-weight:800;">🗑️ Cancelar / Desestimar / Borrar</button>`
+      ? `<button type="button" onclick="window.abrirModalBajaSolicitudFirma('${escHtml(r.id)}')" style="${btnCls}margin-left:auto;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;font-weight:800;">🗑️ Cancelar / Desestimar / Borrar</button>`
       : '';
 
     const renGuia = r.datos_renaper_guia || {};
@@ -1543,7 +1543,7 @@
       : '';
 
     ov.innerHTML = `
-      <div style="background:#ffffff;border-radius:16px;max-width:1080px;width:96vw;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(15,23,42,0.35);overflow:hidden;">
+      <div style="background:#ffffff;border-radius:16px;max-width:min(1440px,97vw);width:97vw;max-height:94vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(15,23,42,0.35);overflow:hidden;">
         <!-- HEADER -->
         <div style="padding:0.95rem 1.25rem;background:linear-gradient(135deg,#0f2744 0%,#1e3a8a 100%);color:#ffffff;display:flex;justify-content:space-between;align-items:flex-start;gap:0.75rem;">
           <div style="min-width:0;">
@@ -1562,7 +1562,7 @@
         ${bajaBannerHtml}
 
         <!-- BARRA DE ACCIONES -->
-        <div style="padding:0.7rem 1.2rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center;">
+        <div style="padding:0.65rem 1.25rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;gap:0.42rem;flex-wrap:nowrap;align-items:center;overflow-x:auto;">
           <button type="button" onclick="window.descargarPdfSolicitudFirma('${escHtml(r.id)}', '${tipoDescarga}')" style="${btnCls}border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-weight:800;">📥 ${labelDescarga}</button>
           ${tsrBtn}
           ${driveBtn}

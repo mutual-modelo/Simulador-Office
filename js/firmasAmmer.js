@@ -1604,6 +1604,15 @@
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:0.55rem;margin-bottom:1rem;">
               ${kpiItem('Dictamen eKYC', (ek && ek.estado_ekyc) || 'Sin captura eKYC', (ek && ek.estado_ekyc === 'APROBADO') ? '#f0fdf4' : ((ek && ek.estado_ekyc === 'REVISION_REQUERIDA') ? '#fef2f2' : '#fffbeb'), (ek && ek.estado_ekyc === 'APROBADO') ? '#166534' : ((ek && ek.estado_ekyc === 'REVISION_REQUERIDA') ? '#b91c1c' : '#92400e'))}
               ${kpiItem('Cotejo Facial (Selfie vs DNI)', ek && ek.face_match_pct != null ? `${ek.face_match_pct}% coincidencia${ek.motor_biometria === 'biometria_local_offline' ? ' · Motor Local' : (ek.motor_biometria === 'gemini_vision' ? ' · Gemini IA' : '')}` : 'No ejecutado', '#eff6ff', '#1d4ed8')}
+              ${(() => {
+                const cf = (ek && ek.cotejo_firma) || r.cotejo_firma || {};
+                const cfPct = cf && cf.firma_match_pct;
+                const cfMotor = cf.motor_usado === 'hibrido_gemini_y_local' ? 'IA + Local' : (cf.motor_usado === 'gemini_vision' ? 'Gemini IA' : 'Motor Local');
+                const cfTxt = cfPct != null ? `${cfPct}% coincidencia · ${cfMotor}` : (cf && cf.observaciones ? 'Revisión visual' : 'No ejecutado');
+                const cfBg = cfPct == null ? '#f8fafc' : (cfPct >= 62 ? '#f0fdf4' : (cfPct >= 48 ? '#fffbeb' : '#fef2f2'));
+                const cfCol = cfPct == null ? '#475569' : (cfPct >= 62 ? '#166534' : (cfPct >= 48 ? '#92400e' : '#b91c1c'));
+                return kpiItem('Cotejo Firma (DNI vs Trazo)', cfTxt, cfBg, cfCol);
+              })()}
               ${kpiItem('Prueba de Vida (Liveness)', ek && ek.liveness_ok === true ? 'Aprobada' : (ek && ek.liveness_ok === false ? 'Observada' : 'No ejecutada'))}
               ${kpiItem('Código DNI (PDF417 / QR)', codKpiTxt)}
               ${kpiItem('Validación RENAPER (Asesor)', ejManKpi, ejManBg, ejManCol)}
@@ -1611,12 +1620,18 @@
               ${kpiItem('CajaJPER Entre Ríos', cj.consultado ? `${cj.cantidad_expedientes || 0} expediente(s)` : 'No consultado')}
             </div>
 
-            ${(ek && (ek.observaciones_biometria || (Array.isArray(ek.alertas) && ek.alertas.length))) ? `
-              <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.65rem 0.85rem;margin-bottom:1rem;font-size:0.76rem;color:#334155;">
-                ${ek.observaciones_biometria ? `<div><strong>Detalle biométrico:</strong> ${escHtml(ek.observaciones_biometria)}</div>` : ''}
-                ${(Array.isArray(ek.alertas) && ek.alertas.length) ? `<div style="margin-top:4px;color:#b45309;"><strong>Alertas eKYC:</strong> ${ek.alertas.map(a => escHtml(a)).join(' · ')}</div>` : ''}
-              </div>
-            ` : ''}
+            ${(() => {
+              const cf = (ek && ek.cotejo_firma) || r.cotejo_firma || {};
+              const hayObs = Boolean((ek && ek.observaciones_biometria) || cf.observaciones || (ek && Array.isArray(ek.alertas) && ek.alertas.length));
+              if (!hayObs) return '';
+              return `
+                <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.65rem 0.85rem;margin-bottom:1rem;font-size:0.76rem;color:#334155;">
+                  ${(ek && ek.observaciones_biometria) ? `<div><strong>Detalle biométrico facial:</strong> ${escHtml(ek.observaciones_biometria)}</div>` : ''}
+                  ${cf.observaciones ? `<div style="margin-top:4px;"><strong>Análisis biométrico de firma:</strong> ${escHtml(cf.observaciones)}</div>` : ''}
+                  ${(ek && Array.isArray(ek.alertas) && ek.alertas.length) ? `<div style="margin-top:4px;color:#b45309;"><strong>Alertas eKYC:</strong> ${ek.alertas.map(a => escHtml(a)).join(' · ')}</div>` : ''}
+                </div>
+              `;
+            })()}
 
             ${ejManual ? `
               <div style="background:${ejManBg};border:1px solid ${ejManual.valido ? '#86efac' : '#fecaca'};border-radius:10px;padding:0.65rem 0.85rem;margin-bottom:1rem;font-size:0.78rem;color:${ejManCol};display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
@@ -1650,11 +1665,17 @@
               </div>
             ` : ''}
 
-            <div style="font-size:0.8rem;font-weight:800;color:#0f172a;margin-bottom:0.5rem;">Capturas Documentales y Firma Ológrafa (clic para ampliar)</div>
+            <div style="font-size:0.8rem;font-weight:800;color:#0f172a;margin-bottom:0.5rem;">Capturas Documentales, 3 Momentos Biométricos y Cotejo de Firma (clic para ampliar)</div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0.75rem;">
               ${fotoCard('🪪 DNI Frente', imgs.dni_frente_b64, 'image/jpeg', 'Sin foto DNI frente')}
               ${fotoCard('🪪 DNI Dorso', imgs.dni_dorso_b64, 'image/jpeg', 'Sin foto DNI dorso')}
-              ${fotoCard('🤳 Selfie Biométrica', imgs.selfie_b64, 'image/jpeg', 'Sin captura de selfie')}
+              ${fotoCard('🤳 Selfie 1 · Mirada Frontal', imgs.selfie_b64, 'image/jpeg', 'Sin captura de selfie')}
+              ${(imgs.selfie_2_b64 || imgs.selfie_desafio_b64) ? fotoCard('🤳 Selfie 2 · Sonrisa', imgs.selfie_2_b64 || imgs.selfie_desafio_b64, 'image/jpeg', '') : ''}
+              ${imgs.selfie_3_b64 ? fotoCard('🤳 Selfie 3 · Giro de Cabeza', imgs.selfie_3_b64, 'image/jpeg', '') : ''}
+              ${(() => {
+                const cf = (ek && ek.cotejo_firma) || r.cotejo_firma || {};
+                return cf.recorte_firma_dni_b64 ? fotoCard('✒️ Firma Aislada del DNI', cf.recorte_firma_dni_b64, 'image/png', '') : '';
+              })()}
               ${fotoCard('✍️ Firma Ológrafa Capturada', imgs.firma_png_b64, 'image/png', 'Aún sin firma manuscrita')}
             </div>
           </div>

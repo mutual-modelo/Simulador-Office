@@ -1781,7 +1781,7 @@
         grabandoAhora: false,
         vozHabilitada: true,
         retoLiveness: 'Mirá al centro, sonreí suavemente y girá un poco la cabeza',
-        ekycImgs: { dniFrente: '', dniDorso: '', selfie1: '', selfie2: '', pdf417Raw: '', qrRaw: '' },
+        ekycImgs: { dniFrente: '', dniDorso: '', selfie1: '', selfie2: '', selfie3: '', pdf417Raw: '', qrRaw: '' },
         drawing: false,
         hasInk: false,
         startTime: null,
@@ -2024,7 +2024,8 @@
               dniFrenteBase64: appState.ekycImgs.dniFrente || null,
               dniDorsoBase64: appState.ekycImgs.dniDorso || null,
               selfieBase64: appState.ekycImgs.selfie1 || null,
-              selfieDesafioBase64: appState.ekycImgs.selfie2 || null,
+              selfieDesafioBase64: appState.ekycImgs.selfie2 || appState.ekycImgs.selfie3 || null,
+              selfie3Base64: appState.ekycImgs.selfie3 || null,
               retoLiveness: appState.retoLiveness,
               pdf417Raw: appState.ekycImgs.pdf417Raw || null,
               qrRaw: appState.ekycImgs.qrRaw || null,
@@ -3026,7 +3027,7 @@
               c.width = vid.videoWidth || 640;
               c.height = vid.videoHeight || 480;
               c.getContext('2d').drawImage(vid, 0, 0, c.width, c.height);
-              return c.toDataURL('image/jpeg', 0.82);
+              return c.toDataURL('image/jpeg', 0.90);
             };
 
             const chunks = [];
@@ -3131,18 +3132,28 @@
             btnGrabar.disabled = false;
             document.getElementById('btnCancelarCamaraLive').disabled = false;
 
-            // Seleccionar el frame con mayor movimiento real de todas las muestras durante los gestos
-            const candidatos = [...muestrasSonrisa, ...muestrasGiro];
-            let frameDesafioFinal = candidatos[candidatos.length - 1] || frameNeutral;
-            let maxMov = 0;
-            for (const cand of candidatos) {
+            // Seleccionar los mejores frames de cada momento de la secuencia (Sonrisa y Giro)
+            let frameSonrisa = muestrasSonrisa[Math.floor(muestrasSonrisa.length / 2)] || muestrasSonrisa[0] || frameNeutral;
+            let maxMovSonrisa = 0;
+            for (const cand of muestrasSonrisa) {
               const d = await medirMovimientoEntreFrames(frameNeutral, cand);
-              if (d > maxMov) {
-                maxMov = d;
-                frameDesafioFinal = cand;
+              if (d > maxMovSonrisa) {
+                maxMovSonrisa = d;
+                frameSonrisa = cand;
               }
             }
 
+            let frameGiro = muestrasGiro[Math.floor(muestrasGiro.length / 2)] || muestrasGiro[muestrasGiro.length - 1] || frameSonrisa;
+            let maxMovGiro = 0;
+            for (const cand of muestrasGiro) {
+              const d = await medirMovimientoEntreFrames(frameNeutral, cand);
+              if (d > maxMovGiro) {
+                maxMovGiro = d;
+                frameGiro = cand;
+              }
+            }
+
+            const maxMov = Math.max(maxMovSonrisa, maxMovGiro);
             if (maxMov < 0.55) {
               hablarGuia('No pudimos notar el movimiento de tu rostro. Intentemos de nuevo con calma y buena luz.');
               document.getElementById('selfieLiveView').style.display = 'none';
@@ -3152,9 +3163,10 @@
             }
 
             appState.ekycImgs.selfie1 = frameNeutral;
-            appState.ekycImgs.selfie2 = frameDesafioFinal;
+            appState.ekycImgs.selfie2 = frameSonrisa;
+            appState.ekycImgs.selfie3 = frameGiro;
             appState.ekycValidado = false;
-            appState.retoLiveness = 'Video guiado en vivo (3 etapas con audio sincronizado y muestreo multi-cuadro)';
+            appState.retoLiveness = 'Video guiado en vivo (3 momentos: frente, sonrisa y giro con audio sincronizado)';
 
             document.getElementById('selfieLiveView').style.display = 'none';
             document.getElementById('selfieDoneView').style.display = 'block';
@@ -3174,7 +3186,7 @@
             const box = document.getElementById('ekycResultadoBox');
             box.className = 'alert alert-ok';
             box.style.display = 'block';
-            box.innerHTML = '<strong>✅ ¡Video de prueba de vida grabado correctamente!</strong><br/><span style="font-size:0.9rem;font-weight:500;">Ahora tocá <strong>Verificar y Continuar →</strong> abajo para pasar a tu firma.</span>';
+            box.innerHTML = '<strong>✅ ¡Video y 3 capturas biométricas grabadas correctamente!</strong><br/><span style="font-size:0.9rem;font-weight:500;">Ahora tocá <strong>Verificar y Continuar →</strong> abajo para pasar a tu firma.</span>';
             hablarGuia('Perfecto, ya grabamos tu video. Tocá el botón continuar para pasar a tu firma.');
           });
         }
@@ -3185,6 +3197,7 @@
           btnReintentar.addEventListener('click', () => {
             appState.ekycImgs.selfie1 = '';
             appState.ekycImgs.selfie2 = '';
+            appState.ekycImgs.selfie3 = '';
             appState.ekycValidado = false;
             document.getElementById('selfieDoneView').style.display = 'none';
             document.getElementById('selfieIntroView').style.display = 'block';

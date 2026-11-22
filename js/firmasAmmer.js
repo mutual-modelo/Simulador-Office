@@ -1113,6 +1113,14 @@
             badgesHtml += `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:${ekBg};color:${ekCol};">🪪 eKYC ${escHtml(ek.estado_ekyc)}${escHtml(fmTxt)}</span>`;
             if (ek.pdf417_ok) {
               badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#ecfeff;color:#0e7490;">📊 PDF417 OK</span>';
+            } else if (ek.qr_ok || ek.codigo_dni_ok) {
+              badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#ecfeff;color:#0e7490;">📱 QR DNI OK</span>';
+            }
+            const ejMan = r.validacion_ejemplar_manual;
+            if (ejMan && typeof ejMan.valido === 'boolean') {
+              badgesHtml += ejMan.valido
+                ? '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#dcfce7;color:#166534;">🪪 Ejemplar VÁLIDO</span>'
+                : '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#fee2e2;color:#b91c1c;">⛔ Ejemplar INVÁLIDO</span>';
             }
             const bo = ek.boletin_oficial_er;
             if (bo && bo.consultado) {
@@ -1437,12 +1445,19 @@
       : '';
 
     const renGuia = r.datos_renaper_guia || {};
+    const dniExPre = (ek && ek.dni_extraido) || {};
+    const ejManual = r.validacion_ejemplar_manual || null;
     const renArgs = JSON.stringify({
+      solicitudId: r.id,
       nombre: r.nombre_solicitante || '-',
-      dni: renGuia.dni || r.dni_solicitante || '',
-      sexo: renGuia.sexo || '',
-      fecha_nacimiento: renGuia.fecha_nacimiento || '',
-      ejemplar: renGuia.ejemplar || '',
+      dni: renGuia.dni || dniExPre.dni || r.dni_solicitante || '',
+      sexo: renGuia.sexo || dniExPre.sexo || '',
+      fecha_nacimiento: renGuia.fecha_nacimiento || dniExPre.fecha_nacimiento || '',
+      ejemplar: renGuia.ejemplar || dniExPre.ejemplar || '',
+      fecha_emision: renGuia.fecha_emision || dniExPre.fecha_emision || '',
+      nro_tramite: renGuia.nro_tramite || dniExPre.nro_tramite || '',
+      validacion_ejemplar_manual: ejManual,
+      origen: 'firmas',
     }).replace(/"/g, '&quot;');
 
     // Fotos y firma
@@ -1471,6 +1486,18 @@
     const bo = (ek && ek.boletin_oficial_er) || {};
     const cj = (ek && ek.cajajper) || {};
     const p417 = (ek && ek.pdf417) || {};
+    const qrDni = (ek && ek.qr) || {};
+    const codDni = (ek && ek.codigo_dni) || (p417.ok ? p417 : (qrDni.ok ? qrDni : {}));
+    const codKpiTxt = codDni.ok
+      ? `Válido (${codDni.tipo_codigo || 'CÓDIGO'} · ${codDni.formato || '-'}) · Ejemplar ${codDni.ejemplar || dniEx.ejemplar || '-'}`
+      : 'Sin lectura automática (PDF417/QR)';
+    const ejManKpi = ejManual
+      ? (ejManual.valido
+        ? `✅ VÁLIDO (${ejManual.analista_nombre || 'Asesor'})`
+        : `⛔ NO VÁLIDO (${ejManual.analista_nombre || 'Asesor'})`)
+      : 'Pendiente de comparar';
+    const ejManBg = ejManual ? (ejManual.valido ? '#dcfce7' : '#fef2f2') : '#fffbeb';
+    const ejManCol = ejManual ? (ejManual.valido ? '#166534' : '#b91c1c') : '#92400e';
     const tsa = r.tsa_resumen || {};
     const pades = r.pades_resumen || {};
     const gpsLink = (r.geo_latitud != null && r.geo_longitud != null)
@@ -1539,7 +1566,7 @@
           <button type="button" onclick="window.descargarPdfSolicitudFirma('${escHtml(r.id)}', '${tipoDescarga}')" style="${btnCls}border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-weight:800;">📥 ${labelDescarga}</button>
           ${tsrBtn}
           ${driveBtn}
-          <button type="button" onclick="window.abrirAsistenteRenaperMiEjemplar(${renArgs})" style="${btnCls}border:1px solid #bae6fd;background:#f0f9ff;color:#0369a1;">🪪 Validar DNI (RENAPER)</button>
+          <button type="button" onclick="window.abrirAsistenteRenaperMiEjemplar(${renArgs})" style="${btnCls}border:1px solid #bae6fd;background:#f0f9ff;color:#0369a1;">🪪 Validar Ejemplar (RENAPER)</button>
           <a href="${verifyUrl}" target="_blank" rel="noopener" style="${btnCls}border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;">🔍 Validación Pública</a>
           ${verifyTechBtn}
           ${recordarWaBtn}
@@ -1578,21 +1605,48 @@
               ${kpiItem('Dictamen eKYC', (ek && ek.estado_ekyc) || 'Sin captura eKYC', (ek && ek.estado_ekyc === 'APROBADO') ? '#f0fdf4' : '#f8fafc', (ek && ek.estado_ekyc === 'APROBADO') ? '#166534' : '#334155')}
               ${kpiItem('Cotejo Facial (Selfie vs DNI)', ek && ek.face_match_pct != null ? `${ek.face_match_pct}% coincidencia` : 'No ejecutado', '#eff6ff', '#1d4ed8')}
               ${kpiItem('Prueba de Vida (Liveness)', ek && ek.liveness_ok === true ? 'Aprobada' : (ek && ek.liveness_ok === false ? 'Observada' : 'No ejecutada'))}
-              ${kpiItem('Código PDF417 DNI Dorso', p417.ok ? `Válido · Ejemplar ${p417.ejemplar || '-'}` : 'Sin lectura PDF417')}
+              ${kpiItem('Código DNI (PDF417 / QR)', codKpiTxt)}
+              ${kpiItem('Validación RENAPER (Asesor)', ejManKpi, ejManBg, ejManCol)}
               ${kpiItem('Boletín Oficial Entre Ríos', bo.consultado ? (bo.tiene_alerta_critica ? `⚠️ ${bo.total_resultados || 0} alerta(s)` : `Limpio (${bo.total_resultados || 0} menc.)`) : 'No consultado', bo.tiene_alerta_critica ? '#fef2f2' : '#f0fdf4', bo.tiene_alerta_critica ? '#b91c1c' : '#166534')}
               ${kpiItem('CajaJPER Entre Ríos', cj.consultado ? `${cj.cantidad_expedientes || 0} expediente(s)` : 'No consultado')}
             </div>
 
-            ${(dniEx.dni || dniEx.nombre || dniEx.fecha_nacimiento) ? `
-              <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.65rem 0.85rem;margin-bottom:1rem;font-size:0.78rem;color:#334155;">
-                <strong>Datos leídos del DNI:</strong> Nombre: ${escHtml(dniEx.nombre || '-')} · DNI: ${escHtml(dniEx.dni || '-')} · Sexo: ${escHtml(dniEx.sexo || '-')} · F. Nac.: ${escHtml(dniEx.fecha_nacimiento || '-')} · Ejemplar: ${escHtml(dniEx.ejemplar || '-')} · Trámite: ${escHtml(dniEx.nro_tramite || '-')}
+            ${ejManual ? `
+              <div style="background:${ejManBg};border:1px solid ${ejManual.valido ? '#86efac' : '#fecaca'};border-radius:10px;padding:0.65rem 0.85rem;margin-bottom:1rem;font-size:0.78rem;color:${ejManCol};display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+                <div>
+                  <strong>${ejManual.valido ? '✅ Ejemplar validado manualmente contra RENAPER' : '⛔ Ejemplar marcado NO VÁLIDO contra RENAPER'}</strong><br/>
+                  <span>DNI: Ejemplar <strong>${escHtml(ejManual.ejemplar_dni || dniEx.ejemplar || '-')}</strong> · Emisión <strong>${escHtml(ejManual.fecha_emision_dni || dniEx.fecha_emision || '-')}</strong></span>
+                  ${(ejManual.ejemplar_renaper || ejManual.fecha_emision_renaper) ? ` · <span>RENAPER: Ejemplar <strong>${escHtml(ejManual.ejemplar_renaper || '-')}</strong> · Emisión <strong>${escHtml(ejManual.fecha_emision_renaper || '-')}</strong></span>` : ''}
+                  ${ejManual.observaciones ? `<div style="margin-top:2px;">Obs.: <em>${escHtml(ejManual.observaciones)}</em></div>` : ''}
+                </div>
+                <button type="button" onclick="window.abrirAsistenteRenaperMiEjemplar(${renArgs})" style="${btnCls}border:1px solid #0284c7;background:#ffffff;color:#0369a1;">✏️ Editar comparación</button>
+              </div>
+            ` : ''}
+
+            ${(dniEx.dni || dniEx.nombre || dniEx.fecha_nacimiento || dniEx.ejemplar || dniEx.fecha_emision) ? `
+              <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.75rem 0.9rem;margin-bottom:1rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.55rem;">
+                  <strong style="font-size:0.8rem;color:#0f2744;">🪪 Datos completos extraídos del DNI</strong>
+                  ${dniEx.formato_dni ? `<span style="font-size:0.69rem;font-weight:800;padding:2px 8px;border-radius:9999px;background:#e0f2fe;color:#0369a1;">${escHtml(dniEx.formato_dni)}</span>` : ''}
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.45rem;font-size:0.76rem;color:#334155;">
+                  <div><span style="color:#64748b;font-size:0.68rem;">Apellido y Nombre</span><div style="font-weight:800;color:#0f172a;">${escHtml(dniEx.nombre || '-')}</div></div>
+                  <div><span style="color:#64748b;font-size:0.68rem;">DNI / CUIL</span><div style="font-weight:800;color:#0f172a;">${escHtml(dniEx.dni || '-')}${dniEx.cuil ? ` · ${escHtml(dniEx.cuil)}` : ''}</div></div>
+                  <div><span style="color:#64748b;font-size:0.68rem;">Ejemplar / Sexo</span><div style="font-weight:800;color:#0f172a;">Ejemplar ${escHtml(dniEx.ejemplar || '-')} · ${escHtml(dniEx.sexo || '-')}</div></div>
+                  <div><span style="color:#64748b;font-size:0.68rem;">Fecha de Emisión</span><div style="font-weight:800;color:#0369a1;">${escHtml(dniEx.fecha_emision || 'No detectada')}</div></div>
+                  <div><span style="color:#64748b;font-size:0.68rem;">Fecha de Vencimiento</span><div style="font-weight:800;color:#0f172a;">${escHtml(dniEx.fecha_vencimiento || '-')}</div></div>
+                  <div><span style="color:#64748b;font-size:0.68rem;">Fecha de Nacimiento</span><div style="font-weight:800;color:#0f172a;">${escHtml(dniEx.fecha_nacimiento || '-')}</div></div>
+                  <div><span style="color:#64748b;font-size:0.68rem;">Trámite N° / Of. Ident.</span><div style="font-weight:700;color:#0f172a;">${escHtml(dniEx.nro_tramite || '-')}${dniEx.oficina_identificadora ? ` · Of. ${escHtml(dniEx.oficina_identificadora)}` : ''}${dniEx.nro_serie ? ` · Serie ${escHtml(dniEx.nro_serie)}` : ''}</div></div>
+                  <div><span style="color:#64748b;font-size:0.68rem;">Lugar de Nacimiento / Nac.</span><div style="font-weight:700;color:#0f172a;">${escHtml(dniEx.lugar_nacimiento || '-')}${dniEx.nacionalidad ? ` (${escHtml(dniEx.nacionalidad)})` : ''}</div></div>
+                  <div style="grid-column:1/-1;"><span style="color:#64748b;font-size:0.68rem;">Domicilio en DNI</span><div style="font-weight:700;color:#0f172a;">${escHtml(dniEx.domicilio || 'No detectado')}${dniEx.progenitores ? ` · Hijo/a de: ${escHtml(dniEx.progenitores)}` : ''}</div></div>
+                </div>
               </div>
             ` : ''}
 
             <div style="font-size:0.8rem;font-weight:800;color:#0f172a;margin-bottom:0.5rem;">Capturas Documentales y Firma Ológrafa (clic para ampliar)</div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0.75rem;">
               ${fotoCard('🪪 DNI Frente', imgs.dni_frente_b64, 'image/jpeg', 'Sin foto DNI frente')}
-              ${fotoCard('🪪 DNI Dorso (PDF417)', imgs.dni_dorso_b64, 'image/jpeg', 'Sin foto DNI dorso')}
+              ${fotoCard('🪪 DNI Dorso', imgs.dni_dorso_b64, 'image/jpeg', 'Sin foto DNI dorso')}
               ${fotoCard('🤳 Selfie Biométrica', imgs.selfie_b64, 'image/jpeg', 'Sin captura de selfie')}
               ${fotoCard('✍️ Firma Ológrafa Capturada', imgs.firma_png_b64, 'image/png', 'Aún sin firma manuscrita')}
             </div>
@@ -3157,6 +3211,103 @@
     if (modal) modal.style.display = 'none';
   }
 
+  function _obtenerAsesorActualRenaper() {
+    const sess = typeof global.getSession === 'function' ? global.getSession() : null;
+    const usuario = String((sess && (sess.usuario || sess.username || sess.user)) || '').trim();
+    const nombre = String((sess && (sess.nombre || sess.apellido_nombres || sess.name)) || usuario || 'Asesor').trim();
+    return { usuario, nombre };
+  }
+
+  async function guardarDecisionManualRenaperModal(esValido) {
+    const info = global._ultimoPayloadRenaperModal || {};
+    const ejRen = String((document.getElementById('inpRenaperCompEjemplar') || {}).value || '').trim().toUpperCase();
+    const emRen = String((document.getElementById('inpRenaperCompEmision') || {}).value || '').trim();
+    const obsRen = String((document.getElementById('inpRenaperCompObs') || {}).value || '').trim();
+    const asesor = _obtenerAsesorActualRenaper();
+    const ahoraIso = new Date().toISOString();
+
+    const reg = {
+      valido: Boolean(esValido),
+      estado: esValido ? 'VALIDO' : 'INVALIDO',
+      ejemplar_dni: String(info.ejemplar || '').trim().toUpperCase() || null,
+      fecha_emision_dni: String(info.fecha_emision || '').trim() || null,
+      ejemplar_renaper: ejRen || null,
+      fecha_emision_renaper: emRen || null,
+      observaciones: obsRen || null,
+      analista_usuario: asesor.usuario || null,
+      analista_nombre: asesor.nombre,
+      validado_en: ahoraIso,
+    };
+
+    const btnOk = document.getElementById('btnRenaperManualValido');
+    const btnBad = document.getElementById('btnRenaperManualInvalido');
+    if (btnOk) btnOk.disabled = true;
+    if (btnBad) btnBad.disabled = true;
+
+    try {
+      if (info.solicitudId) {
+        const res = await apiFetchJson(`/api/firmas/solicitudes/${encodeURIComponent(info.solicitudId)}/validacion-ejemplar`, {
+          method: 'POST',
+          body: JSON.stringify({
+            valido: reg.valido,
+            ejemplarDni: reg.ejemplar_dni,
+            fechaEmisionDni: reg.fecha_emision_dni,
+            ejemplarRenaper: reg.ejemplar_renaper,
+            fechaEmisionRenaper: reg.fecha_emision_renaper,
+            observaciones: reg.observaciones,
+            analistaUsuario: reg.analista_usuario,
+            analistaNombre: reg.analista_nombre,
+          }),
+        });
+        const regSaved = res.validacion_ejemplar_manual || reg;
+        info.validacion_ejemplar_manual = regSaved;
+        const idx = state.solicitudesFirma.findIndex((x) => String(x.id) === String(info.solicitudId));
+        if (idx >= 0) {
+          state.solicitudesFirma[idx].validacion_ejemplar_manual = regSaved;
+          renderBandejaFirmas();
+        }
+        const ovFicha = document.getElementById('modalFichaSolicitudFirmaOverlay');
+        if (ovFicha && ovFicha.style.display !== 'none') {
+          abrirFichaSolicitudFirma(info.solicitudId);
+        }
+      } else if (info.origen === 'auditoria20' && global._auditoria20Estado && global._auditoria20Estado.dni) {
+        global._auditoria20Estado.dni.validacion_ejemplar_manual = reg;
+        info.validacion_ejemplar_manual = reg;
+        if (typeof global.actualizarEstadoEjemplarManualAudit20 === 'function') {
+          global.actualizarEstadoEjemplarManualAudit20(reg);
+        }
+        if (typeof global.ejecutarAuditoriaIntegralAudit20 === 'function') {
+          global.ejecutarAuditoriaIntegralAudit20(true);
+        }
+      } else if (info.origen === 'expediente' && global._fichaExpedienteActivoObj) {
+        global._fichaExpedienteActivoObj.validacion_ejemplar_manual = reg;
+        info.validacion_ejemplar_manual = reg;
+      }
+
+      const statusBox = document.getElementById('boxEstadoManualEjemplarModal');
+      if (statusBox) {
+        statusBox.style.display = 'block';
+        statusBox.style.background = reg.valido ? '#dcfce7' : '#fef2f2';
+        statusBox.style.borderColor = reg.valido ? '#86efac' : '#fecaca';
+        statusBox.style.color = reg.valido ? '#166534' : '#b91c1c';
+        statusBox.innerHTML = reg.valido
+          ? `✅ Marcado como <strong>VÁLIDO</strong> por ${escHtml(reg.analista_nombre)}.`
+          : `⛔ Marcado como <strong>NO VÁLIDO</strong> por ${escHtml(reg.analista_nombre)}.`;
+      }
+      notify(
+        reg.valido
+          ? 'Validación manual de Ejemplar guardada como VÁLIDA.'
+          : 'Validación manual de Ejemplar marcada como NO VÁLIDA.',
+        reg.valido ? 'success' : 'warning'
+      );
+    } catch (err) {
+      notify('Error guardando validación manual: ' + err.message, 'error');
+    } finally {
+      if (btnOk) btnOk.disabled = false;
+      if (btnBad) btnBad.disabled = false;
+    }
+  }
+
   function abrirAsistenteRenaperMiEjemplar(datos) {
     bindRenaperBridgeListeners();
     const info = datos || {};
@@ -3164,7 +3315,9 @@
     const sexoLabel = normalizarSexoRenaper(info.sexo);
     const fechaNac = normalizarFechaDdMmAaaa(info.fecha_nacimiento);
     const ejemplar = String(info.ejemplar || '').trim().toUpperCase();
+    const fechaEmisionFmt = normalizarFechaDdMmAaaa(info.fecha_emision) || String(info.fecha_emision || '').trim();
     const nombre = String(info.nombre || 'Asociado').trim();
+    const prevManual = info.validacion_ejemplar_manual || null;
 
     const payloadExt = {
       nombre,
@@ -3172,6 +3325,7 @@
       sexo: sexoLabel,
       fecha_nacimiento: fechaNac,
       ejemplar,
+      fecha_emision: fechaEmisionFmt,
     };
     renaperAssistState.lastDatos = info;
 
@@ -3200,26 +3354,26 @@
     if (!modal) {
       modal = document.createElement('div');
       modal.id = 'modalGuiaRenaperEjemplar';
-      modal.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:99999;max-width:405px;width:calc(100vw - 32px);background:#ffffff;border:2px solid #0284c7;border-radius:14px;box-shadow:0 18px 40px rgba(15,23,42,0.28);padding:1rem;font-family:inherit;';
+      modal.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:99999;max-width:420px;width:calc(100vw - 32px);max-height:88vh;overflow-y:auto;background:#ffffff;border:2px solid #0284c7;border-radius:14px;box-shadow:0 18px 40px rgba(15,23,42,0.28);padding:1rem;font-family:inherit;';
       document.body.appendChild(modal);
     }
 
     const rowFn = (lbl, val, copyId, copiedAuto) => `
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:0.45rem 0.6rem;margin-bottom:0.4rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:0.42rem 0.6rem;margin-bottom:0.35rem;">
         <div style="min-width:0;">
-          <div style="font-size:0.68rem;font-weight:700;color:#64748b;text-transform:uppercase;">${escHtml(lbl)}</div>
-          <div style="font-size:0.86rem;font-weight:800;color:#0f172a;word-break:break-word;">${escHtml(val || 'No informado')}${copiedAuto ? ' <span style="font-size:0.68rem;color:#059669;">(Copiado)</span>' : ''}</div>
+          <div style="font-size:0.66rem;font-weight:700;color:#64748b;text-transform:uppercase;">${escHtml(lbl)}</div>
+          <div style="font-size:0.84rem;font-weight:800;color:#0f172a;word-break:break-word;">${escHtml(val || 'No informado')}${copiedAuto ? ' <span style="font-size:0.68rem;color:#059669;">(Copiado)</span>' : ''}</div>
         </div>
-        ${copyId && val ? `<button type="button" data-copy-renaper="${escHtml(val)}" style="padding:0.28rem 0.55rem;border-radius:6px;border:1px solid #0284c7;background:#ffffff;color:#0369a1;font-size:0.71rem;font-weight:700;cursor:pointer;flex-shrink:0;">📋 Copiar</button>` : ''}
+        ${copyId && val ? `<button type="button" data-copy-renaper="${escHtml(val)}" style="padding:0.25rem 0.5rem;border-radius:6px;border:1px solid #0284c7;background:#ffffff;color:#0369a1;font-size:0.7rem;font-weight:700;cursor:pointer;flex-shrink:0;">📋 Copiar</button>` : ''}
       </div>
     `;
 
     const extHintHtml = tieneExt
       ? ''
       : `
-        <details style="margin-top:0.5rem;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:0.45rem 0.6rem;font-size:0.71rem;color:#334155;">
+        <details style="margin-top:0.45rem;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:0.4rem 0.6rem;font-size:0.7rem;color:#334155;">
           <summary style="cursor:pointer;font-weight:700;color:#0f2744;">🧩 ¿Querés usar Pestaña Dividida nativa de Chrome + Autocompletado?</summary>
-          <div style="margin-top:0.4rem;line-height:1.4;">
+          <div style="margin-top:0.35rem;line-height:1.4;">
             1. <a href="downloads/ammer-renaper-split-view-ext.zip" download style="color:#1d4ed8;font-weight:700;text-decoration:underline;">Descargá la extensión AMMER (.zip)</a> y descomprimila.<br/>
             2. En Chrome abrí <code>chrome://extensions</code>, activá <strong>Modo de desarrollador</strong> y tocá <strong>Cargar descomprimida</strong>.<br/>
             3. Recargá esta página (<code>F5</code>). Desde Chrome 155 abre RENAPER en pestaña dividida real y completa el formulario solo.
@@ -3227,20 +3381,64 @@
         </details>
       `;
 
+    const estadoPrevDisplay = prevManual ? 'block' : 'none';
+    const estadoPrevBg = prevManual ? (prevManual.valido ? '#dcfce7' : '#fef2f2') : '#f8fafc';
+    const estadoPrevBd = prevManual ? (prevManual.valido ? '#86efac' : '#fecaca') : '#e2e8f0';
+    const estadoPrevCol = prevManual ? (prevManual.valido ? '#166534' : '#b91c1c') : '#334155';
+    const estadoPrevTxt = prevManual
+      ? (prevManual.valido
+        ? `✅ Marcado como <strong>VÁLIDO</strong> por ${escHtml(prevManual.analista_nombre || 'Asesor')}.`
+        : `⛔ Marcado como <strong>NO VÁLIDO</strong> por ${escHtml(prevManual.analista_nombre || 'Asesor')}.`)
+      : '';
+
     modal.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;margin-bottom:0.45rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
         <div style="font-size:0.88rem;font-weight:800;color:#0f2744;">🪪 Asistente RENAPER Mi Ejemplar</div>
         <button type="button" onclick="document.getElementById('modalGuiaRenaperEjemplar').style.display='none'" title="Ocultar asistente" style="border:none;background:#f1f5f9;color:#334155;border-radius:6px;padding:2px 8px;font-weight:800;cursor:pointer;">✕</button>
       </div>
-      <div id="boxEstadoVentanaRenaper" style="font-size:0.73rem;border:1px solid #86efac;border-radius:8px;padding:0.42rem 0.6rem;margin-bottom:0.5rem;line-height:1.35;"></div>
-      <div style="font-size:0.75rem;color:#475569;margin-bottom:0.5rem;">Titular: <strong>${escHtml(nombre)}</strong></div>
+      <div id="boxEstadoVentanaRenaper" style="font-size:0.72rem;border:1px solid #86efac;border-radius:8px;padding:0.4rem 0.6rem;margin-bottom:0.45rem;line-height:1.35;"></div>
+      <div style="font-size:0.74rem;color:#475569;margin-bottom:0.45rem;">Titular: <strong>${escHtml(nombre)}</strong></div>
       ${rowFn('1. DNI (solo dígitos)', dniClean, true, Boolean(dniClean))}
       ${rowFn('2. Sexo en DNI', sexoLabel, false, false)}
       ${rowFn('3. Fecha de Nacimiento (DD/MM/AAAA)', fechaNac, Boolean(fechaNac), false)}
-      ${ejemplar ? rowFn('Ejemplar impreso leído (para comparar)', 'Ejemplar ' + ejemplar, false, false) : ''}
-      <div style="display:flex;gap:0.45rem;margin-top:0.55rem;flex-wrap:wrap;">
-        <button type="button" id="btnCerrarVentanaRenaperModal" onclick="window.cerrarVentanaRenaperMiEjemplar()" style="flex:1;justify-content:center;align-items:center;gap:5px;padding:0.5rem 0.8rem;border-radius:8px;border:1px solid #dc2626;background:#dc2626;color:#ffffff;font-size:0.78rem;font-weight:800;cursor:pointer;">✕ Cerrar RENAPER y terminar</button>
-        <button type="button" id="btnReabrirVentanaRenaperModal" onclick="window.abrirAsistenteRenaperMiEjemplar(window._ultimoPayloadRenaperModal)" style="display:none;flex:1;justify-content:center;align-items:center;gap:5px;padding:0.5rem 0.8rem;border-radius:8px;border:1px solid #0284c7;background:#0284c7;color:#ffffff;font-size:0.78rem;font-weight:800;cursor:pointer;">↗️ Reabrir RENAPER</button>
+
+      <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:0.55rem 0.65rem;margin:0.45rem 0;">
+        <div style="font-size:0.7rem;font-weight:800;color:#0369a1;text-transform:uppercase;margin-bottom:0.35rem;">🔎 Datos del DNI para comparar con RENAPER</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;">
+          <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:7px;padding:0.35rem 0.5rem;">
+            <div style="font-size:0.64rem;font-weight:700;color:#64748b;text-transform:uppercase;">Ejemplar en DNI</div>
+            <div style="font-size:0.9rem;font-weight:800;color:#0f172a;">${escHtml(ejemplar ? ('Ejemplar ' + ejemplar) : 'No leído')}</div>
+          </div>
+          <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:7px;padding:0.35rem 0.5rem;">
+            <div style="font-size:0.64rem;font-weight:700;color:#64748b;text-transform:uppercase;">Fecha de Emisión</div>
+            <div style="font-size:0.9rem;font-weight:800;color:#0369a1;">${escHtml(fechaEmisionFmt || 'No leída')}</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.55rem 0.65rem;margin-bottom:0.45rem;">
+        <div style="font-size:0.71rem;font-weight:800;color:#0f2744;margin-bottom:0.35rem;">⚖️ Validación Manual del Asesor</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.35rem;margin-bottom:0.35rem;">
+          <div>
+            <label style="display:block;font-size:0.64rem;font-weight:700;color:#475569;">Ejemplar en RENAPER</label>
+            <input type="text" id="inpRenaperCompEjemplar" maxlength="4" value="${escHtml((prevManual && prevManual.ejemplar_renaper) || ejemplar || '')}" placeholder="Ej: A / B / C" style="width:100%;box-sizing:border-box;padding:0.3rem 0.45rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.76rem;font-weight:700;text-transform:uppercase;"/>
+          </div>
+          <div>
+            <label style="display:block;font-size:0.64rem;font-weight:700;color:#475569;">Emisión en RENAPER</label>
+            <input type="text" id="inpRenaperCompEmision" value="${escHtml((prevManual && prevManual.fecha_emision_renaper) || fechaEmisionFmt || '')}" placeholder="DD/MM/AAAA" style="width:100%;box-sizing:border-box;padding:0.3rem 0.45rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.76rem;font-weight:700;"/>
+          </div>
+        </div>
+        <input type="text" id="inpRenaperCompObs" value="${escHtml((prevManual && prevManual.observaciones) || '')}" placeholder="Observaciones (opcional: coincide ejemplar y fecha)" style="width:100%;box-sizing:border-box;padding:0.3rem 0.45rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.73rem;margin-bottom:0.4rem;"/>
+        <div id="boxEstadoManualEjemplarModal" style="display:${estadoPrevDisplay};background:${estadoPrevBg};border:1px solid ${estadoPrevBd};color:${estadoPrevCol};border-radius:7px;padding:0.35rem 0.5rem;font-size:0.73rem;margin-bottom:0.4rem;">${estadoPrevTxt}</div>
+        <div style="display:flex;gap:0.4rem;">
+          <button type="button" id="btnRenaperManualValido" onclick="window.guardarDecisionManualRenaperModal(true)" style="flex:1;padding:0.42rem 0.6rem;border-radius:7px;border:1px solid #15803d;background:#15803d;color:#ffffff;font-size:0.74rem;font-weight:800;cursor:pointer;">✅ Marcar Válido</button>
+          <button type="button" id="btnRenaperManualInvalido" onclick="window.guardarDecisionManualRenaperModal(false)" style="flex:1;padding:0.42rem 0.6rem;border-radius:7px;border:1px solid #b91c1c;background:#b91c1c;color:#ffffff;font-size:0.74rem;font-weight:800;cursor:pointer;">⛔ Marcar No Válido</button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:0.45rem;margin-top:0.4rem;flex-wrap:wrap;">
+        <button type="button" id="btnCerrarVentanaRenaperModal" onclick="window.cerrarVentanaRenaperMiEjemplar()" style="flex:1;justify-content:center;align-items:center;gap:5px;padding:0.45rem 0.75rem;border-radius:8px;border:1px solid #475569;background:#475569;color:#ffffff;font-size:0.76rem;font-weight:800;cursor:pointer;">✕ Cerrar RENAPER</button>
+        <button type="button" id="btnReabrirVentanaRenaperModal" onclick="window.abrirAsistenteRenaperMiEjemplar(window._ultimoPayloadRenaperModal)" style="display:none;flex:1;justify-content:center;align-items:center;gap:5px;padding:0.45rem 0.75rem;border-radius:8px;border:1px solid #0284c7;background:#0284c7;color:#ffffff;font-size:0.76rem;font-weight:800;cursor:pointer;">↗️ Reabrir RENAPER</button>
       </div>
       ${extHintHtml}
     `;
@@ -3259,11 +3457,15 @@
     if (!r) return;
     const guia = r.datos_renaper_guia || {};
     abrirAsistenteRenaperMiEjemplar({
+      solicitudId: r.id,
       nombre: r.nombre_solicitante || '-',
       dni: guia.dni || r.dni_solicitante || '',
       sexo: guia.sexo || '',
       fecha_nacimiento: guia.fecha_nacimiento || '',
       ejemplar: guia.ejemplar || '',
+      fecha_emision: guia.fecha_emision || '',
+      validacion_ejemplar_manual: r.validacion_ejemplar_manual || null,
+      origen: 'firmas',
     });
   }
 
@@ -3280,6 +3482,9 @@
       sexo: sol.sexo || s.sexo || '',
       fecha_nacimiento: sol.fechaNacimiento || sol.fecha_nacimiento || s.fechaNacimiento || '',
       ejemplar: sol.ejemplar || '',
+      fecha_emision: sol.fechaEmision || sol.fecha_emision || '',
+      validacion_ejemplar_manual: s.validacion_ejemplar_manual || null,
+      origen: 'expediente',
     });
   }
 
@@ -3688,6 +3893,7 @@
   global.enviarAFirmaDesdeFicha = enviarAFirmaDesdeFicha;
   global.abrirModalCertificadoPades = abrirModalCertificadoPades;
   global.abrirAsistenteRenaperMiEjemplar = abrirAsistenteRenaperMiEjemplar;
+  global.guardarDecisionManualRenaperModal = guardarDecisionManualRenaperModal;
   global.cerrarVentanaRenaperMiEjemplar = cerrarVentanaRenaperMiEjemplar;
   global.abrirAsistenteRenaperPorId = abrirAsistenteRenaperPorId;
   global.abrirAsistenteRenaperDesdeFicha = abrirAsistenteRenaperDesdeFicha;

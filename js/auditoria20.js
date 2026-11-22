@@ -438,24 +438,47 @@
             (v ? 'background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;' : 'background:#fff1f2;color:#9f1239;border:1px solid #fecdd3;') + '">' +
             (v ? '✔' : '✖') + ' ' + sanitizeHTML(k) + '</span>'
           ).join(' ')
-        : '<span style="font-size:0.74rem;color:#64748b;">No se detectó el código de lectura del dorso (si subiste solo el frente, podés unificar frente y dorso).</span>';
+        : '<span style="font-size:0.74rem;color:#64748b;">No se detectó MRZ (en DNI V1 figura en el frente; en V2/V3 en el dorso — adjuntá frente y dorso para validar checksum ICAO 9303).</span>';
+
+      const codUbicTxt = ext.tiene_qr
+        ? ('Código QR' + (ext.ubicacion_codigo ? (' (' + ext.ubicacion_codigo + ')') : ''))
+        : (ext.tiene_pdf417 ? ('Código PDF417' + (ext.ubicacion_codigo ? (' (' + ext.ubicacion_codigo + ')') : '')) : '');
+
+      const renaperArgsAudit = JSON.stringify({
+        nombre: [ext.apellido, ext.nombres].filter(Boolean).join(', ') || 'Asociado',
+        dni: det.dni_extraido || ext.dni || '',
+        sexo: ext.sexo || '',
+        fecha_nacimiento: det.fecha_nacimiento_iso || ext.fecha_nacimiento || '',
+        ejemplar: ext.ejemplar || det.ejemplar || '',
+        fecha_emision: det.fecha_emision_iso || ext.fecha_emision || '',
+        nro_tramite: ext.nro_tramite || '',
+        validacion_ejemplar_manual: data.validacion_ejemplar_manual || null,
+        origen: 'auditoria20'
+      }).replace(/"/g, '&quot;');
 
       out.innerHTML =
         '<div style="padding:0.9rem 1rem;border-radius:12px;' + hdrStyle + '">' +
           '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0.5rem;">' +
-            '<div style="font-size:0.9rem;font-weight:800;">' + (ok ? '✅' : '⛔') + ' Dictamen DNI: ' + sanitizeHTML(data.dictamen_final || 'REVISION_MANUAL') + '</div>' +
-            (data.discrepancia_ia_vs_reglas ? '<span style="padding:2px 9px;border-radius:9999px;font-size:11px;font-weight:800;background:#7f1d1d;color:#ffffff;">⚠️ Revisión manual sugerida</span>' : '') +
+            '<div style="font-size:0.9rem;font-weight:800;">' + (ok ? '✅' : '⛔') + ' Dictamen DNI: ' + sanitizeHTML(data.dictamen_final || 'REVISION_MANUAL') + (ext.formato_dni ? (' · <span style="font-size:0.75rem;opacity:0.9;">' + sanitizeHTML(ext.formato_dni) + '</span>') : '') + '</div>' +
+            '<div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">' +
+              (data.discrepancia_ia_vs_reglas ? '<span style="padding:2px 9px;border-radius:9999px;font-size:11px;font-weight:800;background:#7f1d1d;color:#ffffff;">⚠️ Revisión manual sugerida</span>' : '') +
+              '<button type="button" onclick="if(typeof window.abrirAsistenteRenaperMiEjemplar===\'function\'){window.abrirAsistenteRenaperMiEjemplar(' + renaperArgsAudit + ');}" style="padding:4px 10px;border-radius:8px;border:1px solid #0284c7;background:#ffffff;color:#0369a1;font-size:0.74rem;font-weight:800;cursor:pointer;">🪪 Validar Ejemplar (RENAPER)</button>' +
+            '</div>' +
           '</div>' +
           '<ul style="margin:0.45rem 0 0 1.15rem;padding:0;font-size:0.76rem;">' + motivos.map(m => '<li>' + sanitizeHTML(m) + '</li>').join('') + '</ul>' +
         '</div>' +
+        '<div id="audit20ManualEjemplarStatus" style="display:none;margin-top:0.65rem;"></div>' +
         '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:0.6rem;margin-top:0.75rem;font-size:0.76rem;">' +
           '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Titular</div><div style="font-weight:800;color:#0f172a;">' + sanitizeHTML(([ext.apellido, ext.nombres].filter(Boolean).join(', ')) || 'No leído') + '</div></div>' +
           '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">DNI / CUIL</div><div style="font-weight:800;font-family:monospace;color:#0f172a;">' + sanitizeHTML(det.dni_extraido || '—') + (ext.cuil ? (' · ' + sanitizeHTML(ext.cuil)) : '') + '</div></div>' +
+          '<div style="padding:0.65rem;border-radius:10px;background:#f0f9ff;border:1px solid #bae6fd;"><div style="color:#0369a1;font-size:11px;font-weight:700;">Ejemplar / Fecha Emisión</div><div style="font-weight:800;color:#0f2744;">Ejemplar ' + sanitizeHTML(ext.ejemplar || det.ejemplar || '—') + ' · Em. ' + sanitizeHTML(det.fecha_emision_iso || ext.fecha_emision || 'No visible') + '</div></div>' +
           '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Vencimiento / Vigencia</div><div style="font-weight:800;color:#0f172a;">' + sanitizeHTML(det.fecha_vencimiento_iso || 'No visible') + (det.dni_vigente === true ? ' (Vigente)' : (det.dni_vigente === false ? ' (VENCIDO)' : '')) + '</div></div>' +
-          '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Domicilio DNI</div><div style="font-weight:700;color:#0f172a;">' + sanitizeHTML(ext.domicilio_dni || 'No visible (requiere dorso)') + '</div></div>' +
+          '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Nacimiento / Sexo</div><div style="font-weight:700;color:#0f172a;">' + sanitizeHTML((det.fecha_nacimiento_iso || ext.fecha_nacimiento || '—') + ' · Sexo ' + (ext.sexo || '—')) + (ext.lugar_nacimiento ? (' · ' + sanitizeHTML(ext.lugar_nacimiento)) : '') + '</div></div>' +
+          '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Trámite N° / Of. Ident.</div><div style="font-weight:700;font-family:monospace;color:#0f172a;">' + sanitizeHTML(ext.nro_tramite || '—') + (ext.oficina_identificadora ? (' · Of. ' + sanitizeHTML(ext.oficina_identificadora)) : '') + (ext.nro_serie ? (' · Serie ' + sanitizeHTML(ext.nro_serie)) : '') + '</div></div>' +
+          '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;grid-column:span 2;"><div style="color:#64748b;font-size:11px;">Domicilio DNI</div><div style="font-weight:700;color:#0f172a;">' + sanitizeHTML(ext.domicilio_dni || 'No visible (requiere dorso)') + (ext.progenitores ? (' · Hijo/a de: ' + sanitizeHTML(ext.progenitores)) : '') + '</div></div>' +
         '</div>' +
         '<div style="margin-top:0.75rem;padding:0.7rem 0.85rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;">' +
-          '<div style="font-size:0.74rem;font-weight:800;color:#0f172a;margin-bottom:5px;">🔐 Verificación del Código de Dorso:</div>' +
+          '<div style="font-size:0.74rem;font-weight:800;color:#0f172a;margin-bottom:5px;">🔐 Verificación MRZ & Códigos de Seguridad' + (codUbicTxt ? (' · <span style="color:#0369a1;">' + sanitizeHTML(codUbicTxt) + '</span>') : '') + ':</div>' +
           '<div style="display:flex;flex-wrap:wrap;gap:0.4rem;">' + checksMrzHtml + '</div>' +
           (evIa.observacionesIA ? ('<div style="margin-top:6px;font-size:0.73rem;color:#475569;"><strong>Observaciones:</strong> ' + sanitizeHTML(evIa.observacionesIA) + '</div>') : '') +
         '</div>' +
@@ -757,8 +780,28 @@
     }
   }
 
+  function actualizarEstadoEjemplarManualAudit20(reg) {
+    const el = document.getElementById('audit20ManualEjemplarStatus');
+    if (!el || !reg) return;
+    el.style.display = 'block';
+    const bg = reg.valido ? '#dcfce7' : '#fef2f2';
+    const bd = reg.valido ? '#86efac' : '#fecaca';
+    const fg = reg.valido ? '#166534' : '#b91c1c';
+    el.innerHTML =
+      '<div style="padding:0.7rem 0.9rem;border-radius:10px;background:' + bg + ';border:1px solid ' + bd + ';color:' + fg + ';font-size:0.77rem;">' +
+        '<strong>' + (reg.valido ? '✅ Validación Manual RENAPER: EJEMPLAR VÁLIDO' : '⛔ Validación Manual RENAPER: EJEMPLAR NO VÁLIDO') + '</strong>' +
+        ' · Asesor: <strong>' + sanitizeHTML(reg.analista_nombre || 'Asesor') + '</strong>' +
+        (reg.ejemplar_renaper || reg.fecha_emision_renaper
+          ? ('<div style="margin-top:3px;">DNI: Ej. ' + sanitizeHTML(reg.ejemplar_dni || '-') + ' / Em. ' + sanitizeHTML(reg.fecha_emision_dni || '-') + ' · RENAPER: Ej. ' + sanitizeHTML(reg.ejemplar_renaper || '-') + ' / Em. ' + sanitizeHTML(reg.fecha_emision_renaper || '-') + '</div>')
+          : '') +
+        (reg.observaciones ? ('<div style="margin-top:2px;">Obs.: <em>' + sanitizeHTML(reg.observaciones) + '</em></div>') : '') +
+      '</div>';
+    actualizarBadgesTabsAuditoria20();
+  }
+
   global._propagarContextoAsociadoAudit20 = _propagarContextoAsociadoAudit20;
   global.actualizarBadgesTabsAuditoria20 = actualizarBadgesTabsAuditoria20;
+  global.actualizarEstadoEjemplarManualAudit20 = actualizarEstadoEjemplarManualAudit20;
   global.cambiarTabAuditoria20 = cambiarTabAuditoria20;
   global.ejecutarValidacionDniAudit20 = ejecutarValidacionDniAudit20;
   global.ejecutarValidacionDomicilioAudit20 = ejecutarValidacionDomicilioAudit20;

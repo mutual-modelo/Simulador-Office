@@ -414,6 +414,9 @@
               '<div style="font-size:0.8rem;color:#334155;margin-top:6px;display:flex;flex-wrap:wrap;gap:0.75rem;">' +
                 '<span>DNI: <strong>' + sanitizeHTML(dniClean) + '</strong></span>' +
                 (cuilLimpio ? ('<span>CUIL: <strong>' + sanitizeHTML(cuilLimpio) + '</strong></span>') : '') +
+                (asoc.dni_ejemplar ? ('<span>Ejemplar: <strong>' + sanitizeHTML(asoc.dni_ejemplar) + '</strong></span>') : '') +
+                (asoc.dni_fecha_emision ? ('<span>F. Emisión: <strong>' + sanitizeHTML(asoc.dni_fecha_emision) + '</strong></span>') : '') +
+                (asoc.dni_vigencia_hasta ? ('<span>Vencimiento: <strong>' + sanitizeHTML(asoc.dni_vigencia_hasta) + '</strong></span>') : '') +
                 '<span>Organismo: <strong>' + sanitizeHTML(orgLimpia) + '</strong></span>' +
               '</div>' +
               '<div style="font-size:0.78rem;color:#475569;margin-top:4px;">Domicilio: ' + sanitizeHTML(domLimpio) + (asoc.localidad ? (' (' + sanitizeHTML(asoc.localidad) + ')') : '') + '</div>' +

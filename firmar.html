@@ -979,7 +979,7 @@
         grabandoAhora: false,
         vozHabilitada: true,
         retoLiveness: 'Mirá al centro, sonreí suavemente y girá un poco la cabeza',
-        ekycImgs: { dniFrente: '', dniDorso: '', selfie1: '', selfie2: '', pdf417Raw: '' },
+        ekycImgs: { dniFrente: '', dniDorso: '', selfie1: '', selfie2: '', pdf417Raw: '', qrRaw: '' },
         drawing: false,
         hasInk: false,
         startTime: null,
@@ -1210,6 +1210,7 @@
               selfieDesafioBase64: appState.ekycImgs.selfie2 || null,
               retoLiveness: appState.retoLiveness,
               pdf417Raw: appState.ekycImgs.pdf417Raw || null,
+              qrRaw: appState.ekycImgs.qrRaw || null,
             }),
           });
           const resJson = await resp.json();
@@ -1605,19 +1606,34 @@
       }
 
       async function intentarLeerPdf417Silencioso(b64) {
-        if (appState.ekycImgs.pdf417Raw) return true;
-        try {
-          if (window.ZXing && typeof window.ZXing.BrowserPDF417Reader === 'function') {
+        let leido = false;
+        if (!window.ZXing) return false;
+
+        if (!appState.ekycImgs.pdf417Raw && typeof window.ZXing.BrowserPDF417Reader === 'function') {
+          try {
             const reader = new window.ZXing.BrowserPDF417Reader();
             const res417 = await reader.decodeFromImageUrl(b64);
             const rawTxt = res417 && (res417.text || (typeof res417.getText === 'function' ? res417.getText() : ''));
             if (rawTxt && String(rawTxt).includes('@')) {
               appState.ekycImgs.pdf417Raw = String(rawTxt);
-              return true;
+              leido = true;
             }
-          }
-        } catch (_) {}
-        return false;
+          } catch (_) {}
+        }
+
+        if (!appState.ekycImgs.qrRaw && typeof window.ZXing.BrowserQRCodeReader === 'function') {
+          try {
+            const qrReader = new window.ZXing.BrowserQRCodeReader();
+            const resQr = await qrReader.decodeFromImageUrl(b64);
+            const rawQr = resQr && (resQr.text || (typeof resQr.getText === 'function' ? resQr.getText() : ''));
+            if (rawQr && String(rawQr).trim().length >= 8) {
+              appState.ekycImgs.qrRaw = String(rawQr).trim();
+              leido = true;
+            }
+          } catch (_) {}
+        }
+
+        return leido || Boolean(appState.ekycImgs.pdf417Raw || appState.ekycImgs.qrRaw);
       }
 
       function setupSeccionEkyc(data) {

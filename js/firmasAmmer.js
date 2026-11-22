@@ -1602,14 +1602,21 @@
           <!-- TAB 2: IDENTIDAD, FOTOS & CRUCES -->
           <div id="pnlFichaModalTab_ekyc" style="display:none;">
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:0.55rem;margin-bottom:1rem;">
-              ${kpiItem('Dictamen eKYC', (ek && ek.estado_ekyc) || 'Sin captura eKYC', (ek && ek.estado_ekyc === 'APROBADO') ? '#f0fdf4' : '#f8fafc', (ek && ek.estado_ekyc === 'APROBADO') ? '#166534' : '#334155')}
-              ${kpiItem('Cotejo Facial (Selfie vs DNI)', ek && ek.face_match_pct != null ? `${ek.face_match_pct}% coincidencia` : 'No ejecutado', '#eff6ff', '#1d4ed8')}
+              ${kpiItem('Dictamen eKYC', (ek && ek.estado_ekyc) || 'Sin captura eKYC', (ek && ek.estado_ekyc === 'APROBADO') ? '#f0fdf4' : ((ek && ek.estado_ekyc === 'REVISION_REQUERIDA') ? '#fef2f2' : '#fffbeb'), (ek && ek.estado_ekyc === 'APROBADO') ? '#166534' : ((ek && ek.estado_ekyc === 'REVISION_REQUERIDA') ? '#b91c1c' : '#92400e'))}
+              ${kpiItem('Cotejo Facial (Selfie vs DNI)', ek && ek.face_match_pct != null ? `${ek.face_match_pct}% coincidencia${ek.motor_biometria === 'biometria_local_offline' ? ' · Motor Local' : (ek.motor_biometria === 'gemini_vision' ? ' · Gemini IA' : '')}` : 'No ejecutado', '#eff6ff', '#1d4ed8')}
               ${kpiItem('Prueba de Vida (Liveness)', ek && ek.liveness_ok === true ? 'Aprobada' : (ek && ek.liveness_ok === false ? 'Observada' : 'No ejecutada'))}
               ${kpiItem('Código DNI (PDF417 / QR)', codKpiTxt)}
               ${kpiItem('Validación RENAPER (Asesor)', ejManKpi, ejManBg, ejManCol)}
               ${kpiItem('Boletín Oficial Entre Ríos', bo.consultado ? (bo.tiene_alerta_critica ? `⚠️ ${bo.total_resultados || 0} alerta(s)` : `Limpio (${bo.total_resultados || 0} menc.)`) : 'No consultado', bo.tiene_alerta_critica ? '#fef2f2' : '#f0fdf4', bo.tiene_alerta_critica ? '#b91c1c' : '#166534')}
               ${kpiItem('CajaJPER Entre Ríos', cj.consultado ? `${cj.cantidad_expedientes || 0} expediente(s)` : 'No consultado')}
             </div>
+
+            ${(ek && (ek.observaciones_biometria || (Array.isArray(ek.alertas) && ek.alertas.length))) ? `
+              <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.65rem 0.85rem;margin-bottom:1rem;font-size:0.76rem;color:#334155;">
+                ${ek.observaciones_biometria ? `<div><strong>Detalle biométrico:</strong> ${escHtml(ek.observaciones_biometria)}</div>` : ''}
+                ${(Array.isArray(ek.alertas) && ek.alertas.length) ? `<div style="margin-top:4px;color:#b45309;"><strong>Alertas eKYC:</strong> ${ek.alertas.map(a => escHtml(a)).join(' · ')}</div>` : ''}
+              </div>
+            ` : ''}
 
             ${ejManual ? `
               <div style="background:${ejManBg};border:1px solid ${ejManual.valido ? '#86efac' : '#fecaca'};border-radius:10px;padding:0.65rem 0.85rem;margin-bottom:1rem;font-size:0.78rem;color:${ejManCol};display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">

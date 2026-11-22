@@ -2601,11 +2601,11 @@
           const w = img.naturalWidth || img.width || 0;
           const h = img.naturalHeight || img.height || 0;
           if (!w || !h) return out;
-          // Zonas típicas de códigos en DNI argentino: PDF417 frente (abajo-der), PDF417 dorso V1 (arriba-izq), QR dorso V3 (der)
+          // Zonas anatómicas de códigos en los 3 DNI argentinos: V2 frente PDF417 (abajo-der), V1 dorso PDF417 (arriba-izq), V3 dorso QR (medio-der sobre MRZ)
           const zonas = [
-            { tag: 'pdf417_frente', sx: 0.44, sy: 0.58, sw: 0.55, sh: 0.41, ox: 0.44, oy: 0.58 },
-            { tag: 'pdf417_dorso', sx: 0.01, sy: 0.02, sw: 0.58, sh: 0.46, ox: 0.01, oy: 0.02 },
-            { tag: 'qr_dorso', sx: 0.46, sy: 0.02, sw: 0.53, sh: 0.64, ox: 0.46, oy: 0.02 },
+            { tag: 'v2_pdf417_frente', sx: 0.48, sy: 0.62, sw: 0.50, sh: 0.35, ox: 0.48, oy: 0.62, minScale: 1.8 },
+            { tag: 'v1_pdf417_dorso', sx: 0.02, sy: 0.03, sw: 0.58, sh: 0.43, ox: 0.02, oy: 0.03, minScale: 1.8 },
+            { tag: 'v3_qr_dorso', sx: 0.65, sy: 0.20, sw: 0.34, sh: 0.49, ox: 0.65, oy: 0.20, minScale: 2.4 },
           ];
           const cv = document.createElement('canvas');
           const ctx = cv.getContext('2d');
@@ -2615,7 +2615,7 @@
             const py = Math.floor(h * z.sy);
             const pw = Math.max(80, Math.floor(w * z.sw));
             const ph = Math.max(60, Math.floor(h * z.sh));
-            const scale = pw < 700 ? 2.0 : 1.35;
+            const scale = pw < 720 ? (z.minScale || 2.0) : 1.4;
             cv.width = Math.round(pw * scale);
             cv.height = Math.round(ph * scale);
             ctx.filter = 'grayscale(1) contrast(1.45) brightness(1.05)';

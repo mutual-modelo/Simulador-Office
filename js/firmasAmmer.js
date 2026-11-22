@@ -3366,6 +3366,7 @@
     global.addEventListener('message', (ev) => {
       if (ev.source !== global || !ev.data || typeof ev.data !== 'object') return;
       if (ev.data.type === 'AMMER_RENAPER_OPENED') {
+        if (ev.data.requestId && String(ev.data.requestId).startsWith('drive_')) return;
         if (ev.data.ok) {
           renaperAssistState.mode = 'extension';
           renaperAssistState.extTabId = ev.data.tabId || null;

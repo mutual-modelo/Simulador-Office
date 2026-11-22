@@ -1496,7 +1496,7 @@
           <div class="dni-orient-callout">
             <span class="dni-orient-callout-ico" aria-hidden="true">📱↻</span>
             <span>
-              <strong>Poné tu celular en horizontal (acostado)</strong> antes de sacar las fotos para encuadrar mejor el frente y el dorso de tu DNI con máximo detalle.
+              <strong>Al tocar 📷 Cámara se abrirá la cámara de tu celular.</strong> Sacá la foto en horizontal (apaisado) encuadrando los 4 bordes y se acomodará automáticamente para leer.
             </span>
           </div>
 
@@ -1511,10 +1511,14 @@
               <img id="imgPrevDniFrente" class="dni-preview" alt="Foto del frente del DNI"/>
               <div id="lblStatusDniFrente" class="dni-status-pill">✓ Foto guardada</div>
               <div style="display:flex;gap:0.4rem;width:100%;flex-wrap:wrap;">
-                <button type="button" id="btnAbrirCamaraDniFrente" class="btn btn-primary btn-sm" style="flex:1;min-height:40px;">
+                <label id="btnAbrirCamaraDniFrente" class="btn btn-primary btn-sm" style="flex:1;min-height:42px;cursor:pointer;">
                   <span id="txtBtnDniFrente">📷 Cámara</span>
+                  <input type="file" id="inpDniFrenteCam" accept="image/*" capture="environment" style="display:none;"/>
+                </label>
+                <button type="button" id="btnRotarPrevDniFrente" class="btn btn-secondary btn-sm" style="min-height:42px;display:none;" title="Girar 90°">
+                  ↻ Girar
                 </button>
-                <label id="lblBtnDniFrenteGal" class="btn btn-secondary btn-sm dni-gal-fallback" style="flex:1;cursor:pointer;min-height:40px;display:none;">
+                <label id="lblBtnDniFrenteGal" class="btn btn-secondary btn-sm dni-gal-fallback" style="flex:1;cursor:pointer;min-height:42px;display:none;">
                   <span>🖼️ Galería</span>
                   <input type="file" id="inpDniFrenteGal" accept="image/*" style="display:none;"/>
                 </label>
@@ -1527,10 +1531,14 @@
               <img id="imgPrevDniDorso" class="dni-preview" alt="Foto del dorso del DNI"/>
               <div id="lblStatusDniDorso" class="dni-status-pill">✓ Foto guardada</div>
               <div style="display:flex;gap:0.4rem;width:100%;flex-wrap:wrap;">
-                <button type="button" id="btnAbrirCamaraDniDorso" class="btn btn-primary btn-sm" style="flex:1;min-height:40px;">
+                <label id="btnAbrirCamaraDniDorso" class="btn btn-primary btn-sm" style="flex:1;min-height:42px;cursor:pointer;">
                   <span id="txtBtnDniDorso">📷 Cámara</span>
+                  <input type="file" id="inpDniDorsoCam" accept="image/*" capture="environment" style="display:none;"/>
+                </label>
+                <button type="button" id="btnRotarPrevDniDorso" class="btn btn-secondary btn-sm" style="min-height:42px;display:none;" title="Girar 90°">
+                  ↻ Girar
                 </button>
-                <label id="lblBtnDniDorsoGal" class="btn btn-secondary btn-sm dni-gal-fallback" style="flex:1;cursor:pointer;min-height:40px;display:none;">
+                <label id="lblBtnDniDorsoGal" class="btn btn-secondary btn-sm dni-gal-fallback" style="flex:1;cursor:pointer;min-height:42px;display:none;">
                   <span>🖼️ Galería</span>
                   <input type="file" id="inpDniDorsoGal" accept="image/*" style="display:none;"/>
                 </label>
@@ -1672,57 +1680,6 @@
       <div class="wizard-bar-actions">
         <button type="button" id="btnWizardPrev" class="btn btn-secondary">← Volver</button>
         <button type="button" id="btnWizardNext" class="btn btn-primary">Continuar →</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- CÁMARA EN PANTALLA COMPLETA PARA DNI (ESTILO APP DE CÁMARA) -->
-  <div id="dniCameraLiveBox" class="dni-cam-live-box" role="dialog" aria-modal="true" aria-label="Cámara para fotografiar DNI">
-    <div class="dni-cam-frame" id="dniCamFrame">
-      <video id="videoDniCapture" autoplay playsinline muted></video>
-      <div id="dniFocusReticle" class="dni-focus-reticle" aria-hidden="true"></div>
-
-      <div class="dni-cam-hud-shell" id="dniCamHudShell">
-        <div class="dni-cam-top-hud">
-          <button type="button" id="btnCancelarCamaraDni" class="dni-hud-btn" aria-label="Cerrar cámara" title="Cerrar">
-            ✕
-          </button>
-          <div id="lblDniCamTitulo" class="dni-hud-title">
-            Frente del DNI
-          </div>
-          <div class="dni-hud-actions-right">
-            <button type="button" id="btnRotarHudDni" class="dni-hud-btn" title="Girar vista a horizontal" aria-label="Girar vista a horizontal">
-              ↻
-            </button>
-            <button type="button" id="btnToggleFlashDni" class="dni-hud-btn" aria-pressed="false" title="Activar o desactivar flash" aria-label="Activar o desactivar flash">
-              ⚡
-            </button>
-          </div>
-        </div>
-
-        <div class="dni-cam-stage">
-          <div class="dni-cam-guide" aria-hidden="true">
-            <span class="dni-guide-dot tl"></span>
-            <span class="dni-guide-dot tr"></span>
-            <span class="dni-guide-dot bl"></span>
-            <span class="dni-guide-dot br"></span>
-          </div>
-          <div id="lblDniGuideHint" class="dni-cam-guide-label">Encuadrá los 4 bordes del DNI dentro del recuadro</div>
-        </div>
-
-        <div id="dniFlashToast" class="dni-flash-toast"></div>
-
-        <label id="lblDniCamNativa" class="dni-nativa-pill" title="Abrir la cámara nativa del teléfono para máxima nitidez">
-          <span>📷 Cámara del cel</span>
-          <input type="file" id="inpDniCamNativa" accept="image/*" capture="environment" style="display:none;"/>
-        </label>
-
-        <div class="dni-cam-bottom-hud">
-          <button type="button" id="btnCapturarFotoDni" class="dni-shutter-btn-wrap" aria-label="Sacar foto">
-            <span class="dni-shutter-ring"><span class="dni-shutter-inner"></span></span>
-            <span class="dni-shutter-caption" id="txtShutterDniCaption">Sacar foto</span>
-          </button>
-        </div>
       </div>
     </div>
   </div>
@@ -2365,95 +2322,191 @@
       }
 
       // ============================================================
-      // CÁMARA EKYC + VIDEO GUIADO + AUDIO + DNI SIN FALSAS ALERTAS
+      // CÁMARA EKYC + VIDEO GUIADO + AUTO-ORIENTACIÓN APAISADA DNI
       // ============================================================
-      let dniFlashToastTimer = null;
-      function mostrarToastFlashDni(texto) {
-        const el = document.getElementById('dniFlashToast');
-        if (!el) return;
-        if (dniFlashToastTimer) {
-          clearTimeout(dniFlashToastTimer);
-          dniFlashToastTimer = null;
-        }
-        if (!texto) {
-          el.style.display = 'none';
-          el.textContent = '';
-          return;
-        }
-        el.textContent = texto;
-        el.style.display = 'block';
-        dniFlashToastTimer = setTimeout(() => {
-          el.style.display = 'none';
-        }, 2800);
-      }
-
-      function actualizarUiFlashDni(encendido) {
-        const btn = document.getElementById('btnToggleFlashDni');
-        if (!btn) return;
-        btn.classList.toggle('is-active', !!encendido);
-        btn.setAttribute('aria-pressed', encendido ? 'true' : 'false');
-        btn.textContent = '⚡';
-      }
-
-      function actualizarOrientacionCamaraDni() {
-        const vid = document.getElementById('videoDniCapture');
-        const box = document.getElementById('dniCameraLiveBox');
-        const hintEl = document.getElementById('lblDniGuideHint');
-        const rotBtn = document.getElementById('btnRotarHudDni');
-        if (!vid || !appState.dniCamStream) return;
-        const esLandscapeReal = window.innerWidth > window.innerHeight;
-
-        if (box) {
-          box.classList.toggle('hud-rot-90', !esLandscapeReal && appState.dniHudRot === '90');
-          box.classList.toggle('hud-rot-n90', !esLandscapeReal && appState.dniHudRot === '-90');
-        }
-        if (rotBtn && !esLandscapeReal) {
-          rotBtn.classList.toggle('is-active', appState.dniHudRot !== '0');
-        }
-
-        const enHorizontal = esLandscapeReal || appState.dniHudRot !== '0';
-        if (hintEl) {
-          hintEl.textContent = enHorizontal
-            ? 'Encuadrá los 4 bordes del DNI dentro del recuadro'
-            : 'Encuadrá el DNI o girá tu celular horizontal';
-        }
-      }
-
       function detenerCamaraDni() {
-        window.removeEventListener('resize', actualizarOrientacionCamaraDni);
-        window.removeEventListener('orientationchange', actualizarOrientacionCamaraDni);
-        if (appState.dniCamStream) {
+        // El flujo de DNI usa la cámara nativa del dispositivo; mantenemos esta limpieza segura.
+        document.body.style.overflow = '';
+      }
+
+      async function _cargarImagenFuente(file) {
+        if (typeof window.createImageBitmap === 'function') {
           try {
-            const vTrack = appState.dniCamStream.getVideoTracks && appState.dniCamStream.getVideoTracks()[0];
-            if (appState.dniTorchOn && vTrack && typeof vTrack.applyConstraints === 'function') {
-              vTrack.applyConstraints({ advanced: [{ torch: false }] }).catch(() => {});
+            return await window.createImageBitmap(file, { imageOrientation: 'from-image' });
+          } catch (_e) {}
+        }
+        return await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error('Imagen no legible'));
+            img.src = reader.result;
+          };
+          reader.onerror = () => reject(new Error('No se pudo leer la foto'));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function _dibujarRotadoDataUrl(src, degCw, maxLado, calidad) {
+        const sw0 = src.width || src.naturalWidth || 1280;
+        const sh0 = src.height || src.naturalHeight || 720;
+        const scale = Math.min(1, (maxLado || 2200) / Math.max(sw0, sh0));
+        const sw = Math.max(1, Math.round(sw0 * scale));
+        const sh = Math.max(1, Math.round(sh0 * scale));
+        const rot = ((degCw % 360) + 360) % 360;
+        const c = document.createElement('canvas');
+        const ctx = c.getContext('2d');
+        if (rot === 90 || rot === 270) {
+          c.width = sh;
+          c.height = sw;
+        } else {
+          c.width = sw;
+          c.height = sh;
+        }
+        ctx.translate(c.width / 2, c.height / 2);
+        if (rot) ctx.rotate((rot * Math.PI) / 180);
+        ctx.drawImage(src, -sw / 2, -sh / 2, sw, sh);
+        return { b64: c.toDataURL('image/jpeg', calidad || 0.93), width: c.width, height: c.height };
+      }
+
+      function _puntuarOrientacionDniVisual(src, degCw) {
+        try {
+          const sw0 = src.width || src.naturalWidth || 120;
+          const sh0 = src.height || src.naturalHeight || 76;
+          const rot = ((degCw % 360) + 360) % 360;
+          const outW = 120;
+          const outH = Math.max(40, Math.round(outW * ((rot === 90 || rot === 270) ? (sw0 / sh0) : (sh0 / sw0))));
+          const c = document.createElement('canvas');
+          c.width = outW;
+          c.height = outH;
+          const ctx = c.getContext('2d');
+          ctx.translate(outW / 2, outH / 2);
+          if (rot) ctx.rotate((rot * Math.PI) / 180);
+          const drawW = (rot === 90 || rot === 270) ? outH : outW;
+          const drawH = (rot === 90 || rot === 270) ? outW : outH;
+          ctx.drawImage(src, -drawW / 2, -drawH / 2, drawW, drawH);
+          const data = ctx.getImageData(0, 0, outW, outH).data;
+          let sumTop = 0, cntTop = 0, sumBot = 0, cntBot = 0, edgeTop = 0, edgeBot = 0;
+          const topLim = Math.floor(outH * 0.24);
+          const botLim = Math.floor(outH * 0.70);
+          for (let y = 0; y < outH; y++) {
+            for (let x = 1; x < outW; x++) {
+              const i = (y * outW + x) * 4;
+              const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+              const lumPrev = 0.299 * data[i - 4] + 0.587 * data[i - 3] + 0.114 * data[i - 2];
+              const diff = Math.abs(lum - lumPrev);
+              if (y < topLim) { sumTop += lum; cntTop++; edgeTop += diff; }
+              else if (y > botLim) { sumBot += lum; cntBot++; edgeBot += diff; }
+            }
+          }
+          const mTop = cntTop ? (sumTop / cntTop) : 0;
+          const mBot = cntBot ? (sumBot / cntBot) : 0;
+          const eTop = cntTop ? (edgeTop / cntTop) : 0;
+          const eBot = cntBot ? (edgeBot / cntBot) : 0;
+          return (mTop - mBot) + 0.8 * (eBot - eTop);
+        } catch (_e) {
+          return 0;
+        }
+      }
+
+      async function _evaluarBarcodeConPosicion(b64, w, h) {
+        if (!window.ZXing) return { tipo: '', cy: null, cx: null };
+        const calcCentro = (res) => {
+          try {
+            const pts = res && (res.resultPoints || (typeof res.getResultPoints === 'function' ? res.getResultPoints() : null));
+            if (!Array.isArray(pts) || !pts.length) return { cx: null, cy: null };
+            let sx = 0, sy = 0, n = 0;
+            for (const p of pts) {
+              const px = typeof p.getX === 'function' ? p.getX() : p.x;
+              const py = typeof p.getY === 'function' ? p.getY() : p.y;
+              if (Number.isFinite(px) && Number.isFinite(py)) { sx += px; sy += py; n++; }
+            }
+            if (!n) return { cx: null, cy: null };
+            return { cx: (sx / n) / (w || 1), cy: (sy / n) / (h || 1) };
+          } catch (_e) { return { cx: null, cy: null }; }
+        };
+        if (typeof window.ZXing.BrowserPDF417Reader === 'function') {
+          try {
+            const r417 = await new window.ZXing.BrowserPDF417Reader().decodeFromImageUrl(b64);
+            const raw = r417 && (r417.text || (typeof r417.getText === 'function' ? r417.getText() : ''));
+            if (raw && String(raw).includes('@')) {
+              if (!appState.ekycImgs.pdf417Raw) appState.ekycImgs.pdf417Raw = String(raw);
+              const { cx, cy } = calcCentro(r417);
+              return { tipo: 'pdf417', cx, cy };
             }
           } catch (_e) {}
+        }
+        if (typeof window.ZXing.BrowserQRCodeReader === 'function') {
           try {
-            appState.dniCamStream.getTracks().forEach((t) => t.stop());
+            const rQr = await new window.ZXing.BrowserQRCodeReader().decodeFromImageUrl(b64);
+            const rawQr = rQr && (rQr.text || (typeof rQr.getText === 'function' ? rQr.getText() : ''));
+            if (rawQr && String(rawQr).trim().length >= 8) {
+              if (!appState.ekycImgs.qrRaw) appState.ekycImgs.qrRaw = String(rawQr).trim();
+              const { cx, cy } = calcCentro(rQr);
+              return { tipo: 'qr', cx, cy };
+            }
           } catch (_e) {}
-          appState.dniCamStream = null;
         }
-        appState.dniTorchOn = false;
-        appState.dniHudRot = '0';
-        appState.dniCamTarget = '';
-        actualizarUiFlashDni(false);
-        mostrarToastFlashDni('');
-        document.body.style.overflow = '';
-        const vid = document.getElementById('videoDniCapture');
-        if (vid) {
-          vid.onloadedmetadata = null;
-          vid.srcObject = null;
+        return { tipo: '', cy: null, cx: null };
+      }
+
+      async function procesarFotoDniApaisada(file, lado) {
+        const src = await _cargarImagenFuente(file);
+        try {
+          const w0 = src.width || src.naturalWidth || 1280;
+          const h0 = src.height || src.naturalHeight || 720;
+
+          if (w0 >= h0) {
+            const res0 = _dibujarRotadoDataUrl(src, 0, 2200, 0.93);
+            const code0 = await _evaluarBarcodeConPosicion(res0.b64, res0.width, res0.height);
+            if (code0.tipo === 'pdf417' && code0.cy != null && code0.cy < 0.42) {
+              return _dibujarRotadoDataUrl(src, 180, 2200, 0.93).b64;
+            }
+            if (code0.tipo === 'qr' && lado === 'dorso' && code0.cx != null && code0.cx < 0.38 && code0.cy > 0.55) {
+              return _dibujarRotadoDataUrl(src, 180, 2200, 0.93).b64;
+            }
+            return res0.b64;
+          }
+
+          // Si llegó vertical, probar ambas orientaciones apaisadas (270° y 90°) y elegir la derecha para leer
+          const cand270 = _dibujarRotadoDataUrl(src, 270, 1100, 0.88);
+          const cand90 = _dibujarRotadoDataUrl(src, 90, 1100, 0.88);
+          const code270 = await _evaluarBarcodeConPosicion(cand270.b64, cand270.width, cand270.height);
+          const code90 = await _evaluarBarcodeConPosicion(cand90.b64, cand90.width, cand90.height);
+
+          let anguloElegido = null;
+          if (code270.tipo === 'pdf417' && code270.cy != null) {
+            anguloElegido = code270.cy > 0.45 ? 270 : 90;
+          } else if (code90.tipo === 'pdf417' && code90.cy != null) {
+            anguloElegido = code90.cy > 0.45 ? 90 : 270;
+          } else if (code270.tipo === 'qr' && code270.cx != null) {
+            anguloElegido = (code270.cx > 0.48 && code270.cy < 0.65) ? 270 : 90;
+          } else if (code90.tipo === 'qr' && code90.cx != null) {
+            anguloElegido = (code90.cx > 0.48 && code90.cy < 0.65) ? 90 : 270;
+          } else {
+            const sc270 = _puntuarOrientacionDniVisual(src, 270);
+            const sc90 = _puntuarOrientacionDniVisual(src, 90);
+            anguloElegido = (sc90 > sc270 + 6) ? 90 : 270;
+          }
+
+          return _dibujarRotadoDataUrl(src, anguloElegido, 2200, 0.93).b64;
+        } finally {
+          if (src && typeof src.close === 'function') {
+            try { src.close(); } catch (_e) {}
+          }
         }
-        const ret = document.getElementById('dniFocusReticle');
-        if (ret) ret.style.display = 'none';
-        const box = document.getElementById('dniCameraLiveBox');
-        const grid = document.getElementById('dniCardsGrid');
-        if (box) {
-          box.style.display = 'none';
-          box.classList.remove('hud-rot-90', 'hud-rot-n90');
-        }
-        if (grid) grid.style.display = 'grid';
+      }
+
+      function rotarDataUrlImagen90(b64) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => {
+            resolve(_dibujarRotadoDataUrl(img, 90, 2200, 0.93).b64);
+          };
+          img.onerror = () => reject(new Error('No se pudo girar la imagen'));
+          img.src = b64;
+        });
       }
 
       function detenerCamaraEkyc() {
@@ -2606,6 +2659,7 @@
           const cardId = isFrente ? 'cardDniFrente' : 'cardDniDorso';
           const lblId = isFrente ? 'lblStatusDniFrente' : 'lblStatusDniDorso';
           const btnTxtId = isFrente ? 'txtBtnDniFrente' : 'txtBtnDniDorso';
+          const rotBtnId = isFrente ? 'btnRotarPrevDniFrente' : 'btnRotarPrevDniDorso';
 
           appState.ekycImgs[key] = b64;
           appState.ekycValidado = false;
@@ -2616,6 +2670,8 @@
           if (card) card.classList.add('captured');
           const btnTxt = document.getElementById(btnTxtId);
           if (btnTxt) btnTxt.textContent = '📷 Sacar otra';
+          const rotBtn = document.getElementById(rotBtnId);
+          if (rotBtn) rotBtn.style.display = 'inline-flex';
 
           const lbl = document.getElementById(lblId);
           if (lbl) {
@@ -2627,237 +2683,6 @@
           const encontro417 = await intentarLeerPdf417Silencioso(b64);
           if (encontro417 && lbl) {
             lbl.textContent = '✓ Foto lista y datos leídos';
-          }
-        };
-
-        const abrirCamaraDni = async (lado) => {
-          mostrarErrorEnPaso('');
-          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            registrarFalloDniParaGaleria('No pudimos abrir la cámara en este dispositivo o navegador.', true);
-            return;
-          }
-          try {
-            detenerCamaraEkyc();
-            const esPortraitWin = window.innerHeight > window.innerWidth;
-            const abrirStreamTrasero = async (devId) => {
-              const baseVideo = devId
-                ? { deviceId: { exact: devId } }
-                : { facingMode: { ideal: 'environment' } };
-              const prefW = esPortraitWin ? 1440 : 1920;
-              const prefH = esPortraitWin ? 1920 : 1440;
-              try {
-                return await navigator.mediaDevices.getUserMedia({
-                  video: {
-                    ...baseVideo,
-                    width: { ideal: prefW },
-                    height: { ideal: prefH },
-                    resizeMode: 'none',
-                  },
-                  audio: false,
-                });
-              } catch (_e1) {
-                try {
-                  return await navigator.mediaDevices.getUserMedia({
-                    video: { ...baseVideo, width: { ideal: 1920 }, height: { ideal: 1080 } },
-                    audio: false,
-                  });
-                } catch (_e2) {
-                  return await navigator.mediaDevices.getUserMedia({ video: baseVideo, audio: false });
-                }
-              }
-            };
-
-            let stream = null;
-            try {
-              stream = await abrirStreamTrasero('');
-            } catch (_eInit) {
-              stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-            }
-
-            let vTrack = stream.getVideoTracks && stream.getVideoTracks()[0];
-            let trackLbl = String((vTrack && vTrack.label) || '').toLowerCase();
-            if (/obs[\s_-]?virtual|virtual\s?cam|manycam|snap\s?cam|camtwist|splitcam|xsplit|youcam/i.test(trackLbl)) {
-              stream.getTracks().forEach((t) => t.stop());
-              registrarFalloDniParaGaleria('Por seguridad no se permiten cámaras virtuales o simuladas.', true);
-              return;
-            }
-
-            // En celulares multi-lente (Samsung S20 FE / Android / iPhone), preferir siempre la lente trasera principal (camera2 0)
-            try {
-              const caps0 = (vTrack && typeof vTrack.getCapabilities === 'function') ? (vTrack.getCapabilities() || {}) : {};
-              const settings0 = (vTrack && typeof vTrack.getSettings === 'function') ? (vTrack.getSettings() || {}) : {};
-              const modos0 = Array.isArray(caps0.focusMode) ? caps0.focusMode : [];
-              const maxW0 = Number((caps0.width && caps0.width.max) || 0);
-              const yaEsPrincipal = /camera2 0\b|back triple camera|back dual camera|back camera\b/i.test(trackLbl)
-                && !/ultra|wide|macro|tele/i.test(trackLbl);
-              const pareceAuxiliar = !yaEsPrincipal && (
-                /ultra[\s_-]?wide|macro|telephoto|depth|0\.5x|camera2 [1-9]/i.test(trackLbl)
-                || (modos0.length === 0)
-                || (maxW0 > 0 && maxW0 < 1440)
-              );
-
-              if (pareceAuxiliar && typeof navigator.mediaDevices.enumerateDevices === 'function') {
-                const devs = await navigator.mediaDevices.enumerateDevices();
-                const cams = devs.filter((d) => d.kind === 'videoinput');
-                const candidata = cams.find((d) => {
-                  const l = String(d.label || '').toLowerCase();
-                  if (!l || d.deviceId === settings0.deviceId) return false;
-                  if (/front|user|ultra[\s_-]?wide|macro|telephoto|depth|obs|virtual/i.test(l)) return false;
-                  return /camera2 0\b|back.*camera|triple|dual|main|facing back|environment/i.test(l);
-                });
-                if (candidata && candidata.deviceId) {
-                  try {
-                    const streamMain = await abrirStreamTrasero(candidata.deviceId);
-                    stream.getTracks().forEach((t) => t.stop());
-                    stream = streamMain;
-                    vTrack = stream.getVideoTracks && stream.getVideoTracks()[0];
-                    trackLbl = String((vTrack && vTrack.label) || '').toLowerCase();
-                  } catch (_eSwitch) {}
-                }
-              }
-
-              // Si la pista arrancó en baja resolución (ej. 640x480), forzar máxima resolución disponible del sensor
-              if (vTrack && typeof vTrack.applyConstraints === 'function') {
-                const cNow = (typeof vTrack.getCapabilities === 'function' ? vTrack.getCapabilities() : {}) || {};
-                const sNow = (typeof vTrack.getSettings === 'function' ? vTrack.getSettings() : {}) || {};
-                const maxCapW = Number((cNow.width && cNow.width.max) || 0);
-                const maxCapH = Number((cNow.height && cNow.height.max) || 0);
-                if ((Number(sNow.width || 0) < 1000 && Number(sNow.height || 0) < 1000) && maxCapW >= 1280) {
-                  const targetW = Math.min(2560, maxCapW);
-                  const targetH = Math.min(2560, maxCapH || 1920);
-                  await vTrack.applyConstraints({ width: { ideal: targetW }, height: { ideal: targetH } }).catch(() => {});
-                }
-              }
-            } catch (_eEnum) {}
-
-            appState.dniCamStream = stream;
-            appState.dniCamTarget = lado;
-            appState.dniTorchOn = false;
-            actualizarUiFlashDni(false);
-            mostrarToastFlashDni('');
-
-            const activarAutofocoContinuo = async (puntoNorm) => {
-              const trk = (appState.dniCamStream && appState.dniCamStream.getVideoTracks && appState.dniCamStream.getVideoTracks()[0]) || vTrack;
-              if (!trk || typeof trk.applyConstraints !== 'function') return;
-              try {
-                const caps = typeof trk.getCapabilities === 'function' ? trk.getCapabilities() : {};
-                const adv = {};
-                const modes = Array.isArray(caps && caps.focusMode) ? caps.focusMode : [];
-                if (puntoNorm && caps && caps.pointsOfInterest) {
-                  adv.pointsOfInterest = [puntoNorm];
-                }
-                if (puntoNorm && modes.includes('single-shot')) {
-                  await trk.applyConstraints({ advanced: [{ ...adv, focusMode: 'single-shot' }] }).catch(() => {});
-                  setTimeout(() => {
-                    if (appState.dniCamStream && modes.includes('continuous')) {
-                      trk.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
-                    }
-                  }, 850);
-                  return;
-                }
-                if (modes.includes('continuous')) {
-                  adv.focusMode = 'continuous';
-                } else if (modes.includes('single-shot')) {
-                  adv.focusMode = 'single-shot';
-                }
-                if (Object.keys(adv).length) {
-                  await trk.applyConstraints({ advanced: [adv] }).catch(() => {});
-                }
-              } catch (_e) {}
-            };
-
-            const btnFlashDni = document.getElementById('btnToggleFlashDni');
-            const actualizarDisponibilidadFlash = () => {
-              if (!btnFlashDni || !vTrack) return;
-              try {
-                const caps = typeof vTrack.getCapabilities === 'function' ? vTrack.getCapabilities() : null;
-                if (caps && Object.prototype.hasOwnProperty.call(caps, 'torch')) {
-                  btnFlashDni.dataset.torchCap = caps.torch ? '1' : '0';
-                } else {
-                  btnFlashDni.dataset.torchCap = '';
-                }
-              } catch (_e) {
-                btnFlashDni.dataset.torchCap = '';
-              }
-            };
-
-            const vid = document.getElementById('videoDniCapture');
-            if (vid) {
-              vid.onloadedmetadata = () => {
-                actualizarOrientacionCamaraDni();
-                actualizarDisponibilidadFlash();
-                activarAutofocoContinuo(null);
-              };
-              vid.srcObject = stream;
-            }
-            setTimeout(() => {
-              actualizarDisponibilidadFlash();
-              activarAutofocoContinuo(null);
-            }, 350);
-
-            const titulo = document.getElementById('lblDniCamTitulo');
-            if (titulo) {
-              titulo.textContent = lado === 'frente' ? 'Frente del DNI' : 'Dorso del DNI';
-            }
-            const grid = document.getElementById('dniCardsGrid');
-            const box = document.getElementById('dniCameraLiveBox');
-            if (grid) grid.style.display = 'none';
-            appState.dniHudRot = (window.innerHeight > window.innerWidth) ? '90' : '0';
-            if (box) {
-              box.classList.remove('hud-rot-90', 'hud-rot-n90');
-              box.style.display = 'block';
-            }
-            document.body.style.overflow = 'hidden';
-            window.addEventListener('resize', actualizarOrientacionCamaraDni);
-            window.addEventListener('orientationchange', actualizarOrientacionCamaraDni);
-            actualizarOrientacionCamaraDni();
-
-            const camFrame = document.getElementById('dniCamFrame');
-            const ret = document.getElementById('dniFocusReticle');
-            if (camFrame && !camFrame.dataset.focusBound) {
-              camFrame.dataset.focusBound = '1';
-              camFrame.addEventListener('click', (ev) => {
-                if (!appState.dniCamStream) return;
-                if (ev.target && ev.target.closest && ev.target.closest('button, label, .dni-cam-top-hud, .dni-cam-bottom-hud')) return;
-                const rect = camFrame.getBoundingClientRect();
-                const x = Math.max(0, Math.min(1, (ev.clientX - rect.left) / (rect.width || 1)));
-                const y = Math.max(0, Math.min(1, (ev.clientY - rect.top) / (rect.height || 1)));
-                if (ret) {
-                  ret.style.left = `${ev.clientX - rect.left}px`;
-                  ret.style.top = `${ev.clientY - rect.top}px`;
-                  ret.style.display = 'block';
-                  ret.style.animation = 'none';
-                  void ret.offsetWidth;
-                  ret.style.animation = 'dniFocusPulse 0.45s ease-out';
-                  clearTimeout(appState._dniFocusHideTmr);
-                  appState._dniFocusHideTmr = setTimeout(() => { ret.style.display = 'none'; }, 1100);
-                }
-                const trk = appState.dniCamStream.getVideoTracks && appState.dniCamStream.getVideoTracks()[0];
-                if (trk && typeof trk.applyConstraints === 'function') {
-                  try {
-                    const c = typeof trk.getCapabilities === 'function' ? trk.getCapabilities() : {};
-                    const modes = Array.isArray(c && c.focusMode) ? c.focusMode : [];
-                    const adv = {};
-                    if (c && c.pointsOfInterest) adv.pointsOfInterest = [{ x, y }];
-                    if (modes.includes('single-shot')) adv.focusMode = 'single-shot';
-                    else if (modes.includes('continuous')) adv.focusMode = 'continuous';
-                    if (Object.keys(adv).length) {
-                      trk.applyConstraints({ advanced: [adv] }).catch(() => {});
-                      if (adv.focusMode === 'single-shot' && modes.includes('continuous')) {
-                        setTimeout(() => {
-                          if (appState.dniCamStream) {
-                            trk.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
-                          }
-                        }, 700);
-                      }
-                    }
-                  } catch (_e) {}
-                }
-              });
-            }
-          } catch (err) {
-            detenerCamaraDni();
-            registrarFalloDniParaGaleria('No pudimos abrir la cámara (' + err.message + ').', true);
           }
         };
 
@@ -2879,201 +2704,59 @@
           });
         }
 
-        const btnCamFrente = document.getElementById('btnAbrirCamaraDniFrente');
-        const btnCamDorso = document.getElementById('btnAbrirCamaraDniDorso');
-        const btnCaptDni = document.getElementById('btnCapturarFotoDni');
-        const btnCancDni = document.getElementById('btnCancelarCamaraDni');
-        const btnFlashDni = document.getElementById('btnToggleFlashDni');
-        const btnRotarHud = document.getElementById('btnRotarHudDni');
-
-        if (btnCamFrente && !btnCamFrente.dataset.bound) {
-          btnCamFrente.dataset.bound = '1';
-          btnCamFrente.addEventListener('click', () => abrirCamaraDni('frente'));
-        }
-        if (btnCamDorso && !btnCamDorso.dataset.bound) {
-          btnCamDorso.dataset.bound = '1';
-          btnCamDorso.addEventListener('click', () => abrirCamaraDni('dorso'));
-        }
-        if (btnRotarHud && !btnRotarHud.dataset.bound) {
-          btnRotarHud.dataset.bound = '1';
-          btnRotarHud.addEventListener('click', () => {
-            appState.dniHudRot = appState.dniHudRot === '90' ? '-90' : (appState.dniHudRot === '-90' ? '0' : '90');
-            actualizarOrientacionCamaraDni();
-          });
-        }
-        if (btnFlashDni && !btnFlashDni.dataset.bound) {
-          btnFlashDni.dataset.bound = '1';
-          btnFlashDni.addEventListener('click', async () => {
-            if (!appState.dniCamStream) return;
-            const vTrack = appState.dniCamStream.getVideoTracks && appState.dniCamStream.getVideoTracks()[0];
-            if (!vTrack || typeof vTrack.applyConstraints !== 'function') {
-              mostrarToastFlashDni('Tu navegador no permite controlar el flash desde la web.');
-              return;
-            }
-            const nextState = !appState.dniTorchOn;
-            try {
-              await vTrack.applyConstraints({ advanced: [{ torch: nextState }] });
-              appState.dniTorchOn = nextState;
-              actualizarUiFlashDni(nextState);
-            } catch (_err) {
-              appState.dniTorchOn = false;
-              actualizarUiFlashDni(false);
-              mostrarToastFlashDni('Esta cámara o navegador no permite activar el flash.');
-            }
-          });
-        }
-        if (btnCaptDni && !btnCaptDni.dataset.bound) {
-          btnCaptDni.dataset.bound = '1';
-          btnCaptDni.addEventListener('click', async () => {
-            const vid = document.getElementById('videoDniCapture');
-            const capLbl = document.getElementById('txtShutterDniCaption');
-            const target = appState.dniCamTarget || 'frente';
-            if (!vid || !appState.dniCamStream) return;
-            btnCaptDni.disabled = true;
-            try {
-              const vTrack = appState.dniCamStream.getVideoTracks && appState.dniCamStream.getVideoTracks()[0];
-              if (vTrack && typeof vTrack.applyConstraints === 'function') {
-                try {
-                  const caps = typeof vTrack.getCapabilities === 'function' ? vTrack.getCapabilities() : {};
-                  const modes = Array.isArray(caps && caps.focusMode) ? caps.focusMode : [];
-                  if (modes.includes('single-shot')) {
-                    if (capLbl) capLbl.textContent = 'Enfocando...';
-                    const advAf = { focusMode: 'single-shot' };
-                    if (caps && caps.pointsOfInterest) advAf.pointsOfInterest = [{ x: 0.5, y: 0.5 }];
-                    await vTrack.applyConstraints({ advanced: [advAf] }).catch(() => {});
-                    await new Promise((r) => setTimeout(r, 650));
-                  }
-                } catch (_e) {}
-              }
-
-              if (capLbl) capLbl.textContent = 'Capturando...';
-              let fuenteImg = vid;
-              let iw = vid.videoWidth || 1280;
-              let ih = vid.videoHeight || 720;
-              let imgUrlObj = '';
-
-              if (vTrack && typeof window.ImageCapture === 'function') {
-                try {
-                  const ic = new window.ImageCapture(vTrack);
-                  let photoOpts;
-                  try {
-                    if (typeof ic.getPhotoCapabilities === 'function') {
-                      const pc = await ic.getPhotoCapabilities();
-                      const maxPw = Number((pc && pc.imageWidth && pc.imageWidth.max) || 0);
-                      const maxPh = Number((pc && pc.imageHeight && pc.imageHeight.max) || 0);
-                      if (maxPw >= 1280 && maxPh >= 720) {
-                        photoOpts = {
-                          imageWidth: Math.min(4096, maxPw),
-                          imageHeight: Math.min(3072, maxPh),
-                        };
-                      }
-                    }
-                  } catch (_pcErr) {}
-
-                  const tomarFotoNat = async () => {
-                    if (photoOpts) {
-                      try { return await ic.takePhoto(photoOpts); } catch (_optErr) {}
-                    }
-                    return await ic.takePhoto();
-                  };
-
-                  const blob = await Promise.race([
-                    tomarFotoNat(),
-                    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 2500)),
-                  ]);
-                  if (blob && blob.size > 0) {
-                    imgUrlObj = URL.createObjectURL(blob);
-                    const loadedImg = await new Promise((res, rej) => {
-                      const im = new Image();
-                      im.onload = () => res(im);
-                      im.onerror = rej;
-                      im.src = imgUrlObj;
-                    });
-                    if (loadedImg && loadedImg.naturalWidth > 0) {
-                      fuenteImg = loadedImg;
-                      iw = loadedImg.naturalWidth;
-                      ih = loadedImg.naturalHeight;
-                    }
-                  }
-                } catch (_icErr) {}
-              }
-
-              const scale = Math.min(1, 2400 / Math.max(iw, ih));
-              const sw = Math.max(1, Math.round(iw * scale));
-              const sh = Math.max(1, Math.round(ih * scale));
-              const rotManual = (window.innerHeight > window.innerWidth) ? appState.dniHudRot : '0';
-              const c = document.createElement('canvas');
-              const ctx = c.getContext('2d');
-              if ((rotManual === '90' || rotManual === '-90') && sw < sh) {
-                c.width = sh;
-                c.height = sw;
-                ctx.translate(c.width / 2, c.height / 2);
-                ctx.rotate(rotManual === '90' ? -Math.PI / 2 : Math.PI / 2);
-                ctx.drawImage(fuenteImg, -sw / 2, -sh / 2, sw, sh);
-              } else {
-                c.width = sw;
-                c.height = sh;
-                ctx.drawImage(fuenteImg, 0, 0, sw, sh);
-              }
-              if (imgUrlObj) {
-                try { URL.revokeObjectURL(imgUrlObj); } catch (_e) {}
-              }
-              const b64 = c.toDataURL('image/jpeg', 0.94);
-              detenerCamaraDni();
-              await guardarFotoDni(target, b64);
-            } catch (err) {
-              detenerCamaraDni();
-              registrarFalloDniParaGaleria('No pudimos capturar la foto (' + err.message + ').', true);
-            } finally {
-              btnCaptDni.disabled = false;
-              if (capLbl) capLbl.textContent = 'Sacar foto';
-            }
-          });
-        }
-        const inpCamNativa = document.getElementById('inpDniCamNativa');
-        if (inpCamNativa && !inpCamNativa.dataset.bound) {
-          inpCamNativa.dataset.bound = '1';
-          inpCamNativa.addEventListener('change', async (ev) => {
-            const file = ev.target.files && ev.target.files[0];
-            ev.target.value = '';
-            if (!file) return;
-            const target = appState.dniCamTarget || 'frente';
-            try {
-              const b64 = await redimensionarArchivoImagen(file, 2400, 0.94);
-              detenerCamaraDni();
-              await guardarFotoDni(target, b64);
-            } catch (err) {
-              detenerCamaraDni();
-              registrarFalloDniParaGaleria('No pudimos leer la foto de la cámara (' + err.message + ').', true);
-            }
-          });
-        }
-        if (btnCancDni && !btnCancDni.dataset.bound) {
-          btnCancDni.dataset.bound = '1';
-          btnCancDni.addEventListener('click', () => {
-            detenerCamaraDni();
-          });
-        }
-
-        const bindDniGalInput = (inpId, lado) => {
+        const bindDniInput = (inpId, lado, esCamara) => {
           const inp = document.getElementById(inpId);
           if (!inp || inp.dataset.bound) return;
           inp.dataset.bound = '1';
           inp.addEventListener('change', async (ev) => {
             const file = ev.target.files && ev.target.files[0];
+            ev.target.value = '';
             if (!file) return;
             mostrarErrorEnPaso('');
+            const lblId = lado === 'frente' ? 'lblStatusDniFrente' : 'lblStatusDniDorso';
+            const lbl = document.getElementById(lblId);
+            if (lbl) {
+              lbl.style.display = 'inline-block';
+              lbl.textContent = '⏳ Acomodando foto...';
+            }
             try {
-              const b64 = await redimensionarArchivoImagen(file, 1400);
+              const b64 = await procesarFotoDniApaisada(file, lado);
               await guardarFotoDni(lado, b64);
             } catch (e) {
-              mostrarErrorEnPaso('No pudimos leer esa foto. Probá elegir otra: ' + e.message);
+              if (lbl) lbl.style.display = 'none';
+              if (esCamara) {
+                registrarFalloDniParaGaleria('No pudimos procesar la foto de la cámara (' + e.message + ').', true);
+              } else {
+                mostrarErrorEnPaso('No pudimos leer esa foto. Probá elegir otra: ' + e.message);
+              }
             }
           });
         };
 
-        bindDniGalInput('inpDniFrenteGal', 'frente');
-        bindDniGalInput('inpDniDorsoGal', 'dorso');
+        const bindRotarPrev = (btnId, lado) => {
+          const btn = document.getElementById(btnId);
+          if (!btn || btn.dataset.bound) return;
+          btn.dataset.bound = '1';
+          btn.addEventListener('click', async () => {
+            const key = lado === 'frente' ? 'dniFrente' : 'dniDorso';
+            const cur = appState.ekycImgs[key];
+            if (!cur) return;
+            btn.disabled = true;
+            try {
+              const rot = await rotarDataUrlImagen90(cur);
+              await guardarFotoDni(lado, rot);
+            } catch (_e) {} finally {
+              btn.disabled = false;
+            }
+          });
+        };
+
+        bindDniInput('inpDniFrenteCam', 'frente', true);
+        bindDniInput('inpDniDorsoCam', 'dorso', true);
+        bindDniInput('inpDniFrenteGal', 'frente', false);
+        bindDniInput('inpDniDorsoGal', 'dorso', false);
+        bindRotarPrev('btnRotarPrevDniFrente', 'frente');
+        bindRotarPrev('btnRotarPrevDniDorso', 'dorso');
 
         // Botones de guía por voz
         const btnTestAudio = document.getElementById('btnProbarAudioGuia');

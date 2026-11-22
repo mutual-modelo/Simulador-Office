@@ -600,7 +600,7 @@
     }
 
     cont.innerHTML = state.firmantesGenerar.map((f, idx) => `
-      <div style="display:grid;grid-template-columns:minmax(140px,1fr) minmax(150px,1.2fr) minmax(105px,0.8fr) minmax(115px,0.9fr) auto;gap:0.45rem;align-items:end;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:0.5rem;">
+      <div class="firmas-multifirmante-row">
         <div>
           <label style="display:block;font-size:0.68rem;font-weight:700;color:#475569;">Turno #${idx + 1} · ${escHtml(f.clave)}</label>
           <input type="text" value="${escHtml(f.etiqueta)}" oninput="window.actualizarDatoFirmanteGenerador(${idx}, 'etiqueta', this.value)" style="width:100%;padding:0.35rem 0.45rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.78rem;"/>
@@ -713,7 +713,7 @@
       }
     });
 
-    cont.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:0.65rem;">' +
+    cont.innerHTML = '<div class="firmas-campos-grid">' +
       itemsUnificados.map(({ campo: c, docs, sharedOrigen }) => {
         const val = resolverPreviewLocal(c, ctx);
         const attr = sharedOrigen
@@ -1154,25 +1154,25 @@
 
           return `
             <tr style="border-bottom:1px solid #e2e8f0;vertical-align:middle;">
-              <td style="padding:0.8rem 0.65rem;font-size:0.82rem;">
+              <td data-label="Asociado / Exp." style="padding:0.8rem 0.65rem;font-size:0.82rem;">
                 <div style="font-weight:800;color:#0f172a;">${escHtml(r.nombre_solicitante || '-')}</div>
                 <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">DNI ${escHtml(r.dni_solicitante || '-')} · Exp: ${escHtml(r.expediente_id || '-')}</div>
               </td>
-              <td style="padding:0.8rem 0.65rem;font-size:0.8rem;color:#1e293b;max-width:270px;line-height:1.35;">${escHtml(r.plantilla_nombre || '-')}</td>
-              <td style="padding:0.8rem 0.65rem;text-align:center;">
+              <td data-label="Documento" style="padding:0.8rem 0.65rem;font-size:0.8rem;color:#1e293b;max-width:270px;line-height:1.35;">${escHtml(r.plantilla_nombre || '-')}</td>
+              <td data-label="Estado" style="padding:0.8rem 0.65rem;text-align:center;">
                 <span style="display:inline-block;padding:3px 10px;border-radius:9999px;font-size:0.71rem;font-weight:800;background:${bg};color:${col};white-space:nowrap;">${escHtml(est)}</span>
               </td>
-              <td style="padding:0.8rem 0.65rem;font-size:0.73rem;color:#475569;white-space:nowrap;line-height:1.5;">
+              <td data-label="Fechas (UTC)" style="padding:0.8rem 0.65rem;font-size:0.73rem;color:#475569;white-space:nowrap;line-height:1.5;">
                 <div>Creada: <strong>${escHtml(fechaCreadaTxt)}</strong></div>
                 ${fechaFirmadaTxt ? `<div style="color:#166534;font-weight:700;">Firmada: ${escHtml(fechaFirmadaTxt)}</div>` : ''}
               </td>
-              <td style="padding:0.8rem 0.65rem;font-size:0.72rem;">
+              <td data-label="Evidencia y Ubicación" style="padding:0.8rem 0.65rem;font-size:0.72rem;">
                 <div class="font-mono" style="color:#334155;" title="${escHtml(shaFull)}">SHA256: ${escHtml(shaShort)}…</div>
                 <div style="margin-top:2px;">IP: ${escHtml(r.ip_origen || '-')} · ${gpsHtml}</div>
                 ${badgesHtml ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;">${badgesHtml}</div>` : ''}
               </td>
-              <td style="padding:0.8rem 0.65rem;text-align:right;white-space:nowrap;">
-                <div style="display:inline-flex;gap:6px;align-items:center;justify-content:flex-end;">
+              <td class="firmas-td-actions" style="padding:0.8rem 0.65rem;">
+                <div class="firmas-td-actions-inner">
                   <button type="button" onclick="window.abrirFichaSolicitudFirma('${escHtml(r.id)}')" title="Ver ficha completa: previsualización del PDF, fotos DNI/Selfie, validaciones, historial y acciones" style="${btnBase}border:1px solid #0284c7;background:#eff6ff;color:#0369a1;font-weight:800;">
                     📋 Ver Ficha
                   </button>
@@ -1210,28 +1210,30 @@
           const motivoTxt = br.motivo ? `<div style="font-size:0.71rem;color:#475569;margin-top:3px;max-width:220px;white-space:normal;">${escHtml(br.motivo)}</div>` : '';
           const waMask = br.telefono_validacion ? `<div style="font-size:0.7rem;color:#047857;margin-top:2px;">📲 WA validado: ${escHtml(br.telefono_validacion)}</div>` : '';
           return `
-            <tr style="border-bottom:1px solid #fee2e2;vertical-align:middle;background:#fffafa;">
-              <td style="padding:0.75rem 0.65rem;font-size:0.82rem;">
+            <tr class="firmas-row-elim" style="border-bottom:1px solid #fee2e2;vertical-align:middle;background:#fffafa;">
+              <td data-label="Asociado / Exp." style="padding:0.75rem 0.65rem;font-size:0.82rem;">
                 <div style="font-weight:800;color:#0f172a;">${escHtml(r.nombre_solicitante || '-')}</div>
                 <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">DNI ${escHtml(r.dni_solicitante || '-')} · Exp: ${escHtml(r.expediente_id || '-')}</div>
               </td>
-              <td style="padding:0.75rem 0.65rem;font-size:0.79rem;color:#334155;max-width:240px;line-height:1.35;">${escHtml(r.plantilla_nombre || '-')}</td>
-              <td style="padding:0.75rem 0.65rem;text-align:center;">
+              <td data-label="Documento" style="padding:0.75rem 0.65rem;font-size:0.79rem;color:#334155;max-width:240px;line-height:1.35;">${escHtml(r.plantilla_nombre || '-')}</td>
+              <td data-label="Estado / Motivo" style="padding:0.75rem 0.65rem;text-align:center;">
                 <span style="display:inline-block;padding:3px 10px;border-radius:9999px;font-size:0.71rem;font-weight:800;background:#fee2e2;color:#991b1b;white-space:nowrap;">${escHtml(est)}</span>
                 ${motivoTxt}
               </td>
-              <td style="padding:0.75rem 0.65rem;font-size:0.79rem;color:#0f172a;">
+              <td data-label="Responsable" style="padding:0.75rem 0.65rem;font-size:0.79rem;color:#0f172a;">
                 <div style="font-weight:800;">${escHtml(nomResp)}</div>
                 ${usrResp ? `<div style="font-size:0.72rem;color:#475569;font-weight:700;">Usuario: ${escHtml(usrResp)}</div>` : ''}
                 ${waMask}
               </td>
-              <td style="padding:0.75rem 0.65rem;font-size:0.76rem;color:#334155;white-space:nowrap;font-weight:700;">
+              <td data-label="Fecha y Hora" style="padding:0.75rem 0.65rem;font-size:0.76rem;color:#334155;white-space:nowrap;font-weight:700;">
                 ${escHtml(fechaBajaTxt)}
               </td>
-              <td style="padding:0.75rem 0.65rem;text-align:right;white-space:nowrap;">
-                <button type="button" onclick="window.abrirFichaSolicitudFirma('${escHtml(r.id)}')" style="${btnBase}border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;">
-                  📋 Ver Ficha
-                </button>
+              <td class="firmas-td-actions" style="padding:0.75rem 0.65rem;">
+                <div class="firmas-td-actions-inner">
+                  <button type="button" onclick="window.abrirFichaSolicitudFirma('${escHtml(r.id)}')" style="${btnBase}border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;">
+                    📋 Ver Ficha
+                  </button>
+                </div>
               </td>
             </tr>
           `;
@@ -1555,7 +1557,7 @@
       : '';
 
     ov.innerHTML = `
-      <div style="background:#ffffff;border-radius:16px;max-width:min(1820px,98.5vw);width:98.5vw;max-height:94vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(15,23,42,0.35);overflow:hidden;">
+      <div class="firmas-ficha-dialog" style="background:#ffffff;border-radius:16px;max-width:min(1820px,98.5vw);width:98.5vw;max-height:94vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(15,23,42,0.35);overflow:hidden;">
         <!-- HEADER -->
         <div style="padding:0.95rem 1.25rem;background:linear-gradient(135deg,#0f2744 0%,#1e3a8a 100%);color:#ffffff;display:flex;justify-content:space-between;align-items:flex-start;gap:0.75rem;">
           <div style="min-width:0;">
@@ -1568,13 +1570,13 @@
               DNI ${escHtml(r.dni_solicitante || '-')} · Expediente: <strong>${escHtml(r.expediente_id || '-')}</strong> · Documento: <strong>${escHtml(r.plantilla_nombre || '-')}</strong>
             </div>
           </div>
-          <button type="button" onclick="document.getElementById('modalFichaSolicitudFirmaOverlay').style.display='none'" style="border:none;background:rgba(255,255,255,0.18);color:#ffffff;border-radius:8px;padding:5px 11px;font-weight:800;cursor:pointer;font-size:0.9rem;">✕</button>
+          <button type="button" onclick="document.getElementById('modalFichaSolicitudFirmaOverlay').style.display='none'" style="border:none;background:rgba(255,255,255,0.18);color:#ffffff;border-radius:8px;padding:5px 11px;font-weight:800;cursor:pointer;font-size:0.9rem;flex-shrink:0;">✕</button>
         </div>
 
         ${bajaBannerHtml}
 
         <!-- BARRA DE ACCIONES -->
-        <div style="padding:0.65rem 1.25rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;gap:0.42rem;flex-wrap:nowrap;align-items:center;overflow-x:auto;">
+        <div class="firmas-ficha-actions" style="padding:0.65rem 1.25rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;gap:0.42rem;flex-wrap:nowrap;align-items:center;overflow-x:auto;">
           <button type="button" onclick="window.descargarPdfSolicitudFirma('${escHtml(r.id)}', '${tipoDescarga}')" style="${btnCls}border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-weight:800;">📥 ${labelDescarga}</button>
           ${tsrBtn}
           ${driveBtn}
@@ -1588,7 +1590,7 @@
         </div>
 
         <!-- PESTAÑAS INTERNAS DE LA FICHA -->
-        <div style="padding:0.55rem 1.2rem;background:#ffffff;border-bottom:1px solid #e2e8f0;display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center;">
+        <div class="firmas-ficha-tabs" style="padding:0.55rem 1.2rem;background:#ffffff;border-bottom:1px solid #e2e8f0;display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center;">
           <button type="button" id="btnFichaModalTab_pdf" onclick="window.cambiarTabFichaSolicitudModal('pdf')" style="${btnCls}border:1px solid #0f2744;background:#0f2744;color:#ffffff;">📑 Previsualización PDF</button>
           <button type="button" id="btnFichaModalTab_ekyc" onclick="window.cambiarTabFichaSolicitudModal('ekyc')" style="${btnCls}border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;">🪪 Identidad, Fotos y Cruces</button>
           <button type="button" id="btnFichaModalTab_evidencia" onclick="window.cambiarTabFichaSolicitudModal('evidencia')" style="${btnCls}border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;">🔐 Evidencia Técnica y Legal</button>
@@ -1596,7 +1598,7 @@
         </div>
 
         <!-- CUERPO SCROLLEABLE -->
-        <div style="padding:1rem 1.25rem;overflow-y:auto;flex:1;min-height:360px;">
+        <div class="firmas-ficha-body" style="padding:1rem 1.25rem;overflow-y:auto;flex:1;min-height:360px;">
           <!-- TAB 1: PDF PREVIEW -->
           <div id="pnlFichaModalTab_pdf" style="display:block;">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.65rem;">
@@ -1614,7 +1616,7 @@
 
           <!-- TAB 2: IDENTIDAD, FOTOS & CRUCES -->
           <div id="pnlFichaModalTab_ekyc" style="display:none;">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:0.48rem;margin-bottom:1rem;">
+            <div class="firmas-ficha-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(145px,100%),1fr));gap:0.48rem;margin-bottom:1rem;">
               ${kpiItem('Dictamen eKYC', (ek && ek.estado_ekyc) || 'Sin captura eKYC', (ek && ek.estado_ekyc === 'APROBADO') ? '#f0fdf4' : ((ek && ek.estado_ekyc === 'REVISION_REQUERIDA') ? '#fef2f2' : '#fffbeb'), (ek && ek.estado_ekyc === 'APROBADO') ? '#166534' : ((ek && ek.estado_ekyc === 'REVISION_REQUERIDA') ? '#b91c1c' : '#92400e'))}
               ${kpiItem('Cotejo Facial (Selfie vs DNI)', ek && ek.face_match_pct != null ? `${ek.face_match_pct}% coincidencia${ek.motor_biometria === 'biometria_local_offline' ? ' · Motor Local' : (ek.motor_biometria === 'gemini_vision' ? ' · Gemini IA' : '')}` : 'No ejecutado', '#eff6ff', '#1d4ed8')}
               ${(() => {
@@ -1679,7 +1681,7 @@
             ` : ''}
 
             <div style="font-size:0.8rem;font-weight:800;color:#0f172a;margin-bottom:0.5rem;">Capturas Documentales, 3 Momentos Biométricos y Cotejo de Firma (clic para ampliar)</div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0.75rem;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr));gap:0.75rem;">
               ${fotoCard('🪪 DNI Frente', imgs.dni_frente_b64, 'image/jpeg', 'Sin foto DNI frente')}
               ${fotoCard('🪪 DNI Dorso', imgs.dni_dorso_b64, 'image/jpeg', 'Sin foto DNI dorso')}
               ${fotoCard('🤳 Selfie 1 · Mirada Frontal', imgs.selfie_b64, 'image/jpeg', 'Sin captura de selfie')}
@@ -1745,7 +1747,7 @@
 
           <!-- TAB 3: EVIDENCIA TÉCNICA Y LEGAL -->
           <div id="pnlFichaModalTab_evidencia" style="display:none;">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0.65rem;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:0.65rem;">
               ${kpiItem('Fecha Creación (UTC)', (r.created_at || '').slice(0, 19).replace('T', ' ') || '-')}
               ${kpiItem('Primera Lectura (UTC)', (r.leido_en || '').slice(0, 19).replace('T', ' ') || '-')}
               ${kpiItem('Fecha Firma (UTC)', (r.firmado_en || '').slice(0, 19).replace('T', ' ') || 'Pendiente')}
@@ -2719,7 +2721,7 @@
             🧹 <strong>Modo Campo Vacío activo:</strong> al generar o firmar el PDF, todo texto precompleto (o campo previo) cubierto por este recuadro se borrará en blanco sin escribir nada encima. Podés convertirlo en rellenable en cualquier momento.
           </div>
         ` : `
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(130px,100%),1fr));gap:0.5rem;">
             <div>
               <label style="font-size:0.72rem;font-weight:700;color:#475569;">Tamaño fuente</label>
               <input type="number" min="6" max="18" step="0.5" value="${Number(c.font_size || 10)}" oninput="window.actualizarPropCampoEditor('font_size', parseFloat(this.value) || 10)" style="width:100%;padding:0.35rem 0.5rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.8rem;"/>
@@ -3640,7 +3642,7 @@
 
       <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:0.55rem 0.65rem;margin:0.45rem 0;">
         <div style="font-size:0.7rem;font-weight:800;color:#0369a1;text-transform:uppercase;margin-bottom:0.35rem;">🔎 Datos del DNI para comparar con RENAPER</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(130px,100%),1fr));gap:0.4rem;">
           <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:7px;padding:0.35rem 0.5rem;">
             <div style="font-size:0.64rem;font-weight:700;color:#64748b;text-transform:uppercase;">Ejemplar en DNI</div>
             <div style="font-size:0.9rem;font-weight:800;color:#0f172a;">${escHtml(ejemplar ? ('Ejemplar ' + ejemplar) : 'No leído')}</div>
@@ -3654,7 +3656,7 @@
 
       <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.55rem 0.65rem;margin-bottom:0.45rem;">
         <div style="font-size:0.71rem;font-weight:800;color:#0f2744;margin-bottom:0.35rem;">⚖️ Validación Manual del Asesor</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.35rem;margin-bottom:0.35rem;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(130px,100%),1fr));gap:0.35rem;margin-bottom:0.35rem;">
           <div>
             <label style="display:block;font-size:0.64rem;font-weight:700;color:#475569;">Ejemplar en RENAPER</label>
             <input type="text" id="inpRenaperCompEjemplar" maxlength="4" value="${escHtml((prevManual && prevManual.ejemplar_renaper) || ejemplar || '')}" placeholder="Ej: A / B / C" style="width:100%;box-sizing:border-box;padding:0.3rem 0.45rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.76rem;font-weight:700;text-transform:uppercase;"/>

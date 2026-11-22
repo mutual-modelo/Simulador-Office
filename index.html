@@ -2,9 +2,16 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title>Simulador de Ayudas Económicas — Mutual Modelo</title>
-  <link rel="icon" type="image/jpeg" href="favicon.png"/>
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="manifest" href="manifest.webmanifest"/>
+  <meta name="theme-color" content="#0f2744"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="AMMER Mutual"/>
+  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
   <meta name="description" content="Simulador oficial de ayudas económicas de Mutual Modelo. Líneas FEDEM Provincial, Municipales Convenio VIKINGO / QUAD y Tarjeta Sidecreer."/>
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://script.google.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; worker-src 'self' blob: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data: blob:; frame-src 'self' https://drive.google.com https://docs.google.com https://*.googleusercontent.com data: blob:;"/>
   <meta name="referrer" content="strict-origin-when-cross-origin"/>
@@ -3807,6 +3814,85 @@
     .ai-concl-card.tone-danger{border-left-color:#ef4444;background:#fff1f2}
     .ai-concl-list{margin:0.45rem 0 0 1.15rem;padding:0;font-size:0.74rem;color:#334155}
     .ai-concl-list li{margin-bottom:0.22rem;line-height:1.4}
+
+    /* ========================================================================
+       FIRMAS AMMER — DISEÑO RESPONSIVE ADAPTATIVO (DESKTOP / TABLET / MÓVIL)
+       ======================================================================== */
+    .firmas-shell{padding:1.25rem;display:flex;flex-direction:column;gap:0.95rem;width:100%;max-width:100%;box-sizing:border-box}
+    .firmas-hero{background:linear-gradient(135deg,#0f2744 0%,#1e3a8a 100%);color:#ffffff;border-radius:14px;padding:1.15rem 1.4rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;box-shadow:0 4px 14px rgba(15,39,68,0.14)}
+    .firmas-hero-title{font-size:clamp(0.95rem,2.1vw,1.08rem);font-weight:800;letter-spacing:0.01em;line-height:1.3}
+    .firmas-hero-sub{font-size:clamp(0.75rem,1.6vw,0.81rem);color:#cbd5e1;margin-top:4px;line-height:1.4}
+    .firmas-tabs-bar{background:#ffffff;border:1px solid #cbd5e1;border-radius:12px;padding:0.45rem;display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center;box-shadow:0 1px 3px rgba(15,23,42,0.05)}
+    .firmas-tab-btn{padding:0.55rem 1.05rem;border-radius:8px;font-size:0.82rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all .15s ease;line-height:1.25}
+    .firmas-card{background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:1.15rem;display:flex;flex-direction:column;gap:1rem;width:100%;box-sizing:border-box}
+    .firmas-card--danger{border-color:#fecaca}
+    .firmas-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr));gap:0.9rem}
+    .firmas-exp-row{display:flex;gap:0.45rem;flex-wrap:wrap;align-items:stretch}
+    .firmas-exp-row select{flex:1 1 185px;min-width:0}
+    .firmas-sello-wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem}
+    .firmas-sello-controls{display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap}
+    .firmas-sello-controls input[type="file"]{max-width:100%}
+    .firmas-multifirmante-row{display:grid;grid-template-columns:minmax(130px,1fr) minmax(150px,1.2fr) minmax(105px,0.8fr) minmax(115px,0.9fr) auto;gap:0.45rem;align-items:end;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:0.55rem}
+    .firmas-campos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(235px,100%),1fr));gap:0.65rem}
+    .firmas-canvas-prueba{max-width:100%;height:auto;border:1.5px dashed #94a3b8;border-radius:8px;background:#ffffff;cursor:crosshair;touch-action:none}
+    .firmas-cta-bar{display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center;padding-top:0.4rem;border-top:1px solid #e2e8f0}
+    .firmas-cta-primary{margin-left:auto}
+    .firmas-filter-bar{display:flex;justify-content:space-between;align-items:center;gap:0.6rem;flex-wrap:wrap;margin-bottom:0.9rem}
+    .firmas-filter-input{flex:1 1 240px;min-width:0;padding:0.52rem 0.75rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;box-sizing:border-box}
+    .firmas-table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .firmas-responsive-table{width:100%;border-collapse:collapse}
+    .firmas-td-actions{text-align:right;white-space:nowrap}
+    .firmas-td-actions-inner{display:inline-flex;gap:6px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+    .firmas-editor-top-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:0.8rem;background:#f8fafc;padding:0.9rem;border-radius:10px;border:1px solid #e2e8f0}
+    .firmas-editor-meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr));gap:0.7rem}
+    .firmas-editor-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr);gap:1rem;align-items:start}
+    .firmas-ficha-dialog{background:#ffffff;border-radius:16px;max-width:min(1820px,98.5vw);width:98.5vw;max-height:94vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(15,23,42,0.35);overflow:hidden}
+    .firmas-ficha-actions{padding:0.65rem 1.25rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;gap:0.42rem;flex-wrap:wrap;align-items:center}
+    .firmas-ficha-tabs{padding:0.55rem 1.2rem;background:#ffffff;border-bottom:1px solid #e2e8f0;display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center}
+    .firmas-ficha-body{padding:1rem 1.25rem;overflow-y:auto;flex:1;min-height:320px}
+    .firmas-ficha-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:0.48rem;margin-bottom:1rem}
+    #fichaModalPdfPagesWrap canvas,#firmaPreviewPaginasContainer canvas{max-width:100% !important;height:auto !important}
+    @media (max-width:1024px){
+      .firmas-editor-grid{grid-template-columns:minmax(0,1fr)}
+      .firmas-multifirmante-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .firmas-ficha-actions{padding:0.55rem 0.85rem}
+      .firmas-ficha-tabs{padding:0.5rem 0.85rem}
+      .firmas-ficha-body{padding:0.85rem}
+    }
+    @media (max-width:860px){
+      .firmas-table-wrap{overflow-x:visible}
+      .firmas-responsive-table thead{display:none}
+      .firmas-responsive-table,.firmas-responsive-table tbody{display:block;width:100%}
+      .firmas-responsive-table tr{display:block;background:#ffffff;border:1px solid #cbd5e1;border-radius:12px;padding:0.75rem 0.85rem;margin-bottom:0.75rem;box-shadow:0 1px 4px rgba(15,23,42,0.06)}
+      .firmas-responsive-table tr.firmas-row-elim{background:#fffafa;border-color:#fecaca}
+      .firmas-responsive-table td{display:flex;flex-direction:column;align-items:flex-start;gap:0.18rem;padding:0.38rem 0 !important;border-bottom:1px dashed #e2e8f0;max-width:none !important;white-space:normal !important;text-align:left !important;width:100%;box-sizing:border-box}
+      .firmas-responsive-table td:last-child{border-bottom:none;padding-top:0.55rem !important}
+      .firmas-responsive-table td[colspan]{align-items:center;text-align:center !important;border-bottom:none}
+      .firmas-responsive-table td[data-label]::before{content:attr(data-label);font-size:0.66rem;font-weight:800;text-transform:uppercase;letter-spacing:0.03em;color:#64748b}
+      .firmas-td-actions-inner{width:100%;justify-content:flex-start}
+      .firmas-td-actions-inner button,.firmas-td-actions-inner a{flex:1 1 auto;justify-content:center;min-height:36px}
+    }
+    @media (max-width:640px){
+      .firmas-shell{padding:0.55rem;gap:0.65rem}
+      .firmas-hero{padding:0.9rem 1rem;border-radius:12px}
+      .firmas-card{padding:0.85rem;border-radius:12px;gap:0.85rem}
+      .firmas-tabs-bar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0.4rem;padding:0.4rem}
+      .firmas-tab-btn{padding:0.55rem 0.5rem;font-size:0.74rem;text-align:center}
+      .firmas-multifirmante-row{grid-template-columns:minmax(0,1fr)}
+      .firmas-cta-bar{flex-direction:column;align-items:stretch}
+      .firmas-cta-bar button{width:100%;justify-content:center}
+      .firmas-cta-primary{margin-left:0}
+      .firmas-filter-bar{gap:0.45rem}
+      .firmas-filter-input{flex:1 1 100%;width:100%}
+      .firmas-filter-bar button{flex:1 1 46%;justify-content:center}
+      .firmas-ficha-dialog{width:100vw !important;max-width:100vw !important;height:100dvh !important;max-height:100dvh !important;border-radius:0 !important}
+      .firmas-ficha-actions{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0.5rem 0.7rem}
+      .firmas-ficha-tabs{padding:0.45rem 0.7rem;gap:0.35rem}
+      .firmas-ficha-tabs button{flex:1 1 46%;justify-content:center;font-size:0.72rem !important;padding:0.42rem 0.5rem !important}
+      .firmas-ficha-body{padding:0.75rem}
+      .firmas-ficha-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+      #editorPdfScrollWrap{max-height:58vh !important;padding:0.45rem !important}
+    }
   </style>
 </head>
 <body>
@@ -3990,6 +4076,16 @@
               <div class="notif-dropdown-list" id="notifDropdownList"></div>
             </div>
           </div>
+
+          <!-- BOTÓN INSTALAR APP / ACCESO DIRECTO PWA -->
+          <button class="btn-top-help" id="btnTopInstallPwa" type="button" onclick="window.instalarAppAmmer()" style="display:none;background:#eff6ff;border-color:#93c5fd;color:#1d4ed8;" title="Instalar Mutual Modelo o crear acceso directo en Chrome" aria-label="Instalar aplicación">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span class="btn-top-help-label">Instalar App</span>
+          </button>
 
           <!-- BOTÓN CENTRO DE AYUDA / WIKI -->
           <button class="btn-top-help" id="btnOpenFaqWiki" type="button" onclick="abrirModalFaqWiki()" title="Base de Conocimiento y Preguntas Frecuentes (FAQ)" aria-label="Centro de Ayuda y Preguntas Frecuentes">
@@ -5186,42 +5282,42 @@
 
       <!-- VISTA: FIRMAS AMMER (PLANTILLAS PDF, ENLACE MÓVIL Y TRAZABILIDAD) -->
       <section id="vistaFirmasAMMER" class="app-view">
-        <div class="main-panel" style="padding:1.25rem;display:flex;flex-direction:column;gap:0.95rem;">
-          <div style="background:linear-gradient(135deg,#0f2744 0%,#1e3a8a 100%);color:#ffffff;border-radius:14px;padding:1.15rem 1.4rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;box-shadow:0 4px 14px rgba(15,39,68,0.14);">
+        <div class="main-panel firmas-shell">
+          <div class="firmas-hero">
             <div>
-              <div style="font-size:1.08rem;font-weight:800;letter-spacing:0.01em;">✍️ Firmas AMMER — Firma Electrónica y Gestión de Plantillas PDF</div>
-              <div style="font-size:0.81rem;color:#cbd5e1;margin-top:4px;line-height:1.4;">Creá plantillas PDF reutilizables, enviá enlaces móviles seguros con validación de identidad y descargá documentos firmados con trazabilidad legal.</div>
+              <div class="firmas-hero-title">✍️ Firmas AMMER — Firma Electrónica y Gestión de Plantillas PDF</div>
+              <div class="firmas-hero-sub">Creá plantillas PDF reutilizables, enviá enlaces móviles seguros con validación de identidad y descargá documentos firmados con trazabilidad legal.</div>
             </div>
           </div>
 
-          <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:12px;padding:0.45rem;display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center;box-shadow:0 1px 3px rgba(15,23,42,0.05);">
-            <button type="button" id="btnTabFirma_generar" onclick="cambiarTabFirmas('generar')" style="padding:0.55rem 1.05rem;border-radius:8px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.82rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">✉️ Generar y Enviar a Firma</button>
-            <button type="button" id="btnTabFirma_bandeja" onclick="cambiarTabFirmas('bandeja')" style="padding:0.55rem 1.05rem;border-radius:8px;border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;font-size:0.82rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">📂 Bandeja de Documentos y Evidencia</button>
-            <button type="button" id="btnTabFirma_eliminados" onclick="cambiarTabFirmas('eliminados')" style="padding:0.55rem 1.05rem;border-radius:8px;border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;font-size:0.82rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">🗑️ Eliminados / Cancelados <span id="badgeTabFirmasEliminadas" style="display:none;background:#fee2e2;color:#b91c1c;border-radius:9999px;padding:1px 7px;font-size:0.71rem;font-weight:800;">0</span></button>
-            <button type="button" id="btnTabFirma_editor" onclick="cambiarTabFirmas('editor')" style="display:none;padding:0.55rem 1.05rem;border-radius:8px;border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;font-size:0.82rem;font-weight:700;cursor:pointer;align-items:center;gap:6px;">🎨 Editor Visual de Plantillas PDF</button>
+          <div class="firmas-tabs-bar">
+            <button type="button" id="btnTabFirma_generar" class="firmas-tab-btn" onclick="cambiarTabFirmas('generar')" style="border:1px solid #0f2744;background:#0f2744;color:#ffffff;">✉️ Generar y Enviar a Firma</button>
+            <button type="button" id="btnTabFirma_bandeja" class="firmas-tab-btn" onclick="cambiarTabFirmas('bandeja')" style="border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;">📂 Bandeja de Documentos y Evidencia</button>
+            <button type="button" id="btnTabFirma_eliminados" class="firmas-tab-btn" onclick="cambiarTabFirmas('eliminados')" style="border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;">🗑️ Eliminados / Cancelados <span id="badgeTabFirmasEliminadas" style="display:none;background:#fee2e2;color:#b91c1c;border-radius:9999px;padding:1px 7px;font-size:0.71rem;font-weight:800;">0</span></button>
+            <button type="button" id="btnTabFirma_editor" class="firmas-tab-btn" onclick="cambiarTabFirmas('editor')" style="display:none;border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;">🎨 Editor Visual de Plantillas PDF</button>
           </div>
 
           <!-- SUB-PANEL 1: GENERAR Y ENVIAR A FIRMA -->
           <div id="panelFirmas_generar" style="display:block;">
-            <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:1.15rem;display:flex;flex-direction:column;gap:1rem;">
-              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0.9rem;">
+            <div class="firmas-card">
+              <div class="firmas-form-grid">
                 <div>
                   <label style="display:block;font-size:0.76rem;font-weight:800;color:#334155;margin-bottom:5px;">1. Seleccionar Plantilla PDF</label>
                   <select id="selFirmaPlantilla" onchange="onPlantillaGenerarChange()" style="width:100%;padding:0.52rem 0.65rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.84rem;background:#ffffff;color:#0f172a;"></select>
                 </div>
                 <div>
                   <label style="display:block;font-size:0.76rem;font-weight:800;color:#334155;margin-bottom:5px;">2. Vincular Expediente (Autocompleta datos)</label>
-                  <div style="display:flex;gap:0.45rem;">
-                    <select id="selFirmaExpediente" onchange="renderCamposCompletarFormulario()" style="flex:1;min-width:0;padding:0.52rem 0.65rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.84rem;background:#ffffff;color:#0f172a;"></select>
+                  <div class="firmas-exp-row">
+                    <select id="selFirmaExpediente" onchange="renderCamposCompletarFormulario()" style="padding:0.52rem 0.65rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.84rem;background:#ffffff;color:#0f172a;"></select>
                     <button type="button" onclick="exportarExpedienteCompletoZip()" title="Descargar el legajo completo y todas sus firmas en un archivo .ZIP" style="padding:0.48rem 0.78rem;border-radius:8px;border:1px solid #0f2744;background:#eff6ff;color:#0f2744;font-size:0.77rem;font-weight:700;cursor:pointer;white-space:nowrap;">📦 Legajo .ZIP</button>
                   </div>
                 </div>
                 <div>
-                  <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:5px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap;">
                     <label style="font-size:0.76rem;font-weight:800;color:#334155;">3. WhatsApp de Contacto</label>
                     <span id="badgeEstadoBotWaFirmas" style="font-size:0.68rem;font-weight:700;padding:1px 7px;border-radius:9999px;background:#f1f5f9;color:#475569;">Bot WA: verificando...</span>
                   </div>
-                  <input type="text" id="inpFirmaTelefonoWa" placeholder="Ej: 3434123456 (sin 0 ni 15)" style="width:100%;padding:0.52rem 0.65rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.84rem;"/>
+                  <input type="text" id="inpFirmaTelefonoWa" placeholder="Ej: 3434123456 (sin 0 ni 15)" style="width:100%;padding:0.52rem 0.65rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.84rem;box-sizing:border-box;"/>
                   <label style="display:inline-flex;align-items:center;gap:5px;font-size:0.72rem;font-weight:700;color:#065f46;margin-top:5px;cursor:pointer;">
                     <input type="checkbox" id="chkEnviarWaAutoFirma"/> 🤖 Enviar enlace por WhatsApp automáticamente al generar
                   </label>
@@ -5239,11 +5335,11 @@
 
               <!-- CARGA DE SELLO OFICIAL INSTITUCIONAL (PNG) -->
               <div id="firmaSelloInstitucionalWrap" style="display:none;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:0.85rem 1rem;">
-                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;">
-                  <div style="flex:1;min-width:240px;">
+                <div class="firmas-sello-wrap">
+                  <div style="flex:1;min-width:min(240px,100%);">
                     <div style="font-size:0.8rem;font-weight:800;color:#5b21b6;margin-bottom:3px;">🏛️ Sello Oficial Institucional (PNG transparente)</div>
                     <div style="font-size:0.73rem;color:#6d28d9;margin-bottom:0.45rem;">Esta plantilla incluye espacio para el sello de Mutual Modelo. Subilo una vez y podés recordarlo en este navegador.</div>
-                    <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+                    <div class="firmas-sello-controls">
                       <input type="file" id="inpFirmaSelloPngFile" accept="image/png,image/*" onchange="onArchivoSelloPngSeleccionado(event)" style="font-size:0.78rem;"/>
                       <label style="display:flex;align-items:center;gap:4px;font-size:0.74rem;font-weight:600;color:#4c1d95;cursor:pointer;">
                         <input type="checkbox" id="chkRecordarSelloOficial" checked/> Recordar sello en navegador
@@ -5280,7 +5376,7 @@
               <details style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0.7rem 0.9rem;">
                 <summary style="cursor:pointer;font-size:0.8rem;font-weight:700;color:#334155;">✍️ Opcional: Dibujar firma de prueba presencial (para vista previa completa)</summary>
                 <div style="margin-top:0.6rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
-                  <canvas id="canvasFirmaPruebaPresencial" width="320" height="110" style="border:1.5px dashed #94a3b8;border-radius:8px;background:#ffffff;cursor:crosshair;touch-action:none;"></canvas>
+                  <canvas id="canvasFirmaPruebaPresencial" class="firmas-canvas-prueba" width="320" height="110"></canvas>
                   <div style="display:flex;flex-direction:column;gap:0.4rem;">
                     <button type="button" onclick="limpiarCanvasFirmaPrueba()" style="padding:0.4rem 0.75rem;border-radius:7px;border:1px solid #cbd5e1;background:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;">🧹 Limpiar firma</button>
                     <button type="button" onclick="previsualizarPdfGenerado(true)" style="padding:0.4rem 0.75rem;border-radius:7px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;">👁️ Ver PDF con esta firma</button>
@@ -5288,15 +5384,15 @@
                 </div>
               </details>
 
-              <div style="display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center;padding-top:0.2rem;border-top:1px solid #e2e8f0;">
+              <div class="firmas-cta-bar">
                 <button type="button" onclick="previsualizarPdfGenerado(false)" style="padding:0.58rem 1rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;font-size:0.83rem;font-weight:700;cursor:pointer;">👁️ Vista Previa del PDF</button>
                 <button type="button" onclick="descargarUltimoPreviewPdfFirma()" style="padding:0.58rem 1rem;border-radius:9px;border:1px solid #cbd5e1;background:#f8fafc;color:#334155;font-size:0.83rem;font-weight:700;cursor:pointer;">📥 Descargar PDF Generado</button>
-                <button type="button" onclick="generarEnlaceFirmaMovil()" style="padding:0.62rem 1.2rem;border-radius:9px;border:1px solid #059669;background:#059669;color:#ffffff;font-size:0.85rem;font-weight:800;cursor:pointer;margin-left:auto;">🔗 Generar Enlace(s) de Firma (24 h)</button>
+                <button type="button" class="firmas-cta-primary" onclick="generarEnlaceFirmaMovil()" style="padding:0.62rem 1.2rem;border-radius:9px;border:1px solid #059669;background:#059669;color:#ffffff;font-size:0.85rem;font-weight:800;cursor:pointer;">🔗 Generar Enlace(s) de Firma (24 h)</button>
               </div>
 
               <div id="firmaEnlaceGeneradoBox" style="display:none;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:12px;padding:1rem;">
                 <div style="font-size:0.88rem;font-weight:800;color:#065f46;margin-bottom:0.35rem;">✅ ¡Solicitud(es) de firma generada(s) con 24 horas de vigencia!</div>
-                <div style="font-size:0.74rem;color:#047857;margin-bottom:0.65rem;">Huella SHA-256 original: <span id="lblFirmaHashOriginal" class="font-mono">-</span></div>
+                <div style="font-size:0.74rem;color:#047857;margin-bottom:0.65rem;word-break:break-all;">Huella SHA-256 original: <span id="lblFirmaHashOriginal" class="font-mono">-</span></div>
                 <div id="firmaEnlacesListaContainer" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
               </div>
 
@@ -5305,22 +5401,22 @@
                   <span style="font-size:0.82rem;font-weight:800;color:#0f172a;">Vista Previa del PDF Estampado</span>
                   <button type="button" onclick="document.getElementById('firmaPreviewPdfWrap').style.display='none'" style="padding:2px 8px;border-radius:6px;border:1px solid #94a3b8;background:#ffffff;font-size:0.74rem;cursor:pointer;">Ocultar</button>
                 </div>
-                <div id="firmaPreviewPaginasContainer" style="max-height:560px;overflow-y:auto;"></div>
+                <div id="firmaPreviewPaginasContainer" style="max-height:560px;overflow:auto;"></div>
               </div>
             </div>
           </div>
 
           <!-- SUB-PANEL 2: BANDEJA DE DOCUMENTOS Y EVIDENCIA -->
           <div id="panelFirmas_bandeja" style="display:none;">
-            <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:1.15rem;">
-              <div id="firmaMetricasBar" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:0.6rem;margin-bottom:0.9rem;"></div>
-              <div style="display:flex;justify-content:space-between;align-items:center;gap:0.6rem;flex-wrap:wrap;margin-bottom:0.9rem;">
-                <input type="text" id="inpFiltroBandejaFirmas" oninput="renderBandejaFirmas()" placeholder="Buscar por Nombre, DNI, Expediente, Documento o Estado..." style="flex:1;min-width:240px;padding:0.52rem 0.75rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;"/>
+            <div class="firmas-card">
+              <div id="firmaMetricasBar" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:0.6rem;"></div>
+              <div class="firmas-filter-bar" style="margin-bottom:0;">
+                <input type="text" id="inpFiltroBandejaFirmas" class="firmas-filter-input" oninput="renderBandejaFirmas()" placeholder="Buscar por Nombre, DNI, Expediente, Documento o Estado..."/>
                 <button type="button" onclick="abrirModalCertificadoPades()" title="Ver estado o generar certificado criptográfico PKCS#12 (.p12) para firmar PDFs" style="padding:0.52rem 0.9rem;border-radius:8px;border:1px solid #4338ca;background:#eef2ff;color:#3730a3;font-size:0.8rem;font-weight:700;cursor:pointer;">🔐 Firma Digital (.p12)</button>
                 <button type="button" onclick="cargarBandejaFirmas()" style="padding:0.52rem 0.9rem;border-radius:8px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.8rem;font-weight:700;cursor:pointer;">🔄 Actualizar Listado</button>
               </div>
-              <div style="overflow-x:auto;">
-                <table style="width:100%;border-collapse:collapse;">
+              <div class="firmas-table-wrap">
+                <table class="firmas-responsive-table">
                   <thead>
                     <tr style="background:#f8fafc;border-bottom:2px solid #cbd5e1;text-align:left;font-size:0.73rem;color:#475569;text-transform:uppercase;">
                       <th style="padding:0.6rem 0.65rem;">Asociado / Exp.</th>
@@ -5339,19 +5435,19 @@
 
           <!-- SUB-PANEL 2B: ELIMINADOS / CANCELADOS / DESESTIMADOS -->
           <div id="panelFirmas_eliminados" style="display:none;">
-            <div style="background:#ffffff;border:1px solid #fecaca;border-radius:14px;padding:1.15rem;">
-              <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.85rem;padding-bottom:0.75rem;border-bottom:1px solid #fee2e2;">
+            <div class="firmas-card firmas-card--danger">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;flex-wrap:wrap;padding-bottom:0.75rem;border-bottom:1px solid #fee2e2;">
                 <div>
                   <div style="font-size:0.95rem;font-weight:800;color:#991b1b;">🗑️ Fichas Eliminadas, Canceladas o Desestimadas</div>
                   <div style="font-size:0.77rem;color:#64748b;margin-top:2px;">Registro auditado con código de validación por WhatsApp, nombre y apellido, usuario responsable y fecha/hora exacta de baja.</div>
                 </div>
-                <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-                  <input type="text" id="inpFiltroFirmasEliminadas" oninput="renderBandejaFirmas()" placeholder="Buscar por Asociado, DNI, Responsable o Motivo..." style="min-width:240px;padding:0.48rem 0.72rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.8rem;"/>
+                <div class="firmas-filter-bar" style="margin-bottom:0;flex:1 1 280px;">
+                  <input type="text" id="inpFiltroFirmasEliminadas" class="firmas-filter-input" oninput="renderBandejaFirmas()" placeholder="Buscar por Asociado, DNI, Responsable o Motivo..."/>
                   <button type="button" onclick="cargarBandejaFirmas()" style="padding:0.48rem 0.85rem;border-radius:8px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.79rem;font-weight:700;cursor:pointer;">🔄 Actualizar</button>
                 </div>
               </div>
-              <div style="overflow-x:auto;">
-                <table style="width:100%;border-collapse:collapse;">
+              <div class="firmas-table-wrap">
+                <table class="firmas-responsive-table">
                   <thead>
                     <tr style="background:#fef2f2;border-bottom:2px solid #fecaca;text-align:left;font-size:0.72rem;color:#991b1b;text-transform:uppercase;">
                       <th style="padding:0.6rem 0.65rem;">Asociado / Exp.</th>
@@ -5370,29 +5466,29 @@
 
           <!-- SUB-PANEL 3: EDITOR VISUAL DE PLANTILLAS PDF (ADMIN) -->
           <div id="panelFirmas_editor" style="display:none;">
-            <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:1.15rem;display:flex;flex-direction:column;gap:0.95rem;">
-              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0.8rem;background:#f8fafc;padding:0.9rem;border-radius:10px;border:1px solid #e2e8f0;">
+            <div class="firmas-card">
+              <div class="firmas-editor-top-grid">
                 <div>
                   <label style="display:block;font-size:0.75rem;font-weight:800;color:#334155;margin-bottom:5px;">Subir PDF base para crear nueva plantilla:</label>
                   <input type="file" id="inpPlantillaPdfFile" accept="application/pdf" onchange="onArchivoPdfPlantillaSeleccionado(event)" style="width:100%;font-size:0.8rem;"/>
                 </div>
                 <div>
                   <label style="display:block;font-size:0.75rem;font-weight:800;color:#334155;margin-bottom:5px;">O cargar una plantilla guardada para editar:</label>
-                  <div style="display:flex;gap:0.45rem;align-items:center;">
-                    <select id="selEditarPlantillaExistente" onchange="cargarPlantillaEnEditor(this.value)" style="flex:1;min-width:0;padding:0.48rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;background:#ffffff;"></select>
+                  <div class="firmas-exp-row">
+                    <select id="selEditarPlantillaExistente" onchange="cargarPlantillaEnEditor(this.value)" style="padding:0.48rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;background:#ffffff;"></select>
                     <button type="button" onclick="limpiarEditorPlantillaPdf()" title="Cancelar edición actual y limpiar el editor visual" style="padding:0.48rem 0.78rem;border-radius:8px;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;font-size:0.78rem;font-weight:700;cursor:pointer;white-space:nowrap;">🧹 Limpiar Editor</button>
                   </div>
                 </div>
               </div>
 
-              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0.7rem;">
+              <div class="firmas-editor-meta-grid">
                 <div>
                   <label style="display:block;font-size:0.73rem;font-weight:700;color:#475569;margin-bottom:3px;">Nombre de la Plantilla *</label>
-                  <input type="text" id="inpEditPlantillaNombre" placeholder="Ej: Autorización de Descuento de Haberes" style="width:100%;padding:0.48rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;"/>
+                  <input type="text" id="inpEditPlantillaNombre" placeholder="Ej: Autorización de Descuento de Haberes" style="width:100%;padding:0.48rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;box-sizing:border-box;"/>
                 </div>
                 <div>
                   <label style="display:block;font-size:0.73rem;font-weight:700;color:#475569;margin-bottom:3px;">Categoría</label>
-                  <select id="selEditPlantillaCategoria" style="width:100%;padding:0.48rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;background:#ffffff;">
+                  <select id="selEditPlantillaCategoria" style="width:100%;padding:0.48rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;background:#ffffff;box-sizing:border-box;">
                     <option value="AUTORIZACION">AUTORIZACIÓN</option>
                     <option value="PAGARE">PAGARÉ / MUTUO</option>
                     <option value="CONVENIO">CONVENIO / ADHESIÓN</option>
@@ -5402,7 +5498,7 @@
                 </div>
                 <div>
                   <label style="display:block;font-size:0.73rem;font-weight:700;color:#475569;margin-bottom:3px;">Descripción / Uso interno</label>
-                  <input type="text" id="inpEditPlantillaDesc" placeholder="Opcional..." style="width:100%;padding:0.48rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;"/>
+                  <input type="text" id="inpEditPlantillaDesc" placeholder="Opcional..." style="width:100%;padding:0.48rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;box-sizing:border-box;"/>
                 </div>
               </div>
 
@@ -5418,9 +5514,9 @@
 
               <div id="lblEditorEstadoPdf" style="display:none;font-size:0.78rem;font-weight:600;padding:0.5rem 0.75rem;border-radius:8px;background:#f8fafc;border:1px solid #cbd5e1;color:#334155;"></div>
 
-              <div style="display:grid;grid-template-columns:minmax(340px,1.55fr) minmax(275px,1fr);gap:1rem;align-items:start;">
+              <div class="firmas-editor-grid">
                 <!-- LIENZO PDF INTERACTIVO -->
-                <div style="background:#cbd5e1;border-radius:12px;padding:0.75rem;">
+                <div style="background:#cbd5e1;border-radius:12px;padding:0.75rem;min-width:0;">
                   <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.45rem;margin-bottom:0.6rem;">
                     <div style="display:flex;gap:0.35rem;flex-wrap:wrap;align-items:center;">
                       <button type="button" id="btnModoCampo_texto" onclick="activarModoClickAgregarCampo('texto')" title="Agregar un nuevo campo de texto o dato del expediente" style="padding:0.36rem 0.65rem;border-radius:7px;border:1px solid #d97706;background:#fffbeb;color:#b45309;font-size:0.74rem;font-weight:700;cursor:pointer;">➕ Campo de Texto</button>
@@ -5466,7 +5562,7 @@
                 </div>
 
                 <!-- INSPECTOR DE CAMPOS -->
-                <div style="display:flex;flex-direction:column;gap:0.75rem;">
+                <div style="display:flex;flex-direction:column;gap:0.75rem;min-width:0;">
                   <div>
                     <div style="font-size:0.76rem;font-weight:800;color:#334155;margin-bottom:4px;">Campos configurados en esta plantilla:</div>
                     <div id="editorListaCamposResumen" style="display:flex;gap:0.35rem;flex-wrap:wrap;max-height:130px;overflow-y:auto;padding:0.45rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;"></div>
@@ -25420,11 +25516,47 @@ ${cierreTxt}`;
       sincronizarFechasCorteDesdeNube();
       iniciarSincronizacionPasivaBackground();
     });
+
+    (function initPwaInstallSupport() {
+      let deferredPwaPrompt = null;
+      const btnInstalar = () => document.getElementById('btnTopInstallPwa');
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPwaPrompt = e;
+        const b = btnInstalar();
+        if (b) b.style.display = 'inline-flex';
+      });
+      window.addEventListener('appinstalled', () => {
+        deferredPwaPrompt = null;
+        const b = btnInstalar();
+        if (b) b.style.display = 'none';
+      });
+      window.instalarAppAmmer = async function () {
+        if (!deferredPwaPrompt) {
+          if (typeof showToast === 'function') {
+            showToast('En Chrome abrí el menú (⋮) → "Guardar y compartir" → "Instalar aplicación" o "Crear acceso directo".', 'info');
+          }
+          return;
+        }
+        try {
+          deferredPwaPrompt.prompt();
+          await deferredPwaPrompt.userChoice;
+        } catch (_err) {}
+        deferredPwaPrompt = null;
+        const b = btnInstalar();
+        if (b) b.style.display = 'none';
+      };
+      if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+        });
+      }
+    })();
   </script>
   <script src="js/boletinER.js?v=6"></script>
   <script src="js/auditoria20.js?v=6"></script>
   <script src="js/fichasAsociados.js?v=6"></script>
   <script src="js/sidecreerWidget.js?v=10"></script>
-  <script src="js/firmasAmmer.js?v=16"></script>
+  <script src="js/firmasAmmer.js?v=17"></script>
 </body>
 </html>

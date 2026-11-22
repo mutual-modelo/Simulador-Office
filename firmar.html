@@ -535,16 +535,16 @@
       pointer-events: none;
     }
 
-    /* En vertical (portrait): recuadro rotado 90° limpio */
+    /* En vertical (portrait): recuadro rotado 90° amplio */
     .dni-cam-guide {
       position: relative;
-      width: min(74vw, 320px);
+      width: min(88vw, 390px);
       aspect-ratio: 1 / 1.586;
-      max-height: calc(100dvh - 215px);
-      border: 2.5px dotted rgba(255, 255, 255, 0.92);
+      max-height: calc(100dvh - 180px);
+      border: 2.5px dotted rgba(255, 255, 255, 0.94);
       border-radius: 16px;
       pointer-events: none;
-      box-shadow: 0 0 0 9999px rgba(8, 13, 24, 0.62);
+      box-shadow: 0 0 0 9999px rgba(8, 13, 24, 0.56);
     }
 
     .dni-guide-dot {
@@ -561,19 +561,19 @@
     .dni-guide-dot.br { bottom: -4px; right: -4px; }
 
     .dni-cam-guide-label {
-      margin-top: 0.85rem;
-      color: rgba(255, 255, 255, 0.94);
-      font-size: 0.84rem;
+      margin-top: 0.45rem;
+      color: rgba(255, 255, 255, 0.95);
+      font-size: 0.78rem;
       font-weight: 600;
       text-shadow: 0 1px 6px rgba(0, 0, 0, 0.95);
       pointer-events: none;
-      max-width: 90%;
+      max-width: 92%;
     }
 
     .dni-flash-toast {
       display: none;
       position: absolute;
-      bottom: 118px;
+      bottom: 108px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 5;
@@ -596,7 +596,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 12px 16px max(20px, env(safe-area-inset-bottom));
+      padding: 10px 16px max(16px, env(safe-area-inset-bottom));
       background: linear-gradient(0deg, rgba(6, 10, 18, 0.78) 0%, rgba(6, 10, 18, 0) 100%);
     }
 
@@ -608,17 +608,17 @@
       display: inline-flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.3rem;
+      gap: 0.28rem;
       color: #ffffff;
     }
 
     .dni-shutter-ring {
-      width: 68px;
-      height: 68px;
+      width: 64px;
+      height: 64px;
       border-radius: 50%;
       border: 3.5px solid #ffffff;
       background: rgba(255, 255, 255, 0.16);
-      padding: 5px;
+      padding: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -639,9 +639,9 @@
     }
 
     .dni-shutter-caption {
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       font-weight: 700;
-      color: rgba(255, 255, 255, 0.92);
+      color: rgba(255, 255, 255, 0.94);
       text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
       white-space: nowrap;
     }
@@ -686,33 +686,33 @@
 
       .dni-cam-live-box.hud-rot-90 .dni-cam-top-hud,
       .dni-cam-live-box.hud-rot-n90 .dni-cam-top-hud {
-        padding: 12px 20px 14px;
+        padding: 8px 16px 10px;
       }
 
       .dni-cam-live-box.hud-rot-90 .dni-cam-stage,
       .dni-cam-live-box.hud-rot-n90 .dni-cam-stage {
-        padding: 58px 108px 16px 24px;
+        padding: 46px 90px 8px 12px;
       }
 
       .dni-cam-live-box.hud-rot-90 .dni-cam-guide,
       .dni-cam-live-box.hud-rot-n90 .dni-cam-guide {
         width: auto;
-        height: 66%;
-        max-width: 78%;
-        max-height: 74%;
+        height: 85%;
+        max-width: 96%;
+        max-height: 88%;
         aspect-ratio: 1.586 / 1;
       }
 
       .dni-cam-live-box.hud-rot-90 .dni-cam-guide-label,
       .dni-cam-live-box.hud-rot-n90 .dni-cam-guide-label {
-        margin-top: 0.55rem;
-        font-size: 0.78rem;
+        margin-top: 0.3rem;
+        font-size: 0.74rem;
       }
 
       .dni-cam-live-box.hud-rot-90 .dni-cam-bottom-hud,
       .dni-cam-live-box.hud-rot-n90 .dni-cam-bottom-hud {
         top: 50%;
-        right: 18px;
+        right: 12px;
         bottom: auto;
         left: auto;
         transform: translateY(-50%);
@@ -722,7 +722,7 @@
 
       .dni-cam-live-box.hud-rot-90 .dni-flash-toast,
       .dni-cam-live-box.hud-rot-n90 .dni-flash-toast {
-        bottom: 14px;
+        bottom: 12px;
       }
     }
 
@@ -732,29 +732,29 @@
       }
 
       .dni-cam-top-hud {
-        padding: max(10px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) 14px max(20px, env(safe-area-inset-left));
+        padding: max(8px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 10px max(16px, env(safe-area-inset-left));
       }
 
       .dni-cam-stage {
-        padding: 58px 112px 16px 24px;
+        padding: 46px 94px 8px 14px;
       }
 
       .dni-cam-guide {
         width: auto;
-        height: min(66dvh, 330px);
-        max-width: calc(100vw - 165px);
-        max-height: calc(100dvh - 110px);
+        height: 80dvh;
+        max-width: calc(100vw - 118px);
+        max-height: calc(100dvh - 76px);
         aspect-ratio: 1.586 / 1;
       }
 
       .dni-cam-guide-label {
-        margin-top: 0.55rem;
-        font-size: 0.78rem;
+        margin-top: 0.3rem;
+        font-size: 0.74rem;
       }
 
       .dni-cam-bottom-hud {
         top: 50%;
-        right: max(18px, env(safe-area-inset-right));
+        right: max(12px, env(safe-area-inset-right));
         bottom: auto;
         left: auto;
         transform: translateY(-50%);
@@ -2613,38 +2613,80 @@
           }
           try {
             detenerCamaraEkyc();
+            const abrirStreamTrasero = async (devId) => {
+              const baseVideo = devId
+                ? { deviceId: { exact: devId } }
+                : { facingMode: { ideal: 'environment' } };
+              try {
+                return await navigator.mediaDevices.getUserMedia({
+                  video: {
+                    ...baseVideo,
+                    width: { min: 1280, ideal: 3840 },
+                    height: { min: 720, ideal: 2160 },
+                  },
+                  audio: false,
+                });
+              } catch (e1) {
+                if (e1 && (e1.name === 'OverconstrainedError' || e1.name === 'ConstraintNotSatisfiedError')) {
+                  try {
+                    return await navigator.mediaDevices.getUserMedia({
+                      video: { ...baseVideo, width: { ideal: 1920 }, height: { ideal: 1080 } },
+                      audio: false,
+                    });
+                  } catch (_e2) {
+                    return await navigator.mediaDevices.getUserMedia({ video: baseVideo, audio: false });
+                  }
+                }
+                throw e1;
+              }
+            };
+
             let stream = null;
             try {
-              stream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                  facingMode: { ideal: 'environment' },
-                  width: { ideal: 1920 },
-                  height: { ideal: 1080 },
-                  aspectRatio: { ideal: 16 / 10 },
-                },
-                audio: false,
-              });
-            } catch (eConstraint) {
-              if (eConstraint && (eConstraint.name === 'OverconstrainedError' || eConstraint.name === 'NotFoundError')) {
-                try {
-                  stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: { ideal: 'environment' } },
-                    audio: false,
-                  });
-                } catch (_e2) {
-                  stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-                }
-              } else {
-                throw eConstraint;
-              }
+              stream = await abrirStreamTrasero('');
+            } catch (_eInit) {
+              stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
             }
-            const vTrack = stream.getVideoTracks && stream.getVideoTracks()[0];
-            const trackLbl = String((vTrack && vTrack.label) || '').toLowerCase();
+
+            let vTrack = stream.getVideoTracks && stream.getVideoTracks()[0];
+            let trackLbl = String((vTrack && vTrack.label) || '').toLowerCase();
             if (/obs[\s_-]?virtual|virtual\s?cam|manycam|snap\s?cam|camtwist|splitcam|xsplit|youcam/i.test(trackLbl)) {
               stream.getTracks().forEach((t) => t.stop());
               registrarFalloDniParaGaleria('Por seguridad no se permiten cámaras virtuales o simuladas.', true);
               return;
             }
+
+            // En celulares multi-lente (Android/iPhone), evitar lentes auxiliares sin autofoco (macro / ultra-wide 0.5x)
+            try {
+              const caps0 = (vTrack && typeof vTrack.getCapabilities === 'function') ? (vTrack.getCapabilities() || {}) : {};
+              const settings0 = (vTrack && typeof vTrack.getSettings === 'function') ? (vTrack.getSettings() || {}) : {};
+              const modos0 = Array.isArray(caps0.focusMode) ? caps0.focusMode : [];
+              const maxW0 = Number((caps0.width && caps0.width.max) || 0);
+              const pareceAuxiliar = /ultra[\s_-]?wide|macro|telephoto|depth|0\.5x|camera2 [1-9]/i.test(trackLbl)
+                || (modos0.length === 0)
+                || (maxW0 > 0 && maxW0 < 1920);
+
+              if (pareceAuxiliar && typeof navigator.mediaDevices.enumerateDevices === 'function') {
+                const devs = await navigator.mediaDevices.enumerateDevices();
+                const cams = devs.filter((d) => d.kind === 'videoinput');
+                const candidata = cams.find((d) => {
+                  const l = String(d.label || '').toLowerCase();
+                  if (!l || d.deviceId === settings0.deviceId) return false;
+                  if (/front|user|ultra[\s_-]?wide|macro|telephoto|depth|obs|virtual/i.test(l)) return false;
+                  return /back.*camera|triple|dual|main|camera2 0|facing back|environment/i.test(l);
+                });
+                if (candidata && candidata.deviceId) {
+                  try {
+                    const streamMain = await abrirStreamTrasero(candidata.deviceId);
+                    stream.getTracks().forEach((t) => t.stop());
+                    stream = streamMain;
+                    vTrack = stream.getVideoTracks && stream.getVideoTracks()[0];
+                    trackLbl = String((vTrack && vTrack.label) || '').toLowerCase();
+                  } catch (_eSwitch) {}
+                }
+              }
+            } catch (_eEnum) {}
+
             appState.dniCamStream = stream;
             appState.dniCamTarget = lado;
             appState.dniTorchOn = false;
@@ -2652,28 +2694,31 @@
             mostrarToastFlashDni('');
 
             const activarAutofocoContinuo = async (puntoNorm) => {
-              if (!vTrack || typeof vTrack.applyConstraints !== 'function') return;
+              const trk = (appState.dniCamStream && appState.dniCamStream.getVideoTracks && appState.dniCamStream.getVideoTracks()[0]) || vTrack;
+              if (!trk || typeof trk.applyConstraints !== 'function') return;
               try {
-                const caps = typeof vTrack.getCapabilities === 'function' ? vTrack.getCapabilities() : {};
+                const caps = typeof trk.getCapabilities === 'function' ? trk.getCapabilities() : {};
                 const adv = {};
                 const modes = Array.isArray(caps && caps.focusMode) ? caps.focusMode : [];
                 if (puntoNorm && caps && caps.pointsOfInterest) {
                   adv.pointsOfInterest = [puntoNorm];
                 }
                 if (puntoNorm && modes.includes('single-shot')) {
-                  await vTrack.applyConstraints({ advanced: [{ ...adv, focusMode: 'single-shot' }] }).catch(() => {});
+                  await trk.applyConstraints({ advanced: [{ ...adv, focusMode: 'single-shot' }] }).catch(() => {});
                   setTimeout(() => {
                     if (appState.dniCamStream && modes.includes('continuous')) {
-                      vTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+                      trk.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
                     }
-                  }, 650);
+                  }, 850);
                   return;
                 }
                 if (modes.includes('continuous')) {
                   adv.focusMode = 'continuous';
+                } else if (modes.includes('single-shot')) {
+                  adv.focusMode = 'single-shot';
                 }
                 if (Object.keys(adv).length) {
-                  await vTrack.applyConstraints({ advanced: [adv] }).catch(() => {});
+                  await trk.applyConstraints({ advanced: [adv] }).catch(() => {});
                 }
               } catch (_e) {}
             };
@@ -2846,10 +2891,11 @@
               if (vTrack && typeof vTrack.applyConstraints === 'function') {
                 try {
                   const caps = typeof vTrack.getCapabilities === 'function' ? vTrack.getCapabilities() : {};
+                  const settings = typeof vTrack.getSettings === 'function' ? vTrack.getSettings() : {};
                   const modes = Array.isArray(caps && caps.focusMode) ? caps.focusMode : [];
-                  if (modes.includes('single-shot')) {
+                  if (settings.focusMode !== 'continuous' && modes.includes('single-shot')) {
                     await vTrack.applyConstraints({ advanced: [{ focusMode: 'single-shot' }] }).catch(() => {});
-                    await new Promise((r) => setTimeout(r, 260));
+                    await new Promise((r) => setTimeout(r, 550));
                   }
                 } catch (_e) {}
               }
@@ -2862,9 +2908,31 @@
               if (vTrack && typeof window.ImageCapture === 'function') {
                 try {
                   const ic = new window.ImageCapture(vTrack);
+                  let photoOpts;
+                  try {
+                    if (typeof ic.getPhotoCapabilities === 'function') {
+                      const pc = await ic.getPhotoCapabilities();
+                      const maxPw = Number((pc && pc.imageWidth && pc.imageWidth.max) || 0);
+                      const maxPh = Number((pc && pc.imageHeight && pc.imageHeight.max) || 0);
+                      if (maxPw >= 1280 && maxPh >= 720) {
+                        photoOpts = {
+                          imageWidth: Math.min(4096, maxPw),
+                          imageHeight: Math.min(3072, maxPh),
+                        };
+                      }
+                    }
+                  } catch (_pcErr) {}
+
+                  const tomarFotoNat = async () => {
+                    if (photoOpts) {
+                      try { return await ic.takePhoto(photoOpts); } catch (_optErr) {}
+                    }
+                    return await ic.takePhoto();
+                  };
+
                   const blob = await Promise.race([
-                    ic.takePhoto(),
-                    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 1800)),
+                    tomarFotoNat(),
+                    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 2400)),
                   ]);
                   if (blob && blob.size > 0) {
                     imgUrlObj = URL.createObjectURL(blob);
@@ -2883,7 +2951,7 @@
                 } catch (_icErr) {}
               }
 
-              const scale = Math.min(1, 1920 / Math.max(iw, ih));
+              const scale = Math.min(1, 2400 / Math.max(iw, ih));
               const sw = Math.max(1, Math.round(iw * scale));
               const sh = Math.max(1, Math.round(ih * scale));
               const rotManual = (window.innerHeight > window.innerWidth) ? appState.dniHudRot : '0';
@@ -2903,7 +2971,7 @@
               if (imgUrlObj) {
                 try { URL.revokeObjectURL(imgUrlObj); } catch (_e) {}
               }
-              const b64 = c.toDataURL('image/jpeg', 0.92);
+              const b64 = c.toDataURL('image/jpeg', 0.94);
               detenerCamaraDni();
               await guardarFotoDni(target, b64);
             } catch (err) {

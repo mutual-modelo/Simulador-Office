@@ -1778,6 +1778,7 @@
         galeriaDniHabilitada: false,
         mediaRecorder: null,
         recordedVideoUrl: '',
+        recordedVideoDataUrl: '',
         grabandoAhora: false,
         vozHabilitada: true,
         retoLiveness: 'Mirá al centro, sonreí suavemente y girá un poco la cabeza',
@@ -2026,6 +2027,7 @@
               selfieBase64: appState.ekycImgs.selfie1 || null,
               selfieDesafioBase64: appState.ekycImgs.selfie2 || appState.ekycImgs.selfie3 || null,
               selfie3Base64: appState.ekycImgs.selfie3 || null,
+              selfieVideoBase64: appState.recordedVideoDataUrl || null,
               retoLiveness: appState.retoLiveness,
               pdf417Raw: appState.ekycImgs.pdf417Raw || null,
               qrRaw: appState.ekycImgs.qrRaw || null,
@@ -3043,6 +3045,7 @@
                 rec.ondataavailable = (ev) => {
                   if (ev.data && ev.data.size > 0) chunks.push(ev.data);
                 };
+                appState.recordedVideoDataUrl = '';
                 recorderDonePromise = new Promise((resolve) => {
                   rec.onstop = () => {
                     try {
@@ -3050,6 +3053,16 @@
                         const blob = new Blob(chunks, { type: rec.mimeType || 'video/webm' });
                         if (appState.recordedVideoUrl) URL.revokeObjectURL(appState.recordedVideoUrl);
                         appState.recordedVideoUrl = URL.createObjectURL(blob);
+                        if (blob.size > 0 && blob.size <= 7 * 1024 * 1024 && typeof FileReader === 'function') {
+                          const fr = new FileReader();
+                          fr.onload = () => {
+                            appState.recordedVideoDataUrl = typeof fr.result === 'string' ? fr.result : '';
+                            resolve(appState.recordedVideoUrl);
+                          };
+                          fr.onerror = () => resolve(appState.recordedVideoUrl);
+                          fr.readAsDataURL(blob);
+                          return;
+                        }
                         resolve(appState.recordedVideoUrl);
                         return;
                       }
@@ -3198,6 +3211,7 @@
             appState.ekycImgs.selfie1 = '';
             appState.ekycImgs.selfie2 = '';
             appState.ekycImgs.selfie3 = '';
+            appState.recordedVideoDataUrl = '';
             appState.ekycValidado = false;
             document.getElementById('selfieDoneView').style.display = 'none';
             document.getElementById('selfieIntroView').style.display = 'block';

@@ -1678,6 +1678,38 @@
               })()}
               ${fotoCard('✍️ Firma Ológrafa Capturada', imgs.firma_png_b64, 'image/png', 'Aún sin firma manuscrita')}
             </div>
+
+            ${(() => {
+              const vidB64 = imgs.selfie_video_b64 || '';
+              const vidMime = imgs.selfie_video_mime || 'video/webm';
+              const vidMeta = (ek && ek.video_prueba_vida) || {};
+              const ext = vidMime.includes('mp4') ? 'mp4' : 'webm';
+              const kbTxt = vidMeta.tamano_bytes ? `${Math.round(vidMeta.tamano_bytes / 1024)} KB` : '';
+              if (!vidB64) {
+                return `
+                  <div style="margin-top:1rem;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;padding:0.75rem 0.9rem;">
+                    <div style="font-size:0.8rem;font-weight:800;color:#334155;margin-bottom:0.2rem;">🎥 Prueba de Vida (Video en vivo)</div>
+                    <div style="font-size:0.75rem;color:#64748b;">Sin video grabado adjunto (captura previa o dispositivo sin MediaRecorder).</div>
+                  </div>
+                `;
+              }
+              const vidSrc = vidB64.startsWith('data:') ? vidB64 : `data:${vidMime};base64,${vidB64}`;
+              const dlName = `prueba_vida_${(r.dni_solicitante || 'firmante').replace(/\W+/g, '')}.${ext}`;
+              return `
+                <div style="margin-top:1rem;background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px;padding:0.85rem 1rem;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.55rem;">
+                    <div>
+                      <strong style="font-size:0.84rem;color:#0f2744;">🎥 Prueba de Vida (Video completo de validación facial)</strong>
+                      <div style="font-size:0.72rem;color:#475569;margin-top:2px;">
+                        ${escHtml(vidMime.toUpperCase())}${kbTxt ? ` · ${escHtml(kbTxt)}` : ''}${vidMeta.sha256 ? ` · SHA-256: <span class="font-mono">${escHtml(String(vidMeta.sha256).slice(0, 18))}…</span>` : ''}
+                      </div>
+                    </div>
+                    <a href="${escHtml(vidSrc)}" download="${escHtml(dlName)}" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.74rem;font-weight:700;text-decoration:none;">⬇️ Descargar video</a>
+                  </div>
+                  <video controls playsinline preload="metadata" src="${escHtml(vidSrc)}" style="width:100%;max-width:380px;max-height:280px;border-radius:10px;background:#0f172a;display:block;border:2px solid #cbd5e1;"></video>
+                </div>
+              `;
+            })()}
           </div>
 
           <!-- TAB 3: EVIDENCIA TÉCNICA Y LEGAL -->

@@ -851,29 +851,29 @@
       height: 100%;
       max-width: 560px;
       margin: 0 auto;
-      padding: max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+      padding: max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      gap: 0.5rem;
+      justify-content: flex-start;
+      gap: 0.35rem;
     }
 
     .selfie-live-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 0.75rem;
+      gap: 0.65rem;
       flex-shrink: 0;
     }
 
     .selfie-close-btn {
-      width: 42px;
-      height: 42px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       border: 1.5px solid rgba(255, 255, 255, 0.35);
       background: rgba(15, 23, 42, 0.68);
       color: #ffffff;
-      font-size: 1.05rem;
+      font-size: 1rem;
       font-weight: 800;
       cursor: pointer;
       display: inline-flex;
@@ -886,13 +886,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.55rem;
+      gap: 0.5rem;
       flex: 1;
     }
 
     .liveness-seg {
       width: 34px;
-      height: 10px;
+      height: 9px;
       border-radius: 9999px;
       background: rgba(255, 255, 255, 0.24);
       transition: all 0.25s ease;
@@ -901,8 +901,8 @@
     .liveness-seg.done { background: #22c55e; }
 
     .guide-avatar-circle {
-      width: 62px;
-      height: 62px;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
       background: #e0f2fe;
       border: 2.5px solid #38bdf8;
@@ -913,7 +913,15 @@
       overflow: hidden;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
     }
-    .guide-avatar-circle svg { width: 48px; height: 48px; }
+    .guide-avatar-circle svg { width: 40px; height: 40px; }
+
+    .selfie-status-strip {
+      min-height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
 
     .selfie-live-center {
       flex: 1;
@@ -921,17 +929,19 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      gap: 0.55rem;
+      justify-content: flex-start;
+      gap: 0.45rem;
       text-align: center;
+      padding-top: 2px;
     }
 
     .selfie-cue-block {
-      max-width: 440px;
+      max-width: 460px;
+      flex-shrink: 0;
     }
 
     .guide-cue-title {
-      font-size: clamp(1.18rem, 4.4vw, 1.48rem);
+      font-size: clamp(1.08rem, 4.1vw, 1.36rem);
       font-weight: 800;
       color: #ffffff;
       line-height: 1.2;
@@ -939,10 +949,10 @@
     }
 
     .guide-cue-sub {
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       color: #cbd5e1;
-      margin-top: 4px;
-      line-height: 1.3;
+      margin-top: 3px;
+      line-height: 1.28;
     }
 
     @keyframes headNodTurn {
@@ -959,9 +969,8 @@
 
     .oval-camera-frame {
       position: relative;
-      width: min(72vw, 310px);
-      height: min(88vw, 375px);
-      max-height: 46dvh;
+      width: min(84vw, 360px);
+      height: min(56dvh, 455px);
       margin: 0 auto;
       border-radius: 50% / 46%;
       overflow: hidden;
@@ -969,6 +978,7 @@
       background: #0f172a;
       box-shadow: 0 12px 34px rgba(0, 0, 0, 0.55);
       transition: border-color 0.25s ease;
+      flex-shrink: 0;
     }
 
     .oval-camera-frame.recording { border-color: #f59e0b; box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.25), 0 12px 34px rgba(0, 0, 0, 0.55); }
@@ -983,28 +993,28 @@
     }
 
     .rec-pill {
-      position: absolute;
-      top: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.86);
+      position: static;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1.5px solid rgba(239, 68, 68, 0.65);
       color: #ffffff;
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       font-weight: 800;
-      padding: 4px 11px;
+      padding: 4px 13px;
       border-radius: 9999px;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
       white-space: nowrap;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
     }
 
     .rec-dot {
-      width: 8px;
-      height: 8px;
+      width: 9px;
+      height: 9px;
       border-radius: 50%;
       background: #ef4444;
       animation: pulseRec 1s infinite;
+      flex-shrink: 0;
     }
     @keyframes pulseRec { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
 
@@ -1013,7 +1023,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 62px;
+      min-height: 58px;
+      margin-top: auto;
+      padding-top: 4px;
       flex-shrink: 0;
     }
 
@@ -1062,30 +1074,32 @@
       .selfie-live-shell {
         max-width: 860px;
         display: grid;
-        grid-template-columns: minmax(190px, 42vw) 1fr;
-        grid-template-rows: auto 1fr auto;
+        grid-template-columns: minmax(210px, 44vw) 1fr;
+        grid-template-rows: auto auto 1fr auto;
         grid-template-areas:
           "oval top"
+          "oval status"
           "oval cue"
           "oval bottom";
         align-items: center;
         column-gap: 1.25rem;
-        row-gap: 0.35rem;
+        row-gap: 0.3rem;
       }
 
       .selfie-live-top { grid-area: top; }
+      .selfie-status-strip { grid-area: status; justify-content: flex-start; }
       .selfie-live-center { display: contents; }
       .selfie-cue-block { grid-area: cue; text-align: left; align-self: center; }
       .oval-camera-frame {
         grid-area: oval;
-        height: min(76dvh, 300px);
-        width: min(62dvh, 248px);
-        max-height: none;
+        height: min(82dvh, 330px);
+        width: min(68dvh, 272px);
       }
       .selfie-live-bottom {
         grid-area: bottom;
         justify-content: flex-start;
         padding-right: 58px;
+        margin-top: 0;
       }
     }
 
@@ -1104,7 +1118,7 @@
     .sig-pad-wrap {
       border: 2.5px dashed #64748b;
       border-radius: 14px;
-      background: #f8fafc;
+      background: #ffffff !important;
       position: relative;
       overflow: hidden;
       touch-action: none;
@@ -1116,6 +1130,7 @@
       display: block;
       cursor: crosshair;
       touch-action: none;
+      background: #ffffff !important;
     }
 
     .sig-hint {
@@ -1629,7 +1644,7 @@
           <h1 class="step-heading" style="margin:0;">✍️ Dibujá tu firma</h1>
           <span id="badgeEstadoGeo" class="geo-pill">📍 Ubicación</span>
         </div>
-        <p class="step-lead">Hacé tu firma dentro del recuadro gris y confirmá abajo.</p>
+        <p class="step-lead">Hacé tu firma dentro del recuadro blanco y confirmá abajo.</p>
 
         <div class="sig-pad-wrap">
           <div id="sigHintText" class="sig-hint">✏️ Dibujá tu firma acá con el dedo o el mouse</div>
@@ -2216,7 +2231,7 @@
         const canvas = document.getElementById('canvasFirmaMovil');
         const hint = document.getElementById('sigHintText');
         const lblInfo = document.getElementById('lblTrazosInfo');
-        const ctx = canvas.getContext('2d', { desynchronized: true }) || canvas.getContext('2d');
+        const ctx = canvas.getContext('2d');
 
         // Almacenamos trazos normalizados [0..1] para redibujar sin pérdida en cualquier resize/DPI
         const strokes = [];
@@ -2232,8 +2247,8 @@
 
         function styleCtx(targetCtx, ratio) {
           targetCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
-          targetCtx.strokeStyle = '#0f172a';
-          targetCtx.fillStyle = '#0f172a';
+          targetCtx.strokeStyle = '#000000';
+          targetCtx.fillStyle = '#000000';
           targetCtx.lineWidth = BASE_LINE_WIDTH;
           targetCtx.lineCap = 'round';
           targetCtx.lineJoin = 'round';

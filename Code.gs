@@ -159,6 +159,9 @@ function doPost(e) {
       case 'subirAdjuntoAdicional':
         return crearRespuestaJSON(subirAdjuntoAdicionalBackend(payload));
 
+      case 'subirVideoPruebaVidaDrive':
+        return crearRespuestaJSON(subirVideoPruebaVidaDriveBackend(payload));
+
       case 'eliminarDocumento':
       case 'eliminarAdjunto':
         return crearRespuestaJSON(eliminarDocumentoBackend(payload));
@@ -395,10 +398,12 @@ function normalizarNombreArchivoConPrefijo_(nombreRaw, tipoDoc, prefijoOficial, 
   else if (tipoUpper.indexOf('TRANSFERENCIA') !== -1) tipoUpper = 'TRANSFERENCIA';
   else if (tipoUpper.indexOf('SOLICITUD') !== -1 || tipoUpper.indexOf('AYUDA') !== -1) tipoUpper = 'SOLICITUD DE AYUDA ECONOMICA';
   else if (tipoUpper.indexOf('DESCUENTO') !== -1 || tipoUpper.indexOf('HABERES') !== -1) tipoUpper = 'AUTORIZACION PARA DESCUENTO DE HABERES';
+  else if (tipoUpper.indexOf('PRUEBA DE VIDA') !== -1 || tipoUpper.indexOf('LIVENESS') !== -1) tipoUpper = 'PRUEBA DE VIDA VIDEO';
   else if (tipoUpper.indexOf('OTRO') !== -1) tipoUpper = 'OTROS DOCUMENTOS';
 
-  const baseSinExt = base.replace(/\.(jpg|jpeg|png|webp|gif|bmp|heic|heif|tif|tiff|jfif|pdf)$/i, '').replace(/\.[^.]{2,5}$/, '').trim();
-  const ext = 'PDF';
+  const mVidExt = base.match(/\.(webm|mp4|mov|mkv)$/i);
+  const ext = mVidExt ? mVidExt[1].toUpperCase() : 'PDF';
+  const baseSinExt = base.replace(/\.(jpg|jpeg|png|webp|gif|bmp|heic|heif|tif|tiff|jfif|pdf|webm|mp4|mov|mkv)$/i, '').replace(/\.[^.]{2,5}$/, '').trim();
   if (!prefijo) return (baseSinExt ? baseSinExt.toUpperCase() : tipoUpper) + '.' + ext;
 
   if (baseSinExt && baseSinExt.toUpperCase().indexOf(prefijo.toUpperCase() + ' ') === 0) {
@@ -435,11 +440,12 @@ function guardarArchivosEnDrive_(folder, archivosRaw, idExpediente, autor) {
     const tipoDoc = String(item.tipo || 'OTROS DOCUMENTOS');
     let nombreArchivo = String(item.nombre || item.nombreArchivo || item.name || (idExpediente + ' ADJUNTO_' + (idx + 1) + '.PDF')).trim();
     const rawMime = String(item.tipoMime || item.mimeType || item.type || '').toLowerCase();
-    const esPdfEnBase64 = base64Str.indexOf('JVBERi0') === 0 || rawMime === 'application/pdf';
+    const esVideo = rawMime.indexOf('video/') === 0 || /\.(webm|mp4|mov|mkv)$/i.test(nombreArchivo);
+    const esPdfEnBase64 = !esVideo && (base64Str.indexOf('JVBERi0') === 0 || rawMime === 'application/pdf');
     if (esPdfEnBase64 || /\.(jpg|jpeg|png|webp|gif|bmp|heic|heif|tif|tiff|jfif|pdf)$/i.test(nombreArchivo) || !/\.[a-z0-9]{2,5}$/i.test(nombreArchivo)) {
       nombreArchivo = normalizarNombreArchivoConPrefijo_(nombreArchivo, tipoDoc, idExpediente, idExpediente);
     }
-    const mimeType = esPdfEnBase64 ? 'application/pdf' : String(item.tipoMime || item.mimeType || item.type || 'application/pdf');
+    const mimeType = esVideo ? (rawMime || 'video/webm') : (esPdfEnBase64 ? 'application/pdf' : String(item.tipoMime || item.mimeType || item.type || 'application/pdf'));
 
     const autorResuelto = String(item.cargadoPor || item.usuarioOperador || item.autor || autor || 'Operador').trim() || 'Operador';
 
@@ -2153,6 +2159,174 @@ function subirAdjuntoAdicionalBackend(payload) {
       archivoSubido: guardados[0] || null,
       cargadoPor: operadorActivo,
       carpetaDriveUrl: folder.getUrl()
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function obtenerOCrearCarpetaFichaIdentidad_(dni, nombreAsociado) {
+  const root = obtenerOCrearCarpetaRaiz_();
+  const nombreRaizFichas = 'FICHAS DE IDENTIDAD';
+  let fichasRoot = null;
+  const iterRaiz = root.getFoldersByName(nombreRaizFichas);
+  if (iterRaiz.hasNext()) {
+    fichasRoot = iterRaiz.next();
+  } else {
+    fichasRoot = root.createFolder(nombreRaizFichas);
+    try { fichasRoot.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (_) {}
+  }
+
+  const dniLim = String(dni || '').replace(/\D/g, '').trim();
+  const nombreLim = String(nombreAsociado || 'ASOCIADO')
+    .replace(/[\\/:*?"<>|]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toUpperCase();
+  const nombreSub = dniLim ? (dniLim + ' - ' + nombreLim) : nombreLim;
+
+  const iterSub = fichasRoot.getFolders();
+  while (iterSub.hasNext()) {
+    const f = iterSub.next();
+    const fname = String(f.getName() || '');
+    if (fname === nombreSub || (dniLim && fname.toUpperCase().indexOf(dniLim + ' -') === 0)) {
+      return f;
+    }
+  }
+  const nueva = fichasRoot.createFolder(nombreSub);
+  try { nueva.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (_) {}
+  return nueva;
+}
+
+function subirVideoPruebaVidaDriveBackend(payload) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const base64Str = String(payload.base64 || '').trim();
+    const extras = Array.isArray(payload.archivosExtra) ? payload.archivosExtra : [];
+    if (!base64Str && !extras.length) return { ok: false, error: 'Falta base64 del video o archivosExtra' };
+
+    const idTarget = String(payload.idSolicitud || payload.id || payload.expediente_id || '').trim();
+    const dniRaw = String(payload.dni || payload.dniSolicitante || '').replace(/\D/g, '').trim();
+    const nombreRaw = String(payload.nombre || payload.nombreSolicitante || 'ASOCIADO').trim();
+    const tipoMime = String(payload.tipoMime || 'video/webm').trim() || 'video/webm';
+    const ext = tipoMime.toLowerCase().indexOf('mp4') !== -1 ? 'MP4' : 'WEBM';
+    const nombreArch = String(payload.nombreArchivo || ('PRUEBA_DE_VIDA_' + (dniRaw || idTarget || 'FIRMANTE') + '.' + ext)).trim();
+
+    let folder = null;
+    let destino = 'ficha_identidad';
+    let rowNum = -1;
+    let sheet = null;
+    let map = null;
+    let prefijoOficial = dniRaw || idTarget || 'EKYC';
+
+    if (idTarget && idTarget !== '-' && idTarget !== 'GENERAL' && idTarget !== 'null' && idTarget !== 'undefined') {
+      sheet = obtenerOInicializarHoja_(CONFIG_AMMER.SHEET_SOLICITUDES, HEADERS_SOLICITUDES);
+      map = obtenerHeaderMap_(sheet).map;
+      rowNum = encontrarFilaPorId_(sheet, map, idTarget);
+      if (rowNum !== -1) {
+        const nombreSoc = map['Apellido_Nombre'] !== undefined ? String(sheet.getRange(rowNum, map['Apellido_Nombre'] + 1).getValue()) : nombreRaw;
+        const dniSheet = map['DNI_Asociado'] !== undefined ? String(sheet.getRange(rowNum, map['DNI_Asociado'] + 1).getValue()) : dniRaw;
+        const expDef = resolverNumeroDefinitivoFila_(sheet, rowNum, map, payload);
+        prefijoOficial = expDef || idTarget;
+        folder = obtenerOCrearCarpetaExpediente_(prefijoOficial, nombreSoc || nombreRaw, dniSheet || dniRaw, idTarget);
+        destino = 'expediente';
+      }
+    }
+
+    if (!folder) {
+      folder = obtenerOCrearCarpetaFichaIdentidad_(dniRaw, nombreRaw);
+      destino = 'ficha_identidad';
+    }
+
+    let fileId = '';
+    let urlDrive = '';
+    let previewUrl = '';
+    const nuevasEntradas = [];
+
+    if (base64Str) {
+      const bytes = Utilities.base64Decode(base64Str);
+      const blob = Utilities.newBlob(bytes, tipoMime, nombreArch);
+      const file = folder.createFile(blob);
+      try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (_) {}
+      fileId = file.getId();
+      urlDrive = 'https://drive.google.com/file/d/' + fileId + '/view';
+      previewUrl = 'https://drive.google.com/file/d/' + fileId + '/preview';
+      nuevasEntradas.push({
+        tipo: 'PRUEBA DE VIDA (VIDEO)',
+        nombre: nombreArch,
+        tipoMime: tipoMime,
+        fecha: obtenerFechaHora24Argentina_(),
+        cargadoPor: 'Sistema AMMER eKYC',
+        autor: 'Sistema AMMER eKYC',
+        fileId: fileId,
+        urlDrive: urlDrive,
+        previewUrl: previewUrl
+      });
+    }
+
+    const archivosExtraResult = [];
+    for (let i = 0; i < extras.length; i++) {
+      const item = extras[i] || {};
+      const exB64 = String(item.base64 || '').trim();
+      const exName = String(item.nombreArchivo || item.nombre || ('EVIDENCIA_EKYC_' + (i + 1) + '.jpg')).trim();
+      const exMime = String(item.tipoMime || 'image/jpeg').trim() || 'image/jpeg';
+      if (!exB64) continue;
+      const exBytes = Utilities.base64Decode(exB64);
+      const exBlob = Utilities.newBlob(exBytes, exMime, exName);
+      const exFile = folder.createFile(exBlob);
+      try { exFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (_) {}
+      const exId = exFile.getId();
+      const exUrl = 'https://drive.google.com/file/d/' + exId + '/view';
+      const exPrev = 'https://drive.google.com/file/d/' + exId + '/preview';
+      archivosExtraResult.push({
+        tipo: String(item.tipo || 'EVIDENCIA IDENTIDAD'),
+        nombre: exName,
+        tipoMime: exMime,
+        fileId: exId,
+        urlDrive: exUrl,
+        previewUrl: exPrev
+      });
+      if (rowNum !== -1) {
+        nuevasEntradas.push({
+          tipo: String(item.tipo || 'EVIDENCIA IDENTIDAD'),
+          nombre: exName,
+          tipoMime: exMime,
+          fecha: obtenerFechaHora24Argentina_(),
+          cargadoPor: 'Sistema AMMER eKYC',
+          autor: 'Sistema AMMER eKYC',
+          fileId: exId,
+          urlDrive: exUrl,
+          previewUrl: exPrev
+        });
+      }
+    }
+
+    if (rowNum !== -1 && sheet && map && nuevasEntradas.length) {
+      const colArchivosIdx = (map['Archivos_Adjuntos_JSON'] !== undefined) ? map['Archivos_Adjuntos_JSON'] : 20;
+      const cell = sheet.getRange(rowNum, colArchivosIdx + 1);
+      const actuales = parseJSONSafe_(cell.getValue(), []);
+      const lista = Array.isArray(actuales) ? actuales.slice() : [];
+      for (let k = 0; k < nuevasEntradas.length; k++) lista.push(nuevasEntradas[k]);
+      cell.setValue(JSON.stringify(lista));
+      if (map['Carpeta_Drive_URL'] !== undefined) {
+        sheet.getRange(rowNum, map['Carpeta_Drive_URL'] + 1).setValue(folder.getUrl());
+      }
+      if (map['Ultima_Actualizacion'] !== undefined) {
+        sheet.getRange(rowNum, map['Ultima_Actualizacion'] + 1).setValue(obtenerFechaHora24Argentina_());
+      }
+      SpreadsheetApp.flush();
+    }
+
+    return {
+      ok: true,
+      destino: destino,
+      fileId: fileId,
+      urlDrive: urlDrive,
+      previewUrl: previewUrl,
+      carpetaDriveUrl: folder.getUrl(),
+      nombre: nombreArch,
+      archivosExtra: archivosExtraResult
     };
   } finally {
     lock.releaseLock();

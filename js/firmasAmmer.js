@@ -1426,10 +1426,22 @@
     const verifyUrl = `verificar.html?id=${encodeURIComponent(r.id)}&h=${encodeURIComponent((r.hash_sha256_original || '').slice(0, 16))}`;
     const btnCls = 'display:inline-flex;align-items:center;gap:5px;padding:0.35rem 0.64rem;border-radius:8px;font-size:0.74rem;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;flex-shrink:0;';
 
+    const vidMetaTop = (ek && ek.video_prueba_vida) || {};
+    const driveCarpetaUrl = r.drive_carpeta_url || vidMetaTop.carpeta_url || '';
+    const tieneEvidenciasParaDrive = Boolean(
+      (vidMetaTop && vidMetaTop.presente)
+      || imgs.dni_frente_b64 || imgs.dni_dorso_b64 || imgs.selfie_b64 || imgs.selfie_video_b64 || imgs.firma_png_b64
+      || est === 'FIRMADO'
+    );
     const driveBtn = r.drive_file_url
-      ? `<a href="${escHtml(r.drive_file_url)}" target="_blank" rel="noopener" style="${btnCls}border:1px solid #16a34a;background:#f0fdf4;color:#15803d;">☁️ Abrir en Drive</a>`
-      : (est === 'FIRMADO' && r.expediente_id
-        ? `<button type="button" onclick="window.respaldarSolicitudEnDrive('${escHtml(r.id)}').then(()=>window.abrirFichaSolicitudFirma('${escHtml(r.id)}'))" style="${btnCls}border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;">☁️ Subir a Drive</button>`
+      ? `<a href="${escHtml(r.drive_file_url)}" target="_blank" rel="noopener" style="${btnCls}border:1px solid #16a34a;background:#f0fdf4;color:#15803d;">☁️ Abrir PDF Drive</a>`
+      : (est === 'FIRMADO'
+        ? `<button type="button" onclick="window.respaldarSolicitudEnDrive('${escHtml(r.id)}').then(()=>window.abrirFichaSolicitudFirma('${escHtml(r.id)}'))" style="${btnCls}border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;">☁️ Respaldar Drive</button>`
+        : '');
+    const driveCarpetaBtn = driveCarpetaUrl
+      ? `<a href="${escHtml(driveCarpetaUrl)}" target="_blank" rel="noopener" title="Abrir carpeta en Google Drive con fotos, PDF, video y archivos de validación" style="${btnCls}border:1px solid #15803d;background:#ecfdf5;color:#065f46;font-weight:800;">📁 Carpeta Drive</a>`
+      : (tieneEvidenciasParaDrive
+        ? `<button type="button" onclick="window.migrarVideoPruebaVidaDrive('${escHtml(r.id)}').then(()=>window.abrirFichaSolicitudFirma('${escHtml(r.id)}'))" title="Subir / migrar fotos, PDF y video de prueba de vida a su carpeta en Google Drive" style="${btnCls}border:1px solid #0284c7;background:#e0f2fe;color:#0369a1;font-weight:800;">📁 Enviar a Carpeta Drive</button>`
         : '');
     const tsrBtn = r.tiene_tsr
       ? `<button type="button" onclick="window.descargarTsrSolicitudFirma('${escHtml(r.id)}')" style="${btnCls}border:1px solid #c7d2fe;background:#eef2ff;color:#3730a3;">⏱️ Sello Hora (.tsr)</button>`
@@ -1543,7 +1555,7 @@
       : '';
 
     ov.innerHTML = `
-      <div style="background:#ffffff;border-radius:16px;max-width:min(1440px,97vw);width:97vw;max-height:94vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(15,23,42,0.35);overflow:hidden;">
+      <div style="background:#ffffff;border-radius:16px;max-width:min(1820px,98.5vw);width:98.5vw;max-height:94vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(15,23,42,0.35);overflow:hidden;">
         <!-- HEADER -->
         <div style="padding:0.95rem 1.25rem;background:linear-gradient(135deg,#0f2744 0%,#1e3a8a 100%);color:#ffffff;display:flex;justify-content:space-between;align-items:flex-start;gap:0.75rem;">
           <div style="min-width:0;">
@@ -1566,6 +1578,7 @@
           <button type="button" onclick="window.descargarPdfSolicitudFirma('${escHtml(r.id)}', '${tipoDescarga}')" style="${btnCls}border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-weight:800;">📥 ${labelDescarga}</button>
           ${tsrBtn}
           ${driveBtn}
+          ${driveCarpetaBtn}
           <button type="button" onclick="window.abrirAsistenteRenaperMiEjemplar(${renArgs})" style="${btnCls}border:1px solid #bae6fd;background:#f0f9ff;color:#0369a1;">🪪 Validar Ejemplar (RENAPER)</button>
           <a href="${verifyUrl}" target="_blank" rel="noopener" style="${btnCls}border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;">🔍 Validación Pública</a>
           ${verifyTechBtn}
@@ -1601,7 +1614,7 @@
 
           <!-- TAB 2: IDENTIDAD, FOTOS & CRUCES -->
           <div id="pnlFichaModalTab_ekyc" style="display:none;">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:0.55rem;margin-bottom:1rem;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:0.48rem;margin-bottom:1rem;">
               ${kpiItem('Dictamen eKYC', (ek && ek.estado_ekyc) || 'Sin captura eKYC', (ek && ek.estado_ekyc === 'APROBADO') ? '#f0fdf4' : ((ek && ek.estado_ekyc === 'REVISION_REQUERIDA') ? '#fef2f2' : '#fffbeb'), (ek && ek.estado_ekyc === 'APROBADO') ? '#166534' : ((ek && ek.estado_ekyc === 'REVISION_REQUERIDA') ? '#b91c1c' : '#92400e'))}
               ${kpiItem('Cotejo Facial (Selfie vs DNI)', ek && ek.face_match_pct != null ? `${ek.face_match_pct}% coincidencia${ek.motor_biometria === 'biometria_local_offline' ? ' · Motor Local' : (ek.motor_biometria === 'gemini_vision' ? ' · Gemini IA' : '')}` : 'No ejecutado', '#eff6ff', '#1d4ed8')}
               ${(() => {
@@ -1685,7 +1698,10 @@
               const vidMeta = (ek && ek.video_prueba_vida) || {};
               const ext = vidMime.includes('mp4') ? 'mp4' : 'webm';
               const kbTxt = vidMeta.tamano_bytes ? `${Math.round(vidMeta.tamano_bytes / 1024)} KB` : '';
-              if (!vidB64) {
+              const migradoDrive = vidMeta.estado_migracion_drive === 'MIGRADO_A_DRIVE' && Boolean(vidMeta.drive_url || vidMeta.drive_preview_url);
+              const destTxt = vidMeta.destino_drive === 'expediente' ? 'Carpeta del Expediente' : 'FICHAS DE IDENTIDAD (Drive)';
+
+              if (!vidB64 && !migradoDrive) {
                 return `
                   <div style="margin-top:1rem;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;padding:0.75rem 0.9rem;">
                     <div style="font-size:0.8rem;font-weight:800;color:#334155;margin-bottom:0.2rem;">🎥 Prueba de Vida (Video en vivo)</div>
@@ -1693,20 +1709,35 @@
                   </div>
                 `;
               }
-              const vidSrc = vidB64.startsWith('data:') ? vidB64 : `data:${vidMime};base64,${vidB64}`;
+
+              const badgeEstado = migradoDrive
+                ? `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:#dcfce7;color:#166534;font-size:0.69rem;font-weight:800;">☁️ Migrado a Drive (${escHtml(destTxt)}) · Copia Supabase liberada</span>`
+                : `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:#fef3c7;color:#92400e;font-size:0.69rem;font-weight:800;">🗄️ En Supabase (pendiente migrar a Drive)</span>`;
+
+              const vidSrc = vidB64 ? (vidB64.startsWith('data:') ? vidB64 : `data:${vidMime};base64,${vidB64}`) : '';
               const dlName = `prueba_vida_${(r.dni_solicitante || 'firmante').replace(/\W+/g, '')}.${ext}`;
               return `
-                <div style="margin-top:1rem;background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px;padding:0.85rem 1rem;">
+                <div style="margin-top:1rem;background:#f8fafc;border:1px solid ${migradoDrive ? '#86efac' : '#cbd5e1'};border-radius:12px;padding:0.85rem 1rem;">
                   <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.55rem;">
                     <div>
-                      <strong style="font-size:0.84rem;color:#0f2744;">🎥 Prueba de Vida (Video completo de validación facial)</strong>
-                      <div style="font-size:0.72rem;color:#475569;margin-top:2px;">
+                      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                        <strong style="font-size:0.84rem;color:#0f2744;">🎥 Prueba de Vida (Video completo de validación facial)</strong>
+                        ${badgeEstado}
+                      </div>
+                      <div style="font-size:0.72rem;color:#475569;margin-top:3px;">
                         ${escHtml(vidMime.toUpperCase())}${kbTxt ? ` · ${escHtml(kbTxt)}` : ''}${vidMeta.sha256 ? ` · SHA-256: <span class="font-mono">${escHtml(String(vidMeta.sha256).slice(0, 18))}…</span>` : ''}
                       </div>
                     </div>
-                    <a href="${escHtml(vidSrc)}" download="${escHtml(dlName)}" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.74rem;font-weight:700;text-decoration:none;">⬇️ Descargar video</a>
+                    <div style="display:flex;gap:0.4rem;flex-wrap:wrap;align-items:center;">
+                      ${vidMeta.drive_url ? `<a href="${escHtml(vidMeta.drive_url)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;border:1px solid #16a34a;background:#f0fdf4;color:#15803d;font-size:0.74rem;font-weight:700;text-decoration:none;">▶️ Ver video en Drive</a>` : ''}
+                      ${vidMeta.carpeta_url ? `<a href="${escHtml(vidMeta.carpeta_url)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;border:1px solid #15803d;background:#ecfdf5;color:#065f46;font-size:0.74rem;font-weight:700;text-decoration:none;">📁 Carpeta Drive</a>` : ''}
+                      ${vidSrc ? `<a href="${escHtml(vidSrc)}" download="${escHtml(dlName)}" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.74rem;font-weight:700;text-decoration:none;">⬇️ Descargar video</a>` : ''}
+                      ${!migradoDrive ? `<button type="button" onclick="window.migrarVideoPruebaVidaDrive('${escHtml(r.id)}').then(()=>window.abrirFichaSolicitudFirma('${escHtml(r.id)}'))" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;border:1px solid #0284c7;background:#e0f2fe;color:#0369a1;font-size:0.74rem;font-weight:800;cursor:pointer;">📤 Migrar a Drive ahora</button>` : ''}
+                    </div>
                   </div>
-                  <video controls playsinline preload="metadata" src="${escHtml(vidSrc)}" style="width:100%;max-width:380px;max-height:280px;border-radius:10px;background:#0f172a;display:block;border:2px solid #cbd5e1;"></video>
+                  ${vidSrc
+                    ? `<video controls playsinline preload="metadata" src="${escHtml(vidSrc)}" style="width:100%;max-width:420px;max-height:280px;border-radius:10px;background:#0f172a;display:block;border:2px solid #cbd5e1;"></video>`
+                    : `<iframe src="${escHtml(vidMeta.drive_preview_url || vidMeta.drive_url)}" allow="autoplay" style="width:100%;max-width:480px;height:280px;border-radius:10px;border:2px solid #86efac;background:#0f172a;display:block;"></iframe>`}
                 </div>
               `;
             })()}
@@ -1783,21 +1814,45 @@
 
   async function respaldarSolicitudEnDrive(solId) {
     try {
-      notify('Subiendo PDF firmado al Legajo en Google Drive...', 'info');
+      notify('Subiendo PDF, capturas y evidencias a Google Drive...', 'info');
       const res = await apiFetchJson(`/api/firmas/solicitudes/${encodeURIComponent(solId)}/respaldar-drive`, {
         method: 'POST',
         body: JSON.stringify({}),
       });
-      notify('PDF respaldado correctamente en Google Drive.', 'success');
-      if (res && res.drive_file_url) {
+      notify('Evidencias y PDF respaldados correctamente en Google Drive.', 'success');
+      if (res && (res.drive_file_url || res.drive_carpeta_url)) {
         const target = state.solicitudesFirma.find((x) => String(x.id) === String(solId));
-        if (target) target.drive_file_url = res.drive_file_url;
+        if (target) {
+          if (res.drive_file_url) target.drive_file_url = res.drive_file_url;
+          if (res.drive_carpeta_url) target.drive_carpeta_url = res.drive_carpeta_url;
+        }
         renderBandejaFirmas();
       } else {
         await cargarBandejaFirmas();
       }
+      return res;
     } catch (err) {
       notify('No se pudo respaldar en Drive: ' + err.message, 'error');
+    }
+  }
+
+  async function migrarVideoPruebaVidaDrive(solId) {
+    try {
+      notify('Migrando fotos, video de prueba de vida y evidencias a Google Drive...', 'info');
+      const res = await apiFetchJson(`/api/firmas/solicitudes/${encodeURIComponent(solId)}/migrar-video-drive`, {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+      notify('Evidencias y video migrados correctamente a Google Drive.', 'success');
+      const target = state.solicitudesFirma.find((x) => String(x.id) === String(solId));
+      if (target && res) {
+        if (res.drive_file_url) target.drive_file_url = res.drive_file_url;
+        if (res.drive_carpeta_url) target.drive_carpeta_url = res.drive_carpeta_url;
+      }
+      renderBandejaFirmas();
+      return res;
+    } catch (err) {
+      notify('No se pudo migrar a Drive: ' + err.message, 'error');
     }
   }
 
@@ -4063,6 +4118,7 @@
   global.descargarPdfSolicitudFirma = descargarPdfSolicitudFirma;
   global.descargarTsrSolicitudFirma = descargarTsrSolicitudFirma;
   global.respaldarSolicitudEnDrive = respaldarSolicitudEnDrive;
+  global.migrarVideoPruebaVidaDrive = migrarVideoPruebaVidaDrive;
   global.verBitacoraEventosFirma = verBitacoraEventosFirma;
   global.renovarEnlaceSolicitudFirma = renovarEnlaceSolicitudFirma;
   global.abrirFichaSolicitudFirma = abrirFichaSolicitudFirma;

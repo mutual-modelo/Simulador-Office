@@ -4,9 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Portal oficial de verificación de documentos firmados electrónicamente de la Asociación Mutual Modelo de Entre Ríos (AMMER)." />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://ammer-auditor-api.onrender.com https://challenges.cloudflare.com; frame-src 'self' https://challenges.cloudflare.com data: blob:;" />
   <title>Verificación de Documentos · Mutual Modelo (AMMER)</title>
   <link rel="icon" type="image/png" href="favicon.png" />
   <link rel="apple-touch-icon" href="favicon.png" />
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
   <style>
     :root {
       --navy-950: #0a1628;
@@ -761,6 +764,7 @@
           <input type="password" id="admLoginPass" autocomplete="current-password" required />
         </div>
         <div id="admLoginErr" class="banner banner-err" style="display:none;padding:0.55rem 0.75rem;font-size:0.8rem;margin-bottom:0.85rem;"></div>
+        <div id="turnstileAdminBox" style="display:flex;justify-content:center;margin:0.4rem 0 0.7rem;"></div>
         <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
           <button type="button" class="btn btn-ghost" onclick="window.__cerrarModalAdmin()">Cancelar</button>
           <button type="submit" id="btnAdmLoginSubmit" class="btn btn-primary">Ingresar</button>
@@ -768,15 +772,53 @@
       </form>
     </div>
   </div>
+  <div id="turnstilePublicBox" style="max-width:860px;margin:0 auto 0.5rem;display:flex;justify-content:center;"></div>
 
   <script>
     (function () {
       'use strict';
       const API_BASE = 'https://ammer-auditor-api.onrender.com';
+      const TURNSTILE_SITE_KEY = '0x4AAAAAAGN1Qv0d_p9gTX5i';
       const AUTH_TOKEN_KEY = 'AMMER_API_TOKEN';
       const LAST_ACTIVITY_KEY = 'AMMER_LAST_ACTIVITY_TS';
       const SESSION_IDLE_MAX_MS = 60 * 60 * 1000;
       const params = new URLSearchParams(window.location.search);
+
+      let _tsVerifWidgets = {};
+      function obtenerTokenTurnstileVerif_(containerId, actionName) {
+        return new Promise((resolve) => {
+          if (!window.turnstile || typeof window.turnstile.render !== 'function') {
+            resolve('');
+            return;
+          }
+          const el = document.getElementById(containerId);
+          if (!el) { resolve(''); return; }
+          let settled = false;
+          const done = (v) => {
+            if (settled) return;
+            settled = true;
+            resolve(v || '');
+          };
+          const timer = setTimeout(() => done(''), 8000);
+          try {
+            if (_tsVerifWidgets[containerId] !== undefined) {
+              try { window.turnstile.remove(_tsVerifWidgets[containerId]); } catch (_) {}
+            }
+            el.innerHTML = '';
+            _tsVerifWidgets[containerId] = window.turnstile.render(el, {
+              sitekey: TURNSTILE_SITE_KEY,
+              action: actionName || 'verificar_documento',
+              theme: 'light',
+              size: 'flexible',
+              callback: (tok) => { clearTimeout(timer); done(tok); },
+              'error-callback': () => { clearTimeout(timer); done(''); },
+            });
+          } catch (_) {
+            clearTimeout(timer);
+            done('');
+          }
+        });
+      }
 
       const state = {
         registro: null,
@@ -983,7 +1025,11 @@
 
         try {
           const qs = cleanH ? `?h=${encodeURIComponent(cleanH)}` : '';
-          const resp = await fetch(`${API_BASE}/api/firmas/verificar/${encodeURIComponent(cleanId)}${qs}`);
+          const tsToken = await obtenerTokenTurnstileVerif_('turnstilePublicBox', 'verificar_documento');
+          const hdrs = tsToken ? { 'X-Turnstile-Token': tsToken } : {};
+          const resp = await fetch(`${API_BASE}/api/firmas/verificar/${encodeURIComponent(cleanId)}${qs}`, {
+            headers: hdrs,
+          });
           const data = await resp.json();
           if (!resp.ok) throw new Error(data.detail || `Error HTTP ${resp.status}`);
           state.registro = data;
@@ -1241,10 +1287,16 @@
         btn.textContent = 'Verificando...';
 
         try {
+          const tsAdminTok = await obtenerTokenTurnstileVerif_('turnstileAdminBox', 'login');
           const resp = await fetch(`${API_BASE}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ usuario: userVal, password: passVal, clave: passVal }),
+            body: JSON.stringify({
+              usuario: userVal,
+              password: passVal,
+              clave: passVal,
+              turnstileToken: tsAdminTok || null,
+            }),
           });
           const data = await resp.json().catch(() => ({}));
           if (!resp.ok || data.ok === false || !data.usuario) {

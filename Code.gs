@@ -186,6 +186,12 @@ function doPost(e) {
       case 'limpiarDatosPrueba':
         return crearRespuestaJSON(limpiarDatosPruebaBackend(payload));
 
+      case 'descargarArchivoDrive':
+        return crearRespuestaJSON(descargarArchivoDriveBackend_(payload));
+
+      case 'privatizarDriveHistorico':
+        return crearRespuestaJSON(privatizarDriveHistoricoBackend_(payload));
+
       default:
         return crearRespuestaJSON({
           ok: false,
@@ -198,6 +204,100 @@ function doPost(e) {
       error: 'Error procesando solicitud en Apps Script: ' + (err && err.message ? err.message : String(err))
     });
   }
+}
+
+function verificarGasSharedSecret_(payload) {
+  const expected = String(PropertiesService.getScriptProperties().getProperty('AMMER_GAS_SHARED_SECRET') || '').trim();
+  if (!expected) {
+    return {
+      ok: false,
+      status: 503,
+      error: 'Falta configurar AMMER_GAS_SHARED_SECRET en Propiedades del Script de Google Apps Script.'
+    };
+  }
+  const provided = String((payload && (payload.gasSecret || payload.secret)) || '').trim();
+  if (!provided || provided.length !== expected.length) {
+    return { ok: false, status: 403, error: 'Acceso denegado: secreto de servidor inválido.' };
+  }
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) {
+    diff |= (expected.charCodeAt(i) ^ provided.charCodeAt(i));
+  }
+  if (diff !== 0) {
+    return { ok: false, status: 403, error: 'Acceso denegado: secreto de servidor inválido.' };
+  }
+  return { ok: true };
+}
+
+function descargarArchivoDriveBackend_(payload) {
+  const auth = verificarGasSharedSecret_(payload);
+  if (!auth.ok) return auth;
+
+  const fileId = String((payload && (payload.fileId || payload.id)) || '').trim();
+  if (!/^[a-zA-Z0-9_-]{10,120}$/.test(fileId)) {
+    return { ok: false, status: 400, error: 'Identificador de archivo Drive inválido.' };
+  }
+
+  try {
+    const file = DriveApp.getFileById(fileId);
+    const blob = file.getBlob();
+    const bytes = blob.getBytes();
+    if (bytes && bytes.length > 22 * 1024 * 1024) {
+      return { ok: false, status: 413, error: 'El archivo excede el límite de descarga por proxy.' };
+    }
+    return {
+      ok: true,
+      fileId: fileId,
+      fileName: file.getName() || ('documento_' + fileId),
+      contentType: blob.getContentType() || 'application/octet-stream',
+      sizeBytes: bytes ? bytes.length : 0,
+      base64: Utilities.base64Encode(bytes)
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      status: 404,
+      error: 'No se pudo leer el archivo en Drive: ' + (err && err.message ? err.message : String(err))
+    };
+  }
+}
+
+function privatizarFolderRecursivo_(folder, stats, limiteArchivos) {
+  if (!folder || stats.archivos >= limiteArchivos) return;
+  try {
+    folder.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE);
+    stats.carpetas++;
+  } catch (_) {}
+  const files = folder.getFiles();
+  while (files.hasNext() && stats.archivos < limiteArchivos) {
+    const f = files.next();
+    try {
+      f.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE);
+      stats.archivos++;
+    } catch (_) {}
+  }
+  const subs = folder.getFolders();
+  while (subs.hasNext() && stats.archivos < limiteArchivos) {
+    privatizarFolderRecursivo_(subs.next(), stats, limiteArchivos);
+  }
+}
+
+function privatizarDriveHistoricoBackend_(payload, omitirSecretoPorEditor) {
+  if (omitirSecretoPorEditor !== true) {
+    const auth = verificarGasSharedSecret_(payload);
+    if (!auth.ok) return auth;
+  }
+  const root = obtenerOCrearCarpetaRaiz_();
+  const stats = { ok: true, carpetas: 0, archivos: 0 };
+  const maxItems = Number((payload && payload.limite) || 400) || 400;
+  privatizarFolderRecursivo_(root, stats, maxItems);
+  return stats;
+}
+
+function privatizarLegajosHistoricosDesdeEditor() {
+  const res = privatizarDriveHistoricoBackend_({ limite: 1000 }, true);
+  Logger.log(JSON.stringify(res));
+  return res;
 }
 
 function crearRespuestaJSON(obj) {
@@ -354,7 +454,7 @@ function obtenerOCrearCarpetaExpediente_(idSolicitud, apellidoNombre, dni, idAlt
   }
   const nueva = root.createFolder(nombreCarpeta);
   try {
-    nueva.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    nueva.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE);
   } catch (_) {}
   return nueva;
 }
@@ -455,7 +555,7 @@ function guardarArchivosEnDrive_(folder, archivosRaw, idExpediente, autor) {
         const blob = Utilities.newBlob(bytes, mimeType, nombreArchivo);
         const file = folder.createFile(blob);
         try {
-          file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+          file.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE);
         } catch (_) {}
         const fileId = file.getId();
         resultado.push({
@@ -1469,7 +1569,10 @@ function listarSolicitudes(usuarioActivoInput) {
   const userOrgNombre = String(usuarioActivo.nombreOrganizacion || usuarioActivo.nombre_organizacion || '').toLowerCase().trim();
   const esTitular = Boolean(usuarioActivo.esTitular === true || usuarioActivo.es_titular_organizacion === true || usuarioActivo.es_titular === true || rol.indexOf('titular') !== -1);
 
-  if (!rol || rol === 'admin' || rol === 'administrador') {
+  if (!rol) {
+    return { ok: false, error: 'Rol de usuario requerido para consultar solicitudes.' };
+  }
+  if (rol === 'admin' || rol === 'administrador') {
     return { ok: true, solicitudes: todas, total: todas.length };
   }
 
@@ -1590,10 +1693,6 @@ function eliminarSolicitudBackend(payload) {
   }
 }
 
-const CLEANUP_KEY_SALT_DEFAULT_ = '7e4a1ad11cf627a2b016ac8ab626e12e';
-const CLEANUP_KEY_HASH_DEFAULT_ = '9362828837d52f41da1f9e50b956912c0475216b27c1fc251d2acde79c555a9d';
-const CLEANUP_KEY_ROUNDS_ = 2500;
-
 function timingSafeEqualHex_(a, b) {
   if (!a || !b || a.length !== b.length) return false;
   let diff = 0;
@@ -1607,10 +1706,13 @@ function verificarClaveLimpiezaGas_(claveIngresada) {
   const clave = String(claveIngresada || '').trim();
   if (!clave) return false;
   const props = PropertiesService.getScriptProperties();
-  const customHash = String(props.getProperty('CLEANUP_KEY_HASH') || '').trim().toLowerCase();
-  const customSalt = String(props.getProperty('CLEANUP_KEY_SALT') || CLEANUP_KEY_SALT_DEFAULT_).trim();
-  const expectedHash = customHash || CLEANUP_KEY_HASH_DEFAULT_;
-  const rounds = Number(props.getProperty('CLEANUP_KEY_ROUNDS') || CLEANUP_KEY_ROUNDS_) || CLEANUP_KEY_ROUNDS_;
+  const expectedHash = String(props.getProperty('CLEANUP_KEY_HASH') || '').trim().toLowerCase();
+  const customSalt = String(props.getProperty('CLEANUP_KEY_SALT') || '').trim();
+  if (!expectedHash || !customSalt) {
+    Logger.log('⚠️ CLEANUP_KEY_HASH / CLEANUP_KEY_SALT no configurados en Propiedades del Script.');
+    return false;
+  }
+  const rounds = Number(props.getProperty('CLEANUP_KEY_ROUNDS') || 2500) || 2500;
 
   let actual = hashSha256Hex_(customSalt + ':' + clave);
   for (let r = 1; r < rounds; r++) {
@@ -2174,7 +2276,7 @@ function obtenerOCrearCarpetaFichaIdentidad_(dni, nombreAsociado) {
     fichasRoot = iterRaiz.next();
   } else {
     fichasRoot = root.createFolder(nombreRaizFichas);
-    try { fichasRoot.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (_) {}
+    try { fichasRoot.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE); } catch (_) {}
   }
 
   const dniLim = String(dni || '').replace(/\D/g, '').trim();
@@ -2194,7 +2296,7 @@ function obtenerOCrearCarpetaFichaIdentidad_(dni, nombreAsociado) {
     }
   }
   const nueva = fichasRoot.createFolder(nombreSub);
-  try { nueva.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (_) {}
+  try { nueva.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE); } catch (_) {}
   return nueva;
 }
 
@@ -2248,7 +2350,7 @@ function subirVideoPruebaVidaDriveBackend(payload) {
       const bytes = Utilities.base64Decode(base64Str);
       const blob = Utilities.newBlob(bytes, tipoMime, nombreArch);
       const file = folder.createFile(blob);
-      try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (_) {}
+      try { file.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE); } catch (_) {}
       fileId = file.getId();
       urlDrive = 'https://drive.google.com/file/d/' + fileId + '/view';
       previewUrl = 'https://drive.google.com/file/d/' + fileId + '/preview';
@@ -2275,7 +2377,7 @@ function subirVideoPruebaVidaDriveBackend(payload) {
       const exBytes = Utilities.base64Decode(exB64);
       const exBlob = Utilities.newBlob(exBytes, exMime, exName);
       const exFile = folder.createFile(exBlob);
-      try { exFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (_) {}
+      try { exFile.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE); } catch (_) {}
       const exId = exFile.getId();
       const exUrl = 'https://drive.google.com/file/d/' + exId + '/view';
       const exPrev = 'https://drive.google.com/file/d/' + exId + '/preview';
@@ -4693,7 +4795,7 @@ function auditarLegajoConIA(payload) {
   const anioActual = fechaActual.getFullYear();
   const fechaActualStr = String(fechaActual.getDate()).padStart(2, '0') + '/' + String(mesActual).padStart(2, '0') + '/' + anioActual;
 
-  const promptAuditor = dataIn.promptInstruccion ? String(dataIn.promptInstruccion) : [
+  const promptAuditor = [
     'Actúa como Auditor Crediticio Forense de la Asociación Mutual Modelo de Entre Ríos (AMMER).',
     'FECHA DE AUDITORÍA: ' + fechaActualStr + ' (Mes ' + mesActual + '/' + anioActual + ')',
     '',

@@ -4075,7 +4075,7 @@
             if (outBox) {
               outBox.style.display = 'block';
               outBox.innerHTML = `
-                <div style="font-size:0.74rem;color:#166534;font-weight:700;margin-bottom:4px;">✅ Descargado AMMER_PAdES_Institucional.p12 (Clave: <code>ammer-pades-2026</code>)</div>
+                <div style="font-size:0.74rem;color:#166534;font-weight:700;margin-bottom:4px;">✅ Descargado AMMER_PAdES_Institucional.p12 (cargá su clave propia en <code>PADES_P12_PASSWORD</code> en Render)</div>
                 <textarea id="txtP12Base64Out" rows="3" readonly style="width:100%;font-size:0.68rem;padding:0.4rem;border:1px solid #cbd5e1;border-radius:6px;margin-bottom:4px;">${escHtml(g.p12Base64)}</textarea>
                 <button type="button" onclick="window.copiarInputPorId('txtP12Base64Out', 'PADES_P12_BASE64')" style="padding:0.3rem 0.7rem;border-radius:6px;border:1px solid #0f2744;background:#ffffff;color:#0f2744;font-size:0.72rem;font-weight:700;cursor:pointer;">📋 Copiar PADES_P12_BASE64</button>
               `;

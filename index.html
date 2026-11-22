@@ -13,12 +13,13 @@
   <meta name="apple-mobile-web-app-title" content="AMMER Mutual"/>
   <link rel="apple-touch-icon" href="icons/icon-192.png"/>
   <meta name="description" content="Simulador oficial de ayudas económicas de Mutual Modelo. Líneas FEDEM Provincial, Municipales Convenio VIKINGO / QUAD y Tarjeta Sidecreer."/>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://script.google.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; worker-src 'self' blob: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data: blob:; frame-src 'self' https://drive.google.com https://docs.google.com https://*.googleusercontent.com data: blob:;"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://script.google.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://challenges.cloudflare.com; worker-src 'self' blob: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data: blob:; connect-src 'self' https://ammer-auditor-api.onrender.com https://script.google.com https://script.googleusercontent.com https://mfaziwuvnaxviqgrybva.supabase.co https://challenges.cloudflare.com; frame-src 'self' https://drive.google.com https://docs.google.com https://*.googleusercontent.com https://challenges.cloudflare.com data: blob:;"/>
   <meta name="referrer" content="strict-origin-when-cross-origin"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
   <style>
     /* ========================================================================
        UTILIDADES UI/UX STANDALONE (COMPATIBLE CON TAILWIND Y SIN CONFLICTO)
@@ -3941,6 +3942,7 @@
                   ⏱️ Por seguridad, la sesión se cierra automáticamente tras <strong>1 hora</strong> de inactividad.
                 </div>
               </div>
+              <div id="turnstileLoginBox" style="display:flex;justify-content:center;margin:0.35rem 0 0.5rem;"></div>
               <button type="submit" id="btnLoginSubmit" class="btn-primary-action" style="margin-top:0.25rem;">Iniciar Sesión 🔐</button>
             </form>
           </div>
@@ -8171,11 +8173,6 @@
 
     async function verificarEstadoSistema() {
       try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const paramKey = urlParams.get('admin_key');
-        if (paramKey) {
-          localStorage.setItem('ammer_admin_bypass', paramKey);
-        }
         const activeBypass = localStorage.getItem('ammer_admin_bypass');
 
         if (!RENDER_API_URL || RENDER_API_URL.includes('[TU_API]')) {
@@ -8241,9 +8238,13 @@
 
     // 0.1 SANITIZACIÓN UNIVERSAL CONTRA CROSS-SITE SCRIPTING (XSS)
     function sanitizeHTML(str) {
-      const p = document.createElement('p');
-      p.textContent = (str === null || str === undefined) ? '' : String(str);
-      return p.innerHTML;
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
     function sanitizeSafeUrl(url) {
@@ -10343,6 +10344,64 @@ ${cierreTxt}`;
         : 'Sesión finalizada de forma segura');
     }
 
+    let _tsLoginWidgetId = null;
+    let _tsLoginToken = '';
+    function obtenerTokenTurnstileLogin_() {
+      return new Promise((resolve) => {
+        if (!window.turnstile || typeof window.turnstile.render !== 'function') {
+          resolve(_tsLoginToken || '');
+          return;
+        }
+        const box = document.getElementById('turnstileLoginBox');
+        if (!box) { resolve(''); return; }
+        if (_tsLoginToken) {
+          resolve(_tsLoginToken);
+          return;
+        }
+        let settled = false;
+        const done = (v) => {
+          if (settled) return;
+          settled = true;
+          resolve(v || '');
+        };
+        const timer = setTimeout(() => done(''), 9000);
+        try {
+          if (_tsLoginWidgetId !== null) {
+            try { window.turnstile.remove(_tsLoginWidgetId); } catch (_) {}
+            _tsLoginWidgetId = null;
+          }
+          box.innerHTML = '';
+          _tsLoginWidgetId = window.turnstile.render(box, {
+            sitekey: '0x4AAAAAAGN1Qv0d_p9gTX5i',
+            action: 'login',
+            theme: 'light',
+            size: 'flexible',
+            callback: (tok) => {
+              _tsLoginToken = tok || '';
+              clearTimeout(timer);
+              done(_tsLoginToken);
+            },
+            'expired-callback': () => { _tsLoginToken = ''; },
+            'error-callback': () => {
+              _tsLoginToken = '';
+              clearTimeout(timer);
+              done('');
+            },
+          });
+        } catch (_) {
+          clearTimeout(timer);
+          done('');
+        }
+      });
+    }
+
+    function reiniciarTurnstileLogin_() {
+      _tsLoginToken = '';
+      if (window.turnstile && _tsLoginWidgetId !== null) {
+        try { window.turnstile.reset(_tsLoginWidgetId); } catch (_) {}
+      }
+    }
+
     async function handleLoginSubmit(e) {
       e.preventDefault();
 
@@ -10368,29 +10427,34 @@ ${cierreTxt}`;
       let credencialRechazada = false;
 
       if (RENDER_API_URL && !RENDER_API_URL.includes('[TU_API]')) {
-        mostrarCargando('Verificando Credenciales...', 'Validando sesión segura en servidor AMMER');
+        mostrarCargando('Verificando Credenciales...', 'Validando sesión segura y protección anti-bots AMMER');
         try {
+          const tsTokLogin = await obtenerTokenTurnstileLogin_();
           const respAuth = await fetchConTimeout(`${RENDER_API_URL}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               usuario: userVal,
               password: passVal,
-              clave: passVal
+              clave: passVal,
+              turnstileToken: tsTokLogin || null
             })
           }, 22000);
           const dataAuth = await respAuth.json().catch(() => ({}));
           if (respAuth.ok && dataAuth && dataAuth.ok !== false) {
+            reiniciarTurnstileLogin_();
             if (dataAuth.token) {
               setApiAuthToken(dataAuth.token);
             }
             res = { ok: true, data: dataAuth };
-          } else if (respAuth.status === 401 || respAuth.status === 400) {
+          } else if (respAuth.status === 401 || respAuth.status === 400 || respAuth.status === 403 || respAuth.status === 429) {
             credencialRechazada = true;
+            reiniciarTurnstileLogin_();
             setApiAuthToken(null);
             res = { ok: false, error: dataAuth.detail || dataAuth.message || 'Usuario o contraseña incorrectos.', data: dataAuth };
           }
         } catch (errAuth) {
+          reiniciarTurnstileLogin_();
           console.warn('Auth backend no disponible temporalmente, usando fallback Apps Script:', errAuth);
         } finally {
           ocultarCargando();
@@ -16330,6 +16394,33 @@ ${cierreTxt}`;
       }
     }
 
+    function extraerFileIdDrive_(docObj, rawUrl) {
+      if (docObj && docObj.fileId && /^[a-zA-Z0-9_-]{10,120}$/.test(String(docObj.fileId).trim())) {
+        return String(docObj.fileId).trim();
+      }
+      const s = String(rawUrl || '').trim();
+      const m = s.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) ||
+                s.match(/\/d\/([a-zA-Z0-9_-]+)/) ||
+                s.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (m && m[1]) return m[1];
+      if (/^[a-zA-Z0-9_-]{20,}$/.test(s)) return s;
+      return '';
+    }
+
+    async function cargarBlobUrlDriveAutenticado_(fileId, downloadMode = false) {
+      if (!fileId || !RENDER_API_URL || RENDER_API_URL.includes('[TU_API]') || typeof getApiAuthToken !== 'function' || !getApiAuthToken()) {
+        return null;
+      }
+      const url = `${RENDER_API_URL}/api/drive/archivo/${encodeURIComponent(fileId)}${downloadMode ? '?download=true' : ''}`;
+      const resp = await fetchConTimeout(url, { method: 'GET' }, 45000);
+      if (!resp || !resp.ok) return null;
+      const blob = await resp.blob();
+      if (!blob || blob.size === 0) return null;
+      const objUrl = URL.createObjectURL(blob);
+      registrarObjectUrlVisor(objUrl);
+      return { objUrl, mime: String(blob.type || '').toLowerCase() };
+    }
+
     function renderizarDocumento(docObj, expedienteLabel, solicitudId, adjuntoIndex) {
       const wrap = document.getElementById('docViewerContent');
       const toolbar = document.getElementById('visorImageToolbar');
@@ -16351,7 +16442,7 @@ ${cierreTxt}`;
       }
 
       const rawBase64 = (docObj && (docObj.dataUrl || docObj.base64)) ? String(docObj.dataUrl || docObj.base64).trim() : '';
-      const rawUrlDrive = (docObj && (docObj.urlDrive || docObj.url)) ? String(docObj.urlDrive || docObj.url).trim() : '';
+      const rawUrlDrive = (docObj && (docObj.urlDrive || docObj.url || docObj.previewUrl)) ? String(docObj.urlDrive || docObj.url || docObj.previewUrl).trim() : '';
       const mime = (docObj && (docObj.tipoMime || docObj.mimeType)) ? String(docObj.tipoMime || docObj.mimeType).toLowerCase() : '';
 
       const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(nombreDoc) ||
@@ -16362,7 +16453,7 @@ ${cierreTxt}`;
       if (rawBase64 && isImage) {
         const imgSrc = rawBase64.startsWith('data:') ? rawBase64 : ('data:' + (mime || 'image/jpeg') + ';base64,' + rawBase64);
         if (toolbar) toolbar.style.display = 'flex';
-        wrap.innerHTML = '<div class="doc-viewer-img-container"><img id="visorImageEl" src="' + imgSrc + '" class="doc-viewer-img" alt="' + sanitizeHTML(nombreDoc) + '"/></div>';
+        wrap.innerHTML = '<div class="doc-viewer-img-container"><img id="visorImageEl" src="' + sanitizeHTML(imgSrc) + '" class="doc-viewer-img" alt="' + sanitizeHTML(nombreDoc) + '"/></div>';
         return;
       }
 
@@ -16371,16 +16462,42 @@ ${cierreTxt}`;
         if (toolbar) toolbar.style.display = 'none';
         const pdfBlobUrl = base64ToPdfObjectUrl(rawBase64);
         if (pdfBlobUrl) {
-          wrap.innerHTML = '<iframe src="' + pdfBlobUrl + '" class="doc-viewer-frame" title="' + sanitizeHTML(nombreDoc) + '"></iframe>';
+          wrap.innerHTML = '<iframe src="' + sanitizeHTML(pdfBlobUrl) + '" class="doc-viewer-frame" title="' + sanitizeHTML(nombreDoc) + '"></iframe>';
           return;
         }
       }
 
-      // 3. URL de Bóveda Documental validada y normalizada a /preview
+      // 3. Archivo de Google Drive: intentar proxy autenticado privado primero, con fallback a visor Drive
+      const fileIdDrive = extraerFileIdDrive_(docObj, rawUrlDrive);
       const previewUrl = normalizarUrlVisorDrive(rawUrlDrive);
+      if (fileIdDrive && RENDER_API_URL && !RENDER_API_URL.includes('[TU_API]') && typeof getApiAuthToken === 'function' && getApiAuthToken()) {
+        if (toolbar) toolbar.style.display = 'none';
+        wrap.innerHTML = '<div class="doc-viewer-empty-state"><div style="font-size:2rem;margin-bottom:0.5rem;">🔒⏳</div><p style="font-size:0.86rem;color:var(--text-muted);">Descargando comprobante protegido desde bóveda privada AMMER...</p></div>';
+        cargarBlobUrlDriveAutenticado_(fileIdDrive, false).then((resProxy) => {
+          if (resProxy && resProxy.objUrl) {
+            if (resProxy.mime.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif)$/i.test(nombreDoc)) {
+              if (toolbar) toolbar.style.display = 'flex';
+              wrap.innerHTML = '<div class="doc-viewer-img-container"><img id="visorImageEl" src="' + sanitizeHTML(resProxy.objUrl) + '" class="doc-viewer-img" alt="' + sanitizeHTML(nombreDoc) + '"/></div>';
+            } else {
+              if (toolbar) toolbar.style.display = 'none';
+              wrap.innerHTML = '<iframe src="' + sanitizeHTML(resProxy.objUrl) + '" class="doc-viewer-frame" title="' + sanitizeHTML(nombreDoc) + '"></iframe>';
+            }
+            return;
+          }
+          if (previewUrl) {
+            wrap.innerHTML = '<iframe src="' + sanitizeHTML(previewUrl) + '" class="doc-viewer-frame" allow="autoplay" referrerpolicy="no-referrer" title="' + sanitizeHTML(nombreDoc) + '"></iframe>';
+          }
+        }).catch(() => {
+          if (previewUrl) {
+            wrap.innerHTML = '<iframe src="' + sanitizeHTML(previewUrl) + '" class="doc-viewer-frame" allow="autoplay" referrerpolicy="no-referrer" title="' + sanitizeHTML(nombreDoc) + '"></iframe>';
+          }
+        });
+        return;
+      }
+
       if (previewUrl) {
         if (toolbar) toolbar.style.display = 'none';
-        wrap.innerHTML = '<iframe src="' + previewUrl + '" class="doc-viewer-frame" allow="autoplay" title="' + sanitizeHTML(nombreDoc) + '"></iframe>';
+        wrap.innerHTML = '<iframe src="' + sanitizeHTML(previewUrl) + '" class="doc-viewer-frame" allow="autoplay" referrerpolicy="no-referrer" title="' + sanitizeHTML(nombreDoc) + '"></iframe>';
         return;
       }
 
@@ -16418,17 +16535,31 @@ ${cierreTxt}`;
 
     const abrirVisorDocumental = abrirVisorOnline;
 
-    function descargarDocumentoOnline(solicitudId, adjuntoIndex) {
+    async function descargarDocumentoOnline(solicitudId, adjuntoIndex) {
       const s = getStoredSolicitudes().find(x => String(x.id) === String(solicitudId)); if (!s) return;
       const listaArchivos = normalizarListaArchivos(s);
       const adj = listaArchivos[adjuntoIndex]; if (!adj) return;
       if (adj.dataUrl) {
         const a = document.createElement('a');
         a.href = adj.dataUrl;
-        a.download = adj.nombre;
+        a.download = adj.nombre || 'documento';
         a.click();
-      } else if (adj.fileId || adj.urlDrive || adj.previewUrl) {
-        const fileId = adj.fileId || (String(adj.urlDrive || adj.previewUrl).match(/\/d\/([a-zA-Z0-9_-]+)|[?&]id=([a-zA-Z0-9_-]+)/) || [])[1];
+        return;
+      }
+      const fileId = extraerFileIdDrive_(adj, adj.urlDrive || adj.previewUrl);
+      if (fileId && RENDER_API_URL && !RENDER_API_URL.includes('[TU_API]') && typeof getApiAuthToken === 'function' && getApiAuthToken()) {
+        try {
+          const resProxy = await cargarBlobUrlDriveAutenticado_(fileId, true);
+          if (resProxy && resProxy.objUrl) {
+            const a = document.createElement('a');
+            a.href = resProxy.objUrl;
+            a.download = adj.nombre || ('documento_' + fileId);
+            a.click();
+            return;
+          }
+        } catch (_) {}
+      }
+      if (adj.fileId || adj.urlDrive || adj.previewUrl) {
         const dlUrl = fileId ? ('https://drive.google.com/uc?export=download&id=' + fileId) : (adj.urlDrive || normalizarUrlVisorDrive(adj.previewUrl));
         if (dlUrl) {
           const a = document.createElement('a');

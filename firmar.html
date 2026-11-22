@@ -6,8 +6,11 @@
   <title>Firma Electrónica Segura — Mutual Modelo (AMMER)</title>
   <meta name="description" content="Portal guiado paso a paso para firmar documentos electrónicos de forma segura ante AMMER."/>
   <meta name="theme-color" content="#0f2744"/>
+  <meta name="referrer" content="no-referrer"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; worker-src 'self' blob: https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob:; connect-src 'self' https://ammer-auditor-api.onrender.com https://challenges.cloudflare.com; frame-src 'self' https://challenges.cloudflare.com data: blob:;"/>
   <link rel="icon" type="image/png" href="favicon.png"/>
   <link rel="apple-touch-icon" href="favicon.png"/>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
   <style>
     :root {
       --navy: #0f2744;
@@ -1675,6 +1678,8 @@
           </span>
         </label>
 
+        <div id="turnstileSignerBox" style="display:flex;justify-content:center;margin:0.45rem 0;min-height:10px;"></div>
+
         <button type="button" id="btnConfirmarFirmar" class="btn btn-success" style="width:100%;font-size:1rem;min-height:46px;">
           ✅ Confirmar y Firmar Documento
         </button>
@@ -1743,9 +1748,74 @@
       'use strict';
 
       const API_BASE = 'https://ammer-auditor-api.onrender.com';
+      const TURNSTILE_SITE_KEY = '0x4AAAAAAGN1Qv0d_p9gTX5i';
       const WORKER_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       if (window.pdfjsLib) {
         window.pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER_SRC;
+      }
+
+      let _tsWidgetId = null;
+      let _tsTokenActual = '';
+      let _tsActionActual = '';
+      let _tsPendingResolve = null;
+
+      function obtenerTokenTurnstile_(actionName) {
+        return new Promise((resolve) => {
+          if (!window.turnstile || typeof window.turnstile.render !== 'function') {
+            resolve(_tsTokenActual || '');
+            return;
+          }
+          const box = document.getElementById('turnstileSignerBox');
+          if (!box) { resolve(''); return; }
+          if (_tsTokenActual && _tsActionActual === actionName) {
+            resolve(_tsTokenActual);
+            return;
+          }
+          _tsTokenActual = '';
+          _tsActionActual = actionName || '';
+          const timer = setTimeout(() => {
+            _tsPendingResolve = null;
+            resolve(_tsTokenActual || '');
+          }, 9000);
+          _tsPendingResolve = (tok) => {
+            clearTimeout(timer);
+            _tsPendingResolve = null;
+            resolve(tok || '');
+          };
+          try {
+            if (_tsWidgetId !== null) {
+              try { window.turnstile.remove(_tsWidgetId); } catch (_) {}
+              _tsWidgetId = null;
+            }
+            box.innerHTML = '';
+            _tsWidgetId = window.turnstile.render(box, {
+              sitekey: TURNSTILE_SITE_KEY,
+              action: actionName || 'firmar',
+              theme: 'light',
+              size: 'flexible',
+              callback: (tok) => {
+                _tsTokenActual = tok || '';
+                if (_tsPendingResolve) _tsPendingResolve(_tsTokenActual);
+              },
+              'expired-callback': () => { _tsTokenActual = ''; },
+              'error-callback': () => {
+                _tsTokenActual = '';
+                if (_tsPendingResolve) _tsPendingResolve('');
+              },
+            });
+          } catch (_) {
+            clearTimeout(timer);
+            _tsPendingResolve = null;
+            resolve('');
+          }
+        });
+      }
+
+      function reiniciarTurnstile_() {
+        _tsTokenActual = '';
+        if (window.turnstile && _tsWidgetId !== null) {
+          try { window.turnstile.reset(_tsWidgetId); } catch (_) {}
+        }
       }
 
       const params = new URLSearchParams(window.location.search);
@@ -2018,6 +2088,7 @@
         btnNext.textContent = '⏳ Verificando identidad...';
 
         try {
+          const tsToken = await obtenerTokenTurnstile_('firmar_identidad');
           const resp = await fetch(`${API_BASE}/api/firmas/public/${encodeURIComponent(token)}/validar-identidad`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -2031,15 +2102,18 @@
               retoLiveness: appState.retoLiveness,
               pdf417Raw: appState.ekycImgs.pdf417Raw || null,
               qrRaw: appState.ekycImgs.qrRaw || null,
+              turnstileToken: tsToken || null,
             }),
           });
           const resJson = await resp.json();
           if (!resp.ok || resJson.ok === false) {
             throw new Error(resJson.detail || resJson.message || `Error HTTP ${resp.status}`);
           }
+          reiniciarTurnstile_();
           mostrarResultadoEkyc(resJson);
           return true;
         } catch (err) {
+          reiniciarTurnstile_();
           registrarFalloDniParaGaleria('No pudimos validar tu identidad: ' + err.message, true);
           return false;
         } finally {
@@ -3495,6 +3569,7 @@
         btn.textContent = '⏳ Guardando tu firma, por favor esperá...';
 
         try {
+          const tsTokenSign = await obtenerTokenTurnstile_('firmar_documento');
           const canvas = document.getElementById('canvasFirmaMovil');
           const firmaPng = canvas.toDataURL('image/png');
           const duracionMs = appState.startTime ? (Date.now() - appState.startTime) : 0;
@@ -3512,6 +3587,7 @@
               geoLongitud: appState.gps.lng,
               geoPrecisionMetros: appState.gps.accuracy,
               pinOtp: pinOtpVal,
+              turnstileToken: tsTokenSign || null,
               declaracionJuradaUif: {
                 es_pep: appState.ddjjUif.pep === 'si',
                 pep_respuesta: appState.ddjjUif.pep || 'no',
@@ -3535,6 +3611,7 @@
           }
           mostrarPantallaFirmado(data);
         } catch (err) {
+          reiniciarTurnstile_();
           mostrarErrorEnPaso('No se pudo guardar tu firma: ' + err.message);
           btn.disabled = false;
           btn.textContent = '✅ Confirmar y Firmar Documento';

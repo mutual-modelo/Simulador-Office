@@ -470,37 +470,41 @@
       left: 0;
       right: 0;
       z-index: 4;
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      justify-content: space-between;
-      gap: 0.4rem;
-      padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 14px max(12px, env(safe-area-inset-left));
-      background: linear-gradient(180deg, rgba(0, 0, 0, 0.84) 0%, rgba(0, 0, 0, 0.38) 70%, rgba(0, 0, 0, 0) 100%);
+      gap: 0.5rem;
+      padding: max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 18px max(16px, env(safe-area-inset-left));
+      background: linear-gradient(180deg, rgba(6, 10, 18, 0.72) 0%, rgba(6, 10, 18, 0) 100%);
+    }
+
+    .dni-cam-top-hud > :first-child {
+      justify-self: start;
     }
 
     .dni-hud-actions-right {
+      justify-self: end;
       display: flex;
       align-items: center;
-      gap: 0.35rem;
-      flex-shrink: 0;
+      gap: 0.45rem;
     }
 
     .dni-hud-btn {
-      background: rgba(15, 23, 42, 0.74);
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.58);
       color: #ffffff;
-      border: 1.5px solid rgba(255, 255, 255, 0.38);
-      border-radius: 999px;
-      padding: 0.42rem 0.78rem;
-      font-size: 0.82rem;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      font-size: 1.05rem;
       font-weight: 700;
       cursor: pointer;
-      backdrop-filter: blur(6px);
+      backdrop-filter: blur(8px);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 0.3rem;
-      min-height: 38px;
-      white-space: nowrap;
+      padding: 0;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
     }
 
     .dni-hud-btn.is-active {
@@ -511,38 +515,12 @@
 
     .dni-hud-title {
       color: #ffffff;
-      font-size: 0.92rem;
+      font-size: 1rem;
       font-weight: 800;
       text-align: center;
-      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
-      line-height: 1.2;
-    }
-
-    .dni-rotate-banner {
-      display: none;
-      position: absolute;
-      top: calc(max(12px, env(safe-area-inset-top)) + 50px);
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 4;
-      width: min(92%, 460px);
-      margin: 0;
-      padding: 0.38rem 0.82rem;
-      border-radius: 999px;
-      font-size: 0.78rem;
-      font-weight: 800;
-      line-height: 1.25;
-      pointer-events: none;
-      border: 1.5px solid #fde68a;
-      background: rgba(245, 158, 11, 0.92);
-      color: #1e293b;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-    }
-
-    .dni-rotate-banner.ok {
-      border-color: #86efac;
-      background: rgba(22, 163, 74, 0.92);
-      color: #ffffff;
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.85);
+      white-space: nowrap;
+      letter-spacing: 0.1px;
     }
 
     .dni-cam-stage {
@@ -553,71 +531,60 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 96px 18px 130px;
+      padding: 74px 20px 118px;
       pointer-events: none;
     }
 
-    /* En vertical (portrait): recuadro rotado 90° (vertical/alto, estilo escáner ID móvil) */
+    /* En vertical (portrait): recuadro rotado 90° limpio */
     .dni-cam-guide {
       position: relative;
-      width: min(68vw, 310px);
+      width: min(74vw, 320px);
       aspect-ratio: 1 / 1.586;
-      max-height: calc(100dvh - 245px);
-      border: 3px dotted rgba(255, 255, 255, 0.96);
+      max-height: calc(100dvh - 215px);
+      border: 2.5px dotted rgba(255, 255, 255, 0.92);
       border-radius: 16px;
       pointer-events: none;
-      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.56);
+      box-shadow: 0 0 0 9999px rgba(8, 13, 24, 0.62);
     }
 
-    /* Puntos blancos de referencia en esquinas y laterales */
     .dni-guide-dot {
       position: absolute;
-      width: 11px;
-      height: 11px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: #ffffff;
-      border: 2px solid #0284c7;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.65);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
     }
-    .dni-guide-dot.tl { top: -6px; left: -6px; }
-    .dni-guide-dot.tc { top: -6px; left: 50%; transform: translateX(-50%); }
-    .dni-guide-dot.tr { top: -6px; right: -6px; }
-    .dni-guide-dot.ml { top: 50%; left: -6px; transform: translateY(-50%); }
-    .dni-guide-dot.mr { top: 50%; right: -6px; transform: translateY(-50%); }
-    .dni-guide-dot.bl { bottom: -6px; left: -6px; }
-    .dni-guide-dot.bc { bottom: -6px; left: 50%; transform: translateX(-50%); }
-    .dni-guide-dot.br { bottom: -6px; right: -6px; }
+    .dni-guide-dot.tl { top: -4px; left: -4px; }
+    .dni-guide-dot.tr { top: -4px; right: -4px; }
+    .dni-guide-dot.bl { bottom: -4px; left: -4px; }
+    .dni-guide-dot.br { bottom: -4px; right: -4px; }
 
     .dni-cam-guide-label {
-      margin-top: 0.72rem;
-      color: #ffffff;
-      font-size: 0.8rem;
-      font-weight: 700;
-      background: rgba(15, 23, 42, 0.78);
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      padding: 0.28rem 0.82rem;
-      border-radius: 999px;
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+      margin-top: 0.85rem;
+      color: rgba(255, 255, 255, 0.94);
+      font-size: 0.84rem;
+      font-weight: 600;
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.95);
       pointer-events: none;
-      max-width: 92%;
+      max-width: 90%;
     }
 
     .dni-flash-toast {
       display: none;
       position: absolute;
-      bottom: 122px;
+      bottom: 118px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 5;
-      background: rgba(15, 23, 42, 0.92);
+      background: rgba(15, 23, 42, 0.88);
       color: #f8fafc;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      padding: 0.45rem 0.9rem;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      padding: 0.42rem 0.9rem;
       border-radius: 999px;
       font-size: 0.8rem;
-      font-weight: 700;
+      font-weight: 600;
       max-width: 90%;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
     }
 
     .dni-cam-bottom-hud {
@@ -629,8 +596,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 12px 16px max(18px, env(safe-area-inset-bottom));
-      background: linear-gradient(0deg, rgba(0, 0, 0, 0.86) 0%, rgba(0, 0, 0, 0.36) 70%, rgba(0, 0, 0, 0) 100%);
+      padding: 12px 16px max(20px, env(safe-area-inset-bottom));
+      background: linear-gradient(0deg, rgba(6, 10, 18, 0.78) 0%, rgba(6, 10, 18, 0) 100%);
     }
 
     .dni-shutter-btn-wrap {
@@ -641,21 +608,21 @@
       display: inline-flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.32rem;
+      gap: 0.3rem;
       color: #ffffff;
     }
 
     .dni-shutter-ring {
-      width: 72px;
-      height: 72px;
+      width: 68px;
+      height: 68px;
       border-radius: 50%;
-      border: 4px solid #ffffff;
-      background: rgba(255, 255, 255, 0.22);
+      border: 3.5px solid #ffffff;
+      background: rgba(255, 255, 255, 0.16);
       padding: 5px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
       transition: transform 0.1s ease;
     }
 
@@ -672,14 +639,13 @@
     }
 
     .dni-shutter-caption {
-      font-size: 0.82rem;
-      font-weight: 800;
-      color: #ffffff;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.92);
       text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
       white-space: nowrap;
     }
 
-    /* Rotación manual del HUD a horizontal cuando el celular tiene bloqueo de giro */
     @media (orientation: portrait) {
       .dni-cam-live-box.hud-rot-90 .dni-cam-hud-shell,
       .dni-cam-live-box.hud-rot-n90 .dni-cam-hud-shell {
@@ -700,34 +666,33 @@
 
       .dni-cam-live-box.hud-rot-90 .dni-cam-top-hud,
       .dni-cam-live-box.hud-rot-n90 .dni-cam-top-hud {
-        padding: 10px 18px 12px;
-      }
-
-      .dni-cam-live-box.hud-rot-90 .dni-rotate-banner,
-      .dni-cam-live-box.hud-rot-n90 .dni-rotate-banner {
-        top: 54px;
-        font-size: 0.74rem;
-        padding: 0.28rem 0.7rem;
+        padding: 12px 20px 14px;
       }
 
       .dni-cam-live-box.hud-rot-90 .dni-cam-stage,
       .dni-cam-live-box.hud-rot-n90 .dni-cam-stage {
-        padding: 66px 116px 16px 24px;
+        padding: 58px 108px 16px 24px;
       }
 
       .dni-cam-live-box.hud-rot-90 .dni-cam-guide,
       .dni-cam-live-box.hud-rot-n90 .dni-cam-guide {
         width: auto;
-        height: 62%;
+        height: 66%;
         max-width: 78%;
-        max-height: 70%;
+        max-height: 74%;
         aspect-ratio: 1.586 / 1;
+      }
+
+      .dni-cam-live-box.hud-rot-90 .dni-cam-guide-label,
+      .dni-cam-live-box.hud-rot-n90 .dni-cam-guide-label {
+        margin-top: 0.55rem;
+        font-size: 0.78rem;
       }
 
       .dni-cam-live-box.hud-rot-90 .dni-cam-bottom-hud,
       .dni-cam-live-box.hud-rot-n90 .dni-cam-bottom-hud {
         top: 50%;
-        right: 16px;
+        right: 18px;
         bottom: auto;
         left: auto;
         transform: translateY(-50%);
@@ -741,37 +706,30 @@
       }
     }
 
-    /* En horizontal real (auto-rotate o fullscreen Android): todo cómodo y horizontal */
     @media (orientation: landscape) {
       #btnRotarHudDni {
         display: none;
       }
 
       .dni-cam-top-hud {
-        padding: max(10px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) 12px max(18px, env(safe-area-inset-left));
-      }
-
-      .dni-rotate-banner {
-        top: calc(max(10px, env(safe-area-inset-top)) + 44px);
-        font-size: 0.74rem;
-        padding: 0.28rem 0.75rem;
+        padding: max(10px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) 14px max(20px, env(safe-area-inset-left));
       }
 
       .dni-cam-stage {
-        padding: 72px 124px 16px 24px;
+        padding: 58px 112px 16px 24px;
       }
 
       .dni-cam-guide {
         width: auto;
-        height: min(64dvh, 330px);
-        max-width: calc(100vw - 170px);
-        max-height: calc(100dvh - 138px);
+        height: min(66dvh, 330px);
+        max-width: calc(100vw - 165px);
+        max-height: calc(100dvh - 110px);
         aspect-ratio: 1.586 / 1;
       }
 
       .dni-cam-guide-label {
-        margin-top: 0.5rem;
-        font-size: 0.76rem;
+        margin-top: 0.55rem;
+        font-size: 0.78rem;
       }
 
       .dni-cam-bottom-hud {
@@ -1685,35 +1643,27 @@
 
       <div class="dni-cam-hud-shell" id="dniCamHudShell">
         <div class="dni-cam-top-hud">
-          <button type="button" id="btnCancelarCamaraDni" class="dni-hud-btn">
-            ✕ Volver
+          <button type="button" id="btnCancelarCamaraDni" class="dni-hud-btn" aria-label="Cerrar cámara" title="Cerrar">
+            ✕
           </button>
           <div id="lblDniCamTitulo" class="dni-hud-title">
             Frente del DNI
           </div>
           <div class="dni-hud-actions-right">
-            <button type="button" id="btnRotarHudDni" class="dni-hud-btn" title="Girar textos y controles a horizontal">
-              ↻ Girar
+            <button type="button" id="btnRotarHudDni" class="dni-hud-btn" title="Girar vista a horizontal" aria-label="Girar vista a horizontal">
+              ↻
             </button>
-            <button type="button" id="btnToggleFlashDni" class="dni-hud-btn" aria-pressed="false">
-              🔦 Flash
+            <button type="button" id="btnToggleFlashDni" class="dni-hud-btn" aria-pressed="false" title="Activar o desactivar flash" aria-label="Activar o desactivar flash">
+              ⚡
             </button>
           </div>
-        </div>
-
-        <div id="dniRotateBanner" class="dni-rotate-banner">
-          📱↻ Encuadrá el DNI verticalmente o tocá <strong>↻ Girar</strong> en horizontal
         </div>
 
         <div class="dni-cam-stage">
           <div class="dni-cam-guide" aria-hidden="true">
             <span class="dni-guide-dot tl"></span>
-            <span class="dni-guide-dot tc"></span>
             <span class="dni-guide-dot tr"></span>
-            <span class="dni-guide-dot ml"></span>
-            <span class="dni-guide-dot mr"></span>
             <span class="dni-guide-dot bl"></span>
-            <span class="dni-guide-dot bc"></span>
             <span class="dni-guide-dot br"></span>
           </div>
           <div id="lblDniGuideHint" class="dni-cam-guide-label">Encuadrá los 4 bordes del DNI dentro del recuadro</div>
@@ -2396,18 +2346,15 @@
         if (!btn) return;
         btn.classList.toggle('is-active', !!encendido);
         btn.setAttribute('aria-pressed', encendido ? 'true' : 'false');
-        btn.textContent = encendido ? '⚡ Flash ON' : '🔦 Flash';
+        btn.textContent = '⚡';
       }
 
       function actualizarOrientacionCamaraDni() {
         const vid = document.getElementById('videoDniCapture');
-        const banner = document.getElementById('dniRotateBanner');
         const box = document.getElementById('dniCameraLiveBox');
         const hintEl = document.getElementById('lblDniGuideHint');
         const rotBtn = document.getElementById('btnRotarHudDni');
         if (!vid || !appState.dniCamStream) return;
-        const vw = vid.videoWidth || 0;
-        const vh = vid.videoHeight || 0;
         const esLandscapeReal = window.innerWidth > window.innerHeight;
 
         if (box) {
@@ -2416,41 +2363,19 @@
         }
         if (rotBtn && !esLandscapeReal) {
           rotBtn.classList.toggle('is-active', appState.dniHudRot !== '0');
-          rotBtn.textContent = appState.dniHudRot === '0' ? '↻ Horizontal' : (appState.dniHudRot === '90' ? '↺ Invertir' : '↻ Vertical');
         }
 
-        const enHorizontal = esLandscapeReal || appState.dniHudRot !== '0' || (vw > vh && esLandscapeReal);
+        const enHorizontal = esLandscapeReal || appState.dniHudRot !== '0';
         if (hintEl) {
           hintEl.textContent = enHorizontal
-            ? 'Encuadrá los 4 bordes del DNI en horizontal'
-            : 'Encuadrá los 4 bordes del DNI dentro del recuadro';
-        }
-        if (banner) {
-          banner.style.display = 'block';
-          if (enHorizontal) {
-            banner.className = 'dni-rotate-banner ok';
-            banner.innerHTML = '✅ En horizontal · Encuadrá el DNI y sacá la foto';
-          } else {
-            banner.className = 'dni-rotate-banner';
-            banner.innerHTML = '📱↻ Encuadrá el DNI vertical o tocá <strong>↻ Horizontal</strong> si acostás el celular';
-          }
+            ? 'Encuadrá los 4 bordes del DNI dentro del recuadro'
+            : 'Encuadrá el DNI o girá tu celular horizontal';
         }
       }
 
       function detenerCamaraDni() {
         window.removeEventListener('resize', actualizarOrientacionCamaraDni);
         window.removeEventListener('orientationchange', actualizarOrientacionCamaraDni);
-        try {
-          if (screen.orientation && typeof screen.orientation.unlock === 'function') {
-            screen.orientation.unlock();
-          }
-        } catch (_e) {}
-        try {
-          const box = document.getElementById('dniCameraLiveBox');
-          if (document.fullscreenElement && (!box || document.fullscreenElement === box)) {
-            document.exitFullscreen().catch(() => {});
-          }
-        } catch (_e) {}
         if (appState.dniCamStream) {
           try {
             const vTrack = appState.dniCamStream.getVideoTracks && appState.dniCamStream.getVideoTracks()[0];
@@ -2474,10 +2399,8 @@
           vid.onloadedmetadata = null;
           vid.srcObject = null;
         }
-        const banner = document.getElementById('dniRotateBanner');
         const box = document.getElementById('dniCameraLiveBox');
         const grid = document.getElementById('dniCardsGrid');
-        if (banner) banner.style.display = 'none';
         if (box) {
           box.style.display = 'none';
           box.classList.remove('hud-rot-90', 'hud-rot-n90');
@@ -2743,14 +2666,6 @@
             }
             appState.dniHudRot = '0';
             document.body.style.overflow = 'hidden';
-            try {
-              if (box && typeof box.requestFullscreen === 'function') {
-                await box.requestFullscreen().catch(() => {});
-              }
-              if (screen.orientation && typeof screen.orientation.lock === 'function') {
-                screen.orientation.lock('landscape').catch(() => {});
-              }
-            } catch (_e) {}
             window.addEventListener('resize', actualizarOrientacionCamaraDni);
             window.addEventListener('orientationchange', actualizarOrientacionCamaraDni);
             actualizarOrientacionCamaraDni();

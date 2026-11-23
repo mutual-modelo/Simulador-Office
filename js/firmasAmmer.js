@@ -1148,7 +1148,7 @@
             badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#eef2ff;color:#3730a3;">🔏 PAdES (.p12)</span>';
           }
 
-          const btnBase = 'display:inline-flex;align-items:center;gap:5px;padding:0.4rem 0.78rem;border-radius:8px;font-size:0.76rem;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;';
+          const btnBase = 'display:inline-flex;align-items:center;justify-content:center;gap:4px;height:32px;padding:0 0.68rem;border-radius:8px;font-size:0.74rem;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;flex-shrink:0;line-height:1;';
           const fechaCreadaTxt = (r.created_at || '').slice(0, 16).replace('T', ' ') || '-';
           const fechaFirmadaTxt = r.firmado_en ? r.firmado_en.slice(0, 16).replace('T', ' ') : '';
 
@@ -1179,7 +1179,7 @@
                   <button type="button" onclick="window.descargarPdfSolicitudFirma('${escHtml(r.id)}', '${tipoDescarga}')" title="${escHtml(labelDescarga)}" style="${btnBase}border:1px solid #0f2744;background:#0f2744;color:#ffffff;">
                     📥 Descargar PDF
                   </button>
-                  <button type="button" onclick="window.abrirModalBajaSolicitudFirma('${escHtml(r.id)}')" title="Cancelar, desestimar o eliminar ficha con código de validación por WhatsApp" style="${btnBase}border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;">
+                  <button type="button" onclick="window.abrirModalBajaSolicitudFirma('${escHtml(r.id)}')" title="Cancelar, desestimar o eliminar ficha con código de validación por WhatsApp" style="${btnBase}width:32px;padding:0;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;">
                     🗑️
                   </button>
                 </div>

@@ -1138,29 +1138,37 @@
     }
 
     .video-preview-player {
-      width: min(295px, 80vw);
-      max-height: 44dvh;
+      width: min(260px, 76vw);
+      max-height: 36dvh;
       max-width: 100%;
       border-radius: 14px;
-      border: 3px solid #16a34a;
+      border: 2px solid #86efac;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
       background: #0f172a;
       display: block;
       margin: 0 auto 0.55rem auto;
     }
 
-    /* Firma manuscrita amplia y cómoda */
+    /* Firma manuscrita amplia, limpia y cómoda */
     .sig-pad-wrap {
-      border: 2.5px dashed #64748b;
+      border: 1.5px solid #94a3b8;
       border-radius: 14px;
       background: #ffffff !important;
       position: relative;
       overflow: hidden;
       touch-action: none;
+      box-shadow: inset 0 1px 4px rgba(15, 23, 42, 0.05);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .sig-pad-wrap:focus-within,
+    .sig-pad-wrap:active {
+      border-color: #135596;
+      box-shadow: 0 0 0 3px rgba(19, 85, 150, 0.12);
     }
 
     #canvasFirmaMovil {
       width: 100%;
-      height: clamp(240px, 40dvh, 340px);
+      height: clamp(230px, 38dvh, 320px);
       display: block;
       cursor: crosshair;
       touch-action: none;
@@ -1540,26 +1548,6 @@
     .ekyc-stage-row.is-active { color: #1d4ed8; font-weight: 800; }
     .ekyc-stage-row.is-done { color: #047857; font-weight: 700; }
 
-    /* Línea guía en el recuadro de firma */
-    .sig-baseline {
-      position: absolute;
-      left: 7%;
-      right: 7%;
-      bottom: 24%;
-      border-bottom: 2px dashed #cbd5e1;
-      pointer-events: none;
-      text-align: right;
-    }
-    .sig-baseline span {
-      display: inline-block;
-      font-size: 0.68rem;
-      font-weight: 700;
-      color: #94a3b8;
-      background: #ffffff;
-      padding: 0 6px;
-      transform: translateY(50%);
-    }
-
     /* Comprobante final enriquecido */
     .receipt-hero {
       display: flex;
@@ -1737,17 +1725,17 @@
       <!-- PASO INTERMEDIO: DECLARACIÓN JURADA UIF (ENTRE PASO 1 Y PASO 2) -->
       <section class="card wizard-step-pane" id="paneStepUif" style="display:none;">
         <h1 class="step-heading">📋 Declaración Jurada</h1>
-        <p class="step-lead">Respondé estas 3 consultas para validar tu registro. Funcionan mediante declaración jurada y control automático:</p>
+        <p class="step-lead">Respondé estas 3 preguntas simples para continuar:</p>
 
         <div class="uif-list">
           <!-- Pregunta 1: PEP -->
           <div class="uif-card" id="uifCardPep">
             <div class="uif-q-head">
-              <div class="uif-q-title">1. ¿Sos Persona Expuesta Políticamente (PEP)?</div>
+              <div class="uif-q-title">1. ¿Ocupás un cargo público importante? (PEP)</div>
               <span class="uif-done-pill">✓ Respondida</span>
             </div>
             <div class="uif-q-brief">
-              Si ocupás (u ocupaste en los últimos 2 años) un cargo público de alta jerarquía, o tenés vínculo familiar directo o comercial estrecho con alguien en ese cargo. <em>Habitualmente: No.</em>
+              O tenés un familiar directo con cargo político alto. <em>La mayoría responde No.</em>
             </div>
             <div class="uif-choice-row" role="group" aria-label="¿Sos Persona Expuesta Políticamente?">
               <button type="button" id="btnUifPepNo" class="uif-choice-btn">No</button>
@@ -1758,11 +1746,11 @@
               <input type="text" id="inpUifPepDetalle" maxlength="180" placeholder="Ej: Cargo público o vínculo familiar"/>
             </div>
             <details class="uif-more">
-              <summary>ℹ️ Ver más información</summary>
+              <summary>ℹ️ ¿Qué significa?</summary>
               <div class="uif-more-body">
                 <p><strong>Qué significa:</strong> Según la Resolución UIF 192/2024, comprende a quienes ocupan u ocuparon en los últimos 2 años cargos públicos jerárquicos (presidente, ministro, legislador, juez, intendente, directivo de empresa estatal, autoridad sindical o partidaria, etc.).</p>
                 <p><strong>A quiénes más alcanza:</strong> También sos PEP por vínculo familiar directo (cónyuge, conviviente, padres, hijos, hermanos, suegros) o relación comercial estrecha con alguien que tenga ese cargo.</p>
-                <p><strong>Qué pasa al responder:</strong> Si ponés <strong>No</strong>, el trámite sigue normalmente. Si ponés <strong>Sí</strong>, no se rechaza tu solicitud, sino que se aplica una debida diligencia reforzada (pueden pedirte aclarar el cargo u origen de fondos).</p>
+                <p><strong>Qué pasa al responder:</strong> Si ponés <strong>No</strong>, el trámite sigue normalmente. Si ponés <strong>Sí</strong>, no se rechaza tu solicitud, sino que se aplica una debida diligencia reforzada.</p>
               </div>
             </details>
           </div>
@@ -1770,11 +1758,11 @@
           <!-- Pregunta 2: Sujeto Obligado UIF -->
           <div class="uif-card" id="uifCardSujeto">
             <div class="uif-q-head">
-              <div class="uif-q-title">2. ¿Sos Sujeto Obligado ante la UIF?</div>
+              <div class="uif-q-title">2. ¿Tu actividad informa operaciones a la UIF?</div>
               <span class="uif-done-pill">✓ Respondida</span>
             </div>
             <div class="uif-q-brief">
-              Si tu profesión o actividad te obliga por ley a informar operaciones a la UIF (bancos, aseguradoras, escribanos, contadores que auditan balances, inmobiliarias, cripto, etc.). <em>Un empleado o comerciante común no lo es.</em>
+              Aplica a bancos, escribanos o inmobiliarias. <em>Si sos empleado, jubilado o comerciante: No.</em>
             </div>
             <div class="uif-choice-row" role="group" aria-label="¿Sos Sujeto Obligado ante la UIF?">
               <button type="button" id="btnUifSujetoNo" class="uif-choice-btn">No</button>
@@ -1788,11 +1776,11 @@
               <div id="lblUifConstanciaEstado" style="margin-top:0.25rem;font-weight:700;color:#0369a1;"></div>
             </div>
             <details class="uif-more">
-              <summary>ℹ️ Ver más información</summary>
+              <summary>ℹ️ ¿Qué significa?</summary>
               <div class="uif-more-body">
-                <p><strong>Qué significa:</strong> Consulta si tu actividad económica está comprendida en la Ley 25.246, Art. 20, con obligación legal de informar operaciones sospechosas a la Unidad de Información Financiera (UIF).</p>
-                <p><strong>Quiénes son:</strong> Entidades financieras, aseguradoras, escribanos, contadores auditores, inmobiliarias, concesionarias de autos de lujo, casas de cambio, proveedores de criptoactivos, entre otros. Un trabajador en relación de dependencia o comerciante común responde <strong>No</strong>.</p>
-                <p><strong>Qué pasa al responder:</strong> Si ponés <strong>No</strong>, continuás normalmente. Si ponés <strong>Sí</strong>, podrás adjuntar tu constancia de inscripción ante la UIF o presentarla ante el asesor.</p>
+                <p><strong>Qué significa:</strong> Consulta si tu actividad económica está comprendida en la Ley 25.246, Art. 20, con obligación legal de informar operaciones sospechosas a la UIF.</p>
+                <p><strong>Quiénes son:</strong> Entidades financieras, aseguradoras, escribanos, contadores auditores, inmobiliarias, concesionarias de autos de lujo, casas de cambio, etc. Un empleado, jubilado o comerciante común responde <strong>No</strong>.</p>
+                <p><strong>Qué pasa al responder:</strong> Si ponés <strong>No</strong>, continuás normalmente.</p>
               </div>
             </details>
           </div>
@@ -1800,31 +1788,26 @@
           <!-- Pregunta 3: Origen lícito y Control RePET -->
           <div class="uif-card" id="uifCardRepet">
             <div class="uif-q-head">
-              <div class="uif-q-title">3. Validación de Terrorismo (RePET) y Origen Lícito</div>
+              <div class="uif-q-title">3. Origen de fondos lícito</div>
               <span class="uif-done-pill">✓ Confirmada</span>
             </div>
-            <div class="uif-q-brief">
-              Control automático de tu nombre y DNI/CUIT contra listas oficiales (ONU / RePET) y declaración de origen lícito de tus fondos.
-            </div>
-            <label class="consent-label" style="margin:0.25rem 0 0.35rem;">
+            <label class="consent-label" style="margin:0.35rem 0 0.35rem;">
               <input type="checkbox" id="chkUifRepetLicito"/>
               <span>
-                Declaro bajo juramento que el <strong>origen de mis fondos es lícito</strong> y que no tengo vinculación con actividades terroristas ni financiación ilícita (control RePET / ONU).
+                Confirmo bajo juramento que <strong>mis fondos tienen origen lícito</strong> (control legal RePET / ONU).
               </span>
             </label>
             <details class="uif-more">
-              <summary>ℹ️ Ver más información</summary>
+              <summary>ℹ️ ¿Qué significa?</summary>
               <div class="uif-more-body">
-                <p><strong>Qué validan:</strong> La entidad cruza tus datos (nombre, apellido y DNI/CUIT) contra las listas de sanciones del Consejo de Seguridad de la ONU y el Registro Público de Personas y Entidades vinculadas a actos de Terrorismo y su Financiamiento (RePET) de Argentina.</p>
-                <p><strong>Declaración de origen lícito:</strong> Confirmás bajo juramento que tus fondos son lícitos y que no estás vinculado a actividades terroristas ni proliferación de armas de destrucción masiva.</p>
-                <p><strong>Qué pasa si hay coincidencia:</strong> Si tu nombre coincide con alguien listado (por ejemplo por homonimia), el trámite queda sujeto a verificación preventiva de identidad antes de habilitarse.</p>
+                <p><strong>Qué validan:</strong> La entidad cruza tus datos contra las listas oficiales de sanciones de la ONU y RePET (Argentina) y registra tu declaración de origen lícito de fondos.</p>
               </div>
             </details>
           </div>
         </div>
 
         <div class="uif-note-30">
-          📌 <strong>Nota:</strong> Esta declaración tiene carácter de Declaración Jurada. Si en el futuro cambiás de condición y pasás a ser PEP, tenés un plazo de 30 días para informarlo.
+          📌 Declaración Jurada (si en el futuro pasás a ser PEP, tenés 30 días para avisar).
         </div>
       </section>
 
@@ -1834,7 +1817,7 @@
         <div id="dniIntroView">
           <div class="dni-intro-bar" aria-hidden="true"><div class="dni-intro-bar-fill"></div></div>
           <h1 class="step-heading">🪪 Prepará tu DNI</h1>
-          <p class="step-lead">Vas a sacar una foto del frente y del dorso. Seguí estos 3 consejos:</p>
+          <p class="step-lead">Consejos rápidos para que la foto salga bien:</p>
 
           <div class="tips-list">
             <div class="tip-item">
@@ -1842,8 +1825,8 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><rect x="3" y="7" width="18" height="10" rx="2"/><circle cx="18" cy="12" r="1"/></svg>
               </div>
               <div>
-                <div class="tip-title">Celular en horizontal (acostado)</div>
-                <div class="tip-desc">Aprovechá toda la pantalla y cámara para sacar la foto con mejor detalle.</div>
+                <div class="tip-title">Celular acostado (horizontal)</div>
+                <div class="tip-desc">Abarcá toda la credencial en la pantalla.</div>
               </div>
             </div>
 
@@ -1852,8 +1835,8 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2"/></svg>
               </div>
               <div>
-                <div class="tip-title">Buena luz y sin reflejos</div>
-                <div class="tip-desc">Evitá reflejos de lámparas o flash directo sobre el plástico o código.</div>
+                <div class="tip-title">Buena luz y sin brillos</div>
+                <div class="tip-desc">Evitá reflejos sobre los números o la foto.</div>
               </div>
             </div>
 
@@ -1862,8 +1845,8 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="11" r="2"/><path d="M13 10h5M13 14h4"/></svg>
               </div>
               <div>
-                <div class="tip-title">Apoyá el DNI sobre una mesa lisa</div>
-                <div class="tip-desc">Encuadrá los 4 bordes completos sin tapar ningún dato con tus dedos.</div>
+                <div class="tip-title">Apoyalo en una mesa</div>
+                <div class="tip-desc">Que se vean los 4 bordes sin tapar datos.</div>
               </div>
             </div>
           </div>
@@ -1879,22 +1862,22 @@
             <h1 class="step-heading" style="margin:0;">🪪 Fotos de tu DNI</h1>
             <button type="button" id="btnVerConsejosDni" class="btn btn-secondary btn-sm">💡 Consejos</button>
           </div>
-          <p class="step-lead" id="dniStepLead">Sacá una foto clara del frente y del dorso de tu DNI usando tu cámara.</p>
+          <p class="step-lead" id="dniStepLead">Sacá una foto de frente y otra de atrás.</p>
 
           <div class="dni-tips-chips" aria-label="Recomendaciones rápidas para fotografiar tu DNI">
-            <span class="dni-tip-chip">📱 Celular horizontal</span>
-            <span class="dni-tip-chip">💡 Buena luz sin reflejos</span>
-            <span class="dni-tip-chip">🪪 Encuadrá los 4 bordes</span>
+            <span class="dni-tip-chip">📱 Horizontal</span>
+            <span class="dni-tip-chip">💡 Sin brillos</span>
+            <span class="dni-tip-chip">🪪 4 bordes visibles</span>
           </div>
 
           <div id="dniGaleriaHabilitadaBanner" class="alert alert-warn" style="display:none;margin-bottom:0.65rem;">
-            ⚠️ Luego de 3 intentos fallidos con la cámara o el validador, ya habilitamos el botón <strong>🖼️ Galería</strong> por si preferís elegir las fotos guardadas en tu dispositivo.
+            ⚠️ Ya habilitamos el botón <strong>🖼️ Galería</strong> por si preferís elegir las fotos guardadas en tu celular.
           </div>
 
           <div class="dni-grid" id="dniCardsGrid">
             <div class="dni-card" id="cardDniFrente">
               <div class="dni-title">1. Frente del DNI *</div>
-              <div class="dni-hint">El lado donde está tu foto y tu número</div>
+              <div class="dni-hint">Donde está tu foto</div>
               <img id="imgPrevDniFrente" class="dni-preview" alt="Foto del frente del DNI" title="Tocá para ampliar la foto"/>
               <div id="lblStatusDniFrente" class="dni-status-pill">✓ Foto guardada</div>
               <div style="display:flex;gap:0.4rem;width:100%;flex-wrap:wrap;">
@@ -1913,8 +1896,8 @@
             </div>
 
             <div class="dni-card" id="cardDniDorso">
-              <div class="dni-title">2. Dorso (atrás) del DNI *</div>
-              <div class="dni-hint">El lado donde figuran tu domicilio y huella</div>
+              <div class="dni-title">2. Dorso del DNI *</div>
+              <div class="dni-hint">El lado de atrás</div>
               <img id="imgPrevDniDorso" class="dni-preview" alt="Foto del dorso del DNI" title="Tocá para ampliar la foto"/>
               <div id="lblStatusDniDorso" class="dni-status-pill">✓ Foto guardada</div>
               <div style="display:flex;gap:0.4rem;width:100%;flex-wrap:wrap;">
@@ -1937,14 +1920,14 @@
 
       <!-- PASO 3 (OPCIONAL): VALIDACIÓN FACIAL GUIADA SOLO POR CÁMARA EN VIVO -->
       <section class="card wizard-step-pane" id="paneStepSelfie" style="display:none;">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.2rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.25rem;">
           <h1 class="step-heading" style="margin:0;">🤳 Validamos tu identidad</h1>
           <span id="badgeEstadoEkyc" class="geo-pill">Pendiente</span>
         </div>
 
         <!-- SUBPANTALLA 3A: CONSEJOS CLAROS (ANTES DE PRENDER LA CÁMARA) -->
         <div id="selfieIntroView">
-          <p class="step-lead">Grabaremos un video guiado en vivo para confirmar que sos vos:</p>
+          <p class="step-lead">Grabá un video corto mirando a la cámara:</p>
 
           <div class="tips-list">
             <div class="tip-item">
@@ -1952,8 +1935,8 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
               </div>
               <div>
-                <div class="tip-title">Buscá un lugar bien iluminado</div>
-                <div class="tip-desc">Luz de frente a tu cara, sin ventanas detrás tuyo.</div>
+                <div class="tip-title">Luz de frente a tu cara</div>
+                <div class="tip-desc">Sin ventanas o focos detrás tuyo.</div>
               </div>
             </div>
 
@@ -1963,7 +1946,7 @@
               </div>
               <div>
                 <div class="tip-title">Sin anteojos ni gorra</div>
-                <div class="tip-desc">Despejá tu frente y asegurate de que se vean tus ojos.</div>
+                <div class="tip-desc">Cara despejada y ojos visibles.</div>
               </div>
             </div>
 
@@ -1972,17 +1955,14 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2"/><circle cx="12" cy="18" r="1"/></svg>
               </div>
               <div>
-                <div class="tip-title">Teléfono o cámara a la altura de tu cara</div>
-                <div class="tip-desc">Mirá derecho y realizá cada gesto cuando la guía te avise.</div>
+                <div class="tip-title">Seguí las indicaciones en pantalla</div>
+                <div class="tip-desc">Mirá derecho, sonreí y girá despacio.</div>
               </div>
             </div>
           </div>
 
-          <div class="audio-banner">
-            <div>
-              <div style="font-weight:800;color:#0f2744;font-size:0.88rem;">🔊 Guía por voz</div>
-              <div style="font-size:0.78rem;color:#334155;">Subí el volumen para escuchar los pasos.</div>
-            </div>
+          <div class="audio-banner" style="padding:0.45rem 0.7rem;">
+            <span style="font-weight:700;color:#0f2744;font-size:0.84rem;">🔊 Guía por voz</span>
             <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
               <button type="button" id="btnProbarAudioGuia" class="btn btn-secondary btn-sm">🔈 Probar</button>
               <button type="button" id="btnToggleAudioGuia" class="btn btn-secondary btn-sm">🔊 Voz: Activada</button>
@@ -1990,26 +1970,24 @@
           </div>
 
           <button type="button" id="btnAbrirCamaraSelfie" class="btn btn-success" style="width:100%;font-size:0.98rem;">
-            🎥 Abrir cámara y comenzar video guiado
+            🎥 Comenzar video guiado
           </button>
-          <div style="margin-top:0.5rem;font-size:0.76rem;color:#475569;text-align:center;">
-            🔒 Por seguridad, esta validación se realiza únicamente con cámara en vivo (si tu PC no tiene webcam, abrí este enlace en tu celular).
-          </div>
         </div>
 
         <!-- SUBPANTALLA 3C: VIDEO GRABADO / RESULTADO -->
         <div id="selfieDoneView" style="display:none;text-align:center;">
+          <p class="step-lead" style="margin-bottom:0.55rem;">Revisá tu video antes de continuar:</p>
           <video id="videoSelfiePreview" class="video-preview-player" controls playsinline muted style="display:none;"></video>
           <div id="selfieFallbackPreviewWrap" style="display:none;margin-bottom:0.6rem;">
-            <img id="imgPrevSelfie1" alt="Selfie capturada" style="width:170px;height:170px;object-fit:cover;border-radius:50%;border:3px solid #16a34a;"/>
+            <img id="imgPrevSelfie1" alt="Selfie capturada" style="width:155px;height:155px;object-fit:cover;border-radius:50%;border:2.5px solid #16a34a;"/>
           </div>
-          <div id="ekycResultadoBox" class="alert alert-ok" style="text-align:left;margin-bottom:0.65rem;"></div>
+          <div id="ekycResultadoBox" class="alert alert-ok" style="text-align:center;padding:0.5rem 0.75rem;margin-bottom:0.65rem;font-size:0.86rem;"></div>
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;">
             <button type="button" id="btnReintentarSelfie" class="btn btn-secondary btn-sm">
-              🔄 Volver a grabar el video
+              🔄 Grabar de nuevo
             </button>
-            <button type="button" id="btnSelfieVerificarDirecto" class="btn btn-success" style="flex:1 1 220px;">
-              ✅ Verificar identidad e ir a Firmar →
+            <button type="button" id="btnSelfieVerificarDirecto" class="btn btn-success" style="flex:1 1 200px;">
+              ✅ Verificar y continuar →
             </button>
           </div>
         </div>
@@ -2021,53 +1999,49 @@
           <h1 class="step-heading" style="margin:0;">✍️ Dibujá tu firma</h1>
           <span id="badgeEstadoGeo" class="geo-pill">📍 Ubicación</span>
         </div>
-        <p class="step-lead">Hacé tu firma dentro del recuadro blanco y confirmá abajo.</p>
+        <p class="step-lead">Dibujá tu firma con el dedo adentro del recuadro.</p>
 
         <div class="sig-pad-wrap">
-          <div id="sigHintText" class="sig-hint">✏️ Dibujá tu firma acá con el dedo o el mouse</div>
-          <div class="sig-baseline" aria-hidden="true"><span>Firmá sobre la línea</span></div>
+          <div id="sigHintText" class="sig-hint">✏️ Dibujá tu firma acá</div>
           <canvas id="canvasFirmaMovil"></canvas>
         </div>
 
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.45rem;gap:0.45rem;flex-wrap:wrap;">
           <span id="lblTrazosInfo" style="font-size:0.82rem;font-weight:600;color:#475569;">Todavía no dibujaste tu firma</span>
           <button type="button" id="btnLimpiarFirma" class="btn btn-secondary btn-sm">
-            🧹 Borrar firma
+            🧹 Borrar
           </button>
         </div>
 
         <div id="boxPinOtpFirma" style="display:none;margin:0.6rem 0;padding:0.68rem 0.85rem;border-radius:11px;background:#f5f3ff;border:1.5px solid #c4b5fd;">
           <label for="inpPinOtpFirma" style="display:block;font-size:0.88rem;font-weight:800;color:#5b21b6;margin-bottom:3px;">
-            🔐 Código de seguridad (6 números)
+            🔐 Código de seguridad (WhatsApp)
           </label>
-          <div style="font-size:0.8rem;color:#6d28d9;margin-bottom:0.4rem;">
-            Escribí el código numérico de seguridad que te enviamos por WhatsApp.
-          </div>
           <input type="text" id="inpPinOtpFirma" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" style="width:185px;padding:0.45rem 0.7rem;border:2px solid #8b5cf6;border-radius:9px;font-size:1.2rem;font-weight:800;letter-spacing:6px;text-align:center;color:#4c1d95;background:#ffffff;"/>
         </div>
 
         <label class="consent-label">
           <input type="checkbox" id="chkConsentimientoLegal"/>
           <span>
-            Confirmo que leí el documento, que mis datos son correctos y otorgo mi <strong>firma electrónica</strong> conforme a la Ley 25.506.
+            Leí el documento y confirmo mi <strong>firma electrónica</strong> (Ley 25.506).
           </span>
         </label>
 
         <button type="button" id="btnConfirmarFirmar" class="btn btn-success" style="width:100%;font-size:1rem;min-height:46px;">
-          ✅ Confirmar y Firmar Documento
+          ✅ Confirmar y Firmar
         </button>
       </section>
 
       <div id="ekycVerifyingBanner" class="ekyc-verifying-box" aria-live="polite">
-        <div class="ekyc-verifying-title">⏳ Validando tu identidad de forma segura…</div>
+        <div class="ekyc-verifying-title">⏳ Validando tu identidad…</div>
         <div class="ekyc-stage-list">
-          <div class="ekyc-stage-row" id="ekycStage1"><span>•</span><span>1. Enviando capturas cifradas</span></div>
-          <div class="ekyc-stage-row" id="ekycStage2"><span>•</span><span>2. Cotejando rostro y datos del DNI</span></div>
-          <div class="ekyc-stage-row" id="ekycStage3"><span>•</span><span>3. Preparando tu pantalla de firma</span></div>
+          <div class="ekyc-stage-row" id="ekycStage1"><span>•</span><span>1. Enviando capturas seguras</span></div>
+          <div class="ekyc-stage-row" id="ekycStage2"><span>•</span><span>2. Cotejando rostro y DNI</span></div>
+          <div class="ekyc-stage-row" id="ekycStage3"><span>•</span><span>3. Preparando tu firma</span></div>
         </div>
       </div>
 
-      <div id="turnstileSignerBox" style="width:100%;max-width:360px;margin:0.15rem auto 0;display:flex;justify-content:center;min-height:0;"></div>
+      <div id="turnstileSignerBox" style="width:100%;max-width:360px;margin:0 auto;display:flex;justify-content:center;min-height:0;"></div>
     </div>
   </main>
 
@@ -2175,8 +2149,9 @@
         });
       }
 
-      function obtenerTokenTurnstile_(actionName) {
+      function obtenerTokenTurnstile_(actionName, opts) {
         const action = actionName || 'firmar';
+        const focusOnWait = Boolean(opts && opts.focusOnWait);
         if (_tsTokenActual && _tsActionActual === action) {
           return Promise.resolve(_tsTokenActual);
         }
@@ -2204,23 +2179,26 @@
               resolve(tok || '');
             };
             timer = setTimeout(() => finish(_tsTokenActual || ''), 10000);
-            scrollTimer = setTimeout(() => {
-              if (!settled && box && box.offsetParent !== null) {
-                try { box.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
-              }
-            }, 1800);
+            if (focusOnWait) {
+              scrollTimer = setTimeout(() => {
+                if (!settled && box && box.offsetParent !== null && box.offsetHeight > 8) {
+                  try { box.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
+                }
+              }, 2400);
+            }
             try {
               if (_tsWidgetId !== null) {
                 try { window.turnstile.remove(_tsWidgetId); } catch (_) {}
                 _tsWidgetId = null;
               }
               box.innerHTML = '';
-              box.style.minHeight = '66px';
+              box.style.minHeight = '0';
               _tsWidgetId = window.turnstile.render(box, {
                 sitekey: TURNSTILE_SITE_KEY,
                 action,
                 theme: 'light',
                 size: 'flexible',
+                appearance: 'interaction-only',
                 callback: (tok) => {
                   _tsTokenActual = tok || '';
                   finish(_tsTokenActual);
@@ -2246,7 +2224,7 @@
 
       function precalentarTurnstile_(actionName) {
         try {
-          obtenerTokenTurnstile_(actionName).catch(() => '');
+          obtenerTokenTurnstile_(actionName, { focusOnWait: false }).catch(() => '');
         } catch (_) {}
       }
 
@@ -2594,6 +2572,13 @@
             }
           });
         });
+        const actPill = nav.querySelector('.wizard-step-pill.is-active');
+        if (actPill) {
+          requestAnimationFrame(() => {
+            const targetLeft = Math.max(0, actPill.offsetLeft - (nav.clientWidth - actPill.offsetWidth) / 2);
+            nav.scrollTo({ left: targetLeft, behavior: 'smooth' });
+          });
+        }
       }
 
       function renderStepActual() {
@@ -2732,7 +2717,7 @@
         const stage3Timer = setTimeout(() => setEkycProgressStage_(3), 4800);
 
         try {
-          const tsToken = await obtenerTokenTurnstile_('firmar_identidad');
+          const tsToken = await obtenerTokenTurnstile_('firmar_identidad', { focusOnWait: true });
           if (!tsToken && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
             reiniciarTurnstile_();
             precalentarTurnstile_('firmar_identidad');
@@ -3588,8 +3573,8 @@
           box.className = 'alert alert-ok';
           box.style.display = 'block';
           box.innerHTML = esOk
-            ? '<strong>✅ ¡Tu identidad fue validada correctamente!</strong><br/><span style="font-size:0.9rem;font-weight:500;">Ya podés avanzar al último paso para firmar.</span>'
-            : '<strong>✅ Evidencia recibida correctamente</strong><br/><span style="font-size:0.9rem;font-weight:500;">Tu video y fotos quedaron guardados de forma segura para continuar con tu firma.</span>';
+            ? '<strong>✅ Identidad validada.</strong> Ya podés avanzar a firmar.'
+            : '<strong>✅ Evidencia guardada.</strong> Ya podés continuar con tu firma.';
         }
         appState.ekycValidado = true;
       }
@@ -4107,7 +4092,7 @@
             const box = document.getElementById('ekycResultadoBox');
             box.className = 'alert alert-ok';
             box.style.display = 'block';
-            box.innerHTML = '<strong>✅ ¡Video y 3 capturas biométricas grabadas correctamente!</strong><br/><span style="font-size:0.9rem;font-weight:500;">Tocá el botón verde <strong>Verificar identidad e ir a Firmar →</strong> para continuar.</span>';
+            box.innerHTML = '<strong>✅ Video listo.</strong> Tocá <strong>Verificar y continuar →</strong>.';
             hablarGuia('Perfecto, ya grabamos tu video. Tocá el botón verde para verificar y pasar a tu firma.');
           });
         }
@@ -4399,7 +4384,7 @@
         btn.textContent = '⏳ Guardando tu firma, por favor esperá...';
 
         try {
-          const tsTokenSign = await obtenerTokenTurnstile_('firmar_documento');
+          const tsTokenSign = await obtenerTokenTurnstile_('firmar_documento', { focusOnWait: true });
           if (!tsTokenSign && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
             reiniciarTurnstile_();
             precalentarTurnstile_('firmar_documento');

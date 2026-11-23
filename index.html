@@ -4395,7 +4395,7 @@
                 <span class="wa-actions-divider" aria-hidden="true"></span>
                 <button type="button" class="btn-copy" onclick="copyWhatsAppText()" title="Copiar texto al portapapeles">📋 Copiar</button>
                 <button type="button" class="btn-whatsapp-send" onclick="sendWhatsApp()" title="Abrir conversación directa en WhatsApp Web">📲 Enviar</button>
-                <button type="button" class="btn-copy" onclick="sendWhatsAppViaBot()" title="Enviar directamente desde la línea asignada del Bot WhatsApp AMMER" style="border-color:#15803d;color:#15803d;background:#f0fdf4;font-weight:700;">🤖 Bot</button>
+                <button type="button" id="btnSendWhatsAppViaBot" class="btn-copy" onclick="sendWhatsAppViaBot()" title="Enviar directamente desde la línea asignada del Bot WhatsApp AMMER" style="display:none;border-color:#15803d;color:#15803d;background:#f0fdf4;font-weight:700;">🤖 Bot</button>
               </div>
             </div>
           </div>
@@ -9974,6 +9974,10 @@ ${cierreTxt}`;
     }
 
     function sendWhatsAppViaBot() {
+      if (typeof tieneAccesoBotWhatsapp === 'function' && !tieneAccesoBotWhatsapp()) {
+        showToast('⛔ Acceso restringido: el botón Bot solo está habilitado para rol Admin y Analista.', 'warning');
+        return;
+      }
       const text = document.getElementById('txt-plantilla-whatsapp')?.value || '';
       const phoneInput = (document.getElementById('inp-whatsapp-telefono')?.value || '').trim().replace(/[^0-9]/g, '');
       if (phoneInput.length < 8) {
@@ -10872,6 +10876,13 @@ ${cierreTxt}`;
     }
     window.tieneAccesoFirmasAmmer = tieneAccesoFirmasAmmer;
 
+    function tieneAccesoBotWhatsapp(sessObj) {
+      const s = sessObj || getSession();
+      const rol = String((s && (s.rol || s.role)) || '').trim().toLowerCase();
+      return rol === 'admin' || rol === 'administrador' || rol === 'analista';
+    }
+    window.tieneAccesoBotWhatsapp = tieneAccesoBotWhatsapp;
+
     function checkAuthAndInit() {
       const session = getSession();
       const loginWrapper = document.getElementById('loginScreenWrapper');
@@ -11023,6 +11034,10 @@ ${cierreTxt}`;
       const btnFichaAudit20 = document.getElementById('btnAbrirFichaHistoricaAudit20');
       if (btnFichaAudit20) {
         btnFichaAudit20.style.display = puedeVerPadronFichas ? 'inline-flex' : 'none';
+      }
+      const btnSendWaBot = document.getElementById('btnSendWhatsAppViaBot');
+      if (btnSendWaBot) {
+        btnSendWaBot.style.display = tieneAccesoBotWhatsapp(session) ? 'inline-flex' : 'none';
       }
       actualizarCentroNotificaciones();
       cambiarPestana('view-simulador');
@@ -15591,7 +15606,7 @@ ${cierreTxt}`;
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:4px;flex-wrap:wrap;">' +
             '<div style="display:flex;gap:4px;flex-wrap:wrap;">' +
               '<button type="button" class="btn-copy" style="font-size:0.68rem;padding:4px 7px;" onclick="copiarPropuestaWhatsApp(\'' + s.id + '\')">📋 Copiar Oferta</button>' +
-              '<button type="button" class="btn-copy" style="font-size:0.68rem;padding:4px 7px;border-color:#15803d;color:#15803d;background:#f0fdf4;font-weight:700;" onclick="enviarPropuestaWhatsAppPorBot(\'' + s.id + '\')">🤖 Enviar por Bot</button>' +
+              (tieneAccesoBotWhatsapp() ? ('<button type="button" class="btn-copy" style="font-size:0.68rem;padding:4px 7px;border-color:#15803d;color:#15803d;background:#f0fdf4;font-weight:700;" onclick="enviarPropuestaWhatsAppPorBot(\'' + s.id + '\')">🤖 Enviar por Bot</button>') : '') +
             '</div>' +
             '<button type="submit" class="btn-primary-action" style="width:auto;font-size:0.7rem;padding:5px 10px;font-weight:700;">Actualizar / Registrar Nueva Propuesta 💼</button>' +
           '</div>' +
@@ -15621,7 +15636,7 @@ ${cierreTxt}`;
           html += '<div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">Nota Mutual: <em>"' + (prop.detalle || 'Propuesta crediticia lista') + '"</em></div>' +
             '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">' +
               '<button type="button" class="btn-copy" style="font-size:0.7rem;padding:4px 8px;" onclick="copiarPropuestaWhatsApp(\'' + s.id + '\')">📲 Copiar Propuesta para WhatsApp</button>' +
-              '<button type="button" class="btn-copy" style="font-size:0.7rem;padding:4px 8px;border-color:#15803d;color:#15803d;background:#f0fdf4;font-weight:700;" onclick="enviarPropuestaWhatsAppPorBot(\'' + s.id + '\')">🤖 Enviar por Bot</button>' +
+              (tieneAccesoBotWhatsapp() ? ('<button type="button" class="btn-copy" style="font-size:0.7rem;padding:4px 8px;border-color:#15803d;color:#15803d;background:#f0fdf4;font-weight:700;" onclick="enviarPropuestaWhatsAppPorBot(\'' + s.id + '\')">🤖 Enviar por Bot</button>') : '') +
             '</div>';
         } else {
           html += '<p style="color:var(--text-muted);font-size:0.72rem;padding:0.75rem 0;">La mutual está auditando el legajo. Aún no se ha emitido una contraoferta formal.</p>';
@@ -16489,6 +16504,10 @@ ${cierreTxt}`;
     }
 
     function enviarPropuestaWhatsAppPorBot(id, versionNum) {
+      if (typeof tieneAccesoBotWhatsapp === 'function' && !tieneAccesoBotWhatsapp()) {
+        showToast('⛔ Acceso restringido: el envío por Bot solo está habilitado para rol Admin y Analista.', 'warning');
+        return;
+      }
       const res = _resolverPropuestaParaWhatsApp(id, versionNum);
       if (!res) return;
       if (!res.p) {

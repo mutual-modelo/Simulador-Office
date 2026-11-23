@@ -14,9 +14,11 @@
   <style>
     :root {
       --navy: #0f2744;
-      --blue: #163a63;
+      --navy-deep: #0c2340;
+      --blue: #135596;
       --accent: #0284c7;
-      --ok: #15803d;
+      --ok: #047857;
+      --ok-solid: #059669;
       --ok-bg: #ecfdf5;
       --ok-border: #86efac;
       --warn-bg: #fffbeb;
@@ -36,16 +38,17 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.4;
+      line-height: 1.42;
       font-size: 15px;
-      padding-bottom: 66px; /* espacio compacto para la barra fija inferior */
+      padding-bottom: 72px; /* espacio compacto para la barra fija inferior */
     }
 
     header {
-      background: linear-gradient(135deg, #0a1628 0%, #0f2744 60%, #163a63 100%);
+      background: linear-gradient(135deg, #0c2340 0%, #0f2744 52%, #135596 100%);
       color: #ffffff;
-      padding: 0.5rem 0.9rem;
-      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.2);
+      padding: 0.65rem 0.95rem;
+      box-shadow: 0 6px 20px rgba(12, 35, 64, 0.2);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .header-inner {
@@ -54,72 +57,96 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.65rem;
       flex-wrap: nowrap;
     }
 
-    .brand-title { font-size: 0.96rem; font-weight: 800; letter-spacing: 0.01em; line-height: 1.2; }
-    .brand-sub { font-size: 0.72rem; color: #cbd5e1; margin-top: 1px; line-height: 1.2; }
+    .brand-logo-box {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.96);
+      padding: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+    }
+
+    .brand-logo-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .brand-title { font-size: 0.98rem; font-weight: 800; letter-spacing: -0.01em; line-height: 1.22; }
+    .brand-sub { font-size: 0.72rem; color: rgba(226, 232, 240, 0.92); margin-top: 2px; line-height: 1.2; }
 
     .badge-ssl {
-      font-size: 0.72rem;
-      font-weight: 700;
-      padding: 3px 9px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      padding: 4px 10px;
       border-radius: 9999px;
-      background: rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.15);
       border: 1px solid rgba(255, 255, 255, 0.28);
+      color: #e0f2fe;
       white-space: nowrap;
       flex-shrink: 0;
     }
 
     main {
       max-width: 780px;
-      margin: 0.55rem auto 0.75rem auto;
-      padding: 0 0.65rem;
+      margin: 0.65rem auto 0.85rem auto;
+      padding: 0 0.7rem;
       display: flex;
       flex-direction: column;
-      gap: 0.6rem;
+      gap: 0.65rem;
     }
 
     .card {
       background: var(--card);
-      border: 1px solid #e2e8f0;
-      border-radius: 14px;
-      padding: 0.9rem 1rem;
-      box-shadow: 0 3px 12px rgba(15, 23, 42, 0.05);
+      border: 1px solid rgba(203, 213, 225, 0.88);
+      border-radius: 16px;
+      padding: 1.05rem 1.15rem;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.045);
     }
 
     .step-heading {
-      margin: 0 0 0.2rem 0;
+      margin: 0 0 0.25rem 0;
       font-size: 1.12rem;
       font-weight: 800;
       color: var(--navy);
-      line-height: 1.22;
+      letter-spacing: -0.01em;
+      line-height: 1.24;
     }
 
     .step-lead {
-      margin: 0 0 0.65rem 0;
-      font-size: 0.88rem;
+      margin: 0 0 0.72rem 0;
+      font-size: 0.87rem;
       color: var(--muted);
-      line-height: 1.35;
+      line-height: 1.38;
     }
 
     .meta-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 0.45rem;
+      gap: 0.5rem;
       font-size: 0.86rem;
     }
 
     .meta-item {
-      background: #f8fafc;
+      background: #ffffff;
       border: 1px solid #e2e8f0;
-      border-radius: 9px;
-      padding: 0.42rem 0.65rem;
+      border-left: 3.5px solid #135596;
+      border-radius: 11px;
+      padding: 0.48rem 0.72rem;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.03);
     }
 
-    .meta-lbl { font-size: 0.66rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em; }
-    .meta-val { font-size: 0.88rem; font-weight: 700; color: var(--text); margin-top: 1px; word-break: break-word; }
+    .meta-lbl { font-size: 0.65rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; }
+    .meta-val { font-size: 0.88rem; font-weight: 800; color: var(--text); margin-top: 2px; word-break: break-word; font-variant-numeric: tabular-nums; }
 
     .pdf-toolbar {
       display: flex;
@@ -127,25 +154,26 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 0.45rem;
-      margin: 0.6rem 0 0.5rem 0;
+      margin: 0.65rem 0 0.5rem 0;
     }
 
     .zoom-group {
       display: inline-flex;
       align-items: center;
       gap: 0.25rem;
-      background: #f1f5f9;
+      background: #f8fafc;
       border: 1px solid #cbd5e1;
-      border-radius: 9px;
+      border-radius: 10px;
       padding: 3px;
     }
 
     #pdfPaginasContainer {
-      background: #e2e8f0;
-      border-radius: 10px;
-      padding: 0.55rem;
-      height: calc(100dvh - 320px);
-      min-height: 210px;
+      background: #cbd5e1;
+      border: 1px solid #94a3b8;
+      border-radius: 12px;
+      padding: 0.6rem;
+      height: calc(100dvh - 325px);
+      min-height: 220px;
       max-height: 58dvh;
       overflow: auto;
     }
@@ -153,39 +181,42 @@
     #pdfPaginasContainer canvas {
       display: block;
       margin: 0 auto 0.55rem auto;
-      border-radius: 6px;
+      border-radius: 8px;
       background: #ffffff;
-      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.14);
+      box-shadow: 0 3px 10px rgba(15, 23, 42, 0.16);
       max-width: none;
     }
 
-    /* Botones claros y cómodos sin desperdiciar alto vertical */
+    /* Botones homologados con .firmas-btn de la Web App */
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
       min-height: 42px;
-      padding: 0.55rem 0.95rem;
+      padding: 0.55rem 1rem;
       border-radius: 10px;
-      font-weight: 800;
-      font-size: 0.94rem;
+      font-weight: 700;
+      font-size: 0.92rem;
       cursor: pointer;
-      border: 1.5px solid transparent;
-      transition: transform 0.12s ease, background-color 0.15s ease, opacity 0.15s ease;
+      border: 1px solid #cbd5e1;
+      transition: transform 0.14s ease, background-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
       text-decoration: none;
+      font-family: inherit;
     }
 
-    .btn:active { transform: scale(0.99); }
+    .btn:active:not(:disabled) { transform: scale(0.985); }
     .btn:disabled { opacity: 0.52; cursor: not-allowed; }
-    .btn-sm { min-height: 34px; padding: 0.32rem 0.65rem; font-size: 0.82rem; border-radius: 8px; }
+    .btn-sm { min-height: 34px; padding: 0.32rem 0.72rem; font-size: 0.8rem; border-radius: 8px; }
 
-    .btn-primary { background: var(--navy); color: #ffffff; box-shadow: 0 2px 8px rgba(15, 39, 68, 0.2); }
-    .btn-primary:hover:not(:disabled) { background: var(--blue); }
+    .btn-primary { background: #135596; border-color: #135596; color: #ffffff; box-shadow: 0 2px 8px rgba(19, 85, 150, 0.22); font-weight: 800; }
+    .btn-primary:hover:not(:disabled) { background: #0f4477; border-color: #0f4477; }
     .btn-secondary { background: #ffffff; color: #1e293b; border-color: #cbd5e1; }
-    .btn-secondary:hover:not(:disabled) { background: #f8fafc; }
-    .btn-success { background: #15803d; color: #ffffff; box-shadow: 0 2px 8px rgba(21, 128, 61, 0.22); }
-    .btn-success:hover:not(:disabled) { background: #166534; }
+    .btn-secondary:hover:not(:disabled) { background: #f8fafc; border-color: #94a3b8; }
+    .btn-soft-blue { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+    .btn-soft-blue:hover:not(:disabled) { background: #dbeafe; border-color: #93c5fd; color: #1e3a8a; }
+    .btn-success { background: linear-gradient(135deg, #059669, #047857); border-color: #047857; color: #ffffff; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25); font-weight: 800; }
+    .btn-success:hover:not(:disabled) { background: linear-gradient(135deg, #047857, #065f46); border-color: #065f46; }
 
     /* DNI capture cards */
     .dni-grid {
@@ -1290,19 +1321,302 @@
       .brand-sub { display: none; }
       #pdfPaginasContainer { height: calc(100dvh - 300px); }
     }
+
+    /* Stepper visual superior homologado con .firmas-tabs-bar / .firmas-step-num */
+    .wizard-stepper {
+      background: #e2e8f0;
+      border: 1px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 4px;
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .wizard-stepper::-webkit-scrollbar { display: none; }
+    .wizard-step-pill {
+      flex: 1 0 auto;
+      min-height: 36px;
+      padding: 0.35rem 0.65rem;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #64748b;
+      font-family: inherit;
+      font-size: 0.77rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      white-space: nowrap;
+      cursor: default;
+      transition: all 0.16s ease;
+    }
+    .wizard-step-num {
+      width: 20px;
+      height: 20px;
+      border-radius: 9999px;
+      background: #cbd5e1;
+      color: #334155;
+      font-size: 0.7rem;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .wizard-step-pill.is-active {
+      background: #ffffff;
+      color: #0f2744;
+      border-color: #cbd5e1;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+      font-weight: 800;
+    }
+    .wizard-step-pill.is-active .wizard-step-num {
+      background: #0f2744;
+      color: #ffffff;
+    }
+    .wizard-step-pill.is-done {
+      color: #047857;
+      background: rgba(236, 253, 245, 0.78);
+      cursor: pointer;
+    }
+    .wizard-step-pill.is-done:hover {
+      background: #ecfdf5;
+      border-color: #a7f3d0;
+    }
+    .wizard-step-pill.is-done .wizard-step-num {
+      background: #059669;
+      color: #ffffff;
+    }
+
+    /* Visor PDF expandido */
+    .pdf-page-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e3a8a;
+    }
+    .pdf-reader-shell.is-expanded {
+      position: fixed;
+      inset: 0;
+      z-index: 9500;
+      background: #0f172a;
+      padding: max(10px, env(safe-area-inset-top)) 10px max(12px, env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .pdf-reader-shell.is-expanded .pdf-toolbar {
+      margin: 0;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 0.45rem 0.65rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+    .pdf-reader-shell.is-expanded #pdfPaginasContainer {
+      flex: 1;
+      height: auto;
+      max-height: none;
+      border-radius: 12px;
+    }
+
+    /* UIF tarjetas completadas y pills */
+    .uif-card { transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease; }
+    .uif-card.is-answered {
+      background: #ffffff;
+      border-color: #86efac;
+      box-shadow: 0 2px 10px rgba(5, 150, 105, 0.07);
+    }
+    .uif-q-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+    .uif-done-pill {
+      display: none;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      background: #dcfce7;
+      color: #166534;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .uif-card.is-answered .uif-done-pill { display: inline-flex; align-items: center; gap: 3px; }
+    .consent-label { transition: border-color 0.15s ease, background-color 0.15s ease; }
+    .consent-label:has(input:checked) {
+      border-color: #059669;
+      background: #ecfdf5;
+      color: #065f46;
+    }
+
+    /* Chips compactos DNI + visor ampliado */
+    .dni-tips-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.7rem;
+    }
+    .dni-tip-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e3a8a;
+    }
+    .dni-preview { cursor: zoom-in; }
+    .dni-preview-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9800;
+      background: rgba(9, 17, 31, 0.85);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .dni-preview-modal-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 0.9rem;
+      max-width: min(640px, 95vw);
+      width: 100%;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+      text-align: center;
+    }
+    .dni-preview-modal-card img {
+      max-width: 100%;
+      max-height: 70dvh;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      object-fit: contain;
+      background: #f8fafc;
+    }
+
+    /* Progreso animado eKYC */
+    .ekyc-verifying-box {
+      display: none;
+      margin-top: 0.7rem;
+      background: #eff6ff;
+      border: 1.5px solid #93c5fd;
+      border-radius: 13px;
+      padding: 0.85rem 1rem;
+      text-align: left;
+    }
+    .ekyc-verifying-title {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: #0f2744;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ekyc-stage-list { display: flex; flex-direction: column; gap: 0.35rem; }
+    .ekyc-stage-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #64748b;
+    }
+    .ekyc-stage-row.is-active { color: #1d4ed8; font-weight: 800; }
+    .ekyc-stage-row.is-done { color: #047857; font-weight: 700; }
+
+    /* Línea guía en el recuadro de firma */
+    .sig-baseline {
+      position: absolute;
+      left: 7%;
+      right: 7%;
+      bottom: 24%;
+      border-bottom: 2px dashed #cbd5e1;
+      pointer-events: none;
+      text-align: right;
+    }
+    .sig-baseline span {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #94a3b8;
+      background: #ffffff;
+      padding: 0 6px;
+      transform: translateY(50%);
+    }
+
+    /* Comprobante final enriquecido */
+    .receipt-hero {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+      border: 1.5px solid #86efac;
+      border-radius: 14px;
+      padding: 0.95rem 1.05rem;
+      margin-bottom: 0.85rem;
+    }
+    .receipt-hero-ico {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #059669, #047857);
+      color: #ffffff;
+      font-size: 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.28);
+    }
+    .receipt-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.85rem;
+    }
+    .receipt-badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+    }
   </style>
 </head>
 <body>
   <header>
     <div class="header-inner">
-      <div style="display:flex;align-items:center;gap:0.55rem;min-width:0;">
-        <img src="logo-icono.png" alt="Logo AMMER" style="width:28px;height:28px;border-radius:7px;background:#ffffff;padding:2px;object-fit:contain;flex-shrink:0;"/>
+      <div style="display:flex;align-items:center;gap:0.65rem;min-width:0;">
+        <div class="brand-logo-box">
+          <img src="logo-icono.png" alt="Logo AMMER"/>
+        </div>
         <div style="min-width:0;">
           <div class="brand-title">Mutual Modelo (AMMER) · Firma Electrónica</div>
           <div class="brand-sub">Portal guiado paso a paso · Ley 25.506</div>
         </div>
       </div>
-      <div class="badge-ssl">🔒 Seguro</div>
+      <div class="badge-ssl">🔒 Seguro · Ley 25.506</div>
     </div>
   </header>
 
@@ -1324,9 +1638,17 @@
 
     <!-- PANTALLA FINAL: DOCUMENTO YA FIRMADO (LIMPIA PARA EL PÚBLICO) -->
     <div id="confirmacionFirmadoBox" class="card" style="display:none;">
-      <div id="alertEstadoFirmado" class="alert alert-ok" style="margin-bottom:0.85rem;font-size:0.98rem;">
-        ✅ <strong>¡Listo! Tu documento fue firmado con éxito.</strong><br/>
-        <span style="font-weight:500;font-size:0.9rem;">Podés descargar tu copia firmada con el botón verde de abajo.</span>
+      <div class="receipt-hero">
+        <div class="receipt-hero-ico" aria-hidden="true">✓</div>
+        <div id="alertEstadoFirmado" style="font-size:0.96rem;color:#065f46;line-height:1.4;">
+          <strong>¡Listo! Tu documento fue firmado con éxito.</strong><br/>
+          <span style="font-weight:500;font-size:0.86rem;color:#047857;">Podés descargar tu copia firmada con el botón verde de abajo.</span>
+        </div>
+      </div>
+      <div class="receipt-badges" id="receiptBadgesRow">
+        <span class="receipt-badge-pill">🔒 Firma Electrónica Ley 25.506</span>
+        <span class="receipt-badge-pill">🛡️ Integridad SHA-256</span>
+        <span class="receipt-badge-pill">📅 Sello de fecha y hora</span>
       </div>
       <div class="meta-grid" style="margin-bottom:0.95rem;">
         <div class="meta-item"><div class="meta-lbl">Documento</div><div class="meta-val" id="resDocNombre">-</div></div>
@@ -1340,7 +1662,8 @@
     <!-- ============================================================
          ASISTENTE PASO A PASO (WIZARD POR PANTALLAS)
          ============================================================ -->
-    <div id="contenidoFirmaWrap" style="display:none;flex-direction:column;gap:0.6rem;">
+    <div id="contenidoFirmaWrap" style="display:none;flex-direction:column;gap:0.65rem;">
+      <nav id="wizardTopStepper" class="wizard-stepper" aria-label="Progreso del trámite"></nav>
       <div id="wizardStepErrorBanner" class="alert alert-err" style="display:none;"></div>
 
       <!-- PASO 1: REVISAR EL DOCUMENTO -->
@@ -1359,18 +1682,28 @@
         </div>
         <div id="docPrestamoResumen" class="meta-grid" style="margin-top:0.45rem;display:none;"></div>
 
-        <div class="pdf-toolbar">
-          <div class="zoom-group" aria-label="Tamaño de lectura del documento">
-            <button type="button" id="btnPdfZoomMenos" class="btn btn-secondary btn-sm">🔍 −</button>
-            <span id="lblPdfZoomPct" style="font-size:0.82rem;font-weight:800;padding:0 5px;color:#0f2744;">100%</span>
-            <button type="button" id="btnPdfZoomMas" class="btn btn-secondary btn-sm">🔍 + Agrandar</button>
+        <div id="pdfReaderShell" class="pdf-reader-shell">
+          <div class="pdf-toolbar">
+            <div style="display:inline-flex;align-items:center;gap:0.45rem;flex-wrap:wrap;">
+              <div class="zoom-group" aria-label="Tamaño de lectura del documento">
+                <button type="button" id="btnPdfZoomMenos" class="btn btn-secondary btn-sm">🔍 −</button>
+                <span id="lblPdfZoomPct" style="font-size:0.82rem;font-weight:800;padding:0 5px;color:#0f2744;">100%</span>
+                <button type="button" id="btnPdfZoomMas" class="btn btn-secondary btn-sm">🔍 + Agrandar</button>
+              </div>
+              <span id="lblPdfPageCount" class="pdf-page-pill" style="display:none;">📄 1 pág.</span>
+            </div>
+            <div style="display:inline-flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+              <button type="button" id="btnPdfFullscreenToggle" class="btn btn-soft-blue btn-sm" title="Expandir visor para leer más cómodo">
+                ⛶ Ampliar lectura
+              </button>
+              <button type="button" id="btnDescargarPreviaPdf" class="btn btn-secondary btn-sm">
+                ⬇️ Guardar copia
+              </button>
+            </div>
           </div>
-          <button type="button" id="btnDescargarPreviaPdf" class="btn btn-secondary btn-sm">
-            ⬇️ Guardar copia
-          </button>
-        </div>
 
-        <div id="pdfPaginasContainer"></div>
+          <div id="pdfPaginasContainer"></div>
+        </div>
       </section>
 
       <!-- PASO INTERMEDIO: DECLARACIÓN JURADA UIF (ENTRE PASO 1 Y PASO 2) -->
@@ -1380,8 +1713,11 @@
 
         <div class="uif-list">
           <!-- Pregunta 1: PEP -->
-          <div class="uif-card">
-            <div class="uif-q-title">1. ¿Sos Persona Expuesta Políticamente (PEP)?</div>
+          <div class="uif-card" id="uifCardPep">
+            <div class="uif-q-head">
+              <div class="uif-q-title">1. ¿Sos Persona Expuesta Políticamente (PEP)?</div>
+              <span class="uif-done-pill">✓ Respondida</span>
+            </div>
             <div class="uif-q-brief">
               Si ocupás (u ocupaste en los últimos 2 años) un cargo público de alta jerarquía, o tenés vínculo familiar directo o comercial estrecho con alguien en ese cargo. <em>Habitualmente: No.</em>
             </div>
@@ -1404,8 +1740,11 @@
           </div>
 
           <!-- Pregunta 2: Sujeto Obligado UIF -->
-          <div class="uif-card">
-            <div class="uif-q-title">2. ¿Sos Sujeto Obligado ante la UIF?</div>
+          <div class="uif-card" id="uifCardSujeto">
+            <div class="uif-q-head">
+              <div class="uif-q-title">2. ¿Sos Sujeto Obligado ante la UIF?</div>
+              <span class="uif-done-pill">✓ Respondida</span>
+            </div>
             <div class="uif-q-brief">
               Si tu profesión o actividad te obliga por ley a informar operaciones a la UIF (bancos, aseguradoras, escribanos, contadores que auditan balances, inmobiliarias, cripto, etc.). <em>Un empleado o comerciante común no lo es.</em>
             </div>
@@ -1431,8 +1770,11 @@
           </div>
 
           <!-- Pregunta 3: Origen lícito y Control RePET -->
-          <div class="uif-card">
-            <div class="uif-q-title">3. Validación de Terrorismo (RePET) y Origen Lícito</div>
+          <div class="uif-card" id="uifCardRepet">
+            <div class="uif-q-head">
+              <div class="uif-q-title">3. Validación de Terrorismo (RePET) y Origen Lícito</div>
+              <span class="uif-done-pill">✓ Confirmada</span>
+            </div>
             <div class="uif-q-brief">
               Control automático de tu nombre y DNI/CUIT contra listas oficiales (ONU / RePET) y declaración de origen lícito de tus fondos.
             </div>
@@ -1511,11 +1853,10 @@
           </div>
           <p class="step-lead" id="dniStepLead">Sacá una foto clara del frente y del dorso de tu DNI usando tu cámara.</p>
 
-          <div class="dni-orient-callout">
-            <span class="dni-orient-callout-ico" aria-hidden="true">📱↻</span>
-            <span>
-              <strong>Al tocar 📷 Cámara se abrirá la cámara de tu celular.</strong> Sacá la foto en horizontal (apaisado) encuadrando los 4 bordes y se acomodará automáticamente para leer.
-            </span>
+          <div class="dni-tips-chips" aria-label="Recomendaciones rápidas para fotografiar tu DNI">
+            <span class="dni-tip-chip">📱 Celular horizontal</span>
+            <span class="dni-tip-chip">💡 Buena luz sin reflejos</span>
+            <span class="dni-tip-chip">🪪 Encuadrá los 4 bordes</span>
           </div>
 
           <div id="dniGaleriaHabilitadaBanner" class="alert alert-warn" style="display:none;margin-bottom:0.65rem;">
@@ -1526,7 +1867,7 @@
             <div class="dni-card" id="cardDniFrente">
               <div class="dni-title">1. Frente del DNI *</div>
               <div class="dni-hint">El lado donde está tu foto y tu número</div>
-              <img id="imgPrevDniFrente" class="dni-preview" alt="Foto del frente del DNI"/>
+              <img id="imgPrevDniFrente" class="dni-preview" alt="Foto del frente del DNI" title="Tocá para ampliar la foto"/>
               <div id="lblStatusDniFrente" class="dni-status-pill">✓ Foto guardada</div>
               <div style="display:flex;gap:0.4rem;width:100%;flex-wrap:wrap;">
                 <label id="btnAbrirCamaraDniFrente" class="btn btn-primary btn-sm" style="flex:1;min-height:42px;cursor:pointer;">
@@ -1546,7 +1887,7 @@
             <div class="dni-card" id="cardDniDorso">
               <div class="dni-title">2. Dorso (atrás) del DNI *</div>
               <div class="dni-hint">El lado donde figuran tu domicilio y huella</div>
-              <img id="imgPrevDniDorso" class="dni-preview" alt="Foto del dorso del DNI"/>
+              <img id="imgPrevDniDorso" class="dni-preview" alt="Foto del dorso del DNI" title="Tocá para ampliar la foto"/>
               <div id="lblStatusDniDorso" class="dni-status-pill">✓ Foto guardada</div>
               <div style="display:flex;gap:0.4rem;width:100%;flex-wrap:wrap;">
                 <label id="btnAbrirCamaraDniDorso" class="btn btn-primary btn-sm" style="flex:1;min-height:42px;cursor:pointer;">
@@ -1635,9 +1976,14 @@
             <img id="imgPrevSelfie1" alt="Selfie capturada" style="width:170px;height:170px;object-fit:cover;border-radius:50%;border:3px solid #16a34a;"/>
           </div>
           <div id="ekycResultadoBox" class="alert alert-ok" style="text-align:left;margin-bottom:0.65rem;"></div>
-          <button type="button" id="btnReintentarSelfie" class="btn btn-secondary btn-sm">
-            🔄 Volver a grabar el video
-          </button>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;">
+            <button type="button" id="btnReintentarSelfie" class="btn btn-secondary btn-sm">
+              🔄 Volver a grabar el video
+            </button>
+            <button type="button" id="btnSelfieVerificarDirecto" class="btn btn-success" style="flex:1 1 220px;">
+              ✅ Verificar identidad e ir a Firmar →
+            </button>
+          </div>
         </div>
       </section>
 
@@ -1651,6 +1997,7 @@
 
         <div class="sig-pad-wrap">
           <div id="sigHintText" class="sig-hint">✏️ Dibujá tu firma acá con el dedo o el mouse</div>
+          <div class="sig-baseline" aria-hidden="true"><span>Firmá sobre la línea</span></div>
           <canvas id="canvasFirmaMovil"></canvas>
         </div>
 
@@ -1683,9 +2030,29 @@
         </button>
       </section>
 
+      <div id="ekycVerifyingBanner" class="ekyc-verifying-box" aria-live="polite">
+        <div class="ekyc-verifying-title">⏳ Validando tu identidad de forma segura…</div>
+        <div class="ekyc-stage-list">
+          <div class="ekyc-stage-row" id="ekycStage1"><span>•</span><span>1. Enviando capturas cifradas</span></div>
+          <div class="ekyc-stage-row" id="ekycStage2"><span>•</span><span>2. Cotejando rostro y datos del DNI</span></div>
+          <div class="ekyc-stage-row" id="ekycStage3"><span>•</span><span>3. Preparando tu pantalla de firma</span></div>
+        </div>
+      </div>
+
       <div id="turnstileSignerBox" style="width:100%;max-width:360px;margin:0.15rem auto 0;display:flex;justify-content:center;min-height:0;"></div>
     </div>
   </main>
+
+  <div id="modalPreviewFotoDni" class="dni-preview-modal" role="dialog" aria-modal="true" aria-label="Vista ampliada del DNI">
+    <div class="dni-preview-modal-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.55rem;">
+        <strong id="lblModalPreviewDniTitulo" style="color:#0f2744;font-size:0.95rem;">Vista previa del DNI</strong>
+        <button type="button" id="btnCerrarPreviewDni" class="btn btn-secondary btn-sm">✕ Cerrar</button>
+      </div>
+      <img id="imgModalPreviewDni" src="" alt="Vista ampliada del DNI"/>
+      <div style="font-size:0.78rem;color:#475569;margin-top:0.5rem;">Verificá que los textos, foto y código se lean con nitidez.</div>
+    </div>
+  </div>
 
   <!-- BARRA INFERIOR FIJA DE AVANCE POR PASOS -->
   <div id="wizardBottomBar" class="wizard-bottom-bar" style="display:none;">
@@ -1895,7 +2262,7 @@
         dniCamTarget: '',
         dniTorchOn: false,
         dniHudRot: '0',
-        dniIntroVisto: false,
+        dniIntroVisto: true,
         ddjjUif: { pep: '', pepDetalle: '', sujetoObligado: '', constanciaNombre: '', repetAceptado: false },
         dniFallosHabilitarGaleria: 0,
         galeriaDniHabilitada: false,
@@ -2051,11 +2418,51 @@
         if (cards) cards.style.display = verTarjetas ? 'block' : 'none';
       }
 
+      const STEP_SHORT_LABELS = {
+        doc: 'Documento',
+        uif: 'DDJJ UIF',
+        dni: 'Fotos DNI',
+        selfie: 'Rostro',
+        sign: 'Firma',
+      };
+
+      function renderTopStepper_() {
+        const nav = document.getElementById('wizardTopStepper');
+        if (!nav || !Array.isArray(appState.steps)) return;
+        nav.innerHTML = appState.steps.map((k, idx) => {
+          const isActive = idx === appState.currentStepIdx;
+          const isDone = idx < appState.currentStepIdx;
+          const cls = `wizard-step-pill${isActive ? ' is-active' : ''}${isDone ? ' is-done' : ''}`;
+          const numTxt = isDone ? '✓' : String(idx + 1);
+          const lbl = STEP_SHORT_LABELS[k] || (STEP_META[k] && STEP_META[k].label) || k;
+          return `<button type="button" class="${cls}" data-step-idx="${idx}" ${isDone ? '' : 'disabled'} title="${escHtml((STEP_META[k] && STEP_META[k].label) || lbl)}"><span class="wizard-step-num">${numTxt}</span><span>${escHtml(lbl)}</span></button>`;
+        }).join('');
+        nav.querySelectorAll('.wizard-step-pill.is-done').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            if (appState.grabandoAhora) return;
+            const targetIdx = parseInt(btn.getAttribute('data-step-idx'), 10);
+            if (!Number.isNaN(targetIdx) && targetIdx < appState.currentStepIdx) {
+              appState.currentStepIdx = targetIdx;
+              renderStepActual();
+            }
+          });
+        });
+      }
+
       function renderStepActual() {
         mostrarErrorEnPaso('');
+        const pdfShell = document.getElementById('pdfReaderShell');
+        const btnPdfFs = document.getElementById('btnPdfFullscreenToggle');
+        if (pdfShell && pdfShell.classList.contains('is-expanded')) {
+          pdfShell.classList.remove('is-expanded');
+          if (btnPdfFs) btnPdfFs.textContent = '⛶ Ampliar lectura';
+          document.body.style.overflow = '';
+        }
         const stepKey = appState.steps[appState.currentStepIdx];
         const total = appState.steps.length;
         const num = appState.currentStepIdx + 1;
+
+        renderTopStepper_();
 
         document.querySelectorAll('.wizard-step-pane').forEach((p) => { p.style.display = 'none'; });
         const meta = STEP_META[stepKey];
@@ -2105,6 +2512,26 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
+      function setEkycProgressStage_(stageNum) {
+        const box = document.getElementById('ekycVerifyingBanner');
+        if (!box) return;
+        if (!stageNum) {
+          box.style.display = 'none';
+          return;
+        }
+        box.style.display = 'block';
+        [1, 2, 3].forEach((n) => {
+          const row = document.getElementById(`ekycStage${n}`);
+          if (!row) return;
+          const ico = row.firstElementChild;
+          row.className = 'ekyc-stage-row' + (n < stageNum ? ' is-done' : (n === stageNum ? ' is-active' : ''));
+          if (ico) ico.textContent = n < stageNum ? '✅' : (n === stageNum ? '⏳' : '•');
+        });
+        if (stageNum === 1) {
+          try { box.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (_) {}
+        }
+      }
+
       function registrarFalloDniParaGaleria(mensajeBase, mostrarAvisoPaso = true) {
         if (appState.galeriaDniHabilitada) {
           if (mostrarAvisoPaso && mensajeBase) mostrarErrorEnPaso(mensajeBase);
@@ -2142,9 +2569,18 @@
 
       async function ejecutarValidacionEkycEnServidor() {
         const btnNext = document.getElementById('btnWizardNext');
+        const btnDirecto = document.getElementById('btnSelfieVerificarDirecto');
         const origTxt = btnNext.textContent;
+        const origDirTxt = btnDirecto ? btnDirecto.textContent : '';
         btnNext.disabled = true;
         btnNext.textContent = '⏳ Verificando identidad...';
+        if (btnDirecto) {
+          btnDirecto.disabled = true;
+          btnDirecto.textContent = '⏳ Validando…';
+        }
+        setEkycProgressStage_(1);
+        const stage2Timer = setTimeout(() => setEkycProgressStage_(2), 1400);
+        const stage3Timer = setTimeout(() => setEkycProgressStage_(3), 4800);
 
         try {
           const tsToken = await obtenerTokenTurnstile_('firmar_identidad');
@@ -2188,8 +2624,15 @@
           }
           return false;
         } finally {
+          clearTimeout(stage2Timer);
+          clearTimeout(stage3Timer);
+          setEkycProgressStage_(0);
           btnNext.disabled = false;
           btnNext.textContent = origTxt;
+          if (btnDirecto) {
+            btnDirecto.disabled = false;
+            btnDirecto.textContent = origDirTxt;
+          }
         }
       }
 
@@ -2358,6 +2801,12 @@
 
           cont.innerHTML = '';
           cont.appendChild(frag);
+
+          const lblPags = document.getElementById('lblPdfPageCount');
+          if (lblPags) {
+            lblPags.textContent = doc.numPages === 1 ? '📄 1 pág.' : `📄 ${doc.numPages} págs.`;
+            lblPags.style.display = 'inline-flex';
+          }
 
           const pct = Math.round(appState.pdfZoomPct || 100);
           const lblZ = document.getElementById('lblPdfZoomPct');
@@ -3039,15 +3488,47 @@
           const lbl = document.getElementById(lblId);
           if (lbl) {
             lbl.style.display = 'inline-block';
-            lbl.textContent = '✓ Foto lista';
+            lbl.textContent = '✓ Foto lista (tocá para ampliar)';
           }
 
           // Buscamos PDF417 silenciosamente en FRENTE y DORSO (sin mostrar alertas falsas si el dorso no tiene código de barras)
           const encontro417 = await intentarLeerPdf417Silencioso(b64);
           if (encontro417 && lbl) {
-            lbl.textContent = '✓ Foto lista y datos leídos';
+            lbl.textContent = '✓ Foto lista · Código DNI leído';
           }
         };
+
+        const abrirPreviewDniModal = (ladoLabel, src) => {
+          const modal = document.getElementById('modalPreviewFotoDni');
+          const imgEl = document.getElementById('imgModalPreviewDni');
+          const titEl = document.getElementById('lblModalPreviewDniTitulo');
+          if (!modal || !imgEl || !src) return;
+          imgEl.src = src;
+          if (titEl) titEl.textContent = ladoLabel;
+          modal.style.display = 'flex';
+        };
+        const imgPrevF = document.getElementById('imgPrevDniFrente');
+        const imgPrevD = document.getElementById('imgPrevDniDorso');
+        const modalPrevDni = document.getElementById('modalPreviewFotoDni');
+        const btnCerrarPrevDni = document.getElementById('btnCerrarPreviewDni');
+        if (imgPrevF && !imgPrevF.dataset.boundZoom) {
+          imgPrevF.dataset.boundZoom = '1';
+          imgPrevF.addEventListener('click', () => abrirPreviewDniModal('Frente del DNI', imgPrevF.src));
+        }
+        if (imgPrevD && !imgPrevD.dataset.boundZoom) {
+          imgPrevD.dataset.boundZoom = '1';
+          imgPrevD.addEventListener('click', () => abrirPreviewDniModal('Dorso del DNI', imgPrevD.src));
+        }
+        if (btnCerrarPrevDni && !btnCerrarPrevDni.dataset.boundZoom) {
+          btnCerrarPrevDni.dataset.boundZoom = '1';
+          btnCerrarPrevDni.addEventListener('click', () => { if (modalPrevDni) modalPrevDni.style.display = 'none'; });
+        }
+        if (modalPrevDni && !modalPrevDni.dataset.boundBackdrop) {
+          modalPrevDni.dataset.boundBackdrop = '1';
+          modalPrevDni.addEventListener('click', (ev) => {
+            if (ev.target === modalPrevDni) modalPrevDni.style.display = 'none';
+          });
+        }
 
         const btnContDniIntro = document.getElementById('btnContinuarDniIntro');
         const btnVerConsejos = document.getElementById('btnVerConsejosDni');
@@ -3395,8 +3876,8 @@
             const box = document.getElementById('ekycResultadoBox');
             box.className = 'alert alert-ok';
             box.style.display = 'block';
-            box.innerHTML = '<strong>✅ ¡Video y 3 capturas biométricas grabadas correctamente!</strong><br/><span style="font-size:0.9rem;font-weight:500;">Ahora tocá <strong>Verificar y Continuar →</strong> abajo para pasar a tu firma.</span>';
-            hablarGuia('Perfecto, ya grabamos tu video. Tocá el botón continuar para pasar a tu firma.');
+            box.innerHTML = '<strong>✅ ¡Video y 3 capturas biométricas grabadas correctamente!</strong><br/><span style="font-size:0.9rem;font-weight:500;">Tocá el botón verde <strong>Verificar identidad e ir a Firmar →</strong> para continuar.</span>';
+            hablarGuia('Perfecto, ya grabamos tu video. Tocá el botón verde para verificar y pasar a tu firma.');
           });
         }
 
@@ -3412,6 +3893,12 @@
             document.getElementById('selfieDoneView').style.display = 'none';
             document.getElementById('selfieIntroView').style.display = 'block';
           });
+        }
+
+        const btnSelfieDirecto = document.getElementById('btnSelfieVerificarDirecto');
+        if (btnSelfieDirecto && !btnSelfieDirecto.dataset.bound) {
+          btnSelfieDirecto.dataset.bound = '1';
+          btnSelfieDirecto.addEventListener('click', () => { avanzarPaso(); });
         }
       }
 
@@ -3518,12 +4005,19 @@
         const bPepNo = document.getElementById('btnUifPepNo');
         const bPepSi = document.getElementById('btnUifPepSi');
         const boxPepDet = document.getElementById('boxUifPepDetalle');
+        const cardPep = document.getElementById('uifCardPep');
+        const cardSujeto = document.getElementById('uifCardSujeto');
+        const cardRepet = document.getElementById('uifCardRepet');
         const setPep = (val) => {
           appState.ddjjUif.pep = val;
           if (bPepNo) bPepNo.className = 'uif-choice-btn' + (val === 'no' ? ' selected-no' : '');
           if (bPepSi) bPepSi.className = 'uif-choice-btn' + (val === 'si' ? ' selected-si' : '');
           if (boxPepDet) boxPepDet.style.display = val === 'si' ? 'block' : 'none';
+          if (cardPep) cardPep.classList.add('is-answered');
           mostrarErrorEnPaso('');
+          if (val === 'no' && !appState.ddjjUif.sujetoObligado && cardSujeto) {
+            try { cardSujeto.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
+          }
         };
         if (bPepNo && !bPepNo.dataset.bound) {
           bPepNo.dataset.bound = '1';
@@ -3542,7 +4036,11 @@
           if (bSujNo) bSujNo.className = 'uif-choice-btn' + (val === 'no' ? ' selected-no' : '');
           if (bSujSi) bSujSi.className = 'uif-choice-btn' + (val === 'si' ? ' selected-si' : '');
           if (boxSujDet) boxSujDet.style.display = val === 'si' ? 'block' : 'none';
+          if (cardSujeto) cardSujeto.classList.add('is-answered');
           mostrarErrorEnPaso('');
+          if (val === 'no' && !appState.ddjjUif.repetAceptado && cardRepet) {
+            try { cardRepet.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
+          }
         };
         if (bSujNo && !bSujNo.dataset.bound) {
           bSujNo.dataset.bound = '1';
@@ -3569,6 +4067,7 @@
           chkRepet.dataset.bound = '1';
           chkRepet.addEventListener('change', () => {
             appState.ddjjUif.repetAceptado = Boolean(chkRepet.checked);
+            if (cardRepet) cardRepet.classList.toggle('is-answered', appState.ddjjUif.repetAceptado);
             if (chkRepet.checked) mostrarErrorEnPaso('');
           });
         }
@@ -3577,6 +4076,20 @@
       // Controles globales del asistente y zoom PDF
       document.getElementById('btnWizardNext').addEventListener('click', avanzarPaso);
       document.getElementById('btnWizardPrev').addEventListener('click', retrocederPaso);
+
+      const btnPdfFs = document.getElementById('btnPdfFullscreenToggle');
+      if (btnPdfFs) {
+        btnPdfFs.addEventListener('click', async () => {
+          const shell = document.getElementById('pdfReaderShell');
+          if (!shell) return;
+          const expanded = shell.classList.toggle('is-expanded');
+          btnPdfFs.textContent = expanded ? '✕ Salir de lectura' : '⛶ Ampliar lectura';
+          document.body.style.overflow = expanded ? 'hidden' : '';
+          if (appState.pdfB64Actual) {
+            await renderizarPdfEnMovil(appState.pdfB64Actual);
+          }
+        });
+      }
 
       document.getElementById('btnPdfZoomMas').addEventListener('click', async () => {
         if (!appState.pdfB64Actual || appState.pdfZoomPct >= 240) return;

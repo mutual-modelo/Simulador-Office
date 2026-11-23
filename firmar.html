@@ -1969,6 +1969,14 @@
             </div>
           </div>
 
+          <div id="selfieVozIntroCard" style="display:none;background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:0.7rem 0.85rem;margin-bottom:0.75rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.35rem;">
+              <span style="font-weight:800;color:#065f46;font-size:0.86rem;">🎙️ Al final vas a leer esta frase en voz alta:</span>
+              <button type="button" id="btnEscucharEjemploVoz" class="btn btn-secondary btn-sm" style="font-size:0.78rem;padding:0.28rem 0.55rem;">🔊 Escuchar ejemplo</button>
+            </div>
+            <p id="lblVozIntroFrase" style="margin:0;color:#064e3b;font-size:0.9rem;font-weight:700;line-height:1.4;"></p>
+          </div>
+
           <button type="button" id="btnAbrirCamaraSelfie" class="btn btn-success" style="width:100%;font-size:0.98rem;">
             🎥 Comenzar video guiado
           </button>
@@ -2082,6 +2090,7 @@
           <div class="liveness-seg" id="livSeg1"></div>
           <div class="liveness-seg" id="livSeg2"></div>
           <div class="liveness-seg" id="livSeg3"></div>
+          <div class="liveness-seg" id="livSeg4" style="display:none;"></div>
         </div>
         <div class="guide-avatar-circle" id="guideAvatarSvg"></div>
       </div>
@@ -2090,6 +2099,11 @@
         <div class="selfie-cue-block">
           <div class="guide-cue-title" id="lblGuideCueTitle">Ubicá tu rostro dentro del óvalo</div>
           <div class="guide-cue-sub" id="lblGuideCueSub">Cuando te veas bien, tocá "Iniciar video".</div>
+        </div>
+
+        <div id="voiceTeleprompterBox" style="display:none;background:#ecfdf5;border:2px solid #22c55e;border-radius:14px;padding:0.75rem 0.9rem;color:#065f46;font-size:1.05rem;font-weight:800;line-height:1.4;max-width:440px;width:92%;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.32);">
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:#15803d;margin-bottom:4px;">🎙️ Leé en voz alta ahora:</div>
+          <div id="lblVoiceTeleprompterText"></div>
         </div>
 
         <div class="oval-camera-frame" id="ovalCameraFrame">
@@ -2259,9 +2273,14 @@
         currentStepIdx: 0,
         gps: { lat: null, lng: null, accuracy: null, status: 'pending' },
         gpsObligatorio: false,
+        requierePdf: true,
+        requiereUif: true,
         requiereDni: false,
         requiereSelfie: false,
+        requiereVoz: false,
+        requiereFirma: true,
         requierePinOtp: false,
+        vozConfig: null,
         ekycValidado: false,
         ekycStream: null,
         dniCamStream: null,
@@ -2627,10 +2646,24 @@
           });
         } else {
           btnNext.style.display = 'inline-flex';
+          const isLastModularStep = !appState.requiereFirma && (appState.currentStepIdx === appState.steps.length - 1);
           const isLastPreSign = (appState.steps[appState.currentStepIdx + 1] === 'sign') && (stepKey === 'dni' || stepKey === 'selfie');
-          btnNext.textContent = isLastPreSign && !appState.ekycValidado ? 'Verificar y Continuar →' : 'Continuar →';
+          const needsEkycServer = !appState.ekycValidado && (stepKey === 'dni' || stepKey === 'selfie');
+          if (isLastModularStep) {
+            btnNext.textContent = needsEkycServer ? 'Verificar y Finalizar →' : '✅ Finalizar Trámite';
+          } else {
+            btnNext.textContent = isLastPreSign && !appState.ekycValidado ? 'Verificar y Continuar →' : 'Continuar →';
+          }
+          const btnSelfieDir = document.getElementById('btnSelfieVerificarDirecto');
+          if (btnSelfieDir && stepKey === 'selfie') {
+            btnSelfieDir.textContent = isLastModularStep
+              ? (appState.ekycValidado ? '✅ Finalizar Trámite' : 'Verificar y finalizar →')
+              : 'Verificar y continuar →';
+          }
           if ((stepKey === 'selfie' || (stepKey === 'dni' && !appState.requiereSelfie)) && !appState.ekycValidado) {
             requestAnimationFrame(() => { precalentarTurnstile_('firmar_identidad'); });
+          } else if (isLastModularStep) {
+            requestAnimationFrame(() => { precalentarTurnstile_('firmar_documento'); });
           } else {
             reiniciarTurnstile_();
           }
@@ -2873,6 +2906,8 @@
         if (appState.currentStepIdx < appState.steps.length - 1) {
           appState.currentStepIdx += 1;
           renderStepActual();
+        } else if (!appState.requiereFirma) {
+          await finalizarTramiteSinFirma_();
         }
       }
 
@@ -3248,6 +3283,19 @@
               `<span style="font-weight:500;font-size:0.9rem;">El trámite se completará en cuanto firmen las demás personas. Ya podés descargar tu constancia parcial.</span>`;
           }
           if (btnDown) btnDown.textContent = '⬇️ Descargar copia con tu firma';
+        } else if (!appState.requiereFirma) {
+          if (alertBox) {
+            alertBox.innerHTML = `<strong>¡Listo! Tu identidad fue validada con éxito.</strong><br/>` +
+              `<span style="font-weight:500;font-size:0.86rem;color:#047857;">Podés descargar tu Constancia Probatoria AMMER con el botón verde de abajo.</span>`;
+          }
+          if (btnDown) btnDown.textContent = '⬇️ Descargar Constancia PDF';
+          const badgesRow = document.getElementById('receiptBadgesRow');
+          if (badgesRow) {
+            badgesRow.innerHTML =
+              '<span class="r-badge">🪪 Identidad validada</span>' +
+              (appState.requiereVoz ? '<span class="r-badge">🎙️ Voz registrada</span>' : '') +
+              '<span class="r-badge">🛡️ Constancia SHA-256</span>';
+          }
         }
         document.getElementById('resDocNombre').textContent = (appState.docInfo && appState.docInfo.plantilla_nombre) || 'Documento AMMER';
         let fechaPretty = data.firmado_en || '-';
@@ -3894,10 +3942,27 @@
             }
             try {
               detenerCamaraEkyc();
-              const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
-                audio: false,
-              });
+              const videoConstraints = { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } };
+              let stream = null;
+              if (appState.requiereVoz) {
+                try {
+                  stream = await navigator.mediaDevices.getUserMedia({
+                    video: videoConstraints,
+                    audio: { echoCancellation: true, noiseSuppression: true },
+                  });
+                } catch (_errMic) {
+                  stream = await navigator.mediaDevices.getUserMedia({
+                    video: videoConstraints,
+                    audio: false,
+                  });
+                  mostrarErrorEnPaso('No pudimos activar el micrófono; igual grabaremos tu video facial para revisión.');
+                }
+              } else {
+                stream = await navigator.mediaDevices.getUserMedia({
+                  video: videoConstraints,
+                  audio: false,
+                });
+              }
               const vTrack = stream.getVideoTracks && stream.getVideoTracks()[0];
               const trackLbl = String((vTrack && vTrack.label) || '').toLowerCase();
               if (/obs[\s_-]?virtual|virtual\s?cam|manycam|snap\s?cam|camtwist|splitcam|xsplit|youcam/i.test(trackLbl)) {
@@ -3918,6 +3983,10 @@
               document.getElementById('livSeg1').className = 'liveness-seg';
               document.getElementById('livSeg2').className = 'liveness-seg';
               document.getElementById('livSeg3').className = 'liveness-seg';
+              const seg4Reset = document.getElementById('livSeg4');
+              if (seg4Reset) seg4Reset.className = 'liveness-seg';
+              const teleReset = document.getElementById('voiceTeleprompterBox');
+              if (teleReset) teleReset.style.display = 'none';
               const btnStart = document.getElementById('btnIniciarGrabacionGuiada');
               if (btnStart) {
                 btnStart.disabled = false;
@@ -3974,11 +4043,17 @@
             let recorderDonePromise = Promise.resolve('');
             if (typeof window.MediaRecorder === 'function') {
               try {
-                const mimePref = ['video/webm;codecs=vp8', 'video/webm', 'video/mp4']
+                const tieneAudio = appState.ekycStream.getAudioTracks && appState.ekycStream.getAudioTracks().length > 0;
+                const mimeCands = tieneAudio
+                  ? ['video/webm;codecs=vp8,opus', 'video/webm;codecs=vp9,opus', 'video/webm', 'video/mp4']
+                  : ['video/webm;codecs=vp8', 'video/webm', 'video/mp4'];
+                const mimePref = mimeCands
                   .find((m) => typeof MediaRecorder.isTypeSupported === 'function' && MediaRecorder.isTypeSupported(m)) || '';
-                const rec = mimePref
-                  ? new MediaRecorder(appState.ekycStream, { mimeType: mimePref, videoBitsPerSecond: 140000 })
-                  : new MediaRecorder(appState.ekycStream, { videoBitsPerSecond: 140000 });
+                const recOpts = mimePref
+                  ? { mimeType: mimePref, videoBitsPerSecond: 140000 }
+                  : { videoBitsPerSecond: 140000 };
+                if (tieneAudio) recOpts.audioBitsPerSecond = 32000;
+                const rec = new MediaRecorder(appState.ekycStream, recOpts);
                 appState.mediaRecorder = rec;
                 rec.ondataavailable = (ev) => {
                   if (ev.data && ev.data.size > 0) chunks.push(ev.data);
@@ -4032,12 +4107,16 @@
               }
             };
 
-            // ETAPA 1/3: Mirá de frente (espera fin de voz + 2 seg tranquilos)
+            const teleBox = document.getElementById('voiceTeleprompterBox');
+            if (teleBox) teleBox.style.display = 'none';
+            const totalEtapasLbl = (appState.requiereVoz && appState.vozConfig && appState.vozConfig.frase) ? 4 : 3;
+
+            // ETAPA 1: Mirá de frente (espera fin de voz + 2 seg tranquilos)
             document.getElementById('livSeg1').className = 'liveness-seg active';
             setGuideAvatar('center');
             cueEl.textContent = '1) Mirá de frente dentro del óvalo';
             await ejecutarEtapaConTiempo(
-              'Paso 1/3',
+              `Paso 1/${totalEtapasLbl}`,
               'Paso 1. Mirá de frente a la cámara dentro del óvalo.',
               2,
               null
@@ -4046,13 +4125,13 @@
             const frameNeutral = captureFrame();
             document.getElementById('livSeg1').className = 'liveness-seg done';
 
-            // ETAPA 2/3: Sonreí suavemente (espera fin de voz + 3 seg completos)
+            // ETAPA 2: Sonreí suavemente (espera fin de voz + 3 seg completos)
             document.getElementById('livSeg2').className = 'liveness-seg active';
             setGuideAvatar('smile');
             cueEl.textContent = '2) Sonreí suavemente a la cámara';
             const muestrasSonrisa = [];
             await ejecutarEtapaConTiempo(
-              'Paso 2/3',
+              `Paso 2/${totalEtapasLbl}`,
               'Paso 2. Ahora sonreí suavemente mirando a la cámara.',
               3,
               () => { muestrasSonrisa.push(captureFrame()); }
@@ -4060,19 +4139,43 @@
             if (!appState.grabandoAhora) return;
             document.getElementById('livSeg2').className = 'liveness-seg done';
 
-            // ETAPA 3/3: Girá despacio la cabeza hacia un costado y volvé (espera fin de voz + 4 seg completos)
+            // ETAPA 3: Girá despacio la cabeza hacia un costado y volvé (espera fin de voz + 4 seg completos)
             document.getElementById('livSeg3').className = 'liveness-seg active';
             setGuideAvatar('turn');
             cueEl.textContent = '3) Girá un poquito la cabeza y volvé';
             const muestrasGiro = [];
             await ejecutarEtapaConTiempo(
-              'Paso 3/3',
+              `Paso 3/${totalEtapasLbl}`,
               'Paso 3. Girá despacio tu cabeza hacia un costado y volvé al centro.',
               4,
               () => { muestrasGiro.push(captureFrame()); }
             );
             if (!appState.grabandoAhora) return;
             document.getElementById('livSeg3').className = 'liveness-seg done';
+
+            // ETAPA 4 (SOLO SI REQUIERE VOZ): Lectura de frase dinámica en voz alta (sin voz guía simultánea)
+            if (totalEtapasLbl === 4) {
+              const seg4 = document.getElementById('livSeg4');
+              if (seg4) seg4.className = 'liveness-seg active';
+              setGuideAvatar('center');
+              cueEl.textContent = '4) Leé la frase en voz alta';
+              subEl.textContent = 'Hablá claro mirando a la cámara…';
+              timerEl.textContent = 'Paso 4/4 · Escuchá…';
+              await hablarGuiaAsync('Último paso. Cuando aparezca el recuadro verde, leé la frase en voz alta.');
+              detenerVozGuia();
+              await sleep(250);
+              if (!appState.grabandoAhora) return;
+              if (teleBox) teleBox.style.display = 'block';
+              for (let sv = 9; sv >= 1; sv--) {
+                if (!appState.grabandoAhora) break;
+                timerEl.textContent = `Paso 4/4 · ${sv}s`;
+                subEl.textContent = `Leé la frase en voz alta (${sv} seg.)`;
+                await sleep(1000);
+              }
+              if (teleBox) teleBox.style.display = 'none';
+              if (!appState.grabandoAhora) return;
+              if (seg4) seg4.className = 'liveness-seg done';
+            }
 
             if (appState.mediaRecorder && appState.mediaRecorder.state !== 'inactive') {
               try { appState.mediaRecorder.stop(); } catch (_) {}
@@ -4117,7 +4220,9 @@
             appState.ekycImgs.selfie2 = frameSonrisa;
             appState.ekycImgs.selfie3 = frameGiro;
             appState.ekycValidado = false;
-            appState.retoLiveness = 'Video guiado en vivo (3 momentos: frente, sonrisa y giro con audio sincronizado)';
+            appState.retoLiveness = totalEtapasLbl === 4
+              ? 'Video guiado multimodal (frente, sonrisa, giro y consentimiento verbal en vivo)'
+              : 'Video guiado en vivo (3 momentos: frente, sonrisa y giro con audio sincronizado)';
 
             document.getElementById('selfieLiveView').style.display = 'none';
             document.getElementById('selfieDoneView').style.display = 'block';
@@ -4126,6 +4231,7 @@
             const vidPrev = document.getElementById('videoSelfiePreview');
             const fbWrap = document.getElementById('selfieFallbackPreviewWrap');
             if (videoUrl && vidPrev) {
+              vidPrev.muted = !appState.requiereVoz;
               vidPrev.src = videoUrl;
               vidPrev.style.display = 'block';
               if (fbWrap) fbWrap.style.display = 'none';
@@ -4135,11 +4241,20 @@
               document.getElementById('imgPrevSelfie1').src = frameNeutral;
             }
 
+            const esSinFirmaFinal = !appState.requiereFirma && (appState.currentStepIdx === appState.steps.length - 1);
+            const btnDir = document.getElementById('btnSelfieVerificarDirecto');
+            if (btnDir) {
+              btnDir.textContent = esSinFirmaFinal ? '✅ Verificar y finalizar →' : '✅ Verificar y continuar →';
+            }
             const box = document.getElementById('ekycResultadoBox');
             box.className = 'alert alert-ok';
             box.style.display = 'block';
-            box.innerHTML = '<strong>✅ Video listo.</strong> Tocá <strong>Verificar y continuar →</strong>.';
-            hablarGuia('Perfecto, ya grabamos tu video. Tocá el botón verde para verificar y pasar a tu firma.');
+            box.innerHTML = esSinFirmaFinal
+              ? '<strong>✅ Video listo.</strong> Tocá <strong>Verificar y finalizar →</strong>.'
+              : '<strong>✅ Video listo.</strong> Tocá <strong>Verificar y continuar →</strong>.';
+            hablarGuia(esSinFirmaFinal
+              ? 'Perfecto, ya grabamos tu video. Tocá el botón verde para verificar y finalizar.'
+              : 'Perfecto, ya grabamos tu video. Tocá el botón verde para verificar y pasar a tu firma.');
           });
         }
 
@@ -4234,31 +4349,72 @@
           }
 
           const valsReq = data.validaciones_requeridas || {};
+          appState.requierePdf = valsReq.requiere_pdf !== false;
+          appState.requiereUif = valsReq.declaracion_uif !== false;
           appState.requiereDni = Boolean(valsReq.dni_frente_dorso);
-          appState.requiereSelfie = Boolean(valsReq.selfie_liveness);
+          appState.requiereSelfie = Boolean(valsReq.selfie_liveness || valsReq.selfie_voz_consentimiento);
+          appState.requiereVoz = Boolean(valsReq.selfie_voz_consentimiento);
+          appState.requiereFirma = valsReq.firma_olografa !== false;
           appState.requierePinOtp = Boolean(valsReq.requiere_pin_otp);
+          appState.vozConfig = data.voz_consentimiento || null;
 
-          // Construir lista dinámica de pasos (Declaración Jurada UIF entre Paso 1 y Paso 2)
-          appState.steps = ['doc', 'uif'];
+          // Construir lista dinámica de pasos según módulos exigidos
+          appState.steps = [];
+          if (appState.requierePdf) appState.steps.push('doc');
+          if (appState.requiereUif) appState.steps.push('uif');
           if (appState.requiereDni) appState.steps.push('dni');
           if (appState.requiereSelfie) appState.steps.push('selfie');
-          appState.steps.push('sign');
+          if (appState.requiereFirma) appState.steps.push('sign');
+          if (appState.steps.length === 0) appState.steps.push('sign');
           appState.currentStepIdx = 0;
+
+          const subTopEl = document.querySelector('.topbar-sub');
+          if (subTopEl && !appState.requierePdf) {
+            subTopEl.textContent = 'Validación de Identidad AMMER';
+          }
+
+          const vozIntroCard = document.getElementById('selfieVozIntroCard');
+          const vozIntroFrase = document.getElementById('lblVozIntroFrase');
+          const vozTeleTxt = document.getElementById('lblVoiceTeleprompterText');
+          const seg4El = document.getElementById('livSeg4');
+          const fraseTxt = (appState.vozConfig && appState.vozConfig.frase) ? String(appState.vozConfig.frase) : '';
+          if (appState.requiereVoz && fraseTxt) {
+            if (vozIntroCard) vozIntroCard.style.display = 'block';
+            if (vozIntroFrase) vozIntroFrase.textContent = `"${fraseTxt}"`;
+            if (vozTeleTxt) vozTeleTxt.textContent = `"${fraseTxt}"`;
+            if (seg4El) seg4El.style.display = 'block';
+          } else {
+            if (vozIntroCard) vozIntroCard.style.display = 'none';
+            if (seg4El) seg4El.style.display = 'none';
+          }
+          const btnEjVoz = document.getElementById('btnEscucharEjemploVoz');
+          if (btnEjVoz && !btnEjVoz.dataset.bound) {
+            btnEjVoz.dataset.bound = '1';
+            btnEjVoz.addEventListener('click', () => {
+              if (fraseTxt) hablarGuia(`Tenés que decir: ${fraseTxt}`);
+            });
+          }
 
           if (appState.requierePinOtp) {
             const boxPin = document.getElementById('boxPinOtpFirma');
             if (boxPin) boxPin.style.display = 'block';
           }
-          setupSeccionUif();
+          if (appState.requiereUif) {
+            setupSeccionUif();
+          }
           if (appState.requiereDni || appState.requiereSelfie) {
             setupSeccionEkyc(data);
           }
 
           restaurarProgresoParcial_(Boolean(data.ekyc_completado));
           solicitarGpsEnSegundoPlano();
-          setupSignaturePad();
+          if (appState.requiereFirma) {
+            setupSignaturePad();
+          }
           renderStepActual();
-          await renderizarPdfEnMovil(data.pdfBase64);
+          if (appState.steps.includes('doc')) {
+            await renderizarPdfEnMovil(data.pdfBase64);
+          }
         } catch (err) {
           showErr('No pudimos abrir tu documento: ' + err.message);
         }
@@ -4394,6 +4550,88 @@
         }
       });
 
+      async function enviarCierreTramitePublico(firmaPngOpt) {
+        const tsTokenSign = await obtenerTokenTurnstile_('firmar_documento', { focusOnWait: true });
+        if (!tsTokenSign && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+          reiniciarTurnstile_();
+          precalentarTurnstile_('firmar_documento');
+          throw new Error('No pudimos completar la verificación anti-bots de Cloudflare. Verificá tu conexión e intentá nuevamente.');
+        }
+        const duracionMs = appState.startTime ? (Date.now() - appState.startTime) : 0;
+        let pinOtpVal = null;
+        if (appState.requierePinOtp) {
+          const inpPin = document.getElementById('inpPinOtpFirma');
+          pinOtpVal = String((inpPin && inpPin.value) || '').replace(/\D/g, '');
+          if (pinOtpVal.length !== 6 && pinOtpVal.length !== 4) {
+            throw new Error('Escribí los 6 números del código de seguridad que recibiste por WhatsApp.');
+          }
+        }
+        const resp = await fetch(`${API_BASE}/api/firmas/public/${encodeURIComponent(token)}/firmar`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Idempotency-Key': idempotencyKey,
+          },
+          body: JSON.stringify({
+            firmaPngBase64: firmaPngOpt || null,
+            consentimientoAceptado: true,
+            geoLatitud: appState.gps.lat,
+            geoLongitud: appState.gps.lng,
+            geoPrecisionMetros: appState.gps.accuracy,
+            pinOtp: pinOtpVal,
+            turnstileToken: tsTokenSign || null,
+            declaracionJuradaUif: appState.requiereUif ? {
+              es_pep: appState.ddjjUif.pep === 'si',
+              pep_respuesta: appState.ddjjUif.pep || 'no',
+              pep_detalle: appState.ddjjUif.pepDetalle || '',
+              es_sujeto_obligado: appState.ddjjUif.sujetoObligado === 'si',
+              sujeto_obligado_respuesta: appState.ddjjUif.sujetoObligado || 'no',
+              constancia_uif_archivo: appState.ddjjUif.constanciaNombre || '',
+              origen_licito_y_repet_aceptado: Boolean(appState.ddjjUif.repetAceptado),
+              fecha_declaracion: new Date().toISOString(),
+            } : null,
+            telemetriaTrazo: firmaPngOpt ? {
+              puntos_totales: appState.puntosTotales,
+              trazos: appState.trazos,
+              duracion_ms: duracionMs,
+            } : null,
+          }),
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          throw new Error(data.detail || `Error HTTP ${resp.status}`);
+        }
+        reiniciarTurnstile_();
+        mostrarPantallaFirmado(data);
+        return data;
+      }
+
+      async function finalizarTramiteSinFirma_() {
+        if (appState.gpsObligatorio && appState.gps.lat == null) {
+          mostrarErrorEnPaso('Este trámite pide activar la ubicación de tu dispositivo para poder finalizar.');
+          solicitarGpsEnSegundoPlano();
+          return false;
+        }
+        const btnNext = document.getElementById('btnWizardNext');
+        const btnDir = document.getElementById('btnSelfieVerificarDirecto');
+        const origN = btnNext ? btnNext.textContent : '';
+        const origD = btnDir ? btnDir.textContent : '';
+        if (btnNext) { btnNext.disabled = true; btnNext.textContent = '⏳ Finalizando constancia...'; }
+        if (btnDir) { btnDir.disabled = true; btnDir.textContent = '⏳ Finalizando...'; }
+        try {
+          await enviarCierreTramitePublico(null);
+          return true;
+        } catch (err) {
+          reiniciarTurnstile_();
+          precalentarTurnstile_('firmar_documento');
+          mostrarErrorEnPaso('No se pudo finalizar el trámite: ' + err.message);
+          return false;
+        } finally {
+          if (btnNext) { btnNext.disabled = false; btnNext.textContent = origN; }
+          if (btnDir) { btnDir.disabled = false; btnDir.textContent = origD; }
+        }
+      }
+
       document.getElementById('btnConfirmarFirmar').addEventListener('click', async () => {
         mostrarErrorEnPaso('');
         const chk = document.getElementById('chkConsentimientoLegal');
@@ -4414,11 +4652,10 @@
           solicitarGpsEnSegundoPlano();
           return;
         }
-        let pinOtpVal = null;
         if (appState.requierePinOtp) {
           const inpPin = document.getElementById('inpPinOtpFirma');
-          pinOtpVal = String((inpPin && inpPin.value) || '').replace(/\D/g, '');
-          if (pinOtpVal.length !== 6 && pinOtpVal.length !== 4) {
+          const pv = String((inpPin && inpPin.value) || '').replace(/\D/g, '');
+          if (pv.length !== 6 && pv.length !== 4) {
             mostrarErrorEnPaso('Escribí los 6 números del código de seguridad que recibiste por WhatsApp.');
             if (inpPin) inpPin.focus();
             return;
@@ -4430,62 +4667,15 @@
         btn.textContent = '⏳ Guardando tu firma, por favor esperá...';
 
         try {
-          const tsTokenSign = await obtenerTokenTurnstile_('firmar_documento', { focusOnWait: true });
-          if (!tsTokenSign && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-            reiniciarTurnstile_();
-            precalentarTurnstile_('firmar_documento');
-            mostrarErrorEnPaso('No pudimos completar la verificación anti-bots de Cloudflare. Verificá tu conexión (o desactivá bloqueadores de contenido) y tocá "✅ Confirmar y Firmar Documento" nuevamente.');
-            btn.disabled = false;
-            btn.textContent = '✅ Confirmar y Firmar Documento';
-            return;
-          }
           const canvas = document.getElementById('canvasFirmaMovil');
           const firmaPng = canvas.toDataURL('image/png');
-          const duracionMs = appState.startTime ? (Date.now() - appState.startTime) : 0;
-
-          const resp = await fetch(`${API_BASE}/api/firmas/public/${encodeURIComponent(token)}/firmar`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Idempotency-Key': idempotencyKey,
-            },
-            body: JSON.stringify({
-              firmaPngBase64: firmaPng,
-              consentimientoAceptado: true,
-              geoLatitud: appState.gps.lat,
-              geoLongitud: appState.gps.lng,
-              geoPrecisionMetros: appState.gps.accuracy,
-              pinOtp: pinOtpVal,
-              turnstileToken: tsTokenSign || null,
-              declaracionJuradaUif: {
-                es_pep: appState.ddjjUif.pep === 'si',
-                pep_respuesta: appState.ddjjUif.pep || 'no',
-                pep_detalle: appState.ddjjUif.pepDetalle || '',
-                es_sujeto_obligado: appState.ddjjUif.sujetoObligado === 'si',
-                sujeto_obligado_respuesta: appState.ddjjUif.sujetoObligado || 'no',
-                constancia_uif_archivo: appState.ddjjUif.constanciaNombre || '',
-                origen_licito_y_repet_aceptado: Boolean(appState.ddjjUif.repetAceptado),
-                fecha_declaracion: new Date().toISOString(),
-              },
-              telemetriaTrazo: {
-                puntos_totales: appState.puntosTotales,
-                trazos: appState.trazos,
-                duracion_ms: duracionMs,
-              },
-            }),
-          });
-          const data = await resp.json();
-          if (!resp.ok) {
-            throw new Error(data.detail || `Error HTTP ${resp.status}`);
-          }
-          reiniciarTurnstile_();
-          mostrarPantallaFirmado(data);
+          await enviarCierreTramitePublico(firmaPng);
         } catch (err) {
           reiniciarTurnstile_();
           precalentarTurnstile_('firmar_documento');
           mostrarErrorEnPaso('No se pudo guardar tu firma: ' + err.message);
           btn.disabled = false;
-          btn.textContent = '✅ Confirmar y Firmar Documento';
+          btn.textContent = '✅ Confirmar y Firmar';
         }
       });
 

@@ -2360,6 +2360,8 @@
     .crm-actions-group{display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
     .crm-btn-expediente{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:28px;padding:0 10px;border-radius:7px;font-size:.71rem;font-weight:700;color:#3730a3;background:#eef2ff;border:1px solid #c7d2fe;cursor:pointer;transition:all .15s ease;text-decoration:none;white-space:nowrap;outline:none;box-shadow:0 1px 2px rgba(15,23,42,.04)}
     .crm-btn-expediente:hover{background:#e0e7ff;border-color:#a5b4fc;color:#312e81}
+    .crm-btn-validacion{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:28px;padding:0 10px;border-radius:7px;font-size:.71rem;font-weight:700;color:#047857;background:#ecfdf5;border:1px solid #a7f3d0;cursor:pointer;transition:all .15s ease;text-decoration:none;white-space:nowrap;outline:none;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+    .crm-btn-validacion:hover{background:#d1fae5;border-color:#6ee7b7;color:#065f46}
     .crm-btn-docs{display:inline-flex;align-items:center;justify-content:center;gap:4px;height:28px;padding:0 8px;border-radius:7px;font-size:.71rem;font-weight:600;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;text-decoration:none;white-space:nowrap;transition:all .15s ease}
     a.crm-btn-docs:hover{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
     .crm-btn-icon-danger{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border-radius:7px;color:#e11d48;background:#fff1f2;border:1px solid #fecdd3;cursor:pointer;transition:all .15s ease;flex-shrink:0;outline:none}
@@ -5424,6 +5426,10 @@
                     <select id="selFirmaExpediente" onchange="renderCamposCompletarFormulario()" style="padding:0.52rem 0.65rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.84rem;background:#ffffff;color:#0f172a;"></select>
                     <button type="button" onclick="exportarExpedienteCompletoZip()" title="Descargar el legajo completo y todas sus firmas en un archivo .ZIP" style="padding:0.48rem 0.78rem;border-radius:8px;border:1px solid #0f2744;background:#eff6ff;color:#0f2744;font-size:0.77rem;font-weight:700;cursor:pointer;white-space:nowrap;">📦 Legajo .ZIP</button>
                   </div>
+                  <label id="wrapChkFirmaMostrarVerValidacion" style="display:none;align-items:center;gap:6px;font-size:0.72rem;font-weight:700;color:#047857;margin-top:6px;cursor:pointer;">
+                    <input type="checkbox" id="chkFirmaMostrarVerValidacion" checked style="accent-color:#059669;"/>
+                    <span>Mostrar botón «Ver Validación» en Mis Gestiones y Red Comercial (Admin / Analista)</span>
+                  </label>
                 </div>
                 <div>
                   <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap;">
@@ -7402,9 +7408,6 @@
       <div class="modal-footer-bar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
         <div id="footerCicloVidaFicha"></div>
         <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
-          <button type="button" id="btnVerificarEjemplarRenaperFicha" onclick="if (typeof window.abrirAsistenteRenaperDesdeFicha === 'function') window.abrirAsistenteRenaperDesdeFicha()" style="display:inline-flex;align-items:center;gap:6px;padding:0.5rem 0.85rem;border-radius:8px;border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;font-size:0.8rem;font-weight:700;cursor:pointer;">🪪 Mi Ejemplar RENAPER</button>
-          <button type="button" id="btnEnviarAFirmaDesdeFicha" onclick="if (typeof window.enviarAFirmaDesdeFicha === 'function') window.enviarAFirmaDesdeFicha()" style="display:none;align-items:center;gap:6px;padding:0.5rem 0.9rem;border-radius:8px;border:1px solid #059669;background:#059669;color:#ffffff;font-size:0.8rem;font-weight:700;cursor:pointer;">✍️ Enviar a Firma AMMER</button>
-          <button type="button" id="btnExportarExpedienteZip" onclick="exportarExpedienteCompletoZip()" style="display:none;align-items:center;gap:6px;padding:0.5rem 0.9rem;border-radius:8px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.8rem;font-weight:700;cursor:pointer;">📦 Expediente .ZIP</button>
           <button type="button" class="btn-restore" onclick="cerrarModal('modalFichaCompleta')">Cerrar Expediente</button>
         </div>
       </div>
@@ -15593,15 +15596,6 @@ ${cierreTxt}`;
       }
       window._fichaExpedienteActivoObj = s;
       window._fichaExpedienteActivoId = idActivo;
-      const btnZip = document.getElementById('btnExportarExpedienteZip');
-      const esAdminFirma = (typeof tieneAccesoFirmasAmmer === 'function' && tieneAccesoFirmasAmmer(session));
-      if (btnZip) {
-        btnZip.style.display = esAdminFirma ? 'inline-flex' : 'none';
-      }
-      const btnFirmaFicha = document.getElementById('btnEnviarAFirmaDesdeFicha');
-      if (btnFirmaFicha) {
-        btnFirmaFicha.style.display = esAdminFirma ? 'inline-flex' : 'none';
-      }
 
       const tituloExpediente = idDef ? ('Expediente ' + idDef) : ('Expediente ' + idProv);
       const tituloHtml = '<span class="text-lg font-bold font-mono text-slate-900">' + sanitizeHTML(tituloExpediente) + '</span> <span class="text-base font-semibold text-slate-800">— ' + sanitizeHTML(nombreSocio) + '</span>';
@@ -18872,6 +18866,19 @@ ${cierreTxt}`;
       else if (modo === 'calendario') renderCalendarioModulo('mutualPropias', filtered);
     }
 
+    function renderBotonVerValidacionExpediente(s) {
+      if (typeof window.esAdminOAnalistaFirma !== 'function' || !window.esAdminOAnalistaFirma()) return '';
+      if (typeof window.obtenerFirmaVinculadaAExpediente !== 'function') return '';
+      const firma = window.obtenerFirmaVinculadaAExpediente(s);
+      if (!firma) return '';
+      const safeId = sanitizeHTML(String(s.id || s.id_provisorio || ''));
+      const estFirma = String(firma.estado || 'PENDIENTE').toUpperCase();
+      return '<button type="button" class="crm-btn-validacion" onclick="event.stopPropagation();if(typeof window.abrirValidacionFirmaExpediente===\'function\')window.abrirValidacionFirmaExpediente(\'' + safeId + '\');" title="Ver Ficha Completa de Firma y Evidencia (' + sanitizeHTML(estFirma) + ')">' +
+        '<svg class="w-3.5 h-3.5 shrink-0" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>' +
+        '<span>Ver Validación</span>' +
+      '</button>';
+    }
+
     function renderTablaMutualPropias(filtered) {
       const tbody = document.getElementById('tablaMutualPropiasBody'); if (!tbody) return;
       if (!filtered.length) {
@@ -18925,6 +18932,7 @@ ${cierreTxt}`;
               '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
               '<span>Ver Ficha</span>' +
             '</button>' +
+            renderBotonVerValidacionExpediente(s) +
             driveLinkHtml +
             (typeof renderBotonCicloVida === 'function' ? renderBotonCicloVida(s) : '') +
           '</div></td>' +
@@ -19064,6 +19072,7 @@ ${cierreTxt}`;
               '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
               '<span>Ver Ficha</span>' +
             '</button>' +
+            renderBotonVerValidacionExpediente(s) +
             driveLinkHtml +
             (typeof renderBotonCicloVida === 'function' ? renderBotonCicloVida(s) : '') +
           '</div></td>' +
@@ -22541,7 +22550,7 @@ ${cierreTxt}`;
                   '<td style="padding:5px 6px;text-align:right;font-weight:700;">' + sanitizeHTML(sueldoBrutoTxt) + '</td>' +
                 '</tr>' +
                 '<tr style="border-bottom:1px solid #f1f5f9;">' +
-                  '<td style="padding:5px 6px;">Descuentos SUBTOTAL_1 <span style="font-size:0.66rem;color:#64748b;">(Ley / Prioritarios)</span></td>' +
+                  '<td style="padding:5px 6px;">Total de Descuentos por Ley</td>' +
                   '<td style="padding:5px 6px;text-align:center;color:#64748b;font-size:0.68rem;">' + (Number(totalSub1Val || 0) > 0 ? 'Aplicado' : '—') + '</td>' +
                   '<td style="padding:5px 6px;text-align:right;color:#b91c1c;">' + sanitizeHTML(descLeyTxt) + '</td>' +
                 '</tr>' +
@@ -22564,47 +22573,6 @@ ${cierreTxt}`;
             '</table>' +
           '</div>' +
         '</div>' +
-
-        // SECCIÓN 4: Afectación Padrón, Tope 41,67% y Embargos (Semáforo · solo Admin)
-        (esAdminAuditoria() ? ('<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:0.65rem 0.85rem;font-variant-numeric:tabular-nums;">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;">' +
-            '<span style="font-size:0.7rem;font-weight:800;color:#1e3a8a;text-transform:uppercase;">4. Cascada Padrón, Endeudamiento 41,67% y Embargos</span>' +
-            '<span style="padding:2px 9px;border-radius:6px;background:' + semaforoBg + ';color:' + semaforoFg + ';font-weight:800;font-size:0.68rem;">' + semaforoLbl + '</span>' +
-          '</div>' +
-          alertasHtmlFicha +
-          '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px;font-size:0.74rem;">' +
-            '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:6px 8px;">' +
-              '<div style="font-size:0.65rem;color:#1e40af;font-weight:700;">Afectable (' + pctAfectLbl + ' − No Comp.)</div>' +
-              '<div style="font-weight:800;color:#1d4ed8;font-size:0.84rem;">' + sanitizeHTML(capComputableTxt) + '</div>' +
-            '</div>' +
-            '<div style="background:' + semaforoBg + ';border:1px solid #e2e8f0;border-radius:6px;padding:6px 8px;">' +
-              '<div style="font-size:0.65rem;color:' + semaforoFg + ';font-weight:700;">Disponible Recibo</div>' +
-              '<div style="font-weight:800;color:' + semaforoFg + ';font-size:0.84rem;">' + sanitizeHTML(margenTxt) + '</div>' +
-            '</div>' +
-            '<div style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:6px;padding:6px 8px;">' +
-              '<div style="font-size:0.65rem;color:#3730a3;font-weight:700;">Cuota Segura (Tope 41,67% Neto)</div>' +
-              '<div style="font-weight:800;color:#312e81;font-size:0.84rem;">' + sanitizeHTML(cuotaSeguraTxt) + '</div>' +
-            '</div>' +
-            '<div style="background:' + (rec.embargoDetectado ? '#fef2f2' : '#f0fdf4') + ';border:1px solid ' + (rec.embargoDetectado ? '#fecaca' : '#bbf7d0') + ';border-radius:6px;padding:6px 8px;">' +
-              '<div style="font-size:0.65rem;font-weight:700;color:' + (rec.embargoDetectado ? '#991b1b' : '#166534') + ';">Embargos Judiciales</div>' +
-              '<div style="font-weight:800;font-size:0.78rem;color:' + (rec.embargoDetectado ? '#b91c1c' : '#15803d') + ';">' +
-                (rec.embargoDetectado ? ('🔴 ' + sanitizeHTML(fmtP(rec.embargoMonto ?? 0)) + ' (' + sanitizeHTML(rec.embargoConcepto || 'Embargo') + ')') : '🟢 Sin embargos ($ 0,00)') +
-              '</div>' +
-            '</div>' +
-          '</div>' +
-          waterfallFichaHtml +
-          conclFichaHtml +
-        '</div>' +
-
-        // SECCIÓN 5: Resumen Informativo de Capacidad y Observaciones (solo Admin)
-        '<div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:0.7rem 0.85rem;">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">' +
-            '<span style="font-size:0.7rem;font-weight:800;color:#1e3a8a;text-transform:uppercase;">5. Resumen Informativo de Análisis</span>' +
-            '<span style="font-weight:700;font-size:0.72rem;color:#334155;">' + sanitizeHTML(califLetra) + '</span>' +
-          '</div>' +
-          '<div style="font-size:0.74rem;font-weight:700;color:#1e293b;margin-bottom:4px;">' + sanitizeHTML(dictamenCesion) + '</div>' +
-          '<p class="ai-memo-text" style="margin:0;">"' + sanitizeHTML(memo) + '"</p>' +
-        '</div>') : '') +
 
         ((res.detalleCompletoRecibo && Array.isArray(res.detalleCompletoRecibo.conceptos) && res.detalleCompletoRecibo.conceptos.length > 0) ? (
           '<details style="background:#ffffff;border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;">' +
@@ -26389,7 +26357,7 @@ ${cierreTxt}`;
   <script src="js/auditoria20.js?v=6"></script>
   <script src="js/fichasAsociados.js?v=6"></script>
   <script src="js/sidecreerWidget.js?v=11"></script>
-  <script src="js/firmasAmmer.js?v=18"></script>
+  <script src="js/firmasAmmer.js?v=19"></script>
   <script src="js/whatsappBotAdmin.js?v=3"></script>
 </body>
 </html>

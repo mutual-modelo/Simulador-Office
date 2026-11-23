@@ -269,8 +269,15 @@
     const prest = e.prestamo || {};
     const expId = String(e.id_definitivo || e.ID_Definitivo_Expediente || e.Nro_Definitivo || e.id_provisorio || e.id || '');
 
+    const chkVinc = document.getElementById('chkFirmaMostrarVerValidacion');
+    const mostrarValidacionExp = Boolean(e && (e.id || expId)) && (chkVinc ? Boolean(chkVinc.checked) : true);
+
     const ctx = {
       expediente: { id: expId },
+      expediente_uid: e.id ? String(e.id) : null,
+      expediente_provisorio: (e.id_provisorio || e.idProvisorio) ? String(e.id_provisorio || e.idProvisorio) : null,
+      expediente_definitivo: (e.id_definitivo || e.ID_Definitivo_Expediente || e.Nro_Definitivo) ? String(e.id_definitivo || e.ID_Definitivo_Expediente || e.Nro_Definitivo) : null,
+      mostrar_validacion_expediente: mostrarValidacionExp,
       solicitante: {
         nombre: sol.nombre || e.Apellido_Nombre || e.nombre || '',
         dni: String(sol.dni || e.dni || e.DNI || '').replace(/\D/g, ''),
@@ -648,6 +655,10 @@
 
     const tpls = obtenerPlantillasSeleccionadasGenerador();
     const exp = getExpedienteSeleccionadoEnGenerador();
+    const wrapVinc = document.getElementById('wrapChkFirmaMostrarVerValidacion');
+    if (wrapVinc) {
+      wrapVinc.style.display = exp ? 'flex' : 'none';
+    }
     const ctx = construirContextoDesdeExpediente(exp);
     renderFirmantesGenerar(ctx);
 
@@ -912,6 +923,9 @@
       }
       if (box) box.style.display = 'block';
       notify(`Se generaron ${enlaces.length} enlace(s) de firma correctamente.`, 'success');
+      if (exp && typeof cargarIndiceFirmasPorExpediente === 'function') {
+        cargarIndiceFirmasPorExpediente(true);
+      }
     } catch (err) {
       notify('Error al generar enlace de firma: ' + err.message, 'error');
     }
@@ -1025,6 +1039,7 @@
     try {
       const data = await apiFetchJson('/api/firmas/solicitudes', { method: 'GET' });
       state.solicitudesFirma = Array.isArray(data.solicitudes) ? data.solicitudes : [];
+      _reconstruirIndiceFirmasPorExpediente();
       renderBandejaFirmas();
     } catch (err) {
       tbody.innerHTML = `<tr><td colspan="6" style="padding:1.25rem;text-align:center;color:#b91c1c;">Error cargando bandeja: ${escHtml(err.message)}</td></tr>`;
@@ -4093,6 +4108,134 @@
     }
   }
 
+  let _firmasExpIndexPromise = null;
+  let _firmasExpIndexLoaded = false;
+  let _firmasPorExpMap = new Map();
+
+  function esAdminOAnalistaFirma() {
+    try {
+      const sess = (typeof global.getSession === 'function') ? global.getSession() : null;
+      const rol = String((sess && (sess.rol || sess.role)) || '').trim().toLowerCase();
+      return rol === 'admin' || rol === 'administrador' || rol === 'analista';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function _prioridadEstadoFirma(estRaw) {
+    const e = String(estRaw || '').trim().toUpperCase();
+    if (e === 'FIRMADO') return 4;
+    if (e === 'PARCIAL') return 3;
+    if (e === 'LEIDO') return 2;
+    return 1;
+  }
+
+  function _reconstruirIndiceFirmasPorExpediente() {
+    const mapa = new Map();
+    const lista = Array.isArray(state.solicitudesFirma) ? state.solicitudesFirma : [];
+    for (const r of lista) {
+      if (!r || esSolicitudEnBaja(r)) continue;
+      if (r.mostrar_validacion_expediente === false) continue;
+      const keys = [
+        r.expediente_id,
+        r.expediente_uid,
+        r.expediente_provisorio,
+        r.expediente_definitivo,
+      ]
+        .map((k) => String(k || '').trim().toUpperCase())
+        .filter(Boolean);
+      if (keys.length === 0) continue;
+
+      for (const k of keys) {
+        const prev = mapa.get(k);
+        if (!prev) {
+          mapa.set(k, r);
+          continue;
+        }
+        const pNew = _prioridadEstadoFirma(r.estado);
+        const pOld = _prioridadEstadoFirma(prev.estado);
+        if (pNew > pOld || (pNew === pOld && String(r.created_at || '') > String(prev.created_at || ''))) {
+          mapa.set(k, r);
+        }
+      }
+    }
+    _firmasPorExpMap = mapa;
+    _firmasExpIndexLoaded = true;
+  }
+
+  async function cargarIndiceFirmasPorExpediente(force = false) {
+    if (!esAdminOAnalistaFirma()) return _firmasPorExpMap;
+    if (!force && _firmasExpIndexLoaded) return _firmasPorExpMap;
+    if (_firmasExpIndexPromise && !force) return _firmasExpIndexPromise;
+
+    _firmasExpIndexPromise = (async () => {
+      try {
+        const data = await apiFetchJson('/api/firmas/solicitudes', { method: 'GET' });
+        if (data && Array.isArray(data.solicitudes)) {
+          state.solicitudesFirma = data.solicitudes;
+          _reconstruirIndiceFirmasPorExpediente();
+          if (typeof global.renderModuloMutualPropias === 'function') {
+            global.renderModuloMutualPropias();
+          }
+          if (typeof global.renderModuloMutual === 'function') {
+            global.renderModuloMutual();
+          }
+        }
+      } catch (_) {
+        // Silencioso si no hay sesión lista aún
+      } finally {
+        _firmasExpIndexPromise = null;
+      }
+      return _firmasPorExpMap;
+    })();
+
+    return _firmasExpIndexPromise;
+  }
+
+  function obtenerFirmaVinculadaAExpediente(solicitudObj) {
+    if (!esAdminOAnalistaFirma() || !solicitudObj) return null;
+    if (!_firmasExpIndexLoaded) {
+      cargarIndiceFirmasPorExpediente(false);
+      return null;
+    }
+    const candidates = [
+      solicitudObj.id_definitivo,
+      solicitudObj.ID_Definitivo_Expediente,
+      solicitudObj.Nro_Definitivo,
+      solicitudObj.id_provisorio,
+      solicitudObj.idProvisorio,
+      solicitudObj.id,
+    ]
+      .map((k) => String(k || '').trim().toUpperCase())
+      .filter(Boolean);
+
+    for (const k of candidates) {
+      if (_firmasPorExpMap.has(k)) {
+        return _firmasPorExpMap.get(k);
+      }
+    }
+    return null;
+  }
+
+  async function abrirValidacionFirmaExpediente(solicitudId) {
+    if (!esAdminOAnalistaFirma()) {
+      notify('⛔ Solo usuarios Admin o Analista pueden ver la validación de firma.', 'error');
+      return;
+    }
+    const all = (typeof global.getStoredSolicitudes === 'function') ? global.getStoredSolicitudes() : [];
+    const sol = all.find((x) => String(x.id) === String(solicitudId) || String(x.id_provisorio) === String(solicitudId) || String(x.id_definitivo) === String(solicitudId));
+    let firma = sol ? obtenerFirmaVinculadaAExpediente(sol) : null;
+    if (!firma) {
+      await cargarIndiceFirmasPorExpediente(true);
+      firma = sol ? obtenerFirmaVinculadaAExpediente(sol) : null;
+    }
+    if (!firma || !firma.id) {
+      notify('No se encontró una firma electrónica vinculada a este expediente.', 'warning');
+      return;
+    }
+    return abrirFichaSolicitudFirma(firma.id);
+  }
+
   // Exportar API global
   global.initFirmasAmmerView = initFirmasAmmerView;
   global.cambiarTabFirmas = cambiarTabFirmas;
@@ -4156,4 +4299,8 @@
   global.guardarPlantillaDesdeEditor = guardarPlantillaDesdeEditor;
   global.probarEstampadoEditor = probarEstampadoEditor;
   global.exportarExpedienteCompletoZip = exportarExpedienteCompletoZip;
+  global.esAdminOAnalistaFirma = esAdminOAnalistaFirma;
+  global.cargarIndiceFirmasPorExpediente = cargarIndiceFirmasPorExpediente;
+  global.obtenerFirmaVinculadaAExpediente = obtenerFirmaVinculadaAExpediente;
+  global.abrirValidacionFirmaExpediente = abrirValidacionFirmaExpediente;
 })(window);

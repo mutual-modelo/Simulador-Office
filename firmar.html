@@ -1602,6 +1602,30 @@
       border: 1px solid #cbd5e1;
       color: #334155;
     }
+
+    /* Alertas tempranas de calidad DNI + aviso de recuperación de progreso */
+    .dni-card.has-warn {
+      border-color: #f59e0b;
+      background: #fffbeb;
+    }
+    .dni-status-pill.is-warn {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fcd34d;
+    }
+    .wizard-restored-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.55rem 0.8rem;
+      border-radius: 11px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e3a8a;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
   </style>
 </head>
 <body>
@@ -1664,6 +1688,10 @@
          ============================================================ -->
     <div id="contenidoFirmaWrap" style="display:none;flex-direction:column;gap:0.65rem;">
       <nav id="wizardTopStepper" class="wizard-stepper" aria-label="Progreso del trámite"></nav>
+      <div id="wizardRestoredBanner" class="wizard-restored-banner">
+        <span>♻️ Recuperamos tu progreso anterior para que continúes sin volver a cargar tus respuestas.</span>
+        <button type="button" onclick="this.parentElement.style.display='none'" style="border:none;background:transparent;color:#1e3a8a;font-weight:800;cursor:pointer;font-size:0.9rem;">✕</button>
+      </div>
       <div id="wizardStepErrorBanner" class="alert alert-err" style="display:none;"></div>
 
       <!-- PASO 1: REVISAR EL DOCUMENTO -->
@@ -2288,6 +2316,125 @@
         sign: { paneId: 'paneStepSign', label: 'Firmar documento' },
       };
 
+      function obtenerClaveProgreso_() {
+        if (!token) return '';
+        let h = 2166136261;
+        for (let i = 0; i < token.length; i++) {
+          h ^= token.charCodeAt(i);
+          h = Math.imul(h, 16777619);
+        }
+        return 'AMMER_FIRMA_PROG_' + (h >>> 0).toString(36);
+      }
+
+      function guardarProgresoParcial_() {
+        const k = obtenerClaveProgreso_();
+        if (!k) return;
+        try {
+          const inpPepDet = document.getElementById('inpUifPepDetalle');
+          const snap = {
+            currentStepIdx: Number(appState.currentStepIdx || 0),
+            pdfZoomPct: Number(appState.pdfZoomPct || 100),
+            dniFallosHabilitarGaleria: Number(appState.dniFallosHabilitarGaleria || 0),
+            galeriaDniHabilitada: Boolean(appState.galeriaDniHabilitada),
+            ddjjUif: {
+              pep: appState.ddjjUif.pep || '',
+              pepDetalle: (inpPepDet ? String(inpPepDet.value || '').trim() : appState.ddjjUif.pepDetalle) || '',
+              sujetoObligado: appState.ddjjUif.sujetoObligado || '',
+              repetAceptado: Boolean(appState.ddjjUif.repetAceptado),
+            },
+            ts: Date.now(),
+          };
+          sessionStorage.setItem(k, JSON.stringify(snap));
+        } catch (_e) {}
+      }
+
+      function limpiarProgresoParcial_() {
+        const k = obtenerClaveProgreso_();
+        if (!k) return;
+        try { sessionStorage.removeItem(k); } catch (_e) {}
+      }
+
+      function restaurarProgresoParcial_(ekycYaCompletado) {
+        const k = obtenerClaveProgreso_();
+        if (!k) return;
+        try {
+          const raw = sessionStorage.getItem(k);
+          if (!raw) return;
+          const snap = JSON.parse(raw);
+          if (!snap || (snap.ts && Date.now() - snap.ts > 24 * 3600 * 1000)) {
+            sessionStorage.removeItem(k);
+            return;
+          }
+          let algoRestaurado = false;
+          if (snap.pdfZoomPct && snap.pdfZoomPct >= 60 && snap.pdfZoomPct <= 240) {
+            appState.pdfZoomPct = snap.pdfZoomPct;
+          }
+          if (snap.dniFallosHabilitarGaleria > 0) {
+            appState.dniFallosHabilitarGaleria = snap.dniFallosHabilitarGaleria;
+          }
+          if (snap.galeriaDniHabilitada) {
+            appState.galeriaDniHabilitada = true;
+            const b1 = document.getElementById('lblBtnDniFrenteGal');
+            const b2 = document.getElementById('lblBtnDniDorsoGal');
+            const banner = document.getElementById('dniGaleriaHabilitadaBanner');
+            if (b1) b1.style.display = 'inline-flex';
+            if (b2) b2.style.display = 'inline-flex';
+            if (banner) banner.style.display = 'block';
+          }
+          const uif = snap.ddjjUif || {};
+          if (uif.pep === 'no' || uif.pep === 'si') {
+            appState.ddjjUif.pep = uif.pep;
+            const bNo = document.getElementById('btnUifPepNo');
+            const bSi = document.getElementById('btnUifPepSi');
+            const boxDet = document.getElementById('boxUifPepDetalle');
+            const cardPep = document.getElementById('uifCardPep');
+            const inpDet = document.getElementById('inpUifPepDetalle');
+            if (bNo) bNo.className = 'uif-choice-btn' + (uif.pep === 'no' ? ' selected-no' : '');
+            if (bSi) bSi.className = 'uif-choice-btn' + (uif.pep === 'si' ? ' selected-si' : '');
+            if (boxDet) boxDet.style.display = uif.pep === 'si' ? 'block' : 'none';
+            if (inpDet && uif.pepDetalle) inpDet.value = uif.pepDetalle;
+            if (cardPep) cardPep.classList.add('is-answered');
+            algoRestaurado = true;
+          }
+          if (uif.sujetoObligado === 'no' || uif.sujetoObligado === 'si') {
+            appState.ddjjUif.sujetoObligado = uif.sujetoObligado;
+            const bNo = document.getElementById('btnUifSujetoNo');
+            const bSi = document.getElementById('btnUifSujetoSi');
+            const boxDet = document.getElementById('boxUifSujetoDetalle');
+            const cardSuj = document.getElementById('uifCardSujeto');
+            if (bNo) bNo.className = 'uif-choice-btn' + (uif.sujetoObligado === 'no' ? ' selected-no' : '');
+            if (bSi) bSi.className = 'uif-choice-btn' + (uif.sujetoObligado === 'si' ? ' selected-si' : '');
+            if (boxDet) boxDet.style.display = uif.sujetoObligado === 'si' ? 'block' : 'none';
+            if (cardSuj) cardSuj.classList.add('is-answered');
+            algoRestaurado = true;
+          }
+          if (uif.repetAceptado) {
+            appState.ddjjUif.repetAceptado = true;
+            const chk = document.getElementById('chkUifRepetLicito');
+            const cardRep = document.getElementById('uifCardRepet');
+            if (chk) chk.checked = true;
+            if (cardRep) cardRep.classList.add('is-answered');
+            algoRestaurado = true;
+          }
+          if (typeof snap.currentStepIdx === 'number' && snap.currentStepIdx > 0 && appState.steps.length > 0) {
+            let maxIdx = appState.steps.length - 1;
+            if (!ekycYaCompletado && (appState.requiereDni || appState.requiereSelfie)) {
+              const firstCaptureIdx = appState.steps.findIndex((s) => s === 'dni' || s === 'selfie');
+              if (firstCaptureIdx >= 0) maxIdx = firstCaptureIdx;
+            }
+            const safeIdx = Math.max(0, Math.min(maxIdx, snap.currentStepIdx));
+            if (safeIdx > 0) {
+              appState.currentStepIdx = safeIdx;
+              algoRestaurado = true;
+            }
+          }
+          if (algoRestaurado) {
+            const bRest = document.getElementById('wizardRestoredBanner');
+            if (bRest) bRest.style.display = 'flex';
+          }
+        } catch (_e) {}
+      }
+
       function escHtml(v) {
         return String(v == null ? '' : v)
           .replace(/&/g, '&amp;')
@@ -2508,6 +2655,7 @@
         if (stepKey !== 'selfie') {
           detenerVozGuia();
         }
+        guardarProgresoParcial_();
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -2565,6 +2713,7 @@
             `${mensajeBase} (Intento ${intentos} de 3 · si falla ${restantes === 1 ? '1 vez más' : `${restantes} veces más`} habilitaremos la carga desde galería.)`
           );
         }
+        guardarProgresoParcial_();
       }
 
       async function ejecutarValidacionEkycEnServidor() {
@@ -3055,6 +3204,7 @@
       // PANTALLA FINAL CONFIRMADA
       // ============================================================
       function mostrarPantallaFirmado(data) {
+        limpiarProgresoParcial_();
         detenerCamaraEkyc();
         detenerVozGuia();
         document.getElementById('estadoCargaBox').style.display = 'none';
@@ -3444,6 +3594,74 @@
         appState.ekycValidado = true;
       }
 
+      function _analizarCalidadFotoDni(b64) {
+        return new Promise((resolve) => {
+          if (!b64) { resolve({ ok: true, aviso: '' }); return; }
+          const img = new Image();
+          img.onload = () => {
+            try {
+              const targetW = 220;
+              const targetH = Math.max(80, Math.round(targetW * ((img.naturalHeight || img.height || 140) / (img.naturalWidth || img.width || 220))));
+              const cv = document.createElement('canvas');
+              cv.width = targetW;
+              cv.height = targetH;
+              const ctx = cv.getContext('2d');
+              ctx.drawImage(img, 0, 0, targetW, targetH);
+              const px = ctx.getImageData(0, 0, targetW, targetH).data;
+              const x0 = Math.floor(targetW * 0.12);
+              const x1 = Math.floor(targetW * 0.88);
+              const y0 = Math.floor(targetH * 0.12);
+              const y1 = Math.floor(targetH * 0.88);
+              const lumAt = (x, y) => {
+                const i = (y * targetW + x) * 4;
+                return 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
+              };
+              let sumLum = 0;
+              let blown = 0;
+              let cnt = 0;
+              let lapSum = 0;
+              let lapSq = 0;
+              let lapCnt = 0;
+              for (let y = y0; y < y1; y++) {
+                for (let x = x0; x < x1; x++) {
+                  const v = lumAt(x, y);
+                  sumLum += v;
+                  if (v >= 248) blown += 1;
+                  cnt += 1;
+                  if (x > x0 && x < x1 - 1 && y > y0 && y < y1 - 1) {
+                    const lap = (4 * v) - lumAt(x - 1, y) - lumAt(x + 1, y) - lumAt(x, y - 1) - lumAt(x, y + 1);
+                    lapSum += lap;
+                    lapSq += lap * lap;
+                    lapCnt += 1;
+                  }
+                }
+              }
+              const meanLum = cnt ? (sumLum / cnt) : 128;
+              const blownPct = cnt ? (blown / cnt) : 0;
+              const lapMean = lapCnt ? (lapSum / lapCnt) : 0;
+              const lapVar = lapCnt ? Math.max(0, (lapSq / lapCnt) - (lapMean * lapMean)) : 200;
+
+              let aviso = '';
+              let severa = false;
+              if (meanLum < 45) {
+                aviso = '⚠️ Foto muy oscura · acercate a mejor luz o sacá otra';
+                severa = meanLum < 34;
+              } else if (meanLum > 236 || blownPct > 0.38) {
+                aviso = '⚠️ Mucho reflejo o flash · incliná un poco el teléfono';
+                severa = blownPct > 0.48;
+              } else if (lapVar < 42) {
+                aviso = '⚠️ Foto algo borrosa · tocá la imagen para revisar o sacá otra';
+              }
+              resolve({ ok: !aviso, aviso, severa, meanLum, blownPct, lapVar });
+            } catch (_e) {
+              resolve({ ok: true, aviso: '', severa: false });
+            }
+          };
+          img.onerror = () => resolve({ ok: true, aviso: '', severa: false });
+          img.src = b64;
+        });
+      }
+
       async function intentarLeerPdf417Silencioso(b64) {
         if (!window.ZXing) return false;
         if (!appState.ekycImgs.pdf417Raw || !appState.ekycImgs.qrRaw) {
@@ -3479,7 +3697,10 @@
           const img = document.getElementById(imgId);
           if (img) { img.src = b64; img.style.display = 'block'; }
           const card = document.getElementById(cardId);
-          if (card) card.classList.add('captured');
+          if (card) {
+            card.classList.add('captured');
+            card.classList.remove('has-warn');
+          }
           const btnTxt = document.getElementById(btnTxtId);
           if (btnTxt) btnTxt.textContent = '📷 Sacar otra';
           const rotBtn = document.getElementById(rotBtnId);
@@ -3488,12 +3709,22 @@
           const lbl = document.getElementById(lblId);
           if (lbl) {
             lbl.style.display = 'inline-block';
+            lbl.classList.remove('is-warn');
             lbl.textContent = '✓ Foto lista (tocá para ampliar)';
           }
 
-          // Buscamos PDF417 silenciosamente en FRENTE y DORSO (sin mostrar alertas falsas si el dorso no tiene código de barras)
-          const encontro417 = await intentarLeerPdf417Silencioso(b64);
-          if (encontro417 && lbl) {
+          // Buscamos PDF417 y evaluamos brillo/nitidez localmente en paralelo
+          const [encontro417, calidad] = await Promise.all([
+            intentarLeerPdf417Silencioso(b64),
+            _analizarCalidadFotoDni(b64),
+          ]);
+          if (calidad && calidad.aviso && (!encontro417 || calidad.severa)) {
+            if (card) card.classList.add('has-warn');
+            if (lbl) {
+              lbl.classList.add('is-warn');
+              lbl.textContent = calidad.aviso;
+            }
+          } else if (encontro417 && lbl) {
             lbl.textContent = '✓ Foto lista · Código DNI leído';
           }
         };
@@ -3992,6 +4223,7 @@
             setupSeccionEkyc(data);
           }
 
+          restaurarProgresoParcial_(Boolean(data.ekyc_completado));
           solicitarGpsEnSegundoPlano();
           setupSignaturePad();
           renderStepActual();
@@ -4015,6 +4247,7 @@
           if (boxPepDet) boxPepDet.style.display = val === 'si' ? 'block' : 'none';
           if (cardPep) cardPep.classList.add('is-answered');
           mostrarErrorEnPaso('');
+          guardarProgresoParcial_();
           if (val === 'no' && !appState.ddjjUif.sujetoObligado && cardSujeto) {
             try { cardSujeto.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
           }
@@ -4027,6 +4260,14 @@
           bPepSi.dataset.bound = '1';
           bPepSi.addEventListener('click', () => setPep('si'));
         }
+        const inpPepDet = document.getElementById('inpUifPepDetalle');
+        if (inpPepDet && !inpPepDet.dataset.bound) {
+          inpPepDet.dataset.bound = '1';
+          inpPepDet.addEventListener('input', () => {
+            appState.ddjjUif.pepDetalle = String(inpPepDet.value || '').trim();
+            guardarProgresoParcial_();
+          });
+        }
 
         const bSujNo = document.getElementById('btnUifSujetoNo');
         const bSujSi = document.getElementById('btnUifSujetoSi');
@@ -4038,6 +4279,7 @@
           if (boxSujDet) boxSujDet.style.display = val === 'si' ? 'block' : 'none';
           if (cardSujeto) cardSujeto.classList.add('is-answered');
           mostrarErrorEnPaso('');
+          guardarProgresoParcial_();
           if (val === 'no' && !appState.ddjjUif.repetAceptado && cardRepet) {
             try { cardRepet.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
           }
@@ -4069,6 +4311,7 @@
             appState.ddjjUif.repetAceptado = Boolean(chkRepet.checked);
             if (cardRepet) cardRepet.classList.toggle('is-answered', appState.ddjjUif.repetAceptado);
             if (chkRepet.checked) mostrarErrorEnPaso('');
+            guardarProgresoParcial_();
           });
         }
       }
@@ -4096,6 +4339,7 @@
         appState.pdfZoomPct = Math.min(240, (appState.pdfZoomPct || 100) + 20);
         const lblZ = document.getElementById('lblPdfZoomPct');
         if (lblZ) lblZ.textContent = `${appState.pdfZoomPct}%`;
+        guardarProgresoParcial_();
         await renderizarPdfEnMovil(appState.pdfB64Actual);
       });
 
@@ -4104,6 +4348,7 @@
         appState.pdfZoomPct = Math.max(60, (appState.pdfZoomPct || 100) - 20);
         const lblZ = document.getElementById('lblPdfZoomPct');
         if (lblZ) lblZ.textContent = `${appState.pdfZoomPct}%`;
+        guardarProgresoParcial_();
         await renderizarPdfEnMovil(appState.pdfB64Actual);
       });
 

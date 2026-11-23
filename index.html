@@ -5558,8 +5558,69 @@
           <!-- SUB-PANEL 1: GENERAR Y ENVIAR A FIRMA -->
           <div id="panelFirmas_generar" style="display:block;">
             <div class="firmas-card">
+              <!-- MODALIDAD Y VALIDACIONES MODULARES (CON O SIN PDF + VOZ MULTIMODAL) -->
+              <div class="firmas-section-box" style="margin-bottom:0.25rem;background:linear-gradient(135deg,#f8fafc 0%,#eff6ff 100%);border-color:#bfdbfe;">
+                <div class="firmas-section-head" style="margin-bottom:0.55rem;">
+                  <div>
+                    <div class="firmas-section-title">
+                      <span>🎛️ Modalidad del Trámite y Validaciones de Seguridad</span>
+                    </div>
+                    <div class="firmas-section-sub">Elegí un perfil rápido o combiná libremente módulos con o sin PDF (DNI, Selfie, Voz Dinámica, UIF, Firma).</div>
+                  </div>
+                </div>
+
+                <div id="firmaPresetsBar" style="display:flex;gap:0.45rem;flex-wrap:wrap;margin-bottom:0.7rem;">
+                  <button type="button" id="btnPresetFirma_pdf_std" class="firmas-btn firmas-btn--sm firmas-btn-navy" onclick="aplicarPresetValidacionFirmas('pdf_std')">📄 Firma de Documento (PDF)</button>
+                  <button type="button" id="btnPresetFirma_pdf_voz" class="firmas-btn firmas-btn--sm firmas-btn-soft-blue" onclick="aplicarPresetValidacionFirmas('pdf_voz')">🛡️ Alto Riesgo (PDF + Voz Dinámica)</button>
+                  <button type="button" id="btnPresetFirma_solo_dni" class="firmas-btn firmas-btn--sm firmas-btn-soft-blue" onclick="aplicarPresetValidacionFirmas('solo_dni')">🪪 Solo Fotos DNI (sin PDF)</button>
+                  <button type="button" id="btnPresetFirma_id_voz" class="firmas-btn firmas-btn--sm firmas-btn-soft-blue" onclick="aplicarPresetValidacionFirmas('id_voz')">🤳 Identidad + Video y Voz (sin PDF)</button>
+                  <button type="button" id="btnPresetFirma_dni_firma" class="firmas-btn firmas-btn--sm firmas-btn-soft-blue" onclick="aplicarPresetValidacionFirmas('dni_firma')">✍️ DNI + Firma (sin PDF)</button>
+                </div>
+
+                <div style="display:flex;gap:0.42rem;flex-wrap:wrap;">
+                  <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkGenReqPdf" checked onchange="onToggleValidacionGenerador()"/> 📄 Con documento PDF</label>
+                  <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkGenReqUif" checked onchange="onToggleValidacionGenerador()"/> 📋 DDJJ UIF</label>
+                  <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkGenReqDni" onchange="onToggleValidacionGenerador()"/> 🪪 Fotos DNI (Frente/Dorso)</label>
+                  <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkGenReqSelfie" onchange="onToggleValidacionGenerador()"/> 🤳 Video Selfie Liveness</label>
+                  <label class="firmas-check-pill firmas-check-pill--emerald firmas-check-pill--compact"><input type="checkbox" id="chkGenReqVoz" onchange="onToggleValidacionGenerador()"/> 🎙️ Validación Extra Voz + Frase</label>
+                  <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkGenReqFirma" checked onchange="onToggleValidacionGenerador()"/> ✍️ Firma Ológrafa</label>
+                  <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkGenReqGps" onchange="onToggleValidacionGenerador()"/> 📍 GPS</label>
+                  <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkGenReqPin" onchange="onToggleValidacionGenerador()"/> 🔐 PIN 2FA</label>
+                </div>
+
+                <div id="firmaTituloSinPdfWrap" style="display:none;margin-top:0.7rem;background:#ffffff;border:1px solid #cbd5e1;border-radius:11px;padding:0.65rem 0.85rem;">
+                  <label for="inpFirmaTituloSinPdf" class="firmas-label" style="margin-bottom:4px;">Título de la Constancia de Validación (sin PDF previo)</label>
+                  <input type="text" id="inpFirmaTituloSinPdf" class="firmas-input firmas-input--sm" value="Validación de Identidad AMMER" placeholder="Ej: Validación de Identidad / Solicitud Solo DNI"/>
+                </div>
+
+                <div id="firmaVozConfigBox" style="display:none;margin-top:0.7rem;background:#ffffff;border:1px solid #86efac;border-radius:12px;padding:0.8rem 0.95rem;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.55rem;">
+                    <strong style="font-size:0.82rem;color:#065f46;">🎙️ Validación Multimodal por Voz + Frase Dinámica (Ayudas Económicas)</strong>
+                    <span style="font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:999px;background:#dcfce7;color:#166534;">Incluye código con últimos 3 dígitos del DNI</span>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:0.6rem;margin-bottom:0.55rem;">
+                    <div>
+                      <label for="selFirmaVozEntidad" class="firmas-label" style="margin-bottom:3px;">Entidad mencionada en la frase</label>
+                      <select id="selFirmaVozEntidad" class="firmas-select" style="height:36px;font-size:0.8rem;" onchange="actualizarPreviewFraseVozGenerador()">
+                        <option value="FEDEM / Mutual Modelo">FEDEM / Mutual Modelo</option>
+                        <option value="Mutual Modelo">Mutual Modelo</option>
+                        <option value="FEDEM">FEDEM</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label for="inpFirmaVozCustom" class="firmas-label" style="margin-bottom:3px;">Frase personalizada (opcional · dejar vacío para automática)</label>
+                      <input type="text" id="inpFirmaVozCustom" class="firmas-input firmas-input--sm" oninput="actualizarPreviewFraseVozGenerador()" placeholder="Automática según Variante A (monto/cuotas) o B"/>
+                    </div>
+                  </div>
+                  <div style="background:#f8fafc;border:1px dashed #94a3b8;border-radius:9px;padding:0.55rem 0.75rem;font-size:0.78rem;color:#0f172a;line-height:1.45;">
+                    <span style="font-size:0.68rem;font-weight:800;color:#475569;text-transform:uppercase;display:block;margin-bottom:2px;">Vista previa de frase que leerá el titular:</span>
+                    <span id="lblPreviewFraseVoz" style="font-style:italic;font-weight:600;">"Soy Titular, hoy..., confirmo mi identidad..."</span>
+                  </div>
+                </div>
+              </div>
+
               <div class="firmas-form-grid">
-                <div class="firmas-step-card">
+                <div class="firmas-step-card" id="firmaStepCardPlantilla">
                   <div class="firmas-step-header">
                     <label for="selFirmaPlantilla" class="firmas-step-label">
                       <span class="firmas-step-num">1</span>
@@ -5606,7 +5667,7 @@
               </div>
 
               <!-- PAQUETE / SOBRE DE MÚLTIPLES DOCUMENTOS -->
-              <details class="firmas-accordion">
+              <details class="firmas-accordion" id="firmaPaqueteAccordion">
                 <summary>
                   <span>📦 Enviar Varios PDFs Juntos en un Paquete (1 sola validación y 1 firma para todos)</span>
                 </summary>
@@ -5844,11 +5905,13 @@
 
               <div class="firmas-editor-checks-bar">
                 <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkValFirmaOlografa" checked/> ✍️ Firma manuscrita en pantalla</label>
+                <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkValDeclaracionUif" checked/> 📋 Declaración Jurada UIF</label>
                 <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkValTaparResaltados" checked/> 🧹 Ocultar resaltados amarillos</label>
                 <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkValRequiereSelloPng"/> 🏛️ Incluir Sello Oficial (PNG)</label>
                 <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkValGpsObligatorio"/> 📍 Exigir ubicación GPS</label>
                 <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkValDniFrenteDorso"/> 🪪 Solicitar foto DNI (Frente y Dorso)</label>
                 <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkValSelfieLiveness"/> 🤳 Selfie con prueba de vida</label>
+                <label class="firmas-check-pill firmas-check-pill--emerald firmas-check-pill--compact"><input type="checkbox" id="chkValSelfieVozConsentimiento"/> 🎙️ Validación Extra por Voz + Frase</label>
                 <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkValRequierePinOtp"/> 🔐 Confirmar con PIN por WhatsApp (2FA)</label>
               </div>
 

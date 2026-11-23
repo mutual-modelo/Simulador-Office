@@ -691,6 +691,9 @@
   function actualizarDatoFirmanteGenerador(idx, prop, val) {
     if (state.firmantesGenerar[idx]) {
       state.firmantesGenerar[idx][prop] = val;
+      if (idx === 0 && (prop === 'nombre' || prop === 'dni')) {
+        actualizarPreviewFraseVozGenerador();
+      }
     }
   }
 
@@ -734,14 +737,148 @@
   }
 
   function combinarValidacionesPaquete(tplsList) {
-    const res = { firma_olografa: true, tapar_resaltados: true };
+    const res = { firma_olografa: true, declaracion_uif: true, tapar_resaltados: true };
     (tplsList || []).forEach((t) => {
       const v = t.validaciones_json || {};
-      ['dni_frente_dorso', 'selfie_liveness', 'gps_obligatorio', 'requiere_sello_png', 'requiere_pin_otp'].forEach((k) => {
+      ['dni_frente_dorso', 'selfie_liveness', 'selfie_voz_consentimiento', 'gps_obligatorio', 'requiere_sello_png', 'requiere_pin_otp'].forEach((k) => {
         if (v[k]) res[k] = true;
       });
+      if (v.declaracion_uif === false) res.declaracion_uif = false;
+      if (v.firma_olografa === false) res.firma_olografa = false;
       if (v.tapar_resaltados === false) res.tapar_resaltados = false;
     });
+    if (res.selfie_voz_consentimiento) res.selfie_liveness = true;
+    return res;
+  }
+
+  const FIRMA_PRESETS_MODULARES = {
+    pdf_std: { requiere_pdf: true, declaracion_uif: true, dni_frente_dorso: false, selfie_liveness: false, selfie_voz_consentimiento: false, firma_olografa: true, gps_obligatorio: false, requiere_pin_otp: false, tituloSinPdf: 'Documento AMMER' },
+    pdf_voz: { requiere_pdf: true, declaracion_uif: true, dni_frente_dorso: true, selfie_liveness: true, selfie_voz_consentimiento: true, firma_olografa: true, gps_obligatorio: true, requiere_pin_otp: false, tituloSinPdf: 'Ayuda Económica con Validación Reforzada' },
+    solo_dni: { requiere_pdf: false, declaracion_uif: false, dni_frente_dorso: true, selfie_liveness: false, selfie_voz_consentimiento: false, firma_olografa: false, gps_obligatorio: false, requiere_pin_otp: false, tituloSinPdf: 'Validación Documental (Solo DNI)' },
+    id_voz: { requiere_pdf: false, declaracion_uif: false, dni_frente_dorso: true, selfie_liveness: true, selfie_voz_consentimiento: true, firma_olografa: false, gps_obligatorio: false, requiere_pin_otp: false, tituloSinPdf: 'Validación Biométrica de Identidad y Voz' },
+    dni_firma: { requiere_pdf: false, declaracion_uif: false, dni_frente_dorso: true, selfie_liveness: false, selfie_voz_consentimiento: false, firma_olografa: true, gps_obligatorio: false, requiere_pin_otp: false, tituloSinPdf: 'Validación DNI y Firma de Conformidad' },
+  };
+
+  function _sincronizarBotonesPresetFirmas(activeId) {
+    Object.keys(FIRMA_PRESETS_MODULARES).forEach((pid) => {
+      const btn = document.getElementById(`btnPresetFirma_${pid}`);
+      if (!btn) return;
+      btn.classList.remove('firmas-btn-navy', 'firmas-btn-soft-blue');
+      btn.classList.add(pid === activeId ? 'firmas-btn-navy' : 'firmas-btn-soft-blue');
+    });
+  }
+
+  function formatearMontoTextoSimpleEs(montoRaw) {
+    if (montoRaw === null || montoRaw === undefined || montoRaw === '') return '';
+    const num = Number(String(montoRaw).replace(/[^\d.-]/g, ''));
+    if (!Number.isFinite(num) || num <= 0) return '';
+    const val = Math.round(num);
+    if (val >= 1000000) {
+      const m = Math.floor(val / 1000000);
+      const rm = Math.floor((val % 1000000) / 1000);
+      const pref = m === 1 ? '1 millón' : `${m} millones`;
+      return rm > 0 ? `${pref} ${rm} mil pesos` : `${pref} de pesos`;
+    }
+    if (val >= 1000) {
+      const k = Math.floor(val / 1000);
+      const r = val % 1000;
+      return r >= 50 ? `${k} mil ${r} pesos` : `${k} mil pesos`;
+    }
+    return `${val} pesos`;
+  }
+
+  function actualizarPreviewFraseVozGenerador() {
+    const lbl = document.getElementById('lblPreviewFraseVoz');
+    if (!lbl) return;
+    const customEl = document.getElementById('inpFirmaVozCustom');
+    const customTxt = customEl ? String(customEl.value || '').trim() : '';
+    if (customTxt) {
+      lbl.textContent = `"${customTxt}"`;
+      return;
+    }
+    const exp = getExpedienteSeleccionadoEnGenerador();
+    const ctx = construirContextoDesdeExpediente(exp);
+    const f1 = state.firmantesGenerar[0] || {};
+    const nombre = String(f1.nombre || ctx.solicitante.nombre || 'Nombre y Apellido').trim() || 'Nombre y Apellido';
+    const dniDigits = String(f1.dni || ctx.solicitante.dni || '').replace(/\D/g, '');
+    const cod3 = dniDigits.length >= 3 ? dniDigits.slice(-3) : (dniDigits ? dniDigits.padStart(3, '0') : '000');
+    const entEl = document.getElementById('selFirmaVozEntidad');
+    const entidad = (entEl && entEl.value) ? entEl.value : 'FEDEM / Mutual Modelo';
+    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const hoy = new Date();
+    const fechaTxt = `${hoy.getDate()} de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()}`;
+    const prest = ctx.prestamo || {};
+    const montoTxt = formatearMontoTextoSimpleEs(prest.monto);
+    const cuotasNum = Math.round(Number(prest.cuotas || 0));
+    if (montoTxt && cuotasNum > 0) {
+      const cTxt = cuotasNum === 1 ? '1 cuota' : `${cuotasNum} cuotas`;
+      lbl.textContent = `"Soy ${nombre}, hoy ${fechaTxt}, confirmo y acepto ante ${entidad} esta solicitud de ayuda económica por ${montoTxt} en ${cTxt}. Código ${cod3}."`;
+    } else {
+      lbl.textContent = `"Soy ${nombre}, hoy ${fechaTxt}, confirmo mi identidad y autorizo este trámite ante ${entidad}. Código ${cod3}."`;
+    }
+  }
+
+  function aplicarPresetValidacionFirmas(presetId) {
+    const p = FIRMA_PRESETS_MODULARES[presetId] || FIRMA_PRESETS_MODULARES.pdf_std;
+    state.genPresetId = presetId;
+    const setC = (id, v) => { const el = document.getElementById(id); if (el) el.checked = Boolean(v); };
+    setC('chkGenReqPdf', p.requiere_pdf);
+    setC('chkGenReqUif', p.declaracion_uif);
+    setC('chkGenReqDni', p.dni_frente_dorso);
+    setC('chkGenReqSelfie', p.selfie_liveness || p.selfie_voz_consentimiento);
+    setC('chkGenReqVoz', p.selfie_voz_consentimiento);
+    setC('chkGenReqFirma', p.firma_olografa);
+    setC('chkGenReqGps', p.gps_obligatorio);
+    setC('chkGenReqPin', p.requiere_pin_otp);
+    const inpTit = document.getElementById('inpFirmaTituloSinPdf');
+    if (inpTit && !p.requiere_pdf) inpTit.value = p.tituloSinPdf || 'Validación de Identidad AMMER';
+    _sincronizarBotonesPresetFirmas(presetId);
+    renderCamposCompletarFormulario();
+  }
+
+  function onToggleValidacionGenerador() {
+    const elVoz = document.getElementById('chkGenReqVoz');
+    const elSelfie = document.getElementById('chkGenReqSelfie');
+    if (elVoz && elVoz.checked && elSelfie && !elSelfie.checked) {
+      elSelfie.checked = true;
+    }
+    state.genPresetId = 'custom';
+    _sincronizarBotonesPresetFirmas('');
+    renderCamposCompletarFormulario();
+  }
+
+  function obtenerValidacionesGenerador(tplsOpt) {
+    const getC = (id, def) => {
+      const el = document.getElementById(id);
+      return el ? Boolean(el.checked) : def;
+    };
+    const reqPdf = getC('chkGenReqPdf', true);
+    const tpls = reqPdf ? (tplsOpt || obtenerPlantillasSeleccionadasGenerador()) : [];
+    const baseTpl = reqPdf ? combinarValidacionesPaquete(tpls) : { tapar_resaltados: true };
+
+    const reqVoz = getC('chkGenReqVoz', false) || Boolean(baseTpl.selfie_voz_consentimiento);
+    const reqSelfie = getC('chkGenReqSelfie', false) || reqVoz || Boolean(baseTpl.selfie_liveness);
+    const entEl = document.getElementById('selFirmaVozEntidad');
+    const custEl = document.getElementById('inpFirmaVozCustom');
+
+    const res = {
+      modo_tramite: reqPdf ? 'firma_pdf' : 'solo_identidad',
+      requiere_pdf: reqPdf,
+      declaracion_uif: getC('chkGenReqUif', reqPdf),
+      dni_frente_dorso: getC('chkGenReqDni', false) || Boolean(baseTpl.dni_frente_dorso),
+      selfie_liveness: reqSelfie,
+      selfie_voz_consentimiento: reqVoz,
+      firma_olografa: getC('chkGenReqFirma', reqPdf),
+      gps_obligatorio: getC('chkGenReqGps', false) || Boolean(baseTpl.gps_obligatorio),
+      requiere_pin_otp: getC('chkGenReqPin', false) || Boolean(baseTpl.requiere_pin_otp),
+      requiere_sello_png: reqPdf ? Boolean(baseTpl.requiere_sello_png) : false,
+      tapar_resaltados: reqPdf ? (baseTpl.tapar_resaltados !== false) : true,
+    };
+    if (reqVoz) {
+      res.entidad_voz = (entEl && entEl.value) ? entEl.value : 'FEDEM / Mutual Modelo';
+      const cTxt = custEl ? String(custEl.value || '').trim() : '';
+      if (cTxt) res.frase_voz_personalizada = cTxt;
+    }
     return res;
   }
 
@@ -751,7 +888,23 @@
     const selloWrap = document.getElementById('firmaSelloInstitucionalWrap');
     if (!cont) return;
 
-    const tpls = obtenerPlantillasSeleccionadasGenerador();
+    const reqPdfChk = document.getElementById('chkGenReqPdf');
+    const reqPdfFlag = reqPdfChk ? Boolean(reqPdfChk.checked) : true;
+    const tpls = reqPdfFlag ? obtenerPlantillasSeleccionadasGenerador() : [];
+    const vals = obtenerValidacionesGenerador(tpls);
+
+    const cardTpl = document.getElementById('firmaStepCardPlantilla');
+    const accPaq = document.getElementById('firmaPaqueteAccordion');
+    const wrapTitSinPdf = document.getElementById('firmaTituloSinPdfWrap');
+    const wrapVoz = document.getElementById('firmaVozConfigBox');
+    if (cardTpl) {
+      cardTpl.style.opacity = vals.requiere_pdf ? '1' : '0.45';
+      cardTpl.style.pointerEvents = vals.requiere_pdf ? '' : 'none';
+    }
+    if (accPaq) accPaq.style.display = vals.requiere_pdf ? '' : 'none';
+    if (wrapTitSinPdf) wrapTitSinPdf.style.display = vals.requiere_pdf ? 'none' : 'block';
+    if (wrapVoz) wrapVoz.style.display = vals.selfie_voz_consentimiento ? 'block' : 'none';
+
     const exp = getExpedienteSeleccionadoEnGenerador();
     const wrapVinc = document.getElementById('wrapChkFirmaMostrarVerValidacion');
     if (wrapVinc) {
@@ -759,12 +912,8 @@
     }
     const ctx = construirContextoDesdeExpediente(exp);
     renderFirmantesGenerar(ctx);
-
-    if (tpls.length === 0) {
-      if (selloWrap) selloWrap.style.display = 'none';
-      cont.innerHTML = '<div style="padding:1.4rem;text-align:center;color:#64748b;font-size:0.84rem;background:#f8fafc;border-radius:12px;border:1.5px dashed #cbd5e1;">Seleccioná una plantilla arriba (o cargá tus PDFs en el <strong>Editor Visual de Plantillas PDF</strong> si todavía no creaste ninguna).</div>';
-      if (badgeVal) badgeVal.innerHTML = '';
-      return;
+    if (vals.selfie_voz_consentimiento) {
+      actualizarPreviewFraseVozGenerador();
     }
 
     const todosCampos = [];
@@ -774,27 +923,39 @@
       });
     });
 
-    const vals = combinarValidacionesPaquete(tpls);
     const usaSello = Boolean(vals.requiere_sello_png) || todosCampos.some(({ campo }) => String(campo.tipo || '').toLowerCase() === 'sello');
-    if (selloWrap) selloWrap.style.display = usaSello ? 'block' : 'none';
+    if (selloWrap) selloWrap.style.display = (vals.requiere_pdf && usaSello) ? 'block' : 'none';
     renderPreviewSelloPng();
 
     if (badgeVal) {
       const chips = [];
-      if (tpls.length > 1) chips.push(`📦 Paquete unificado: ${tpls.length} PDFs`);
+      if (!vals.requiere_pdf) chips.push('📄 Trámite sin PDF previo (Constancia AMMER)');
+      else if (tpls.length > 1) chips.push(`📦 Paquete unificado: ${tpls.length} PDFs`);
       chips.push(`👥 ${state.firmantesGenerar.length} ${state.firmantesGenerar.length === 1 ? 'firmante' : 'firmantes requeridos'}`);
-      if (usaSello) chips.push('🏛️ Sello Institucional PNG');
-      if (vals.firma_olografa !== false) chips.push('✍️ Firma manuscrita');
-      if (vals.gps_obligatorio) chips.push('📍 GPS');
-      if (vals.tapar_resaltados !== false) chips.push('🧹 Limpia resaltados amarillos');
+      if (vals.declaracion_uif) chips.push('📋 DDJJ UIF');
       if (vals.dni_frente_dorso) chips.push('🪪 DNI Frente y Dorso');
-      if (vals.selfie_liveness) chips.push('🤳 Selfie Liveness + Cotejo Facial');
-      if (vals.requiere_pin_otp) chips.push('🔐 PIN 2FA (4 dígitos)');
+      if (vals.selfie_liveness) chips.push('🤳 Selfie Liveness');
+      if (vals.selfie_voz_consentimiento) chips.push('🎙️ Voz + Frase Dinámica');
+      if (vals.firma_olografa) chips.push('✍️ Firma manuscrita');
+      if (vals.gps_obligatorio) chips.push('📍 GPS');
+      if (vals.requiere_pin_otp) chips.push('🔐 PIN 2FA');
+      if (vals.requiere_pdf && usaSello) chips.push('🏛️ Sello Institucional PNG');
+      if (vals.requiere_pdf && vals.tapar_resaltados !== false) chips.push('🧹 Limpia resaltados');
       badgeVal.innerHTML = chips.map((c) => `<span style="display:inline-flex;align-items:center;gap:4px;font-size:0.72rem;font-weight:700;padding:4px 10px;border-radius:9999px;background:#eff6ff;color:#0f2744;border:1px solid #bfdbfe;">${escHtml(c)}</span>`).join(' ');
     }
 
     const inpWa = document.getElementById('inpFirmaTelefonoWa');
     if (inpWa && ctx.solicitante.telefono) inpWa.value = ctx.solicitante.telefono;
+
+    if (!vals.requiere_pdf) {
+      cont.innerHTML = '<div style="padding:1.15rem;text-align:center;color:#0f2744;font-size:0.84rem;background:#f0fdf4;border-radius:12px;border:1.5px solid #86efac;">✅ <strong>Validación modular sin PDF previo:</strong> no necesitás elegir plantilla. Al emitir el enlace, se generará una Constancia Probatoria A4 AMMER con las validaciones marcadas arriba.</div>';
+      return;
+    }
+
+    if (tpls.length === 0) {
+      cont.innerHTML = '<div style="padding:1.4rem;text-align:center;color:#64748b;font-size:0.84rem;background:#f8fafc;border-radius:12px;border:1.5px dashed #cbd5e1;">Seleccioná una plantilla arriba (o desmarcá <strong>📄 Con documento PDF</strong> para solicitar solo identidad).</div>';
+      return;
+    }
 
     const camposEditables = todosCampos.filter(({ campo }) =>
       campo.tipo !== 'firma' && campo.tipo !== 'sello' && campo.tipo !== 'borrador' && campo.origen_campo !== 'campo_vacio'
@@ -857,6 +1018,11 @@
   }
 
   async function previsualizarPdfGenerado(usarFirmaPrueba) {
+    const valsPre = obtenerValidacionesGenerador();
+    if (valsPre.requiere_pdf === false) {
+      notify('Las validaciones sin PDF previo generan su Constancia Probatoria A4 automáticamente al emitir el enlace.', 'info');
+      return;
+    }
     const tpls = obtenerPlantillasSeleccionadasGenerador();
     if (tpls.length === 0) {
       notify('Seleccioná al menos una plantilla PDF primero.', 'warning');
@@ -868,7 +1034,7 @@
     const firmaPrueba = usarFirmaPrueba && state.canvasFirmaPrueba.hasInk
       ? document.getElementById('canvasFirmaPruebaPresencial').toDataURL('image/png')
       : null;
-    const vals = combinarValidacionesPaquete(tpls);
+    const vals = obtenerValidacionesGenerador(tpls);
 
     notify(tpls.length > 1 ? `Generando vista previa consolidada del paquete (${tpls.length} PDFs)...` : 'Generando vista previa del PDF estampado...', 'info');
     try {
@@ -922,14 +1088,20 @@
   }
 
   async function generarEnlaceFirmaMovil() {
-    const tpls = obtenerPlantillasSeleccionadasGenerador();
-    if (tpls.length === 0) {
-      notify('Seleccioná al menos una plantilla PDF primero.', 'warning');
+    const valsBase = obtenerValidacionesGenerador();
+    const esSinPdf = valsBase.requiere_pdf === false;
+    const tpls = esSinPdf ? [] : obtenerPlantillasSeleccionadasGenerador();
+    if (!esSinPdf && tpls.length === 0) {
+      notify('Seleccioná al menos una plantilla PDF primero (o desmarcá "Con documento PDF" para trámite modular).', 'warning');
       return;
     }
-    const tpl = tpls[0];
-    const vals = combinarValidacionesPaquete(tpls);
-    if (vals.requiere_sello_png && !state.selloPngBase64) {
+    const vals = obtenerValidacionesGenerador(tpls);
+    if (esSinPdf && !vals.dni_frente_dorso && !vals.selfie_liveness && !vals.selfie_voz_consentimiento && !vals.declaracion_uif && !vals.firma_olografa) {
+      notify('Activá al menos una validación (DNI, Selfie, Voz, UIF o Firma) para generar la solicitud sin PDF.', 'warning');
+      return;
+    }
+    const tpl = tpls[0] || null;
+    if (!esSinPdf && vals.requiere_sello_png && !state.selloPngBase64) {
       notify('Esta plantilla/paquete requiere subir la imagen PNG del Sello Oficial Institucional antes de generar el enlace.', 'warning');
       return;
     }
@@ -951,24 +1123,34 @@
       orden: idx + 1,
     }));
 
-    const nombreDocLabel = tpls.length > 1
-      ? `Paquete (${tpls.length} docs): ${tpls.map((t) => t.nombre).slice(0, 3).join(' + ')}`
-      : tpl.nombre;
+    const inpTitSinPdf = document.getElementById('inpFirmaTituloSinPdf');
+    const tituloSinPdf = (inpTitSinPdf && inpTitSinPdf.value.trim()) || 'Validación de Identidad AMMER';
+    const nombreDocLabel = esSinPdf
+      ? tituloSinPdf
+      : (tpls.length > 1
+        ? `Paquete (${tpls.length} docs): ${tpls.map((t) => t.nombre).slice(0, 3).join(' + ')}`
+        : tpl.nombre);
 
-    notify(tpls.length > 1 ? `Generando paquete unificado (${tpls.length} PDFs)...` : 'Generando enlace(s) seguro(s) de firma 24hs...', 'info');
+    notify(
+      esSinPdf
+        ? 'Generando enlace seguro de validación modular (24hs)...'
+        : (tpls.length > 1 ? `Generando paquete unificado (${tpls.length} PDFs)...` : 'Generando enlace(s) seguro(s) de firma 24hs...'),
+      'info'
+    );
     try {
       const res = await apiFetchJson('/api/firmas/solicitudes', {
         method: 'POST',
         body: JSON.stringify({
-          plantilla_id: tpl.id,
+          plantilla_id: tpl ? tpl.id : null,
           plantillas_ids: tpls.map((t) => t.id),
-          plantilla_nombre: tpls.length > 1 ? nombreDocLabel : tpl.nombre,
+          plantilla_nombre: nombreDocLabel,
+          validaciones: vals,
           expediente_id: exp ? String(exp.id_definitivo || exp.id_provisorio || exp.id) : null,
           dni_solicitante: firmantesPayload[0].dni || ctx.solicitante.dni || '',
           nombre_solicitante: firmantesPayload[0].nombre || ctx.solicitante.nombre || 'Asociado/a',
           telefono_whatsapp: firmantesPayload[0].telefono || telWa,
           contexto: ctx,
-          selloPngBase64: state.selloPngBase64 || null,
+          selloPngBase64: (!esSinPdf && state.selloPngBase64) ? state.selloPngBase64 : null,
           firmantes: firmantesPayload,
           orden_secuencial: ordenSecuencial,
           enviar_whatsapp_auto: enviarWaAuto,
@@ -1916,11 +2098,63 @@
                 return kpiItem('Cotejo Firma (DNI vs Trazo)', cfTxt, cfBg, cfCol);
               })()}
               ${kpiItem('Prueba de Vida (Liveness)', ek && ek.liveness_ok === true ? 'Aprobada' : (ek && ek.liveness_ok === false ? 'Observada' : 'No ejecutada'))}
+              ${(() => {
+                const vv = (ek && ek.voz_validacion) || null;
+                const reqVoz = Boolean((r.validaciones_requeridas_json || {}).selfie_voz_consentimiento || vv);
+                if (!reqVoz) return '';
+                if (!vv) return kpiItem('Voz + Frase Dinámica', 'Solicitada (pendiente)', '#fffbeb', '#92400e');
+                const pctV = vv.coincidencia_frase_pct;
+                const okV = vv.audio_presente !== false && !vv.posible_coaccion_o_spoofing && vv.lipsync_coherente !== false && vv.codigo_dicho_ok !== false && (pctV == null || pctV >= 60);
+                const txtV = vv.audio_presente === false
+                  ? 'Sin audio (revisión)'
+                  : (pctV != null ? `${pctV}% frase · ${vv.codigo_dicho_ok === false ? 'Cód. obs.' : 'Cód. OK'}` : 'Resguardada');
+                return kpiItem('Voz + Frase Dinámica', txtV, okV ? '#f0fdf4' : '#fef2f2', okV ? '#166534' : '#b91c1c');
+              })()}
               ${kpiItem('Código DNI (PDF417 / QR)', codKpiTxt)}
               ${kpiItem('Validación RENAPER (Asesor)', ejManKpi, ejManBg, ejManCol)}
               ${kpiItem('Boletín Oficial Entre Ríos', bo.consultado ? (bo.tiene_alerta_critica ? `⚠️ ${bo.total_resultados || 0} alerta(s)` : `Limpio (${bo.total_resultados || 0} menc.)`) : 'No consultado', bo.tiene_alerta_critica ? '#fef2f2' : '#f0fdf4', bo.tiene_alerta_critica ? '#b91c1c' : '#166534')}
               ${kpiItem('CajaJPER Entre Ríos', cj.consultado ? `${cj.cantidad_expedientes || 0} expediente(s)` : 'No consultado')}
             </div>
+
+            ${(() => {
+              const valsR = r.validaciones_requeridas_json || {};
+              if (valsR.requiere_pdf !== false && valsR.firma_olografa !== false) return '';
+              return `
+                <div style="margin-bottom:0.85rem;background:#eff6ff;border:1px solid #bfdbfe;border-radius:11px;padding:0.6rem 0.9rem;font-size:0.77rem;color:#1e3a8a;display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+                  <strong>🎛️ Trámite modular:</strong>
+                  ${valsR.requiere_pdf === false ? '<span style="background:#ffffff;border:1px solid #bfdbfe;padding:2px 8px;border-radius:999px;font-weight:700;">📄 Constancia generada sin PDF previo</span>' : ''}
+                  ${valsR.firma_olografa === false ? '<span style="background:#ffffff;border:1px solid #bfdbfe;padding:2px 8px;border-radius:999px;font-weight:700;">🪪 Validación sin firma ológrafa requerida</span>' : ''}
+                  ${valsR.declaracion_uif === false ? '<span style="background:#ffffff;border:1px solid #bfdbfe;padding:2px 8px;border-radius:999px;font-weight:700;">Sin DDJJ UIF</span>' : ''}
+                </div>
+              `;
+            })()}
+
+            ${(() => {
+              const vv = (ek && ek.voz_validacion) || null;
+              if (!vv) return '';
+              const pctV = vv.coincidencia_frase_pct;
+              const lsTxt = vv.lipsync_coherente === true ? '✅ Coherente' : (vv.lipsync_coherente === false ? '⛔ Desincronizado' : '—');
+              const codTxtV = vv.codigo_dicho_ok === true ? '✅ Verificado' : (vv.codigo_dicho_ok === false ? '⛔ No coincide' : '—');
+              const spoTxt = vv.posible_coaccion_o_spoofing ? '⛔ Alerta coacción / playback' : '✅ Sin señales';
+              return `
+                <div class="firmas-section-box" style="margin-bottom:1rem;background:#f0fdf4;border-color:#86efac;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.45rem;">
+                    <strong style="font-size:0.83rem;color:#065f46;">🎙️ Validación Extra por Voz + Sincronización Labial (Lip-Sync)</strong>
+                    ${pctV != null ? `<span style="font-size:0.72rem;font-weight:800;padding:2px 9px;border-radius:999px;background:#ffffff;border:1px solid #86efac;color:${pctV >= 65 ? '#166534' : '#b91c1c'};">Coincidencia: ${pctV}%</span>` : ''}
+                  </div>
+                  <div style="font-size:0.77rem;color:#1e293b;display:flex;flex-direction:column;gap:0.35rem;">
+                    ${vv.frase_esperada ? `<div><strong>Frase esperada:</strong> <em>"${escHtml(vv.frase_esperada)}"</em></div>` : ''}
+                    <div><strong>Transcripción detectada:</strong> ${vv.transcripcion ? `"${escHtml(vv.transcripcion)}"` : '<span style="color:#64748b;">(No transcripta / sin audio)</span>'}</div>
+                    <div style="display:flex;gap:0.8rem;flex-wrap:wrap;font-size:0.75rem;margin-top:2px;">
+                      <span><strong>Código DNI:</strong> ${codTxtV}</span>
+                      <span><strong>Lip-Sync:</strong> ${lsTxt}</span>
+                      <span><strong>Integridad audio:</strong> ${spoTxt}</span>
+                    </div>
+                    ${vv.observaciones ? `<div style="font-size:0.74rem;color:#475569;"><strong>Obs.:</strong> ${escHtml(vv.observaciones)}</div>` : ''}
+                  </div>
+                </div>
+              `;
+            })()}
 
             ${(() => {
               const cf = (ek && ek.cotejo_firma) || r.cotejo_firma || {};
@@ -2383,11 +2617,13 @@
       setVal('inpEditPlantillaDesc', tpl.descripcion || '');
       const vals = tpl.validaciones_json || {};
       setChk('chkValFirmaOlografa', vals.firma_olografa !== false);
+      setChk('chkValDeclaracionUif', vals.declaracion_uif !== false);
       setChk('chkValTaparResaltados', vals.tapar_resaltados !== false);
       setChk('chkValRequiereSelloPng', vals.requiere_sello_png);
       setChk('chkValGpsObligatorio', vals.gps_obligatorio);
       setChk('chkValDniFrenteDorso', vals.dni_frente_dorso);
       setChk('chkValSelfieLiveness', vals.selfie_liveness);
+      setChk('chkValSelfieVozConsentimiento', vals.selfie_voz_consentimiento);
       setChk('chkValRequierePinOtp', vals.requiere_pin_otp);
 
       await cargarPdfEnCanvasEditor(res.pdfBase64, 1);
@@ -3317,11 +3553,13 @@
     setVal('inpEditPlantillaDesc', '');
     setVal('inpBuscarCampoEditor', '');
     setChk('chkValFirmaOlografa', true);
+    setChk('chkValDeclaracionUif', true);
     setChk('chkValTaparResaltados', true);
     setChk('chkValRequiereSelloPng', false);
     setChk('chkValGpsObligatorio', false);
     setChk('chkValDniFrenteDorso', false);
     setChk('chkValSelfieLiveness', false);
+    setChk('chkValSelfieVozConsentimiento', false);
     setChk('chkValRequierePinOtp', false);
     setChk('chkEditorVistaLimpia', false);
     setChk('chkEditorGrillaSnap', false);
@@ -3391,11 +3629,13 @@
       campos: state.editor.campos,
       validaciones: {
         firma_olografa: chk('chkValFirmaOlografa', true),
+        declaracion_uif: chk('chkValDeclaracionUif', true),
         tapar_resaltados: chk('chkValTaparResaltados', true),
         requiere_sello_png: chk('chkValRequiereSelloPng', false),
         gps_obligatorio: chk('chkValGpsObligatorio', false),
         dni_frente_dorso: chk('chkValDniFrenteDorso', false),
-        selfie_liveness: chk('chkValSelfieLiveness', false),
+        selfie_liveness: chk('chkValSelfieLiveness', false) || chk('chkValSelfieVozConsentimiento', false),
+        selfie_voz_consentimiento: chk('chkValSelfieVozConsentimiento', false),
         requiere_pin_otp: chk('chkValRequierePinOtp', false),
       },
       activa: true,
@@ -4781,4 +5021,7 @@
   global.cargarIndiceFirmasPorExpediente = cargarIndiceFirmasPorExpediente;
   global.obtenerFirmaVinculadaAExpediente = obtenerFirmaVinculadaAExpediente;
   global.abrirValidacionFirmaExpediente = abrirValidacionFirmaExpediente;
+  global.aplicarPresetValidacionFirmas = aplicarPresetValidacionFirmas;
+  global.onToggleValidacionGenerador = onToggleValidacionGenerador;
+  global.actualizarPreviewFraseVozGenerador = actualizarPreviewFraseVozGenerador;
 })(window);

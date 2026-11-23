@@ -1,5 +1,30 @@
 const RENAPER_URL = 'https://tramites.renaper.gob.ar/mi_ejemplar/';
 const SESSION_KEY = 'ammerSplitTabPairs';
+const ALLOWED_SPLIT_HOSTS = [
+  'tramites.renaper.gob.ar',
+  'drive.google.com',
+  'docs.google.com',
+  'accounts.google.com',
+  'mutual-modelo.github.io',
+  'prestamos-v504.gya.com.ar',
+  'servicios.entrerios.gov.ar',
+  'entrerios.gov.ar',
+  'localhost',
+  '127.0.0.1'
+];
+
+function esUrlSplitPermitida(rawUrl) {
+  try {
+    const parsed = new URL(rawUrl);
+    if (parsed.protocol !== 'https:' && parsed.hostname !== 'localhost' && parsed.hostname !== '127.0.0.1') {
+      return false;
+    }
+    const host = parsed.hostname.toLowerCase();
+    return ALLOWED_SPLIT_HOSTS.some((h) => host === h || host.endsWith('.' + h));
+  } catch (_e) {
+    return false;
+  }
+}
 
 async function getTabPairs() {
   try {
@@ -22,8 +47,8 @@ async function abrirEnSplitView(senderTab, payload, targetUrl) {
     throw new Error('No se pudo identificar la pestaña de Simulador-Office.');
   }
   const destUrl = String(targetUrl || (payload && payload.url) || RENAPER_URL).trim();
-  if (!/^https?:\/\//i.test(destUrl)) {
-    throw new Error('URL inválida para vista dividida.');
+  if (!/^https?:\/\//i.test(destUrl) || !esUrlSplitPermitida(destUrl)) {
+    throw new Error('Dominio no autorizado para abrir desde la extensión AMMER.');
   }
 
   if (destUrl.includes('tramites.renaper.gob.ar')) {

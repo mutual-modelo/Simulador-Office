@@ -1663,12 +1663,12 @@
 
         <div id="boxPinOtpFirma" style="display:none;margin:0.6rem 0;padding:0.68rem 0.85rem;border-radius:11px;background:#f5f3ff;border:1.5px solid #c4b5fd;">
           <label for="inpPinOtpFirma" style="display:block;font-size:0.88rem;font-weight:800;color:#5b21b6;margin-bottom:3px;">
-            🔐 Código de seguridad de 4 números
+            🔐 Código de seguridad (6 números)
           </label>
           <div style="font-size:0.8rem;color:#6d28d9;margin-bottom:0.4rem;">
-            Escribí el código de 4 números que te enviamos por WhatsApp.
+            Escribí el código numérico de seguridad que te enviamos por WhatsApp.
           </div>
-          <input type="text" id="inpPinOtpFirma" inputmode="numeric" maxlength="4" autocomplete="one-time-code" placeholder="0000" style="width:150px;padding:0.45rem 0.7rem;border:2px solid #8b5cf6;border-radius:9px;font-size:1.2rem;font-weight:800;letter-spacing:7px;text-align:center;color:#4c1d95;background:#ffffff;"/>
+          <input type="text" id="inpPinOtpFirma" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" style="width:185px;padding:0.45rem 0.7rem;border:2px solid #8b5cf6;border-radius:9px;font-size:1.2rem;font-weight:800;letter-spacing:6px;text-align:center;color:#4c1d95;background:#ffffff;"/>
         </div>
 
         <label class="consent-label">
@@ -1741,8 +1741,8 @@
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js" integrity="sha384-BzBxP10ZE72aitqj5UMmUsbKFliP/DZqA8Wq+BNNhlIJDGoEd1tpkMYXOg9+n6sB" crossorigin="anonymous"></script>
   <script>
     (function () {
       'use strict';
@@ -3557,8 +3557,8 @@
         if (appState.requierePinOtp) {
           const inpPin = document.getElementById('inpPinOtpFirma');
           pinOtpVal = String((inpPin && inpPin.value) || '').replace(/\D/g, '');
-          if (pinOtpVal.length !== 4) {
-            mostrarErrorEnPaso('Escribí los 4 números del código de seguridad que recibiste por WhatsApp.');
+          if (pinOtpVal.length !== 6 && pinOtpVal.length !== 4) {
+            mostrarErrorEnPaso('Escribí los 6 números del código de seguridad que recibiste por WhatsApp.');
             if (inpPin) inpPin.focus();
             return;
           }

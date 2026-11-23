@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
   <style>
     /* ========================================================================
@@ -10423,6 +10423,16 @@ ${cierreTxt}`;
     }
 
     function handleLogout(motivoPersonalizado) {
+      try {
+        const tokPrev = (typeof getApiAuthToken === 'function') ? getApiAuthToken() : '';
+        if (tokPrev && typeof RENDER_API_URL === 'string' && RENDER_API_URL.startsWith('http') && !RENDER_API_URL.includes('[TU_API]')) {
+          fetch(`${RENDER_API_URL}/api/auth/logout`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${tokPrev}` },
+            keepalive: true
+          }).catch(() => {});
+        }
+      } catch (_) {}
       cerrarModalAvisoInactividad();
       window._motivoCierreAutomaticoPendiente = null;
       window._ultimoChequeoAuthMeTs = 0;
@@ -11818,7 +11828,7 @@ ${cierreTxt}`;
       } else if (esPdf) {
         if (toolbar) toolbar.style.display = 'none';
         if (docViewerContent) {
-          docViewerContent.innerHTML = '<iframe src="' + blobUrl + '" class="doc-viewer-frame" title="' + sanitizeHTML(file.name) + '"></iframe>';
+          docViewerContent.innerHTML = '<iframe src="' + blobUrl + '" class="doc-viewer-frame" sandbox="allow-scripts allow-same-origin allow-downloads" title="' + sanitizeHTML(file.name) + '"></iframe>';
         }
       } else {
         if (toolbar) toolbar.style.display = 'flex';
@@ -13813,23 +13823,6 @@ ${cierreTxt}`;
         }
       } catch (eR) {
         console.warn('Fallback Render /api/solicitudes no disponible:', eR);
-      }
-      try {
-        if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-          const ep = `${SUPABASE_URL}/rest/v1/solicitudes_ayudas?select=*,asociados(*)&order=created_at.desc&limit=150`;
-          const respSb = await fetchConTimeout(ep, {
-            method: 'GET',
-            headers: { 'apikey': SUPABASE_ANON_KEY }
-          }, 12000);
-          if (respSb && respSb.ok) {
-            const rowsSb = await respSb.json();
-            if (Array.isArray(rowsSb) && rowsSb.length > 0) {
-              return rowsSb.map(convertirFilaSupabaseASolicitudCRM).filter(Boolean);
-            }
-          }
-        }
-      } catch (eS) {
-        console.warn('Fallback directo Supabase no disponible:', eS);
       }
       return null;
     }
@@ -16625,7 +16618,7 @@ ${cierreTxt}`;
         if (toolbar) toolbar.style.display = 'none';
         const pdfBlobUrl = base64ToPdfObjectUrl(rawBase64);
         if (pdfBlobUrl) {
-          wrap.innerHTML = '<iframe src="' + sanitizeHTML(pdfBlobUrl) + '" class="doc-viewer-frame" title="' + sanitizeHTML(nombreDoc) + '"></iframe>';
+          wrap.innerHTML = '<iframe src="' + sanitizeHTML(pdfBlobUrl) + '" class="doc-viewer-frame" sandbox="allow-scripts allow-same-origin allow-downloads" title="' + sanitizeHTML(nombreDoc) + '"></iframe>';
           return;
         }
       }
@@ -16643,7 +16636,7 @@ ${cierreTxt}`;
               wrap.innerHTML = '<div class="doc-viewer-img-container"><img id="visorImageEl" src="' + sanitizeHTML(resProxy.objUrl) + '" class="doc-viewer-img" alt="' + sanitizeHTML(nombreDoc) + '"/></div>';
             } else {
               if (toolbar) toolbar.style.display = 'none';
-              wrap.innerHTML = '<iframe src="' + sanitizeHTML(resProxy.objUrl) + '" class="doc-viewer-frame" title="' + sanitizeHTML(nombreDoc) + '"></iframe>';
+              wrap.innerHTML = '<iframe src="' + sanitizeHTML(resProxy.objUrl) + '" class="doc-viewer-frame" sandbox="allow-scripts allow-same-origin allow-downloads" title="' + sanitizeHTML(nombreDoc) + '"></iframe>';
             }
             return;
           }

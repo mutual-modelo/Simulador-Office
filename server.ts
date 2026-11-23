@@ -38,15 +38,39 @@ const HOST = (cliHostIdx !== -1 && cliArgs[cliHostIdx + 1])
   ? cliArgs[cliHostIdx + 1]
   : (process.env.APP_HOST || '0.0.0.0');
 
-// Soporte para payloads con documentos e imágenes en Base64 + CORS institucional para despliegues estáticos
+// Soporte para payloads con documentos e imágenes en Base64 + CORS institucional configurable
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+const ALLOWED_ORIGINS_SERVER = (process.env.ALLOWED_ORIGINS || 'https://mutual-modelo.github.io,http://localhost:3000,http://127.0.0.1:3000')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  next();
+});
+
 app.use('/api', (req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  if (origin && ALLOWED_ORIGINS_SERVER.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Server-Secret');
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
+  }
+  const requiredSecret = (process.env.SERVER_API_SECRET || '').trim();
+  if (requiredSecret && req.path !== '/health') {
+    const provided = req.get('X-Server-Secret') || '';
+    if (provided !== requiredSecret) {
+      return res.status(401).json({ ok: false, error: 'No autorizado.' });
+    }
   }
   next();
 });

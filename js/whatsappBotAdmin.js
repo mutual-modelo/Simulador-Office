@@ -1,8 +1,8 @@
 // ============================================================================
-// MÓDULO ADMIN: CENTRO MULTI-LÍNEA Y MENSAJERÍA WHATSAPP COMPLETA AMMER
-// Exclusivo rol Admin: múltiples sesiones QR, apertura/cierre de sesión,
-// enrutamiento por acción y mensajería directa con fotos, archivos, audio y
-// botones de acción / respuestas predefinidas.
+// MÓDULO ADMIN: CENTRO MULTI-LÍNEA DUAL (QR + META CLOUD API) Y MENSAJERÍA AMMER
+// Exclusivo rol Admin: múltiples sesiones QR + líneas oficiales Meta Cloud API,
+// historial completo sincronizado, votos de encuestas/botones en vivo,
+// audios OGG/Opus, catálogo ampliado de emojis y pie de firma por asesor.
 // ============================================================================
 (function (global) {
   'use strict';
@@ -10,6 +10,8 @@
   const LS_RECENT_CHATS_KEY = 'AMMER_WA_RECENT_CHATS_V1';
   const LS_QUICK_REPLIES_KEY = 'AMMER_WA_QUICK_REPLIES_V1';
   const LS_LOCAL_MSGS_KEY = 'AMMER_WA_LOCAL_MSGS_V1';
+  const LS_EMOJI_RECENTS_KEY = 'AMMER_WA_EMOJI_RECENTS_V1';
+  const LS_FOOTER_CFG_KEY = 'AMMER_WA_FOOTER_CFG_V1';
   const MAX_ATTACHMENT_BYTES = 16 * 1024 * 1024;
 
   const DEFAULT_QUICK_REPLIES = [
@@ -50,24 +52,125 @@
     }
   ];
 
-  const QUICK_EMOJIS = ['✅', '👋', '📄', '🪪', '💳', '✍️', '💰', '📞', '📍', '⏰', '🙏', '🤝', '⚠️', '🎉', '👍', '📎'];
+  // Catálogo ampliado de emojis organizados por categoría con tags en español para buscador
+  const EMOJI_CATALOG = [
+    // AMMER / Oficina / Documentación / Finanzas
+    { e: '✅', c: 'oficina', k: 'ok listo aprobado check confirmado' },
+    { e: '📄', c: 'oficina', k: 'documento pdf archivo recibo' },
+    { e: '📃', c: 'oficina', k: 'pagina contrato hoja' },
+    { e: '📑', c: 'oficina', k: 'expediente legajo' },
+    { e: '🪪', c: 'oficina', k: 'dni documento identidad carnet' },
+    { e: '💳', c: 'oficina', k: 'tarjeta sidecreer credito debito' },
+    { e: '✍️', c: 'oficina', k: 'firma firmar lapicera' },
+    { e: '🖊️', c: 'oficina', k: 'boligrafo firmar' },
+    { e: '💰', c: 'oficina', k: 'dinero plata monto ayuda economica' },
+    { e: '💵', c: 'oficina', k: 'pesos billete efectivo' },
+    { e: '🏦', c: 'oficina', k: 'banco transferencia cbu alias' },
+    { e: '🧾', c: 'oficina', k: 'comprobante recibo ticket' },
+    { e: '📊', c: 'oficina', k: 'cuotas grafico tabla calculo' },
+    { e: '📈', c: 'oficina', k: 'sube disponible margen' },
+    { e: '📋', c: 'oficina', k: 'planilla solicitud formulario lista' },
+    { e: '📎', c: 'oficina', k: 'adjunto clip archivo' },
+    { e: '📁', c: 'oficina', k: 'carpeta expediente' },
+    { e: '💼', c: 'oficina', k: 'trabajo oficina empleo' },
+    { e: '🏢', c: 'oficina', k: 'sede mutual edificio' },
+    { e: '📍', c: 'oficina', k: 'ubicacion direccion mapa' },
+    { e: '📞', c: 'oficina', k: 'telefono llamar contacto' },
+    { e: '📲', c: 'oficina', k: 'celular whatsapp enlace' },
+    { e: '📧', c: 'oficina', k: 'mail correo electronico' },
+    { e: '🔐', c: 'oficina', k: 'pin clave seguridad codigo' },
+    { e: '🛡️', c: 'oficina', k: 'seguridad validacion proteccion' },
+    { e: '📸', c: 'oficina', k: 'foto camara selfie captura' },
+    { e: '🎙️', c: 'oficina', k: 'audio voz microfono' },
+    { e: '📅', c: 'oficina', k: 'fecha calendario turno vencimiento' },
+    { e: '⏰', c: 'oficina', k: 'hora horario reloj' },
+    { e: '⏳', c: 'oficina', k: 'espera proceso pendiente' },
+    { e: '🔍', c: 'oficina', k: 'buscar revisar auditar' },
+    { e: '🖨️', c: 'oficina', k: 'imprimir copia' },
+    // Caras y gestos
+    { e: '👋', c: 'caras', k: 'hola saludo mano chau' },
+    { e: '😊', c: 'caras', k: 'sonrisa amable feliz' },
+    { e: '😄', c: 'caras', k: 'alegre sonrisa' },
+    { e: '😃', c: 'caras', k: 'contento' },
+    { e: '🙂', c: 'caras', k: 'cordial' },
+    { e: '😉', c: 'caras', k: 'guiño' },
+    { e: '😁', c: 'caras', k: 'alegria' },
+    { e: '🤗', c: 'caras', k: 'abrazo cordial' },
+    { e: '🫡', c: 'caras', k: 'recibido orden' },
+    { e: '🤔', c: 'caras', k: 'duda consulta pensar' },
+    { e: '🧐', c: 'caras', k: 'revisando detalle lupa' },
+    { e: '😌', c: 'caras', k: 'tranquilo alivio' },
+    { e: '🙏', c: 'caras', k: 'gracias por favor' },
+    { e: '🤝', c: 'caras', k: 'acuerdo trato mutual' },
+    { e: '👍', c: 'caras', k: 'ok bien pulgar' },
+    { e: '👌', c: 'caras', k: 'perfecto' },
+    { e: '👏', c: 'caras', k: 'aplauso felicitaciones' },
+    { e: '🙌', c: 'caras', k: 'excelente celebrar' },
+    { e: '💪', c: 'caras', k: 'fuerza avance' },
+    { e: '🫶', c: 'caras', k: 'corazon cuidado' },
+    { e: '👆', c: 'caras', k: 'arriba mirar' },
+    { e: '👇', c: 'caras', k: 'abajo enlace link' },
+    { e: '👉', c: 'caras', k: 'aqui ver esto' },
+    { e: '✋', c: 'caras', k: 'esperar alto' },
+    { e: '🎉', c: 'caras', k: 'festejo aprobado acreditado' },
+    { e: '🥳', c: 'caras', k: 'aprobado celebracion' },
+    { e: '🌟', c: 'caras', k: 'destacado estrella' },
+    { e: '💯', c: 'caras', k: 'cien completo' },
+    // Símbolos y alertas
+    { e: '⚠️', c: 'simbolos', k: 'atencion alerta advertencia' },
+    { e: '❗', c: 'simbolos', k: 'importante urgente' },
+    { e: '❓', c: 'simbolos', k: 'pregunta consulta duda' },
+    { e: 'ℹ️', c: 'simbolos', k: 'informacion ayuda' },
+    { e: '❌', c: 'simbolos', k: 'no cancelar error rechazado' },
+    { e: '⭕', c: 'simbolos', k: 'circulo' },
+    { e: '🟢', c: 'simbolos', k: 'verde activo habilitado' },
+    { e: '🟡', c: 'simbolos', k: 'amarillo pendiente proceso' },
+    { e: '🔵', c: 'simbolos', k: 'azul info' },
+    { e: '🔴', c: 'simbolos', k: 'rojo urgente' },
+    { e: '☑️', c: 'simbolos', k: 'marcado completo' },
+    { e: '🔘', c: 'simbolos', k: 'opcion elegir boton' },
+    { e: '🔔', c: 'simbolos', k: 'notificacion aviso recordatorio' },
+    { e: '📢', c: 'simbolos', k: 'anuncio comunicado' },
+    { e: '🔗', c: 'simbolos', k: 'link enlace url' },
+    { e: '➡️', c: 'simbolos', k: 'siguiente continuar flecha' },
+    { e: '⬆️', c: 'simbolos', k: 'subir arriba' },
+    { e: '⬇️', c: 'simbolos', k: 'descargar abajo' },
+    { e: '🔄', c: 'simbolos', k: 'actualizar reenviar sincronizar' },
+    { e: '1️⃣', c: 'simbolos', k: 'uno 1 opcion' },
+    { e: '2️⃣', c: 'simbolos', k: 'dos 2 opcion' },
+    { e: '3️⃣', c: 'simbolos', k: 'tres 3 opcion' },
+    { e: '4️⃣', c: 'simbolos', k: 'cuatro 4 opcion' },
+    { e: '5️⃣', c: 'simbolos', k: 'cinco 5 opcion' },
+    { e: '✨', c: 'simbolos', k: 'nuevo brillo' },
+    { e: '❤️', c: 'simbolos', k: 'corazon' },
+    { e: '💚', c: 'simbolos', k: 'verde whatsapp' },
+    { e: '💙', c: 'simbolos', k: 'azul mutual' }
+  ];
+  const DEFAULT_RECENT_EMOJIS = ['✅', '👋', '📄', '🪪', '💳', '✍️', '💰', '📞', '📍', '⏰', '🙏', '🤝', '⚠️', '🎉', '👍', '📎'];
 
   let pollTimer = null;
+  let chatAutoSyncTimer = null;
   let lastPanelData = null;
   let isFetching = false;
+  let isSyncingChat = false;
   let activeTab = 'mensajeria';
   let userPickedTab = false;
   let searchDebounceTimer = null;
 
-  let activeContact = null; // { phone, name, dni, organismo }
+  let activeContact = null; // { phone, name, dni, organismo, window24h }
   let pendingAttachment = null; // { kind: 'image'|'document'|'audio', base64, mimetype, fileName, size, objectUrl, ptt }
   let buttonsBuilderOpen = false;
   let builderOptions = ['Sí, confirmo', 'Necesito asistencia'];
   let isSendingCustom = false;
+  let currentEmojiCategory = 'oficina';
+  let currentEmojiSearch = '';
+  let selectedMetaTemplate = null;
 
-  // Caché de mensajes en sesión (incluye previsualizaciones locales y mensajes sincronizados del worker)
+  // Caché de mensajes en sesión (local + servidor + media blobs descargados)
   let remoteMessagesByPhone = new Map();
-  let sessionMediaPreviewUrls = new Map(); // id -> objectUrl para fotos/audios enviados en la sesión actual
+  let olderMessagesByPhone = new Map();
+  let sessionMediaPreviewUrls = new Map(); // id -> objectUrl
+  let downloadingMediaIds = new Set();
 
   // Estado de grabación de audio
   let mediaRecorder = null;
@@ -120,6 +223,14 @@
     return typeof global.esAdminAuditoria === 'function' && global.esAdminAuditoria();
   }
 
+  function _getNombreAsesorActual() {
+    const cfg = _getFooterConfig();
+    if (cfg.asesorOverride) return cfg.asesorOverride;
+    const ua = global.estadoApp?.usuarioActual || null;
+    const nom = String((ua && (ua.nombre || ua.nombreCompleto || ua.usuario)) || '').trim();
+    return nom || 'Asesor AMMER';
+  }
+
   function _normalizarTelefonoWa(raw) {
     let digits = String(raw || '').replace(/\D/g, '');
     if (!digits) return '';
@@ -161,6 +272,109 @@
     return dig ? dig.slice(-2) : 'WA';
   }
 
+  // ============================================================================
+  // PIE DE PÁGINA / FIRMA DEL ASESOR
+  // ============================================================================
+  function _getFooterConfig() {
+    try {
+      const raw = localStorage.getItem(LS_FOOTER_CFG_KEY);
+      if (raw) {
+        const p = JSON.parse(raw);
+        if (p && typeof p === 'object') {
+          return {
+            enabled: p.enabled !== false,
+            template: String(p.template || lastPanelData?.config?.footer_template || '— *{asesor}* · Mutual Modelo (AMMER)').trim(),
+            asesorOverride: String(p.asesorOverride || '').trim()
+          };
+        }
+      }
+    } catch (_) {}
+    return {
+      enabled: lastPanelData?.config?.footer_enabled !== false,
+      template: String(lastPanelData?.config?.footer_template || '— *{asesor}* · Mutual Modelo (AMMER)').trim(),
+      asesorOverride: ''
+    };
+  }
+
+  function _saveFooterConfig(cfg) {
+    try {
+      localStorage.setItem(LS_FOOTER_CFG_KEY, JSON.stringify(cfg));
+    } catch (_) {}
+  }
+
+  function _resolverPieFirmaTexto() {
+    const cfg = _getFooterConfig();
+    if (!cfg.enabled || !cfg.template) return '';
+    return cfg.template.replace(/\{asesor\}/gi, _getNombreAsesorActual()).trim();
+  }
+
+  function _renderFooterConfigUI() {
+    const cfg = _getFooterConfig();
+    const chk = document.getElementById('chkWaUseFooter');
+    const lblPrev = document.getElementById('lblWaFooterPreview');
+    const inpTpl = document.getElementById('inpWaFooterTemplate');
+    const inpAsesor = document.getElementById('inpWaFooterAsesorName');
+    if (chk) chk.checked = cfg.enabled;
+    if (inpTpl && !inpTpl.value) inpTpl.value = cfg.template;
+    if (inpAsesor && !inpAsesor.value && cfg.asesorOverride) inpAsesor.value = cfg.asesorOverride;
+    if (lblPrev) {
+      const resolved = cfg.template.replace(/\{asesor\}/gi, _getNombreAsesorActual());
+      lblPrev.textContent = cfg.enabled ? resolved : '(Desactivado para este envío)';
+      lblPrev.style.opacity = cfg.enabled ? '1' : '0.6';
+    }
+  }
+
+  function onToggleFooterWa(checked) {
+    const cfg = _getFooterConfig();
+    cfg.enabled = Boolean(checked);
+    _saveFooterConfig(cfg);
+    _renderFooterConfigUI();
+  }
+
+  function toggleEditarFooterWa(forceState) {
+    const box = document.getElementById('waFooterEditBox');
+    if (!box) return;
+    const next = typeof forceState === 'boolean' ? forceState : !box.classList.contains('open');
+    box.classList.toggle('open', next);
+    if (next) {
+      const cfg = _getFooterConfig();
+      const inpTpl = document.getElementById('inpWaFooterTemplate');
+      const inpAsesor = document.getElementById('inpWaFooterAsesorName');
+      if (inpTpl) inpTpl.value = cfg.template;
+      if (inpAsesor) inpAsesor.value = cfg.asesorOverride || _getNombreAsesorActual();
+    }
+  }
+
+  async function guardarFooterAsesorWa() {
+    const inpTpl = document.getElementById('inpWaFooterTemplate');
+    const inpAsesor = document.getElementById('inpWaFooterAsesorName');
+    const tpl = String(inpTpl?.value || '').trim().slice(0, 160) || '— *{asesor}* · Mutual Modelo (AMMER)';
+    const asesorVal = String(inpAsesor?.value || '').trim().slice(0, 60);
+    const cfg = _getFooterConfig();
+    cfg.template = tpl;
+    cfg.asesorOverride = asesorVal;
+    _saveFooterConfig(cfg);
+    _renderFooterConfigUI();
+    toggleEditarFooterWa(false);
+
+    const apiBase = _getApiBase();
+    const fetchFn = _getFetchFn();
+    if (apiBase && fetchFn) {
+      try {
+        await fetchFn(`${apiBase}/api/admin/whatsapp/config`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            footer_enabled: cfg.enabled,
+            footer_template: cfg.template,
+            fallback_automatico: lastPanelData?.config?.fallback_automatico !== false
+          })
+        }, 12000);
+      } catch (_) {}
+    }
+    _toast('✅ Pie de firma guardado.', 'success');
+  }
+
   function _getQuickReplies() {
     try {
       const raw = localStorage.getItem(LS_QUICK_REPLIES_KEY);
@@ -190,22 +404,25 @@
 
   function _saveRecentChats(list) {
     try {
-      localStorage.setItem(LS_RECENT_CHATS_KEY, JSON.stringify((list || []).slice(0, 25)));
+      localStorage.setItem(LS_RECENT_CHATS_KEY, JSON.stringify((list || []).slice(0, 45)));
     } catch (_) {}
   }
 
   function _upsertRecentChat(contact, lastPreview) {
     const phone = _normalizarTelefonoWa(contact?.phone || '');
     if (phone.length < 10) return;
-    const current = _getRecentChats().filter((c) => _normalizarTelefonoWa(c.phone) !== phone);
-    const existing = _getRecentChats().find((c) => _normalizarTelefonoWa(c.phone) === phone) || {};
+    const all = _getRecentChats();
+    const existing = all.find((c) => _normalizarTelefonoWa(c.phone) === phone) || {};
+    const current = all.filter((c) => _normalizarTelefonoWa(c.phone) !== phone);
+    const nameClean = String(contact?.name || existing.name || `+${phone}`).trim();
     const updated = {
       phone,
-      name: String(contact?.name || existing.name || `+${phone}`).trim(),
+      name: (nameClean.startsWith('+') && existing.name && !existing.name.startsWith('+')) ? existing.name : nameClean,
       dni: String(contact?.dni || existing.dni || '').trim(),
       organismo: String(contact?.organismo || existing.organismo || '').trim(),
       lastText: lastPreview !== undefined ? String(lastPreview).slice(0, 90) : (existing.lastText || ''),
-      updatedAt: new Date().toISOString()
+      window24h: contact?.window24h || existing.window24h || null,
+      updatedAt: contact?.updatedAt || new Date().toISOString()
     };
     current.unshift(updated);
     _saveRecentChats(current);
@@ -236,13 +453,13 @@
       mimetype: msgObj.mimetype || null,
       pollOptions: Array.isArray(msgObj.pollOptions) ? msgObj.pollOptions : null,
       sessionAlias: msgObj.sessionAlias || null,
+      status: msgObj.status || 'sent',
       timestamp: msgObj.timestamp || new Date().toISOString()
     });
-    all[tel] = arr.slice(-40);
-    // Limitar llaves guardadas a los últimos 25 chats
+    all[tel] = arr.slice(-60);
     const keys = Object.keys(all);
-    if (keys.length > 25) {
-      keys.slice(0, keys.length - 25).forEach((k) => delete all[k]);
+    if (keys.length > 35) {
+      keys.slice(0, keys.length - 35).forEach((k) => delete all[k]);
     }
     try {
       localStorage.setItem(LS_LOCAL_MSGS_KEY, JSON.stringify(all));
@@ -254,6 +471,24 @@
       clearInterval(pollTimer);
       pollTimer = null;
     }
+    if (chatAutoSyncTimer) {
+      clearInterval(chatAutoSyncTimer);
+      chatAutoSyncTimer = null;
+    }
+  }
+
+  function _iniciarChatAutoPoll() {
+    if (chatAutoSyncTimer) return;
+    chatAutoSyncTimer = setInterval(() => {
+      const v = document.getElementById('view-whatsapp-bot');
+      if (!v || !v.classList.contains('active')) {
+        clearInterval(chatAutoSyncTimer);
+        chatAutoSyncTimer = null;
+        return;
+      }
+      if (document.hidden || activeTab !== 'mensajeria' || !activeContact?.phone) return;
+      cargarMensajesChatWhatsappAdmin(true);
+    }, 8000);
   }
 
   function _badgeEstado(sesion) {
@@ -265,6 +500,14 @@
         bg: '#ecfdf5',
         fg: '#15803d',
         border: '#86efac'
+      };
+    }
+    if (st === 'PENDING_CREDENTIALS') {
+      return {
+        text: '🟡 Esperando variables Render',
+        bg: '#fffbeb',
+        fg: '#b45309',
+        border: '#fde68a'
       };
     }
     if (st === 'WAITING_QR') {
@@ -330,6 +573,48 @@
     return res;
   }
 
+  function _getSelectedSessionObj() {
+    const selLine = document.getElementById('selWaBotTestSession');
+    const sid = selLine?.value || '';
+    const sesiones = Array.isArray(lastPanelData?.sesiones) ? lastPanelData.sesiones : [];
+    return sesiones.find((s) => s.sessionId === sid) || null;
+  }
+
+  function _actualizarPillVentana24h(winInfo) {
+    const pill = document.getElementById('wa24hWindowPill');
+    const btnTpl = document.getElementById('btnWaMetaTemplates');
+    const ses = _getSelectedSessionObj();
+    const isMeta = ses?.provider === 'meta_cloud_api';
+
+    if (btnTpl) {
+      btnTpl.style.display = isMeta ? 'inline-flex' : 'none';
+    }
+    if (!pill) return;
+    if (!isMeta) {
+      pill.style.display = 'none';
+      return;
+    }
+
+    pill.style.display = 'block';
+    const win = winInfo || activeContact?.window24h || null;
+    if (win && win.open) {
+      pill.style.background = '#ecfdf5';
+      pill.style.color = '#15803d';
+      pill.style.border = '1px solid #86efac';
+      pill.textContent = `🟢 Ventana 24h Meta abierta (${win.hoursRemaining}h restantes) · Texto, media y botones libres`;
+    } else if (activeContact?.phone) {
+      pill.style.background = '#fffbeb';
+      pill.style.color = '#92400e';
+      pill.style.border = '1px solid #fde68a';
+      pill.textContent = '🟡 Ventana 24h cerrada en API Meta · Usá "📋 Plantillas Meta" para iniciar o cambiá a Línea QR';
+    } else {
+      pill.style.background = '#eff6ff';
+      pill.style.color = '#1e40af';
+      pill.style.border = '1px solid #bfdbfe';
+      pill.textContent = '☁️ Línea API Oficial Meta activa (Botones interactivos y Plantillas)';
+    }
+  }
+
   function cambiarTabWhatsappBotAdmin(tabKey, manual = true) {
     const next = tabKey === 'lineas' ? 'lineas' : 'mensajeria';
     if (manual) userPickedTab = true;
@@ -350,6 +635,14 @@
     }
     if (panelMsg) panelMsg.classList.toggle('active', next === 'mensajeria');
     if (panelLin) panelLin.classList.toggle('active', next === 'lineas');
+  }
+
+  function abrirConfigApiOficialMetaWa() {
+    cambiarTabWhatsappBotAdmin('lineas', true);
+    const card = document.getElementById('waMetaAddCard');
+    if (card) card.style.display = 'block';
+    const banner = document.getElementById('waMetaReadinessBanner');
+    if (banner) banner.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function usarLineaEnMensajeriaWa(sessionId) {
@@ -373,20 +666,80 @@
     if (!ses) {
       badgeEl.textContent = 'Sin datos';
       badgeEl.style.color = '#64748b';
+      _actualizarPillVentana24h(null);
       return;
     }
+    const provTag = ses.provider === 'meta_cloud_api' ? '☁️ API Meta' : '📱 QR';
     if (ses.connected || ses.status === 'READY') {
-      badgeEl.textContent = `🟢 Lista${ses.phoneMasked ? ' · ' + ses.phoneMasked : ''}`;
+      badgeEl.textContent = `🟢 ${provTag}${ses.phoneMasked ? ' · ' + ses.phoneMasked : ''}`;
       badgeEl.style.color = '#15803d';
     } else if (ses.status === 'WAITING_QR') {
       badgeEl.textContent = '🟡 Esperando QR';
+      badgeEl.style.color = '#b45309';
+    } else if (ses.status === 'PENDING_CREDENTIALS') {
+      badgeEl.textContent = '🟡 Falta Render Env';
       badgeEl.style.color = '#b45309';
     } else {
       badgeEl.textContent = '🔴 Desconectada';
       badgeEl.style.color = '#b91c1c';
     }
+    _actualizarPillVentana24h(null);
     if (activeContact && activeContact.phone) {
       cargarMensajesChatWhatsappAdmin(true);
+    }
+  }
+
+  function _renderMetaReadinessBanner(metaStatus) {
+    const box = document.getElementById('waMetaReadinessBanner');
+    if (!box) return;
+    const st = metaStatus || {};
+    const apiBase = _getApiBase() || 'https://ammer-auditor-api.onrender.com';
+    const webhookUrl = `${apiBase.replace(/\/+$/, '')}${st.webhookPath || '/api/whatsapp/meta/webhook'}`;
+    const envVars = [
+      { key: 'META_WA_ACCESS_TOKEN', ok: Boolean(st.hasAccessToken), label: 'System User Token' },
+      { key: 'META_WA_PHONE_NUMBER_ID', ok: Boolean(st.hasPhoneNumberId), label: 'Phone Number ID' },
+      { key: 'META_WA_WABA_ID', ok: Boolean(st.hasWabaId), label: 'WhatsApp Business Account ID' },
+      { key: 'META_APP_SECRET', ok: Boolean(st.hasAppSecret), label: 'App Secret (firma HMAC)' },
+      { key: 'META_WEBHOOK_VERIFY_TOKEN', ok: Boolean(st.hasVerifyToken), label: 'Webhook Verify Token' }
+    ];
+
+    const chips = envVars.map((v) =>
+      `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:7px;font-size:0.71rem;font-weight:700;background:${v.ok ? '#ecfdf5' : '#fffbeb'};color:${v.ok ? '#15803d' : '#92400e'};border:1px solid ${v.ok ? '#86efac' : '#fde68a'};">` +
+        `${v.ok ? '✅' : '⏳'} <code>${_esc(v.key)}</code>` +
+      `</span>`
+    ).join('');
+
+    const title = st.fullyConfigured
+      ? '☁️ WhatsApp Cloud API Oficial Meta: Conectada y lista'
+      : '☁️ WhatsApp Cloud API Oficial Meta (Modo Dual listo — esperando variables en Render)';
+
+    box.innerHTML =
+      `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">` +
+        `<div style="flex:1;min-width:260px;">` +
+          `<div style="font-size:0.9rem;font-weight:800;color:#1e3a8a;">${title}</div>` +
+          `<div style="font-size:0.75rem;color:#475569;margin-top:3px;line-height:1.45;">` +
+            (st.fullyConfigured
+              ? 'Tus credenciales en Render están activas. Podés operar líneas Meta junto con tus líneas QR desde la misma bandeja y asignarlas por acción abajo.'
+              : 'El backend, webhooks HMAC, plantillas, botones nativos y Coexistence ya están desplegados. Cuando cargues estas variables en <strong>Render → Environment</strong> y pegues la URL de Webhook en Meta, la línea oficial aparecerá lista automáticamente:') +
+          `</div>` +
+        `</div>` +
+        `<div style="display:flex;gap:6px;flex-wrap:wrap;">` +
+          `<button type="button" onclick="window.copiarWebhookUrlMetaWa('${_esc(webhookUrl)}')" style="padding:0.42rem 0.78rem;border-radius:8px;border:1px solid #93c5fd;background:#eff6ff;color:#1d4ed8;font-size:0.73rem;font-weight:800;cursor:pointer;">📋 Copiar URL Webhook</button>` +
+          `<button type="button" onclick="document.getElementById('waMetaAddCard').style.display='block'" style="padding:0.42rem 0.78rem;border-radius:8px;border:none;background:#1d4ed8;color:#ffffff;font-size:0.73rem;font-weight:800;cursor:pointer;">➕ Línea Meta Extra</button>` +
+        `</div>` +
+      `</div>` +
+      `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:0.65rem;">${chips}</div>` +
+      `<div style="margin-top:0.55rem;font-size:0.71rem;color:#334155;">` +
+        `<strong>Webhook Callback URL para Meta:</strong> <code>${_esc(webhookUrl)}</code> · Suscribir campos: <code>messages</code>` +
+        (st.coexistenceDefault ? ' · <code>smb_message_echoes</code> · <code>history</code> (Coexistence activo)' : ' (opcional Coexistence: <code>smb_message_echoes</code>, <code>history</code>)') +
+      `</div>`;
+  }
+
+  function copiarWebhookUrlMetaWa(url) {
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(url).then(() => _toast('📋 URL de Webhook Meta copiada.', 'success'));
+    } else {
+      _toast(url, 'info');
     }
   }
 
@@ -407,10 +760,13 @@
     const rutas = cfg.rutas || {};
     const aliases = cfg.aliases || {};
 
+    _renderMetaReadinessBanner(data?.metaStatus);
     _renderSidebarIndicator(sesiones);
+    _renderFooterConfigUI();
 
     const readyCount = sesiones.filter((s) => s.connected || s.status === 'READY').length;
     const qrCount = sesiones.filter((s) => s.status === 'WAITING_QR' || s.status === 'CONNECTING').length;
+    const metaCount = sesiones.filter((s) => s.provider === 'meta_cloud_api').length;
 
     if (!userPickedTab) {
       cambiarTabWhatsappBotAdmin(readyCount === 0 ? 'lineas' : 'mensajeria', false);
@@ -435,10 +791,12 @@
         `<span style="padding:4px 10px;border-radius:9999px;font-size:0.74rem;font-weight:800;background:${readyCount > 0 ? 'rgba(22,163,74,0.22)' : 'rgba(239,68,68,0.24)'};color:#ffffff;border:1px solid ${readyCount > 0 ? 'rgba(134,239,172,0.5)' : 'rgba(254,202,202,0.5)'};">` +
           `${readyCount > 0 ? '🟢' : '🔴'} ${readyCount} de ${sesiones.length} líneas conectadas` +
         `</span>` +
+        (metaCount > 0
+          ? `<span style="padding:4px 10px;border-radius:9999px;font-size:0.74rem;font-weight:700;background:rgba(59,130,246,0.28);color:#dbeafe;border:1px solid rgba(147,197,253,0.45);">☁️ ${metaCount} API Oficial Meta</span>`
+          : '') +
         (qrCount > 0
           ? `<span style="padding:4px 10px;border-radius:9999px;font-size:0.74rem;font-weight:700;background:rgba(245,158,11,0.24);color:#fef3c7;border:1px solid rgba(253,230,138,0.45);">📷 ${qrCount} esperando QR</span>`
-          : '') +
-        `<span style="padding:4px 10px;border-radius:9999px;font-size:0.73rem;font-weight:700;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.92);border:1px solid rgba(255,255,255,0.2);">Máx. ${Number(data?.maxSessions || 8)} líneas</span>`;
+          : '');
     }
 
     if (warnBox) {
@@ -447,19 +805,13 @@
         warnBox.style.background = '#fff7ed';
         warnBox.style.borderColor = '#fed7aa';
         warnBox.style.color = '#9a3412';
-        warnBox.innerHTML = '⚙️ <strong>Worker WhatsApp no configurado en Render:</strong> cargá <code>WHATSAPP_WORKER_URL</code> y <code>WHATSAPP_WORKER_SECRET</code> en Environment para habilitar la gestión de sesiones.';
+        warnBox.innerHTML = '⚙️ <strong>WhatsApp Worker no configurado en Render:</strong> cargá <code>WHATSAPP_WORKER_URL</code> o configurá las variables de <strong>Meta Cloud API</strong> para habilitar líneas.';
       } else if (data && data.ok === false) {
         warnBox.style.display = 'block';
         warnBox.style.background = '#fef2f2';
         warnBox.style.borderColor = '#fecaca';
         warnBox.style.color = '#991b1b';
         warnBox.innerHTML = '⚠️ <strong>Worker temporalmente inaccesible:</strong> ' + _esc(data.mensaje || 'Verificá el servicio en Northflank.');
-      } else if (data && data.multiSessionSupported === false) {
-        warnBox.style.display = 'block';
-        warnBox.style.background = '#eff6ff';
-        warnBox.style.borderColor = '#bfdbfe';
-        warnBox.style.color = '#1e40af';
-        warnBox.innerHTML = 'ℹ️ <strong>Modo compatibilidad de 1 línea activo:</strong> la línea principal funciona normalmente. Cuando se actualice el servicio en Northflank con la nueva versión de <code>sidecreer-whatsapp-worker</code>, se habilitará automáticamente la creación de múltiples líneas QR simultáneas.';
       } else {
         warnBox.style.display = 'none';
       }
@@ -468,16 +820,17 @@
     if (sesiones.length === 0) {
       gridEl.innerHTML =
         '<div style="grid-column:1 / -1;padding:1.5rem;border-radius:12px;border:1px dashed #cbd5e1;background:#f8fafc;text-align:center;color:#64748b;font-size:0.84rem;">' +
-          'No hay líneas WhatsApp disponibles todavía. Usá <strong>“➕ Nueva Línea QR”</strong> o verificá la conexión con el worker.' +
+          'No hay líneas WhatsApp disponibles todavía. Usá <strong>“➕ Nueva Línea QR”</strong> o configurá <strong>API Oficial Meta</strong>.' +
         '</div>';
     } else {
       gridEl.innerHTML = sesiones.map((s) => {
         const sid = String(s.sessionId || '');
+        const isMeta = s.provider === 'meta_cloud_api';
         const aliasVal = aliases[sid] || s.alias || (s.isDefault ? 'Línea Principal' : sid);
         const badge = _badgeEstado(s);
         const isReady = Boolean(s.connected || s.status === 'READY');
-        const isClosed = s.status === 'CLOSED' || s.status === 'DISCONNECTED' || s.status === 'LOGGED_OUT';
-        const hasQr = s.status === 'WAITING_QR' && s.qrDataUrl;
+        const isClosed = !isMeta && (s.status === 'CLOSED' || s.status === 'DISCONNECTED' || s.status === 'LOGGED_OUT');
+        const hasQr = !isMeta && s.status === 'WAITING_QR' && s.qrDataUrl;
         const asigList = _accionesAsignadasASesion(sid, rutas, acciones);
         const chipsHtml = asigList.length > 0
           ? asigList.map((lbl) => `<span style="display:inline-flex;padding:2px 7px;border-radius:6px;background:#eef2ff;color:#3730a3;font-size:0.68rem;font-weight:700;">${_esc(lbl)}</span>`).join(' ')
@@ -486,15 +839,19 @@
         const safeSid = _esc(sid);
         const safeSidJs = sid.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
+        const modePill = isMeta
+          ? `<span style="padding:2px 7px;border-radius:9999px;background:#1d4ed8;color:#ffffff;font-size:0.64rem;font-weight:800;">☁️ API META${s.coexistence ? ' · COEX' : ''}</span>`
+          : `<span style="padding:2px 7px;border-radius:9999px;background:#0f2744;color:#ffffff;font-size:0.64rem;font-weight:800;">${s.isDefault ? '📱 QR PRINCIPAL' : '📱 MODO QR'}</span>`;
+
         return (
-          `<div style="background:#ffffff;border:1px solid ${isReady ? '#86efac' : '#cbd5e1'};border-radius:14px;padding:1rem;display:flex;flex-direction:column;gap:0.72rem;box-shadow:0 2px 10px rgba(15,23,42,0.05);">` +
+          `<div style="background:#ffffff;border:1px solid ${isReady ? (isMeta ? '#93c5fd' : '#86efac') : '#cbd5e1'};border-radius:14px;padding:1rem;display:flex;flex-direction:column;gap:0.72rem;box-shadow:0 2px 10px rgba(15,23,42,0.05);">` +
             `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;">` +
               `<div style="flex:1;min-width:170px;">` +
-                `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">` +
-                  `<input type="text" data-wa-alias-sid="${safeSid}" value="${_esc(aliasVal)}" maxlength="60" placeholder="Nombre de la línea" style="font-size:0.88rem;font-weight:800;color:#0f172a;border:1px solid #e2e8f0;border-radius:8px;padding:4px 8px;width:100%;max-width:230px;background:#f8fafc;"/>` +
-                  (s.isDefault ? '<span style="padding:2px 7px;border-radius:9999px;background:#0f2744;color:#ffffff;font-size:0.65rem;font-weight:800;">PRINCIPAL</span>' : '') +
+                `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap;">` +
+                  `<input type="text" data-wa-alias-sid="${safeSid}" value="${_esc(aliasVal)}" maxlength="60" placeholder="Nombre de la línea" style="font-size:0.88rem;font-weight:800;color:#0f172a;border:1px solid #e2e8f0;border-radius:8px;padding:4px 8px;width:100%;max-width:210px;background:#f8fafc;"/>` +
+                  modePill +
                 `</div>` +
-                `<div style="font-size:0.71rem;color:#64748b;font-family:var(--font-mono,monospace);">ID: ${safeSid}${s.displayName ? ' · ' + _esc(s.displayName) : ''}</div>` +
+                `<div style="font-size:0.71rem;color:#64748b;font-family:var(--font-mono,monospace);">ID: ${safeSid}${s.phoneNumberId ? ' · PhoneID ' + _esc(s.phoneNumberId) : ''}${s.displayName ? ' · ' + _esc(s.displayName) : ''}</div>` +
               `</div>` +
               `<span style="display:inline-flex;align-items:center;padding:4px 10px;border-radius:9999px;font-size:0.72rem;font-weight:800;background:${badge.bg};color:${badge.fg};border:1px solid ${badge.border};">${badge.text}</span>` +
             `</div>` +
@@ -516,15 +873,18 @@
 
             `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:6px;border-top:1px solid #f1f5f9;">` +
               (isReady
-                ? `<button type="button" onclick="window.usarLineaEnMensajeriaWa('${safeSidJs}')" style="flex:1;min-width:140px;padding:0.46rem 0.75rem;border-radius:8px;border:none;background:#16a34a;color:#ffffff;font-size:0.74rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>Escribir desde acá</span></button>`
+                ? `<button type="button" onclick="window.usarLineaEnMensajeriaWa('${safeSidJs}')" style="flex:1;min-width:140px;padding:0.46rem 0.75rem;border-radius:8px;border:none;background:${isMeta ? '#1d4ed8' : '#16a34a'};color:#ffffff;font-size:0.74rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px;"><span>💬 Escribir desde acá</span></button>`
                 : '') +
-              (isClosed
-                ? `<button type="button" onclick="window.abrirSesionWhatsappBotAdmin('${safeSidJs}')" style="flex:1;min-width:130px;padding:0.48rem 0.75rem;border-radius:8px;border:none;background:#16a34a;color:#ffffff;font-size:0.75rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg><span>Abrir Sesión / QR</span></button>`
-                : `<button type="button" onclick="window.cerrarSesionWhatsappBotAdmin('${safeSidJs}', 'cerrar')" style="padding:0.45rem 0.7rem;border-radius:8px;border:1px solid #cbd5e1;background:#f8fafc;color:#334155;font-size:0.74rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg><span>Cerrar</span></button>` +
-                  `<button type="button" onclick="window.cerrarSesionWhatsappBotAdmin('${safeSidJs}', 'desvincular_nuevo_qr')" style="padding:0.45rem 0.7rem;border-radius:8px;border:1px solid #fecdd3;background:#fff1f2;color:#be123c;font-size:0.74rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg><span>Nuevo QR</span></button>`
+              (!isMeta
+                ? (isClosed
+                    ? `<button type="button" onclick="window.abrirSesionWhatsappBotAdmin('${safeSidJs}')" style="flex:1;min-width:130px;padding:0.48rem 0.75rem;border-radius:8px;border:none;background:#16a34a;color:#ffffff;font-size:0.75rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px;"><span>Abrir Sesión / QR</span></button>`
+                    : `<button type="button" onclick="window.cerrarSesionWhatsappBotAdmin('${safeSidJs}', 'cerrar')" style="padding:0.45rem 0.7rem;border-radius:8px;border:1px solid #cbd5e1;background:#f8fafc;color:#334155;font-size:0.74rem;font-weight:700;cursor:pointer;">Cerrar</button>` +
+                      `<button type="button" onclick="window.cerrarSesionWhatsappBotAdmin('${safeSidJs}', 'desvincular_nuevo_qr')" style="padding:0.45rem 0.7rem;border-radius:8px;border:1px solid #fecdd3;background:#fff1f2;color:#be123c;font-size:0.74rem;font-weight:700;cursor:pointer;">Nuevo QR</button>`
+                  )
+                : `<button type="button" onclick="window.usarLineaEnMensajeriaWa('${safeSidJs}');window.toggleMetaTemplatesDrawerWa(true);window.cargarPlantillasMetaWa();" style="padding:0.45rem 0.7rem;border-radius:8px;border:1px solid #93c5fd;background:#eff6ff;color:#1d4ed8;font-size:0.73rem;font-weight:700;cursor:pointer;">📋 Plantillas</button>`
               ) +
-              (!s.isDefault
-                ? `<button type="button" onclick="window.eliminarSesionWhatsappBotAdmin('${safeSidJs}')" title="Eliminar línea adicional" style="padding:0.45rem 0.65rem;border-radius:8px;border:1px solid #e2e8f0;background:#ffffff;color:#64748b;font-size:0.74rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>`
+              ((!isMeta && !s.isDefault) || (isMeta && !s.isMetaDefault)
+                ? `<button type="button" onclick="window.${isMeta ? 'eliminarLineaMetaWhatsappAdmin' : 'eliminarSesionWhatsappBotAdmin'}('${safeSidJs}')" title="Eliminar línea adicional" style="padding:0.45rem 0.65rem;border-radius:8px;border:1px solid #e2e8f0;background:#ffffff;color:#64748b;font-size:0.74rem;font-weight:700;cursor:pointer;">🗑️</button>`
                 : '') +
             `</div>` +
           `</div>`
@@ -532,7 +892,7 @@
       }).join('');
     }
 
-    const optsHtml = (selectedSid) => {
+    const optsHtml = (selectedSid, forActionKey = '') => {
       const seen = new Set();
       const allSids = [];
       sesiones.forEach((s) => {
@@ -542,17 +902,19 @@
         }
       });
       if (selectedSid && !seen.has(selectedSid)) {
-        allSids.push({ sessionId: selectedSid, status: 'DISCONNECTED', alias: aliases[selectedSid] || selectedSid });
+        allSids.push({ sessionId: selectedSid, provider: 'baileys_qr', status: 'DISCONNECTED', alias: aliases[selectedSid] || selectedSid });
       }
       if (allSids.length === 0) {
-        allSids.push({ sessionId: 'sidecreer_default', status: 'DISCONNECTED', alias: 'Línea Principal' });
+        allSids.push({ sessionId: 'sidecreer_default', provider: 'baileys_qr', status: 'DISCONNECTED', alias: 'Línea Principal' });
       }
       return allSids.map((s) => {
         const sid = s.sessionId;
         const lbl = aliases[sid] || s.alias || sid;
-        const stTag = s.connected ? `🟢 ${s.phoneMasked || 'Conectado'}` : (s.status || 'Sin conexión');
+        const prov = s.provider === 'meta_cloud_api' ? '☁️ API' : '📱 QR';
+        const stTag = s.connected ? `🟢 ${s.phoneMasked || 'Lista'}` : (s.status || 'Sin conexión');
         const sel = sid === selectedSid ? ' selected' : '';
-        return `<option value="${_esc(sid)}"${sel}>${_esc(lbl)} (${_esc(stTag)})</option>`;
+        const disabled = (forActionKey === 'sidecreer_consulta' && s.provider === 'meta_cloud_api') ? ' disabled' : '';
+        return `<option value="${_esc(sid)}"${sel}${disabled}>[${prov}] ${_esc(lbl)} (${_esc(stTag)})</option>`;
       }).join('');
     };
 
@@ -566,7 +928,7 @@
             `<div style="font-size:0.72rem;color:#64748b;margin-top:2px;">${_esc(acc.description || '')}</div>` +
           `</div>` +
           `<select data-wa-route-action="${_esc(aKey)}" style="width:100%;padding:0.46rem 0.65rem;border-radius:8px;border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;font-size:0.79rem;font-weight:700;">` +
-            optsHtml(selected) +
+            optsHtml(selected, aKey) +
           `</select>` +
         `</div>`
       );
@@ -596,8 +958,12 @@
           cargarPanelWhatsappBotAdmin(true);
         }, 4200);
       }
-    } else if (!enVista || qrCount === 0) {
-      detenerPollingWhatsappBotAdmin();
+    } else if (pollTimer && (!enVista || qrCount === 0)) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+    if (enVista && activeContact?.phone) {
+      _iniciarChatAutoPoll();
     }
   }
 
@@ -633,6 +999,7 @@
   function _initComposerUI() {
     _renderQuickReplies();
     _renderEmojiPopover();
+    _renderFooterConfigUI();
     _renderRecentChatsList();
     _renderButtonsOptions();
     if (!activeContact) {
@@ -641,6 +1008,7 @@
         seleccionarContactoWhatsappAdmin(recents[0], false);
       }
     }
+    cargarConversacionesServidorWa(true);
   }
 
   function initWhatsappBotPanelAdmin() {
@@ -650,10 +1018,13 @@
     }
     _initComposerUI();
     cargarPanelWhatsappBotAdmin(false);
+    if (activeContact?.phone) {
+      _iniciarChatAutoPoll();
+    }
   }
 
   // ============================================================================
-  // BUSCADOR DE CONTACTOS (SOLICITUDES + PADRÓN ASOCIADOS + TELÉFONO DIRECTO)
+  // BUSCADOR DE CONTACTOS Y CONVERSACIONES DEL SERVIDOR
   // ============================================================================
   function _collectLocalContacts(term) {
     const q = String(term || '').trim().toLowerCase();
@@ -822,6 +1193,7 @@
       activeContact = existing || { phone: digits, name: `+${digits}`, dni: '', organismo: '' };
       _updateChatHeader();
       _renderWaChatThread();
+      _actualizarPillVentana24h(activeContact.window24h);
     }
   }
 
@@ -846,7 +1218,8 @@
       phone,
       name: String(contact?.name || `+${phone}`).trim(),
       dni: String(contact?.dni || '').trim(),
-      organismo: String(contact?.organismo || '').trim()
+      organismo: String(contact?.organismo || '').trim(),
+      window24h: contact?.window24h || null
     };
 
     const inpPhone = document.getElementById('inpWaBotTestPhone');
@@ -858,9 +1231,43 @@
 
     _upsertRecentChat(activeContact);
     _updateChatHeader();
+    _actualizarPillVentana24h(activeContact.window24h);
     _renderWaChatThread();
+    _iniciarChatAutoPoll();
     if (shouldSync) {
       cargarMensajesChatWhatsappAdmin(true);
+    }
+  }
+
+  async function cargarConversacionesServidorWa(silencioso = false) {
+    if (!_esAdmin()) return;
+    const apiBase = _getApiBase();
+    const fetchFn = _getFetchFn();
+    if (!apiBase || !fetchFn) return;
+    const selLine = document.getElementById('selWaBotTestSession');
+    const sid = selLine?.value || '';
+    try {
+      const qs = new URLSearchParams({ limit: '50' });
+      if (sid) qs.set('sessionId', sid);
+      const resp = await fetchFn(`${apiBase}/api/admin/whatsapp/conversaciones?${qs.toString()}`, { method: 'GET' }, 12000);
+      const data = resp && resp.ok ? await resp.json().catch(() => null) : null;
+      const list = Array.isArray(data?.conversaciones) ? data.conversaciones : [];
+      for (let i = list.length - 1; i >= 0; i--) {
+        const c = list[i];
+        if (!c?.phone) continue;
+        _upsertRecentChat({
+          phone: c.phone,
+          name: c.name || `+${c.phone}`,
+          dni: c.dni || '',
+          window24h: c.window24h || null,
+          updatedAt: c.lastMessageAt
+        }, c.lastMessageText || '');
+      }
+      if (!silencioso) {
+        _toast(`🔄 ${list.length} conversaciones sincronizadas desde el servidor.`, 'info');
+      }
+    } catch (_) {
+      if (!silencioso) _toast('⚠️ No se pudieron sincronizar conversaciones.', 'warning');
     }
   }
 
@@ -868,6 +1275,8 @@
     const av = document.getElementById('waChatActiveAvatar');
     const nm = document.getElementById('waChatActiveName');
     const mt = document.getElementById('waChatActiveMeta');
+    const btnOlder = document.getElementById('btnWaLoadOlder');
+    if (btnOlder) btnOlder.style.display = activeContact?.phone ? 'inline-flex' : 'none';
     if (!activeContact) {
       if (av) av.textContent = 'WA';
       if (nm) nm.textContent = 'Seleccioná un destinatario';
@@ -924,6 +1333,7 @@
     localStorage.removeItem(LS_RECENT_CHATS_KEY);
     localStorage.removeItem(LS_LOCAL_MSGS_KEY);
     remoteMessagesByPhone.clear();
+    olderMessagesByPhone.clear();
     activeContact = null;
     _updateChatHeader();
     _renderRecentChatsList();
@@ -931,18 +1341,68 @@
   }
 
   // ============================================================================
-  // HILO DE MENSAJES (FUSIÓN LOCAL + WORKER EN VIVO)
+  // DESCARGA ON-DEMAND DE MEDIA ENTRANTE Y HILO DE MENSAJES
   // ============================================================================
-  function _renderWaChatThread() {
+  async function cargarMediaMensajeWa(msgId, mediaId = '', kind = 'image', fileName = '') {
+    if (!msgId || downloadingMediaIds.has(msgId)) return;
+    const apiBase = _getApiBase();
+    const fetchFn = _getFetchFn();
+    const selLine = document.getElementById('selWaBotTestSession');
+    const sid = selLine?.value || 'sidecreer_default';
+    if (!apiBase || !fetchFn) return;
+    downloadingMediaIds.add(msgId);
+    try {
+      const qs = mediaId ? `?media_id=${encodeURIComponent(mediaId)}` : '';
+      const resp = await fetchFn(`${apiBase}/api/admin/whatsapp/media/${encodeURIComponent(sid)}/${encodeURIComponent(msgId)}${qs}`, { method: 'GET' }, 25000);
+      if (!resp || !resp.ok) {
+        throw new Error('Archivo no disponible en el servidor.');
+      }
+      const blob = await resp.blob();
+      const objUrl = URL.createObjectURL(blob);
+      sessionMediaPreviewUrls.set(msgId, objUrl);
+      if (kind === 'document') {
+        const a = document.createElement('a');
+        a.href = objUrl;
+        a.download = fileName || 'archivo_whatsapp';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+      _renderWaChatThread();
+    } catch (err) {
+      _toast('⚠️ ' + (err?.message || 'No se pudo descargar el archivo.'), 'warning');
+    } finally {
+      downloadingMediaIds.delete(msgId);
+    }
+  }
+
+  function _renderStatusTicks(m) {
+    if (!m.fromMe) return '';
+    const st = String(m.status || 'sent').toLowerCase();
+    if (st === 'failed') {
+      return `<span class="wa-checks err" title="${_esc(m.statusDetail || 'Error de entrega')}">⚠️</span>`;
+    }
+    if (st === 'read') {
+      return '<span class="wa-checks read" title="Leído">✓✓</span>';
+    }
+    if (st === 'delivered') {
+      return '<span class="wa-checks" title="Entregado">✓✓</span>';
+    }
+    return '<span class="wa-checks" title="Enviado">✓</span>';
+  }
+
+  function _renderWaChatThread(preserveScrollTop = false) {
     const threadEl = document.getElementById('waChatThread');
     if (!threadEl) return;
+    const wasAtBottom = (threadEl.scrollHeight - threadEl.scrollTop - threadEl.clientHeight) < 80;
+    const prevScroll = threadEl.scrollTop;
 
     if (!activeContact || !activeContact.phone) {
       threadEl.innerHTML =
         '<div style="margin:auto;text-align:center;max-width:410px;background:rgba(255,255,255,0.9);border:1px solid rgba(203,213,225,0.8);border-radius:14px;padding:1.25rem;box-shadow:0 2px 10px rgba(15,23,42,0.06);">' +
           '<div style="font-size:1.4rem;margin-bottom:6px;">💬</div>' +
           '<div style="font-size:0.86rem;font-weight:800;color:#0f2744;">WhatsApp Directo AMMER</div>' +
-          '<div style="font-size:0.76rem;color:#475569;margin-top:4px;line-height:1.45;">Elegí un asociado o ingresá un número en el panel izquierdo para enviar mensajes de texto, fotos, documentos PDF, audios grabados al instante o botones de respuesta rápida.</div>' +
+          '<div style="font-size:0.76rem;color:#475569;margin-top:4px;line-height:1.45;">Elegí un asociado o ingresá un número en el panel izquierdo para enviar mensajes, fotos, documentos PDF, audios o encuestas/botones.</div>' +
         '</div>';
       return;
     }
@@ -950,15 +1410,34 @@
     const tel = _normalizarTelefonoWa(activeContact.phone);
     const localMap = _getLocalMessagesMap();
     const localMsgs = Array.isArray(localMap[tel]) ? localMap[tel] : [];
+    const olderMsgs = Array.isArray(olderMessagesByPhone.get(tel)) ? olderMessagesByPhone.get(tel) : [];
     const remoteMsgs = Array.isArray(remoteMessagesByPhone.get(tel)) ? remoteMessagesByPhone.get(tel) : [];
 
-    // Deduplicar por id manteniendo orden cronológico
+    // Deduplicar por id priorizando la versión más reciente del servidor (pollVotes y status actualizados)
     const byId = new Map();
-    for (const m of [...localMsgs, ...remoteMsgs]) {
+    for (const m of [...localMsgs, ...olderMsgs, ...remoteMsgs]) {
       const key = m.id || `${m.timestamp}_${m.text}`;
-      if (!byId.has(key)) byId.set(key, m);
+      const prev = byId.get(key);
+      if (!prev) {
+        byId.set(key, m);
+      } else {
+        byId.set(key, {
+          ...prev,
+          ...m,
+          pollOptions: m.pollOptions || prev.pollOptions,
+          pollVotes: m.pollVotes || prev.pollVotes
+        });
+      }
     }
     const merged = Array.from(byId.values()).sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0));
+
+    // Mapear votos provenientes de mensajes kind === 'poll_vote' hacia su encuesta original por pollMessageId
+    const pollVotesByParentId = new Map();
+    for (const m of merged) {
+      if (m.kind === 'poll_vote' && m.pollMessageId && Array.isArray(m.selectedOptions)) {
+        pollVotesByParentId.set(m.pollMessageId, m.selectedOptions);
+      }
+    }
 
     if (merged.length === 0) {
       threadEl.innerHTML =
@@ -974,17 +1453,31 @@
       const previewUrl = m.id ? sessionMediaPreviewUrls.get(m.id) : null;
       let mediaHtml = '';
       if (previewUrl && m.kind === 'image') {
-        mediaHtml = `<img src="${_esc(previewUrl)}" alt="Imagen enviada" class="wa-msg-media-thumb"/>`;
+        mediaHtml = `<img src="${_esc(previewUrl)}" alt="Imagen" class="wa-msg-media-thumb"/>`;
       } else if (previewUrl && m.kind === 'audio') {
         mediaHtml = `<audio controls src="${_esc(previewUrl)}" style="max-width:250px;height:36px;margin-bottom:4px;display:block;"></audio>`;
+      } else if (m.hasMedia && m.id && (m.kind === 'image' || m.kind === 'audio' || m.kind === 'document')) {
+        const lblBtn = m.kind === 'audio' ? '🎧 Escuchar audio' : (m.kind === 'image' ? '🖼️ Ver foto' : `⬇️ Descargar ${m.fileName || 'archivo'}`);
+        mediaHtml = `<button type="button" onclick="window.cargarMediaMensajeWa('${_esc(m.id)}', '${_esc(m.mediaId || '')}', '${_esc(m.kind)}', '${_esc(m.fileName || '')}')" style="margin-bottom:5px;padding:4px 9px;border-radius:8px;border:1px solid #cbd5e1;background:rgba(255,255,255,0.85);color:#0f2744;font-size:0.72rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">${lblBtn}</button>`;
       } else if (m.kind === 'document' && m.fileName) {
         mediaHtml = `<div class="wa-msg-doc-pill">📄 ${_esc(m.fileName)}</div>`;
       }
 
       let pollHtml = '';
       if (Array.isArray(m.pollOptions) && m.pollOptions.length > 0) {
+        const counts = (m.pollVotes && m.pollVotes.counts) || {};
+        const lastSelected = (m.pollVotes && Array.isArray(m.pollVotes.selectedOptions) && m.pollVotes.selectedOptions) ||
+          (m.id && pollVotesByParentId.get(m.id)) ||
+          [];
         pollHtml = '<div class="wa-msg-poll-box">' +
-          m.pollOptions.map((opt) => `<div class="wa-msg-poll-opt">🔘 ${_esc(opt)}</div>`).join('') +
+          m.pollOptions.map((opt) => {
+            const cnt = Number(counts[opt] || 0);
+            const isVoted = cnt > 0 || lastSelected.includes(opt);
+            const badge = isVoted
+              ? `<span class="wa-poll-vote-badge">✅ Elegido${cnt > 1 ? ' (' + cnt + ')' : ''}</span>`
+              : '';
+            return `<div class="wa-msg-poll-opt${isVoted ? ' voted' : ''}"><span>🔘 ${_esc(opt)}</span>${badge}</div>`;
+          }).join('') +
         '</div>';
       }
 
@@ -1003,43 +1496,200 @@
             `<div class="wa-msg-meta">` +
               (isOut && m.sessionAlias ? `<span>via ${_esc(m.sessionAlias)}</span>` : '') +
               `<span>${_esc(_formatHora(m.timestamp))}</span>` +
-              (isOut ? '<span class="wa-checks">✓✓</span>' : '') +
+              _renderStatusTicks(m) +
             `</div>` +
           `</div>` +
         `</div>`
       );
     }).join('');
 
-    threadEl.scrollTop = threadEl.scrollHeight;
+    if (preserveScrollTop) {
+      threadEl.scrollTop = prevScroll;
+    } else if (wasAtBottom || prevScroll === 0) {
+      threadEl.scrollTop = threadEl.scrollHeight;
+    }
   }
 
   async function cargarMensajesChatWhatsappAdmin(silencioso = false) {
-    if (!_esAdmin() || !activeContact || !activeContact.phone) return;
+    if (!_esAdmin() || !activeContact || !activeContact.phone || isSyncingChat) return;
     const apiBase = _getApiBase();
     const fetchFn = _getFetchFn();
     if (!apiBase || !fetchFn) return;
     const selLine = document.getElementById('selWaBotTestSession');
     const sid = selLine?.value || '';
     const tel = _normalizarTelefonoWa(activeContact.phone);
+    isSyncingChat = true;
     try {
-      const qs = new URLSearchParams({ telefono: tel, limit: '80' });
+      const qs = new URLSearchParams({ telefono: tel, limit: '150' });
       if (sid) qs.set('sessionId', sid);
       const resp = await fetchFn(`${apiBase}/api/admin/whatsapp/mensajes?${qs.toString()}`, { method: 'GET' }, 12000);
       const data = resp && resp.ok ? await resp.json().catch(() => null) : null;
       if (data && Array.isArray(data.mensajes)) {
         remoteMessagesByPhone.set(tel, data.mensajes);
+        if (data.window24h) {
+          activeContact.window24h = data.window24h;
+          _actualizarPillVentana24h(data.window24h);
+        }
         _renderWaChatThread();
         if (!silencioso) {
-          _toast(data.supported === false ? 'ℹ️ Worker pendiente de actualización para sincronizar respuestas entrantes.' : '🔄 Conversación sincronizada.', 'info');
+          _toast(data.supported === false ? 'ℹ️ Worker pendiente de actualización para sincronizar respuestas entrantes.' : '🔄 Conversación y encuestas sincronizadas.', 'info');
         }
       }
     } catch (_) {
       if (!silencioso) _toast('⚠️ No se pudieron consultar mensajes recientes.', 'warning');
+    } finally {
+      isSyncingChat = false;
+    }
+  }
+
+  async function cargarMensajesAnterioresWa() {
+    if (!_esAdmin() || !activeContact || !activeContact.phone) return;
+    const apiBase = _getApiBase();
+    const fetchFn = _getFetchFn();
+    if (!apiBase || !fetchFn) return;
+    const tel = _normalizarTelefonoWa(activeContact.phone);
+    const selLine = document.getElementById('selWaBotTestSession');
+    const sid = selLine?.value || '';
+
+    const currentAll = [...(olderMessagesByPhone.get(tel) || []), ...(remoteMessagesByPhone.get(tel) || [])]
+      .sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0));
+    const oldestTs = currentAll[0]?.timestamp || '';
+
+    try {
+      await fetchFn(`${apiBase}/api/admin/whatsapp/sincronizar-historial`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: sid || undefined, telefono: tel, count: 50 })
+      }, 15000);
+
+      if (oldestTs) {
+        const qs = new URLSearchParams({ telefono: tel, limit: '100', before: oldestTs });
+        if (sid) qs.set('sessionId', sid);
+        const resp = await fetchFn(`${apiBase}/api/admin/whatsapp/mensajes?${qs.toString()}`, { method: 'GET' }, 12000);
+        const data = resp && resp.ok ? await resp.json().catch(() => null) : null;
+        if (data && Array.isArray(data.mensajes) && data.mensajes.length > 0) {
+          const prevOld = olderMessagesByPhone.get(tel) || [];
+          olderMessagesByPhone.set(tel, [...data.mensajes, ...prevOld]);
+          _renderWaChatThread(true);
+          _toast(`⬆️ Se cargaron ${data.mensajes.length} mensajes anteriores.`, 'success');
+          return;
+        }
+      }
+      _toast('🔄 Solicitud de historial enviada al teléfono; actualizando en segundos...', 'info');
+      setTimeout(() => cargarMensajesChatWhatsappAdmin(true), 2200);
+    } catch (_) {
+      _toast('⚠️ No se pudo consultar historial previo.', 'warning');
     }
   }
 
   // ============================================================================
-  // RESPUESTAS PREDEFINIDAS (QUICK REPLIES) Y EMOJIS
+  // PLANTILLAS META CLOUD API
+  // ============================================================================
+  function toggleMetaTemplatesDrawerWa(forceState) {
+    const drawer = document.getElementById('waMetaTemplatesDrawer');
+    if (!drawer) return;
+    const next = typeof forceState === 'boolean' ? forceState : !drawer.classList.contains('open');
+    drawer.classList.toggle('open', next);
+    if (next && (!drawer.dataset.loadedOnce || drawer.dataset.loadedOnce === '0')) {
+      cargarPlantillasMetaWa();
+    }
+  }
+
+  async function cargarPlantillasMetaWa() {
+    const listEl = document.getElementById('waMetaTemplatesList');
+    const drawer = document.getElementById('waMetaTemplatesDrawer');
+    const apiBase = _getApiBase();
+    const fetchFn = _getFetchFn();
+    if (!listEl || !apiBase || !fetchFn) return;
+    const selLine = document.getElementById('selWaBotTestSession');
+    const sid = selLine?.value || 'meta_default';
+    listEl.innerHTML = '<span style="font-size:0.74rem;color:#475569;">Consultando plantillas aprobadas en Meta...</span>';
+    try {
+      const resp = await fetchFn(`${apiBase}/api/admin/whatsapp/meta/templates?sessionId=${encodeURIComponent(sid)}`, { method: 'GET' }, 15000);
+      const data = resp && resp.ok ? await resp.json().catch(() => null) : null;
+      if (drawer) drawer.dataset.loadedOnce = '1';
+      if (!data || !data.ok) {
+        listEl.innerHTML = `<span style="font-size:0.74rem;color:#b45309;">⚠️ ${_esc(data?.error || 'Meta Cloud API aún no configurada en Render.')}</span>`;
+        return;
+      }
+      const tpls = (data.templates || []).filter((t) => String(t.status || '').toUpperCase() === 'APPROVED');
+      if (tpls.length === 0) {
+        listEl.innerHTML = '<span style="font-size:0.74rem;color:#64748b;">No se encontraron plantillas en estado APPROVED en tu WABA.</span>';
+        return;
+      }
+      listEl.innerHTML = tpls.map((t, idx) =>
+        `<button type="button" class="wa-quick-chip" data-meta-tpl-idx="${idx}" title="${_esc(t.bodyText || '')}">📋 ${_esc(t.name)} (${_esc(t.language || 'es_AR')})</button>`
+      ).join('');
+      listEl.querySelectorAll('[data-meta-tpl-idx]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const i = Number(btn.getAttribute('data-meta-tpl-idx'));
+          selectedMetaTemplate = tpls[i] || null;
+          const sendBox = document.getElementById('waMetaTemplateSendBox');
+          const lblN = document.getElementById('lblWaSelectedTemplateName');
+          const lblB = document.getElementById('lblWaSelectedTemplateBody');
+          if (sendBox && selectedMetaTemplate) {
+            sendBox.style.display = 'flex';
+            if (lblN) lblN.textContent = `Plantilla: ${selectedMetaTemplate.name} (${selectedMetaTemplate.language || 'es_AR'})`;
+            if (lblB) lblB.textContent = selectedMetaTemplate.bodyText || '(Sin vista previa de cuerpo)';
+          }
+        });
+      });
+    } catch (_) {
+      listEl.innerHTML = '<span style="font-size:0.74rem;color:#b91c1c;">⚠️ Error consultando plantillas Meta.</span>';
+    }
+  }
+
+  async function enviarPlantillaMetaSeleccionadaWa() {
+    if (!selectedMetaTemplate || isSendingCustom) return;
+    const inpTel = document.getElementById('inpWaBotTestPhone');
+    const telNorm = _normalizarTelefonoWa(inpTel?.value || activeContact?.phone || '');
+    if (telNorm.length < 10) {
+      _toast('⚠️ Seleccioná o ingresá un teléfono válido.', 'warning');
+      return;
+    }
+    const selLine = document.getElementById('selWaBotTestSession');
+    const paramsRaw = String(document.getElementById('inpWaTemplateParams')?.value || '').trim();
+    const params = paramsRaw ? paramsRaw.split('|').map((s) => s.trim()) : [];
+
+    const apiBase = _getApiBase();
+    const fetchFn = _getFetchFn();
+    if (!apiBase || !fetchFn) return;
+    isSendingCustom = true;
+    try {
+      const resp = await fetchFn(`${apiBase}/api/admin/whatsapp/enviar-personalizado`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: selLine?.value || 'meta_default',
+          telefono: telNorm,
+          mensaje: selectedMetaTemplate.bodyText || selectedMetaTemplate.name,
+          templateName: selectedMetaTemplate.name,
+          templateLanguage: selectedMetaTemplate.language || 'es_AR',
+          templateParams: params
+        })
+      }, 30000);
+      const data = resp ? await resp.json().catch(() => null) : null;
+      if (!resp || !resp.ok || !data?.ok) {
+        throw new Error((data && (data.detail || data.error)) || 'Error enviando plantilla.');
+      }
+      _appendLocalMessage(telNorm, {
+        id: data.messageId,
+        kind: 'template',
+        text: `📋 Plantilla Meta: ${selectedMetaTemplate.name}`,
+        timestamp: new Date().toISOString()
+      });
+      _renderWaChatThread();
+      toggleMetaTemplatesDrawerWa(false);
+      _toast('✅ Plantilla oficial Meta enviada.', 'success');
+    } catch (err) {
+      _toast('⚠️ ' + (err?.message || 'No se pudo enviar la plantilla.'), 'error');
+    } finally {
+      isSendingCustom = false;
+    }
+  }
+
+  // ============================================================================
+  // RESPUESTAS PREDEFINIDAS (QUICK REPLIES) Y SELECTOR AMPLIO DE EMOJIS
   // ============================================================================
   function _personalizarPlantilla(tplText) {
     const nombreRaw = activeContact?.name && !activeContact.name.startsWith('+')
@@ -1134,19 +1784,83 @@
     _renderQuickReplies();
   }
 
+  function _getRecentEmojis() {
+    try {
+      const raw = localStorage.getItem(LS_EMOJI_RECENTS_KEY);
+      const arr = raw ? JSON.parse(raw) : null;
+      if (Array.isArray(arr) && arr.length > 0) return arr;
+    } catch (_) {}
+    return DEFAULT_RECENT_EMOJIS.slice();
+  }
+
+  function _pushRecentEmoji(emoji) {
+    const prev = _getRecentEmojis().filter((x) => x !== emoji);
+    prev.unshift(emoji);
+    try {
+      localStorage.setItem(LS_EMOJI_RECENTS_KEY, JSON.stringify(prev.slice(0, 24)));
+    } catch (_) {}
+  }
+
+  function _renderEmojiGridOnly() {
+    const grid = document.getElementById('waEmojiGridBox');
+    if (!grid) return;
+    const q = String(currentEmojiSearch || '').trim().toLowerCase();
+    let list = [];
+    if (q) {
+      list = EMOJI_CATALOG.filter((item) => item.k.includes(q) || item.e === q).map((item) => item.e);
+    } else if (currentEmojiCategory === 'recientes') {
+      list = _getRecentEmojis();
+    } else if (currentEmojiCategory === 'todos') {
+      list = EMOJI_CATALOG.map((item) => item.e);
+    } else {
+      list = EMOJI_CATALOG.filter((item) => item.c === currentEmojiCategory).map((item) => item.e);
+    }
+    grid.innerHTML = list.length > 0
+      ? list.map((em) => `<button type="button" class="wa-emoji-btn" onclick="window.insertarEmojiWa('${em}')">${em}</button>`).join('')
+      : '<div style="grid-column:1 / -1;text-align:center;padding:0.75rem;font-size:0.74rem;color:#64748b;">Sin emojis coincidentes</div>';
+  }
+
   function _renderEmojiPopover() {
     const pop = document.getElementById('waEmojiPopover');
     if (!pop) return;
-    pop.innerHTML = QUICK_EMOJIS.map((em) =>
-      `<button type="button" class="wa-emoji-btn" onclick="window.insertarEmojiWa('${em}')">${em}</button>`
-    ).join('');
+    const tabs = [
+      { id: 'recientes', label: '🕒 Recientes' },
+      { id: 'oficina', label: '💼 AMMER' },
+      { id: 'caras', label: '😊 Gestos' },
+      { id: 'simbolos', label: '✅ Símbolos' },
+      { id: 'todos', label: '🌐 Todos' }
+    ];
+    pop.innerHTML =
+      `<input type="search" id="inpWaEmojiSearch" value="${_esc(currentEmojiSearch)}" placeholder="🔎 Buscar emoji (ej: dni, plata, ok, firma...)" oninput="window.buscarEmojiWa(this.value)" style="width:100%;padding:0.35rem 0.55rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.74rem;box-sizing:border-box;"/>` +
+      `<div class="wa-emoji-tabs">` +
+        tabs.map((t) => `<button type="button" class="wa-emoji-tab${currentEmojiCategory === t.id ? ' active' : ''}" onclick="window.cambiarCategoriaEmojiWa('${t.id}')">${t.label}</button>`).join('') +
+      `</div>` +
+      `<div id="waEmojiGridBox" class="wa-emoji-grid"></div>`;
+    _renderEmojiGridOnly();
+  }
+
+  function cambiarCategoriaEmojiWa(catId) {
+    currentEmojiCategory = catId || 'oficina';
+    currentEmojiSearch = '';
+    const inp = document.getElementById('inpWaEmojiSearch');
+    if (inp) inp.value = '';
+    _renderEmojiPopover();
+  }
+
+  function buscarEmojiWa(query) {
+    currentEmojiSearch = String(query || '');
+    _renderEmojiGridOnly();
   }
 
   function toggleEmojiPopoverWa(forceState) {
     const pop = document.getElementById('waEmojiPopover');
     if (!pop) return;
     const next = typeof forceState === 'boolean' ? forceState : !pop.classList.contains('open');
+    if (next) _renderEmojiPopover();
     pop.classList.toggle('open', next);
+    if (next) {
+      setTimeout(() => document.getElementById('inpWaEmojiSearch')?.focus(), 40);
+    }
   }
 
   function insertarEmojiWa(emoji) {
@@ -1157,6 +1871,7 @@
     inp.value = inp.value.slice(0, start) + emoji + inp.value.slice(end);
     inp.focus();
     inp.selectionStart = inp.selectionEnd = start + emoji.length;
+    _pushRecentEmoji(emoji);
     autoResizeWaTextarea(inp);
     toggleEmojiPopoverWa(false);
   }
@@ -1278,7 +1993,7 @@
           `<audio controls src="${_esc(pendingAttachment.objectUrl)}" style="height:34px;max-width:260px;"></audio>` +
           `<label style="display:inline-flex;align-items:center;gap:5px;font-size:0.72rem;font-weight:700;color:#14532d;cursor:pointer;">` +
             `<input type="checkbox" ${pendingAttachment.ptt !== false ? 'checked' : ''} onchange="window.toggleWaAudioPtt(this.checked)" style="accent-color:#16a34a;"/>` +
-            `<span>Enviar como nota de voz</span>` +
+            `<span>Enviar como nota de voz (OGG/Opus)</span>` +
           `</label>` +
         `</div>`;
     } else {
@@ -1454,7 +2169,6 @@
         if (secs >= 300) detenerGrabacionAudioWa(false);
       }, 250);
 
-      // Visualizador simple en canvas
       try {
         const AudioCtx = global.AudioContext || global.webkitAudioContext;
         if (AudioCtx) {
@@ -1552,7 +2266,7 @@
   }
 
   // ============================================================================
-  // ENVÍO PERSONALIZADO MULTIMEDIA / TEXTO / AUDIO / BOTONES
+  // ENVÍO PERSONALIZADO MULTIMEDIA / TEXTO / AUDIO / BOTONES / PIE DE FIRMA
   // ============================================================================
   function autoResizeWaTextarea(el) {
     if (!el) return;
@@ -1575,7 +2289,7 @@
     const inpMsg = document.getElementById('inpWaBotTestMsg');
     const telRaw = String(inpTel?.value || activeContact?.phone || '').trim();
     const telNorm = _normalizarTelefonoWa(telRaw);
-    const msg = String(inpMsg?.value || '').trim();
+    let msg = String(inpMsg?.value || '').trim();
 
     if (telNorm.length < 10) {
       _toast('⚠️ Ingresá o seleccioná un destinatario con número válido (ej: 549343...).', 'warning');
@@ -1595,6 +2309,12 @@
       _toast('⚠️ Escribí un mensaje, adjuntá una foto/archivo, grabá un audio o agregá botones.', 'warning');
       if (inpMsg) inpMsg.focus();
       return;
+    }
+
+    // Agregar pie de página / firma del asesor si está habilitado y hay texto o caption
+    const footerTxt = _resolverPieFirmaTexto();
+    if (footerTxt && msg && !msg.includes(footerTxt)) {
+      msg = `${msg}\n\n${footerTxt}`;
     }
 
     const apiBase = _getApiBase();
@@ -1646,7 +2366,6 @@
 
       const msgId = data.messageId || `sent_${Date.now()}`;
       if (currentAttachment?.objectUrl) {
-        // Transferir ownership del objectUrl al historial de la sesión para mostrar preview en la burbuja
         sessionMediaPreviewUrls.set(msgId, currentAttachment.objectUrl);
         pendingAttachment.objectUrl = null;
       }
@@ -1668,6 +2387,7 @@
         mimetype: currentAttachment?.mimetype || null,
         pollOptions: activeButtons.length >= 2 ? activeButtons : null,
         sessionAlias,
+        status: 'sent',
         timestamp: new Date().toISOString()
       });
 
@@ -1693,7 +2413,7 @@
   }
 
   // ============================================================================
-  // GESTIÓN DE SESIONES QR Y ENRUTAMIENTO
+  // GESTIÓN DE SESIONES QR, LÍNEAS META CLOUD API Y ENRUTAMIENTO
   // ============================================================================
   async function crearNuevaLineaWhatsappBotAdmin() {
     if (!_esAdmin()) return;
@@ -1726,6 +2446,64 @@
       _toast('⚠️ ' + (err?.message || 'No se pudo crear la línea WhatsApp.'), 'error');
     } finally {
       if (btn) btn.disabled = false;
+    }
+  }
+
+  async function crearLineaMetaWhatsappAdmin() {
+    if (!_esAdmin()) return;
+    const alias = String(document.getElementById('inpWaMetaAlias')?.value || '').trim() || 'Línea Oficial Meta';
+    const phoneId = String(document.getElementById('inpWaMetaPhoneId')?.value || '').replace(/\D/g, '');
+    const wabaId = String(document.getElementById('inpWaMetaWabaId')?.value || '').replace(/\D/g, '');
+    const dispPhone = String(document.getElementById('inpWaMetaDisplayPhone')?.value || '').trim();
+    const tokenKey = String(document.getElementById('inpWaMetaTokenEnvKey')?.value || 'META_WA_ACCESS_TOKEN').trim();
+    const coex = Boolean(document.getElementById('chkWaMetaCoexistence')?.checked);
+
+    if (phoneId.length < 6) {
+      _toast('⚠️ Ingresá un Phone Number ID válido de Meta.', 'warning');
+      return;
+    }
+
+    const apiBase = _getApiBase();
+    const fetchFn = _getFetchFn();
+    if (!apiBase || !fetchFn) return;
+    try {
+      const resp = await fetchFn(`${apiBase}/api/admin/whatsapp/meta/lineas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          alias,
+          phone_number_id: phoneId,
+          waba_id: wabaId || undefined,
+          display_phone: dispPhone || undefined,
+          token_env_key: tokenKey || 'META_WA_ACCESS_TOKEN',
+          coexistence_enabled: coex
+        })
+      }, 20000);
+      const data = resp ? await resp.json().catch(() => null) : null;
+      if (!resp || !resp.ok || !data?.ok) {
+        throw new Error((data && (data.detail || data.error)) || 'No se pudo registrar la línea Meta.');
+      }
+      document.getElementById('waMetaAddCard').style.display = 'none';
+      _toast('✅ Línea Meta Cloud API registrada.', 'success');
+      await cargarPanelWhatsappBotAdmin(false);
+    } catch (err) {
+      _toast('⚠️ ' + (err?.message || 'Error guardando línea Meta.'), 'error');
+    }
+  }
+
+  async function eliminarLineaMetaWhatsappAdmin(sessionId) {
+    if (!_esAdmin()) return;
+    if (!global.confirm(`¿Eliminar la línea Meta "${sessionId}"?`)) return;
+    const apiBase = _getApiBase();
+    const fetchFn = _getFetchFn();
+    if (!apiBase || !fetchFn) return;
+    try {
+      const resp = await fetchFn(`${apiBase}/api/admin/whatsapp/meta/lineas/${encodeURIComponent(sessionId)}`, { method: 'DELETE' }, 15000);
+      if (!resp || !resp.ok) throw new Error('No se pudo eliminar');
+      _toast('🗑️ Línea Meta eliminada.', 'success');
+      await cargarPanelWhatsappBotAdmin(false);
+    } catch (err) {
+      _toast('⚠️ ' + (err?.message || 'Error eliminando línea Meta'), 'error');
     }
   }
 
@@ -1818,6 +2596,7 @@
 
     const chkFallback = document.getElementById('chkWaBotFallbackAuto');
     const fallbackAuto = chkFallback ? Boolean(chkFallback.checked) : true;
+    const footerCfg = _getFooterConfig();
 
     const btn = document.getElementById('btnWaBotGuardarConfig');
     if (btn) btn.disabled = true;
@@ -1825,7 +2604,13 @@
       const resp = await fetchFn(`${apiBase}/api/admin/whatsapp/config`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ aliases, rutas, fallback_automatico: fallbackAuto })
+        body: JSON.stringify({
+          aliases,
+          rutas,
+          fallback_automatico: fallbackAuto,
+          footer_enabled: footerCfg.enabled,
+          footer_template: footerCfg.template
+        })
       }, 20000);
       const data = resp ? await resp.json().catch(() => null) : null;
       if (!resp || !resp.ok || !data?.ok) {
@@ -1882,6 +2667,8 @@
   global.cargarPanelWhatsappBotAdmin = cargarPanelWhatsappBotAdmin;
   global.detenerPollingWhatsappBotAdmin = detenerPollingWhatsappBotAdmin;
   global.cambiarTabWhatsappBotAdmin = cambiarTabWhatsappBotAdmin;
+  global.abrirConfigApiOficialMetaWa = abrirConfigApiOficialMetaWa;
+  global.copiarWebhookUrlMetaWa = copiarWebhookUrlMetaWa;
   global.usarLineaEnMensajeriaWa = usarLineaEnMensajeriaWa;
   global.onWaComposerSessionChange = onWaComposerSessionChange;
   global.buscarContactoWhatsappAdmin = buscarContactoWhatsappAdmin;
@@ -1889,11 +2676,22 @@
   global.onWaDirectPhoneInput = onWaDirectPhoneInput;
   global.abrirChatPorTelefonoAdmin = abrirChatPorTelefonoAdmin;
   global.seleccionarContactoWhatsappAdmin = seleccionarContactoWhatsappAdmin;
+  global.cargarConversacionesServidorWa = cargarConversacionesServidorWa;
   global.limpiarHistorialChatsWhatsappAdmin = limpiarHistorialChatsWhatsappAdmin;
   global.cargarMensajesChatWhatsappAdmin = cargarMensajesChatWhatsappAdmin;
+  global.cargarMensajesAnterioresWa = cargarMensajesAnterioresWa;
+  global.cargarMediaMensajeWa = cargarMediaMensajeWa;
+  global.toggleMetaTemplatesDrawerWa = toggleMetaTemplatesDrawerWa;
+  global.cargarPlantillasMetaWa = cargarPlantillasMetaWa;
+  global.enviarPlantillaMetaSeleccionadaWa = enviarPlantillaMetaSeleccionadaWa;
+  global.onToggleFooterWa = onToggleFooterWa;
+  global.toggleEditarFooterWa = toggleEditarFooterWa;
+  global.guardarFooterAsesorWa = guardarFooterAsesorWa;
   global.toggleEditorRespuestasRapidasWa = toggleEditorRespuestasRapidasWa;
   global.agregarRespuestaRapidaWa = agregarRespuestaRapidaWa;
   global.eliminarRespuestaRapidaWa = eliminarRespuestaRapidaWa;
+  global.cambiarCategoriaEmojiWa = cambiarCategoriaEmojiWa;
+  global.buscarEmojiWa = buscarEmojiWa;
   global.toggleEmojiPopoverWa = toggleEmojiPopoverWa;
   global.insertarEmojiWa = insertarEmojiWa;
   global.toggleBotonesBuilderWa = toggleBotonesBuilderWa;
@@ -1916,6 +2714,8 @@
   global.handleWaComposerKeydown = handleWaComposerKeydown;
   global.enviarMensajePersonalizadoWhatsappAdmin = enviarMensajePersonalizadoWhatsappAdmin;
   global.crearNuevaLineaWhatsappBotAdmin = crearNuevaLineaWhatsappBotAdmin;
+  global.crearLineaMetaWhatsappAdmin = crearLineaMetaWhatsappAdmin;
+  global.eliminarLineaMetaWhatsappAdmin = eliminarLineaMetaWhatsappAdmin;
   global.abrirSesionWhatsappBotAdmin = abrirSesionWhatsappBotAdmin;
   global.cerrarSesionWhatsappBotAdmin = cerrarSesionWhatsappBotAdmin;
   global.eliminarSesionWhatsappBotAdmin = eliminarSesionWhatsappBotAdmin;

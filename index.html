@@ -1665,11 +1665,13 @@
       width: 100vw;
       height: 100vh;
     }
-    .wiki-video-frame-wrap iframe {
+    .wiki-video-frame-wrap iframe,
+    .wiki-video-frame-wrap video {
       width: 100%;
       height: 100%;
       border: 0;
       display: block;
+      background: #020617;
     }
     .wiki-video-card-actions {
       display: flex;
@@ -8136,7 +8138,15 @@
         <button type="button" class="wiki-video-switch-pill is-active" data-video-id="1Q4NuruXO1CFnfyrwK595CabO_U9y5swa" onclick="seleccionarVideoCentroAyuda('1Q4NuruXO1CFnfyrwK595CabO_U9y5swa', 'Guía Rápida de Uso de la Web App', false)">🎬 Guía Rápida Web App</button>
       </div>
       <div id="wikiVideoPlayerFrameWrap" class="wiki-video-frame-wrap">
-        <iframe id="wikiVideoPlayerIframe" src="about:blank" title="Guía Rápida Mutual Modelo" allow="autoplay; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        <div id="wikiVideoLoadingState" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:#e2e8f0;background:#020617;font-size:13px;">
+          <div>⏳ Cargando videotutorial protegido...</div>
+        </div>
+        <video id="wikiVideoNativePlayer" controls playsinline style="display:none;"></video>
+        <iframe id="wikiVideoPlayerIframe" src="about:blank" title="Guía Rápida Mutual Modelo" allow="storage-access; autoplay; fullscreen; picture-in-picture" loading="lazy"></iframe>
+      </div>
+      <div id="wikiVideoCookieHint" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:8px 14px;background:#0f172a;border-top:1px solid rgba(148,163,184,0.2);font-size:12px;color:#cbd5e1;">
+        <span>💡 Si tu navegador o modo incógnito bloquea las cookies de Google Drive, reproducilo directo en una pestaña nueva.</span>
+        <a id="wikiVideoHintOpenNewTab" href="https://drive.google.com/file/d/1Q4NuruXO1CFnfyrwK595CabO_U9y5swa/view" target="_blank" rel="noopener noreferrer" class="wiki-video-ctrl-btn" style="text-decoration:none;">↗ Abrir en pestaña nueva</a>
       </div>
     </div>
   </div>
@@ -12057,17 +12067,17 @@ ${cierreTxt}`;
 
       const lightbox = document.getElementById('wikiVideoLightboxModal');
       const iframe = document.getElementById('wikiVideoPlayerIframe');
+      const nativeVid = document.getElementById('wikiVideoNativePlayer');
+      const loadState = document.getElementById('wikiVideoLoadingState');
       const titleEl = document.getElementById('wikiVideoCurrentTitle');
       const newTabEl = document.getElementById('wikiVideoOpenNewTab');
+      const hintTabEl = document.getElementById('wikiVideoHintOpenNewTab');
       const targetPreviewUrl = 'https://drive.google.com/file/d/' + encodeURIComponent(idClean) + '/preview';
       const targetViewUrl = 'https://drive.google.com/file/d/' + encodeURIComponent(idClean) + '/view';
 
-      if (iframe && iframe.getAttribute('data-loaded-id') !== idClean) {
-        iframe.src = targetPreviewUrl;
-        iframe.setAttribute('data-loaded-id', idClean);
-      }
       if (titleEl) titleEl.textContent = _wikiActiveVideoTitle;
       if (newTabEl) newTabEl.href = targetViewUrl;
+      if (hintTabEl) hintTabEl.href = targetViewUrl;
 
       document.querySelectorAll('.wiki-video-card').forEach(card => {
         const cardVid = card.getAttribute('data-video-id');
@@ -12083,6 +12093,70 @@ ${cierreTxt}`;
         lightbox.setAttribute('aria-hidden', 'false');
         lightbox.focus();
       }
+
+      const mostrarIframeFallback = () => {
+        if (loadState) loadState.style.display = 'none';
+        if (nativeVid) {
+          try { nativeVid.pause(); } catch (_) {}
+          nativeVid.style.display = 'none';
+          nativeVid.removeAttribute('src');
+        }
+        if (iframe) {
+          iframe.style.display = 'block';
+          if (iframe.getAttribute('data-loaded-id') !== idClean) {
+            iframe.src = targetPreviewUrl;
+            iframe.setAttribute('data-loaded-id', idClean);
+          }
+        }
+      };
+
+      const yaCargadoNative = nativeVid && nativeVid.getAttribute('data-loaded-id') === idClean && nativeVid.getAttribute('src');
+      if (yaCargadoNative) {
+        if (loadState) loadState.style.display = 'none';
+        if (iframe) iframe.style.display = 'none';
+        nativeVid.style.display = 'block';
+        return;
+      }
+
+      const puedeProxy = (
+        typeof RENDER_API_URL === 'string' &&
+        RENDER_API_URL &&
+        !RENDER_API_URL.includes('[TU_API]') &&
+        typeof getApiAuthToken === 'function' &&
+        getApiAuthToken() &&
+        typeof cargarBlobUrlDriveAutenticado_ === 'function'
+      );
+
+      if (!puedeProxy) {
+        mostrarIframeFallback();
+        return;
+      }
+
+      if (iframe) {
+        iframe.style.display = 'none';
+        iframe.src = 'about:blank';
+        iframe.removeAttribute('data-loaded-id');
+      }
+      if (nativeVid) nativeVid.style.display = 'none';
+      if (loadState) loadState.style.display = 'flex';
+
+      cargarBlobUrlDriveAutenticado_(idClean, false).then((resProxy) => {
+        if (_wikiActiveVideoId !== idClean) return;
+        if (resProxy && resProxy.objUrl && (!resProxy.mime || resProxy.mime.startsWith('video/'))) {
+          if (loadState) loadState.style.display = 'none';
+          if (iframe) iframe.style.display = 'none';
+          if (nativeVid) {
+            nativeVid.src = resProxy.objUrl;
+            nativeVid.setAttribute('data-loaded-id', idClean);
+            nativeVid.style.display = 'block';
+            try { nativeVid.play().catch(() => {}); } catch (_) {}
+            return;
+          }
+        }
+        mostrarIframeFallback();
+      }).catch(() => {
+        if (_wikiActiveVideoId === idClean) mostrarIframeFallback();
+      });
     }
 
     function cerrarVideoModalWiki() {
@@ -12094,10 +12168,20 @@ ${cierreTxt}`;
         lightbox.classList.remove('is-open');
         lightbox.setAttribute('aria-hidden', 'true');
       }
+      const loadState = document.getElementById('wikiVideoLoadingState');
+      if (loadState) loadState.style.display = 'none';
+      const nativeVid = document.getElementById('wikiVideoNativePlayer');
+      if (nativeVid) {
+        try { nativeVid.pause(); } catch (_) {}
+        nativeVid.removeAttribute('src');
+        nativeVid.removeAttribute('data-loaded-id');
+        nativeVid.style.display = 'none';
+      }
       const iframe = document.getElementById('wikiVideoPlayerIframe');
       if (iframe) {
         iframe.src = 'about:blank';
         iframe.removeAttribute('data-loaded-id');
+        iframe.style.display = 'block';
       }
       document.querySelectorAll('.wiki-video-card').forEach(card => card.classList.remove('is-playing'));
     }
@@ -16617,6 +16701,9 @@ ${cierreTxt}`;
             if (resProxy.mime.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif)$/i.test(nombreDoc)) {
               if (toolbar) toolbar.style.display = 'flex';
               wrap.innerHTML = '<div class="doc-viewer-img-container"><img id="visorImageEl" src="' + sanitizeHTML(resProxy.objUrl) + '" class="doc-viewer-img" alt="' + sanitizeHTML(nombreDoc) + '"/></div>';
+            } else if (resProxy.mime.startsWith('video/') || /\.(mp4|webm|mov|m4v|ogg)$/i.test(nombreDoc)) {
+              if (toolbar) toolbar.style.display = 'none';
+              wrap.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#020617;border-radius:10px;overflow:hidden;"><video src="' + sanitizeHTML(resProxy.objUrl) + '" controls playsinline style="width:100%;height:100%;max-height:74vh;background:#020617;"></video></div>';
             } else {
               if (toolbar) toolbar.style.display = 'none';
               wrap.innerHTML = '<iframe src="' + sanitizeHTML(resProxy.objUrl) + '" class="doc-viewer-frame" sandbox="allow-scripts allow-same-origin allow-downloads" title="' + sanitizeHTML(nombreDoc) + '"></iframe>';

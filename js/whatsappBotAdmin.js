@@ -10,8 +10,8 @@
   const LS_RECENT_CHATS_KEY = 'AMMER_WA_RECENT_CHATS_V1';
   const LS_QUICK_REPLIES_KEY = 'AMMER_WA_QUICK_REPLIES_V1';
   const LS_LOCAL_MSGS_KEY = 'AMMER_WA_LOCAL_MSGS_V1';
-  const LS_EMOJI_RECENTS_KEY = 'AMMER_WA_EMOJI_RECENTS_V1';
-  const LS_FOOTER_CFG_KEY = 'AMMER_WA_FOOTER_CFG_V1';
+  const STORAGE_WA_EMOJI_RECENTS = 'AMMER_WA_EMOJI_RECENTS_V1';
+  const STORAGE_WA_FOOTER_CFG = 'AMMER_WA_FOOTER_CFG_V1';
   const MAX_ATTACHMENT_BYTES = 16 * 1024 * 1024;
 
   const DEFAULT_QUICK_REPLIES = [
@@ -277,7 +277,7 @@
   // ============================================================================
   function _getFooterConfig() {
     try {
-      const raw = localStorage.getItem(LS_FOOTER_CFG_KEY);
+      const raw = localStorage.getItem(STORAGE_WA_FOOTER_CFG);
       if (raw) {
         const p = JSON.parse(raw);
         if (p && typeof p === 'object') {
@@ -298,7 +298,7 @@
 
   function _saveFooterConfig(cfg) {
     try {
-      localStorage.setItem(LS_FOOTER_CFG_KEY, JSON.stringify(cfg));
+      localStorage.setItem(STORAGE_WA_FOOTER_CFG, JSON.stringify(cfg));
     } catch (_) {}
   }
 
@@ -1786,7 +1786,7 @@
 
   function _getRecentEmojis() {
     try {
-      const raw = localStorage.getItem(LS_EMOJI_RECENTS_KEY);
+      const raw = localStorage.getItem(STORAGE_WA_EMOJI_RECENTS);
       const arr = raw ? JSON.parse(raw) : null;
       if (Array.isArray(arr) && arr.length > 0) return arr;
     } catch (_) {}
@@ -1797,7 +1797,7 @@
     const prev = _getRecentEmojis().filter((x) => x !== emoji);
     prev.unshift(emoji);
     try {
-      localStorage.setItem(LS_EMOJI_RECENTS_KEY, JSON.stringify(prev.slice(0, 24)));
+      localStorage.setItem(STORAGE_WA_EMOJI_RECENTS, JSON.stringify(prev.slice(0, 24)));
     } catch (_) {}
   }
 

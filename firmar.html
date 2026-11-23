@@ -2716,33 +2716,73 @@
         const stage2Timer = setTimeout(() => setEkycProgressStage_(2), 1400);
         const stage3Timer = setTimeout(() => setEkycProgressStage_(3), 4800);
 
+        const esErrorRed = (err) => {
+          const m = String((err && err.message) || '');
+          const n = String((err && err.name) || '');
+          return n === 'AbortError' || /failed to fetch|load failed|networkerror|network request failed|fetch|timeout|aborted/i.test(m);
+        };
+
+        const enviarValidacionHttp = async (tsTok, incluirVideo) => {
+          const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+          const timerAbort = ctrl ? setTimeout(() => ctrl.abort(), 75000) : null;
+          try {
+            const resp = await fetch(`${API_BASE}/api/firmas/public/${encodeURIComponent(token)}/validar-identidad`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              signal: ctrl ? ctrl.signal : undefined,
+              body: JSON.stringify({
+                dniFrenteBase64: appState.ekycImgs.dniFrente || null,
+                dniDorsoBase64: appState.ekycImgs.dniDorso || null,
+                selfieBase64: appState.ekycImgs.selfie1 || null,
+                selfieDesafioBase64: appState.ekycImgs.selfie2 || appState.ekycImgs.selfie3 || null,
+                selfie3Base64: appState.ekycImgs.selfie3 || null,
+                selfieVideoBase64: (incluirVideo && appState.recordedVideoDataUrl) ? appState.recordedVideoDataUrl : null,
+                retoLiveness: appState.retoLiveness,
+                pdf417Raw: appState.ekycImgs.pdf417Raw || null,
+                qrRaw: appState.ekycImgs.qrRaw || null,
+                turnstileToken: tsTok || null,
+              }),
+            });
+            let resJson = {};
+            try {
+              resJson = await resp.json();
+            } catch (_pj) {
+              throw new Error(`El servidor respondió HTTP ${resp.status}. Intentá nuevamente.`);
+            }
+            if (!resp.ok || resJson.ok === false) {
+              throw new Error(resJson.detail || resJson.message || `Error HTTP ${resp.status}`);
+            }
+            return resJson;
+          } finally {
+            if (timerAbort) clearTimeout(timerAbort);
+          }
+        };
+
         try {
           const tsToken = await obtenerTokenTurnstile_('firmar_identidad', { focusOnWait: true });
-          if (!tsToken && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+          const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+          if (!tsToken && !isLocal) {
             reiniciarTurnstile_();
             precalentarTurnstile_('firmar_identidad');
             mostrarErrorEnPaso('No pudimos completar la verificación anti-bots de Cloudflare. Verificá tu conexión (o desactivá bloqueadores de contenido) y tocá "Verificar y Continuar" de nuevo.');
             return false;
           }
-          const resp = await fetch(`${API_BASE}/api/firmas/public/${encodeURIComponent(token)}/validar-identidad`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              dniFrenteBase64: appState.ekycImgs.dniFrente || null,
-              dniDorsoBase64: appState.ekycImgs.dniDorso || null,
-              selfieBase64: appState.ekycImgs.selfie1 || null,
-              selfieDesafioBase64: appState.ekycImgs.selfie2 || appState.ekycImgs.selfie3 || null,
-              selfie3Base64: appState.ekycImgs.selfie3 || null,
-              selfieVideoBase64: appState.recordedVideoDataUrl || null,
-              retoLiveness: appState.retoLiveness,
-              pdf417Raw: appState.ekycImgs.pdf417Raw || null,
-              qrRaw: appState.ekycImgs.qrRaw || null,
-              turnstileToken: tsToken || null,
-            }),
-          });
-          const resJson = await resp.json();
-          if (!resp.ok || resJson.ok === false) {
-            throw new Error(resJson.detail || resJson.message || `Error HTTP ${resp.status}`);
+          let resJson;
+          try {
+            resJson = await enviarValidacionHttp(tsToken, true);
+          } catch (errPrimero) {
+            if (appState.recordedVideoDataUrl && esErrorRed(errPrimero)) {
+              if (btnDirecto) btnDirecto.textContent = '⏳ Reintentando…';
+              btnNext.textContent = '⏳ Reintentando envío liviano...';
+              reiniciarTurnstile_();
+              const tsRetry = await obtenerTokenTurnstile_('firmar_identidad', { focusOnWait: true });
+              if (!tsRetry && !isLocal) {
+                throw errPrimero;
+              }
+              resJson = await enviarValidacionHttp(tsRetry, false);
+            } else {
+              throw errPrimero;
+            }
           }
           reiniciarTurnstile_();
           mostrarResultadoEkyc(resJson);
@@ -2753,6 +2793,9 @@
           if (/turnstile|anti-?bots/i.test(msgErr)) {
             precalentarTurnstile_('firmar_identidad');
             mostrarErrorEnPaso('No pudimos completar la verificación anti-bots: ' + msgErr);
+          } else if (esErrorRed(err)) {
+            precalentarTurnstile_('firmar_identidad');
+            registrarFalloDniParaGaleria('No pudimos conectarnos con el servidor (conexión lenta o inestable). Verificá tu internet e intentá de nuevo.', true);
           } else {
             registrarFalloDniParaGaleria('No pudimos validar tu identidad: ' + msgErr, true);
           }
@@ -3917,11 +3960,14 @@
             document.getElementById('recStatusPill').style.display = 'inline-flex';
 
             const captureFrame = () => {
+              const rawW = vid.videoWidth || 640;
+              const rawH = vid.videoHeight || 480;
+              const scale = Math.min(1, 720 / Math.max(rawW, rawH));
               const c = document.createElement('canvas');
-              c.width = vid.videoWidth || 640;
-              c.height = vid.videoHeight || 480;
+              c.width = Math.max(1, Math.round(rawW * scale));
+              c.height = Math.max(1, Math.round(rawH * scale));
               c.getContext('2d').drawImage(vid, 0, 0, c.width, c.height);
-              return c.toDataURL('image/jpeg', 0.85);
+              return c.toDataURL('image/jpeg', 0.78);
             };
 
             const chunks = [];
@@ -3931,8 +3977,8 @@
                 const mimePref = ['video/webm;codecs=vp8', 'video/webm', 'video/mp4']
                   .find((m) => typeof MediaRecorder.isTypeSupported === 'function' && MediaRecorder.isTypeSupported(m)) || '';
                 const rec = mimePref
-                  ? new MediaRecorder(appState.ekycStream, { mimeType: mimePref, videoBitsPerSecond: 200000 })
-                  : new MediaRecorder(appState.ekycStream);
+                  ? new MediaRecorder(appState.ekycStream, { mimeType: mimePref, videoBitsPerSecond: 140000 })
+                  : new MediaRecorder(appState.ekycStream, { videoBitsPerSecond: 140000 });
                 appState.mediaRecorder = rec;
                 rec.ondataavailable = (ev) => {
                   if (ev.data && ev.data.size > 0) chunks.push(ev.data);
@@ -3945,7 +3991,7 @@
                         const blob = new Blob(chunks, { type: rec.mimeType || 'video/webm' });
                         if (appState.recordedVideoUrl) URL.revokeObjectURL(appState.recordedVideoUrl);
                         appState.recordedVideoUrl = URL.createObjectURL(blob);
-                        if (blob.size > 0 && blob.size <= 7 * 1024 * 1024 && typeof FileReader === 'function') {
+                        if (blob.size > 0 && blob.size <= 2.5 * 1024 * 1024 && typeof FileReader === 'function') {
                           const fr = new FileReader();
                           fr.onload = () => {
                             appState.recordedVideoDataUrl = typeof fr.result === 'string' ? fr.result : '';

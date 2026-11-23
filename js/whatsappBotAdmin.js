@@ -15,37 +15,37 @@
   const DEFAULT_QUICK_REPLIES = [
     {
       id: 'qr_saludo',
-      title: '👋 Saludo AMMER',
+      title: 'Saludo AMMER',
       text: 'Hola {nombre}, te saludamos desde Asociación Mutual Modelo de Entre Ríos (AMMER). ¿En qué podemos ayudarte?'
     },
     {
       id: 'qr_recibo',
-      title: '📄 Pedir Recibo',
+      title: 'Pedir Recibo',
       text: 'Hola {nombre}, para avanzar con tu evaluación necesitamos que nos envíes por acá tu último recibo de haberes en PDF o foto nítida.'
     },
     {
       id: 'qr_dni',
-      title: '🪪 Pedir DNI',
+      title: 'Pedir DNI',
       text: 'Hola {nombre}, por favor envianos foto nítida del frente y dorso de tu DNI para completar la validación de identidad.'
     },
     {
       id: 'qr_firma',
-      title: '✍️ Recordar Firma',
+      title: 'Recordar Firma',
       text: 'Hola {nombre}, te recordamos que tenés documentación pendiente de firma electrónica en AMMER. Avisanos si necesitás que te reenviemos el enlace.'
     },
     {
       id: 'qr_sidecreer',
-      title: '💳 Saldo Sidecreer',
+      title: 'Saldo Sidecreer',
       text: 'Hola {nombre}, ¿podrías confirmarnos tu número de tarjeta Sidecreer o si querés que verifiquemos tu disponible actualizado?'
     },
     {
       id: 'qr_acreditado',
-      title: '✅ Acreditación',
+      title: 'Acreditación',
       text: '¡Buenas noticias {nombre}! Tu gestión en Mutual Modelo fue aprobada y acreditada correctamente. Ante cualquier consulta estamos a disposición.'
     },
     {
       id: 'qr_horarios',
-      title: '📍 Horarios Sede',
+      title: 'Horarios Sede',
       text: 'Te atendemos en Mutual Modelo de Entre Ríos de lunes a viernes de 8:00 a 16:00 hs. Podés respondernos directamente por este medio.'
     }
   ];
@@ -516,15 +516,15 @@
 
             `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:6px;border-top:1px solid #f1f5f9;">` +
               (isReady
-                ? `<button type="button" onclick="window.usarLineaEnMensajeriaWa('${safeSidJs}')" style="flex:1;min-width:140px;padding:0.46rem 0.75rem;border-radius:8px;border:none;background:#16a34a;color:#ffffff;font-size:0.74rem;font-weight:800;cursor:pointer;">💬 Escribir desde acá</button>`
+                ? `<button type="button" onclick="window.usarLineaEnMensajeriaWa('${safeSidJs}')" style="flex:1;min-width:140px;padding:0.46rem 0.75rem;border-radius:8px;border:none;background:#16a34a;color:#ffffff;font-size:0.74rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>Escribir desde acá</span></button>`
                 : '') +
               (isClosed
-                ? `<button type="button" onclick="window.abrirSesionWhatsappBotAdmin('${safeSidJs}')" style="flex:1;min-width:130px;padding:0.48rem 0.75rem;border-radius:8px;border:none;background:#16a34a;color:#ffffff;font-size:0.75rem;font-weight:800;cursor:pointer;">🔓 Abrir Sesión / Escanear QR</button>`
-                : `<button type="button" onclick="window.cerrarSesionWhatsappBotAdmin('${safeSidJs}', 'cerrar')" style="padding:0.45rem 0.7rem;border-radius:8px;border:1px solid #cbd5e1;background:#f8fafc;color:#334155;font-size:0.74rem;font-weight:700;cursor:pointer;">⏸️ Cerrar</button>` +
-                  `<button type="button" onclick="window.cerrarSesionWhatsappBotAdmin('${safeSidJs}', 'desvincular_nuevo_qr')" style="padding:0.45rem 0.7rem;border-radius:8px;border:1px solid #fecdd3;background:#fff1f2;color:#be123c;font-size:0.74rem;font-weight:700;cursor:pointer;">🔄 Nuevo QR</button>`
+                ? `<button type="button" onclick="window.abrirSesionWhatsappBotAdmin('${safeSidJs}')" style="flex:1;min-width:130px;padding:0.48rem 0.75rem;border-radius:8px;border:none;background:#16a34a;color:#ffffff;font-size:0.75rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg><span>Abrir Sesión / QR</span></button>`
+                : `<button type="button" onclick="window.cerrarSesionWhatsappBotAdmin('${safeSidJs}', 'cerrar')" style="padding:0.45rem 0.7rem;border-radius:8px;border:1px solid #cbd5e1;background:#f8fafc;color:#334155;font-size:0.74rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg><span>Cerrar</span></button>` +
+                  `<button type="button" onclick="window.cerrarSesionWhatsappBotAdmin('${safeSidJs}', 'desvincular_nuevo_qr')" style="padding:0.45rem 0.7rem;border-radius:8px;border:1px solid #fecdd3;background:#fff1f2;color:#be123c;font-size:0.74rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg><span>Nuevo QR</span></button>`
               ) +
               (!s.isDefault
-                ? `<button type="button" onclick="window.eliminarSesionWhatsappBotAdmin('${safeSidJs}')" title="Eliminar línea adicional" style="padding:0.45rem 0.65rem;border-radius:8px;border:1px solid #e2e8f0;background:#ffffff;color:#64748b;font-size:0.74rem;font-weight:700;cursor:pointer;">🗑️</button>`
+                ? `<button type="button" onclick="window.eliminarSesionWhatsappBotAdmin('${safeSidJs}')" title="Eliminar línea adicional" style="padding:0.45rem 0.65rem;border-radius:8px;border:1px solid #e2e8f0;background:#ffffff;color:#64748b;font-size:0.74rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>`
                 : '') +
             `</div>` +
           `</div>`
@@ -1051,6 +1051,18 @@
       .replace(/\{dni\}/gi, dniRaw);
   }
 
+  function _quickReplyIconSvg(id) {
+    const s = 'width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"';
+    if (id === 'qr_saludo') return `<svg ${s} stroke="#0284c7"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`;
+    if (id === 'qr_recibo') return `<svg ${s} stroke="#2563eb"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>`;
+    if (id === 'qr_dni') return `<svg ${s} stroke="#7c3aed"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><path d="M15 8h2"></path><path d="M15 12h2"></path><path d="M7 16h10"></path></svg>`;
+    if (id === 'qr_firma') return `<svg ${s} stroke="#d97706"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path></svg>`;
+    if (id === 'qr_sidecreer') return `<svg ${s} stroke="#0d9488"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>`;
+    if (id === 'qr_acreditado') return `<svg ${s} stroke="#16a34a"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
+    if (id === 'qr_horarios') return `<svg ${s} stroke="#dc2626"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`;
+    return `<svg ${s} stroke="#16a34a"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`;
+  }
+
   function _renderQuickReplies() {
     const bar = document.getElementById('waQuickRepliesContainer');
     const adminList = document.getElementById('waQuickRepliesAdminList');
@@ -1058,7 +1070,7 @@
 
     if (bar) {
       bar.innerHTML = list.map((item, idx) =>
-        `<button type="button" class="wa-quick-chip" data-wa-qr-idx="${idx}" title="${_esc(item.text)}">${_esc(item.title)}</button>`
+        `<button type="button" class="wa-quick-chip" data-wa-qr-idx="${idx}" title="${_esc(item.text)}">${_quickReplyIconSvg(item.id)}<span>${_esc(item.title)}</span></button>`
       ).join('');
       bar.querySelectorAll('[data-wa-qr-idx]').forEach((btn) => {
         btn.addEventListener('click', () => {

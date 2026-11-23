@@ -1928,91 +1928,107 @@
     /* ========================================================================
        WHATSAPP BOT HUB — CENTRO MULTI-LÍNEA Y MENSAJERÍA COMPLETA
        ======================================================================== */
-    .wa-hub-shell{max-width:1360px;margin:0 auto;display:flex;flex-direction:column;gap:0.95rem}
-    .wa-hub-hero{background:linear-gradient(135deg,#0c2340 0%,#0f3d3e 55%,#14532d 100%);color:#fff;border-radius:16px;padding:1.1rem 1.3rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;box-shadow:0 8px 24px rgba(12,35,64,0.16)}
-    .wa-hub-hero-title{font-size:1.1rem;font-weight:800;letter-spacing:-0.015em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-    .wa-hub-role-pill{padding:2px 9px;border-radius:9999px;background:rgba(255,255,255,0.16);border:1px solid rgba(255,255,255,0.22);font-size:0.66rem;font-weight:800;letter-spacing:0.04em}
-    .wa-hub-kpis{display:flex;gap:6px;flex-wrap:wrap;margin-top:0.65rem}
+    .workspace-inner-container:has(#view-whatsapp-bot.active){max-width:1760px}
+    .wa-hub-shell{max-width:100%;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:0.85rem}
+    .wa-hub-hero{background:linear-gradient(135deg,#0c2340 0%,#0f3d3e 55%,#14532d 100%);color:#fff;border-radius:16px;padding:1rem 1.35rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;box-shadow:0 8px 24px rgba(12,35,64,0.16)}
+    .wa-hub-hero-title{font-size:1.12rem;font-weight:800;letter-spacing:-0.015em;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+    .wa-hub-role-pill{padding:2px 9px;border-radius:9999px;background:rgba(255,255,255,0.16);border:1px solid rgba(255,255,255,0.24);font-size:0.66rem;font-weight:800;letter-spacing:0.04em}
+    .wa-hub-kpis{display:flex;gap:6px;flex-wrap:wrap;margin-top:0.55rem}
+    .wa-hub-btn-primary{padding:0.5rem 0.95rem;border-radius:9px;border:none;background:#22c55e;color:#ffffff;font-size:0.78rem;font-weight:800;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(34,197,94,0.28);transition:all .14s ease}
+    .wa-hub-btn-primary:hover{background:#16a34a;transform:translateY(-1px)}
+    .wa-hub-btn-ghost{padding:0.44rem 0.85rem;border-radius:9px;border:1px solid rgba(255,255,255,0.34);background:rgba(255,255,255,0.13);color:#ffffff;font-size:0.76rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .14s ease}
+    .wa-hub-btn-ghost:hover{background:rgba(255,255,255,0.22)}
     .wa-hub-tabs{display:inline-flex;gap:4px;background:#e2e8f0;padding:4px;border-radius:12px;align-self:flex-start;flex-wrap:wrap}
-    .wa-hub-tab-btn{border:none;background:transparent;color:#475569;font-family:inherit;font-size:0.8rem;font-weight:700;padding:0.5rem 0.95rem;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .16s ease}
+    .wa-hub-tab-btn{border:none;background:transparent;color:#475569;font-family:inherit;font-size:0.8rem;font-weight:700;padding:0.5rem 0.95rem;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .16s ease}
     .wa-hub-tab-btn:hover{color:#0f172a;background:rgba(255,255,255,0.55)}
     .wa-hub-tab-btn.active{background:#ffffff;color:#0f2744;box-shadow:0 1px 4px rgba(15,23,42,0.12)}
     .wa-hub-tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:9999px;font-size:0.66rem;font-weight:800;background:#16a34a;color:#fff}
     .wa-hub-tab-badge.warn{background:#d97706}
-    .wa-hub-tab-panel{display:none;flex-direction:column;gap:0.95rem}
+    .wa-hub-tab-panel{display:none;flex-direction:column;gap:0.9rem}
     .wa-hub-tab-panel.active{display:flex}
 
     /* Workspace estilo WhatsApp Web */
-    .wa-chat-workspace{display:grid;grid-template-columns:340px minmax(0,1fr);background:#ffffff;border:1px solid #cbd5e1;border-radius:16px;overflow:hidden;box-shadow:0 6px 24px rgba(15,23,42,0.06);min-height:640px}
-    .wa-chat-sidebar{background:#f8fafc;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;min-width:0}
-    .wa-sidebar-section{padding:0.8rem 0.9rem;border-bottom:1px solid #e2e8f0}
+    .wa-chat-workspace{display:grid;grid-template-columns:315px minmax(0,1fr);background:#ffffff;border:1px solid #cbd5e1;border-radius:16px;overflow:hidden;box-shadow:0 8px 28px rgba(15,23,42,0.07);height:clamp(540px,calc(100vh - 245px),780px);min-height:0}
+    .wa-chat-sidebar{background:#f8fafc;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;min-width:0;height:100%;min-height:0;overflow:hidden}
+    .wa-sidebar-section{padding:0.75rem 0.9rem;border-bottom:1px solid #e2e8f0;flex-shrink:0}
     .wa-sidebar-label{display:flex;align-items:center;justify-content:space-between;font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:#475569;margin-bottom:0.4rem}
-    .wa-line-select{width:100%;padding:0.5rem 0.65rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;font-size:0.8rem;font-weight:700;outline:none;cursor:pointer}
+    .wa-line-select{width:100%;padding:0.48rem 0.65rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;font-size:0.79rem;font-weight:700;outline:none;cursor:pointer}
     .wa-line-select:focus{border-color:#16a34a;box-shadow:0 0 0 2px rgba(22,163,74,0.14)}
     .wa-contact-search-wrap{position:relative}
-    .wa-contact-search-input{width:100%;padding:0.5rem 0.7rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;font-size:0.8rem;font-weight:600;box-sizing:border-box;outline:none}
+    .wa-contact-search-input{width:100%;padding:0.48rem 0.7rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;font-size:0.79rem;font-weight:600;box-sizing:border-box;outline:none}
     .wa-contact-search-input:focus{border-color:#0d9488;box-shadow:0 0 0 2px rgba(13,148,136,0.14)}
-    .wa-search-results{margin-top:0.45rem;max-height:210px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+    .wa-search-results{margin-top:0.45rem;max-height:195px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
     .wa-search-item{display:flex;align-items:center;gap:8px;padding:0.45rem 0.55rem;border-radius:8px;background:#ffffff;border:1px solid #e2e8f0;cursor:pointer;text-align:left;width:100%;transition:all .12s ease}
     .wa-search-item:hover{border-color:#16a34a;background:#f0fdf4}
-    .wa-recent-list{flex:1;overflow-y:auto;padding:0.5rem;display:flex;flex-direction:column;gap:4px;max-height:430px}
+    .wa-recent-list{flex:1 1 0;min-height:0;overflow-y:auto;padding:0.5rem;display:flex;flex-direction:column;gap:4px}
     .wa-recent-item{display:flex;align-items:center;gap:9px;padding:0.55rem 0.65rem;border-radius:10px;border:1px solid transparent;background:transparent;cursor:pointer;text-align:left;width:100%;transition:all .12s ease}
     .wa-recent-item:hover{background:#eef2f6}
     .wa-recent-item.active{background:#ecfdf5;border-color:#86efac}
     .wa-avatar{width:36px;height:36px;border-radius:9999px;background:linear-gradient(135deg,#0f2744,#16a34a);color:#fff;font-size:0.78rem;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
-    .wa-chat-main{display:flex;flex-direction:column;min-width:0;background:#efeae2;position:relative}
-    .wa-chat-main.drag-over::after{content:"📥 Soltá la imagen o archivo para adjuntar";position:absolute;inset:12px;background:rgba(240,253,244,0.94);border:2px dashed #16a34a;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:800;color:#15803d;z-index:30;pointer-events:none}
-    .wa-chat-header{background:#f0f2f5;border-bottom:1px solid #d1d7db;padding:0.7rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap}
-    .wa-chat-thread{flex:1;padding:1rem 1.15rem;overflow-y:auto;display:flex;flex-direction:column;gap:0.55rem;min-height:250px;max-height:360px;background-color:#efeae2;background-image:radial-gradient(rgba(15,23,42,0.055) 1px,transparent 1px);background-size:16px 16px}
-    .wa-msg-row{display:flex;flex-direction:column;max-width:78%}
+    .wa-chat-main{display:flex;flex-direction:column;min-width:0;height:100%;min-height:0;overflow:hidden;background:#efeae2;position:relative}
+    .wa-chat-main.drag-over::after{content:"Soltá la imagen o archivo para adjuntar";position:absolute;inset:12px;background:rgba(240,253,244,0.95);border:2px dashed #16a34a;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:800;color:#15803d;z-index:30;pointer-events:none}
+    .wa-chat-header{background:#f0f2f5;border-bottom:1px solid #d1d7db;padding:0.65rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;flex-shrink:0}
+    .wa-chat-header-btn{padding:0.4rem 0.78rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#1e293b;font-size:0.74rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .14s ease}
+    .wa-chat-header-btn:hover{background:#f8fafc;border-color:#94a3b8}
+    .wa-chat-thread{flex:1 1 0;min-height:0;padding:1rem 1.25rem;overflow-y:auto;display:flex;flex-direction:column;gap:0.55rem;background-color:#efeae2;background-image:radial-gradient(rgba(15,23,42,0.055) 1px,transparent 1px);background-size:16px 16px}
+    .wa-msg-row{display:flex;flex-direction:column;max-width:74%}
     .wa-msg-row.out{align-self:flex-end;align-items:flex-end}
     .wa-msg-row.in{align-self:flex-start;align-items:flex-start}
-    .wa-msg-bubble{border-radius:10px;padding:0.5rem 0.72rem;box-shadow:0 1px 2px rgba(15,23,42,0.1);font-size:0.82rem;line-height:1.45;color:#111b21;word-break:break-word;white-space:pre-wrap}
+    .wa-msg-bubble{border-radius:10px;padding:0.5rem 0.75rem;box-shadow:0 1px 2px rgba(15,23,42,0.1);font-size:0.82rem;line-height:1.45;color:#111b21;word-break:break-word;white-space:pre-wrap}
     .wa-msg-row.out .wa-msg-bubble{background:#d9fdd3;border-top-right-radius:2px}
     .wa-msg-row.in .wa-msg-bubble{background:#ffffff;border-top-left-radius:2px}
     .wa-msg-meta{display:flex;align-items:center;justify-content:flex-end;gap:5px;font-size:0.65rem;color:#667781;margin-top:4px}
-    .wa-msg-media-thumb{max-width:220px;max-height:180px;border-radius:8px;display:block;margin-bottom:5px;border:1px solid rgba(15,23,42,0.1);object-fit:cover}
+    .wa-msg-media-thumb{max-width:240px;max-height:190px;border-radius:8px;display:block;margin-bottom:5px;border:1px solid rgba(15,23,42,0.1);object-fit:cover}
     .wa-msg-doc-pill{display:inline-flex;align-items:center;gap:6px;padding:0.38rem 0.6rem;border-radius:8px;background:rgba(15,23,42,0.06);font-size:0.75rem;font-weight:700;margin-bottom:4px}
     .wa-msg-poll-box{margin-top:6px;padding-top:6px;border-top:1px dashed rgba(15,23,42,0.15);display:flex;flex-direction:column;gap:4px}
     .wa-msg-poll-opt{padding:4px 8px;border-radius:7px;background:rgba(255,255,255,0.72);border:1px solid rgba(22,163,74,0.3);font-size:0.73rem;font-weight:700;color:#14532d}
 
-    /* Barra de respuestas predefinidas */
-    .wa-quick-bar{background:#f8fafc;border-top:1px solid #d1d7db;padding:0.5rem 0.85rem;display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:thin}
-    .wa-quick-chip{flex-shrink:0;padding:0.32rem 0.68rem;border-radius:9999px;border:1px solid #cbd5e1;background:#ffffff;color:#0f2744;font-size:0.72rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .14s ease;white-space:nowrap}
-    .wa-quick-chip:hover{background:#ecfdf5;border-color:#16a34a;color:#15803d;transform:translateY(-1px)}
-    .wa-quick-chip-manage{flex-shrink:0;padding:0.32rem 0.65rem;border-radius:9999px;border:1px dashed #94a3b8;background:#f1f5f9;color:#475569;font-size:0.71rem;font-weight:700;cursor:pointer}
-    .wa-quick-chip-manage:hover{background:#e2e8f0;color:#0f172a}
+    /* Barra de respuestas predefinidas (sin scroll lateral) */
+    .wa-quick-bar{background:#f8fafc;border-top:1px solid #d1d7db;padding:0.52rem 0.9rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-shrink:0}
+    .wa-quick-label{display:inline-flex;align-items:center;gap:4px;font-size:0.69rem;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:0.03em;margin-right:2px}
+    .wa-quick-chip{padding:0.3rem 0.68rem;border-radius:9999px;border:1px solid #cbd5e1;background:#ffffff;color:#0f2744;font-size:0.72rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .14s ease;white-space:nowrap}
+    .wa-quick-chip:hover{background:#ecfdf5;border-color:#16a34a;color:#15803d;transform:translateY(-1px);box-shadow:0 2px 6px rgba(22,163,74,0.12)}
+    .wa-quick-chip-manage{padding:0.3rem 0.7rem;border-radius:9999px;border:1px dashed #94a3b8;background:#f1f5f9;color:#334155;font-size:0.71rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .14s ease}
+    .wa-quick-chip-manage:hover{background:#e2e8f0;color:#0f172a;border-color:#64748b}
 
     /* Constructor de botones interactivos & preview adjunto */
-    .wa-composer-drawer{background:#f8fafc;border-top:1px solid #d1d7db;padding:0.65rem 0.9rem;display:none;flex-direction:column;gap:0.5rem}
+    .wa-composer-drawer{background:#f8fafc;border-top:1px solid #d1d7db;padding:0.65rem 0.9rem;display:none;flex-direction:column;gap:0.5rem;flex-shrink:0}
     .wa-composer-drawer.open{display:flex}
-    .wa-attachment-strip{background:#f0fdf4;border-top:1px solid #bbf7d0;padding:0.55rem 0.9rem;display:none;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap}
+    .wa-attachment-strip{background:#f0fdf4;border-top:1px solid #bbf7d0;padding:0.55rem 0.9rem;display:none;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;flex-shrink:0}
     .wa-attachment-strip.open{display:flex}
 
     /* Footer compositor estilo WhatsApp */
-    .wa-composer-footer{background:#f0f2f5;border-top:1px solid #d1d7db;padding:0.6rem 0.85rem;display:flex;flex-direction:column;gap:0.45rem;position:relative}
+    .wa-composer-footer{background:#f0f2f5;border-top:1px solid #d1d7db;padding:0.65rem 0.9rem;display:flex;flex-direction:column;gap:0.45rem;position:relative;flex-shrink:0}
     .wa-composer-row{display:flex;align-items:flex-end;gap:0.45rem}
-    .wa-tool-btn{width:36px;height:36px;border-radius:9999px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;flex-shrink:0;transition:all .14s ease}
-    .wa-tool-btn:hover{background:#e2e8f0;color:#0f172a}
+    .wa-tool-btn{width:38px;height:38px;border-radius:9999px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .15s ease;box-shadow:0 1px 2px rgba(15,23,42,0.05)}
+    .wa-tool-btn svg{width:17px;height:17px;display:block}
+    .wa-tool-btn:hover{background:#f8fafc;border-color:#94a3b8;color:#0f172a;transform:translateY(-1px)}
+    .wa-tool-btn.wa-tool-emoji{color:#d97706}
+    .wa-tool-btn.wa-tool-photo{color:#0284c7}
+    .wa-tool-btn.wa-tool-file{color:#475569}
+    .wa-tool-btn.wa-tool-buttons{color:#0f2744}
+    .wa-tool-btn.wa-tool-mic{color:#dc2626}
     .wa-tool-btn.active{background:#dcfce7;border-color:#16a34a;color:#15803d}
     .wa-tool-btn.recording{background:#fee2e2;border-color:#ef4444;color:#dc2626;animation:waRecPulse 1.1s infinite}
     @keyframes waRecPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.45)}50%{box-shadow:0 0 0 7px rgba(239,68,68,0)}}
-    .wa-msg-input{flex:1;min-height:38px;max-height:130px;padding:0.52rem 0.8rem;border-radius:18px;border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;font-family:inherit;font-size:0.84rem;line-height:1.4;resize:none;outline:none;box-sizing:border-box}
+    .wa-msg-input{flex:1;min-height:40px;max-height:130px;padding:0.55rem 0.9rem;border-radius:20px;border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;font-family:inherit;font-size:0.84rem;line-height:1.4;resize:none;outline:none;box-sizing:border-box}
     .wa-msg-input:focus{border-color:#16a34a;box-shadow:0 0 0 2px rgba(22,163,74,0.12)}
-    .wa-send-btn{height:38px;padding:0 1rem;border-radius:9999px;border:none;background:#16a34a;color:#ffffff;font-family:inherit;font-size:0.8rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:5px;flex-shrink:0;box-shadow:0 2px 6px rgba(22,163,74,0.28);transition:all .14s ease}
+    .wa-send-btn{height:40px;padding:0 1.05rem;border-radius:9999px;border:none;background:#16a34a;color:#ffffff;font-family:inherit;font-size:0.8rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px;flex-shrink:0;box-shadow:0 2px 8px rgba(22,163,74,0.28);transition:all .14s ease}
     .wa-send-btn:hover{background:#15803d;transform:translateY(-1px)}
     .wa-send-btn:disabled{opacity:0.55;cursor:not-allowed;transform:none}
     .wa-recording-bar{display:none;align-items:center;justify-content:space-between;gap:0.7rem;background:#fff1f2;border:1px solid #fecdd3;border-radius:12px;padding:0.45rem 0.75rem}
     .wa-recording-bar.active{display:flex}
-    .wa-emoji-popover{position:absolute;bottom:62px;left:14px;background:#ffffff;border:1px solid #cbd5e1;border-radius:12px;padding:0.45rem;box-shadow:0 8px 24px rgba(15,23,42,0.15);display:none;gap:4px;flex-wrap:wrap;max-width:260px;z-index:25}
+    .wa-emoji-popover{position:absolute;bottom:64px;left:14px;background:#ffffff;border:1px solid #cbd5e1;border-radius:12px;padding:0.45rem;box-shadow:0 8px 24px rgba(15,23,42,0.15);display:none;gap:4px;flex-wrap:wrap;max-width:260px;z-index:25}
     .wa-emoji-popover.open{display:flex}
     .wa-emoji-btn{width:32px;height:32px;border:none;background:transparent;border-radius:7px;font-size:1.1rem;cursor:pointer}
     .wa-emoji-btn:hover{background:#f1f5f9}
 
     @media (max-width:960px){
-      .wa-chat-workspace{grid-template-columns:1fr;min-height:auto}
-      .wa-chat-sidebar{border-right:none;border-bottom:1px solid #e2e8f0}
-      .wa-recent-list{max-height:175px}
+      .wa-chat-workspace{grid-template-columns:1fr;height:auto;min-height:520px}
+      .wa-chat-sidebar{height:auto;border-right:none;border-bottom:1px solid #e2e8f0}
+      .wa-recent-list{max-height:175px;flex:none}
+      .wa-chat-main{height:auto;min-height:460px}
+      .wa-chat-thread{min-height:240px;max-height:380px}
       .wa-msg-row{max-width:90%}
     }
 
@@ -5684,21 +5700,28 @@
           <div class="wa-hub-hero">
             <div style="flex:1;min-width:250px;">
               <div class="wa-hub-hero-title">
-                <span>💬 Centro WhatsApp AMMER</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                <span>Centro WhatsApp AMMER</span>
                 <span class="wa-hub-role-pill">ADMIN</span>
               </div>
-              <div style="font-size:0.79rem;color:rgba(255,255,255,0.86);margin-top:4px;line-height:1.42;max-width:680px;">
+              <div style="font-size:0.79rem;color:rgba(255,255,255,0.86);margin-top:4px;line-height:1.42;max-width:740px;">
                 Operá tus líneas WhatsApp en vivo: enviá mensajes personalizados, fotos, archivos, notas de voz o botones de respuesta rápida, y administrá tus sesiones QR y enrutamiento automático.
               </div>
               <div id="waBotSummaryKpis" class="wa-hub-kpis"></div>
             </div>
-            <div style="display:flex;flex-direction:column;gap:8px;min-width:260px;">
+            <div style="display:flex;flex-direction:column;gap:8px;min-width:270px;">
               <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <input type="text" id="inpWaBotNuevoAlias" maxlength="60" placeholder="Nombre nueva línea (ej: Propuestas)" style="flex:1;min-width:170px;padding:0.48rem 0.72rem;border-radius:9px;border:1px solid rgba(255,255,255,0.35);background:rgba(255,255,255,0.96);color:#0f172a;font-size:0.79rem;font-weight:600;"/>
-                <button type="button" id="btnWaBotCrearLinea" onclick="window.crearNuevaLineaWhatsappBotAdmin()" style="padding:0.48rem 0.9rem;border-radius:9px;border:none;background:#22c55e;color:#ffffff;font-size:0.78rem;font-weight:800;cursor:pointer;white-space:nowrap;">➕ Nueva Línea QR</button>
+                <input type="text" id="inpWaBotNuevoAlias" maxlength="60" placeholder="Nombre nueva línea (ej: Propuestas)" style="flex:1;min-width:175px;padding:0.48rem 0.72rem;border-radius:9px;border:1px solid rgba(255,255,255,0.35);background:rgba(255,255,255,0.96);color:#0f172a;font-size:0.79rem;font-weight:600;"/>
+                <button type="button" id="btnWaBotCrearLinea" class="wa-hub-btn-primary" onclick="window.crearNuevaLineaWhatsappBotAdmin()">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  <span>Nueva Línea QR</span>
+                </button>
               </div>
               <div style="display:flex;justify-content:flex-end;gap:6px;">
-                <button type="button" id="btnWaBotRefresh" onclick="window.cargarPanelWhatsappBotAdmin(false)" style="padding:0.42rem 0.85rem;border-radius:9px;border:1px solid rgba(255,255,255,0.35);background:rgba(255,255,255,0.14);color:#ffffff;font-size:0.76rem;font-weight:700;cursor:pointer;">🔄 Actualizar Estado y QR</button>
+                <button type="button" id="btnWaBotRefresh" class="wa-hub-btn-ghost" onclick="window.cargarPanelWhatsappBotAdmin(false)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                  <span>Actualizar Estado y QR</span>
+                </button>
               </div>
             </div>
           </div>
@@ -5709,15 +5732,17 @@
           <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;">
             <div class="wa-hub-tabs" role="tablist" aria-label="Secciones de WhatsApp Bot">
               <button type="button" id="btnWaTabMensajeria" class="wa-hub-tab-btn active" role="tab" aria-selected="true" onclick="window.cambiarTabWhatsappBotAdmin('mensajeria')">
-                <span>💬 Mensajería Directa</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <span>Mensajería Directa</span>
               </button>
               <button type="button" id="btnWaTabLineas" class="wa-hub-tab-btn" role="tab" aria-selected="false" onclick="window.cambiarTabWhatsappBotAdmin('lineas')">
-                <span>📱 Líneas QR y Enrutamiento</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                <span>Líneas QR y Enrutamiento</span>
                 <span id="waBotTabLineasBadge" class="wa-hub-tab-badge" style="display:none;">0</span>
               </button>
             </div>
             <div style="font-size:0.74rem;color:#64748b;font-weight:600;">
-              💡 Podés pegar capturas con <code>Ctrl+V</code>, arrastrar archivos o grabar audios directo al asociado.
+              Podés pegar capturas con <code>Ctrl+V</code>, arrastrar archivos o grabar notas de voz directo al asociado.
             </div>
           </div>
 
@@ -5728,7 +5753,7 @@
               <aside class="wa-chat-sidebar">
                 <div class="wa-sidebar-section">
                   <div class="wa-sidebar-label">
-                    <span>📡 Línea WhatsApp Emisora</span>
+                    <span>Línea WhatsApp Emisora</span>
                     <span id="waComposerLineStatusBadge" style="font-size:0.68rem;font-weight:800;color:#64748b;">—</span>
                   </div>
                   <select id="selWaBotTestSession" class="wa-line-select" onchange="window.onWaComposerSessionChange()"></select>
@@ -5736,7 +5761,7 @@
 
                 <div class="wa-sidebar-section">
                   <div class="wa-sidebar-label">
-                    <span>🔍 Destinatario (Asociado o Número)</span>
+                    <span>Destinatario (Asociado o Número)</span>
                   </div>
                   <div class="wa-contact-search-wrap">
                     <input
@@ -5752,13 +5777,13 @@
                   </div>
                   <div style="display:flex;gap:5px;margin-top:0.45rem;">
                     <input type="tel" id="inpWaBotTestPhone" placeholder="Teléfono ej: 549343..." style="flex:1;min-width:0;padding:0.42rem 0.6rem;border-radius:8px;border:1px solid #cbd5e1;background:#ffffff;font-size:0.76rem;font-weight:700;color:#0f172a;box-sizing:border-box;" oninput="window.onWaDirectPhoneInput(this.value)"/>
-                    <button type="button" onclick="window.abrirChatPorTelefonoAdmin()" style="padding:0.42rem 0.7rem;border-radius:8px;border:none;background:#0f2744;color:#ffffff;font-size:0.74rem;font-weight:800;cursor:pointer;white-space:nowrap;">Abrir</button>
+                    <button type="button" onclick="window.abrirChatPorTelefonoAdmin()" style="padding:0.42rem 0.75rem;border-radius:8px;border:none;background:#0f2744;color:#ffffff;font-size:0.74rem;font-weight:800;cursor:pointer;white-space:nowrap;">Abrir</button>
                   </div>
                 </div>
 
                 <div class="wa-sidebar-section" style="padding:0.55rem 0.9rem;background:#f1f5f9;">
                   <div class="wa-sidebar-label" style="margin-bottom:0;">
-                    <span>🕘 Chats recientes</span>
+                    <span>Chats recientes</span>
                     <button type="button" onclick="window.limpiarHistorialChatsWhatsappAdmin()" style="border:none;background:transparent;color:#64748b;font-size:0.68rem;font-weight:700;cursor:pointer;">Limpiar</button>
                   </div>
                 </div>
@@ -5784,16 +5809,24 @@
                     </div>
                   </div>
                   <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-                    <button type="button" id="btnWaChatSync" onclick="window.cargarMensajesChatWhatsappAdmin(false)" title="Sincronizar mensajes recientes de la línea" style="padding:0.38rem 0.7rem;border-radius:8px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.74rem;font-weight:700;cursor:pointer;">🔄 Sincronizar</button>
-                    <button type="button" onclick="window.cambiarTabWhatsappBotAdmin('lineas')" style="padding:0.38rem 0.7rem;border-radius:8px;border:1px solid #cbd5e1;background:#ffffff;color:#0f2744;font-size:0.74rem;font-weight:700;cursor:pointer;">⚙️ Líneas QR</button>
+                    <button type="button" id="btnWaChatSync" class="wa-chat-header-btn" onclick="window.cargarMensajesChatWhatsappAdmin(false)" title="Sincronizar mensajes recientes de la línea">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                      <span>Sincronizar</span>
+                    </button>
+                    <button type="button" class="wa-chat-header-btn" onclick="window.cambiarTabWhatsappBotAdmin('lineas')" style="color:#0f2744;">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                      <span>Líneas QR</span>
+                    </button>
                   </div>
                 </div>
 
                 <!-- HILO DE MENSAJES -->
                 <div id="waChatThread" class="wa-chat-thread">
-                  <div style="margin:auto;text-align:center;max-width:410px;background:rgba(255,255,255,0.88);border:1px solid rgba(203,213,225,0.8);border-radius:14px;padding:1.25rem;box-shadow:0 2px 10px rgba(15,23,42,0.06);">
-                    <div style="font-size:1.4rem;margin-bottom:6px;">💬</div>
-                    <div style="font-size:0.86rem;font-weight:800;color:#0f2744;">WhatsApp Directo AMMER</div>
+                  <div style="margin:auto;text-align:center;max-width:430px;background:rgba(255,255,255,0.9);border:1px solid rgba(203,213,225,0.8);border-radius:14px;padding:1.35rem;box-shadow:0 2px 10px rgba(15,23,42,0.06);">
+                    <div style="width:42px;height:42px;border-radius:9999px;background:#dcfce7;color:#15803d;display:inline-flex;align-items:center;justify-content:center;margin-bottom:8px;">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                    </div>
+                    <div style="font-size:0.88rem;font-weight:800;color:#0f2744;">WhatsApp Directo AMMER</div>
                     <div style="font-size:0.76rem;color:#475569;margin-top:4px;line-height:1.45;">
                       Elegí un asociado o ingresá un número en el panel izquierdo para enviar mensajes de texto, fotos, documentos PDF, audios grabados al instante o botones de respuesta rápida.
                     </div>
@@ -5802,21 +5835,27 @@
 
                 <!-- BARRA DE BOTONES DE ACCIÓN / RESPUESTAS PREDEFINIDAS -->
                 <div class="wa-quick-bar">
-                  <span style="font-size:0.69rem;font-weight:800;color:#475569;text-transform:uppercase;flex-shrink:0;">⚡ Rápidas:</span>
-                  <div id="waQuickRepliesContainer" style="display:flex;align-items:center;gap:6px;"></div>
-                  <button type="button" class="wa-quick-chip-manage" onclick="window.toggleEditorRespuestasRapidasWa()">⚙️ Editar / Agregar</button>
+                  <span class="wa-quick-label">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                    <span>Rápidas:</span>
+                  </span>
+                  <div id="waQuickRepliesContainer" style="display:contents;"></div>
+                  <button type="button" class="wa-quick-chip-manage" onclick="window.toggleEditorRespuestasRapidasWa()">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                    <span>Editar / Agregar</span>
+                  </button>
                 </div>
 
                 <!-- EDITOR DE RESPUESTAS PREDEFINIDAS PERSONALIZADAS -->
                 <div id="waQuickRepliesDrawer" class="wa-composer-drawer">
                   <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
-                    <div style="font-size:0.78rem;font-weight:800;color:#0f2744;">⚡ Administrar Respuestas Predefinidas (variables: <code>{nombre}</code>, <code>{dni}</code>)</div>
+                    <div style="font-size:0.78rem;font-weight:800;color:#0f2744;">Administrar Respuestas Predefinidas (variables: <code>{nombre}</code>, <code>{dni}</code>)</div>
                     <button type="button" onclick="window.toggleEditorRespuestasRapidasWa(false)" style="border:none;background:transparent;font-size:0.78rem;font-weight:800;color:#64748b;cursor:pointer;">✕ Cerrar</button>
                   </div>
                   <div style="display:grid;grid-template-columns:180px 1fr auto;gap:6px;align-items:center;">
                     <input type="text" id="inpWaNewQuickTitle" maxlength="36" placeholder="Título botón (ej: Pedir CBU)" style="padding:0.42rem 0.6rem;border-radius:8px;border:1px solid #cbd5e1;font-size:0.76rem;"/>
                     <input type="text" id="inpWaNewQuickText" maxlength="800" placeholder="Texto de respuesta (podés usar {nombre} y {dni})..." style="padding:0.42rem 0.6rem;border-radius:8px;border:1px solid #cbd5e1;font-size:0.76rem;"/>
-                    <button type="button" onclick="window.agregarRespuestaRapidaWa()" style="padding:0.44rem 0.8rem;border-radius:8px;border:none;background:#16a34a;color:#fff;font-size:0.75rem;font-weight:800;cursor:pointer;white-space:nowrap;">➕ Guardar</button>
+                    <button type="button" onclick="window.agregarRespuestaRapidaWa()" style="padding:0.44rem 0.85rem;border-radius:8px;border:none;background:#16a34a;color:#fff;font-size:0.75rem;font-weight:800;cursor:pointer;white-space:nowrap;">Guardar</button>
                   </div>
                   <div id="waQuickRepliesAdminList" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
                 </div>
@@ -5824,11 +5863,11 @@
                 <!-- CONSTRUCTOR DE BOTONES DE ACCIÓN PARA EL DESTINATARIO -->
                 <div id="waButtonsBuilderDrawer" class="wa-composer-drawer">
                   <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
-                    <div style="font-size:0.78rem;font-weight:800;color:#0f2744;">🔘 Botones de Respuesta Interactiva para el Destinatario</div>
+                    <div style="font-size:0.78rem;font-weight:800;color:#0f2744;">Botones de Respuesta Interactiva para el Destinatario</div>
                     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                       <select id="selWaButtonsMode" style="padding:0.32rem 0.55rem;border-radius:7px;border:1px solid #cbd5e1;font-size:0.73rem;font-weight:700;background:#fff;">
                         <option value="encuesta">Encuesta interactiva WhatsApp (tocable)</option>
-                        <option value="texto_numerado">Opciones numeradas en mensaje (1️⃣ 2️⃣ 3️⃣)</option>
+                        <option value="texto_numerado">Opciones numeradas en mensaje (1, 2, 3)</option>
                       </select>
                       <button type="button" onclick="window.limpiarBotonesInteractivosWa()" style="border:1px solid #fecdd3;background:#fff1f2;color:#be123c;border-radius:7px;padding:0.28rem 0.6rem;font-size:0.71rem;font-weight:700;cursor:pointer;">Quitar</button>
                     </div>
@@ -5857,9 +5896,18 @@
                       <canvas id="waRecordingWave" width="120" height="24" style="height:24px;width:120px;border-radius:6px;background:rgba(255,255,255,0.75);"></canvas>
                     </div>
                     <div style="display:flex;align-items:center;gap:6px;">
-                      <button type="button" onclick="window.cancelarGrabacionAudioWa()" style="padding:0.36rem 0.7rem;border-radius:8px;border:1px solid #fecdd3;background:#ffffff;color:#be123c;font-size:0.74rem;font-weight:700;cursor:pointer;">🗑️ Cancelar</button>
-                      <button type="button" onclick="window.detenerGrabacionAudioWa(false)" style="padding:0.36rem 0.75rem;border-radius:8px;border:1px solid #cbd5e1;background:#ffffff;color:#0f2744;font-size:0.74rem;font-weight:800;cursor:pointer;">⏹️ Detener y escuchar</button>
-                      <button type="button" onclick="window.detenerGrabacionAudioWa(true)" style="padding:0.38rem 0.85rem;border-radius:8px;border:none;background:#16a34a;color:#ffffff;font-size:0.74rem;font-weight:800;cursor:pointer;">➤ Enviar audio</button>
+                      <button type="button" onclick="window.cancelarGrabacionAudioWa()" style="padding:0.36rem 0.7rem;border-radius:8px;border:1px solid #fecdd3;background:#ffffff;color:#be123c;font-size:0.74rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        <span>Cancelar</span>
+                      </button>
+                      <button type="button" onclick="window.detenerGrabacionAudioWa(false)" style="padding:0.36rem 0.75rem;border-radius:8px;border:1px solid #cbd5e1;background:#ffffff;color:#0f2744;font-size:0.74rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"></rect></svg>
+                        <span>Detener y escuchar</span>
+                      </button>
+                      <button type="button" onclick="window.detenerGrabacionAudioWa(true)" style="padding:0.38rem 0.85rem;border-radius:8px;border:none;background:#16a34a;color:#ffffff;font-size:0.74rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:5px;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                        <span>Enviar audio</span>
+                      </button>
                     </div>
                   </div>
 
@@ -5867,10 +5915,18 @@
                     <input type="file" id="inpWaFilePhoto" accept="image/*" style="display:none;" onchange="window.onWaFileSelected(this, 'image')"/>
                     <input type="file" id="inpWaFileDoc" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip,.rar,.png,.jpg,.jpeg,.webp,.mp3,.ogg,.wav,.m4a" style="display:none;" onchange="window.onWaFileSelected(this, 'auto')"/>
 
-                    <button type="button" id="btnWaEmojiToggle" class="wa-tool-btn" title="Emojis rápidos" onclick="window.toggleEmojiPopoverWa()">😊</button>
-                    <button type="button" class="wa-tool-btn" title="Adjuntar foto o captura" onclick="document.getElementById('inpWaFilePhoto')?.click()">📷</button>
-                    <button type="button" class="wa-tool-btn" title="Adjuntar archivo o PDF" onclick="document.getElementById('inpWaFileDoc')?.click()">📎</button>
-                    <button type="button" id="btnWaToggleButtonsBuilder" class="wa-tool-btn" title="Agregar botones de respuesta interactiva" onclick="window.toggleBotonesBuilderWa()">🔘</button>
+                    <button type="button" id="btnWaEmojiToggle" class="wa-tool-btn wa-tool-emoji" title="Insertar emoji" aria-label="Insertar emoji" onclick="window.toggleEmojiPopoverWa()">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+                    </button>
+                    <button type="button" class="wa-tool-btn wa-tool-photo" title="Adjuntar foto o imagen" aria-label="Adjuntar foto o imagen" onclick="document.getElementById('inpWaFilePhoto')?.click()">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    </button>
+                    <button type="button" class="wa-tool-btn wa-tool-file" title="Adjuntar archivo o PDF" aria-label="Adjuntar archivo o PDF" onclick="document.getElementById('inpWaFileDoc')?.click()">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                    </button>
+                    <button type="button" id="btnWaToggleButtonsBuilder" class="wa-tool-btn wa-tool-buttons" title="Agregar botones de respuesta interactiva" aria-label="Agregar botones de respuesta interactiva" onclick="window.toggleBotonesBuilderWa()">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                    </button>
 
                     <textarea
                       id="inpWaBotTestMsg"
@@ -5882,10 +5938,12 @@
                       onpaste="window.handleWaComposerPaste(event)"
                     ></textarea>
 
-                    <button type="button" id="btnWaRecordAudio" class="wa-tool-btn" title="Grabar nota de voz" onclick="window.iniciarGrabacionAudioWa()">🎙️</button>
+                    <button type="button" id="btnWaRecordAudio" class="wa-tool-btn wa-tool-mic" title="Grabar nota de voz" aria-label="Grabar nota de voz" onclick="window.iniciarGrabacionAudioWa()">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                    </button>
                     <button type="button" id="btnWaBotProbarEnvio" class="wa-send-btn" onclick="window.enviarMensajePersonalizadoWhatsappAdmin()">
                       <span>Enviar</span>
-                      <span>➤</span>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                     </button>
                   </div>
                 </div>
@@ -5897,7 +5955,7 @@
           <div id="waTabPanelLineas" class="wa-hub-tab-panel">
             <div>
               <div style="font-size:0.86rem;font-weight:800;color:#0f172a;margin-bottom:0.55rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
-                <span>📱 Líneas WhatsApp Conectadas y Sesiones QR</span>
+                <span>Líneas WhatsApp Conectadas y Sesiones QR</span>
                 <span style="font-size:0.73rem;color:#64748b;font-weight:600;">Editá el nombre de cada línea y guardá la configuración abajo. Desde cualquier línea conectada podés abrir el chat directo.</span>
               </div>
               <div id="waBotSessionsGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:0.9rem;">
@@ -5908,10 +5966,13 @@
             <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:14px;padding:1.1rem 1.2rem;box-shadow:0 2px 8px rgba(15,23,42,0.04);">
               <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:0.75rem;">
                 <div>
-                  <div style="font-size:0.92rem;font-weight:800;color:#0f172a;">🔀 Configuración de Acciones por Número Conectado</div>
+                  <div style="font-size:0.92rem;font-weight:800;color:#0f172a;">Configuración de Acciones por Número Conectado</div>
                   <div style="font-size:0.76rem;color:#64748b;">Definí qué línea WhatsApp se utiliza automáticamente para cada operación del ecosistema.</div>
                 </div>
-                <button type="button" id="btnWaBotGuardarConfig" onclick="window.guardarConfigWhatsappBotAdmin()" style="padding:0.52rem 1rem;border-radius:9px;border:none;background:#0f2744;color:#ffffff;font-size:0.79rem;font-weight:800;cursor:pointer;">💾 Guardar Configuración de Acciones</button>
+                <button type="button" id="btnWaBotGuardarConfig" onclick="window.guardarConfigWhatsappBotAdmin()" style="padding:0.52rem 1rem;border-radius:9px;border:none;background:#0f2744;color:#ffffff;font-size:0.79rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                  <span>Guardar Configuración de Acciones</span>
+                </button>
               </div>
               <div id="waBotRoutingContainer" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:0.65rem;"></div>
               <label style="display:flex;align-items:center;gap:8px;margin-top:0.85rem;padding:0.6rem 0.75rem;border-radius:8px;background:#f0fdf4;border:1px solid #bbf7d0;font-size:0.78rem;font-weight:700;color:#166534;cursor:pointer;">
@@ -26329,6 +26390,6 @@ ${cierreTxt}`;
   <script src="js/fichasAsociados.js?v=6"></script>
   <script src="js/sidecreerWidget.js?v=11"></script>
   <script src="js/firmasAmmer.js?v=18"></script>
-  <script src="js/whatsappBotAdmin.js?v=2"></script>
+  <script src="js/whatsappBotAdmin.js?v=3"></script>
 </body>
 </html>

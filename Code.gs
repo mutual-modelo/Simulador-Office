@@ -108,6 +108,10 @@ function doPost(e) {
   try {
     const raw = (e && e.postData && e.postData.contents) ? e.postData.contents : '{}';
     const payload = JSON.parse(raw);
+    const authServer = verificarGasSharedSecret_(payload);
+    if (!authServer.ok) {
+      return crearRespuestaJSON(authServer);
+    }
     const action = String(payload.action || '').trim();
 
     switch (action) {
@@ -1684,6 +1688,32 @@ function eliminarSolicitudBackend(payload) {
     const idTarget = payload.idSolicitud || payload.id;
     const rowNum = encontrarFilaPorId_(sheet, map, idTarget);
     if (rowNum === -1) return { ok: false, error: 'Expediente no encontrado: ' + idTarget };
+
+    const usuarioActivo = (payload && payload.usuarioActivo) || {};
+    const rol = String(usuarioActivo.rol || (payload && payload.rol) || '').toLowerCase().trim();
+    const esPriv = (
+      rol === 'admin' ||
+      rol === 'administrador' ||
+      rol.indexOf('analista') !== -1 ||
+      rol.indexOf('asesor mutual') !== -1
+    );
+    if (!esPriv) {
+      const uid = String(usuarioActivo.id || usuarioActivo.usuario_id || usuarioActivo.idUsuario || '').trim();
+      const miNom = String(usuarioActivo.nombre || '').toLowerCase().trim();
+      const orgId = String(usuarioActivo.idOrganizacion || usuarioActivo.organizacion_id || '').toLowerCase().trim();
+      const esTit = Boolean(usuarioActivo.esTitular === true || usuarioActivo.es_titular === true || usuarioActivo.es_titular_organizacion === true);
+      const colAsesorId = map['ID_Usuario_Asesor'] !== undefined ? String(sheet.getRange(rowNum, map['ID_Usuario_Asesor'] + 1).getValue() || '').trim() : '';
+      const colAsesorNom = map['Nombre_Asesor'] !== undefined ? String(sheet.getRange(rowNum, map['Nombre_Asesor'] + 1).getValue() || '').toLowerCase().trim() : '';
+      const colOrgId = map['ID_Organizacion'] !== undefined ? String(sheet.getRange(rowNum, map['ID_Organizacion'] + 1).getValue() || '').toLowerCase().trim() : '';
+      const autorizado = Boolean(
+        (uid && colAsesorId && uid === colAsesorId) ||
+        (miNom && colAsesorNom && colAsesorNom === miNom) ||
+        (esTit && orgId && colOrgId && orgId === colOrgId)
+      );
+      if (!autorizado) {
+        return { ok: false, error: 'Acceso denegado: no tenés permisos para eliminar este expediente.' };
+      }
+    }
 
     sheet.deleteRow(rowNum);
     SpreadsheetApp.flush();

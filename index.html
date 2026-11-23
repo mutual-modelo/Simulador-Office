@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-title" content="AMMER Mutual"/>
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png"/>
   <meta name="description" content="Simulador oficial de ayudas económicas de Mutual Modelo. Líneas FEDEM Provincial, Municipales Convenio VIKINGO / QUAD y Tarjeta Sidecreer."/>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://script.google.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://challenges.cloudflare.com; worker-src 'self' blob: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data: blob:; connect-src 'self' https://ammer-auditor-api.onrender.com https://script.google.com https://script.googleusercontent.com https://mfaziwuvnaxviqgrybva.supabase.co https://challenges.cloudflare.com; frame-src 'self' https://drive.google.com https://docs.google.com https://*.googleusercontent.com https://challenges.cloudflare.com data: blob:;"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://challenges.cloudflare.com; worker-src 'self' blob: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data: blob:; connect-src 'self' https://ammer-auditor-api.onrender.com https://mfaziwuvnaxviqgrybva.supabase.co https://challenges.cloudflare.com; frame-src 'self' https://drive.google.com https://docs.google.com https://*.googleusercontent.com https://challenges.cloudflare.com data: blob:;"/>
   <meta name="referrer" content="strict-origin-when-cross-origin"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -8571,26 +8571,39 @@
       }
       try {
         const bodyPayload = Object.assign({}, payload || {});
-        if (bodyPayload.action !== 'login' && !bodyPayload.usuarioActivo) {
-          const sess = (typeof getSession === 'function') ? getSession() : null;
-          if (sess) bodyPayload.usuarioActivo = sess;
+        const apiBase = String(RENDER_API_URL || '').trim().replace(/\/+$/, '');
+        if (!apiBase || apiBase.includes('[TU_API]')) {
+          return { ok: false, error: 'URL del servidor API AMMER no configurada.', data: null };
         }
-        const response = await fetchConTimeout(APPS_SCRIPT_URL, {
+        const token = (typeof getApiAuthToken === 'function') ? getApiAuthToken() : null;
+        if (!token) {
+          return { ok: false, status: 401, error: 'Sesión API vencida o ausente. Volvé a iniciar sesión.', data: null };
+        }
+
+        const headers = {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        };
+        const response = await fetchConTimeout(`${apiBase}/api/gas/proxy`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'text/plain;charset=utf-8'
-          },
+          headers: headers,
           body: JSON.stringify(bodyPayload)
-        }, 28000);
-        if (!response.ok) {
-          return { ok: false, error: 'HTTP ' + response.status, data: null };
-        }
+        }, 45000);
+
         const text = await response.text();
         let parsed;
         try {
-          parsed = JSON.parse(text);
+          parsed = text ? JSON.parse(text) : {};
         } catch (e) {
           parsed = { rawText: text };
+        }
+        if (!response.ok) {
+          return {
+            ok: false,
+            status: response.status,
+            error: (parsed && (parsed.detail || parsed.error || parsed.message)) || ('HTTP ' + response.status),
+            data: parsed
+          };
         }
         if (parsed && parsed.rawText && String(parsed.rawText).trim().startsWith('<')) {
           return {
@@ -8602,7 +8615,7 @@
         if (parsed && (parsed.ok === false || parsed.success === false)) {
           return {
             ok: false,
-            error: parsed.error || parsed.message || 'El servidor rechazó la operación.',
+            error: parsed.error || parsed.message || parsed.detail || 'El servidor rechazó la operación.',
             data: parsed
           };
         }
@@ -10544,7 +10557,7 @@ ${cierreTxt}`;
               clave: passVal,
               turnstileToken: tsTokLogin || null
             })
-          }, 22000);
+          }, 45000);
           const dataAuth = await respAuth.json().catch(() => ({}));
           if (respAuth.ok && dataAuth && dataAuth.ok !== false) {
             reiniciarTurnstileLogin_();
@@ -10557,25 +10570,23 @@ ${cierreTxt}`;
             reiniciarTurnstileLogin_();
             setApiAuthToken(null);
             res = { ok: false, error: dataAuth.detail || dataAuth.message || 'Usuario o contraseña incorrectos.', data: dataAuth };
+          } else {
+            reiniciarTurnstileLogin_();
+            setApiAuthToken(null);
+            res = { ok: false, error: dataAuth.detail || dataAuth.message || ('Error del servidor de autenticación (HTTP ' + respAuth.status + ').'), data: dataAuth };
           }
         } catch (errAuth) {
           reiniciarTurnstileLogin_();
-          console.warn('Auth backend no disponible temporalmente, usando fallback Apps Script:', errAuth);
+          setApiAuthToken(null);
+          console.warn('Error conectando con backend de autenticación AMMER:', errAuth);
+          res = { ok: false, error: 'No se pudo conectar con el servidor de autenticación AMMER. Reintentá en unos segundos.' };
         } finally {
           ocultarCargando();
         }
       }
 
       if (!res && !credencialRechazada) {
-        res = await callApi({
-          action: 'login',
-          usuario: userVal,
-          password: passVal,
-          clave: passVal
-        }, {
-          title: 'Verificando Credenciales...',
-          sub: 'Consultando base de usuarios'
-        });
+        res = { ok: false, error: 'Servidor de autenticación AMMER no configurado.' };
       }
 
       let loggedUser = null;
@@ -13838,39 +13849,11 @@ ${cierreTxt}`;
           mostrarCargando('🔄 Actualizando expedientes desde la base central...', 'Consultando expedientes y Legajos Digitales en tiempo real');
         }
         try {
-          const orgId = session.idOrganizacion || session.organizacion_id || '';
-          const orgNom = session.nombreOrganizacion || session.nombre_organizacion || '';
-          const esTit = Boolean(session.esTitular !== undefined ? session.esTitular : (session.esTitularOrg !== undefined ? session.esTitularOrg : session.es_titular_organizacion));
-          const isComercialWithOrg = String(session.rol || '').toLowerCase().includes('comercial') && Boolean(orgId);
-
-          const respuesta = await fetchConTimeout(APPS_SCRIPT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              action: 'obtenerSolicitudes',
-              usuarioActivo: session,
-              idUsuario: session.id,
-              id: session.id,
-              usuario_id: session.id,
-              usuario: session.usuario || session.email,
-              nombre: session.nombre,
-              rol: session.rol,
-              idOrganizacion: orgId,
-              organizacion_id: orgId,
-              nombreOrganizacion: orgNom,
-              nombre_organizacion: orgNom,
-              esTitularOrg: isComercialWithOrg ? true : esTit,
-              esTitular: esTit,
-              es_titular: esTit,
-              es_titular_organizacion: esTit
-            })
-          }, 25000);
-
-          if (!respuesta.ok) {
-            throw new Error('HTTP ' + respuesta.status);
+          const resProxy = await callApi({ action: 'obtenerSolicitudes' });
+          if (!resProxy || !resProxy.ok) {
+            throw new Error((resProxy && resProxy.error) || 'Error consultando solicitudes en proxy');
           }
-
-          const resJSON = await respuesta.json();
+          const resJSON = resProxy.data;
           let lista = null;
           if (Array.isArray(resJSON)) lista = resJSON;
           else if (resJSON && resJSON.ok !== false && Array.isArray(resJSON.solicitudes)) lista = resJSON.solicitudes;
@@ -17849,22 +17832,25 @@ ${cierreTxt}`;
           verificadoBackend = true;
         }
 
-        if (typeof APPS_SCRIPT_URL === 'string' && APPS_SCRIPT_URL.startsWith('http')) {
-          const respGas = await fetchConTimeout(APPS_SCRIPT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              action: 'limpiarDatosPrueba',
-              limpiarSolicitudes: scope === 'all' || scope === 'solicitudes',
-              limpiarPadron: scope === 'all' || scope === 'padron',
-              incluirDrive: true,
-              securityKey: claveIngresada,
-              usuarioActivo: sess
-            })
-          }, 30000).catch(() => null);
+        if (RENDER_API_URL && !RENDER_API_URL.includes('[TU_API]')) {
+          const resGas = await callApi({
+            action: 'limpiarDatosPrueba',
+            limpiarSolicitudes: scope === 'all' || scope === 'solicitudes',
+            limpiarPadron: scope === 'all' || scope === 'padron',
+            incluirDrive: true,
+            securityKey: claveIngresada
+          }).catch(() => null);
 
-          if (respGas && respGas.ok) {
-            const gasJson = await respGas.json().catch(() => null);
+          if (resGas && !resGas.ok) {
+            const gasJson = resGas.data;
+            if (!verificadoBackend) {
+              if (inp) inp.value = '';
+              mostrarErrorModal('❌ ' + (resGas.error || (gasJson && gasJson.error) || 'Clave de seguridad incorrecta.'));
+              return;
+            }
+            showToast('⚠️ Aviso Sheets/Drive: ' + (resGas.error || 'No se pudo completar limpieza en Apps Script'));
+          } else if (resGas && resGas.ok && resGas.data) {
+            const gasJson = resGas.data;
             if (gasJson && gasJson.ok === false) {
               if (!verificadoBackend) {
                 if (inp) inp.value = '';
@@ -21664,13 +21650,9 @@ ${cierreTxt}`;
           if ((sc.dictamen === 'OBSERVADO' || sc.dictamen === 'RECHAZADO') && (sFresca.estado === 'Pendiente' || sFresca.estado === 'En Análisis')) {
             sFresca.estado = 'Observado';
           }
-          // Persistir dictamen real en nube si corresponde
-          if (typeof APPS_SCRIPT_URL === 'string' && APPS_SCRIPT_URL.startsWith('http')) {
-            fetchConTimeout(APPS_SCRIPT_URL, {
-              method: 'POST',
-              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-              body: JSON.stringify({ action: 'auditarConIA', idSolicitud: solicitudId, resultado: auditRes })
-            }, 12000).catch(() => {});
+          // Persistir dictamen real en nube vía proxy autenticado
+          if (RENDER_API_URL && !RENDER_API_URL.includes('[TU_API]')) {
+            callApi({ action: 'auditarConIA', idSolicitud: solicitudId, resultado: auditRes }).catch(() => {});
           }
         } else {
           sFresca.auditoriaIA = {

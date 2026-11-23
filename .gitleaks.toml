@@ -1,0 +1,17 @@
+title = "Configuración Gitleaks - AMMER Simulador-Office"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Permitir únicamente claves públicas del frontend y nombres de claves localStorage; excluir artefactos de build"
+paths = [
+  '''(^|/)dist/''',
+  '''(^|/)node_modules/''',
+]
+regexes = [
+  '''sb_publishable_-uPo2ppGYLbdHF5x2gg2Yw_m-VsitJX''',
+  '''0x4AAAAAAGN1Qv0d_p9gTX5i''',
+  '''AMMER_SOLICITUDES_PROD_V1''',
+  '''AMMER_NOTIFICACIONES_LEIDAS_V1''',
+]

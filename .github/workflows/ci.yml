@@ -58,3 +58,49 @@ jobs:
         run: |
           bun install --frozen-lockfile
           bun run build
+
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Escanear secretos con Gitleaks
+        run: |
+          GITLEAKS_VER="8.24.2"
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VER}/gitleaks_${GITLEAKS_VER}_linux_x64.tar.gz" -o /tmp/gitleaks.tar.gz
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          /tmp/gitleaks dir . --redact --verbose --config .gitleaks.toml
+      - name: Auditar dependencias JS (bun audit)
+        run: |
+          bun install --frozen-lockfile
+          bun audit --audit-level=high
+      - name: Verificar reglas de seguridad estáticas (Code.gs y HTML)
+        run: |
+          python3 - <<'PY'
+          import pathlib, re, sys
+
+          code_gs = pathlib.Path("Code.gs").read_text(encoding="utf-8")
+          if "ANYONE_WITH_LINK" in code_gs:
+              sys.exit("Fallo de seguridad: se detectó ANYONE_WITH_LINK en Code.gs")
+
+          objetivos = [
+              pathlib.Path("index.html"),
+              pathlib.Path("firmar.html"),
+              pathlib.Path("verificar.html"),
+              pathlib.Path("Code.gs"),
+              *sorted(pathlib.Path("js").glob("*.js")),
+          ]
+          patrones_prohibidos = [
+              (r"AIza[0-9A-Za-z_-]{25,}", "Posible API Key de Google expuesta"),
+              (r"sb_secret_[0-9A-Za-z_-]{15,}", "Posible Secret Key de Supabase expuesta"),
+          ]
+          for archivo in objetivos:
+              if not archivo.exists():
+                  continue
+              txt = archivo.read_text(encoding="utf-8", errors="ignore")
+              for pat, desc in patrones_prohibidos:
+                  if re.search(pat, txt):
+                      sys.exit(f"Fallo de seguridad en {archivo}: {desc}")
+          print("Chequeo estático de secretos y Drive privado OK")
+          PY
+

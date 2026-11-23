@@ -1678,12 +1678,12 @@
           </span>
         </label>
 
-        <div id="turnstileSignerBox" style="display:flex;justify-content:center;margin:0.45rem 0;min-height:10px;"></div>
-
         <button type="button" id="btnConfirmarFirmar" class="btn btn-success" style="width:100%;font-size:1rem;min-height:46px;">
           ✅ Confirmar y Firmar Documento
         </button>
       </section>
+
+      <div id="turnstileSignerBox" style="width:100%;max-width:360px;margin:0.15rem auto 0;display:flex;justify-content:center;min-height:0;"></div>
     </div>
   </main>
 
@@ -1757,64 +1757,117 @@
       let _tsWidgetId = null;
       let _tsTokenActual = '';
       let _tsActionActual = '';
-      let _tsPendingResolve = null;
+      let _tsInFlightPromise = null;
+      let _tsInFlightAction = '';
+
+      function esperarTurnstileApi_(maxMs) {
+        if (window.turnstile && typeof window.turnstile.render === 'function') {
+          return Promise.resolve(true);
+        }
+        return new Promise((resolve) => {
+          const started = Date.now();
+          const iv = setInterval(() => {
+            if (window.turnstile && typeof window.turnstile.render === 'function') {
+              clearInterval(iv);
+              resolve(true);
+              return;
+            }
+            if (Date.now() - started >= (maxMs || 5000)) {
+              clearInterval(iv);
+              resolve(false);
+            }
+          }, 120);
+        });
+      }
 
       function obtenerTokenTurnstile_(actionName) {
-        return new Promise((resolve) => {
-          if (!window.turnstile || typeof window.turnstile.render !== 'function') {
-            resolve(_tsTokenActual || '');
-            return;
-          }
+        const action = actionName || 'firmar';
+        if (_tsTokenActual && _tsActionActual === action) {
+          return Promise.resolve(_tsTokenActual);
+        }
+        if (_tsInFlightPromise && _tsInFlightAction === action) {
+          return _tsInFlightPromise;
+        }
+        _tsInFlightAction = action;
+        _tsInFlightPromise = (async () => {
+          const apiReady = await esperarTurnstileApi_(5000);
           const box = document.getElementById('turnstileSignerBox');
-          if (!box) { resolve(''); return; }
-          if (_tsTokenActual && _tsActionActual === actionName) {
-            resolve(_tsTokenActual);
-            return;
+          if (!apiReady || !box || box.offsetParent === null) {
+            return '';
           }
-          _tsTokenActual = '';
-          _tsActionActual = actionName || '';
-          const timer = setTimeout(() => {
-            _tsPendingResolve = null;
-            resolve(_tsTokenActual || '');
-          }, 9000);
-          _tsPendingResolve = (tok) => {
-            clearTimeout(timer);
-            _tsPendingResolve = null;
-            resolve(tok || '');
-          };
-          try {
-            if (_tsWidgetId !== null) {
-              try { window.turnstile.remove(_tsWidgetId); } catch (_) {}
-              _tsWidgetId = null;
+          return await new Promise((resolve) => {
+            _tsTokenActual = '';
+            _tsActionActual = action;
+            let settled = false;
+            let timer = null;
+            let scrollTimer = null;
+            const finish = (tok) => {
+              if (settled) return;
+              settled = true;
+              if (timer) clearTimeout(timer);
+              if (scrollTimer) clearTimeout(scrollTimer);
+              resolve(tok || '');
+            };
+            timer = setTimeout(() => finish(_tsTokenActual || ''), 10000);
+            scrollTimer = setTimeout(() => {
+              if (!settled && box && box.offsetParent !== null) {
+                try { box.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
+              }
+            }, 1800);
+            try {
+              if (_tsWidgetId !== null) {
+                try { window.turnstile.remove(_tsWidgetId); } catch (_) {}
+                _tsWidgetId = null;
+              }
+              box.innerHTML = '';
+              box.style.minHeight = '66px';
+              _tsWidgetId = window.turnstile.render(box, {
+                sitekey: TURNSTILE_SITE_KEY,
+                action,
+                theme: 'light',
+                size: 'flexible',
+                callback: (tok) => {
+                  _tsTokenActual = tok || '';
+                  finish(_tsTokenActual);
+                },
+                'expired-callback': () => {
+                  _tsTokenActual = '';
+                },
+                'error-callback': () => {
+                  _tsTokenActual = '';
+                  finish('');
+                },
+              });
+            } catch (_) {
+              finish('');
             }
-            box.innerHTML = '';
-            _tsWidgetId = window.turnstile.render(box, {
-              sitekey: TURNSTILE_SITE_KEY,
-              action: actionName || 'firmar',
-              theme: 'light',
-              size: 'flexible',
-              callback: (tok) => {
-                _tsTokenActual = tok || '';
-                if (_tsPendingResolve) _tsPendingResolve(_tsTokenActual);
-              },
-              'expired-callback': () => { _tsTokenActual = ''; },
-              'error-callback': () => {
-                _tsTokenActual = '';
-                if (_tsPendingResolve) _tsPendingResolve('');
-              },
-            });
-          } catch (_) {
-            clearTimeout(timer);
-            _tsPendingResolve = null;
-            resolve('');
-          }
+          });
+        })().finally(() => {
+          _tsInFlightPromise = null;
+          _tsInFlightAction = '';
         });
+        return _tsInFlightPromise;
+      }
+
+      function precalentarTurnstile_(actionName) {
+        try {
+          obtenerTokenTurnstile_(actionName).catch(() => '');
+        } catch (_) {}
       }
 
       function reiniciarTurnstile_() {
         _tsTokenActual = '';
+        _tsActionActual = '';
+        _tsInFlightPromise = null;
+        _tsInFlightAction = '';
         if (window.turnstile && _tsWidgetId !== null) {
-          try { window.turnstile.reset(_tsWidgetId); } catch (_) {}
+          try { window.turnstile.remove(_tsWidgetId); } catch (_) {}
+          _tsWidgetId = null;
+        }
+        const box = document.getElementById('turnstileSignerBox');
+        if (box) {
+          box.innerHTML = '';
+          box.style.minHeight = '0';
         }
       }
 
@@ -2031,11 +2084,17 @@
           // Recalcular tamaño real del canvas ahora que el paso es visible
           requestAnimationFrame(() => {
             if (typeof window.__resizeFirmaCanvas === 'function') window.__resizeFirmaCanvas();
+            precalentarTurnstile_('firmar_documento');
           });
         } else {
           btnNext.style.display = 'inline-flex';
           const isLastPreSign = (appState.steps[appState.currentStepIdx + 1] === 'sign') && (stepKey === 'dni' || stepKey === 'selfie');
           btnNext.textContent = isLastPreSign && !appState.ekycValidado ? 'Verificar y Continuar →' : 'Continuar →';
+          if ((stepKey === 'selfie' || (stepKey === 'dni' && !appState.requiereSelfie)) && !appState.ekycValidado) {
+            requestAnimationFrame(() => { precalentarTurnstile_('firmar_identidad'); });
+          } else {
+            reiniciarTurnstile_();
+          }
         }
 
         detenerCamaraEkyc();
@@ -2089,6 +2148,12 @@
 
         try {
           const tsToken = await obtenerTokenTurnstile_('firmar_identidad');
+          if (!tsToken && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            reiniciarTurnstile_();
+            precalentarTurnstile_('firmar_identidad');
+            mostrarErrorEnPaso('No pudimos completar la verificación anti-bots de Cloudflare. Verificá tu conexión (o desactivá bloqueadores de contenido) y tocá "Verificar y Continuar" de nuevo.');
+            return false;
+          }
           const resp = await fetch(`${API_BASE}/api/firmas/public/${encodeURIComponent(token)}/validar-identidad`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -2114,7 +2179,13 @@
           return true;
         } catch (err) {
           reiniciarTurnstile_();
-          registrarFalloDniParaGaleria('No pudimos validar tu identidad: ' + err.message, true);
+          const msgErr = String((err && err.message) || '');
+          if (/turnstile|anti-?bots/i.test(msgErr)) {
+            precalentarTurnstile_('firmar_identidad');
+            mostrarErrorEnPaso('No pudimos completar la verificación anti-bots: ' + msgErr);
+          } else {
+            registrarFalloDniParaGaleria('No pudimos validar tu identidad: ' + msgErr, true);
+          }
           return false;
         } finally {
           btnNext.disabled = false;
@@ -3307,6 +3378,7 @@
 
             document.getElementById('selfieLiveView').style.display = 'none';
             document.getElementById('selfieDoneView').style.display = 'block';
+            precalentarTurnstile_('firmar_identidad');
 
             const vidPrev = document.getElementById('videoSelfiePreview');
             const fbWrap = document.getElementById('selfieFallbackPreviewWrap');
@@ -3570,6 +3642,14 @@
 
         try {
           const tsTokenSign = await obtenerTokenTurnstile_('firmar_documento');
+          if (!tsTokenSign && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            reiniciarTurnstile_();
+            precalentarTurnstile_('firmar_documento');
+            mostrarErrorEnPaso('No pudimos completar la verificación anti-bots de Cloudflare. Verificá tu conexión (o desactivá bloqueadores de contenido) y tocá "✅ Confirmar y Firmar Documento" nuevamente.');
+            btn.disabled = false;
+            btn.textContent = '✅ Confirmar y Firmar Documento';
+            return;
+          }
           const canvas = document.getElementById('canvasFirmaMovil');
           const firmaPng = canvas.toDataURL('image/png');
           const duracionMs = appState.startTime ? (Date.now() - appState.startTime) : 0;
@@ -3609,9 +3689,11 @@
           if (!resp.ok) {
             throw new Error(data.detail || `Error HTTP ${resp.status}`);
           }
+          reiniciarTurnstile_();
           mostrarPantallaFirmado(data);
         } catch (err) {
           reiniciarTurnstile_();
+          precalentarTurnstile_('firmar_documento');
           mostrarErrorEnPaso('No se pudo guardar tu firma: ' + err.message);
           btn.disabled = false;
           btn.textContent = '✅ Confirmar y Firmar Documento';

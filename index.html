@@ -3928,57 +3928,165 @@
     .ai-concl-list li{margin-bottom:0.22rem;line-height:1.4}
 
     /* ========================================================================
-       FIRMAS AMMER — DISEÑO RESPONSIVE ADAPTATIVO (DESKTOP / TABLET / MÓVIL)
+       FIRMAS AMMER — SISTEMA DE DISEÑO AMMER (DESKTOP / TABLET / MÓVIL)
        ======================================================================== */
-    .firmas-shell{padding:1.25rem;display:flex;flex-direction:column;gap:0.95rem;width:100%;max-width:100%;box-sizing:border-box}
-    .firmas-hero{background:linear-gradient(135deg,#0f2744 0%,#1e3a8a 100%);color:#ffffff;border-radius:14px;padding:1.15rem 1.4rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;box-shadow:0 4px 14px rgba(15,39,68,0.14)}
-    .firmas-hero-title{font-size:clamp(0.95rem,2.1vw,1.08rem);font-weight:800;letter-spacing:0.01em;line-height:1.3}
-    .firmas-hero-sub{font-size:clamp(0.75rem,1.6vw,0.81rem);color:#cbd5e1;margin-top:4px;line-height:1.4}
-    .firmas-tabs-bar{background:#ffffff;border:1px solid #cbd5e1;border-radius:12px;padding:0.45rem;display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center;box-shadow:0 1px 3px rgba(15,23,42,0.05)}
-    .firmas-tab-btn{padding:0.55rem 1.05rem;border-radius:8px;font-size:0.82rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all .15s ease;line-height:1.25}
-    .firmas-card{background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:1.15rem;display:flex;flex-direction:column;gap:1rem;width:100%;box-sizing:border-box}
+    .workspace-inner-container:has(#vistaFirmasAMMER.active){max-width:1700px}
+    .firmas-shell{padding:0.25rem 0 1.5rem;display:flex;flex-direction:column;gap:1rem;width:100%;max-width:100%;box-sizing:border-box}
+    .firmas-hero{background:linear-gradient(135deg,#0c2340 0%,#0f2744 52%,#135596 100%);color:#ffffff;border-radius:16px;padding:1.15rem 1.45rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;box-shadow:0 10px 28px rgba(12,35,64,0.16);border:1px solid rgba(255,255,255,0.08)}
+    .firmas-hero-left{display:flex;align-items:center;gap:0.95rem;min-width:0;flex:1 1 320px}
+    .firmas-hero-icon{width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,0.13);border:1px solid rgba(255,255,255,0.22);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#ffffff;box-shadow:inset 0 1px 0 rgba(255,255,255,0.15)}
+    .firmas-hero-title{font-size:clamp(1rem,2.1vw,1.15rem);font-weight:800;letter-spacing:-0.015em;line-height:1.25;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .firmas-hero-pill{padding:2px 9px;border-radius:9999px;background:rgba(255,255,255,0.16);border:1px solid rgba(255,255,255,0.25);font-size:0.65rem;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:#e0f2fe}
+    .firmas-hero-sub{font-size:clamp(0.75rem,1.5vw,0.82rem);color:rgba(226,232,240,0.92);margin-top:4px;line-height:1.45;max-width:820px}
+
+    /* Segmented Tabs Bar (alineada con wa-hub-tabs / view-switcher-control) */
+    .firmas-tabs-bar{background:#e2e8f0;border:1px solid #cbd5e1;border-radius:13px;padding:4px;display:inline-flex;gap:4px;flex-wrap:wrap;align-items:center;align-self:flex-start;max-width:100%}
+    .firmas-tab-btn{padding:0.52rem 1rem;border-radius:9px;border:1px solid transparent;background:transparent;color:#475569;font-family:inherit;font-size:0.8rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:all .16s ease;line-height:1.25;white-space:nowrap}
+    .firmas-tab-btn:hover:not(.active){color:#0f172a;background:rgba(255,255,255,0.6)}
+    .firmas-tab-btn.active{background:#ffffff;color:#0f2744;border-color:#cbd5e1;box-shadow:0 2px 6px rgba(15,23,42,0.1)}
+    .firmas-tab-btn--danger.active{background:#991b1b;color:#ffffff;border-color:#991b1b;box-shadow:0 2px 8px rgba(153,27,27,0.28)}
+    .firmas-tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;padding:0 6px;border-radius:9999px;font-size:0.68rem;font-weight:800;background:#fee2e2;color:#b91c1c}
+    .firmas-tab-btn--danger.active .firmas-tab-badge{background:rgba(255,255,255,0.22);color:#ffffff}
+
+    /* Cards & Subsecciones */
+    .firmas-card{background:#ffffff;border:1px solid rgba(203,213,225,0.85);border-radius:16px;padding:1.3rem 1.4rem;display:flex;flex-direction:column;gap:1.1rem;width:100%;box-sizing:border-box;box-shadow:0 4px 16px rgba(15,23,42,0.04)}
     .firmas-card--danger{border-color:#fecaca}
-    .firmas-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr));gap:0.9rem}
-    .firmas-exp-row{display:flex;gap:0.45rem;flex-wrap:wrap;align-items:stretch}
+    .firmas-section-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:13px;padding:1rem 1.1rem}
+    .firmas-section-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.65rem;margin-bottom:0.75rem}
+    .firmas-section-title{font-size:0.84rem;font-weight:800;color:#0f2744;display:flex;align-items:center;gap:7px}
+    .firmas-section-sub{font-size:0.74rem;color:#64748b;margin-top:2px;line-height:1.38}
+
+    /* Paso 1-2-3 Step Cards */
+    .firmas-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(275px,100%),1fr));gap:0.95rem}
+    .firmas-step-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:13px;padding:0.95rem 1rem;display:flex;flex-direction:column;gap:0.45rem;transition:border-color .15s ease,box-shadow .15s ease}
+    .firmas-step-card:focus-within{border-color:#93c5fd;background:#ffffff;box-shadow:0 4px 14px rgba(19,85,150,0.07)}
+    .firmas-step-header{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;margin-bottom:2px}
+    .firmas-step-label{display:inline-flex;align-items:center;gap:7px;font-size:0.78rem;font-weight:800;color:#0f2744}
+    .firmas-step-num{width:21px;height:21px;border-radius:9999px;background:#0f2744;color:#ffffff;font-size:0.69rem;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+    .firmas-exp-row{display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center}
     .firmas-exp-row select{flex:1 1 185px;min-width:0}
-    .firmas-sello-wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem}
-    .firmas-sello-controls{display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap}
+
+    /* Controles de Formulario Homologados (.ds-input style) */
+    .firmas-label{display:block;font-size:0.74rem;font-weight:700;color:#475569;margin-bottom:5px;line-height:1.25}
+    .firmas-input,.firmas-select,.firmas-textarea{width:100%;font-family:var(--font-sans);font-size:0.84rem;color:#0f172a;background:#ffffff;border:1px solid #cbd5e1;border-radius:10px;outline:none;box-sizing:border-box;transition:border-color .15s ease,box-shadow .15s ease,background-color .15s ease}
+    .firmas-input,.firmas-select{height:40px;padding:0 0.78rem}
+    .firmas-input--sm,.firmas-select--sm{height:36px;padding:0 0.65rem;font-size:0.8rem;border-radius:8px}
+    .firmas-textarea{padding:0.55rem 0.75rem;line-height:1.45;resize:vertical}
+    .firmas-input:focus,.firmas-select:focus,.firmas-textarea:focus{border-color:#135596;box-shadow:0 0 0 3px rgba(19,85,150,0.14)}
+    .firmas-input::placeholder{color:#94a3b8}
+    .firmas-file-input{width:100%;font-size:0.79rem;color:#334155;background:#ffffff;border:1.5px dashed #cbd5e1;border-radius:10px;padding:0.45rem 0.6rem;cursor:pointer;box-sizing:border-box}
+    .firmas-file-input:hover{border-color:#135596;background:#f0f7ff}
+
+    /* Toggle Pills & Chips */
+    .firmas-check-pill{display:inline-flex;align-items:center;gap:6px;padding:0.42rem 0.78rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.76rem;font-weight:700;cursor:pointer;transition:all .14s ease;user-select:none}
+    .firmas-check-pill:hover{border-color:#93c5fd;background:#f8fafc}
+    .firmas-check-pill:has(input:checked){border-color:#135596;background:#eff6ff;color:#0f2744;box-shadow:0 1px 3px rgba(19,85,150,0.12)}
+    .firmas-check-pill--emerald:has(input:checked){border-color:#059669;background:#ecfdf5;color:#065f46}
+    .firmas-check-pill--compact{padding:0.32rem 0.65rem;font-size:0.73rem;border-radius:8px}
+    .firmas-check-pill input[type="checkbox"]{accent-color:#135596;width:14px;height:14px;margin:0;cursor:pointer}
+    .firmas-check-pill--emerald input[type="checkbox"]{accent-color:#059669}
+
+    /* Botonera Consistente */
+    .firmas-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:38px;padding:0 0.95rem;border-radius:10px;border:1px solid #cbd5e1;background:#ffffff;color:#1e293b;font-family:inherit;font-size:0.8rem;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;transition:all .15s ease;box-sizing:border-box}
+    .firmas-btn:hover:not(:disabled){background:#f8fafc;border-color:#94a3b8;transform:translateY(-1px);box-shadow:0 2px 6px rgba(15,23,42,0.06)}
+    .firmas-btn:disabled{opacity:0.55;cursor:not-allowed;transform:none}
+    .firmas-btn--sm{height:33px;padding:0 0.72rem;font-size:0.75rem;border-radius:8px}
+    .firmas-btn--xs{height:29px;padding:0 0.58rem;font-size:0.72rem;border-radius:7px}
+    .firmas-btn-primary{background:#135596;border-color:#135596;color:#ffffff;box-shadow:0 2px 6px rgba(19,85,150,0.22)}
+    .firmas-btn-primary:hover:not(:disabled){background:#0f4477;border-color:#0f4477;color:#ffffff}
+    .firmas-btn-navy{background:#0f2744;border-color:#0f2744;color:#ffffff;box-shadow:0 2px 6px rgba(15,39,68,0.2)}
+    .firmas-btn-navy:hover:not(:disabled){background:#163a63;border-color:#163a63;color:#ffffff}
+    .firmas-btn-emerald{background:linear-gradient(135deg,#059669,#047857);border-color:#047857;color:#ffffff;font-weight:800;box-shadow:0 4px 12px rgba(5,150,105,0.25)}
+    .firmas-btn-emerald:hover:not(:disabled){background:linear-gradient(135deg,#047857,#065f46);border-color:#065f46;color:#ffffff}
+    .firmas-btn-soft-blue{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
+    .firmas-btn-soft-blue:hover:not(:disabled){background:#dbeafe;border-color:#93c5fd;color:#1e3a8a}
+    .firmas-btn-indigo{background:#eef2ff;border-color:#c7d2fe;color:#3730a3}
+    .firmas-btn-indigo:hover:not(:disabled){background:#e0e7ff;border-color:#a5b4fc;color:#312e81}
+    .firmas-btn-danger{background:#fef2f2;border-color:#fecaca;color:#b91c1c}
+    .firmas-btn-danger:hover:not(:disabled){background:#fee2e2;border-color:#fca5a5;color:#991b1b}
+    .firmas-btn-danger-solid{background:#991b1b;border-color:#991b1b;color:#ffffff}
+    .firmas-btn-danger-solid:hover:not(:disabled){background:#7f1d1d;border-color:#7f1d1d;color:#ffffff}
+    .firmas-btn-icon{width:33px;height:33px;padding:0;border-radius:8px;justify-content:center}
+
+    /* Acordeones & Secciones especiales */
+    .firmas-accordion{background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px;padding:0.75rem 1rem;transition:border-color .15s ease}
+    .firmas-accordion[open]{background:#ffffff;border-color:#93c5fd;box-shadow:0 2px 10px rgba(15,23,42,0.04)}
+    .firmas-accordion summary{cursor:pointer;font-size:0.81rem;font-weight:800;color:#0f2744;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px;user-select:none}
+    .firmas-accordion summary::-webkit-details-marker{display:none}
+    .firmas-accordion summary::after{content:"▾";font-size:0.85rem;color:#64748b;transition:transform .16s ease}
+    .firmas-accordion[open] summary::after{transform:rotate(180deg);color:#135596}
+
+    .firmas-sello-box{background:linear-gradient(135deg,#f5f3ff 0%,#faf5ff 100%);border:1px solid #ddd6fe;border-radius:13px;padding:0.95rem 1.1rem}
+    .firmas-sello-wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.85rem}
+    .firmas-sello-controls{display:flex;gap:0.55rem;align-items:center;flex-wrap:wrap}
     .firmas-sello-controls input[type="file"]{max-width:100%}
-    .firmas-multifirmante-row{display:grid;grid-template-columns:minmax(130px,1fr) minmax(150px,1.2fr) minmax(105px,0.8fr) minmax(115px,0.9fr) auto;gap:0.45rem;align-items:end;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:0.55rem}
-    .firmas-campos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(235px,100%),1fr));gap:0.65rem}
-    .firmas-canvas-prueba{max-width:100%;height:auto;border:1.5px dashed #94a3b8;border-radius:8px;background:#ffffff;cursor:crosshair;touch-action:none}
-    .firmas-cta-bar{display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center;padding-top:0.4rem;border-top:1px solid #e2e8f0}
+    .firmas-multifirmante-row{display:grid;grid-template-columns:minmax(130px,1fr) minmax(165px,1.25fr) minmax(110px,0.8fr) minmax(125px,0.95fr) auto;gap:0.55rem;align-items:end;background:#ffffff;border:1px solid #e2e8f0;border-radius:11px;padding:0.75rem 0.85rem;box-shadow:0 1px 3px rgba(15,23,42,0.03)}
+    .firmas-campos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(255px,100%),1fr));gap:0.75rem}
+    .firmas-field-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:11px;padding:0.65rem 0.78rem;transition:border-color .15s ease,background-color .15s ease}
+    .firmas-field-card:focus-within{background:#ffffff;border-color:#93c5fd;box-shadow:0 2px 8px rgba(19,85,150,0.08)}
+    .firmas-canvas-prueba{max-width:100%;height:auto;border:1.5px dashed #94a3b8;border-radius:10px;background:#ffffff;cursor:crosshair;touch-action:none;box-shadow:inset 0 1px 3px rgba(15,23,42,0.04)}
+    .firmas-cta-bar{display:flex;gap:0.65rem;flex-wrap:wrap;align-items:center;padding-top:0.9rem;border-top:1px solid #e2e8f0}
     .firmas-cta-primary{margin-left:auto}
-    .firmas-filter-bar{display:flex;justify-content:space-between;align-items:center;gap:0.6rem;flex-wrap:wrap;margin-bottom:0.9rem}
-    .firmas-filter-input{flex:1 1 240px;min-width:0;padding:0.52rem 0.75rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;box-sizing:border-box}
-    .firmas-table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+    /* Bandeja KPIs, Filtros y Tabla */
+    .firmas-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.7rem}
+    .firmas-kpi-card{background:#ffffff;border:1px solid #e2e8f0;border-left:4px solid var(--kpi-accent,#135596);border-radius:12px;padding:0.72rem 0.9rem;box-shadow:0 2px 6px rgba(15,23,42,0.03);transition:transform .14s ease,box-shadow .14s ease}
+    .firmas-kpi-card:hover{transform:translateY(-1px);box-shadow:0 5px 12px rgba(15,23,42,0.06)}
+    .firmas-kpi-lbl{font-size:0.67rem;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.04em}
+    .firmas-kpi-val{font-size:1.25rem;font-weight:800;color:var(--kpi-val-color,#0f172a);margin-top:3px;font-variant-numeric:tabular-nums}
+    .firmas-filter-bar{display:flex;justify-content:space-between;align-items:center;gap:0.65rem;flex-wrap:wrap;margin-bottom:0.25rem}
+    .firmas-search-wrap{position:relative;flex:1 1 280px;min-width:0;display:flex;align-items:center}
+    .firmas-search-icon{position:absolute;left:0.85rem;color:#64748b;pointer-events:none;display:flex;align-items:center}
+    .firmas-filter-input{width:100%;height:40px;padding:0 0.85rem 0 2.4rem;border:1px solid #cbd5e1;border-radius:10px;font-size:0.83rem;font-family:inherit;background:#f8fafc;color:#0f172a;box-sizing:border-box;outline:none;transition:all .15s ease}
+    .firmas-filter-input:focus{background:#ffffff;border-color:#135596;box-shadow:0 0 0 3px rgba(19,85,150,0.14)}
+    .firmas-table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid #e2e8f0;border-radius:12px;background:#ffffff}
     .firmas-responsive-table{width:100%;border-collapse:collapse}
+    .firmas-responsive-table thead th{background:#f8fafc;border-bottom:1.5px solid #cbd5e1;padding:0.72rem 0.78rem;font-size:0.7rem;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:0.04em}
+    .firmas-responsive-table tbody tr{border-bottom:1px solid #f1f5f9;transition:background-color .12s ease}
+    .firmas-responsive-table tbody tr:last-child{border-bottom:none}
+    .firmas-responsive-table tbody tr:hover{background:#f8fafc}
     .firmas-td-actions{text-align:right;white-space:nowrap;width:1%}
     .firmas-td-actions-inner{display:inline-flex;gap:6px;align-items:center;justify-content:flex-end;flex-wrap:nowrap}
-    .firmas-editor-top-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:0.8rem;background:#f8fafc;padding:0.9rem;border-radius:10px;border:1px solid #e2e8f0}
-    .firmas-editor-meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr));gap:0.7rem}
-    .firmas-editor-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr);gap:1rem;align-items:start}
-    .firmas-ficha-dialog{background:#ffffff;border-radius:16px;max-width:min(1820px,98.5vw);width:98.5vw;max-height:94vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(15,23,42,0.35);overflow:hidden}
-    .firmas-ficha-actions{padding:0.65rem 1.25rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;gap:0.42rem;flex-wrap:wrap;align-items:center}
-    .firmas-ficha-tabs{padding:0.55rem 1.2rem;background:#ffffff;border-bottom:1px solid #e2e8f0;display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center}
-    .firmas-ficha-body{padding:1rem 1.25rem;overflow-y:auto;flex:1;min-height:320px}
-    .firmas-ficha-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:0.48rem;margin-bottom:1rem}
+
+    /* Editor Visual PDF */
+    .firmas-editor-top-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:0.9rem;background:#f8fafc;padding:1rem;border-radius:13px;border:1px solid #e2e8f0}
+    .firmas-editor-meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:0.75rem}
+    .firmas-editor-checks-bar{display:flex;gap:0.5rem;flex-wrap:wrap;background:#f8fafc;padding:0.75rem 0.9rem;border-radius:12px;border:1px solid #e2e8f0}
+    .firmas-editor-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(305px,1fr);gap:1.1rem;align-items:start}
+    .firmas-editor-canvas-shell{background:#e2e8f0;border:1px solid #cbd5e1;border-radius:14px;padding:0.85rem;min-width:0;display:flex;flex-direction:column;gap:0.7rem}
+    .firmas-editor-toolbar{background:#ffffff;border:1px solid #cbd5e1;border-radius:11px;padding:0.55rem 0.65rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;box-shadow:0 1px 3px rgba(15,23,42,0.05)}
+    .firmas-editor-tool-group{display:flex;gap:0.35rem;flex-wrap:wrap;align-items:center}
+    .firmas-editor-tool-btn{height:33px;padding:0 0.68rem;border-radius:8px;font-family:inherit;font-size:0.74rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .13s ease}
+    .firmas-editor-tool-btn:hover{transform:translateY(-1px);box-shadow:0 2px 5px rgba(15,23,42,0.08)}
+    .firmas-editor-tool-btn.is-active{box-shadow:0 0 0 2.5px #1d4ed8,0 3px 8px rgba(29,78,216,0.18) !important;transform:translateY(-1px)}
+    .firmas-editor-inspector-col{display:flex;flex-direction:column;gap:0.8rem;min-width:0;position:sticky;top:0.75rem}
+    .firmas-editor-fields-list{display:flex;gap:0.38rem;flex-wrap:wrap;max-height:145px;overflow-y:auto;padding:0.55rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:11px}
+
+    /* Modal Ficha Completa de Firma y Evidencia */
+    .firmas-ficha-dialog{background:#ffffff;border-radius:18px;max-width:min(1760px,97.5vw);width:97.5vw;max-height:94vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(15,23,42,0.38);border:1px solid rgba(255,255,255,0.12);overflow:hidden}
+    .firmas-ficha-header{padding:1rem 1.35rem;background:linear-gradient(135deg,#0c2340 0%,#0f2744 52%,#135596 100%);color:#ffffff;display:flex;justify-content:space-between;align-items:flex-start;gap:0.85rem;flex-shrink:0}
+    .firmas-ficha-actions{padding:0.65rem 1.35rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center;flex-shrink:0}
+    .firmas-ficha-tabs{padding:0.55rem 1.35rem;background:#ffffff;border-bottom:1px solid #e2e8f0;display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center;flex-shrink:0}
+    .firmas-ficha-body{padding:1.1rem 1.35rem;overflow-y:auto;flex:1;min-height:320px;background:#ffffff}
+    .firmas-ficha-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.55rem;margin-bottom:1rem}
     #fichaModalPdfPagesWrap canvas,#firmaPreviewPaginasContainer canvas{max-width:100% !important;height:auto !important}
+
     @media (max-width:1024px){
       .firmas-editor-grid{grid-template-columns:minmax(0,1fr)}
+      .firmas-editor-inspector-col{position:static}
       .firmas-multifirmante-row{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .firmas-ficha-actions{padding:0.55rem 0.85rem}
-      .firmas-ficha-tabs{padding:0.5rem 0.85rem}
-      .firmas-ficha-body{padding:0.85rem}
+      .firmas-ficha-actions{padding:0.55rem 0.9rem}
+      .firmas-ficha-tabs{padding:0.5rem 0.9rem}
+      .firmas-ficha-body{padding:0.9rem}
     }
     @media (max-width:860px){
-      .firmas-table-wrap{overflow-x:visible}
+      .firmas-table-wrap{overflow-x:visible;border:none;background:transparent}
       .firmas-responsive-table thead{display:none}
       .firmas-responsive-table,.firmas-responsive-table tbody{display:block;width:100%}
-      .firmas-responsive-table tr{display:block;background:#ffffff;border:1px solid #cbd5e1;border-radius:12px;padding:0.75rem 0.85rem;margin-bottom:0.75rem;box-shadow:0 1px 4px rgba(15,23,42,0.06)}
+      .firmas-responsive-table tr{display:block;background:#ffffff;border:1px solid #cbd5e1;border-radius:13px;padding:0.85rem 0.95rem;margin-bottom:0.75rem;box-shadow:0 2px 6px rgba(15,23,42,0.05)}
       .firmas-responsive-table tr.firmas-row-elim{background:#fffafa;border-color:#fecaca}
-      .firmas-responsive-table td{display:flex;flex-direction:column;align-items:flex-start;gap:0.18rem;padding:0.38rem 0 !important;border-bottom:1px dashed #e2e8f0;max-width:none !important;white-space:normal !important;text-align:left !important;width:100%;box-sizing:border-box}
-      .firmas-responsive-table td:last-child{border-bottom:none;padding-top:0.55rem !important}
+      .firmas-responsive-table td{display:flex;flex-direction:column;align-items:flex-start;gap:0.2rem;padding:0.42rem 0 !important;border-bottom:1px dashed #e2e8f0;max-width:none !important;white-space:normal !important;text-align:left !important;width:100%;box-sizing:border-box}
+      .firmas-responsive-table td:last-child{border-bottom:none;padding-top:0.6rem !important}
       .firmas-responsive-table td[colspan]{align-items:center;text-align:center !important;border-bottom:none}
       .firmas-responsive-table td[data-label]::before{content:attr(data-label);font-size:0.66rem;font-weight:800;text-transform:uppercase;letter-spacing:0.03em;color:#64748b}
       .firmas-td-actions{width:100%}
@@ -3986,17 +4094,17 @@
       .firmas-td-actions-inner button,.firmas-td-actions-inner a{flex:1 1 auto;justify-content:center;min-height:36px}
     }
     @media (max-width:640px){
-      .firmas-shell{padding:0.55rem;gap:0.65rem}
-      .firmas-hero{padding:0.9rem 1rem;border-radius:12px}
-      .firmas-card{padding:0.85rem;border-radius:12px;gap:0.85rem}
-      .firmas-tabs-bar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0.4rem;padding:0.4rem}
+      .firmas-shell{padding:0 0 1rem;gap:0.75rem}
+      .firmas-hero{padding:0.95rem 1.05rem;border-radius:13px}
+      .firmas-card{padding:0.9rem;border-radius:13px;gap:0.9rem}
+      .firmas-tabs-bar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0.35rem;padding:0.35rem;width:100%}
       .firmas-tab-btn{padding:0.55rem 0.5rem;font-size:0.74rem;text-align:center}
       .firmas-multifirmante-row{grid-template-columns:minmax(0,1fr)}
       .firmas-cta-bar{flex-direction:column;align-items:stretch}
       .firmas-cta-bar button{width:100%;justify-content:center}
       .firmas-cta-primary{margin-left:0}
       .firmas-filter-bar{gap:0.45rem}
-      .firmas-filter-input{flex:1 1 100%;width:100%}
+      .firmas-search-wrap{flex:1 1 100%;width:100%}
       .firmas-filter-bar button{flex:1 1 46%;justify-content:center}
       .firmas-ficha-dialog{width:100vw !important;max-width:100vw !important;height:100dvh !important;max-height:100dvh !important;border-radius:0 !important}
       .firmas-ficha-actions{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0.5rem 0.7rem}
@@ -5398,127 +5506,205 @@
       <!-- VISTA: FIRMAS AMMER (PLANTILLAS PDF, ENLACE MÓVIL Y TRAZABILIDAD) -->
       <section id="vistaFirmasAMMER" class="app-view">
         <div class="main-panel firmas-shell">
+          <!-- HERO INSTITUCIONAL -->
           <div class="firmas-hero">
-            <div>
-              <div class="firmas-hero-title">✍️ Firmas AMMER — Firma Electrónica y Gestión de Plantillas PDF</div>
-              <div class="firmas-hero-sub">Creá plantillas PDF reutilizables, enviá enlaces móviles seguros con validación de identidad y descargá documentos firmados con trazabilidad legal.</div>
+            <div class="firmas-hero-left">
+              <div class="firmas-hero-icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+              </div>
+              <div style="min-width:0;">
+                <div class="firmas-hero-title">
+                  <span>Firmas AMMER — Firma Electrónica y Plantillas PDF</span>
+                  <span class="firmas-hero-pill">Ley 25.506 · eKYC · PAdES</span>
+                </div>
+                <div class="firmas-hero-sub">Creá plantillas PDF reutilizables, enviá enlaces móviles seguros con validación biométrica y descargá documentos firmados con trazabilidad legal completa.</div>
+              </div>
             </div>
           </div>
 
-          <div class="firmas-tabs-bar">
-            <button type="button" id="btnTabFirma_generar" class="firmas-tab-btn" onclick="cambiarTabFirmas('generar')" style="border:1px solid #0f2744;background:#0f2744;color:#ffffff;">✉️ Generar y Enviar a Firma</button>
-            <button type="button" id="btnTabFirma_bandeja" class="firmas-tab-btn" onclick="cambiarTabFirmas('bandeja')" style="border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;">📂 Bandeja de Documentos y Evidencia</button>
-            <button type="button" id="btnTabFirma_eliminados" class="firmas-tab-btn" onclick="cambiarTabFirmas('eliminados')" style="border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;">🗑️ Eliminados / Cancelados <span id="badgeTabFirmasEliminadas" style="display:none;background:#fee2e2;color:#b91c1c;border-radius:9999px;padding:1px 7px;font-size:0.71rem;font-weight:800;">0</span></button>
-            <button type="button" id="btnTabFirma_editor" class="firmas-tab-btn" onclick="cambiarTabFirmas('editor')" style="display:none;border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;">🎨 Editor Visual de Plantillas PDF</button>
+          <!-- PESTAÑAS SEGMENTADAS -->
+          <div class="firmas-tabs-bar" role="tablist" aria-label="Secciones de Firmas AMMER">
+            <button type="button" id="btnTabFirma_generar" class="firmas-tab-btn active" onclick="cambiarTabFirmas('generar')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+              <span>Generar y Enviar a Firma</span>
+            </button>
+            <button type="button" id="btnTabFirma_bandeja" class="firmas-tab-btn" onclick="cambiarTabFirmas('bandeja')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+              <span>Bandeja de Documentos y Evidencia</span>
+            </button>
+            <button type="button" id="btnTabFirma_eliminados" class="firmas-tab-btn firmas-tab-btn--danger" onclick="cambiarTabFirmas('eliminados')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
+              <span>Eliminados / Cancelados</span>
+              <span id="badgeTabFirmasEliminadas" class="firmas-tab-badge" style="display:none;">0</span>
+            </button>
+            <button type="button" id="btnTabFirma_editor" class="firmas-tab-btn" onclick="cambiarTabFirmas('editor')" style="display:none;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              <span>Editor Visual de Plantillas PDF</span>
+            </button>
           </div>
 
           <!-- SUB-PANEL 1: GENERAR Y ENVIAR A FIRMA -->
           <div id="panelFirmas_generar" style="display:block;">
             <div class="firmas-card">
               <div class="firmas-form-grid">
-                <div>
-                  <label style="display:block;font-size:0.76rem;font-weight:800;color:#334155;margin-bottom:5px;">1. Seleccionar Plantilla PDF</label>
-                  <select id="selFirmaPlantilla" onchange="onPlantillaGenerarChange()" style="width:100%;padding:0.52rem 0.65rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.84rem;background:#ffffff;color:#0f172a;"></select>
-                </div>
-                <div>
-                  <label style="display:block;font-size:0.76rem;font-weight:800;color:#334155;margin-bottom:5px;">2. Vincular Expediente (Autocompleta datos)</label>
-                  <div class="firmas-exp-row">
-                    <select id="selFirmaExpediente" onchange="renderCamposCompletarFormulario()" style="padding:0.52rem 0.65rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.84rem;background:#ffffff;color:#0f172a;"></select>
-                    <button type="button" onclick="exportarExpedienteCompletoZip()" title="Descargar el legajo completo y todas sus firmas en un archivo .ZIP" style="padding:0.48rem 0.78rem;border-radius:8px;border:1px solid #0f2744;background:#eff6ff;color:#0f2744;font-size:0.77rem;font-weight:700;cursor:pointer;white-space:nowrap;">📦 Legajo .ZIP</button>
+                <div class="firmas-step-card">
+                  <div class="firmas-step-header">
+                    <label for="selFirmaPlantilla" class="firmas-step-label">
+                      <span class="firmas-step-num">1</span>
+                      <span>Seleccionar Plantilla PDF</span>
+                    </label>
                   </div>
-                  <label id="wrapChkFirmaMostrarVerValidacion" style="display:none;align-items:center;gap:6px;font-size:0.72rem;font-weight:700;color:#047857;margin-top:6px;cursor:pointer;">
-                    <input type="checkbox" id="chkFirmaMostrarVerValidacion" checked style="accent-color:#059669;"/>
-                    <span>Mostrar botón «Ver Validación» en Mis Gestiones y Red Comercial (Admin / Analista)</span>
+                  <select id="selFirmaPlantilla" class="firmas-select" onchange="onPlantillaGenerarChange()"></select>
+                </div>
+
+                <div class="firmas-step-card">
+                  <div class="firmas-step-header">
+                    <label for="selFirmaExpediente" class="firmas-step-label">
+                      <span class="firmas-step-num">2</span>
+                      <span>Vincular Expediente (Autocompleta)</span>
+                    </label>
+                  </div>
+                  <div class="firmas-exp-row">
+                    <select id="selFirmaExpediente" class="firmas-select" onchange="renderCamposCompletarFormulario()"></select>
+                    <button type="button" class="firmas-btn firmas-btn-soft-blue" onclick="exportarExpedienteCompletoZip()" title="Descargar el legajo completo y todas sus firmas en un archivo .ZIP">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                      <span>Legajo .ZIP</span>
+                    </button>
+                  </div>
+                  <label id="wrapChkFirmaMostrarVerValidacion" class="firmas-check-pill firmas-check-pill--emerald firmas-check-pill--compact" style="display:none;margin-top:4px;">
+                    <input type="checkbox" id="chkFirmaMostrarVerValidacion" checked/>
+                    <span>Mostrar «Ver Validación» en Mis Gestiones y Red Comercial</span>
                   </label>
                 </div>
-                <div>
-                  <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap;">
-                    <label style="font-size:0.76rem;font-weight:800;color:#334155;">3. WhatsApp de Contacto</label>
-                    <span id="badgeEstadoBotWaFirmas" style="font-size:0.68rem;font-weight:700;padding:1px 7px;border-radius:9999px;background:#f1f5f9;color:#475569;">Bot WA: verificando...</span>
+
+                <div class="firmas-step-card">
+                  <div class="firmas-step-header">
+                    <label for="inpFirmaTelefonoWa" class="firmas-step-label">
+                      <span class="firmas-step-num">3</span>
+                      <span>WhatsApp de Contacto</span>
+                    </label>
+                    <span id="badgeEstadoBotWaFirmas" style="font-size:0.68rem;font-weight:800;padding:2px 8px;border-radius:9999px;background:#e2e8f0;color:#475569;">Bot WA: verificando...</span>
                   </div>
-                  <input type="text" id="inpFirmaTelefonoWa" placeholder="Ej: 3434123456 (sin 0 ni 15)" style="width:100%;padding:0.52rem 0.65rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.84rem;box-sizing:border-box;"/>
-                  <label style="display:inline-flex;align-items:center;gap:5px;font-size:0.72rem;font-weight:700;color:#065f46;margin-top:5px;cursor:pointer;">
-                    <input type="checkbox" id="chkEnviarWaAutoFirma"/> 🤖 Enviar enlace por WhatsApp automáticamente al generar
+                  <input type="text" id="inpFirmaTelefonoWa" class="firmas-input" placeholder="Ej: 3434123456 (sin 0 ni 15)"/>
+                  <label class="firmas-check-pill firmas-check-pill--emerald firmas-check-pill--compact" style="margin-top:4px;align-self:flex-start;">
+                    <input type="checkbox" id="chkEnviarWaAutoFirma"/>
+                    <span>🤖 Enviar enlace por WhatsApp automáticamente al generar</span>
                   </label>
                 </div>
               </div>
 
               <!-- PAQUETE / SOBRE DE MÚLTIPLES DOCUMENTOS -->
-              <details style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.7rem 0.9rem;">
-                <summary style="cursor:pointer;font-size:0.8rem;font-weight:800;color:#0f2744;">📦 Enviar Varios PDFs Juntos en un Paquete (1 sola validación y 1 firma para todos)</summary>
-                <div style="font-size:0.73rem;color:#475569;margin:0.4rem 0 0.55rem;">Marcá 2 o más plantillas para incluirlas en un mismo envío. Los datos compartidos (Nombre, DNI, CBU, Monto, etc.) se completan una única vez.</div>
+              <details class="firmas-accordion">
+                <summary>
+                  <span>📦 Enviar Varios PDFs Juntos en un Paquete (1 sola validación y 1 firma para todos)</span>
+                </summary>
+                <div style="font-size:0.74rem;color:#475569;margin:0.5rem 0 0.6rem;">Marcá 2 o más plantillas para incluirlas en un mismo envío. Los datos compartidos (Nombre, DNI, CBU, Monto, etc.) se completan una única vez.</div>
                 <div id="firmaPaquetePlantillasContainer" style="display:flex;gap:0.45rem;flex-wrap:wrap;"></div>
               </details>
 
-              <div id="firmaValidacionesResumen" style="display:flex;gap:0.4rem;flex-wrap:wrap;"></div>
+              <div id="firmaValidacionesResumen" style="display:flex;gap:0.42rem;flex-wrap:wrap;"></div>
 
               <!-- CARGA DE SELLO OFICIAL INSTITUCIONAL (PNG) -->
-              <div id="firmaSelloInstitucionalWrap" style="display:none;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:0.85rem 1rem;">
+              <div id="firmaSelloInstitucionalWrap" class="firmas-sello-box" style="display:none;">
                 <div class="firmas-sello-wrap">
                   <div style="flex:1;min-width:min(240px,100%);">
-                    <div style="font-size:0.8rem;font-weight:800;color:#5b21b6;margin-bottom:3px;">🏛️ Sello Oficial Institucional (PNG transparente)</div>
-                    <div style="font-size:0.73rem;color:#6d28d9;margin-bottom:0.45rem;">Esta plantilla incluye espacio para el sello de Mutual Modelo. Subilo una vez y podés recordarlo en este navegador.</div>
+                    <div style="font-size:0.84rem;font-weight:800;color:#5b21b6;margin-bottom:3px;">🏛️ Sello Oficial Institucional (PNG transparente)</div>
+                    <div style="font-size:0.74rem;color:#6d28d9;margin-bottom:0.6rem;">Esta plantilla incluye espacio para el sello de Mutual Modelo. Subilo una vez y podés recordarlo en este navegador.</div>
                     <div class="firmas-sello-controls">
-                      <input type="file" id="inpFirmaSelloPngFile" accept="image/png,image/*" onchange="onArchivoSelloPngSeleccionado(event)" style="font-size:0.78rem;"/>
-                      <label style="display:flex;align-items:center;gap:4px;font-size:0.74rem;font-weight:600;color:#4c1d95;cursor:pointer;">
-                        <input type="checkbox" id="chkRecordarSelloOficial" checked/> Recordar sello en navegador
+                      <input type="file" id="inpFirmaSelloPngFile" class="firmas-file-input" style="width:auto;max-width:260px;" accept="image/png,image/*" onchange="onArchivoSelloPngSeleccionado(event)"/>
+                      <label class="firmas-check-pill firmas-check-pill--compact">
+                        <input type="checkbox" id="chkRecordarSelloOficial" checked/>
+                        <span>Recordar sello en navegador</span>
                       </label>
-                      <button type="button" onclick="limpiarSelloPngOficial()" style="padding:2px 8px;border-radius:6px;border:1px solid #c4b5fd;background:#ffffff;color:#5b21b6;font-size:0.72rem;font-weight:700;cursor:pointer;">🗑️ Quitar sello</button>
+                      <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-danger" onclick="limpiarSelloPngOficial()">🗑️ Quitar sello</button>
                     </div>
                   </div>
-                  <div id="previewSelloPngBox" style="width:96px;height:66px;border:1px dashed #a78bfa;border-radius:8px;background:#ffffff;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:0.7rem;color:#7c3aed;text-align:center;padding:4px;">Sin sello</div>
+                  <div id="previewSelloPngBox" style="width:110px;height:74px;border:1.5px dashed #a78bfa;border-radius:10px;background:#ffffff;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:0.72rem;font-weight:700;color:#7c3aed;text-align:center;padding:6px;">Sin sello</div>
                 </div>
               </div>
 
               <!-- FIRMANTES REQUERIDOS (1 O MÁS PERSONAS) -->
-              <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0.9rem;">
-                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.55rem;">
+              <div class="firmas-section-box">
+                <div class="firmas-section-head">
                   <div>
-                    <div style="font-size:0.8rem;font-weight:800;color:#0f172a;">👥 Firmantes Requeridos</div>
-                    <div style="font-size:0.72rem;color:#64748b;">Si participan 2 o más personas, cada una recibe su propio enlace y el trámite se completa cuando firman todas.</div>
+                    <div class="firmas-section-title">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#135596" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                      <span>Firmantes Requeridos</span>
+                    </div>
+                    <div class="firmas-section-sub">Si participan 2 o más personas, cada una recibe su propio enlace y el trámite se completa cuando firman todas.</div>
                   </div>
                   <div style="display:flex;gap:0.55rem;align-items:center;flex-wrap:wrap;">
-                    <label style="display:inline-flex;align-items:center;gap:5px;font-size:0.74rem;font-weight:700;color:#1e3a8a;background:#eff6ff;border:1px solid #bfdbfe;padding:0.32rem 0.65rem;border-radius:7px;cursor:pointer;">
-                      <input type="checkbox" id="chkOrdenSecuencialFirma"/> 🔢 Firmar por turno (orden #1 → #2)
+                    <label class="firmas-check-pill firmas-check-pill--compact">
+                      <input type="checkbox" id="chkOrdenSecuencialFirma"/>
+                      <span>🔢 Firmar por turno (orden #1 → #2)</span>
                     </label>
-                    <button type="button" onclick="agregarFirmanteGenerador()" style="padding:0.35rem 0.72rem;border-radius:7px;border:1px solid #0f2744;background:#ffffff;color:#0f2744;font-size:0.74rem;font-weight:700;cursor:pointer;">➕ Agregar Firmante</button>
+                    <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-soft-blue" onclick="agregarFirmanteGenerador()">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                      <span>Agregar Firmante</span>
+                    </button>
                   </div>
                 </div>
-                <div id="firmaMultifirmantesContainer" style="display:flex;flex-direction:column;gap:0.5rem;"></div>
+                <div id="firmaMultifirmantesContainer" style="display:flex;flex-direction:column;gap:0.55rem;"></div>
               </div>
 
+              <!-- DATOS DINÁMICOS DEL DOCUMENTO -->
               <div>
-                <div style="font-size:0.78rem;font-weight:800;color:#1e293b;margin-bottom:0.45rem;">Datos a completar en el documento (podés modificar o vaciar cualquier campo antes de enviarlo):</div>
+                <div class="firmas-section-head" style="margin-bottom:0.55rem;">
+                  <div class="firmas-section-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#135596" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                    <span>Datos a completar en el documento</span>
+                  </div>
+                  <span style="font-size:0.73rem;color:#64748b;font-weight:600;">Podés modificar o vaciar cualquier campo antes de enviarlo</span>
+                </div>
                 <div id="firmaCamposGenerarContainer"></div>
               </div>
 
-              <details style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0.7rem 0.9rem;">
-                <summary style="cursor:pointer;font-size:0.8rem;font-weight:700;color:#334155;">✍️ Opcional: Dibujar firma de prueba presencial (para vista previa completa)</summary>
-                <div style="margin-top:0.6rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+              <!-- FIRMA DE PRUEBA PRESENCIAL -->
+              <details class="firmas-accordion">
+                <summary>
+                  <span>✍️ Opcional: Dibujar firma de prueba presencial (para vista previa completa)</span>
+                </summary>
+                <div style="margin-top:0.75rem;display:flex;align-items:center;gap:0.85rem;flex-wrap:wrap;">
                   <canvas id="canvasFirmaPruebaPresencial" class="firmas-canvas-prueba" width="320" height="110"></canvas>
-                  <div style="display:flex;flex-direction:column;gap:0.4rem;">
-                    <button type="button" onclick="limpiarCanvasFirmaPrueba()" style="padding:0.4rem 0.75rem;border-radius:7px;border:1px solid #cbd5e1;background:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;">🧹 Limpiar firma</button>
-                    <button type="button" onclick="previsualizarPdfGenerado(true)" style="padding:0.4rem 0.75rem;border-radius:7px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;">👁️ Ver PDF con esta firma</button>
+                  <div style="display:flex;flex-direction:column;gap:0.45rem;">
+                    <button type="button" class="firmas-btn firmas-btn--sm" onclick="limpiarCanvasFirmaPrueba()">🧹 Limpiar firma</button>
+                    <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-navy" onclick="previsualizarPdfGenerado(true)">👁️ Ver PDF con esta firma</button>
                   </div>
                 </div>
               </details>
 
+              <!-- BARRA PRINCIPAL DE ACCIONES -->
               <div class="firmas-cta-bar">
-                <button type="button" onclick="previsualizarPdfGenerado(false)" style="padding:0.58rem 1rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;font-size:0.83rem;font-weight:700;cursor:pointer;">👁️ Vista Previa del PDF</button>
-                <button type="button" onclick="descargarUltimoPreviewPdfFirma()" style="padding:0.58rem 1rem;border-radius:9px;border:1px solid #cbd5e1;background:#f8fafc;color:#334155;font-size:0.83rem;font-weight:700;cursor:pointer;">📥 Descargar PDF Generado</button>
-                <button type="button" class="firmas-cta-primary" onclick="generarEnlaceFirmaMovil()" style="padding:0.62rem 1.2rem;border-radius:9px;border:1px solid #059669;background:#059669;color:#ffffff;font-size:0.85rem;font-weight:800;cursor:pointer;">🔗 Generar Enlace(s) de Firma (24 h)</button>
+                <button type="button" class="firmas-btn" onclick="previsualizarPdfGenerado(false)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  <span>Vista Previa del PDF</span>
+                </button>
+                <button type="button" class="firmas-btn firmas-btn-soft-blue" onclick="descargarUltimoPreviewPdfFirma()">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  <span>Descargar PDF Generado</span>
+                </button>
+                <button type="button" class="firmas-btn firmas-btn-emerald firmas-cta-primary" onclick="generarEnlaceFirmaMovil()">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                  <span>Generar Enlace(s) de Firma (24 h)</span>
+                </button>
               </div>
 
-              <div id="firmaEnlaceGeneradoBox" style="display:none;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:12px;padding:1rem;">
-                <div style="font-size:0.88rem;font-weight:800;color:#065f46;margin-bottom:0.35rem;">✅ ¡Solicitud(es) de firma generada(s) con 24 horas de vigencia!</div>
-                <div style="font-size:0.74rem;color:#047857;margin-bottom:0.65rem;word-break:break-all;">Huella SHA-256 original: <span id="lblFirmaHashOriginal" class="font-mono">-</span></div>
-                <div id="firmaEnlacesListaContainer" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
+              <!-- RESULTADO ENLACE GENERADO -->
+              <div id="firmaEnlaceGeneradoBox" style="display:none;background:linear-gradient(135deg,#ecfdf5 0%,#f0fdf4 100%);border:1px solid #6ee7b7;border-radius:14px;padding:1.1rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.4rem;">
+                  <div style="font-size:0.92rem;font-weight:800;color:#065f46;">✅ ¡Solicitud(es) de firma generada(s) con 24 horas de vigencia!</div>
+                  <div style="font-size:0.72rem;color:#047857;background:#ffffff;border:1px solid #a7f3d0;border-radius:8px;padding:3px 9px;word-break:break-all;">
+                    SHA-256 original: <span id="lblFirmaHashOriginal" class="font-mono">-</span>
+                  </div>
+                </div>
+                <div id="firmaEnlacesListaContainer" style="display:flex;flex-direction:column;gap:0.75rem;margin-top:0.65rem;"></div>
               </div>
 
-              <div id="firmaPreviewPdfWrap" style="display:none;background:#e2e8f0;border-radius:12px;padding:0.85rem;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.65rem;">
-                  <span style="font-size:0.82rem;font-weight:800;color:#0f172a;">Vista Previa del PDF Estampado</span>
-                  <button type="button" onclick="document.getElementById('firmaPreviewPdfWrap').style.display='none'" style="padding:2px 8px;border-radius:6px;border:1px solid #94a3b8;background:#ffffff;font-size:0.74rem;cursor:pointer;">Ocultar</button>
+              <!-- PREVIEW PDF ESTAMPADO -->
+              <div id="firmaPreviewPdfWrap" style="display:none;background:#e2e8f0;border:1px solid #cbd5e1;border-radius:14px;padding:0.95rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.7rem;">
+                  <span style="font-size:0.84rem;font-weight:800;color:#0f2744;">📄 Vista Previa del PDF Estampado</span>
+                  <button type="button" class="firmas-btn firmas-btn--xs" onclick="document.getElementById('firmaPreviewPdfWrap').style.display='none'">Ocultar</button>
                 </div>
                 <div id="firmaPreviewPaginasContainer" style="max-height:560px;overflow:auto;"></div>
               </div>
@@ -5528,22 +5714,33 @@
           <!-- SUB-PANEL 2: BANDEJA DE DOCUMENTOS Y EVIDENCIA -->
           <div id="panelFirmas_bandeja" style="display:none;">
             <div class="firmas-card">
-              <div id="firmaMetricasBar" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:0.6rem;"></div>
-              <div class="firmas-filter-bar" style="margin-bottom:0;">
-                <input type="text" id="inpFiltroBandejaFirmas" class="firmas-filter-input" oninput="renderBandejaFirmas()" placeholder="Buscar por Nombre, DNI, Expediente, Documento o Estado..."/>
-                <button type="button" onclick="abrirModalCertificadoPades()" title="Ver estado o generar certificado criptográfico PKCS#12 (.p12) para firmar PDFs" style="padding:0.52rem 0.9rem;border-radius:8px;border:1px solid #4338ca;background:#eef2ff;color:#3730a3;font-size:0.8rem;font-weight:700;cursor:pointer;">🔐 Firma Digital (.p12)</button>
-                <button type="button" onclick="cargarBandejaFirmas()" style="padding:0.52rem 0.9rem;border-radius:8px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.8rem;font-weight:700;cursor:pointer;">🔄 Actualizar Listado</button>
+              <div id="firmaMetricasBar" class="firmas-kpi-grid"></div>
+              <div class="firmas-filter-bar">
+                <div class="firmas-search-wrap">
+                  <span class="firmas-search-icon" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  </span>
+                  <input type="text" id="inpFiltroBandejaFirmas" class="firmas-filter-input" oninput="renderBandejaFirmas()" placeholder="Buscar por Nombre, DNI, Expediente, Documento o Estado..."/>
+                </div>
+                <button type="button" class="firmas-btn firmas-btn-indigo" onclick="abrirModalCertificadoPades()" title="Ver estado o generar certificado criptográfico PKCS#12 (.p12) para firmar PDFs">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                  <span>Firma Digital (.p12)</span>
+                </button>
+                <button type="button" class="firmas-btn firmas-btn-navy" onclick="cargarBandejaFirmas()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                  <span>Actualizar Listado</span>
+                </button>
               </div>
               <div class="firmas-table-wrap">
                 <table class="firmas-responsive-table">
                   <thead>
-                    <tr style="background:#f8fafc;border-bottom:2px solid #cbd5e1;text-align:left;font-size:0.73rem;color:#475569;text-transform:uppercase;">
-                      <th style="padding:0.6rem 0.65rem;">Asociado / Exp.</th>
-                      <th style="padding:0.6rem 0.65rem;">Documento</th>
-                      <th style="padding:0.6rem 0.65rem;text-align:center;">Estado</th>
-                      <th style="padding:0.6rem 0.65rem;white-space:nowrap;">Fechas (UTC)</th>
-                      <th style="padding:0.6rem 0.65rem;">Evidencia Digital y Ubicación</th>
-                      <th style="padding:0.6rem 0.65rem;text-align:right;white-space:nowrap;">Acciones y Descargas</th>
+                    <tr style="text-align:left;">
+                      <th>Asociado / Exp.</th>
+                      <th>Documento</th>
+                      <th style="text-align:center;">Estado</th>
+                      <th style="white-space:nowrap;">Fechas (UTC)</th>
+                      <th>Evidencia Digital y Ubicación</th>
+                      <th style="text-align:right;white-space:nowrap;">Acciones y Descargas</th>
                     </tr>
                   </thead>
                   <tbody id="tbodyBandejaFirmas"></tbody>
@@ -5555,26 +5752,31 @@
           <!-- SUB-PANEL 2B: ELIMINADOS / CANCELADOS / DESESTIMADOS -->
           <div id="panelFirmas_eliminados" style="display:none;">
             <div class="firmas-card firmas-card--danger">
-              <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;flex-wrap:wrap;padding-bottom:0.75rem;border-bottom:1px solid #fee2e2;">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:0.85rem;flex-wrap:wrap;padding-bottom:0.85rem;border-bottom:1px solid #fee2e2;">
                 <div>
-                  <div style="font-size:0.95rem;font-weight:800;color:#991b1b;">🗑️ Fichas Eliminadas, Canceladas o Desestimadas</div>
-                  <div style="font-size:0.77rem;color:#64748b;margin-top:2px;">Registro auditado con código de validación por WhatsApp, nombre y apellido, usuario responsable y fecha/hora exacta de baja.</div>
+                  <div style="font-size:0.96rem;font-weight:800;color:#991b1b;">🗑️ Fichas Eliminadas, Canceladas o Desestimadas</div>
+                  <div style="font-size:0.76rem;color:#64748b;margin-top:2px;">Registro auditado con código de validación por WhatsApp, nombre y apellido, usuario responsable y fecha/hora exacta de baja.</div>
                 </div>
-                <div class="firmas-filter-bar" style="margin-bottom:0;flex:1 1 280px;">
-                  <input type="text" id="inpFiltroFirmasEliminadas" class="firmas-filter-input" oninput="renderBandejaFirmas()" placeholder="Buscar por Asociado, DNI, Responsable o Motivo..."/>
-                  <button type="button" onclick="cargarBandejaFirmas()" style="padding:0.48rem 0.85rem;border-radius:8px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.79rem;font-weight:700;cursor:pointer;">🔄 Actualizar</button>
+                <div class="firmas-filter-bar" style="margin-bottom:0;flex:1 1 300px;">
+                  <div class="firmas-search-wrap">
+                    <span class="firmas-search-icon" aria-hidden="true">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </span>
+                    <input type="text" id="inpFiltroFirmasEliminadas" class="firmas-filter-input" oninput="renderBandejaFirmas()" placeholder="Buscar por Asociado, DNI, Responsable o Motivo..."/>
+                  </div>
+                  <button type="button" class="firmas-btn firmas-btn-navy" onclick="cargarBandejaFirmas()">🔄 Actualizar</button>
                 </div>
               </div>
-              <div class="firmas-table-wrap">
+              <div class="firmas-table-wrap" style="border-color:#fecaca;">
                 <table class="firmas-responsive-table">
                   <thead>
-                    <tr style="background:#fef2f2;border-bottom:2px solid #fecaca;text-align:left;font-size:0.72rem;color:#991b1b;text-transform:uppercase;">
-                      <th style="padding:0.6rem 0.65rem;">Asociado / Exp.</th>
-                      <th style="padding:0.6rem 0.65rem;">Documento</th>
-                      <th style="padding:0.6rem 0.65rem;text-align:center;">Estado / Motivo</th>
-                      <th style="padding:0.6rem 0.65rem;">Eliminado / Cancelado por</th>
-                      <th style="padding:0.6rem 0.65rem;white-space:nowrap;">Fecha y Hora</th>
-                      <th style="padding:0.6rem 0.65rem;text-align:right;">Acciones</th>
+                    <tr style="background:#fef2f2;text-align:left;">
+                      <th style="background:#fef2f2;color:#991b1b;border-bottom-color:#fecaca;">Asociado / Exp.</th>
+                      <th style="background:#fef2f2;color:#991b1b;border-bottom-color:#fecaca;">Documento</th>
+                      <th style="background:#fef2f2;color:#991b1b;border-bottom-color:#fecaca;text-align:center;">Estado / Motivo</th>
+                      <th style="background:#fef2f2;color:#991b1b;border-bottom-color:#fecaca;">Eliminado / Cancelado por</th>
+                      <th style="background:#fef2f2;color:#991b1b;border-bottom-color:#fecaca;white-space:nowrap;">Fecha y Hora</th>
+                      <th style="background:#fef2f2;color:#991b1b;border-bottom-color:#fecaca;text-align:right;">Acciones</th>
                     </tr>
                   </thead>
                   <tbody id="tbodyFirmasEliminadas"></tbody>
@@ -5588,26 +5790,26 @@
             <div class="firmas-card">
               <div class="firmas-editor-top-grid">
                 <div>
-                  <label style="display:block;font-size:0.75rem;font-weight:800;color:#334155;margin-bottom:5px;">Subir PDF base para crear nueva plantilla:</label>
-                  <input type="file" id="inpPlantillaPdfFile" accept="application/pdf" onchange="onArchivoPdfPlantillaSeleccionado(event)" style="width:100%;font-size:0.8rem;"/>
+                  <label for="inpPlantillaPdfFile" class="firmas-label">Subir PDF base para crear nueva plantilla:</label>
+                  <input type="file" id="inpPlantillaPdfFile" class="firmas-file-input" accept="application/pdf" onchange="onArchivoPdfPlantillaSeleccionado(event)"/>
                 </div>
                 <div>
-                  <label style="display:block;font-size:0.75rem;font-weight:800;color:#334155;margin-bottom:5px;">O cargar una plantilla guardada para editar:</label>
+                  <label for="selEditarPlantillaExistente" class="firmas-label">O cargar una plantilla guardada para editar:</label>
                   <div class="firmas-exp-row">
-                    <select id="selEditarPlantillaExistente" onchange="cargarPlantillaEnEditor(this.value)" style="padding:0.48rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;background:#ffffff;"></select>
-                    <button type="button" onclick="limpiarEditorPlantillaPdf()" title="Cancelar edición actual y limpiar el editor visual" style="padding:0.48rem 0.78rem;border-radius:8px;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;font-size:0.78rem;font-weight:700;cursor:pointer;white-space:nowrap;">🧹 Limpiar Editor</button>
+                    <select id="selEditarPlantillaExistente" class="firmas-select" onchange="cargarPlantillaEnEditor(this.value)"></select>
+                    <button type="button" class="firmas-btn firmas-btn-danger" onclick="limpiarEditorPlantillaPdf()" title="Cancelar edición actual y limpiar el editor visual">🧹 Limpiar Editor</button>
                   </div>
                 </div>
               </div>
 
               <div class="firmas-editor-meta-grid">
                 <div>
-                  <label style="display:block;font-size:0.73rem;font-weight:700;color:#475569;margin-bottom:3px;">Nombre de la Plantilla *</label>
-                  <input type="text" id="inpEditPlantillaNombre" placeholder="Ej: Autorización de Descuento de Haberes" style="width:100%;padding:0.48rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;box-sizing:border-box;"/>
+                  <label for="inpEditPlantillaNombre" class="firmas-label">Nombre de la Plantilla *</label>
+                  <input type="text" id="inpEditPlantillaNombre" class="firmas-input" placeholder="Ej: Autorización de Descuento de Haberes"/>
                 </div>
                 <div>
-                  <label style="display:block;font-size:0.73rem;font-weight:700;color:#475569;margin-bottom:3px;">Categoría</label>
-                  <select id="selEditPlantillaCategoria" style="width:100%;padding:0.48rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;background:#ffffff;box-sizing:border-box;">
+                  <label for="selEditPlantillaCategoria" class="firmas-label">Categoría</label>
+                  <select id="selEditPlantillaCategoria" class="firmas-select">
                     <option value="AUTORIZACION">AUTORIZACIÓN</option>
                     <option value="PAGARE">PAGARÉ / MUTUO</option>
                     <option value="CONVENIO">CONVENIO / ADHESIÓN</option>
@@ -5616,43 +5818,43 @@
                   </select>
                 </div>
                 <div>
-                  <label style="display:block;font-size:0.73rem;font-weight:700;color:#475569;margin-bottom:3px;">Descripción / Uso interno</label>
-                  <input type="text" id="inpEditPlantillaDesc" placeholder="Opcional..." style="width:100%;padding:0.48rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;box-sizing:border-box;"/>
+                  <label for="inpEditPlantillaDesc" class="firmas-label">Descripción / Uso interno</label>
+                  <input type="text" id="inpEditPlantillaDesc" class="firmas-input" placeholder="Opcional..."/>
                 </div>
               </div>
 
-              <div style="display:flex;gap:0.9rem 1.15rem;flex-wrap:wrap;background:#eff6ff;padding:0.7rem 0.9rem;border-radius:10px;border:1px solid #bfdbfe;font-size:0.78rem;font-weight:600;color:#1e3a8a;">
-                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="chkValFirmaOlografa" checked/> ✍️ Firma manuscrita en pantalla</label>
-                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="chkValTaparResaltados" checked/> 🧹 Ocultar resaltados amarillos</label>
-                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="chkValRequiereSelloPng"/> 🏛️ Incluir Sello Oficial (PNG)</label>
-                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="chkValGpsObligatorio"/> 📍 Exigir ubicación GPS</label>
-                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="chkValDniFrenteDorso"/> 🪪 Solicitar foto DNI (Frente y Dorso)</label>
-                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="chkValSelfieLiveness"/> 🤳 Selfie con prueba de vida</label>
-                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="chkValRequierePinOtp"/> 🔐 Confirmar con PIN por WhatsApp (2FA)</label>
+              <div class="firmas-editor-checks-bar">
+                <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkValFirmaOlografa" checked/> ✍️ Firma manuscrita en pantalla</label>
+                <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkValTaparResaltados" checked/> 🧹 Ocultar resaltados amarillos</label>
+                <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkValRequiereSelloPng"/> 🏛️ Incluir Sello Oficial (PNG)</label>
+                <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkValGpsObligatorio"/> 📍 Exigir ubicación GPS</label>
+                <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkValDniFrenteDorso"/> 🪪 Solicitar foto DNI (Frente y Dorso)</label>
+                <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkValSelfieLiveness"/> 🤳 Selfie con prueba de vida</label>
+                <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkValRequierePinOtp"/> 🔐 Confirmar con PIN por WhatsApp (2FA)</label>
               </div>
 
-              <div id="lblEditorEstadoPdf" style="display:none;font-size:0.78rem;font-weight:600;padding:0.5rem 0.75rem;border-radius:8px;background:#f8fafc;border:1px solid #cbd5e1;color:#334155;"></div>
+              <div id="lblEditorEstadoPdf" style="display:none;font-size:0.78rem;font-weight:700;padding:0.55rem 0.85rem;border-radius:10px;background:#f8fafc;border:1px solid #cbd5e1;color:#334155;"></div>
 
               <div class="firmas-editor-grid">
                 <!-- LIENZO PDF INTERACTIVO -->
-                <div style="background:#cbd5e1;border-radius:12px;padding:0.75rem;min-width:0;">
-                  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.45rem;margin-bottom:0.6rem;">
-                    <div style="display:flex;gap:0.35rem;flex-wrap:wrap;align-items:center;">
-                      <button type="button" id="btnModoCampo_texto" onclick="activarModoClickAgregarCampo('texto')" title="Agregar un nuevo campo de texto o dato del expediente" style="padding:0.36rem 0.65rem;border-radius:7px;border:1px solid #d97706;background:#fffbeb;color:#b45309;font-size:0.74rem;font-weight:700;cursor:pointer;">➕ Campo de Texto</button>
-                      <button type="button" id="btnModoCampo_borrador" onclick="activarModoClickAgregarCampo('borrador')" title="Tapar/borrar texto precompleto del PDF para dejar ese espacio vacío" style="padding:0.36rem 0.65rem;border-radius:7px;border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;font-size:0.74rem;font-weight:700;cursor:pointer;">🧹 Borrar Texto (Espacio Vacío)</button>
-                      <button type="button" id="btnModoCampo_firma" onclick="activarModoClickAgregarCampo('firma')" title="Colocar recuadro donde se estampará la firma del solicitante" style="padding:0.36rem 0.65rem;border-radius:7px;border:1px solid #047857;background:#ecfdf5;color:#065f46;font-size:0.74rem;font-weight:700;cursor:pointer;">✍️ Caja de Firma</button>
-                      <button type="button" id="btnModoCampo_sello" onclick="activarModoClickAgregarCampo('sello')" title="Colocar recuadro para estampar el sello oficial PNG" style="padding:0.36rem 0.65rem;border-radius:7px;border:1px solid #6d28d9;background:#f5f3ff;color:#5b21b6;font-size:0.74rem;font-weight:700;cursor:pointer;">🏛️ Sello PNG</button>
-                      <button type="button" id="btnModoCampo_pan" onclick="activarModoClickAgregarCampo('pan')" title="Desplazar el documento haciendo clic y arrastrando (también podés arrastrar cualquier parte vacía del PDF)" style="padding:0.36rem 0.65rem;border-radius:7px;border:1px solid #475569;background:#f8fafc;color:#1e293b;font-size:0.74rem;font-weight:700;cursor:pointer;">🖐️ Mover PDF</button>
-                      <button type="button" id="btnAnalizarPdfIaEditor" onclick="reanalizarPdfConIaEditor()" title="Detectar campos y zonas de firma automáticamente con IA" style="padding:0.36rem 0.7rem;border-radius:7px;border:1px solid #1d4ed8;background:#eff6ff;color:#1d4ed8;font-size:0.74rem;font-weight:800;cursor:pointer;">✨ Detectar Campos (IA)</button>
+                <div class="firmas-editor-canvas-shell">
+                  <div class="firmas-editor-toolbar">
+                    <div class="firmas-editor-tool-group">
+                      <button type="button" id="btnModoCampo_texto" class="firmas-editor-tool-btn" onclick="activarModoClickAgregarCampo('texto')" title="Agregar un nuevo campo de texto o dato del expediente" style="border:1px solid #f59e0b;background:#fffbeb;color:#b45309;">➕ Campo de Texto</button>
+                      <button type="button" id="btnModoCampo_borrador" class="firmas-editor-tool-btn" onclick="activarModoClickAgregarCampo('borrador')" title="Tapar/borrar texto precompleto del PDF para dejar ese espacio vacío" style="border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;">🧹 Borrar Texto (Vacío)</button>
+                      <button type="button" id="btnModoCampo_firma" class="firmas-editor-tool-btn" onclick="activarModoClickAgregarCampo('firma')" title="Colocar recuadro donde se estampará la firma del solicitante" style="border:1px solid #059669;background:#ecfdf5;color:#065f46;">✍️ Caja de Firma</button>
+                      <button type="button" id="btnModoCampo_sello" class="firmas-editor-tool-btn" onclick="activarModoClickAgregarCampo('sello')" title="Colocar recuadro para estampar el sello oficial PNG" style="border:1px solid #7c3aed;background:#f5f3ff;color:#5b21b6;">🏛️ Sello PNG</button>
+                      <button type="button" id="btnModoCampo_pan" class="firmas-editor-tool-btn" onclick="activarModoClickAgregarCampo('pan')" title="Desplazar el documento haciendo clic y arrastrando (también podés arrastrar cualquier parte vacía del PDF)" style="border:1px solid #64748b;background:#f8fafc;color:#1e293b;">🖐️ Mover PDF</button>
+                      <button type="button" id="btnAnalizarPdfIaEditor" class="firmas-editor-tool-btn" onclick="reanalizarPdfConIaEditor()" title="Detectar campos y zonas de firma automáticamente con IA" style="border:1px solid #1d4ed8;background:#eff6ff;color:#1d4ed8;font-weight:800;">✨ Detectar Campos (IA)</button>
                     </div>
-                    <div style="display:flex;align-items:center;gap:0.45rem;flex-wrap:wrap;">
-                      <label title="Muestra en blanco sólido cómo quedarán las zonas donde se borra texto previo" style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:6px;border:1px solid #94a3b8;background:#ffffff;font-size:0.72rem;font-weight:700;color:#0f172a;cursor:pointer;">
+                    <div class="firmas-editor-tool-group">
+                      <label class="firmas-check-pill firmas-check-pill--compact" title="Muestra en blanco sólido cómo quedarán las zonas donde se borra texto previo">
                         <input type="checkbox" id="chkEditorVistaLimpia" onchange="toggleVistaLimpiaEditor(this.checked)"/>
-                        👁️ Vista limpia
+                        <span>👁️ Vista limpia</span>
                       </label>
-                      <div style="display:inline-flex;align-items:center;gap:3px;background:#ffffff;border:1px solid #94a3b8;border-radius:7px;padding:2px 4px;">
-                        <button type="button" onclick="zoomEditorPdf(-0.2)" title="Alejar zoom (-)" style="padding:1px 7px;border-radius:5px;border:1px solid #cbd5e1;background:#f8fafc;color:#0f172a;font-size:0.78rem;font-weight:800;cursor:pointer;">➖</button>
-                        <select id="selEditorZoomPct" onchange="setZoomEditorPdf(parseFloat(this.value))" title="Nivel de zoom del PDF" style="border:none;background:transparent;font-size:0.74rem;font-weight:800;color:#0f172a;cursor:pointer;outline:none;">
+                      <div style="display:inline-flex;align-items:center;gap:3px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:2px 4px;">
+                        <button type="button" class="firmas-btn firmas-btn--xs" style="width:26px;padding:0;height:25px;" onclick="zoomEditorPdf(-0.2)" title="Alejar zoom (-)">−</button>
+                        <select id="selEditorZoomPct" onchange="setZoomEditorPdf(parseFloat(this.value))" title="Nivel de zoom del PDF" style="border:none;background:transparent;font-size:0.74rem;font-weight:800;color:#0f172a;cursor:pointer;outline:none;padding:0 4px;">
                           <option value="0.5">50%</option>
                           <option value="0.75">75%</option>
                           <option value="1" selected>100%</option>
@@ -5662,18 +5864,18 @@
                           <option value="2">200%</option>
                           <option value="2.5">250%</option>
                         </select>
-                        <button type="button" onclick="zoomEditorPdf(0.2)" title="Acercar zoom (+)" style="padding:1px 7px;border-radius:5px;border:1px solid #cbd5e1;background:#f8fafc;color:#0f172a;font-size:0.78rem;font-weight:800;cursor:pointer;">➕</button>
-                        <button type="button" onclick="ajustarZoomEditorPdf()" title="Ajustar el documento al ancho visible" style="padding:1px 6px;border-radius:5px;border:1px solid #cbd5e1;background:#eff6ff;color:#1d4ed8;font-size:0.7rem;font-weight:700;cursor:pointer;">↔️ Ajustar</button>
+                        <button type="button" class="firmas-btn firmas-btn--xs" style="width:26px;padding:0;height:25px;" onclick="zoomEditorPdf(0.2)" title="Acercar zoom (+)">+</button>
+                        <button type="button" class="firmas-btn firmas-btn--xs firmas-btn-soft-blue" style="height:25px;" onclick="ajustarZoomEditorPdf()" title="Ajustar el documento al ancho visible">↔️ Ajustar</button>
                       </div>
-                      <div style="display:flex;align-items:center;gap:0.3rem;">
-                        <button type="button" onclick="cambiarPaginaEditor(-1)" title="Página anterior" style="padding:2px 8px;border-radius:6px;border:1px solid #64748b;background:#ffffff;font-size:0.75rem;cursor:pointer;">◀</button>
-                        <span id="lblEditorPaginaActual" style="font-size:0.75rem;font-weight:700;color:#0f172a;">Página 1 de 1</span>
-                        <button type="button" onclick="cambiarPaginaEditor(1)" title="Página siguiente" style="padding:2px 8px;border-radius:6px;border:1px solid #64748b;background:#ffffff;font-size:0.75rem;cursor:pointer;">▶</button>
+                      <div style="display:inline-flex;align-items:center;gap:0.3rem;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:2px 5px;">
+                        <button type="button" class="firmas-btn firmas-btn--xs" style="width:26px;padding:0;height:25px;" onclick="cambiarPaginaEditor(-1)" title="Página anterior">◀</button>
+                        <span id="lblEditorPaginaActual" style="font-size:0.73rem;font-weight:800;color:#0f172a;padding:0 3px;">Página 1 de 1</span>
+                        <button type="button" class="firmas-btn firmas-btn--xs" style="width:26px;padding:0;height:25px;" onclick="cambiarPaginaEditor(1)" title="Página siguiente">▶</button>
                       </div>
                     </div>
                   </div>
-                  <div id="editorPdfScrollWrap" style="overflow:auto;max-height:740px;padding:0.75rem;background:#94a3b8;border-radius:8px;text-align:left;" title="Usá Ctrl + rueda del mouse para acercar o alejar, y arrastrá sobre el fondo para desplazar el PDF">
-                    <div id="editorPdfPageFrame" style="position:relative;margin:0 auto;width:fit-content;box-shadow:0 4px 16px rgba(15,23,42,0.25);">
+                  <div id="editorPdfScrollWrap" style="overflow:auto;max-height:740px;padding:0.85rem;background:#64748b;border-radius:10px;text-align:left;" title="Usá Ctrl + rueda del mouse para acercar o alejar, y arrastrá sobre el fondo para desplazar el PDF">
+                    <div id="editorPdfPageFrame" style="position:relative;margin:0 auto;width:fit-content;box-shadow:0 8px 26px rgba(15,23,42,0.35);">
                       <canvas id="canvasEditorPlantillaPdf" style="display:block;background:#ffffff;"></canvas>
                       <div id="overlayCamposPlantilla" style="position:absolute;inset:0;"></div>
                     </div>
@@ -5681,16 +5883,16 @@
                 </div>
 
                 <!-- INSPECTOR DE CAMPOS -->
-                <div style="display:flex;flex-direction:column;gap:0.75rem;min-width:0;">
-                  <div>
-                    <div style="font-size:0.76rem;font-weight:800;color:#334155;margin-bottom:4px;">Campos configurados en esta plantilla:</div>
-                    <div id="editorListaCamposResumen" style="display:flex;gap:0.35rem;flex-wrap:wrap;max-height:130px;overflow-y:auto;padding:0.45rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;"></div>
+                <div class="firmas-editor-inspector-col">
+                  <div class="firmas-section-box" style="padding:0.85rem;">
+                    <div class="firmas-label" style="margin-bottom:6px;">Campos configurados en esta plantilla:</div>
+                    <div id="editorListaCamposResumen" class="firmas-editor-fields-list"></div>
                   </div>
                   <div id="editorInspectorCampoContainer"></div>
-                  <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.35rem;">
-                    <button type="button" onclick="limpiarEditorPlantillaPdf()" title="Cancelar edición y vaciar el editor visual" style="padding:0.55rem 0.75rem;border-radius:8px;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;font-size:0.79rem;font-weight:700;cursor:pointer;">✕ Cancelar / Limpiar</button>
-                    <button type="button" onclick="probarEstampadoEditor()" title="Descargar un PDF de prueba con datos ficticios para verificar cómo queda" style="flex:1;padding:0.55rem 0.75rem;border-radius:8px;border:1px solid #0f2744;background:#eff6ff;color:#0f2744;font-size:0.79rem;font-weight:700;cursor:pointer;">🧪 Probar PDF</button>
-                    <button type="button" onclick="guardarPlantillaDesdeEditor()" style="flex:1;padding:0.55rem 0.75rem;border-radius:8px;border:1px solid #059669;background:#059669;color:#ffffff;font-size:0.8rem;font-weight:800;cursor:pointer;">💾 Guardar Plantilla</button>
+                  <div style="display:flex;gap:0.5rem;flex-wrap:wrap;padding-top:0.25rem;">
+                    <button type="button" class="firmas-btn firmas-btn-danger" onclick="limpiarEditorPlantillaPdf()" title="Cancelar edición y vaciar el editor visual">✕ Cancelar</button>
+                    <button type="button" class="firmas-btn firmas-btn-soft-blue" style="flex:1;" onclick="probarEstampadoEditor()" title="Descargar un PDF de prueba con datos ficticios para verificar cómo queda">🧪 Probar PDF</button>
+                    <button type="button" class="firmas-btn firmas-btn-emerald" style="flex:1;" onclick="guardarPlantillaDesdeEditor()">💾 Guardar Plantilla</button>
                   </div>
                 </div>
               </div>
@@ -26357,7 +26559,7 @@ ${cierreTxt}`;
   <script src="js/auditoria20.js?v=6"></script>
   <script src="js/fichasAsociados.js?v=6"></script>
   <script src="js/sidecreerWidget.js?v=11"></script>
-  <script src="js/firmasAmmer.js?v=19"></script>
+  <script src="js/firmasAmmer.js?v=20"></script>
   <script src="js/whatsappBotAdmin.js?v=3"></script>
 </body>
 </html>

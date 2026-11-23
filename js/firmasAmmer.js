@@ -361,17 +361,10 @@
           btn.style.display = 'inline-flex';
         }
         btn.classList.toggle('active', k === tabKey);
-        if (k === tabKey) {
-          btn.style.background = k === 'eliminados' ? '#991b1b' : '#0f2744';
-          btn.style.color = '#ffffff';
-          btn.style.borderColor = k === 'eliminados' ? '#991b1b' : '#0f2744';
-          btn.style.boxShadow = '0 2px 6px rgba(15,39,68,0.22)';
-        } else {
-          btn.style.background = '#f8fafc';
-          btn.style.color = '#1e293b';
-          btn.style.borderColor = '#cbd5e1';
-          btn.style.boxShadow = 'none';
-        }
+        btn.style.background = '';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+        btn.style.boxShadow = '';
       }
       if (pnl) pnl.style.display = k === tabKey ? 'block' : 'none';
     });
@@ -429,15 +422,16 @@
     const cont = document.getElementById('firmaPaquetePlantillasContainer');
     if (!cont) return;
     if (state.plantillas.length === 0) {
-      cont.innerHTML = '<span style="font-size:0.74rem;color:#64748b;">No hay plantillas disponibles aún.</span>';
+      cont.innerHTML = '<span style="font-size:0.75rem;color:#64748b;">No hay plantillas disponibles aún.</span>';
       return;
     }
     cont.innerHTML = state.plantillas.map((p) => {
       const checked = state.selectedPlantillasPaqueteIds.includes(p.id);
       return `
-        <label style="display:inline-flex;align-items:center;gap:6px;padding:0.35rem 0.65rem;border-radius:8px;border:1px solid ${checked ? '#1d4ed8' : '#cbd5e1'};background:${checked ? '#dbeafe' : '#ffffff'};color:${checked ? '#1e3a8a' : '#334155'};font-size:0.76rem;font-weight:700;cursor:pointer;">
+        <label class="firmas-check-pill firmas-check-pill--compact">
           <input type="checkbox" ${checked ? 'checked' : ''} onchange="window.togglePlantillaEnPaquete('${escHtml(p.id)}', this.checked)"/>
-          ${escHtml(p.nombre)} <span style="font-weight:500;color:#64748b;">(${p.paginas || 1}p)</span>
+          <span>${escHtml(p.nombre)}</span>
+          <span style="font-weight:600;color:#64748b;font-size:0.7rem;">(${p.paginas || 1} pág.)</span>
         </label>
       `;
     }).join('');
@@ -609,27 +603,27 @@
     cont.innerHTML = state.firmantesGenerar.map((f, idx) => `
       <div class="firmas-multifirmante-row">
         <div>
-          <label style="display:block;font-size:0.68rem;font-weight:700;color:#475569;">Turno #${idx + 1} · ${escHtml(f.clave)}</label>
-          <input type="text" value="${escHtml(f.etiqueta)}" oninput="window.actualizarDatoFirmanteGenerador(${idx}, 'etiqueta', this.value)" style="width:100%;padding:0.35rem 0.45rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.78rem;"/>
+          <label class="firmas-label" style="margin-bottom:4px;">Turno #${idx + 1} · ${escHtml(f.clave)}</label>
+          <input type="text" class="firmas-input firmas-input--sm" value="${escHtml(f.etiqueta)}" oninput="window.actualizarDatoFirmanteGenerador(${idx}, 'etiqueta', this.value)"/>
         </div>
         <div>
-          <label style="display:block;font-size:0.68rem;font-weight:700;color:#475569;">Nombre completo</label>
-          <input type="text" value="${escHtml(f.nombre)}" oninput="window.actualizarDatoFirmanteGenerador(${idx}, 'nombre', this.value)" placeholder="Nombre y Apellido" style="width:100%;padding:0.35rem 0.45rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.78rem;"/>
+          <label class="firmas-label" style="margin-bottom:4px;">Nombre completo</label>
+          <input type="text" class="firmas-input firmas-input--sm" value="${escHtml(f.nombre)}" oninput="window.actualizarDatoFirmanteGenerador(${idx}, 'nombre', this.value)" placeholder="Nombre y Apellido"/>
         </div>
         <div>
-          <label style="display:block;font-size:0.68rem;font-weight:700;color:#475569;">DNI</label>
-          <input type="text" value="${escHtml(f.dni)}" oninput="window.actualizarDatoFirmanteGenerador(${idx}, 'dni', this.value)" placeholder="Sin puntos" style="width:100%;padding:0.35rem 0.45rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.78rem;"/>
+          <label class="firmas-label" style="margin-bottom:4px;">DNI</label>
+          <input type="text" class="firmas-input firmas-input--sm font-mono" value="${escHtml(f.dni)}" oninput="window.actualizarDatoFirmanteGenerador(${idx}, 'dni', this.value)" placeholder="Sin puntos"/>
         </div>
         <div>
-          <label style="display:block;font-size:0.68rem;font-weight:700;color:#475569;">WhatsApp</label>
-          <input type="text" value="${escHtml(f.telefono)}" oninput="window.actualizarDatoFirmanteGenerador(${idx}, 'telefono', this.value)" placeholder="3434..." style="width:100%;padding:0.35rem 0.45rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.78rem;"/>
+          <label class="firmas-label" style="margin-bottom:4px;">WhatsApp</label>
+          <input type="text" class="firmas-input firmas-input--sm font-mono" value="${escHtml(f.telefono)}" oninput="window.actualizarDatoFirmanteGenerador(${idx}, 'telefono', this.value)" placeholder="3434..."/>
         </div>
-        <div style="display:flex;gap:3px;align-items:center;">
+        <div style="display:flex;gap:4px;align-items:center;padding-bottom:1px;">
           ${state.firmantesGenerar.length > 1 ? `
-            <button type="button" onclick="window.moverOrdenFirmanteGenerador(${idx}, -1)" title="Subir orden" style="padding:0.3rem 0.42rem;border-radius:6px;border:1px solid #cbd5e1;background:#f8fafc;font-size:0.72rem;cursor:pointer;">▲</button>
-            <button type="button" onclick="window.moverOrdenFirmanteGenerador(${idx}, 1)" title="Bajar orden" style="padding:0.3rem 0.42rem;border-radius:6px;border:1px solid #cbd5e1;background:#f8fafc;font-size:0.72rem;cursor:pointer;">▼</button>
-            <button type="button" onclick="window.eliminarFirmanteGenerador(${idx})" title="Quitar firmante" style="padding:0.32rem 0.5rem;border-radius:6px;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;font-size:0.75rem;cursor:pointer;">🗑️</button>
-          ` : '<span style="font-size:0.72rem;color:#94a3b8;padding:0 4px;">#1</span>'}
+            <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-icon" onclick="window.moverOrdenFirmanteGenerador(${idx}, -1)" title="Subir orden">▲</button>
+            <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-icon" onclick="window.moverOrdenFirmanteGenerador(${idx}, 1)" title="Bajar orden">▼</button>
+            <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-icon firmas-btn-danger" onclick="window.eliminarFirmanteGenerador(${idx})" title="Quitar firmante">🗑️</button>
+          ` : '<span style="display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 10px;border-radius:8px;background:#f1f5f9;border:1px solid #e2e8f0;font-size:0.74rem;font-weight:800;color:#475569;">#1</span>'}
         </div>
       </div>
     `).join('');
@@ -664,7 +658,7 @@
 
     if (tpls.length === 0) {
       if (selloWrap) selloWrap.style.display = 'none';
-      cont.innerHTML = '<div style="padding:1.25rem;text-align:center;color:#64748b;font-size:0.84rem;background:#f8fafc;border-radius:10px;border:1px dashed #cbd5e1;">Seleccioná una plantilla arriba (o cargá tus PDFs en el <strong>Editor Visual de Plantillas PDF</strong> si todavía no creaste ninguna).</div>';
+      cont.innerHTML = '<div style="padding:1.4rem;text-align:center;color:#64748b;font-size:0.84rem;background:#f8fafc;border-radius:12px;border:1.5px dashed #cbd5e1;">Seleccioná una plantilla arriba (o cargá tus PDFs en el <strong>Editor Visual de Plantillas PDF</strong> si todavía no creaste ninguna).</div>';
       if (badgeVal) badgeVal.innerHTML = '';
       return;
     }
@@ -692,7 +686,7 @@
       if (vals.dni_frente_dorso) chips.push('🪪 DNI Frente y Dorso');
       if (vals.selfie_liveness) chips.push('🤳 Selfie Liveness + Cotejo Facial');
       if (vals.requiere_pin_otp) chips.push('🔐 PIN 2FA (4 dígitos)');
-      badgeVal.innerHTML = chips.map((c) => `<span style="font-size:0.72rem;font-weight:700;padding:3px 9px;border-radius:9999px;background:#eff6ff;color:#1e3a8a;border:1px solid #bfdbfe;">${escHtml(c)}</span>`).join(' ');
+      badgeVal.innerHTML = chips.map((c) => `<span style="display:inline-flex;align-items:center;gap:4px;font-size:0.72rem;font-weight:700;padding:4px 10px;border-radius:9999px;background:#eff6ff;color:#0f2744;border:1px solid #bfdbfe;">${escHtml(c)}</span>`).join(' ');
     }
 
     const inpWa = document.getElementById('inpFirmaTelefonoWa');
@@ -702,7 +696,7 @@
       campo.tipo !== 'firma' && campo.tipo !== 'sello' && campo.tipo !== 'borrador' && campo.origen_campo !== 'campo_vacio'
     );
     if (camposEditables.length === 0) {
-      cont.innerHTML = '<div style="padding:0.85rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:0.82rem;color:#475569;">Estas plantillas no tienen campos de texto editables (solo zonas limpiadas, firma o sello).</div>';
+      cont.innerHTML = '<div style="padding:1rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:11px;font-size:0.82rem;color:#475569;">Estas plantillas no tienen campos de texto editables (solo zonas limpiadas, firma o sello).</div>';
       return;
     }
 
@@ -731,16 +725,17 @@
           ? `data-firma-origen-valor="${escHtml(sharedOrigen)}"`
           : `data-firma-campo-valor="${escHtml(c.id)}"`;
         const alcance = docs.size > 1
-          ? `<span style="font-weight:700;color:#1d4ed8;">(Aplica a ${docs.size} PDFs)</span>`
-          : `<span style="font-weight:500;color:#94a3b8;">(${tpls.length > 1 ? escHtml([...docs][0].slice(0, 18)) : 'Pág.' + (c.pagina || 1)})</span>`;
+          ? `<span style="font-weight:700;color:#1d4ed8;background:#dbeafe;padding:1px 6px;border-radius:9999px;font-size:0.65rem;">${docs.size} PDFs</span>`
+          : `<span style="font-weight:600;color:#64748b;background:#ffffff;border:1px solid #e2e8f0;padding:1px 6px;border-radius:9999px;font-size:0.65rem;">${tpls.length > 1 ? escHtml([...docs][0].slice(0, 18)) : 'Pág. ' + (c.pagina || 1)}</span>`;
         return `
-          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:0.5rem 0.65rem;">
-            <label style="display:block;font-size:0.71rem;font-weight:700;color:#475569;margin-bottom:3px;">
-              ${escHtml(c.etiqueta || c.id)} ${alcance}
+          <div class="firmas-field-card">
+            <label class="firmas-label" style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:5px;">
+              <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(c.etiqueta || c.id)}</span>
+              ${alcance}
             </label>
-            <div style="display:flex;gap:4px;align-items:center;">
-              <input type="text" ${attr} value="${escHtml(val)}" oninput="this.dataset.userEdited='1'" placeholder="Dejar vacío o ingresar..." style="flex:1;min-width:0;padding:0.38rem 0.55rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.82rem;background:#ffffff;color:#0f172a;"/>
-              <button type="button" onclick="window.limpiarInputGenerarCampo(this)" title="Vaciar texto para dejar el campo en blanco en el PDF" style="padding:0.36rem 0.5rem;border-radius:6px;border:1px solid #cbd5e1;background:#ffffff;color:#0369a1;font-size:0.75rem;cursor:pointer;">🧹</button>
+            <div style="display:flex;gap:5px;align-items:center;">
+              <input type="text" class="firmas-input firmas-input--sm" ${attr} value="${escHtml(val)}" oninput="this.dataset.userEdited='1'" placeholder="Dejar vacío o ingresar..."/>
+              <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-icon firmas-btn-soft-blue" onclick="window.limpiarInputGenerarCampo(this)" title="Vaciar texto para dejar el campo en blanco en el PDF">🧹</button>
             </div>
           </div>
         `;
@@ -893,29 +888,29 @@
           const pinNote = item.pin_otp ? `\n\n🔐 Tu código PIN de seguridad para confirmar la firma es: *${item.pin_otp}*` : '';
           const msg = `Hola ${item.nombre || 'Estimado/a'}, te compartimos desde Asociación Mutual Modelo de Entre Ríos (AMMER) el enlace seguro para revisar y firmar "${nombreDocLabel}" (${item.etiqueta || 'Firmante'}):\n\n${item.url_firma}${pinNote}\n\nEste enlace es personal y tiene vigencia de 24 horas.`;
           const pinBadge = item.pin_otp
-            ? `<div style="display:inline-flex;align-items:center;gap:6px;margin-bottom:0.45rem;padding:0.32rem 0.65rem;border-radius:8px;background:#f5f3ff;border:1px solid #ddd6fe;color:#5b21b6;font-size:0.78rem;font-weight:800;">🔐 PIN 2FA para firmar: <span class="font-mono" style="font-size:0.9rem;letter-spacing:2px;">${escHtml(item.pin_otp)}</span></div>`
+            ? `<div style="display:inline-flex;align-items:center;gap:6px;margin-bottom:0.55rem;padding:0.35rem 0.72rem;border-radius:9px;background:#f5f3ff;border:1px solid #ddd6fe;color:#5b21b6;font-size:0.78rem;font-weight:800;">🔐 PIN 2FA para firmar: <span class="font-mono" style="font-size:0.92rem;letter-spacing:2px;">${escHtml(item.pin_otp)}</span></div>`
             : '';
           const waAutoBadge = item.whatsapp_auto && item.whatsapp_auto.ok
-            ? '<span style="display:inline-block;margin-left:6px;padding:1px 7px;border-radius:9999px;background:#dcfce7;color:#166534;font-size:0.68rem;font-weight:800;">🤖 Enviado por Bot WA</span>'
+            ? '<span style="display:inline-flex;align-items:center;margin-left:6px;padding:2px 8px;border-radius:9999px;background:#dcfce7;border:1px solid #86efac;color:#166534;font-size:0.68rem;font-weight:800;">🤖 Enviado por Bot WA</span>'
             : (ordenSecuencial && (item.orden || idx + 1) > 1
-              ? '<span style="display:inline-block;margin-left:6px;padding:1px 7px;border-radius:9999px;background:#fff7ed;color:#9a3412;font-size:0.68rem;font-weight:700;">⏳ Se habilita al firmar turno previo</span>'
+              ? '<span style="display:inline-flex;align-items:center;margin-left:6px;padding:2px 8px;border-radius:9999px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:0.68rem;font-weight:700;">⏳ Se habilita al firmar turno previo</span>'
               : '');
           return `
-            <div style="background:#ffffff;border:1px solid #a7f3d0;border-radius:10px;padding:0.8rem;">
-              <div style="font-size:0.8rem;font-weight:800;color:#065f46;margin-bottom:0.4rem;">
-                👤 ${ordenSecuencial ? `[Turno #${item.orden || idx + 1}] ` : ''}${escHtml(item.etiqueta || `Firmante ${idx + 1}`)}: ${escHtml(item.nombre || '-')}
-                ${item.dni ? `<span style="font-weight:500;color:#047857;">(DNI ${escHtml(item.dni)})</span>` : ''}
+            <div style="background:#ffffff;border:1px solid #a7f3d0;border-radius:12px;padding:0.95rem 1.05rem;box-shadow:0 2px 8px rgba(5,150,105,0.06);">
+              <div style="font-size:0.84rem;font-weight:800;color:#065f46;margin-bottom:0.5rem;display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
+                <span>👤 ${ordenSecuencial ? `[Turno #${item.orden || idx + 1}] ` : ''}${escHtml(item.etiqueta || `Firmante ${idx + 1}`)}: ${escHtml(item.nombre || '-')}</span>
+                ${item.dni ? `<span class="font-mono" style="font-weight:600;color:#047857;font-size:0.77rem;">(DNI ${escHtml(item.dni)})</span>` : ''}
                 ${waAutoBadge}
               </div>
               ${pinBadge}
-              <div style="display:flex;gap:0.45rem;flex-wrap:wrap;margin-bottom:0.5rem;">
-                <input type="text" id="txtEnlaceFirmante_${idx}" readonly value="${escHtml(item.url_firma)}" style="flex:1;min-width:220px;padding:0.42rem 0.6rem;border:1px solid #6ee7b7;border-radius:7px;background:#f8fafc;font-size:0.78rem;color:#0f172a;"/>
-                <button type="button" onclick="window.copiarInputPorId('txtEnlaceFirmante_${idx}', 'Enlace de firma')" style="padding:0.42rem 0.8rem;border-radius:7px;border:1px solid #047857;background:#ffffff;color:#047857;font-size:0.76rem;font-weight:700;cursor:pointer;">📋 Copiar Enlace</button>
+              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.55rem;">
+                <input type="text" id="txtEnlaceFirmante_${idx}" class="firmas-input firmas-input--sm font-mono" readonly value="${escHtml(item.url_firma)}" style="flex:1;min-width:220px;border-color:#6ee7b7;background:#f8fafc;"/>
+                <button type="button" class="firmas-btn firmas-btn--sm" onclick="window.copiarInputPorId('txtEnlaceFirmante_${idx}', 'Enlace de firma')" style="border-color:#059669;color:#047857;">📋 Copiar Enlace</button>
               </div>
-              <textarea id="txtMsgWaFirmante_${idx}" rows="3" style="width:100%;padding:0.45rem;border:1px solid #6ee7b7;border-radius:7px;font-size:0.76rem;background:#ffffff;color:#0f172a;margin-bottom:0.45rem;">${escHtml(msg)}</textarea>
-              <div style="display:flex;gap:0.45rem;flex-wrap:wrap;">
-                <button type="button" onclick="window.copiarInputPorId('txtMsgWaFirmante_${idx}', 'Mensaje WhatsApp')" style="padding:0.4rem 0.78rem;border-radius:7px;border:1px solid #047857;background:#ffffff;color:#047857;font-size:0.76rem;font-weight:700;cursor:pointer;">📋 Copiar Mensaje</button>
-                <button type="button" onclick="window.abrirWhatsAppFirmante('${escHtml(item.telefono || telWa)}', 'txtMsgWaFirmante_${idx}')" style="padding:0.4rem 0.85rem;border-radius:7px;border:1px solid #16a34a;background:#16a34a;color:#ffffff;font-size:0.76rem;font-weight:700;cursor:pointer;">💬 Abrir Chat WhatsApp</button>
+              <textarea id="txtMsgWaFirmante_${idx}" class="firmas-textarea" rows="3" style="border-color:#6ee7b7;font-size:0.78rem;margin-bottom:0.55rem;">${escHtml(msg)}</textarea>
+              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                <button type="button" class="firmas-btn firmas-btn--sm" onclick="window.copiarInputPorId('txtMsgWaFirmante_${idx}', 'Mensaje WhatsApp')" style="border-color:#059669;color:#047857;">📋 Copiar Mensaje</button>
+                <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-emerald" onclick="window.abrirWhatsAppFirmante('${escHtml(item.telefono || telWa)}', 'txtMsgWaFirmante_${idx}')">💬 Abrir Chat WhatsApp</button>
               </div>
             </div>
           `;
@@ -983,22 +978,22 @@
       bar.innerHTML = '';
       return;
     }
-    const card = (lbl, val, bg, col) => `
-      <div style="background:${bg};border:1px solid #e2e8f0;border-radius:10px;padding:0.6rem 0.8rem;">
-        <div style="font-size:0.68rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.02em;">${escHtml(lbl)}</div>
-        <div style="font-size:1.08rem;font-weight:800;color:${col};margin-top:3px;">${escHtml(val)}</div>
+    const card = (lbl, val, accent, col) => `
+      <div class="firmas-kpi-card" style="--kpi-accent:${accent};--kpi-val-color:${col};">
+        <div class="firmas-kpi-lbl">${escHtml(lbl)}</div>
+        <div class="firmas-kpi-val">${escHtml(val)}</div>
       </div>
     `;
     const promTxt = m.tiempo_promedio_firma_min != null
       ? (m.tiempo_promedio_firma_min >= 60 ? `${(m.tiempo_promedio_firma_min / 60).toFixed(1)} h` : `${m.tiempo_promedio_firma_min} min`)
       : '-';
     bar.innerHTML = [
-      card('Total Solicitudes', m.total, '#f8fafc', '#0f172a'),
-      card('Completadas', `${m.firmadas} (${m.tasa_completitud_pct || 0}%)`, '#f0fdf4', '#166534'),
-      card('En Espera / Parciales', (m.pendientes || 0) + (m.parciales || 0), '#fffbeb', '#b45309'),
-      card('Tiempo Promedio', promTxt, '#eff6ff', '#1d4ed8'),
-      card('Paquetes Multi-PDF', m.paquetes_multidoc || 0, '#f5f3ff', '#5b21b6'),
-      card('Alertas Identidad', m.alertas_ekyc_o_cruce || 0, (m.alertas_ekyc_o_cruce > 0 ? '#fef2f2' : '#f8fafc'), (m.alertas_ekyc_o_cruce > 0 ? '#b91c1c' : '#334155')),
+      card('Total Solicitudes', m.total, '#0f2744', '#0f172a'),
+      card('Completadas', `${m.firmadas} (${m.tasa_completitud_pct || 0}%)`, '#16a34a', '#166534'),
+      card('En Espera / Parciales', (m.pendientes || 0) + (m.parciales || 0), '#d97706', '#b45309'),
+      card('Tiempo Promedio', promTxt, '#135596', '#135596'),
+      card('Paquetes Multi-PDF', m.paquetes_multidoc || 0, '#7c3aed', '#5b21b6'),
+      card('Alertas Identidad', m.alertas_ekyc_o_cruce || 0, (m.alertas_ekyc_o_cruce > 0 ? '#dc2626' : '#64748b'), (m.alertas_ekyc_o_cruce > 0 ? '#b91c1c' : '#334155')),
     ].join('');
   }
 
@@ -1034,7 +1029,7 @@
   async function cargarBandejaFirmas() {
     const tbody = document.getElementById('tbodyBandejaFirmas');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="6" style="padding:1.25rem;text-align:center;color:#64748b;">Cargando solicitudes de firma...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="padding:1.5rem;text-align:center;color:#64748b;font-weight:600;">Cargando solicitudes de firma...</td></tr>';
     cargarMetricasFirmas();
     try {
       const data = await apiFetchJson('/api/firmas/solicitudes', { method: 'GET' });
@@ -1042,7 +1037,7 @@
       _reconstruirIndiceFirmasPorExpediente();
       renderBandejaFirmas();
     } catch (err) {
-      tbody.innerHTML = `<tr><td colspan="6" style="padding:1.25rem;text-align:center;color:#b91c1c;">Error cargando bandeja: ${escHtml(err.message)}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="padding:1.5rem;text-align:center;color:#b91c1c;font-weight:600;">Error cargando bandeja: ${escHtml(err.message)}</td></tr>`;
     }
   }
 
@@ -1082,8 +1077,10 @@
 
     if (badgeElim) {
       badgeElim.textContent = String(eliminadasAll.length);
-      badgeElim.style.display = eliminadasAll.length > 0 ? 'inline-block' : 'none';
+      badgeElim.style.display = eliminadasAll.length > 0 ? 'inline-flex' : 'none';
     }
+
+    const chipBadge = (txt, bg, col, bd) => `<span style="display:inline-flex;align-items:center;padding:2px 7px;border-radius:9999px;font-size:0.67rem;font-weight:700;background:${bg};color:${col};border:1px solid ${bd || 'transparent'};white-space:nowrap;">${txt}</span>`;
 
     if (tbody) {
       const q = String((document.getElementById('inpFiltroBandejaFirmas') || {}).value || '').trim().toLowerCase();
@@ -1092,17 +1089,17 @@
         return `${r.nombre_solicitante || ''} ${r.dni_solicitante || ''} ${r.expediente_id || ''} ${r.plantilla_nombre || ''} ${r.estado || ''}`.toLowerCase().includes(q);
       });
       if (filtradas.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="padding:1.5rem;text-align:center;color:#64748b;">No hay solicitudes activas en bandeja.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="padding:2rem;text-align:center;color:#64748b;font-size:0.84rem;">No hay solicitudes activas en bandeja.</td></tr>';
       } else {
         tbody.innerHTML = filtradas.map((r) => {
           const est = String(r.estado || 'PENDIENTE').toUpperCase();
-          let bg = '#fef3c7', col = '#92400e';
-          if (est === 'FIRMADO') { bg = '#dcfce7'; col = '#166534'; }
-          else if (est === 'PARCIAL') { bg = '#ffedd5'; col = '#9a3412'; }
-          else if (est === 'LEIDO') { bg = '#dbeafe'; col = '#1e40af'; }
+          let bg = '#fef3c7', col = '#92400e', bd = '#fde68a';
+          if (est === 'FIRMADO') { bg = '#dcfce7'; col = '#166534'; bd = '#86efac'; }
+          else if (est === 'PARCIAL') { bg = '#ffedd5'; col = '#9a3412'; bd = '#fed7aa'; }
+          else if (est === 'LEIDO') { bg = '#dbeafe'; col = '#1e40af'; bd = '#bfdbfe'; }
 
           const gpsHtml = (r.geo_latitud != null && r.geo_longitud != null)
-            ? `<a href="https://maps.google.com/?q=${r.geo_latitud},${r.geo_longitud}" target="_blank" rel="noopener" style="color:#1d4ed8;text-decoration:underline;font-size:0.72rem;">📍 Ver GPS</a>`
+            ? `<a href="https://maps.google.com/?q=${r.geo_latitud},${r.geo_longitud}" target="_blank" rel="noopener" style="color:#135596;text-decoration:underline;font-weight:700;font-size:0.72rem;">📍 Ver GPS</a>`
             : '<span style="color:#94a3b8;font-size:0.72rem;">Sin GPS</span>';
 
           const shaFull = r.hash_sha256_firmado || r.hash_sha256_original || '';
@@ -1113,34 +1110,35 @@
           const ek = r.ekyc_resumen || null;
           let badgesHtml = '';
           if (r.es_paquete) {
-            badgesHtml += `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#eef2ff;color:#3730a3;">📦 Paquete (${r.paquete_cantidad || 2} docs)</span>`;
+            badgesHtml += chipBadge(`📦 Paquete (${escHtml(r.paquete_cantidad || 2)} docs)`, '#eef2ff', '#3730a3', '#c7d2fe');
           }
           if (r.orden_secuencial) {
-            badgesHtml += `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#fff7ed;color:#9a3412;">🔢 Turno ${r.orden_firma || 1}/${r.firmantes_total || 2}</span>`;
+            badgesHtml += chipBadge(`🔢 Turno ${escHtml(r.orden_firma || 1)}/${escHtml(r.firmantes_total || 2)}`, '#fff7ed', '#9a3412', '#fed7aa');
           }
           if (r.impacto_expediente && r.impacto_expediente.ok) {
-            badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#f0fdf4;color:#15803d;">📂 En Ficha</span>';
+            badgesHtml += chipBadge('📂 En Ficha', '#f0fdf4', '#15803d', '#bbf7d0');
           }
           if (ek && ek.estado_ekyc) {
             const ekCol = ek.estado_ekyc === 'APROBADO' ? '#166534' : '#b45309';
             const ekBg = ek.estado_ekyc === 'APROBADO' ? '#dcfce7' : '#fef3c7';
+            const ekBd = ek.estado_ekyc === 'APROBADO' ? '#86efac' : '#fde68a';
             const fmTxt = ek.face_match_pct != null ? ` · Face ${ek.face_match_pct}%` : '';
-            badgesHtml += `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:${ekBg};color:${ekCol};">🪪 eKYC ${escHtml(ek.estado_ekyc)}${escHtml(fmTxt)}</span>`;
+            badgesHtml += chipBadge(`🪪 eKYC ${escHtml(ek.estado_ekyc)}${escHtml(fmTxt)}`, ekBg, ekCol, ekBd);
             if (ek.pdf417_ok) {
-              badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#ecfeff;color:#0e7490;">📊 PDF417 OK</span>';
+              badgesHtml += chipBadge('📊 PDF417 OK', '#ecfeff', '#0e7490', '#a5f3fc');
             } else if (ek.qr_ok || ek.codigo_dni_ok) {
-              badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#ecfeff;color:#0e7490;">📱 QR DNI OK</span>';
+              badgesHtml += chipBadge('📱 QR DNI OK', '#ecfeff', '#0e7490', '#a5f3fc');
             }
             const ejMan = r.validacion_ejemplar_manual;
             if (ejMan && typeof ejMan.valido === 'boolean') {
               badgesHtml += ejMan.valido
-                ? '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#dcfce7;color:#166534;">🪪 Ejemplar VÁLIDO</span>'
-                : '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#fee2e2;color:#b91c1c;">⛔ Ejemplar INVÁLIDO</span>';
+                ? chipBadge('🪪 Ejemplar VÁLIDO', '#dcfce7', '#166534', '#86efac')
+                : chipBadge('⛔ Ejemplar INVÁLIDO', '#fee2e2', '#b91c1c', '#fecaca');
             }
             const bo = ek.boletin_oficial_er;
             if (bo && bo.consultado) {
               const boAlert = bo.tiene_alerta_critica;
-              badgesHtml += `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:${boAlert ? '#fee2e2' : '#ecfdf5'};color:${boAlert ? '#b91c1c' : '#047857'};">${boAlert ? '⚠️ Boletín ER (' + (bo.total_resultados || 0) + ')' : '📰 Boletín ER OK'}</span>`;
+              badgesHtml += chipBadge(boAlert ? `⚠️ Boletín ER (${escHtml(bo.total_resultados || 0)})` : '📰 Boletín ER OK', boAlert ? '#fee2e2' : '#ecfdf5', boAlert ? '#b91c1c' : '#047857', boAlert ? '#fecaca' : '#a7f3d0');
             }
             const cj = ek.cajajper;
             if (cj && cj.consultado) {
@@ -1148,53 +1146,55 @@
               const cjAlto = cj.nivel_alerta === 'ALTO';
               const cjBg = cjAlto ? '#fee2e2' : (cjTram > 0 ? '#fef3c7' : '#ecfdf5');
               const cjCol = cjAlto ? '#b91c1c' : (cjTram > 0 ? '#92400e' : '#047857');
-              badgesHtml += `<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:${cjBg};color:${cjCol};">${cjTram > 0 ? '🏛️ CajaJPER (' + cjTram + ' exp.)' : '🏛️ CajaJPER OK'}</span>`;
+              const cjBd = cjAlto ? '#fecaca' : (cjTram > 0 ? '#fde68a' : '#a7f3d0');
+              badgesHtml += chipBadge(cjTram > 0 ? `🏛️ CajaJPER (${cjTram} exp.)` : '🏛️ CajaJPER OK', cjBg, cjCol, cjBd);
             }
           }
           if (r.pin_otp_verificado) {
-            badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#f5f3ff;color:#5b21b6;">🔐 PIN 2FA OK</span>';
+            badgesHtml += chipBadge('🔐 PIN 2FA OK', '#f5f3ff', '#5b21b6', '#ddd6fe');
           }
           const tsa = r.tsa_resumen || null;
           if (tsa && tsa.ok) {
-            badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#eff6ff;color:#1d4ed8;">⏱️ TSA RFC 3161</span>';
+            badgesHtml += chipBadge('⏱️ TSA RFC 3161', '#eff6ff', '#1d4ed8', '#bfdbfe');
           }
           const pades = r.pades_resumen || null;
           if (pades && pades.ok) {
-            badgesHtml += '<span style="display:inline-block;padding:1px 6px;border-radius:6px;font-size:0.68rem;font-weight:700;background:#eef2ff;color:#3730a3;">🔏 PAdES (.p12)</span>';
+            badgesHtml += chipBadge('🔏 PAdES (.p12)', '#eef2ff', '#3730a3', '#c7d2fe');
           }
 
-          const btnBase = 'display:inline-flex;align-items:center;justify-content:center;gap:4px;height:32px;padding:0 0.68rem;border-radius:8px;font-size:0.74rem;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;flex-shrink:0;line-height:1;';
           const fechaCreadaTxt = (r.created_at || '').slice(0, 16).replace('T', ' ') || '-';
           const fechaFirmadaTxt = r.firmado_en ? r.firmado_en.slice(0, 16).replace('T', ' ') : '';
 
           return `
-            <tr style="border-bottom:1px solid #e2e8f0;vertical-align:middle;">
-              <td data-label="Asociado / Exp." style="padding:0.8rem 0.65rem;font-size:0.82rem;">
+            <tr>
+              <td data-label="Asociado / Exp." style="padding:0.85rem 0.78rem;font-size:0.83rem;">
                 <div style="font-weight:800;color:#0f172a;">${escHtml(r.nombre_solicitante || '-')}</div>
-                <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">DNI ${escHtml(r.dni_solicitante || '-')} · Exp: ${escHtml(r.expediente_id || '-')}</div>
+                <div style="font-size:0.72rem;color:#64748b;margin-top:3px;">
+                  <span class="font-mono">DNI ${escHtml(r.dni_solicitante || '-')}</span> · Exp: <strong>${escHtml(r.expediente_id || '-')}</strong>
+                </div>
               </td>
-              <td data-label="Documento" style="padding:0.8rem 0.65rem;font-size:0.8rem;color:#1e293b;max-width:270px;line-height:1.35;">${escHtml(r.plantilla_nombre || '-')}</td>
-              <td data-label="Estado" style="padding:0.8rem 0.65rem;text-align:center;">
-                <span style="display:inline-block;padding:3px 10px;border-radius:9999px;font-size:0.71rem;font-weight:800;background:${bg};color:${col};white-space:nowrap;">${escHtml(est)}</span>
+              <td data-label="Documento" style="padding:0.85rem 0.78rem;font-size:0.81rem;color:#1e293b;max-width:270px;line-height:1.38;font-weight:600;">${escHtml(r.plantilla_nombre || '-')}</td>
+              <td data-label="Estado" style="padding:0.85rem 0.78rem;text-align:center;">
+                <span style="display:inline-flex;align-items:center;padding:3px 11px;border-radius:9999px;font-size:0.7rem;font-weight:800;background:${bg};color:${col};border:1px solid ${bd};white-space:nowrap;">${escHtml(est)}</span>
               </td>
-              <td data-label="Fechas (UTC)" style="padding:0.8rem 0.65rem;font-size:0.73rem;color:#475569;white-space:nowrap;line-height:1.5;">
-                <div>Creada: <strong>${escHtml(fechaCreadaTxt)}</strong></div>
-                ${fechaFirmadaTxt ? `<div style="color:#166534;font-weight:700;">Firmada: ${escHtml(fechaFirmadaTxt)}</div>` : ''}
+              <td data-label="Fechas (UTC)" style="padding:0.85rem 0.78rem;font-size:0.73rem;color:#475569;white-space:nowrap;line-height:1.55;">
+                <div>Creada: <strong class="font-mono">${escHtml(fechaCreadaTxt)}</strong></div>
+                ${fechaFirmadaTxt ? `<div style="color:#166534;font-weight:700;">Firmada: <span class="font-mono">${escHtml(fechaFirmadaTxt)}</span></div>` : ''}
               </td>
-              <td data-label="Evidencia y Ubicación" style="padding:0.8rem 0.65rem;font-size:0.72rem;">
+              <td data-label="Evidencia y Ubicación" style="padding:0.85rem 0.78rem;font-size:0.72rem;">
                 <div class="font-mono" style="color:#334155;" title="${escHtml(shaFull)}">SHA256: ${escHtml(shaShort)}…</div>
-                <div style="margin-top:2px;">IP: ${escHtml(r.ip_origen || '-')} · ${gpsHtml}</div>
-                ${badgesHtml ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;">${badgesHtml}</div>` : ''}
+                <div style="margin-top:3px;color:#475569;">IP: <span class="font-mono">${escHtml(r.ip_origen || '-')}</span> · ${gpsHtml}</div>
+                ${badgesHtml ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;">${badgesHtml}</div>` : ''}
               </td>
-              <td class="firmas-td-actions" style="padding:0.8rem 0.65rem;">
+              <td class="firmas-td-actions" style="padding:0.85rem 0.78rem;">
                 <div class="firmas-td-actions-inner">
-                  <button type="button" onclick="window.abrirFichaSolicitudFirma('${escHtml(r.id)}')" title="Ver ficha completa: previsualización del PDF, fotos DNI/Selfie, validaciones, historial y acciones" style="${btnBase}border:1px solid #0284c7;background:#eff6ff;color:#0369a1;font-weight:800;">
+                  <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-soft-blue" onclick="window.abrirFichaSolicitudFirma('${escHtml(r.id)}')" title="Ver ficha completa: previsualización del PDF, fotos DNI/Selfie, validaciones, historial y acciones">
                     📋 Ver Ficha
                   </button>
-                  <button type="button" onclick="window.descargarPdfSolicitudFirma('${escHtml(r.id)}', '${tipoDescarga}')" title="${escHtml(labelDescarga)}" style="${btnBase}border:1px solid #0f2744;background:#0f2744;color:#ffffff;">
+                  <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-navy" onclick="window.descargarPdfSolicitudFirma('${escHtml(r.id)}', '${tipoDescarga}')" title="${escHtml(labelDescarga)}">
                     📥 Descargar PDF
                   </button>
-                  <button type="button" onclick="window.abrirModalBajaSolicitudFirma('${escHtml(r.id)}')" title="Cancelar, desestimar o eliminar ficha con código de validación por WhatsApp" style="${btnBase}width:32px;padding:0;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;">
+                  <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-icon firmas-btn-danger" onclick="window.abrirModalBajaSolicitudFirma('${escHtml(r.id)}')" title="Cancelar, desestimar o eliminar ficha con código de validación por WhatsApp">
                     🗑️
                   </button>
                 </div>
@@ -1213,39 +1213,38 @@
         return `${r.nombre_solicitante || ''} ${r.dni_solicitante || ''} ${r.expediente_id || ''} ${r.plantilla_nombre || ''} ${r.estado || ''} ${br.eliminado_por_nombre || ''} ${br.eliminado_por_usuario || ''} ${br.motivo || ''}`.toLowerCase().includes(qE);
       });
       if (elimFiltradas.length === 0) {
-        tbodyElim.innerHTML = '<tr><td colspan="6" style="padding:1.5rem;text-align:center;color:#64748b;">No hay fichas eliminadas, canceladas o desestimadas.</td></tr>';
+        tbodyElim.innerHTML = '<tr><td colspan="6" style="padding:2rem;text-align:center;color:#64748b;font-size:0.84rem;">No hay fichas eliminadas, canceladas o desestimadas.</td></tr>';
       } else {
-        const btnBase = 'display:inline-flex;align-items:center;gap:5px;padding:0.38rem 0.74rem;border-radius:8px;font-size:0.75rem;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;';
         tbodyElim.innerHTML = elimFiltradas.map((r) => {
           const est = String(r.estado || 'DESESTIMADO').toUpperCase();
           const br = r.baja_registro || {};
           const nomResp = br.eliminado_por_nombre || '-';
           const usrResp = br.eliminado_por_usuario ? `@${br.eliminado_por_usuario}` : '';
           const fechaBajaTxt = br.fecha_baja ? formatearFechaHoraAr(br.fecha_baja) : (br.fecha_baja_ar || formatearFechaHoraAr(r.created_at));
-          const motivoTxt = br.motivo ? `<div style="font-size:0.71rem;color:#475569;margin-top:3px;max-width:220px;white-space:normal;">${escHtml(br.motivo)}</div>` : '';
-          const waMask = br.telefono_validacion ? `<div style="font-size:0.7rem;color:#047857;margin-top:2px;">📲 WA validado: ${escHtml(br.telefono_validacion)}</div>` : '';
+          const motivoTxt = br.motivo ? `<div style="font-size:0.72rem;color:#475569;margin-top:4px;max-width:220px;white-space:normal;">${escHtml(br.motivo)}</div>` : '';
+          const waMask = br.telefono_validacion ? `<div style="font-size:0.7rem;color:#047857;margin-top:3px;font-weight:600;">📲 WA validado: ${escHtml(br.telefono_validacion)}</div>` : '';
           return `
-            <tr class="firmas-row-elim" style="border-bottom:1px solid #fee2e2;vertical-align:middle;background:#fffafa;">
-              <td data-label="Asociado / Exp." style="padding:0.75rem 0.65rem;font-size:0.82rem;">
+            <tr class="firmas-row-elim" style="background:#fffafa;">
+              <td data-label="Asociado / Exp." style="padding:0.82rem 0.78rem;font-size:0.83rem;">
                 <div style="font-weight:800;color:#0f172a;">${escHtml(r.nombre_solicitante || '-')}</div>
-                <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">DNI ${escHtml(r.dni_solicitante || '-')} · Exp: ${escHtml(r.expediente_id || '-')}</div>
+                <div style="font-size:0.72rem;color:#64748b;margin-top:3px;"><span class="font-mono">DNI ${escHtml(r.dni_solicitante || '-')}</span> · Exp: <strong>${escHtml(r.expediente_id || '-')}</strong></div>
               </td>
-              <td data-label="Documento" style="padding:0.75rem 0.65rem;font-size:0.79rem;color:#334155;max-width:240px;line-height:1.35;">${escHtml(r.plantilla_nombre || '-')}</td>
-              <td data-label="Estado / Motivo" style="padding:0.75rem 0.65rem;text-align:center;">
-                <span style="display:inline-block;padding:3px 10px;border-radius:9999px;font-size:0.71rem;font-weight:800;background:#fee2e2;color:#991b1b;white-space:nowrap;">${escHtml(est)}</span>
+              <td data-label="Documento" style="padding:0.82rem 0.78rem;font-size:0.8rem;color:#334155;max-width:240px;line-height:1.38;font-weight:600;">${escHtml(r.plantilla_nombre || '-')}</td>
+              <td data-label="Estado / Motivo" style="padding:0.82rem 0.78rem;text-align:center;">
+                <span style="display:inline-flex;padding:3px 10px;border-radius:9999px;font-size:0.7rem;font-weight:800;background:#fee2e2;color:#991b1b;border:1px solid #fecaca;white-space:nowrap;">${escHtml(est)}</span>
                 ${motivoTxt}
               </td>
-              <td data-label="Responsable" style="padding:0.75rem 0.65rem;font-size:0.79rem;color:#0f172a;">
+              <td data-label="Responsable" style="padding:0.82rem 0.78rem;font-size:0.79rem;color:#0f172a;">
                 <div style="font-weight:800;">${escHtml(nomResp)}</div>
                 ${usrResp ? `<div style="font-size:0.72rem;color:#475569;font-weight:700;">Usuario: ${escHtml(usrResp)}</div>` : ''}
                 ${waMask}
               </td>
-              <td data-label="Fecha y Hora" style="padding:0.75rem 0.65rem;font-size:0.76rem;color:#334155;white-space:nowrap;font-weight:700;">
-                ${escHtml(fechaBajaTxt)}
+              <td data-label="Fecha y Hora" style="padding:0.82rem 0.78rem;font-size:0.76rem;color:#334155;white-space:nowrap;font-weight:700;">
+                <span class="font-mono">${escHtml(fechaBajaTxt)}</span>
               </td>
-              <td class="firmas-td-actions" style="padding:0.75rem 0.65rem;">
+              <td class="firmas-td-actions" style="padding:0.82rem 0.78rem;">
                 <div class="firmas-td-actions-inner">
-                  <button type="button" onclick="window.abrirFichaSolicitudFirma('${escHtml(r.id)}')" style="${btnBase}border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;">
+                  <button type="button" class="firmas-btn firmas-btn--sm" onclick="window.abrirFichaSolicitudFirma('${escHtml(r.id)}')">
                     📋 Ver Ficha
                   </button>
                 </div>
@@ -1356,9 +1355,7 @@
       const pnl = document.getElementById('pnlFichaModalTab_' + k);
       const act = k === fichaModalState.tab;
       if (btn) {
-        btn.style.background = act ? '#0f2744' : '#f8fafc';
-        btn.style.color = act ? '#ffffff' : '#1e293b';
-        btn.style.borderColor = act ? '#0f2744' : '#cbd5e1';
+        btn.classList.toggle('firmas-btn-navy', act);
       }
       if (pnl) pnl.style.display = act ? 'block' : 'none';
     });
@@ -1378,10 +1375,10 @@
     fichaModalState.pdfZoom = 1.0;
 
     ov.innerHTML = `
-      <div style="background:#ffffff;border-radius:16px;max-width:1080px;width:96vw;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(15,23,42,0.35);overflow:hidden;">
-        <div style="padding:0.95rem 1.25rem;background:linear-gradient(135deg,#0f2744 0%,#1e3a8a 100%);color:#ffffff;display:flex;justify-content:space-between;align-items:center;">
-          <div style="font-weight:800;font-size:0.98rem;">📋 Cargando Ficha Completa de Firma y Evidencia...</div>
-          <button type="button" onclick="document.getElementById('modalFichaSolicitudFirmaOverlay').style.display='none'" style="border:none;background:rgba(255,255,255,0.18);color:#ffffff;border-radius:7px;padding:4px 10px;font-weight:800;cursor:pointer;">✕</button>
+      <div class="firmas-ficha-dialog" style="max-width:1080px;">
+        <div class="firmas-ficha-header" style="align-items:center;">
+          <div style="font-weight:800;font-size:1rem;">📋 Cargando Ficha Completa de Firma y Evidencia...</div>
+          <button type="button" onclick="document.getElementById('modalFichaSolicitudFirmaOverlay').style.display='none'" style="border:1px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.14);color:#ffffff;border-radius:9px;width:32px;height:32px;font-weight:800;cursor:pointer;">✕</button>
         </div>
         <div style="padding:2.5rem;text-align:center;color:#475569;font-size:0.9rem;">⏳ Recuperando PDF, capturas biométricas, validaciones e historial forense...</div>
       </div>
@@ -1415,10 +1412,10 @@
       }
     } catch (err) {
       ov.innerHTML = `
-        <div style="background:#ffffff;border-radius:14px;max-width:520px;width:94vw;padding:1.5rem;text-align:center;">
+        <div style="background:#ffffff;border-radius:16px;max-width:520px;width:94vw;padding:1.5rem;text-align:center;box-shadow:0 20px 50px rgba(15,23,42,0.3);">
           <div style="font-weight:800;color:#b91c1c;margin-bottom:0.5rem;">Error cargando Ficha</div>
           <div style="font-size:0.84rem;color:#475569;margin-bottom:1rem;">${escHtml(err.message)}</div>
-          <button type="button" onclick="document.getElementById('modalFichaSolicitudFirmaOverlay').style.display='none'" style="padding:0.45rem 1rem;border-radius:8px;border:1px solid #cbd5e1;background:#f8fafc;font-weight:700;cursor:pointer;">Cerrar</button>
+          <button type="button" class="firmas-btn" onclick="document.getElementById('modalFichaSolicitudFirmaOverlay').style.display='none'">Cerrar</button>
         </div>
       `;
       return;
@@ -1441,7 +1438,6 @@
     const tipoDescarga = (est === 'FIRMADO' || est === 'PARCIAL') ? 'firmado' : 'original';
     const labelDescarga = est === 'FIRMADO' ? 'Descargar PDF Firmado' : (est === 'PARCIAL' ? 'Descargar PDF Parcial' : 'Descargar PDF Original');
     const verifyUrl = `verificar.html?id=${encodeURIComponent(r.id)}&h=${encodeURIComponent((r.hash_sha256_original || '').slice(0, 16))}`;
-    const btnCls = 'display:inline-flex;align-items:center;gap:5px;padding:0.35rem 0.64rem;border-radius:8px;font-size:0.74rem;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;flex-shrink:0;';
 
     const vidMetaTop = (ek && ek.video_prueba_vida) || {};
     const driveCarpetaUrl = r.drive_carpeta_url || vidMetaTop.carpeta_url || '';
@@ -1451,26 +1447,26 @@
       || est === 'FIRMADO'
     );
     const driveBtn = r.drive_file_url
-      ? `<a href="${escHtml(r.drive_file_url)}" target="_blank" rel="noopener" style="${btnCls}border:1px solid #16a34a;background:#f0fdf4;color:#15803d;">☁️ Abrir PDF Drive</a>`
+      ? `<a href="${escHtml(r.drive_file_url)}" target="_blank" rel="noopener" class="firmas-btn firmas-btn--sm" style="border-color:#86efac;background:#f0fdf4;color:#15803d;">☁️ Abrir PDF Drive</a>`
       : (est === 'FIRMADO'
-        ? `<button type="button" onclick="window.respaldarSolicitudEnDrive('${escHtml(r.id)}').then(()=>window.abrirFichaSolicitudFirma('${escHtml(r.id)}'))" style="${btnCls}border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;">☁️ Respaldar Drive</button>`
+        ? `<button type="button" class="firmas-btn firmas-btn--sm firmas-btn-soft-blue" onclick="window.respaldarSolicitudEnDrive('${escHtml(r.id)}').then(()=>window.abrirFichaSolicitudFirma('${escHtml(r.id)}'))">☁️ Respaldar Drive</button>`
         : '');
     const driveCarpetaBtn = driveCarpetaUrl
-      ? `<a href="${escHtml(driveCarpetaUrl)}" target="_blank" rel="noopener" title="Abrir carpeta en Google Drive con fotos, PDF, video y archivos de validación" style="${btnCls}border:1px solid #15803d;background:#ecfdf5;color:#065f46;font-weight:800;">📁 Carpeta Drive</a>`
+      ? `<a href="${escHtml(driveCarpetaUrl)}" target="_blank" rel="noopener" title="Abrir carpeta en Google Drive con fotos, PDF, video y archivos de validación" class="firmas-btn firmas-btn--sm" style="border-color:#15803d;background:#ecfdf5;color:#065f46;font-weight:800;">📁 Carpeta Drive</a>`
       : (tieneEvidenciasParaDrive
-        ? `<button type="button" onclick="window.migrarVideoPruebaVidaDrive('${escHtml(r.id)}').then(()=>window.abrirFichaSolicitudFirma('${escHtml(r.id)}'))" title="Subir / migrar fotos, PDF y video de prueba de vida a su carpeta en Google Drive" style="${btnCls}border:1px solid #0284c7;background:#e0f2fe;color:#0369a1;font-weight:800;">📁 Enviar a Carpeta Drive</button>`
+        ? `<button type="button" class="firmas-btn firmas-btn--sm firmas-btn-soft-blue" onclick="window.migrarVideoPruebaVidaDrive('${escHtml(r.id)}').then(()=>window.abrirFichaSolicitudFirma('${escHtml(r.id)}'))" title="Subir / migrar fotos, PDF y video de prueba de vida a su carpeta en Google Drive" style="font-weight:800;">📁 Enviar a Carpeta Drive</button>`
         : '');
     const tsrBtn = r.tiene_tsr
-      ? `<button type="button" onclick="window.descargarTsrSolicitudFirma('${escHtml(r.id)}')" style="${btnCls}border:1px solid #c7d2fe;background:#eef2ff;color:#3730a3;">⏱️ Sello Hora (.tsr)</button>`
+      ? `<button type="button" class="firmas-btn firmas-btn--sm firmas-btn-indigo" onclick="window.descargarTsrSolicitudFirma('${escHtml(r.id)}')">⏱️ Sello Hora (.tsr)</button>`
       : '';
     const recordarWaBtn = (r.telefono_whatsapp && !esSolicitudEnBaja(r) && est !== 'FIRMADO')
-      ? `<button type="button" onclick="window.notificarWhatsappSolicitud('${escHtml(r.id)}', 'recordatorio')" style="${btnCls}border:1px solid #86efac;background:#f0fdf4;color:#15803d;">📲 Recordar WhatsApp</button>`
+      ? `<button type="button" class="firmas-btn firmas-btn--sm" onclick="window.notificarWhatsappSolicitud('${escHtml(r.id)}', 'recordatorio')" style="border-color:#86efac;background:#f0fdf4;color:#15803d;">📲 Recordar WhatsApp</button>`
       : '';
     const renovarBtn = (est !== 'FIRMADO' && !esSolicitudEnBaja(r))
-      ? `<button type="button" onclick="window.renovarEnlaceSolicitudFirma('${escHtml(r.id)}')" style="${btnCls}border:1px solid #fcd34d;background:#fffbeb;color:#b45309;">🔄 Renovar Enlace</button>`
+      ? `<button type="button" class="firmas-btn firmas-btn--sm" onclick="window.renovarEnlaceSolicitudFirma('${escHtml(r.id)}')" style="border-color:#fcd34d;background:#fffbeb;color:#b45309;">🔄 Renovar Enlace</button>`
       : '';
     const revocarBtn = !esSolicitudEnBaja(r)
-      ? `<button type="button" onclick="window.abrirModalBajaSolicitudFirma('${escHtml(r.id)}')" style="${btnCls}margin-left:auto;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;font-weight:800;">🗑️ Cancelar / Desestimar / Borrar</button>`
+      ? `<button type="button" class="firmas-btn firmas-btn--sm firmas-btn-danger" style="margin-left:auto;font-weight:800;" onclick="window.abrirModalBajaSolicitudFirma('${escHtml(r.id)}')">🗑️ Cancelar / Desestimar / Borrar</button>`
       : '';
 
     const renGuia = r.datos_renaper_guia || {};
@@ -1493,20 +1489,20 @@
     const fotoCard = (titulo, b64, mimeDef, sinMsg) => {
       if (!b64) {
         return `
-          <div style="background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;padding:1rem;text-align:center;">
-            <div style="font-size:0.75rem;font-weight:800;color:#334155;margin-bottom:0.35rem;">${escHtml(titulo)}</div>
+          <div style="background:#f8fafc;border:1.5px dashed #cbd5e1;border-radius:12px;padding:1rem;text-align:center;">
+            <div style="font-size:0.76rem;font-weight:800;color:#334155;margin-bottom:0.35rem;">${escHtml(titulo)}</div>
             <div style="font-size:0.74rem;color:#94a3b8;padding:1.2rem 0;">${escHtml(sinMsg || 'No requerida / No capturada')}</div>
           </div>
         `;
       }
       const src = b64.startsWith('data:') ? b64 : `data:${mimeDef};base64,${b64}`;
       return `
-        <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:10px;padding:0.65rem;display:flex;flex-direction:column;gap:0.4rem;">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:0.75rem;font-weight:800;color:#0f172a;">${escHtml(titulo)}</span>
-            <button type="button" data-ampliar-foto="${escHtml(src)}" data-ampliar-titulo="${escHtml(titulo)}" style="padding:2px 7px;border-radius:5px;border:1px solid #cbd5e1;background:#f8fafc;font-size:0.69rem;font-weight:700;cursor:pointer;">🔍 Ampliar</button>
+        <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:12px;padding:0.75rem;display:flex;flex-direction:column;gap:0.5rem;box-shadow:0 2px 6px rgba(15,23,42,0.03);">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+            <span style="font-size:0.77rem;font-weight:800;color:#0f2744;">${escHtml(titulo)}</span>
+            <button type="button" class="firmas-btn firmas-btn--xs" data-ampliar-foto="${escHtml(src)}" data-ampliar-titulo="${escHtml(titulo)}">🔍 Ampliar</button>
           </div>
-          <img src="${src}" alt="${escHtml(titulo)}" style="width:100%;height:175px;object-fit:contain;background:#f8fafc;border-radius:7px;border:1px solid #e2e8f0;cursor:pointer;" data-ampliar-foto="${escHtml(src)}" data-ampliar-titulo="${escHtml(titulo)}"/>
+          <img src="${src}" alt="${escHtml(titulo)}" style="width:100%;height:175px;object-fit:contain;background:#f8fafc;border-radius:9px;border:1px solid #e2e8f0;cursor:pointer;" data-ampliar-foto="${escHtml(src)}" data-ampliar-titulo="${escHtml(titulo)}"/>
         </div>
       `;
     };
@@ -1530,74 +1526,74 @@
     const tsa = r.tsa_resumen || {};
     const pades = r.pades_resumen || {};
     const gpsLink = (r.geo_latitud != null && r.geo_longitud != null)
-      ? `<a href="https://maps.google.com/?q=${r.geo_latitud},${r.geo_longitud}" target="_blank" rel="noopener" style="color:#1d4ed8;font-weight:700;text-decoration:underline;">📍 ${r.geo_latitud}, ${r.geo_longitud} (Abrir en Google Maps)</a>`
+      ? `<a href="https://maps.google.com/?q=${r.geo_latitud},${r.geo_longitud}" target="_blank" rel="noopener" style="color:#135596;font-weight:700;text-decoration:underline;">📍 ${r.geo_latitud}, ${r.geo_longitud} (Abrir en Google Maps)</a>`
       : 'No informada / Denegada';
 
     const kpiItem = (lbl, val, bgK, colK) => `
-      <div style="background:${bgK || '#f8fafc'};border:1px solid #e2e8f0;border-radius:9px;padding:0.55rem 0.75rem;">
-        <div style="font-size:0.67rem;font-weight:700;color:#64748b;text-transform:uppercase;">${escHtml(lbl)}</div>
-        <div style="font-size:0.86rem;font-weight:800;color:${colK || '#0f172a'};margin-top:2px;word-break:break-word;">${escHtml(val || '-')}</div>
+      <div style="background:${bgK || '#f8fafc'};border:1px solid #e2e8f0;border-radius:11px;padding:0.62rem 0.82rem;">
+        <div style="font-size:0.66rem;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.03em;">${escHtml(lbl)}</div>
+        <div style="font-size:0.86rem;font-weight:800;color:${colK || '#0f172a'};margin-top:3px;word-break:break-word;">${escHtml(val || '-')}</div>
       </div>
     `;
 
     const evHtml = evs.length === 0
       ? '<div style="padding:1.5rem;text-align:center;color:#64748b;font-size:0.84rem;">No hay eventos registrados aún para esta solicitud.</div>'
       : evs.map((ev) => `
-        <div style="border-left:3px solid #1d4ed8;background:#f8fafc;border-radius:8px;padding:0.6rem 0.85rem;margin-bottom:0.55rem;">
+        <div style="border-left:3.5px solid #135596;background:#f8fafc;border-top:1px solid #e2e8f0;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;border-radius:10px;padding:0.7rem 0.95rem;margin-bottom:0.6rem;">
           <div style="display:flex;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;">
-            <strong style="color:#0f2744;font-size:0.82rem;">${escHtml(ev.evento || '-')}</strong>
-            <span style="font-size:0.72rem;color:#475569;">${escHtml((ev.created_at || '').slice(0, 19).replace('T', ' '))} UTC</span>
+            <strong style="color:#0f2744;font-size:0.83rem;">${escHtml(ev.evento || '-')}</strong>
+            <span class="font-mono" style="font-size:0.72rem;color:#475569;">${escHtml((ev.created_at || '').slice(0, 19).replace('T', ' '))} UTC</span>
           </div>
-          <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">IP: ${escHtml(ev.ip_origen || '-')} · Navegador: ${escHtml((ev.user_agent || '-').slice(0, 90))}</div>
-          ${ev.detalle_json ? `<details style="margin-top:0.3rem;"><summary style="cursor:pointer;font-size:0.71rem;color:#1d4ed8;font-weight:700;">Ver detalle técnico</summary><pre style="margin:0.35rem 0 0;padding:0.45rem;background:#ffffff;border:1px solid #e2e8f0;border-radius:6px;font-size:0.68rem;overflow-x:auto;color:#334155;">${escHtml(JSON.stringify(ev.detalle_json, null, 2))}</pre></details>` : ''}
+          <div style="font-size:0.72rem;color:#64748b;margin-top:3px;">IP: <span class="font-mono">${escHtml(ev.ip_origen || '-')}</span> · Navegador: ${escHtml((ev.user_agent || '-').slice(0, 90))}</div>
+          ${ev.detalle_json ? `<details style="margin-top:0.35rem;"><summary style="cursor:pointer;font-size:0.72rem;color:#135596;font-weight:700;">Ver detalle técnico</summary><pre class="font-mono" style="margin:0.4rem 0 0;padding:0.55rem;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;font-size:0.69rem;overflow-x:auto;color:#334155;">${escHtml(JSON.stringify(ev.detalle_json, null, 2))}</pre></details>` : ''}
         </div>
       `).join('');
 
     const esAdminFirmas = (typeof window.tieneAccesoFirmasAmmer === 'function') ? window.tieneAccesoFirmasAmmer() : false;
     const verifyTechBtn = esAdminFirmas
-      ? `<a href="${verifyUrl}&modo=tecnico" target="_blank" rel="noopener" style="${btnCls}border:1px solid #c7d2fe;background:#eef2ff;color:#3730a3;">🛡️ Validación Técnica (Admin)</a>`
+      ? `<a href="${verifyUrl}&modo=tecnico" target="_blank" rel="noopener" class="firmas-btn firmas-btn--sm firmas-btn-indigo">🛡️ Validación Técnica (Admin)</a>`
       : '';
 
     const brInfo = r.baja_registro || null;
     const bajaBannerHtml = (esSolicitudEnBaja(r) && brInfo)
-      ? `<div style="padding:0.68rem 1.2rem;background:#fef2f2;border-bottom:1px solid #fecaca;color:#991b1b;font-size:0.8rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+      ? `<div style="padding:0.72rem 1.35rem;background:#fef2f2;border-bottom:1px solid #fecaca;color:#991b1b;font-size:0.8rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
           <div>
             <strong>🗑️ Ficha ${escHtml(brInfo.accion || est)}:</strong>
             Por <strong>${escHtml(brInfo.eliminado_por_nombre || '-')}</strong> (@${escHtml(brInfo.eliminado_por_usuario || '-')})
             · Fecha/hora: <strong>${escHtml(brInfo.fecha_baja ? formatearFechaHoraAr(brInfo.fecha_baja) : (brInfo.fecha_baja_ar || '-'))}</strong>
             ${brInfo.motivo ? ` · Motivo: <em>${escHtml(brInfo.motivo)}</em>` : ''}
           </div>
-          ${brInfo.telefono_validacion ? `<span style="font-size:0.73rem;font-weight:700;background:#ffffff;border:1px solid #fecaca;padding:2px 8px;border-radius:9999px;">📲 Validado WA ${escHtml(brInfo.telefono_validacion)}</span>` : ''}
+          ${brInfo.telefono_validacion ? `<span style="font-size:0.73rem;font-weight:700;background:#ffffff;border:1px solid #fecaca;padding:2px 9px;border-radius:9999px;">📲 Validado WA ${escHtml(brInfo.telefono_validacion)}</span>` : ''}
         </div>`
       : '';
 
     ov.innerHTML = `
-      <div class="firmas-ficha-dialog" style="background:#ffffff;border-radius:16px;max-width:min(1820px,98.5vw);width:98.5vw;max-height:94vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(15,23,42,0.35);overflow:hidden;">
+      <div class="firmas-ficha-dialog">
         <!-- HEADER -->
-        <div style="padding:0.95rem 1.25rem;background:linear-gradient(135deg,#0f2744 0%,#1e3a8a 100%);color:#ffffff;display:flex;justify-content:space-between;align-items:flex-start;gap:0.75rem;">
+        <div class="firmas-ficha-header">
           <div style="min-width:0;">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-              <span style="font-size:1.05rem;font-weight:800;">📋 Ficha de Firma: ${escHtml(r.nombre_solicitante || '-')}</span>
-              <span style="padding:2px 10px;border-radius:9999px;font-size:0.72rem;font-weight:800;background:${bg};color:${col};">${escHtml(est)}</span>
-              ${r.es_paquete ? `<span style="padding:2px 8px;border-radius:9999px;font-size:0.71rem;font-weight:700;background:#e0e7ff;color:#1e3a8a;">📦 Paquete (${r.paquete_cantidad} docs)</span>` : ''}
+              <span style="font-size:1.06rem;font-weight:800;letter-spacing:-0.01em;">📋 Ficha de Firma: ${escHtml(r.nombre_solicitante || '-')}</span>
+              <span style="padding:2px 10px;border-radius:9999px;font-size:0.71rem;font-weight:800;background:${bg};color:${col};">${escHtml(est)}</span>
+              ${r.es_paquete ? `<span style="padding:2px 9px;border-radius:9999px;font-size:0.71rem;font-weight:700;background:#e0e7ff;color:#1e3a8a;">📦 Paquete (${r.paquete_cantidad} docs)</span>` : ''}
             </div>
-            <div style="font-size:0.78rem;color:#cbd5e1;margin-top:4px;">
-              DNI ${escHtml(r.dni_solicitante || '-')} · Expediente: <strong>${escHtml(r.expediente_id || '-')}</strong> · Documento: <strong>${escHtml(r.plantilla_nombre || '-')}</strong>
+            <div style="font-size:0.78rem;color:rgba(226,232,240,0.92);margin-top:4px;">
+              <span class="font-mono">DNI ${escHtml(r.dni_solicitante || '-')}</span> · Expediente: <strong>${escHtml(r.expediente_id || '-')}</strong> · Documento: <strong>${escHtml(r.plantilla_nombre || '-')}</strong>
             </div>
           </div>
-          <button type="button" onclick="document.getElementById('modalFichaSolicitudFirmaOverlay').style.display='none'" style="border:none;background:rgba(255,255,255,0.18);color:#ffffff;border-radius:8px;padding:5px 11px;font-weight:800;cursor:pointer;font-size:0.9rem;flex-shrink:0;">✕</button>
+          <button type="button" onclick="document.getElementById('modalFichaSolicitudFirmaOverlay').style.display='none'" style="border:1px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.14);color:#ffffff;border-radius:9px;width:34px;height:34px;font-weight:800;cursor:pointer;font-size:0.95rem;flex-shrink:0;">✕</button>
         </div>
 
         ${bajaBannerHtml}
 
         <!-- BARRA DE ACCIONES -->
-        <div class="firmas-ficha-actions" style="padding:0.65rem 1.25rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;gap:0.42rem;flex-wrap:nowrap;align-items:center;overflow-x:auto;">
-          <button type="button" onclick="window.descargarPdfSolicitudFirma('${escHtml(r.id)}', '${tipoDescarga}')" style="${btnCls}border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-weight:800;">📥 ${labelDescarga}</button>
+        <div class="firmas-ficha-actions">
+          <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-navy" onclick="window.descargarPdfSolicitudFirma('${escHtml(r.id)}', '${tipoDescarga}')">📥 ${labelDescarga}</button>
           ${tsrBtn}
           ${driveBtn}
           ${driveCarpetaBtn}
-          <button type="button" onclick="window.abrirAsistenteRenaperMiEjemplar(${renArgs})" style="${btnCls}border:1px solid #bae6fd;background:#f0f9ff;color:#0369a1;">🪪 Validar Ejemplar (RENAPER)</button>
-          <a href="${verifyUrl}" target="_blank" rel="noopener" style="${btnCls}border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;">🔍 Validación Pública</a>
+          <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-soft-blue" onclick="window.abrirAsistenteRenaperMiEjemplar(${renArgs})">🪪 Validar Ejemplar (RENAPER)</button>
+          <a href="${verifyUrl}" target="_blank" rel="noopener" class="firmas-btn firmas-btn--sm">🔍 Validación Pública</a>
           ${verifyTechBtn}
           ${recordarWaBtn}
           ${renovarBtn}
@@ -1605,35 +1601,35 @@
         </div>
 
         <!-- PESTAÑAS INTERNAS DE LA FICHA -->
-        <div class="firmas-ficha-tabs" style="padding:0.55rem 1.2rem;background:#ffffff;border-bottom:1px solid #e2e8f0;display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center;">
-          <button type="button" id="btnFichaModalTab_pdf" onclick="window.cambiarTabFichaSolicitudModal('pdf')" style="${btnCls}border:1px solid #0f2744;background:#0f2744;color:#ffffff;">📑 Previsualización PDF</button>
-          <button type="button" id="btnFichaModalTab_ekyc" onclick="window.cambiarTabFichaSolicitudModal('ekyc')" style="${btnCls}border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;">🪪 Identidad, Fotos y Cruces</button>
-          <button type="button" id="btnFichaModalTab_evidencia" onclick="window.cambiarTabFichaSolicitudModal('evidencia')" style="${btnCls}border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;">🔐 Evidencia Técnica y Legal</button>
-          <button type="button" id="btnFichaModalTab_eventos" onclick="window.cambiarTabFichaSolicitudModal('eventos')" style="${btnCls}border:1px solid #cbd5e1;background:#f8fafc;color:#1e293b;">📜 Historial (${evs.length})</button>
+        <div class="firmas-ficha-tabs">
+          <button type="button" id="btnFichaModalTab_pdf" class="firmas-btn firmas-btn--sm firmas-btn-navy" onclick="window.cambiarTabFichaSolicitudModal('pdf')">📑 Previsualización PDF</button>
+          <button type="button" id="btnFichaModalTab_ekyc" class="firmas-btn firmas-btn--sm" onclick="window.cambiarTabFichaSolicitudModal('ekyc')">🪪 Identidad, Fotos y Cruces</button>
+          <button type="button" id="btnFichaModalTab_evidencia" class="firmas-btn firmas-btn--sm" onclick="window.cambiarTabFichaSolicitudModal('evidencia')">🔐 Evidencia Técnica y Legal</button>
+          <button type="button" id="btnFichaModalTab_eventos" class="firmas-btn firmas-btn--sm" onclick="window.cambiarTabFichaSolicitudModal('eventos')">📜 Historial (${evs.length})</button>
         </div>
 
         <!-- CUERPO SCROLLEABLE -->
-        <div class="firmas-ficha-body" style="padding:1rem 1.25rem;overflow-y:auto;flex:1;min-height:360px;">
+        <div class="firmas-ficha-body">
           <!-- TAB 1: PDF PREVIEW -->
           <div id="pnlFichaModalTab_pdf" style="display:block;">
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.65rem;">
-              <div style="font-size:0.78rem;font-weight:700;color:#334155;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.7rem;">
+              <div style="font-size:0.8rem;font-weight:700;color:#334155;">
                 Visualizando: <strong style="color:#0f2744;">${pdfRes && pdfRes.tipo === 'firmado' ? 'PDF Firmado con Evidencia y Audit Trail' : 'PDF Original de la Solicitud'}</strong>
               </div>
-              <div style="display:inline-flex;align-items:center;gap:4px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:7px;padding:2px 6px;">
-                <button type="button" onclick="window.zoomFichaPdfModal(-0.2)" style="padding:1px 8px;border-radius:5px;border:1px solid #cbd5e1;background:#ffffff;font-weight:800;cursor:pointer;">➖</button>
+              <div style="display:inline-flex;align-items:center;gap:4px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:9px;padding:3px 6px;">
+                <button type="button" class="firmas-btn firmas-btn--xs" style="width:26px;padding:0;height:25px;" onclick="window.zoomFichaPdfModal(-0.2)">−</button>
                 <span id="lblFichaModalPdfZoom" style="font-size:0.75rem;font-weight:800;min-width:44px;text-align:center;">100%</span>
-                <button type="button" onclick="window.zoomFichaPdfModal(0.2)" style="padding:1px 8px;border-radius:5px;border:1px solid #cbd5e1;background:#ffffff;font-weight:800;cursor:pointer;">➕</button>
+                <button type="button" class="firmas-btn firmas-btn--xs" style="width:26px;padding:0;height:25px;" onclick="window.zoomFichaPdfModal(0.2)">+</button>
               </div>
             </div>
-            <div id="fichaModalPdfPagesWrap" style="background:#cbd5e1;border-radius:10px;padding:0.85rem;overflow:auto;max-height:60vh;"></div>
+            <div id="fichaModalPdfPagesWrap" style="background:#94a3b8;border:1px solid #cbd5e1;border-radius:12px;padding:0.9rem;overflow:auto;max-height:60vh;"></div>
           </div>
 
           <!-- TAB 2: IDENTIDAD, FOTOS & CRUCES -->
           <div id="pnlFichaModalTab_ekyc" style="display:none;">
-            <div class="firmas-ficha-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(145px,100%),1fr));gap:0.48rem;margin-bottom:1rem;">
+            <div class="firmas-ficha-kpis">
               ${kpiItem('Dictamen eKYC', (ek && ek.estado_ekyc) || 'Sin captura eKYC', (ek && ek.estado_ekyc === 'APROBADO') ? '#f0fdf4' : ((ek && ek.estado_ekyc === 'REVISION_REQUERIDA') ? '#fef2f2' : '#fffbeb'), (ek && ek.estado_ekyc === 'APROBADO') ? '#166534' : ((ek && ek.estado_ekyc === 'REVISION_REQUERIDA') ? '#b91c1c' : '#92400e'))}
-              ${kpiItem('Cotejo Facial (Selfie vs DNI)', ek && ek.face_match_pct != null ? `${ek.face_match_pct}% coincidencia${ek.motor_biometria === 'biometria_local_offline' ? ' · Motor Local' : (ek.motor_biometria === 'gemini_vision' ? ' · Gemini IA' : '')}` : 'No ejecutado', '#eff6ff', '#1d4ed8')}
+              ${kpiItem('Cotejo Facial (Selfie vs DNI)', ek && ek.face_match_pct != null ? `${ek.face_match_pct}% coincidencia${ek.motor_biometria === 'biometria_local_offline' ? ' · Motor Local' : (ek.motor_biometria === 'gemini_vision' ? ' · Gemini IA' : '')}` : 'No ejecutado', '#eff6ff', '#135596')}
               ${(() => {
                 const cf = (ek && ek.cotejo_firma) || r.cotejo_firma || {};
                 const cfPct = cf && cf.firma_match_pct;
@@ -1655,7 +1651,7 @@
               const hayObs = Boolean((ek && ek.observaciones_biometria) || cf.observaciones || (ek && Array.isArray(ek.alertas) && ek.alertas.length));
               if (!hayObs) return '';
               return `
-                <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.65rem 0.85rem;margin-bottom:1rem;font-size:0.76rem;color:#334155;">
+                <div class="firmas-section-box" style="margin-bottom:1rem;font-size:0.78rem;color:#334155;">
                   ${(ek && ek.observaciones_biometria) ? `<div><strong>Detalle biométrico facial:</strong> ${escHtml(ek.observaciones_biometria)}</div>` : ''}
                   ${cf.observaciones ? `<div style="margin-top:4px;"><strong>Análisis biométrico de firma:</strong> ${escHtml(cf.observaciones)}</div>` : ''}
                   ${(ek && Array.isArray(ek.alertas) && ek.alertas.length) ? `<div style="margin-top:4px;color:#b45309;"><strong>Alertas eKYC:</strong> ${ek.alertas.map(a => escHtml(a)).join(' · ')}</div>` : ''}
@@ -1664,39 +1660,39 @@
             })()}
 
             ${ejManual ? `
-              <div style="background:${ejManBg};border:1px solid ${ejManual.valido ? '#86efac' : '#fecaca'};border-radius:10px;padding:0.65rem 0.85rem;margin-bottom:1rem;font-size:0.78rem;color:${ejManCol};display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+              <div style="background:${ejManBg};border:1px solid ${ejManual.valido ? '#86efac' : '#fecaca'};border-radius:12px;padding:0.75rem 0.95rem;margin-bottom:1rem;font-size:0.79rem;color:${ejManCol};display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
                 <div>
                   <strong>${ejManual.valido ? '✅ Ejemplar validado manualmente contra RENAPER' : '⛔ Ejemplar marcado NO VÁLIDO contra RENAPER'}</strong><br/>
                   <span>DNI: Ejemplar <strong>${escHtml(ejManual.ejemplar_dni || dniEx.ejemplar || '-')}</strong> · Emisión <strong>${escHtml(ejManual.fecha_emision_dni || dniEx.fecha_emision || '-')}</strong></span>
                   ${(ejManual.ejemplar_renaper || ejManual.fecha_emision_renaper) ? ` · <span>RENAPER: Ejemplar <strong>${escHtml(ejManual.ejemplar_renaper || '-')}</strong> · Emisión <strong>${escHtml(ejManual.fecha_emision_renaper || '-')}</strong></span>` : ''}
                   ${ejManual.observaciones ? `<div style="margin-top:2px;">Obs.: <em>${escHtml(ejManual.observaciones)}</em></div>` : ''}
                 </div>
-                <button type="button" onclick="window.abrirAsistenteRenaperMiEjemplar(${renArgs})" style="${btnCls}border:1px solid #0284c7;background:#ffffff;color:#0369a1;">✏️ Editar comparación</button>
+                <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-soft-blue" onclick="window.abrirAsistenteRenaperMiEjemplar(${renArgs})">✏️ Editar comparación</button>
               </div>
             ` : ''}
 
             ${(dniEx.dni || dniEx.nombre || dniEx.fecha_nacimiento || dniEx.ejemplar || dniEx.fecha_emision) ? `
-              <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.75rem 0.9rem;margin-bottom:1rem;">
-                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.55rem;">
-                  <strong style="font-size:0.8rem;color:#0f2744;">🪪 Datos completos extraídos del DNI</strong>
-                  ${dniEx.formato_dni ? `<span style="font-size:0.69rem;font-weight:800;padding:2px 8px;border-radius:9999px;background:#e0f2fe;color:#0369a1;">${escHtml(dniEx.formato_dni)}</span>` : ''}
+              <div class="firmas-section-box" style="margin-bottom:1rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.65rem;">
+                  <strong style="font-size:0.83rem;color:#0f2744;">🪪 Datos completos extraídos del DNI</strong>
+                  ${dniEx.formato_dni ? `<span style="font-size:0.69rem;font-weight:800;padding:2px 9px;border-radius:9999px;background:#e0f2fe;color:#0369a1;">${escHtml(dniEx.formato_dni)}</span>` : ''}
                 </div>
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.45rem;font-size:0.76rem;color:#334155;">
-                  <div><span style="color:#64748b;font-size:0.68rem;">Apellido y Nombre</span><div style="font-weight:800;color:#0f172a;">${escHtml(dniEx.nombre || '-')}</div></div>
-                  <div><span style="color:#64748b;font-size:0.68rem;">DNI / CUIL</span><div style="font-weight:800;color:#0f172a;">${escHtml(dniEx.dni || '-')}${dniEx.cuil ? ` · ${escHtml(dniEx.cuil)}` : ''}</div></div>
-                  <div><span style="color:#64748b;font-size:0.68rem;">Ejemplar / Sexo</span><div style="font-weight:800;color:#0f172a;">Ejemplar ${escHtml(dniEx.ejemplar || '-')} · ${escHtml(dniEx.sexo || '-')}</div></div>
-                  <div><span style="color:#64748b;font-size:0.68rem;">Fecha de Emisión</span><div style="font-weight:800;color:#0369a1;">${escHtml(dniEx.fecha_emision || 'No detectada')}</div></div>
-                  <div><span style="color:#64748b;font-size:0.68rem;">Fecha de Vencimiento</span><div style="font-weight:800;color:#0f172a;">${escHtml(dniEx.fecha_vencimiento || '-')}</div></div>
-                  <div><span style="color:#64748b;font-size:0.68rem;">Fecha de Nacimiento</span><div style="font-weight:800;color:#0f172a;">${escHtml(dniEx.fecha_nacimiento || '-')}</div></div>
-                  <div><span style="color:#64748b;font-size:0.68rem;">Trámite N° / Of. Ident.</span><div style="font-weight:700;color:#0f172a;">${escHtml(dniEx.nro_tramite || '-')}${dniEx.oficina_identificadora ? ` · Of. ${escHtml(dniEx.oficina_identificadora)}` : ''}${dniEx.nro_serie ? ` · Serie ${escHtml(dniEx.nro_serie)}` : ''}</div></div>
-                  <div><span style="color:#64748b;font-size:0.68rem;">Lugar de Nacimiento / Nac.</span><div style="font-weight:700;color:#0f172a;">${escHtml(dniEx.lugar_nacimiento || '-')}${dniEx.nacionalidad ? ` (${escHtml(dniEx.nacionalidad)})` : ''}</div></div>
-                  <div style="grid-column:1/-1;"><span style="color:#64748b;font-size:0.68rem;">Domicilio en DNI</span><div style="font-weight:700;color:#0f172a;">${escHtml(dniEx.domicilio || 'No detectado')}${dniEx.progenitores ? ` · Hijo/a de: ${escHtml(dniEx.progenitores)}` : ''}</div></div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:0.6rem;font-size:0.78rem;color:#334155;">
+                  <div><span style="color:#64748b;font-size:0.68rem;font-weight:700;text-transform:uppercase;">Apellido y Nombre</span><div style="font-weight:800;color:#0f172a;">${escHtml(dniEx.nombre || '-')}</div></div>
+                  <div><span style="color:#64748b;font-size:0.68rem;font-weight:700;text-transform:uppercase;">DNI / CUIL</span><div class="font-mono" style="font-weight:800;color:#0f172a;">${escHtml(dniEx.dni || '-')}${dniEx.cuil ? ` · ${escHtml(dniEx.cuil)}` : ''}</div></div>
+                  <div><span style="color:#64748b;font-size:0.68rem;font-weight:700;text-transform:uppercase;">Ejemplar / Sexo</span><div style="font-weight:800;color:#0f172a;">Ejemplar ${escHtml(dniEx.ejemplar || '-')} · ${escHtml(dniEx.sexo || '-')}</div></div>
+                  <div><span style="color:#64748b;font-size:0.68rem;font-weight:700;text-transform:uppercase;">Fecha de Emisión</span><div class="font-mono" style="font-weight:800;color:#135596;">${escHtml(dniEx.fecha_emision || 'No detectada')}</div></div>
+                  <div><span style="color:#64748b;font-size:0.68rem;font-weight:700;text-transform:uppercase;">Fecha de Vencimiento</span><div class="font-mono" style="font-weight:800;color:#0f172a;">${escHtml(dniEx.fecha_vencimiento || '-')}</div></div>
+                  <div><span style="color:#64748b;font-size:0.68rem;font-weight:700;text-transform:uppercase;">Fecha de Nacimiento</span><div class="font-mono" style="font-weight:800;color:#0f172a;">${escHtml(dniEx.fecha_nacimiento || '-')}</div></div>
+                  <div><span style="color:#64748b;font-size:0.68rem;font-weight:700;text-transform:uppercase;">Trámite N° / Of. Ident.</span><div style="font-weight:700;color:#0f172a;">${escHtml(dniEx.nro_tramite || '-')}${dniEx.oficina_identificadora ? ` · Of. ${escHtml(dniEx.oficina_identificadora)}` : ''}${dniEx.nro_serie ? ` · Serie ${escHtml(dniEx.nro_serie)}` : ''}</div></div>
+                  <div><span style="color:#64748b;font-size:0.68rem;font-weight:700;text-transform:uppercase;">Lugar de Nacimiento / Nac.</span><div style="font-weight:700;color:#0f172a;">${escHtml(dniEx.lugar_nacimiento || '-')}${dniEx.nacionalidad ? ` (${escHtml(dniEx.nacionalidad)})` : ''}</div></div>
+                  <div style="grid-column:1/-1;"><span style="color:#64748b;font-size:0.68rem;font-weight:700;text-transform:uppercase;">Domicilio en DNI</span><div style="font-weight:700;color:#0f172a;">${escHtml(dniEx.domicilio || 'No detectado')}${dniEx.progenitores ? ` · Hijo/a de: ${escHtml(dniEx.progenitores)}` : ''}</div></div>
                 </div>
               </div>
             ` : ''}
 
-            <div style="font-size:0.8rem;font-weight:800;color:#0f172a;margin-bottom:0.5rem;">Capturas Documentales, 3 Momentos Biométricos y Cotejo de Firma (clic para ampliar)</div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr));gap:0.75rem;">
+            <div style="font-size:0.83rem;font-weight:800;color:#0f2744;margin-bottom:0.6rem;">Capturas Documentales, 3 Momentos Biométricos y Cotejo de Firma (clic para ampliar)</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:0.8rem;">
               ${fotoCard('🪪 DNI Frente', imgs.dni_frente_b64, 'image/jpeg', 'Sin foto DNI frente')}
               ${fotoCard('🪪 DNI Dorso', imgs.dni_dorso_b64, 'image/jpeg', 'Sin foto DNI dorso')}
               ${fotoCard('🤳 Selfie 1 · Mirada Frontal', imgs.selfie_b64, 'image/jpeg', 'Sin captura de selfie')}
@@ -1720,41 +1716,41 @@
 
               if (!vidB64 && !migradoDrive) {
                 return `
-                  <div style="margin-top:1rem;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;padding:0.75rem 0.9rem;">
-                    <div style="font-size:0.8rem;font-weight:800;color:#334155;margin-bottom:0.2rem;">🎥 Prueba de Vida (Video en vivo)</div>
-                    <div style="font-size:0.75rem;color:#64748b;">Sin video grabado adjunto (captura previa o dispositivo sin MediaRecorder).</div>
+                  <div style="margin-top:1rem;background:#f8fafc;border:1.5px dashed #cbd5e1;border-radius:12px;padding:0.85rem 1rem;">
+                    <div style="font-size:0.82rem;font-weight:800;color:#334155;margin-bottom:0.2rem;">🎥 Prueba de Vida (Video en vivo)</div>
+                    <div style="font-size:0.76rem;color:#64748b;">Sin video grabado adjunto (captura previa o dispositivo sin MediaRecorder).</div>
                   </div>
                 `;
               }
 
               const badgeEstado = migradoDrive
-                ? `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:#dcfce7;color:#166534;font-size:0.69rem;font-weight:800;">☁️ Migrado a Drive (${escHtml(destTxt)}) · Copia Supabase liberada</span>`
-                : `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:#fef3c7;color:#92400e;font-size:0.69rem;font-weight:800;">🗄️ En Supabase (pendiente migrar a Drive)</span>`;
+                ? `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;background:#dcfce7;color:#166534;font-size:0.69rem;font-weight:800;">☁️ Migrado a Drive (${escHtml(destTxt)}) · Copia Supabase liberada</span>`
+                : `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;background:#fef3c7;color:#92400e;font-size:0.69rem;font-weight:800;">🗄️ En Supabase (pendiente migrar a Drive)</span>`;
 
               const vidSrc = vidB64 ? (vidB64.startsWith('data:') ? vidB64 : `data:${vidMime};base64,${vidB64}`) : '';
               const dlName = `prueba_vida_${(r.dni_solicitante || 'firmante').replace(/\W+/g, '')}.${ext}`;
               return `
-                <div style="margin-top:1rem;background:#f8fafc;border:1px solid ${migradoDrive ? '#86efac' : '#cbd5e1'};border-radius:12px;padding:0.85rem 1rem;">
-                  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.55rem;">
+                <div style="margin-top:1rem;background:#f8fafc;border:1px solid ${migradoDrive ? '#86efac' : '#cbd5e1'};border-radius:13px;padding:0.95rem 1.1rem;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.65rem;">
                     <div>
                       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                        <strong style="font-size:0.84rem;color:#0f2744;">🎥 Prueba de Vida (Video completo de validación facial)</strong>
+                        <strong style="font-size:0.85rem;color:#0f2744;">🎥 Prueba de Vida (Video completo de validación facial)</strong>
                         ${badgeEstado}
                       </div>
                       <div style="font-size:0.72rem;color:#475569;margin-top:3px;">
                         ${escHtml(vidMime.toUpperCase())}${kbTxt ? ` · ${escHtml(kbTxt)}` : ''}${vidMeta.sha256 ? ` · SHA-256: <span class="font-mono">${escHtml(String(vidMeta.sha256).slice(0, 18))}…</span>` : ''}
                       </div>
                     </div>
-                    <div style="display:flex;gap:0.4rem;flex-wrap:wrap;align-items:center;">
-                      ${vidMeta.drive_url ? `<a href="${escHtml(vidMeta.drive_url)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;border:1px solid #16a34a;background:#f0fdf4;color:#15803d;font-size:0.74rem;font-weight:700;text-decoration:none;">▶️ Ver video en Drive</a>` : ''}
-                      ${vidMeta.carpeta_url ? `<a href="${escHtml(vidMeta.carpeta_url)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;border:1px solid #15803d;background:#ecfdf5;color:#065f46;font-size:0.74rem;font-weight:700;text-decoration:none;">📁 Carpeta Drive</a>` : ''}
-                      ${vidSrc ? `<a href="${escHtml(vidSrc)}" download="${escHtml(dlName)}" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;border:1px solid #0f2744;background:#0f2744;color:#ffffff;font-size:0.74rem;font-weight:700;text-decoration:none;">⬇️ Descargar video</a>` : ''}
-                      ${!migradoDrive ? `<button type="button" onclick="window.migrarVideoPruebaVidaDrive('${escHtml(r.id)}').then(()=>window.abrirFichaSolicitudFirma('${escHtml(r.id)}'))" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;border:1px solid #0284c7;background:#e0f2fe;color:#0369a1;font-size:0.74rem;font-weight:800;cursor:pointer;">📤 Migrar a Drive ahora</button>` : ''}
+                    <div style="display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center;">
+                      ${vidMeta.drive_url ? `<a href="${escHtml(vidMeta.drive_url)}" target="_blank" rel="noopener" class="firmas-btn firmas-btn--xs" style="border-color:#86efac;background:#f0fdf4;color:#15803d;">▶️ Ver video en Drive</a>` : ''}
+                      ${vidMeta.carpeta_url ? `<a href="${escHtml(vidMeta.carpeta_url)}" target="_blank" rel="noopener" class="firmas-btn firmas-btn--xs" style="border-color:#15803d;background:#ecfdf5;color:#065f46;">📁 Carpeta Drive</a>` : ''}
+                      ${vidSrc ? `<a href="${escHtml(vidSrc)}" download="${escHtml(dlName)}" class="firmas-btn firmas-btn--xs firmas-btn-navy">⬇️ Descargar video</a>` : ''}
+                      ${!migradoDrive ? `<button type="button" class="firmas-btn firmas-btn--xs firmas-btn-soft-blue" onclick="window.migrarVideoPruebaVidaDrive('${escHtml(r.id)}').then(()=>window.abrirFichaSolicitudFirma('${escHtml(r.id)}'))">📤 Migrar a Drive ahora</button>` : ''}
                     </div>
                   </div>
                   ${vidSrc
-                    ? `<video controls playsinline preload="metadata" src="${escHtml(vidSrc)}" style="width:100%;max-width:420px;max-height:280px;border-radius:10px;background:#0f172a;display:block;border:2px solid #cbd5e1;"></video>`
-                    : `<iframe src="${escHtml(vidMeta.drive_preview_url || vidMeta.drive_url)}" allow="autoplay" style="width:100%;max-width:480px;height:280px;border-radius:10px;border:2px solid #86efac;background:#0f172a;display:block;"></iframe>`}
+                    ? `<video controls playsinline preload="metadata" src="${escHtml(vidSrc)}" style="width:100%;max-width:420px;max-height:280px;border-radius:11px;background:#0f172a;display:block;border:2px solid #cbd5e1;"></video>`
+                    : `<iframe src="${escHtml(vidMeta.drive_preview_url || vidMeta.drive_url)}" allow="autoplay" style="width:100%;max-width:480px;height:280px;border-radius:11px;border:2px solid #86efac;background:#0f172a;display:block;"></iframe>`}
                 </div>
               `;
             })()}
@@ -1773,7 +1769,7 @@
               ${kpiItem('Sello Temporal TSA RFC 3161', tsa.ok ? `${tsa.authority || 'TSA'} (${tsa.timestamp_utc || 'OK'})` : 'No emitido')}
               ${kpiItem('Certificado Criptográfico PAdES (.p12)', pades.ok ? `${pades.subject_cn || 'AMMER'} (Emisor: ${pades.issuer_cn || '-'})` : 'No aplicado')}
             </div>
-            <div style="margin-top:0.85rem;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.75rem 0.9rem;font-size:0.76rem;color:#334155;display:flex;flex-direction:column;gap:0.4rem;">
+            <div class="firmas-section-box" style="margin-top:0.9rem;font-size:0.78rem;color:#334155;display:flex;flex-direction:column;gap:0.45rem;">
               <div><strong>Geolocalización GPS:</strong> ${gpsLink}</div>
               <div class="font-mono" style="word-break:break-all;"><strong>SHA-256 Original:</strong> ${escHtml(r.hash_sha256_original || '-')}</div>
               <div class="font-mono" style="word-break:break-all;"><strong>SHA-256 Final Firmado:</strong> ${escHtml(r.hash_sha256_firmado || '-')}</div>
@@ -2210,9 +2206,10 @@
       const btn = document.getElementById('btnModoCampo_' + k);
       if (!btn) return;
       const activo = state.editor.addModeTipo === k;
-      btn.style.outline = activo ? '2.5px solid #1d4ed8' : 'none';
-      btn.style.outlineOffset = activo ? '1px' : '0';
-      btn.style.transform = activo ? 'translateY(-1px)' : 'none';
+      btn.classList.toggle('is-active', activo);
+      btn.style.outline = '';
+      btn.style.outlineOffset = '';
+      btn.style.transform = '';
     });
   }
 
@@ -2660,13 +2657,13 @@
           const ico = (item.tipo === 'borrador' || item.origen_campo === 'campo_vacio')
             ? '🧹 '
             : (item.tipo === 'firma' ? '✍️ ' : (item.tipo === 'sello' ? '🏛️ ' : ''));
-          return `<button type="button" data-pill-id="${escHtml(item.id)}" onclick="window.seleccionarCampoEditor('${escHtml(item.id)}')" style="padding:3px 8px;border-radius:6px;border:1px solid ${act ? '#1d4ed8' : '#cbd5e1'};background:${act ? '#dbeafe' : '#ffffff'};color:${act ? '#1e3a8a' : '#334155'};font-size:0.72rem;font-weight:700;cursor:pointer;">${ico}P${item.pagina || 1}: ${escHtml(item.etiqueta || item.id)}</button>`;
+          return `<button type="button" data-pill-id="${escHtml(item.id)}" class="firmas-btn firmas-btn--xs ${act ? 'firmas-btn-primary' : ''}" onclick="window.seleccionarCampoEditor('${escHtml(item.id)}')">${ico}P${item.pagina || 1}: ${escHtml(item.etiqueta || item.id)}</button>`;
         }).join(' ');
     }
 
     if (!cont) return;
     if (!c) {
-      cont.innerHTML = '<div style="padding:1rem;background:#f8fafc;border-radius:8px;border:1px dashed #cbd5e1;font-size:0.8rem;color:#64748b;">Hacé clic sobre un cuadro en el PDF (o agregá un campo nuevo) para configurar qué dato o firmante se estampa ahí. Podés usar las flechas del teclado para ajustar posición con precisión o <strong>Ctrl + rueda</strong> para hacer zoom.</div>';
+      cont.innerHTML = '<div style="padding:1.1rem;background:#f8fafc;border-radius:12px;border:1.5px dashed #cbd5e1;font-size:0.81rem;color:#64748b;line-height:1.5;">Hacé clic sobre un cuadro en el PDF (o agregá un campo nuevo) para configurar qué dato o firmante se estampa ahí. Podés usar las flechas del teclado para ajustar posición con precisión o <strong>Ctrl + rueda</strong> para hacer zoom.</div>';
       return;
     }
 
@@ -2682,77 +2679,77 @@
         `<option value="${escHtml(f.clave)}" ${(c.firmante_clave || 'firmante_1') === f.clave ? 'selected' : ''}>${escHtml(f.label)}</option>`
       ).join('');
       extraFirmaHtml = `
-        <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:0.55rem;display:flex;flex-direction:column;gap:0.45rem;">
+        <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:0.7rem;display:flex;flex-direction:column;gap:0.5rem;">
           <div>
-            <label style="font-size:0.71rem;font-weight:800;color:#065f46;">Persona asignada a esta caja de firma:</label>
-            <select onchange="window.actualizarPropCampoEditor('firmante_clave', this.value)" style="width:100%;padding:0.35rem 0.5rem;border:1px solid #6ee7b7;border-radius:6px;font-size:0.79rem;background:#ffffff;">${fOpts}</select>
+            <label class="firmas-label" style="color:#065f46;margin-bottom:4px;">Persona asignada a esta caja de firma:</label>
+            <select class="firmas-select firmas-select--sm" onchange="window.actualizarPropCampoEditor('firmante_clave', this.value)" style="border-color:#6ee7b7;">${fOpts}</select>
           </div>
           <div>
-            <label style="font-size:0.71rem;font-weight:800;color:#065f46;">Etiqueta visible del firmante:</label>
-            <input type="text" value="${escHtml(c.firmante_etiqueta || c.etiqueta || 'Titular / Asociado')}" oninput="window.actualizarPropCampoEditor('firmante_etiqueta', this.value)" style="width:100%;padding:0.35rem 0.5rem;border:1px solid #6ee7b7;border-radius:6px;font-size:0.79rem;"/>
+            <label class="firmas-label" style="color:#065f46;margin-bottom:4px;">Etiqueta visible del firmante:</label>
+            <input type="text" class="firmas-input firmas-input--sm" value="${escHtml(c.firmante_etiqueta || c.etiqueta || 'Titular / Asociado')}" oninput="window.actualizarPropCampoEditor('firmante_etiqueta', this.value)" style="border-color:#6ee7b7;"/>
           </div>
         </div>
       `;
     }
 
     const fuenteBadge = c.fuente === 'ia_gemini'
-      ? '<span style="font-size:0.66rem;padding:1px 6px;border-radius:9999px;background:#e0e7ff;color:#3730a3;font-weight:700;">✨ IA</span>'
-      : (c.fuente === 'regla' ? '<span style="font-size:0.66rem;padding:1px 6px;border-radius:9999px;background:#fef3c7;color:#92400e;font-weight:700;">📐 Regla PDF</span>' : '');
+      ? '<span style="font-size:0.66rem;padding:2px 7px;border-radius:9999px;background:#e0e7ff;color:#3730a3;font-weight:800;">✨ IA</span>'
+      : (c.fuente === 'regla' ? '<span style="font-size:0.66rem;padding:2px 7px;border-radius:9999px;background:#fef3c7;color:#92400e;font-weight:800;">📐 Regla PDF</span>' : '');
 
     const textoPrevBox = c.texto_referencia
-      ? `<div style="font-size:0.71rem;color:#64748b;background:#fffbeb;padding:4px 6px;border-radius:5px;border:1px solid #fde68a;display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
+      ? `<div style="font-size:0.72rem;color:#64748b;background:#fffbeb;padding:0.45rem 0.65rem;border-radius:8px;border:1px solid #fde68a;display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
            <span>Texto previo detectado: "${escHtml(c.texto_referencia)}"</span>
-           ${!esBorrador ? `<button type="button" onclick="window.convertirCampoSoloBorradorEditor('${escHtml(c.id)}', true)" style="padding:2px 6px;border-radius:5px;border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;font-size:0.69rem;font-weight:700;cursor:pointer;">🧹 Borrar y dejar vacío</button>` : ''}
+           ${!esBorrador ? `<button type="button" class="firmas-btn firmas-btn--xs firmas-btn-soft-blue" onclick="window.convertirCampoSoloBorradorEditor('${escHtml(c.id)}', true)">🧹 Borrar y dejar vacío</button>` : ''}
          </div>`
       : '';
 
     cont.innerHTML = `
-      <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.8rem;display:flex;flex-direction:column;gap:0.55rem;">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.35rem;flex-wrap:wrap;">
-          <strong style="font-size:0.82rem;color:#0f172a;">Campo: ${escHtml(c.id)} (Pág. ${c.pagina || 1}) ${fuenteBadge}</strong>
-          <div style="display:flex;gap:0.3rem;flex-wrap:wrap;">
+      <div class="firmas-section-box" style="padding:0.95rem;display:flex;flex-direction:column;gap:0.65rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+          <strong style="font-size:0.83rem;color:#0f2744;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;">Campo: ${escHtml(c.id)} (Pág. ${c.pagina || 1}) ${fuenteBadge}</strong>
+          <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
             ${esBorrador
-              ? `<button type="button" onclick="window.convertirCampoSoloBorradorEditor('${escHtml(c.id)}', false)" style="padding:2px 8px;border-radius:6px;border:1px solid #d97706;background:#fffbeb;color:#b45309;font-size:0.72rem;font-weight:700;cursor:pointer;">✏️ Hacer rellenable</button>`
-              : `<button type="button" onclick="window.convertirCampoSoloBorradorEditor('${escHtml(c.id)}', true)" title="Elimina el texto previo del PDF sin pedir texto nuevo" style="padding:2px 8px;border-radius:6px;border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;font-size:0.72rem;font-weight:700;cursor:pointer;">🧹 Dejar vacío</button>`}
-            <button type="button" onclick="window.duplicarCampoEditor('${escHtml(c.id)}')" style="padding:2px 8px;border-radius:6px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-size:0.72rem;font-weight:700;cursor:pointer;">📋 Duplicar</button>
-            <button type="button" onclick="window.eliminarCampoEditor('${escHtml(c.id)}')" style="padding:2px 8px;border-radius:6px;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;font-size:0.72rem;font-weight:700;cursor:pointer;">🗑️ Quitar</button>
+              ? `<button type="button" class="firmas-btn firmas-btn--xs" onclick="window.convertirCampoSoloBorradorEditor('${escHtml(c.id)}', false)" style="border-color:#f59e0b;background:#fffbeb;color:#b45309;">✏️ Hacer rellenable</button>`
+              : `<button type="button" class="firmas-btn firmas-btn--xs firmas-btn-soft-blue" onclick="window.convertirCampoSoloBorradorEditor('${escHtml(c.id)}', true)" title="Elimina el texto previo del PDF sin pedir texto nuevo">🧹 Dejar vacío</button>`}
+            <button type="button" class="firmas-btn firmas-btn--xs firmas-btn-soft-blue" onclick="window.duplicarCampoEditor('${escHtml(c.id)}')">📋 Duplicar</button>
+            <button type="button" class="firmas-btn firmas-btn--xs firmas-btn-danger" onclick="window.eliminarCampoEditor('${escHtml(c.id)}')">🗑️ Quitar</button>
           </div>
         </div>
-        <div id="lblEditorCampoCoords" style="font-size:0.69rem;color:#475569;font-family:monospace;background:#ffffff;padding:3px 6px;border-radius:5px;border:1px solid #e2e8f0;">
+        <div id="lblEditorCampoCoords" class="font-mono" style="font-size:0.7rem;color:#475569;background:#ffffff;padding:4px 8px;border-radius:7px;border:1px solid #e2e8f0;">
           X: ${(Number(c.x_pct || 0) * 100).toFixed(1)}% · Y: ${(Number(c.y_pct || 0) * 100).toFixed(1)}% · Ancho: ${(Number(c.w_pct || 0) * 100).toFixed(1)}% · Alto: ${(Number(c.h_pct || 0) * 100).toFixed(1)}%
         </div>
         ${textoPrevBox}
         <div>
-          <label style="font-size:0.72rem;font-weight:700;color:#475569;">Etiqueta visible</label>
-          <input type="text" id="editCampoEtiqueta" value="${escHtml(c.etiqueta || '')}" oninput="window.actualizarPropCampoEditor('etiqueta', this.value)" style="width:100%;padding:0.35rem 0.5rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.8rem;"/>
+          <label for="editCampoEtiqueta" class="firmas-label" style="margin-bottom:4px;">Etiqueta visible</label>
+          <input type="text" id="editCampoEtiqueta" class="firmas-input firmas-input--sm" value="${escHtml(c.etiqueta || '')}" oninput="window.actualizarPropCampoEditor('etiqueta', this.value)"/>
         </div>
         <div>
-          <label style="font-size:0.72rem;font-weight:700;color:#475569;">Tipo / Dato del expediente a estampar</label>
-          <select id="editCampoOrigen" onchange="window.actualizarOrigenCampoEditor(this.value)" style="width:100%;padding:0.35rem 0.5rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.8rem;background:#ffffff;">${optHtml}</select>
+          <label for="editCampoOrigen" class="firmas-label" style="margin-bottom:4px;">Tipo / Dato del expediente a estampar</label>
+          <select id="editCampoOrigen" class="firmas-select firmas-select--sm" onchange="window.actualizarOrigenCampoEditor(this.value)">${optHtml}</select>
         </div>
         ${extraFirmaHtml}
         ${esBorrador ? `
-          <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:0.55rem 0.65rem;font-size:0.74rem;color:#0369a1;line-height:1.4;">
+          <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:0.65rem 0.78rem;font-size:0.74rem;color:#0369a1;line-height:1.42;">
             🧹 <strong>Modo Campo Vacío activo:</strong> al generar o firmar el PDF, todo texto precompleto (o campo previo) cubierto por este recuadro se borrará en blanco sin escribir nada encima. Podés convertirlo en rellenable en cualquier momento.
           </div>
         ` : `
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(130px,100%),1fr));gap:0.5rem;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(130px,100%),1fr));gap:0.55rem;align-items:end;">
             <div>
-              <label style="font-size:0.72rem;font-weight:700;color:#475569;">Tamaño fuente</label>
-              <input type="number" min="6" max="18" step="0.5" value="${Number(c.font_size || 10)}" oninput="window.actualizarPropCampoEditor('font_size', parseFloat(this.value) || 10)" style="width:100%;padding:0.35rem 0.5rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.8rem;"/>
+              <label class="firmas-label" style="margin-bottom:4px;">Tamaño fuente</label>
+              <input type="number" class="firmas-input firmas-input--sm" min="6" max="18" step="0.5" value="${Number(c.font_size || 10)}" oninput="window.actualizarPropCampoEditor('font_size', parseFloat(this.value) || 10)"/>
             </div>
-            <div style="display:flex;align-items:flex-end;padding-bottom:4px;">
-              <label style="display:flex;align-items:center;gap:5px;font-size:0.75rem;font-weight:600;color:#334155;cursor:pointer;" title="Blanquea el texto previo que hubiera debajo en el PDF base">
+            <div>
+              <label class="firmas-check-pill firmas-check-pill--compact" style="width:100%;justify-content:center;" title="Blanquea el texto previo que hubiera debajo en el PDF base">
                 <input type="checkbox" ${c.cubrir_fondo !== false ? 'checked' : ''} onchange="window.actualizarPropCampoEditor('cubrir_fondo', this.checked)"/>
-                🧹 Eliminar texto previo (fondo blanco)
+                <span>🧹 Fondo blanco</span>
               </label>
             </div>
           </div>
           <div>
-            <label style="font-size:0.72rem;font-weight:700;color:#475569;">Valor por defecto / texto fijo (opcional)</label>
-            <div style="display:flex;gap:4px;align-items:center;">
-              <input type="text" id="editCampoValorManual" value="${escHtml(c.valor_manual || '')}" oninput="window.actualizarPropCampoEditor('valor_manual', this.value)" style="flex:1;min-width:0;padding:0.35rem 0.5rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.8rem;" placeholder="Se usa si el dato es manual"/>
-              <button type="button" onclick="window.vaciarValorCampoEditor('${escHtml(c.id)}')" title="Borrar texto precompleto y dejar este campo vacío para completar" style="padding:0.35rem 0.55rem;border-radius:6px;border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;font-size:0.73rem;font-weight:700;cursor:pointer;white-space:nowrap;">🧹 Vaciar</button>
+            <label for="editCampoValorManual" class="firmas-label" style="margin-bottom:4px;">Valor por defecto / texto fijo (opcional)</label>
+            <div style="display:flex;gap:5px;align-items:center;">
+              <input type="text" id="editCampoValorManual" class="firmas-input firmas-input--sm" value="${escHtml(c.valor_manual || '')}" oninput="window.actualizarPropCampoEditor('valor_manual', this.value)" placeholder="Se usa si el dato es manual"/>
+              <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-soft-blue" onclick="window.vaciarValorCampoEditor('${escHtml(c.id)}')" title="Borrar texto precompleto y dejar este campo vacío para completar">🧹 Vaciar</button>
             </div>
           </div>
         `}
@@ -3607,27 +3604,27 @@
     if (!modal) {
       modal = document.createElement('div');
       modal.id = 'modalGuiaRenaperEjemplar';
-      modal.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:99999;max-width:420px;width:calc(100vw - 32px);max-height:88vh;overflow-y:auto;background:#ffffff;border:2px solid #0284c7;border-radius:14px;box-shadow:0 18px 40px rgba(15,23,42,0.28);padding:1rem;font-family:inherit;';
+      modal.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:99999;max-width:430px;width:calc(100vw - 32px);max-height:88vh;overflow-y:auto;background:#ffffff;border:1.5px solid #135596;border-radius:16px;box-shadow:0 22px 50px rgba(15,23,42,0.28);padding:1.1rem;font-family:inherit;';
       document.body.appendChild(modal);
     }
 
     const rowFn = (lbl, val, copyId, copiedAuto) => `
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:0.42rem 0.6rem;margin-bottom:0.35rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0.48rem 0.68rem;margin-bottom:0.4rem;">
         <div style="min-width:0;">
-          <div style="font-size:0.66rem;font-weight:700;color:#64748b;text-transform:uppercase;">${escHtml(lbl)}</div>
-          <div style="font-size:0.84rem;font-weight:800;color:#0f172a;word-break:break-word;">${escHtml(val || 'No informado')}${copiedAuto ? ' <span style="font-size:0.68rem;color:#059669;">(Copiado)</span>' : ''}</div>
+          <div style="font-size:0.65rem;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.03em;">${escHtml(lbl)}</div>
+          <div style="font-size:0.85rem;font-weight:800;color:#0f172a;word-break:break-word;">${escHtml(val || 'No informado')}${copiedAuto ? ' <span style="font-size:0.68rem;color:#059669;">(Copiado)</span>' : ''}</div>
         </div>
-        ${copyId && val ? `<button type="button" data-copy-renaper="${escHtml(val)}" style="padding:0.25rem 0.5rem;border-radius:6px;border:1px solid #0284c7;background:#ffffff;color:#0369a1;font-size:0.7rem;font-weight:700;cursor:pointer;flex-shrink:0;">📋 Copiar</button>` : ''}
+        ${copyId && val ? `<button type="button" class="firmas-btn firmas-btn--xs firmas-btn-soft-blue" data-copy-renaper="${escHtml(val)}">📋 Copiar</button>` : ''}
       </div>
     `;
 
     const extHintHtml = tieneExt
       ? ''
       : `
-        <details style="margin-top:0.45rem;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:0.4rem 0.6rem;font-size:0.7rem;color:#334155;">
-          <summary style="cursor:pointer;font-weight:700;color:#0f2744;">🧩 ¿Querés usar Pestaña Dividida nativa de Chrome + Autocompletado?</summary>
-          <div style="margin-top:0.35rem;line-height:1.4;">
-            1. <a href="downloads/ammer-renaper-split-view-ext.zip" download style="color:#1d4ed8;font-weight:700;text-decoration:underline;">Descargá la extensión AMMER (.zip)</a> y descomprimila.<br/>
+        <details class="firmas-accordion" style="margin-top:0.55rem;padding:0.55rem 0.75rem;font-size:0.71rem;color:#334155;">
+          <summary style="font-size:0.73rem;">🧩 ¿Querés usar Pestaña Dividida nativa de Chrome + Autocompletado?</summary>
+          <div style="margin-top:0.4rem;line-height:1.45;">
+            1. <a href="downloads/ammer-renaper-split-view-ext.zip" download style="color:#135596;font-weight:700;text-decoration:underline;">Descargá la extensión AMMER (.zip)</a> y descomprimila.<br/>
             2. En Chrome abrí <code>chrome://extensions</code>, activá <strong>Modo de desarrollador</strong> y tocá <strong>Cargar descomprimida</strong>.<br/>
             3. Recargá esta página (<code>F5</code>). Desde Chrome 155 abre RENAPER en pestaña dividida real y completa el formulario solo.
           </div>
@@ -3645,53 +3642,53 @@
       : '';
 
     modal.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
-        <div style="font-size:0.88rem;font-weight:800;color:#0f2744;">🪪 Asistente RENAPER Mi Ejemplar</div>
-        <button type="button" onclick="document.getElementById('modalGuiaRenaperEjemplar').style.display='none'" title="Ocultar asistente" style="border:none;background:#f1f5f9;color:#334155;border-radius:6px;padding:2px 8px;font-weight:800;cursor:pointer;">✕</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;margin-bottom:0.55rem;padding-bottom:0.5rem;border-bottom:1px solid #e2e8f0;">
+        <div style="font-size:0.9rem;font-weight:800;color:#0f2744;">🪪 Asistente RENAPER Mi Ejemplar</div>
+        <button type="button" class="firmas-btn firmas-btn--xs" style="width:28px;padding:0;" onclick="document.getElementById('modalGuiaRenaperEjemplar').style.display='none'" title="Ocultar asistente">✕</button>
       </div>
-      <div id="boxEstadoVentanaRenaper" style="font-size:0.72rem;border:1px solid #86efac;border-radius:8px;padding:0.4rem 0.6rem;margin-bottom:0.45rem;line-height:1.35;"></div>
-      <div style="font-size:0.74rem;color:#475569;margin-bottom:0.45rem;">Titular: <strong>${escHtml(nombre)}</strong></div>
+      <div id="boxEstadoVentanaRenaper" style="font-size:0.72rem;border:1px solid #86efac;border-radius:9px;padding:0.45rem 0.65rem;margin-bottom:0.5rem;line-height:1.38;"></div>
+      <div style="font-size:0.76rem;color:#475569;margin-bottom:0.5rem;">Titular: <strong style="color:#0f172a;">${escHtml(nombre)}</strong></div>
       ${rowFn('1. DNI (solo dígitos)', dniClean, true, Boolean(dniClean))}
       ${rowFn('2. Sexo en DNI', sexoLabel, false, false)}
       ${rowFn('3. Fecha de Nacimiento (DD/MM/AAAA)', fechaNac, Boolean(fechaNac), false)}
 
-      <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:0.55rem 0.65rem;margin:0.45rem 0;">
-        <div style="font-size:0.7rem;font-weight:800;color:#0369a1;text-transform:uppercase;margin-bottom:0.35rem;">🔎 Datos del DNI para comparar con RENAPER</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(130px,100%),1fr));gap:0.4rem;">
-          <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:7px;padding:0.35rem 0.5rem;">
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:11px;padding:0.65rem 0.75rem;margin:0.55rem 0;">
+        <div style="font-size:0.7rem;font-weight:800;color:#135596;text-transform:uppercase;margin-bottom:0.4rem;">🔎 Datos del DNI para comparar con RENAPER</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(130px,100%),1fr));gap:0.45rem;">
+          <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:9px;padding:0.42rem 0.58rem;">
             <div style="font-size:0.64rem;font-weight:700;color:#64748b;text-transform:uppercase;">Ejemplar en DNI</div>
             <div style="font-size:0.9rem;font-weight:800;color:#0f172a;">${escHtml(ejemplar ? ('Ejemplar ' + ejemplar) : 'No leído')}</div>
           </div>
-          <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:7px;padding:0.35rem 0.5rem;">
+          <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:9px;padding:0.42rem 0.58rem;">
             <div style="font-size:0.64rem;font-weight:700;color:#64748b;text-transform:uppercase;">Fecha de Emisión</div>
-            <div style="font-size:0.9rem;font-weight:800;color:#0369a1;">${escHtml(fechaEmisionFmt || 'No leída')}</div>
+            <div class="font-mono" style="font-size:0.9rem;font-weight:800;color:#135596;">${escHtml(fechaEmisionFmt || 'No leída')}</div>
           </div>
         </div>
       </div>
 
-      <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.55rem 0.65rem;margin-bottom:0.45rem;">
-        <div style="font-size:0.71rem;font-weight:800;color:#0f2744;margin-bottom:0.35rem;">⚖️ Validación Manual del Asesor</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(130px,100%),1fr));gap:0.35rem;margin-bottom:0.35rem;">
+      <div class="firmas-section-box" style="padding:0.7rem 0.78rem;margin-bottom:0.55rem;">
+        <div style="font-size:0.73rem;font-weight:800;color:#0f2744;margin-bottom:0.45rem;">⚖️ Validación Manual del Asesor</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(130px,100%),1fr));gap:0.45rem;margin-bottom:0.45rem;">
           <div>
-            <label style="display:block;font-size:0.64rem;font-weight:700;color:#475569;">Ejemplar en RENAPER</label>
-            <input type="text" id="inpRenaperCompEjemplar" maxlength="4" value="${escHtml((prevManual && prevManual.ejemplar_renaper) || ejemplar || '')}" placeholder="Ej: A / B / C" style="width:100%;box-sizing:border-box;padding:0.3rem 0.45rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.76rem;font-weight:700;text-transform:uppercase;"/>
+            <label class="firmas-label" style="font-size:0.67rem;margin-bottom:3px;">Ejemplar en RENAPER</label>
+            <input type="text" id="inpRenaperCompEjemplar" class="firmas-input firmas-input--sm" maxlength="4" value="${escHtml((prevManual && prevManual.ejemplar_renaper) || ejemplar || '')}" placeholder="Ej: A / B / C" style="font-weight:700;text-transform:uppercase;"/>
           </div>
           <div>
-            <label style="display:block;font-size:0.64rem;font-weight:700;color:#475569;">Emisión en RENAPER</label>
-            <input type="text" id="inpRenaperCompEmision" value="${escHtml((prevManual && prevManual.fecha_emision_renaper) || fechaEmisionFmt || '')}" placeholder="DD/MM/AAAA" style="width:100%;box-sizing:border-box;padding:0.3rem 0.45rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.76rem;font-weight:700;"/>
+            <label class="firmas-label" style="font-size:0.67rem;margin-bottom:3px;">Emisión en RENAPER</label>
+            <input type="text" id="inpRenaperCompEmision" class="firmas-input firmas-input--sm font-mono" value="${escHtml((prevManual && prevManual.fecha_emision_renaper) || fechaEmisionFmt || '')}" placeholder="DD/MM/AAAA" style="font-weight:700;"/>
           </div>
         </div>
-        <input type="text" id="inpRenaperCompObs" value="${escHtml((prevManual && prevManual.observaciones) || '')}" placeholder="Observaciones (opcional: coincide ejemplar y fecha)" style="width:100%;box-sizing:border-box;padding:0.3rem 0.45rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.73rem;margin-bottom:0.4rem;"/>
-        <div id="boxEstadoManualEjemplarModal" style="display:${estadoPrevDisplay};background:${estadoPrevBg};border:1px solid ${estadoPrevBd};color:${estadoPrevCol};border-radius:7px;padding:0.35rem 0.5rem;font-size:0.73rem;margin-bottom:0.4rem;">${estadoPrevTxt}</div>
-        <div style="display:flex;gap:0.4rem;">
-          <button type="button" id="btnRenaperManualValido" onclick="window.guardarDecisionManualRenaperModal(true)" style="flex:1;padding:0.42rem 0.6rem;border-radius:7px;border:1px solid #15803d;background:#15803d;color:#ffffff;font-size:0.74rem;font-weight:800;cursor:pointer;">✅ Marcar Válido</button>
-          <button type="button" id="btnRenaperManualInvalido" onclick="window.guardarDecisionManualRenaperModal(false)" style="flex:1;padding:0.42rem 0.6rem;border-radius:7px;border:1px solid #b91c1c;background:#b91c1c;color:#ffffff;font-size:0.74rem;font-weight:800;cursor:pointer;">⛔ Marcar No Válido</button>
+        <input type="text" id="inpRenaperCompObs" class="firmas-input firmas-input--sm" value="${escHtml((prevManual && prevManual.observaciones) || '')}" placeholder="Observaciones (opcional: coincide ejemplar y fecha)" style="margin-bottom:0.48rem;"/>
+        <div id="boxEstadoManualEjemplarModal" style="display:${estadoPrevDisplay};background:${estadoPrevBg};border:1px solid ${estadoPrevBd};color:${estadoPrevCol};border-radius:8px;padding:0.42rem 0.58rem;font-size:0.74rem;margin-bottom:0.48rem;">${estadoPrevTxt}</div>
+        <div style="display:flex;gap:0.45rem;">
+          <button type="button" id="btnRenaperManualValido" class="firmas-btn firmas-btn--sm firmas-btn-emerald" style="flex:1;" onclick="window.guardarDecisionManualRenaperModal(true)">✅ Marcar Válido</button>
+          <button type="button" id="btnRenaperManualInvalido" class="firmas-btn firmas-btn--sm firmas-btn-danger-solid" style="flex:1;" onclick="window.guardarDecisionManualRenaperModal(false)">⛔ Marcar No Válido</button>
         </div>
       </div>
 
-      <div style="display:flex;gap:0.45rem;margin-top:0.4rem;flex-wrap:wrap;">
-        <button type="button" id="btnCerrarVentanaRenaperModal" onclick="window.cerrarVentanaRenaperMiEjemplar()" style="flex:1;justify-content:center;align-items:center;gap:5px;padding:0.45rem 0.75rem;border-radius:8px;border:1px solid #475569;background:#475569;color:#ffffff;font-size:0.76rem;font-weight:800;cursor:pointer;">✕ Cerrar RENAPER</button>
-        <button type="button" id="btnReabrirVentanaRenaperModal" onclick="window.abrirAsistenteRenaperMiEjemplar(window._ultimoPayloadRenaperModal)" style="display:none;flex:1;justify-content:center;align-items:center;gap:5px;padding:0.45rem 0.75rem;border-radius:8px;border:1px solid #0284c7;background:#0284c7;color:#ffffff;font-size:0.76rem;font-weight:800;cursor:pointer;">↗️ Reabrir RENAPER</button>
+      <div style="display:flex;gap:0.45rem;margin-top:0.45rem;flex-wrap:wrap;">
+        <button type="button" id="btnCerrarVentanaRenaperModal" class="firmas-btn firmas-btn--sm" style="flex:1;" onclick="window.cerrarVentanaRenaperMiEjemplar()">✕ Cerrar RENAPER</button>
+        <button type="button" id="btnReabrirVentanaRenaperModal" class="firmas-btn firmas-btn--sm firmas-btn-primary" style="display:none;flex:1;" onclick="window.abrirAsistenteRenaperMiEjemplar(window._ultimoPayloadRenaperModal)">↗️ Reabrir RENAPER</button>
       </div>
       ${extHintHtml}
     `;
@@ -3747,16 +3744,16 @@
     if (!ov) {
       ov = document.createElement('div');
       ov.id = 'modalFase4FirmasOverlay';
-      ov.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(15,23,42,0.55);display:flex;align-items:center;justify-content:center;padding:1rem;';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(15,23,42,0.58);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:1rem;';
       document.body.appendChild(ov);
     }
     ov.innerHTML = `
-      <div style="background:#ffffff;border-radius:14px;max-width:660px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 24px 50px rgba(15,23,42,0.3);overflow:hidden;">
-        <div style="padding:0.9rem 1.1rem;background:#0f2744;color:#ffffff;display:flex;justify-content:space-between;align-items:center;">
-          <div style="font-weight:800;font-size:0.95rem;">${titleHtml}</div>
-          <button type="button" onclick="document.getElementById('modalFase4FirmasOverlay').style.display='none'" style="border:none;background:rgba(255,255,255,0.16);color:#ffffff;border-radius:6px;padding:3px 9px;font-weight:800;cursor:pointer;">✕</button>
+      <div style="background:#ffffff;border-radius:16px;max-width:660px;width:100%;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 24px 55px rgba(15,23,42,0.34);overflow:hidden;border:1px solid #cbd5e1;">
+        <div style="padding:0.95rem 1.2rem;background:linear-gradient(135deg,#0c2340 0%,#135596 100%);color:#ffffff;display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
+          <div style="font-weight:800;font-size:0.96rem;">${titleHtml}</div>
+          <button type="button" onclick="document.getElementById('modalFase4FirmasOverlay').style.display='none'" style="border:1px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.14);color:#ffffff;border-radius:8px;width:30px;height:30px;font-weight:800;cursor:pointer;">✕</button>
         </div>
-        <div style="padding:1rem 1.1rem;overflow-y:auto;">${bodyHtml}</div>
+        <div style="padding:1.1rem 1.2rem;overflow-y:auto;">${bodyHtml}</div>
       </div>
     `;
     ov.style.display = 'flex';
@@ -3770,13 +3767,13 @@
       const rowsHtml = evs.length === 0
         ? '<div style="padding:1rem;text-align:center;color:#64748b;">No hay eventos registrados todavía para esta solicitud.</div>'
         : evs.map((ev) => `
-          <div style="border-left:3px solid #1d4ed8;background:#f8fafc;border-radius:6px;padding:0.55rem 0.75rem;margin-bottom:0.55rem;">
+          <div style="border-left:3.5px solid #135596;background:#f8fafc;border-top:1px solid #e2e8f0;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;border-radius:9px;padding:0.6rem 0.8rem;margin-bottom:0.55rem;">
             <div style="display:flex;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;">
               <strong style="color:#0f2744;font-size:0.82rem;">${escHtml(ev.evento || '-')}</strong>
-              <span style="font-size:0.72rem;color:#475569;">${escHtml((ev.created_at || '').slice(0, 19).replace('T', ' '))} UTC</span>
+              <span class="font-mono" style="font-size:0.72rem;color:#475569;">${escHtml((ev.created_at || '').slice(0, 19).replace('T', ' '))} UTC</span>
             </div>
-            <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">IP: ${escHtml(ev.ip_origen || '-')} · UA: ${escHtml((ev.user_agent || '-').slice(0, 75))}</div>
-            ${ev.detalle_json ? `<pre style="margin:0.35rem 0 0;padding:0.4rem;background:#ffffff;border:1px solid #e2e8f0;border-radius:5px;font-size:0.68rem;overflow-x:auto;color:#334155;">${escHtml(JSON.stringify(ev.detalle_json, null, 2))}</pre>` : ''}
+            <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">IP: <span class="font-mono">${escHtml(ev.ip_origen || '-')}</span> · UA: ${escHtml((ev.user_agent || '-').slice(0, 75))}</div>
+            ${ev.detalle_json ? `<pre class="font-mono" style="margin:0.35rem 0 0;padding:0.45rem;background:#ffffff;border:1px solid #e2e8f0;border-radius:6px;font-size:0.68rem;overflow-x:auto;color:#334155;">${escHtml(JSON.stringify(ev.detalle_json, null, 2))}</pre>` : ''}
           </div>
         `).join('');
       ensureModalFase4Firmas(`🕵️ Bitácora Forense (${escHtml(solId.slice(0, 8))})`, rowsHtml);
@@ -3795,18 +3792,18 @@
       const pinNote = res.pin_otp ? `\n\n🔐 Tu nuevo PIN de seguridad para confirmar la firma es: *${res.pin_otp}*` : '';
       const msg = `Hola ${res.nombre_solicitante || 'Estimado/a'}, te reenviamos desde Asociación Mutual Modelo de Entre Ríos (AMMER) el nuevo enlace seguro para firmar "${res.plantilla_nombre || 'Documento'}":\n\n${res.url_firma}${pinNote}\n\nVigencia: 24 horas.`;
       ensureModalFase4Firmas('🔄 Enlace Renovado (24hs)', `
-        <div style="font-size:0.82rem;color:#166534;background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:0.6rem 0.8rem;margin-bottom:0.75rem;font-weight:700;">
+        <div style="font-size:0.82rem;color:#166534;background:#dcfce7;border:1px solid #86efac;border-radius:10px;padding:0.65rem 0.85rem;margin-bottom:0.75rem;font-weight:700;">
           ✅ Enlace anterior invalidado. Ya podés compartir el nuevo link por WhatsApp.
         </div>
-        ${res.pin_otp ? `<div style="margin-bottom:0.6rem;padding:0.45rem 0.7rem;border-radius:8px;background:#f5f3ff;border:1px solid #ddd6fe;color:#5b21b6;font-weight:800;font-size:0.84rem;">🔐 Nuevo PIN 2FA: <span class="font-mono">${escHtml(res.pin_otp)}</span></div>` : ''}
-        <div style="display:flex;gap:0.45rem;flex-wrap:wrap;margin-bottom:0.5rem;">
-          <input type="text" id="txtEnlaceRenovadoModal" readonly value="${escHtml(res.url_firma)}" style="flex:1;min-width:220px;padding:0.45rem 0.6rem;border:1px solid #cbd5e1;border-radius:7px;font-size:0.78rem;"/>
-          <button type="button" onclick="window.copiarInputPorId('txtEnlaceRenovadoModal', 'Nuevo enlace')" style="padding:0.45rem 0.8rem;border-radius:7px;border:1px solid #047857;background:#ffffff;color:#047857;font-size:0.76rem;font-weight:700;cursor:pointer;">📋 Copiar</button>
+        ${res.pin_otp ? `<div style="margin-bottom:0.65rem;padding:0.48rem 0.75rem;border-radius:9px;background:#f5f3ff;border:1px solid #ddd6fe;color:#5b21b6;font-weight:800;font-size:0.84rem;">🔐 Nuevo PIN 2FA: <span class="font-mono">${escHtml(res.pin_otp)}</span></div>` : ''}
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.55rem;">
+          <input type="text" id="txtEnlaceRenovadoModal" class="firmas-input firmas-input--sm font-mono" readonly value="${escHtml(res.url_firma)}" style="flex:1;min-width:220px;"/>
+          <button type="button" class="firmas-btn firmas-btn--sm" onclick="window.copiarInputPorId('txtEnlaceRenovadoModal', 'Nuevo enlace')" style="border-color:#059669;color:#047857;">📋 Copiar</button>
         </div>
-        <textarea id="txtMsgWaRenovadoModal" rows="4" style="width:100%;padding:0.45rem;border:1px solid #cbd5e1;border-radius:7px;font-size:0.78rem;margin-bottom:0.6rem;">${escHtml(msg)}</textarea>
+        <textarea id="txtMsgWaRenovadoModal" class="firmas-textarea" rows="4" style="font-size:0.79rem;margin-bottom:0.65rem;">${escHtml(msg)}</textarea>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-          <button type="button" onclick="window.copiarInputPorId('txtMsgWaRenovadoModal', 'Mensaje WhatsApp')" style="padding:0.45rem 0.85rem;border-radius:7px;border:1px solid #0f2744;background:#ffffff;color:#0f2744;font-size:0.78rem;font-weight:700;cursor:pointer;">📋 Copiar Mensaje</button>
-          <button type="button" onclick="window.abrirWhatsAppFirmante('${escHtml(res.telefono_whatsapp || '')}', 'txtMsgWaRenovadoModal')" style="padding:0.45rem 0.9rem;border-radius:7px;border:1px solid #16a34a;background:#16a34a;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;">💬 Abrir WhatsApp</button>
+          <button type="button" class="firmas-btn firmas-btn--sm" onclick="window.copiarInputPorId('txtMsgWaRenovadoModal', 'Mensaje WhatsApp')">📋 Copiar Mensaje</button>
+          <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-emerald" onclick="window.abrirWhatsAppFirmante('${escHtml(res.telefono_whatsapp || '')}', 'txtMsgWaRenovadoModal')">💬 Abrir WhatsApp</button>
         </div>
       `);
       await cargarBandejaFirmas();
@@ -3846,7 +3843,7 @@
     if (!ov) {
       ov = document.createElement('div');
       ov.id = 'modalBajaSolicitudFirmaOverlay';
-      ov.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(15,23,42,0.68);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:1rem;';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:1rem;';
       ov.addEventListener('click', (ev) => {
         if (ev.target === ov) ov.style.display = 'none';
       });
@@ -3858,56 +3855,56 @@
     try { lastWa = localStorage.getItem('AMMER_LAST_WA_BAJA_NUM') || ''; } catch (_) {}
 
     ov.innerHTML = `
-      <div style="background:#ffffff;border-radius:16px;max-width:480px;width:96vw;box-shadow:0 24px 60px rgba(15,23,42,0.38);border:1px solid #fecaca;overflow:hidden;">
-        <div style="padding:0.95rem 1.2rem;background:#991b1b;color:#ffffff;display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
+      <div style="background:#ffffff;border-radius:16px;max-width:490px;width:96vw;box-shadow:0 24px 60px rgba(15,23,42,0.38);border:1px solid #fecaca;overflow:hidden;">
+        <div style="padding:0.95rem 1.25rem;background:linear-gradient(135deg,#7f1d1d 0%,#991b1b 100%);color:#ffffff;display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
           <div style="font-weight:800;font-size:0.98rem;">🗑️ Cancelar / Desestimar / Borrar Ficha</div>
-          <button type="button" onclick="document.getElementById('modalBajaSolicitudFirmaOverlay').style.display='none'" style="border:none;background:rgba(255,255,255,0.2);color:#ffffff;border-radius:7px;padding:3px 9px;font-weight:800;cursor:pointer;">✕</button>
+          <button type="button" onclick="document.getElementById('modalBajaSolicitudFirmaOverlay').style.display='none'" style="border:1px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.16);color:#ffffff;border-radius:8px;width:30px;height:30px;font-weight:800;cursor:pointer;">✕</button>
         </div>
-        <div style="padding:1.15rem 1.25rem;">
-          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0.7rem 0.85rem;margin-bottom:0.9rem;font-size:0.8rem;">
+        <div style="padding:1.2rem 1.3rem;">
+          <div class="firmas-section-box" style="padding:0.75rem 0.9rem;margin-bottom:0.95rem;font-size:0.8rem;">
             <div style="font-weight:800;color:#0f172a;">${escHtml(row.nombre_solicitante || 'Ficha seleccionada')}</div>
             <div style="color:#475569;margin-top:2px;">DNI ${escHtml(row.dni_solicitante || '-')} · ${escHtml(row.plantilla_nombre || '-')} (${escHtml(row.estado || '-')})</div>
             <div style="color:#0f2744;margin-top:4px;font-weight:700;">👤 Responsable que quedará registrado: ${escHtml(op.nombre)} (@${escHtml(op.usuario)})</div>
           </div>
 
           <div id="bajaStep1Wrap">
-            <div style="margin-bottom:0.7rem;">
-              <label style="display:block;font-size:0.76rem;font-weight:800;color:#334155;margin-bottom:4px;">Tipo de baja / acción *</label>
-              <select id="selBajaAccionTipo" style="width:100%;padding:0.52rem 0.7rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.84rem;background:#ffffff;color:#0f172a;font-weight:700;">
+            <div style="margin-bottom:0.75rem;">
+              <label for="selBajaAccionTipo" class="firmas-label">Tipo de baja / acción *</label>
+              <select id="selBajaAccionTipo" class="firmas-select" style="font-weight:700;">
                 <option value="DESESTIMADO">Desestimar ficha (sin curso)</option>
                 <option value="CANCELADO">Cancelar solicitud</option>
                 <option value="ELIMINADO">Eliminar / Borrar ficha</option>
               </select>
             </div>
-            <div style="margin-bottom:0.7rem;">
-              <label style="display:block;font-size:0.76rem;font-weight:800;color:#334155;margin-bottom:4px;">Número de WhatsApp para enviar código de validación *</label>
-              <input type="tel" id="inpBajaWaTelefono" value="${escHtml(lastWa)}" placeholder="Ej: 3434123456 (sin 0 ni 15)" style="width:100%;padding:0.55rem 0.72rem;border:1.5px solid #cbd5e1;border-radius:8px;font-size:0.86rem;"/>
-              <div style="font-size:0.71rem;color:#64748b;margin-top:3px;">Se generará un código automático de 6 dígitos y se enviará a este WhatsApp para autorizar la baja.</div>
+            <div style="margin-bottom:0.75rem;">
+              <label for="inpBajaWaTelefono" class="firmas-label">Número de WhatsApp para enviar código de validación *</label>
+              <input type="tel" id="inpBajaWaTelefono" class="firmas-input" value="${escHtml(lastWa)}" placeholder="Ej: 3434123456 (sin 0 ni 15)"/>
+              <div style="font-size:0.71rem;color:#64748b;margin-top:4px;">Se generará un código automático de 6 dígitos y se enviará a este WhatsApp para autorizar la baja.</div>
             </div>
-            <div style="margin-bottom:0.9rem;">
-              <label style="display:block;font-size:0.76rem;font-weight:800;color:#334155;margin-bottom:4px;">Motivo / Observación (opcional)</label>
-              <input type="text" id="inpBajaMotivo" maxlength="250" placeholder="Ej: Datos erróneos, operación desistida por asociado..." style="width:100%;padding:0.52rem 0.72rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.83rem;"/>
+            <div style="margin-bottom:0.95rem;">
+              <label for="inpBajaMotivo" class="firmas-label">Motivo / Observación (opcional)</label>
+              <input type="text" id="inpBajaMotivo" class="firmas-input" maxlength="250" placeholder="Ej: Datos erróneos, operación desistida por asociado..."/>
             </div>
-            <div id="bajaErrBox1" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:8px;padding:0.55rem 0.75rem;font-size:0.79rem;font-weight:600;margin-bottom:0.75rem;"></div>
-            <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
-              <button type="button" onclick="document.getElementById('modalBajaSolicitudFirmaOverlay').style.display='none'" style="padding:0.52rem 0.9rem;border-radius:8px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.82rem;font-weight:700;cursor:pointer;">Cancelar</button>
-              <button type="button" id="btnBajaEnviarOtpWa" style="padding:0.55rem 1.05rem;border-radius:8px;border:none;background:#0f766e;color:#ffffff;font-size:0.83rem;font-weight:800;cursor:pointer;">📲 Enviar Código por WhatsApp</button>
+            <div id="bajaErrBox1" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:10px;padding:0.6rem 0.8rem;font-size:0.79rem;font-weight:600;margin-bottom:0.8rem;"></div>
+            <div style="display:flex;gap:0.55rem;justify-content:flex-end;">
+              <button type="button" class="firmas-btn" onclick="document.getElementById('modalBajaSolicitudFirmaOverlay').style.display='none'">Cancelar</button>
+              <button type="button" id="btnBajaEnviarOtpWa" class="firmas-btn firmas-btn-emerald">📲 Enviar Código por WhatsApp</button>
             </div>
           </div>
 
           <div id="bajaStep2Wrap" style="display:none;">
-            <div id="bajaOtpInfoBanner" style="background:#ecfdf5;border:1px solid #86efac;color:#166534;border-radius:10px;padding:0.65rem 0.85rem;font-size:0.8rem;font-weight:700;margin-bottom:0.85rem;"></div>
+            <div id="bajaOtpInfoBanner" style="background:#ecfdf5;border:1px solid #86efac;color:#166534;border-radius:11px;padding:0.7rem 0.9rem;font-size:0.8rem;font-weight:700;margin-bottom:0.85rem;"></div>
             <div id="bajaWaFallbackWrap" style="display:none;margin-bottom:0.85rem;">
-              <a id="lnkBajaWaManual" href="#" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:0.48rem 0.85rem;border-radius:8px;background:#16a34a;color:#ffffff;font-size:0.8rem;font-weight:800;text-decoration:none;">💬 Abrir WhatsApp Web para enviar código</a>
+              <a id="lnkBajaWaManual" href="#" target="_blank" rel="noopener" class="firmas-btn firmas-btn-emerald">💬 Abrir WhatsApp Web para enviar código</a>
             </div>
             <div style="margin-bottom:0.85rem;">
-              <label style="display:block;font-size:0.78rem;font-weight:800;color:#0f172a;margin-bottom:5px;">Ingresá el código de 6 dígitos enviado por WhatsApp *</label>
-              <input type="text" id="inpBajaOtpCodigo" inputmode="numeric" maxlength="6" placeholder="000000" style="width:100%;padding:0.65rem 0.85rem;border:2px solid #0f2744;border-radius:10px;font-size:1.35rem;font-weight:800;letter-spacing:8px;text-align:center;color:#0f172a;"/>
+              <label for="inpBajaOtpCodigo" class="firmas-label">Ingresá el código de 6 dígitos enviado por WhatsApp *</label>
+              <input type="text" id="inpBajaOtpCodigo" class="firmas-input font-mono" inputmode="numeric" maxlength="6" placeholder="000000" style="height:48px;border:2px solid #0f2744;font-size:1.35rem;font-weight:800;letter-spacing:8px;text-align:center;"/>
             </div>
-            <div id="bajaErrBox2" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:8px;padding:0.55rem 0.75rem;font-size:0.79rem;font-weight:600;margin-bottom:0.75rem;"></div>
-            <div style="display:flex;gap:0.5rem;justify-content:space-between;flex-wrap:wrap;">
-              <button type="button" id="btnBajaVolverStep1" style="padding:0.52rem 0.85rem;border-radius:8px;border:1px solid #cbd5e1;background:#ffffff;color:#334155;font-size:0.8rem;font-weight:700;cursor:pointer;">← Reenviar / Cambiar WA</button>
-              <button type="button" id="btnBajaConfirmarFinal" style="padding:0.55rem 1.05rem;border-radius:8px;border:none;background:#991b1b;color:#ffffff;font-size:0.83rem;font-weight:800;cursor:pointer;">✅ Validar Código y Confirmar Baja</button>
+            <div id="bajaErrBox2" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:10px;padding:0.6rem 0.8rem;font-size:0.79rem;font-weight:600;margin-bottom:0.8rem;"></div>
+            <div style="display:flex;gap:0.55rem;justify-content:space-between;flex-wrap:wrap;">
+              <button type="button" id="btnBajaVolverStep1" class="firmas-btn">← Reenviar / Cambiar WA</button>
+              <button type="button" id="btnBajaConfirmarFinal" class="firmas-btn firmas-btn-danger-solid">✅ Validar Código y Confirmar Baja</button>
             </div>
           </div>
         </div>
@@ -4050,21 +4047,21 @@
       const st = await apiFetchJson('/api/firmas/pades/estado', { method: 'GET' });
       const c = st.certificado || {};
       const body = `
-        <div style="font-size:0.82rem;color:#334155;margin-bottom:0.85rem;line-height:1.45;">
+        <div style="font-size:0.83rem;color:#334155;margin-bottom:0.9rem;line-height:1.48;">
           Cada documento completado recibe un sello criptográfico <strong>PAdES (.p12)</strong> embebido dentro del PDF para detectar alteraciones en Adobe Reader.
           Hoy está operando en modo: <strong style="color:#3730a3;">${escHtml(st.modo || '-')}</strong>
         </div>
-        <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.75rem;font-size:0.78rem;margin-bottom:0.85rem;">
+        <div class="firmas-section-box" style="padding:0.85rem;font-size:0.79rem;margin-bottom:0.9rem;display:flex;flex-direction:column;gap:4px;">
           <div><strong>Titular (CN):</strong> ${escHtml(c.subject_cn || '-')}</div>
           <div><strong>Emisor:</strong> ${escHtml(c.issuer_cn || '-')}</div>
           <div><strong>Tipo:</strong> ${c.autofirmado ? 'Autofirmado institucional gratuito' : 'Certificado externo / Autoridad Certificante'}</div>
           <div class="font-mono" style="margin-top:4px;word-break:break-all;"><strong>Huella SHA-256:</strong> ${escHtml(c.fingerprint_sha256 || '-')}</div>
         </div>
-        <div style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:0.75rem;margin-bottom:0.75rem;">
-          <div style="font-size:0.78rem;font-weight:800;color:#3730a3;margin-bottom:4px;">Generar .p12 autofirmado estable para fijar en Render</div>
-          <div style="font-size:0.73rem;color:#4338ca;margin-bottom:0.55rem;">Si querés mantener exactamente la misma huella entre reinicios o cuando contrates un certificado AATL/licenciado, configurá <code>PADES_P12_BASE64</code> y <code>PADES_P12_PASSWORD</code> en Render.</div>
-          <button type="button" id="btnGenerarP12Modal" style="padding:0.45rem 0.9rem;border-radius:8px;border:1px solid #4338ca;background:#4338ca;color:#ffffff;font-size:0.78rem;font-weight:700;cursor:pointer;">🔐 Generar y Descargar .p12 + Base64</button>
-          <div id="boxResultadoGenP12" style="display:none;margin-top:0.65rem;"></div>
+        <div style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:0.9rem;">
+          <div style="font-size:0.82rem;font-weight:800;color:#3730a3;margin-bottom:4px;">Generar .p12 autofirmado estable para fijar en Render</div>
+          <div style="font-size:0.74rem;color:#4338ca;margin-bottom:0.65rem;line-height:1.42;">Si querés mantener exactamente la misma huella entre reinicios o cuando contrates un certificado AATL/licenciado, configurá <code>PADES_P12_BASE64</code> y <code>PADES_P12_PASSWORD</code> en Render.</div>
+          <button type="button" id="btnGenerarP12Modal" class="firmas-btn firmas-btn--sm" style="border-color:#4338ca;background:#4338ca;color:#ffffff;">🔐 Generar y Descargar .p12 + Base64</button>
+          <div id="boxResultadoGenP12" style="display:none;margin-top:0.7rem;"></div>
         </div>
       `;
       ensureModalFase4Firmas('🔐 Certificado Criptográfico PDF PAdES (.p12)', body);
@@ -4090,9 +4087,9 @@
             if (outBox) {
               outBox.style.display = 'block';
               outBox.innerHTML = `
-                <div style="font-size:0.74rem;color:#166534;font-weight:700;margin-bottom:4px;">✅ Descargado AMMER_PAdES_Institucional.p12 (cargá su clave propia en <code>PADES_P12_PASSWORD</code> en Render)</div>
-                <textarea id="txtP12Base64Out" rows="3" readonly style="width:100%;font-size:0.68rem;padding:0.4rem;border:1px solid #cbd5e1;border-radius:6px;margin-bottom:4px;">${escHtml(g.p12Base64)}</textarea>
-                <button type="button" onclick="window.copiarInputPorId('txtP12Base64Out', 'PADES_P12_BASE64')" style="padding:0.3rem 0.7rem;border-radius:6px;border:1px solid #0f2744;background:#ffffff;color:#0f2744;font-size:0.72rem;font-weight:700;cursor:pointer;">📋 Copiar PADES_P12_BASE64</button>
+                <div style="font-size:0.75rem;color:#166534;font-weight:700;margin-bottom:5px;">✅ Descargado AMMER_PAdES_Institucional.p12 (cargá su clave propia en <code>PADES_P12_PASSWORD</code> en Render)</div>
+                <textarea id="txtP12Base64Out" class="firmas-textarea font-mono" rows="3" readonly style="font-size:0.69rem;margin-bottom:5px;">${escHtml(g.p12Base64)}</textarea>
+                <button type="button" class="firmas-btn firmas-btn--xs" onclick="window.copiarInputPorId('txtP12Base64Out', 'PADES_P12_BASE64')">📋 Copiar PADES_P12_BASE64</button>
               `;
             }
           } catch (e) {

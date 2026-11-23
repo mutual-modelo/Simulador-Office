@@ -11849,7 +11849,7 @@ ${cierreTxt}`;
       } else if (esPdf) {
         if (toolbar) toolbar.style.display = 'none';
         if (docViewerContent) {
-          docViewerContent.innerHTML = '<iframe src="' + blobUrl + '" class="doc-viewer-frame" sandbox="allow-scripts allow-same-origin allow-downloads" title="' + sanitizeHTML(file.name) + '"></iframe>';
+          renderizarPdfEnVisor_(docViewerContent, blobUrl, file.name, file);
         }
       } else {
         if (toolbar) toolbar.style.display = 'flex';
@@ -16630,6 +16630,105 @@ ${cierreTxt}`;
       return '';
     }
 
+    async function cargarPdfJsSiHaceFalta_() {
+      if (window.pdfjsLib && typeof window.pdfjsLib.getDocument === 'function') {
+        return window.pdfjsLib;
+      }
+      if (!window._ammerPdfJsPromise) {
+        window._ammerPdfJsPromise = new Promise((resolve) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+          s.integrity = 'sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e';
+          s.crossOrigin = 'anonymous';
+          s.onload = () => {
+            try {
+              if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+                window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+              }
+              resolve(window.pdfjsLib || null);
+            } catch (_) {
+              resolve(null);
+            }
+          };
+          s.onerror = () => resolve(null);
+          document.head.appendChild(s);
+        });
+      }
+      return window._ammerPdfJsPromise;
+    }
+
+    async function renderizarPdfEnVisor_(wrap, pdfUrl, nombreDoc, pdfBlob = null) {
+      if (!wrap || !pdfUrl) return;
+      const safeName = sanitizeHTML(nombreDoc || 'Documento.pdf');
+      const safeUrl = sanitizeHTML(pdfUrl);
+
+      let tieneFirmaPdf = false;
+      try {
+        const b = pdfBlob || (pdfUrl.startsWith('blob:') ? await fetch(pdfUrl).then(r => r.blob()) : null);
+        if (b && b.size >= 5) {
+          const headTxt = await b.slice(0, 16).text();
+          tieneFirmaPdf = headTxt.includes('%PDF-');
+        }
+      } catch (_) {}
+
+      const fallbackIframeHtml = tieneFirmaPdf
+        ? '<iframe src="' + safeUrl + '" class="doc-viewer-frame" title="' + safeName + '"></iframe>'
+        : '<iframe src="' + safeUrl + '" class="doc-viewer-frame" sandbox="allow-downloads" title="' + safeName + '"></iframe>';
+
+      try {
+        const pdfjs = await cargarPdfJsSiHaceFalta_();
+        if (!pdfjs) {
+          wrap.innerHTML = fallbackIframeHtml;
+          return;
+        }
+        const ab = pdfBlob ? await pdfBlob.arrayBuffer() : await fetch(pdfUrl).then(r => r.arrayBuffer());
+        const doc = await pdfjs.getDocument({ data: new Uint8Array(ab) }).promise;
+        const numPages = doc.numPages || 1;
+
+        wrap.innerHTML =
+          '<div style="display:flex;flex-direction:column;width:100%;height:100%;background:#1e293b;border-radius:10px;overflow:hidden;">' +
+            '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;background:#0f172a;color:#e2e8f0;font-size:12px;border-bottom:1px solid rgba(148,163,184,0.2);">' +
+              '<span>📄 <strong>' + safeName + '</strong> • ' + numPages + (numPages === 1 ? ' página' : ' páginas') + '</span>' +
+              '<a href="' + safeUrl + '" target="_blank" rel="noopener noreferrer" style="color:#93c5fd;text-decoration:none;font-weight:600;">↗ Abrir en pestaña nueva</a>' +
+            '</div>' +
+            '<div id="pdfJsPagesContainer" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;align-items:center;gap:12px;"></div>' +
+          '</div>';
+
+        const pagesBox = wrap.querySelector('#pdfJsPagesContainer');
+        if (!pagesBox) return;
+
+        for (let pNum = 1; pNum <= numPages; pNum++) {
+          if (!document.body.contains(pagesBox)) return;
+          const page = await doc.getPage(pNum);
+          const baseVp = page.getViewport({ scale: 1.0 });
+          const targetWidth = Math.min(860, Math.max(320, (wrap.clientWidth || 760) - 44));
+          const scale = targetWidth / (baseVp.width || 600);
+          const vp = page.getViewport({ scale: Math.min(2.0, Math.max(1.1, scale)) });
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.floor(vp.width * dpr);
+          canvas.height = Math.floor(vp.height * dpr);
+          canvas.style.width = Math.floor(vp.width) + 'px';
+          canvas.style.height = 'auto';
+          canvas.style.maxWidth = '100%';
+          canvas.style.background = '#ffffff';
+          canvas.style.borderRadius = '6px';
+          canvas.style.boxShadow = '0 4px 18px rgba(0,0,0,0.35)';
+
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            pagesBox.appendChild(canvas);
+            await page.render({ canvasContext: ctx, viewport: vp }).promise;
+          }
+        }
+      } catch (errPdf) {
+        console.warn('Fallback de visor PDF nativo tras error PDF.js:', errPdf);
+        wrap.innerHTML = fallbackIframeHtml;
+      }
+    }
+
     async function cargarBlobUrlDriveAutenticado_(fileId, downloadMode = false) {
       if (!fileId || !RENDER_API_URL || RENDER_API_URL.includes('[TU_API]') || typeof getApiAuthToken !== 'function' || !getApiAuthToken()) {
         return null;
@@ -16641,7 +16740,7 @@ ${cierreTxt}`;
       if (!blob || blob.size === 0) return null;
       const objUrl = URL.createObjectURL(blob);
       registrarObjectUrlVisor(objUrl);
-      return { objUrl, mime: String(blob.type || '').toLowerCase() };
+      return { objUrl, mime: String(blob.type || '').toLowerCase(), blob };
     }
 
     function renderizarDocumento(docObj, expedienteLabel, solicitudId, adjuntoIndex) {
@@ -16680,12 +16779,12 @@ ${cierreTxt}`;
         return;
       }
 
-      // 2. PDF / Documento en Base64 -> convertir a Blob URL seguro
+      // 2. PDF / Documento en Base64 -> renderizar con PDF.js (Desktop y Móvil)
       if (rawBase64 && !isImage) {
         if (toolbar) toolbar.style.display = 'none';
         const pdfBlobUrl = base64ToPdfObjectUrl(rawBase64);
         if (pdfBlobUrl) {
-          wrap.innerHTML = '<iframe src="' + sanitizeHTML(pdfBlobUrl) + '" class="doc-viewer-frame" sandbox="allow-scripts allow-same-origin allow-downloads" title="' + sanitizeHTML(nombreDoc) + '"></iframe>';
+          renderizarPdfEnVisor_(wrap, pdfBlobUrl, nombreDoc);
           return;
         }
       }
@@ -16704,14 +16803,17 @@ ${cierreTxt}`;
             } else if (resProxy.mime.startsWith('video/') || /\.(mp4|webm|mov|m4v|ogg)$/i.test(nombreDoc)) {
               if (toolbar) toolbar.style.display = 'none';
               wrap.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#020617;border-radius:10px;overflow:hidden;"><video src="' + sanitizeHTML(resProxy.objUrl) + '" controls playsinline style="width:100%;height:100%;max-height:74vh;background:#020617;"></video></div>';
+            } else if (resProxy.mime.includes('pdf') || /\.pdf$/i.test(nombreDoc)) {
+              if (toolbar) toolbar.style.display = 'none';
+              renderizarPdfEnVisor_(wrap, resProxy.objUrl, nombreDoc, resProxy.blob || null);
             } else {
               if (toolbar) toolbar.style.display = 'none';
-              wrap.innerHTML = '<iframe src="' + sanitizeHTML(resProxy.objUrl) + '" class="doc-viewer-frame" sandbox="allow-scripts allow-same-origin allow-downloads" title="' + sanitizeHTML(nombreDoc) + '"></iframe>';
+              wrap.innerHTML = '<iframe src="' + sanitizeHTML(resProxy.objUrl) + '" class="doc-viewer-frame" sandbox="allow-downloads" title="' + sanitizeHTML(nombreDoc) + '"></iframe>';
             }
             return;
           }
           if (previewUrl) {
-            wrap.innerHTML = '<iframe src="' + sanitizeHTML(previewUrl) + '" class="doc-viewer-frame" allow="autoplay" referrerpolicy="no-referrer" title="' + sanitizeHTML(nombreDoc) + '"></iframe>';
+            wrap.innerHTML = '<iframe src="' + sanitizeHTML(previewUrl) + '" class="doc-viewer-frame" allow="storage-access; autoplay" referrerpolicy="no-referrer" title="' + sanitizeHTML(nombreDoc) + '"></iframe>';
           }
         }).catch(() => {
           if (previewUrl) {

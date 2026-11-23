@@ -3916,7 +3916,7 @@
           <div class="login-card-header">
             <img src="logo.png" alt="Mutual Modelo" class="login-logo-img" onerror="handleLogoFallback(this)"/>
             <h1>Acceso al Sistema</h1>
-            <p>Simulador y Plataforma Operativa de Ayudas Económicas</p>
+            <p>Ecosistema AMMER</p>
           </div>
           <div class="login-card-body">
             <div id="loginErrorMsg" class="login-error-alert"></div>
@@ -4392,7 +4392,8 @@
                 <button type="button" class="btn-wa-icon" onclick="restablecerPlantillaPorDefecto()" title="Restablecer plantilla por defecto" aria-label="Restablecer plantilla por defecto">🔄</button>
                 <span class="wa-actions-divider" aria-hidden="true"></span>
                 <button type="button" class="btn-copy" onclick="copyWhatsAppText()" title="Copiar texto al portapapeles">📋 Copiar</button>
-                <button type="button" class="btn-whatsapp-send" onclick="sendWhatsApp()" title="Abrir conversación directa en WhatsApp">📲 Enviar</button>
+                <button type="button" class="btn-whatsapp-send" onclick="sendWhatsApp()" title="Abrir conversación directa en WhatsApp Web">📲 Enviar</button>
+                <button type="button" class="btn-copy" onclick="sendWhatsAppViaBot()" title="Enviar directamente desde la línea asignada del Bot WhatsApp AMMER" style="border-color:#15803d;color:#15803d;background:#f0fdf4;font-weight:700;">🤖 Bot</button>
               </div>
             </div>
           </div>
@@ -5576,6 +5577,85 @@
                     <button type="button" onclick="guardarPlantillaDesdeEditor()" style="flex:1;padding:0.55rem 0.75rem;border-radius:8px;border:1px solid #059669;background:#059669;color:#ffffff;font-size:0.8rem;font-weight:800;cursor:pointer;">💾 Guardar Plantilla</button>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISTA EXCLUSIVA ADMIN: CENTRO MULTI-LÍNEA WHATSAPP BOT -->
+      <section id="view-whatsapp-bot" class="app-view">
+        <div class="main-panel" style="max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:1rem;">
+          <!-- HERO & ACCIONES GLOBALES -->
+          <div style="background:linear-gradient(135deg,#0f2744 0%,#14532d 100%);color:#ffffff;border-radius:16px;padding:1.2rem 1.35rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;box-shadow:0 6px 20px rgba(15,39,68,0.16);">
+            <div style="flex:1;min-width:240px;">
+              <div style="font-size:1.12rem;font-weight:800;letter-spacing:-0.01em;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span>🤖 Whatsapp Bot — Centro Multi-Línea AMMER</span>
+                <span style="padding:2px 8px;border-radius:9999px;background:rgba(255,255,255,0.18);font-size:0.68rem;font-weight:800;">SOLO ADMIN</span>
+              </div>
+              <div style="font-size:0.8rem;color:rgba(255,255,255,0.86);margin-top:4px;line-height:1.45;">
+                Conectá una o varias líneas WhatsApp mediante código QR, cerrá o rotá sesiones en vivo y elegí qué número atiende validaciones eKYC/OTP, recordatorios, propuestas y consultas a Sidecreer.
+              </div>
+              <div id="waBotSummaryKpis" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:0.75rem;"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;min-width:260px;">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <input type="text" id="inpWaBotNuevoAlias" maxlength="60" placeholder="Nombre nueva línea (ej: Propuestas)" style="flex:1;min-width:170px;padding:0.48rem 0.7rem;border-radius:8px;border:1px solid rgba(255,255,255,0.35);background:rgba(255,255,255,0.95);color:#0f172a;font-size:0.79rem;font-weight:600;"/>
+                <button type="button" id="btnWaBotCrearLinea" onclick="window.crearNuevaLineaWhatsappBotAdmin()" style="padding:0.48rem 0.9rem;border-radius:8px;border:none;background:#22c55e;color:#ffffff;font-size:0.78rem;font-weight:800;cursor:pointer;white-space:nowrap;">➕ Nueva Línea QR</button>
+              </div>
+              <div style="display:flex;justify-content:flex-end;">
+                <button type="button" id="btnWaBotRefresh" onclick="window.cargarPanelWhatsappBotAdmin(false)" style="padding:0.42rem 0.85rem;border-radius:8px;border:1px solid rgba(255,255,255,0.35);background:rgba(255,255,255,0.12);color:#ffffff;font-size:0.76rem;font-weight:700;cursor:pointer;">🔄 Actualizar Estado y QR</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="waBotWorkerNotice" style="display:none;padding:0.8rem 1rem;border-radius:10px;border:1px solid #cbd5e1;font-size:0.8rem;line-height:1.45;"></div>
+
+          <!-- GRILLA DE LÍNEAS WHATSAPP CONECTADAS / QR -->
+          <div>
+            <div style="font-size:0.86rem;font-weight:800;color:#0f172a;margin-bottom:0.55rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+              <span>📱 Líneas WhatsApp Conectadas y Sesiones QR</span>
+              <span style="font-size:0.73rem;color:#64748b;font-weight:600;">Podés editar el nombre de cada línea y luego presionar “Guardar Configuración” abajo.</span>
+            </div>
+            <div id="waBotSessionsGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:0.9rem;">
+              <div style="padding:1.5rem;text-align:center;color:#64748b;font-size:0.82rem;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;">Cargando sesiones WhatsApp...</div>
+            </div>
+          </div>
+
+          <!-- MATRIZ DE ENRUTAMIENTO: QUÉ ACCIONES USA CADA LÍNEA -->
+          <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:14px;padding:1.1rem 1.2rem;box-shadow:0 2px 8px rgba(15,23,42,0.04);">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:0.75rem;">
+              <div>
+                <div style="font-size:0.92rem;font-weight:800;color:#0f172a;">🔀 Configuración de Acciones por Número Conectado</div>
+                <div style="font-size:0.76rem;color:#64748b;">Definí qué línea WhatsApp se utiliza automáticamente para cada operación del ecosistema.</div>
+              </div>
+              <button type="button" id="btnWaBotGuardarConfig" onclick="window.guardarConfigWhatsappBotAdmin()" style="padding:0.52rem 1rem;border-radius:9px;border:none;background:#0f2744;color:#ffffff;font-size:0.79rem;font-weight:800;cursor:pointer;">💾 Guardar Configuración de Acciones</button>
+            </div>
+            <div id="waBotRoutingContainer" style="display:flex;flex-direction:column;gap:0.55rem;"></div>
+            <label style="display:flex;align-items:center;gap:8px;margin-top:0.85rem;padding:0.6rem 0.75rem;border-radius:8px;background:#f0fdf4;border:1px solid #bbf7d0;font-size:0.78rem;font-weight:700;color:#166534;cursor:pointer;">
+              <input type="checkbox" id="chkWaBotFallbackAuto" checked style="width:16px;height:16px;accent-color:#16a34a;"/>
+              <span>Respaldo automático: si la línea asignada está desconectada o cerrada, usar otra línea conectada disponible antes de pasar a enlace manual.</span>
+            </label>
+          </div>
+
+          <!-- PRUEBA RÁPIDA DE ENVÍO -->
+          <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:14px;padding:1rem 1.2rem;box-shadow:0 2px 8px rgba(15,23,42,0.04);">
+            <div style="font-size:0.88rem;font-weight:800;color:#0f172a;margin-bottom:0.55rem;">🧪 Prueba Rápida de Envío desde una Línea Específica</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.6rem;align-items:end;">
+              <div>
+                <label style="display:block;font-size:0.72rem;font-weight:700;color:#475569;margin-bottom:3px;">Línea emisora</label>
+                <select id="selWaBotTestSession" style="width:100%;padding:0.48rem 0.65rem;border-radius:8px;border:1px solid #cbd5e1;font-size:0.79rem;font-weight:700;background:#ffffff;"></select>
+              </div>
+              <div>
+                <label style="display:block;font-size:0.72rem;font-weight:700;color:#475569;margin-bottom:3px;">Teléfono destino</label>
+                <input type="tel" id="inpWaBotTestPhone" placeholder="549343..." style="width:100%;padding:0.48rem 0.65rem;border-radius:8px;border:1px solid #cbd5e1;font-size:0.79rem;box-sizing:border-box;"/>
+              </div>
+              <div>
+                <label style="display:block;font-size:0.72rem;font-weight:700;color:#475569;margin-bottom:3px;">Mensaje de prueba</label>
+                <input type="text" id="inpWaBotTestMsg" value="Prueba de conexión AMMER WhatsApp Bot ✅" style="width:100%;padding:0.48rem 0.65rem;border-radius:8px;border:1px solid #cbd5e1;font-size:0.79rem;box-sizing:border-box;"/>
+              </div>
+              <div>
+                <button type="button" id="btnWaBotProbarEnvio" onclick="window.probarEnvioWhatsappBotAdmin()" style="width:100%;padding:0.52rem 0.9rem;border-radius:8px;border:none;background:#16a34a;color:#ffffff;font-size:0.79rem;font-weight:800;cursor:pointer;">📲 Enviar Prueba</button>
               </div>
             </div>
           </div>
@@ -9870,6 +9950,21 @@ ${cierreTxt}`;
       window.open(url, '_blank', 'noopener,noreferrer');
     }
 
+    function sendWhatsAppViaBot() {
+      const text = document.getElementById('txt-plantilla-whatsapp')?.value || '';
+      const phoneInput = (document.getElementById('inp-whatsapp-telefono')?.value || '').trim().replace(/[^0-9]/g, '');
+      if (phoneInput.length < 8) {
+        showToast('⚠️ Ingresá el número de teléfono destino antes de enviar por Bot WhatsApp.', 'warning');
+        document.getElementById('inp-whatsapp-telefono')?.focus();
+        return;
+      }
+      if (typeof window.enviarMensajeViaBotAmmerConFallback === 'function') {
+        window.enviarMensajeViaBotAmmerConFallback(phoneInput, text, sendWhatsApp);
+      } else {
+        sendWhatsApp();
+      }
+    }
+
     function setLinea(lineaKey) { if (!FINANCIAL_DATA[lineaKey]) return; state.linea = lineaKey; renderApp(); }
     function setModo(modoKey) {
       if (modoKey !== 'neto' && modoKey !== 'cuota') return;
@@ -10599,7 +10694,10 @@ ${cierreTxt}`;
         'mis-gestiones': 'view-mutual-propias',
         'view-mutual-propias': 'view-mutual-propias',
         'comercializador': 'view-comercializador',
-        'view-comercializador': 'view-comercializador'
+        'view-comercializador': 'view-comercializador',
+        'whatsapp-bot': 'view-whatsapp-bot',
+        'whatsapp': 'view-whatsapp-bot',
+        'view-whatsapp-bot': 'view-whatsapp-bot'
       };
       const targetViewId = mapaVistas[k] || vistaKey;
       cambiarPestana(targetViewId);
@@ -10609,6 +10707,10 @@ ${cierreTxt}`;
       const sess = getSession();
       if (!sess && viewId !== 'view-login') {
         viewId = 'view-login';
+      }
+
+      if (viewId !== 'view-whatsapp-bot' && typeof window.detenerPollingWhatsappBotAdmin === 'function') {
+        window.detenerPollingWhatsappBotAdmin();
       }
 
       const loginWrapper = document.getElementById('loginScreenWrapper');
@@ -10658,6 +10760,9 @@ ${cierreTxt}`;
         } else if (viewId === 'view-ficha-asociado') {
           titleEl.textContent = 'Padrón y Fichas de Asociados';
           subEl.textContent = 'Consulta integral de documentación y solicitudes';
+        } else if (viewId === 'view-whatsapp-bot') {
+          titleEl.textContent = 'Whatsapp Bot';
+          subEl.textContent = 'Gestión multi-línea QR, sesiones conectadas y enrutamiento de acciones (Admin)';
         } else if (viewId === 'view-comercializador') {
           titleEl.textContent = sess.es_titular_organizacion ? 'Gestiones Organización' : 'Mis Gestiones';
           subEl.textContent = 'Seguimiento operativo y alta de solicitudes de ayuda económica';
@@ -10672,6 +10777,16 @@ ${cierreTxt}`;
 
       const skipSync = Boolean(options && options.skipCloudSync);
 
+      if (viewId === 'view-whatsapp-bot') {
+        if (!esAdminAuditoria()) {
+          showToast('⛔ Acceso restringido: Whatsapp Bot solo está habilitado para rol Admin.');
+          cambiarPestana('view-simulador');
+          return;
+        }
+        if (typeof window.initWhatsappBotPanelAdmin === 'function') {
+          window.initWhatsappBotPanelAdmin();
+        }
+      }
       if (viewId === 'view-comercializador') {
         renderModuloComercializador();
         if (!skipSync) cargarSolicitudesDesdeNube(true);
@@ -10796,6 +10911,8 @@ ${cierreTxt}`;
         const iconRedComercial = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>';
         const iconBoveda = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>';
         const iconAyuda = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+        const iconWhatsappBot = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>';
+        const esAdminMenu = Boolean(session && String(session.rol || '').toLowerCase().includes('admin'));
 
         const itemAuditoriaIA = '<button type="button" id="btnNavAuditoriaIA" class="sidebar-nav-item" data-view="vistaAuditoriaIA" data-tooltip="Auditoría IA" onclick="cambiarVistaPrincipal(\'auditoria-ia\')">' +
           '<span class="sidebar-nav-icon" style="color:#818cf8;">' + iconAuditoriaIA + '</span>' +
@@ -10831,6 +10948,11 @@ ${cierreTxt}`;
           html += '<a href="https://drive.google.com/drive/folders/1jGnj7xiI76Ck9YQN5cWLSLJt9Tes1LL9" target="_blank" rel="noopener noreferrer" id="btn-sidebar-boveda" class="sidebar-nav-item" style="text-decoration:none;" data-tooltip="3en1 Drive" onclick="return abrir3en1Drive(event)">' +
             '<span class="sidebar-nav-icon">' + iconBoveda + '</span>' +
             '<span class="sidebar-nav-label ' + textCls + '">3en1 Drive</span></a>';
+          if (esAdminMenu) {
+            html += '<button type="button" id="btnNavWhatsappBot" class="sidebar-nav-item" data-view="view-whatsapp-bot" data-tooltip="Whatsapp Bot" onclick="cambiarPestana(\'view-whatsapp-bot\')">' +
+              '<span class="sidebar-nav-icon" style="color:#4ade80;">' + iconWhatsappBot + '</span>' +
+              '<span class="sidebar-nav-label ' + textCls + '" style="display:flex;align-items:center;gap:6px;"><span>Whatsapp Bot</span><span id="navWaBotStatusDot" style="display:none;min-width:17px;height:17px;padding:0 5px;border-radius:9999px;font-size:0.65rem;font-weight:800;align-items:center;justify-content:center;"></span></span></button>';
+          }
         } else {
           const tabName = session.es_titular_organizacion ? 'Gestiones Org.' : 'Mis Gestiones';
           html += '<button type="button" class="sidebar-nav-item active" data-view="view-simulador" data-tooltip="Simulador" onclick="cambiarPestana(\'view-simulador\')">' +
@@ -15407,7 +15529,10 @@ ${cierreTxt}`;
           '</div>' +
 
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:4px;flex-wrap:wrap;">' +
-            '<button type="button" class="btn-copy" style="font-size:0.68rem;padding:4px 7px;" onclick="copiarPropuestaWhatsApp(\'' + s.id + '\')">📋 Copiar Oferta para WhatsApp</button>' +
+            '<div style="display:flex;gap:4px;flex-wrap:wrap;">' +
+              '<button type="button" class="btn-copy" style="font-size:0.68rem;padding:4px 7px;" onclick="copiarPropuestaWhatsApp(\'' + s.id + '\')">📋 Copiar Oferta</button>' +
+              '<button type="button" class="btn-copy" style="font-size:0.68rem;padding:4px 7px;border-color:#15803d;color:#15803d;background:#f0fdf4;font-weight:700;" onclick="enviarPropuestaWhatsAppPorBot(\'' + s.id + '\')">🤖 Enviar por Bot</button>' +
+            '</div>' +
             '<button type="submit" class="btn-primary-action" style="width:auto;font-size:0.7rem;padding:5px 10px;font-weight:700;">Actualizar / Registrar Nueva Propuesta 💼</button>' +
           '</div>' +
         '</form>';
@@ -15434,8 +15559,9 @@ ${cierreTxt}`;
           }
 
           html += '<div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">Nota Mutual: <em>"' + (prop.detalle || 'Propuesta crediticia lista') + '"</em></div>' +
-            '<div style="margin-top:8px;">' +
+            '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">' +
               '<button type="button" class="btn-copy" style="font-size:0.7rem;padding:4px 8px;" onclick="copiarPropuestaWhatsApp(\'' + s.id + '\')">📲 Copiar Propuesta para WhatsApp</button>' +
+              '<button type="button" class="btn-copy" style="font-size:0.7rem;padding:4px 8px;border-color:#15803d;color:#15803d;background:#f0fdf4;font-weight:700;" onclick="enviarPropuestaWhatsAppPorBot(\'' + s.id + '\')">🤖 Enviar por Bot</button>' +
             '</div>';
         } else {
           html += '<p style="color:var(--text-muted);font-size:0.72rem;padding:0.75rem 0;">La mutual está auditando el legajo. Aún no se ha emitido una contraoferta formal.</p>';
@@ -16245,18 +16371,7 @@ ${cierreTxt}`;
       verFichaCompleta(id);
     }
 
-    function copiarPropuestaWhatsApp(id, versionNum) {
-      const s = getStoredSolicitudes().find(x => String(x.id) === String(id)); if (!s) return;
-      let p = s.propuestaMutual;
-      if (versionNum !== undefined && versionNum !== null && s.historialPropuestas) {
-        const vMatch = s.historialPropuestas.find(v => Number(v.version) === Number(versionNum));
-        if (vMatch) p = vMatch;
-      }
-      if (!p || !p.activa) {
-        showToast('No hay una propuesta activa para copiar ⚠️');
-        return;
-      }
-
+    function _armarTextoPropuestaWhatsApp(s, p) {
       let texto = `¡Hola ${s.solicitante.nombre}! 👋 Desde Mutual Modelo te informamos que hemos analizado tu legajo crediticio:
 
 📋 *Propuesta Oficial de Ayuda Económica (Versión v${p.version || 1}):*
@@ -16283,12 +16398,60 @@ ${cierreTxt}`;
       }
 
       texto += `\n\n📲 Respondé a este mensaje para coordinar la firma y acreditación bancaria inmediata.`;
+      return texto;
+    }
 
+    function _resolverPropuestaParaWhatsApp(id, versionNum) {
+      const s = getStoredSolicitudes().find(x => String(x.id) === String(id));
+      if (!s) return null;
+      let p = s.propuestaMutual;
+      if (versionNum !== undefined && versionNum !== null && s.historialPropuestas) {
+        const vMatch = s.historialPropuestas.find(v => Number(v.version) === Number(versionNum));
+        if (vMatch) p = vMatch;
+      }
+      if (!p || !p.activa) return { s, p: null };
+      return { s, p };
+    }
+
+    function copiarPropuestaWhatsApp(id, versionNum) {
+      const res = _resolverPropuestaParaWhatsApp(id, versionNum);
+      if (!res) return;
+      if (!res.p) {
+        showToast('No hay una propuesta activa para copiar ⚠️');
+        return;
+      }
+      const texto = _armarTextoPropuestaWhatsApp(res.s, res.p);
       navigator.clipboard.writeText(texto).then(() => {
-        showToast('Propuesta ' + (p.version ? ('v' + p.version + ' ') : '') + 'copiada para WhatsApp 📋');
+        showToast('Propuesta ' + (res.p.version ? ('v' + res.p.version + ' ') : '') + 'copiada para WhatsApp 📋');
       }).catch(() => {
         showToast('Propuesta copiada 📋');
       });
+    }
+
+    function enviarPropuestaWhatsAppPorBot(id, versionNum) {
+      const res = _resolverPropuestaParaWhatsApp(id, versionNum);
+      if (!res) return;
+      if (!res.p) {
+        showToast('No hay una propuesta activa para enviar ⚠️');
+        return;
+      }
+      const texto = _armarTextoPropuestaWhatsApp(res.s, res.p);
+      const tel = String(res.s?.solicitante?.telefono || '').trim();
+      const telPrompt = tel || String(window.prompt('Ingresá el número de WhatsApp destino (ej: 3435123456):', '') || '').trim();
+      if (!telPrompt || telPrompt.replace(/\D/g, '').length < 8) {
+        showToast('⚠️ No hay un número de WhatsApp válido en el expediente.', 'warning');
+        return;
+      }
+      const fallbackWa = () => {
+        const clean = telPrompt.replace(/\D/g, '');
+        const waNum = clean.startsWith('54') ? clean : ('549' + clean.replace(/^0+/, ''));
+        window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(texto)}`, '_blank', 'noopener,noreferrer');
+      };
+      if (typeof window.enviarMensajeViaBotAmmerConFallback === 'function') {
+        window.enviarMensajeViaBotAmmerConFallback(telPrompt, texto, fallbackWa);
+      } else {
+        fallbackWa();
+      }
     }
 
     /* VISOR DOCUMENTAL ONLINE IN-APP (SIN SALIR DEL LEGAJO DIGITAL) */
@@ -25687,7 +25850,8 @@ ${cierreTxt}`;
   <script src="js/boletinER.js?v=6"></script>
   <script src="js/auditoria20.js?v=6"></script>
   <script src="js/fichasAsociados.js?v=6"></script>
-  <script src="js/sidecreerWidget.js?v=10"></script>
+  <script src="js/sidecreerWidget.js?v=11"></script>
   <script src="js/firmasAmmer.js?v=17"></script>
+  <script src="js/whatsappBotAdmin.js?v=1"></script>
 </body>
 </html>

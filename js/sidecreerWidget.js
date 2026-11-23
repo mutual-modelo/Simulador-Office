@@ -315,6 +315,10 @@
       if (typeof global.showToast === 'function') global.showToast('⛔ Solo usuarios Admin pueden gestionar la vinculación WhatsApp.');
       return;
     }
+    if (document.getElementById('view-whatsapp-bot') && typeof global.cambiarPestana === 'function') {
+      global.cambiarPestana('view-whatsapp-bot');
+      return;
+    }
     if (typeof global.abrirModal === 'function') {
       global.abrirModal('modalAdminWhatsAppSidecreer');
     }

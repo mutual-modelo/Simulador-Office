@@ -208,9 +208,18 @@
           ${svgHtml.replace('<svg ', '<svg style="width:100%;height:100%;display:block;" ')}
         </div>
         <div class="font-mono" style="font-size:0.72rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:0.5rem;word-break:break-all;margin-bottom:0.75rem;">${escHtml(url)}</div>
-        <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-soft-blue" onclick="navigator.clipboard.writeText('${escHtml(url)}').then(()=>window.notificarSistema && window.notificarSistema('Enlace copiado','success'))">📋 Copiar Enlace</button>
+        <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-soft-blue js-firmas-copy-url" data-copy-url="${escHtml(url)}">📋 Copiar Enlace</button>
       </div>
     `);
+    const btnCopyQr = document.querySelector('#modalFase4FirmasOverlay .js-firmas-copy-url');
+    if (btnCopyQr) {
+      btnCopyQr.addEventListener('click', () => {
+        const u = btnCopyQr.getAttribute('data-copy-url') || '';
+        if (navigator.clipboard && u) {
+          navigator.clipboard.writeText(u).then(() => window.notificarSistema && window.notificarSistema('Enlace copiado', 'success'));
+        }
+      });
+    }
   }
 
   function guardarEnlaceCacheado_(solId, info) {
@@ -701,6 +710,19 @@
     const cont = document.getElementById('firmaMultifirmantesContainer');
     if (!cont) return;
     const ctx = ctxOpt || construirContextoDesdeExpediente(getExpedienteSeleccionadoEnGenerador());
+    const mpCtx = global._mpContextoParaFirmas;
+    if (mpCtx && state.firmantesGenerar[0]) {
+      if (mpCtx.fullName && (mpCtx._forceApply || !state.firmantesGenerar[0].nombre)) {
+        state.firmantesGenerar[0].nombre = mpCtx.fullName;
+      }
+      if (mpCtx.dni && (mpCtx._forceApply || !state.firmantesGenerar[0].dni)) {
+        state.firmantesGenerar[0].dni = mpCtx.dni;
+      }
+      if (mpCtx.phone && (mpCtx._forceApply || !state.firmantesGenerar[0].telefono)) {
+        state.firmantesGenerar[0].telefono = mpCtx.phone;
+      }
+      mpCtx._forceApply = false;
+    }
     if (state.firmantesGenerar[0]) {
       if (!state.firmantesGenerar[0].nombre && ctx.solicitante.nombre) state.firmantesGenerar[0].nombre = ctx.solicitante.nombre;
       if (!state.firmantesGenerar[0].dni && ctx.solicitante.dni) state.firmantesGenerar[0].dni = ctx.solicitante.dni;
@@ -1213,7 +1235,7 @@
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
                   <button type="button" class="firmas-btn firmas-btn--sm" onclick="window.copiarInputPorId('txtMsgWaFirmante_${idx}', 'Mensaje WhatsApp')" style="border-color:#059669;color:#047857;">📋 Copiar Mensaje</button>
                   ${botSendBtn}
-                  <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-emerald" onclick="window.abrirWhatsAppFirmante('${escHtml(item.telefono || telWa)}', 'txtMsgWaFirmante_${idx}')">💬 Abrir Chat WhatsApp</button>
+                  <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-emerald js-firmas-wa-open" data-wa-tel="${escHtml(item.telefono || telWa)}" data-wa-input="txtMsgWaFirmante_${idx}">💬 Abrir Chat WhatsApp</button>
                 </div>
               </div>
               <div class="firmas-qr-card">
@@ -1221,7 +1243,7 @@
                   <span style="font-size:0.68rem;color:#64748b;">QR...</span>
                 </div>
                 <span style="font-size:0.69rem;font-weight:800;color:#065f46;text-align:center;">📱 Escanear en persona</span>
-                <button type="button" class="firmas-btn firmas-btn--xs" style="width:100%;" onclick="window.ampliarQrModal('${escHtml(item.url_firma)}', '${escHtml(item.nombre || 'Firmante')}')">🔍 Ampliar QR</button>
+                <button type="button" class="firmas-btn firmas-btn--xs js-firmas-qr-zoom" style="width:100%;" data-qr-url="${escHtml(item.url_firma)}" data-qr-nombre="${escHtml(item.nombre || 'Firmante')}">🔍 Ampliar QR</button>
               </div>
             </div>
           `;
@@ -1231,6 +1253,18 @@
             renderQrEnElemento(`qrFirmaGenBox_${idx}`, item.url_firma, `${item.nombre || 'Firmante'} — Firma AMMER`);
           }
         });
+        if (enlacesCont) {
+          enlacesCont.querySelectorAll('.js-firmas-wa-open').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              abrirWhatsAppFirmante(btn.getAttribute('data-wa-tel') || '', btn.getAttribute('data-wa-input') || '');
+            });
+          });
+          enlacesCont.querySelectorAll('.js-firmas-qr-zoom').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              ampliarQrModal(btn.getAttribute('data-qr-url') || '', btn.getAttribute('data-qr-nombre') || 'Firmante');
+            });
+          });
+        }
       }
       if (box) box.style.display = 'block';
       notify(`Se generaron ${enlaces.length} enlace(s) de firma correctamente.`, 'success');

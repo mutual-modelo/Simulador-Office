@@ -18,7 +18,7 @@ jobs:
       - name: Validar sintaxis JS embebida en index.html y JSON del padrón
         run: |
           python3 - <<'PY'
-          import hashlib, json, re, subprocess, sys, tempfile
+          import hashlib, json, pathlib, re, subprocess, sys, tempfile
 
           raw_padron = open("padron_codigos_descuentos_normalizado.json", "rb").read()
           padron = json.loads(raw_padron.decode("utf-8"))
@@ -28,21 +28,28 @@ jobs:
               sys.exit(f"Desfase de padrón JSON: actual={sha_actual} esperado={manifest['sha256']}")
           print(f"Padrón JSON válido y sincronizado: sha256={sha_actual[:12]}... ({len(padron)} claves)")
 
-          html = open("index.html", encoding="utf-8").read()
-          scripts = re.findall(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", html, re.S | re.I)
-          if not scripts:
-              sys.exit("No se encontraron scripts inline en index.html")
-          for i, script in enumerate(scripts):
-              with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False, encoding="utf-8") as tf:
-                  tf.write(script)
-                  p = tf.name
-              res = subprocess.run(["node", "--check", p], capture_output=True, text=True)
-              if res.returncode != 0:
-                  print(res.stderr)
-                  sys.exit(f"Error de sintaxis JS en script inline #{i}")
+          for html_name in ("index.html", "firmar.html", "verificar.html"):
+              p_html = pathlib.Path(html_name)
+              if not p_html.exists():
+                  sys.exit(f"Falta archivo HTML esperado: {html_name}")
+              html = p_html.read_text(encoding="utf-8")
+              scripts = re.findall(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", html, re.S | re.I)
+              if not scripts:
+                  sys.exit(f"No se encontraron scripts inline en {html_name}")
+              for i, script in enumerate(scripts):
+                  with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False, encoding="utf-8") as tf:
+                      tf.write(script)
+                      p = tf.name
+                  res = subprocess.run(["node", "--check", p], capture_output=True, text=True)
+                  if res.returncode != 0:
+                      print(res.stderr)
+                      sys.exit(f"Error de sintaxis JS en {html_name} script inline #{i}")
 
-          import pathlib
-          srcs = re.findall(r'<script[^>]*\bsrc=["\']([^"\']+)["\']', html, re.I)
+          html_idx = pathlib.Path("index.html").read_text(encoding="utf-8")
+          srcs = re.findall(r'<script[^>]*\bsrc=["\']([^"\']+)["\']', html_idx, re.I)
+          for extra_js in ("sw.js",):
+              if pathlib.Path(extra_js).exists():
+                  srcs.append(extra_js)
           for s in srcs:
               if not s.startswith(("http://", "https://", "//")):
                   p_mod = pathlib.Path(s.split("?")[0])
@@ -52,7 +59,7 @@ jobs:
                   if res.returncode != 0:
                       print(res.stderr)
                       sys.exit(f"Error de sintaxis JS en {p_mod}")
-          print(f"Scripts inline ({len(scripts)}) y módulos locales válidos")
+          print("Scripts inline (index/firmar/verificar) y módulos locales (incl. sw.js) válidos")
           PY
       - name: Instalar dependencias con Bun y verificar build Vite
         run: |

@@ -77,6 +77,7 @@
       history: [],
       selectedFieldId: null,
       addModeTipo: null, // 'texto' | 'borrador' | 'firma' | 'sello' | null
+      sourcePdfParts: [], // [{ id, name, base64, pages, pageStart, pageEnd }]
     },
     canvasFirmaPrueba: {
       drawing: false,
@@ -2691,65 +2692,302 @@
     }
   }
 
-  async function onArchivoPdfPlantillaSeleccionado(ev) {
-    const file = ev.target && ev.target.files && ev.target.files[0];
-    if (!file) return;
-    if (!file.name.toLowerCase().endsWith('.pdf')) {
-      notify('El archivo debe ser un PDF válido.', 'warning');
+  function renderMultiPdfQueueEditor_() {
+    const wrap = document.getElementById('wrapEditorMultiPdfQueue');
+    if (!wrap) return;
+    const parts = Array.isArray(state.editor.sourcePdfParts) ? state.editor.sourcePdfParts : [];
+    const tieneBaseSinPartes = parts.length === 0 && Boolean(state.editor.pdfBase64);
+
+    if (parts.length === 0 && !tieneBaseSinPartes) {
+      wrap.style.display = 'none';
+      wrap.innerHTML = '';
       return;
     }
 
-    setEstadoEditorPdf(`⏳ Cargando vista previa local de "${file.name}"...`, 'info');
-    let b64 = '';
+    wrap.style.display = 'block';
+    if (tieneBaseSinPartes) {
+      wrap.innerHTML =
+        `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">` +
+          `<div style="font-size:0.75rem;font-weight:700;color:#475569;">` +
+            `📄 Documento actual: <strong style="color:#0f172a;">${escHtml(state.editor.archivoNombre || 'plantilla.pdf')}</strong> (${state.editor.totalPages || 1} pág.)` +
+          `</div>` +
+          `<button type="button" class="firmas-btn firmas-btn-soft-blue" style="padding:0.34rem 0.7rem;font-size:0.74rem;" onclick="document.getElementById('inpPlantillaPdfAgregar')?.click()">➕ Anexar más PDFs a esta plantilla</button>` +
+        `</div>`;
+      return;
+    }
+
+    const totalPags = state.editor.totalPages || parts.reduce((acc, p) => acc + (Number(p.pages) || 0), 0) || 1;
+    const rowsHtml = parts.map((p, idx) => {
+      const pagLabel = p.pageStart && p.pageEnd
+        ? (p.pageStart === p.pageEnd ? `pág. ${p.pageStart}` : `págs. ${p.pageStart}–${p.pageEnd}`)
+        : `${p.pages || '?'} pág.`;
+      const controlsHtml = parts.length > 1
+        ? `<div style="display:inline-flex;align-items:center;gap:4px;">` +
+            `<button type="button" class="firmas-btn" style="padding:0.2rem 0.45rem;font-size:0.72rem;" onclick="moverPartePdfEditor(${idx}, -1)" ${idx === 0 ? 'disabled' : ''} title="Subir en el orden">↑</button>` +
+            `<button type="button" class="firmas-btn" style="padding:0.2rem 0.45rem;font-size:0.72rem;" onclick="moverPartePdfEditor(${idx}, 1)" ${idx === parts.length - 1 ? 'disabled' : ''} title="Bajar en el orden">↓</button>` +
+            `<button type="button" class="firmas-btn firmas-btn-danger" style="padding:0.2rem 0.48rem;font-size:0.72rem;" onclick="quitarPartePdfEditor(${idx})" title="Quitar este PDF">✕</button>` +
+          `</div>`
+        : '';
+      return (
+        `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0.38rem 0.58rem;border-radius:8px;background:#ffffff;border:1px solid #e2e8f0;flex-wrap:wrap;">` +
+          `<div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;">` +
+            `<span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:9999px;background:#0f2744;color:#ffffff;font-size:0.68rem;font-weight:800;flex-shrink:0;">${idx + 1}</span>` +
+            `<span style="font-size:0.76rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(p.name || `PDF ${idx + 1}`)}</span>` +
+            `<span style="font-size:0.69rem;font-weight:700;padding:1px 6px;border-radius:9999px;background:#eef2ff;color:#3730a3;flex-shrink:0;">${escHtml(pagLabel)}</span>` +
+          `</div>` +
+          controlsHtml +
+        `</div>`
+      );
+    }).join('');
+
+    wrap.innerHTML =
+      `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:${parts.length > 0 ? '0.45rem' : '0'};">` +
+        `<div style="font-size:0.75rem;font-weight:800;color:#0f172a;">` +
+          `📑 ${parts.length === 1 ? '1 PDF cargado' : `${parts.length} PDFs unidos en orden`} · ${totalPags} página(s) totales` +
+        `</div>` +
+        `<button type="button" class="firmas-btn firmas-btn-soft-blue" style="padding:0.34rem 0.7rem;font-size:0.74rem;" onclick="document.getElementById('inpPlantillaPdfAgregar')?.click()">➕ Agregar otro PDF</button>` +
+      `</div>` +
+      `<div style="display:flex;flex-direction:column;gap:0.35rem;">${rowsHtml}</div>`;
+  }
+
+  async function combinarYRenderizarPartesPdfEditor_(opts) {
+    const o = opts || {};
+    const parts = Array.isArray(state.editor.sourcePdfParts) ? state.editor.sourcePdfParts : [];
+    if (parts.length === 0) {
+      limpiarEditorPlantillaPdf(true);
+      return;
+    }
+
+    let finalB64 = '';
+    let finalNombre = '';
+    const appendFromPage = o.appendFromPage ? Number(o.appendFromPage) : null;
+
+    if (parts.length === 1) {
+      finalB64 = parts[0].base64;
+      finalNombre = parts[0].name || 'plantilla.pdf';
+      setEstadoEditorPdf(`⏳ Cargando vista previa local de "${finalNombre}"...`, 'info');
+    } else {
+      setEstadoEditorPdf(`⏳ Uniendo ${parts.length} PDFs en orden en una plantilla multipágina...`, 'info');
+      try {
+        const resMerge = await apiFetchJson('/api/firmas/plantillas/unir-pdfs', {
+          method: 'POST',
+          body: JSON.stringify({
+            archivos: parts.map((p) => ({ nombre: p.name, pdfBase64: p.base64 })),
+          }),
+        });
+        finalB64 = resMerge.pdfBase64;
+        finalNombre = resMerge.archivo_nombre || 'plantilla_unificada.pdf';
+        const partesRes = Array.isArray(resMerge.partes) ? resMerge.partes : [];
+        parts.forEach((p, idx) => {
+          const meta = partesRes[idx];
+          if (meta) {
+            p.pages = meta.paginas || p.pages || 1;
+            p.pageStart = meta.pagina_inicio || null;
+            p.pageEnd = meta.pagina_fin || null;
+          }
+        });
+        state.editor.totalPages = resMerge.paginas || state.editor.totalPages || 1;
+      } catch (errMerge) {
+        setEstadoEditorPdf(`❌ No se pudieron unir los PDFs: ${errMerge.message}`, 'err');
+        notify('Error uniendo PDFs: ' + errMerge.message, 'error');
+        return;
+      }
+    }
+
     try {
-      b64 = await fileToBase64(file);
-      state.editor.plantillaId = null;
-      state.editor.pdfBase64 = b64;
+      state.editor.pdfBase64 = finalB64;
       state.editor._loadedB64 = '';
       state.editor.pdfDoc = null;
-      state.editor.archivoNombre = file.name;
-      state.editor.currentPage = 1;
-      state.editor.campos = [];
-      state.editor.history = [];
-      state.editor.selectedFieldId = null;
-      actualizarBotonDeshacerEditor_();
+      state.editor.archivoNombre = finalNombre;
 
-      const inpNom = document.getElementById('inpEditPlantillaNombre');
-      if (inpNom && !inpNom.value.trim()) {
-        inpNom.value = file.name.replace(/\.pdf$/i, '').replace(/[_-]+/g, ' ');
+      if (!appendFromPage) {
+        state.editor.plantillaId = null;
+        state.editor.currentPage = 1;
+        state.editor.campos = [];
+        state.editor.history = [];
+        state.editor.selectedFieldId = null;
+        actualizarBotonDeshacerEditor_();
+      } else {
+        pushUndoEditor_();
       }
 
-      // 1. Renderizar primero el PDF localmente en canvas para que SIEMPRE sea visible al instante
-      await cargarPdfEnCanvasEditor(b64, 1);
+      const targetPage = appendFromPage && appendFromPage <= (state.editor.totalPages || 1) ? appendFromPage : 1;
+      await cargarPdfEnCanvasEditor(finalB64, targetPage);
+
+      if (parts.length === 1) {
+        parts[0].pages = state.editor.totalPages || 1;
+        parts[0].pageStart = 1;
+        parts[0].pageEnd = state.editor.totalPages || 1;
+      }
+      renderMultiPdfQueueEditor_();
       renderInspectorCamposEditor();
-      setEstadoEditorPdf(`📄 PDF renderizado (${state.editor.totalPages} pág.). Analizando campos, espacios en blanco y firmas...`, 'info');
+      setEstadoEditorPdf(
+        `📄 PDF multipágina renderizado (${state.editor.totalPages} pág.). Analizando campos, espacios en blanco y firmas...`,
+        'info'
+      );
     } catch (errRender) {
       setEstadoEditorPdf(`⚠️ No se pudo renderizar vista previa en canvas (${errRender.message}).`, 'err');
       notify('Error renderizando PDF local: ' + errRender.message, 'error');
       return;
     }
 
-    // 2. Detectar resaltados, AcroForm, reglas geométricas e IA en segundo plano sin bloquear el lienzo
     try {
-      const { analisis, detectados } = await ejecutarAnalisisPdfServidor(b64, false);
-      state.editor.campos = detectados;
-      state.editor.selectedFieldId = detectados[0] ? detectados[0].id : null;
-      renderCajasOverlayEditor();
-      renderInspectorCamposEditor();
-
-      const modoTxt = analisis.ia_usada
-        ? ' mediante análisis IA + reglas'
-        : (analisis.metodo_analisis === 'highlights' ? ' desde resaltados amarillos' : ' por análisis automático de espacios y firmas');
-      if (detectados.length > 0) {
-        setEstadoEditorPdf(`✅ Se detectaron ${detectados.length} campos${modoTxt}. Podés arrastrarlos, redimensionarlos, editarlos o quitarlos libremente.`, 'ok');
-        notify(`PDF listo: ${detectados.length} campo(s) detectado(s).`, 'success');
+      const { analisis, detectados } = await ejecutarAnalisisPdfServidor(finalB64, false);
+      if (appendFromPage) {
+        const nuevos = detectados
+          .filter((c) => (Number(c.pagina) || 1) >= appendFromPage)
+          .map((c, idx) => Object.assign({}, c, { id: `fld_add_${Date.now()}_${idx}` }));
+        if (nuevos.length > 0) {
+          state.editor.campos = (state.editor.campos || []).concat(nuevos);
+          state.editor.selectedFieldId = nuevos[0].id;
+        }
+        renderCajasOverlayEditor();
+        renderInspectorCamposEditor();
+        setEstadoEditorPdf(
+          `✅ Se anexaron PDFs correctamente (${state.editor.totalPages} pág. totales, ${nuevos.length} campo(s) nuevo(s) detectado(s)).`,
+          'ok'
+        );
+        notify(`Plantilla actualizada: ${state.editor.totalPages} página(s).`, 'success');
       } else {
-        setEstadoEditorPdf('ℹ️ No se detectaron espacios automáticamente en este PDF. Usá "➕ Marcar Campo Texto", "✍️ Marcar Caja Firma" o "✨ Auto-detectar IA".', 'warn');
-        notify('PDF cargado. Hacé clic en los botones superiores para marcar campos y firmas.', 'info');
+        state.editor.campos = detectados;
+        state.editor.selectedFieldId = detectados[0] ? detectados[0].id : null;
+        renderCajasOverlayEditor();
+        renderInspectorCamposEditor();
+
+        const modoTxt = analisis.ia_usada
+          ? ' mediante análisis IA + reglas'
+          : (analisis.metodo_analisis === 'highlights' ? ' desde resaltados amarillos' : ' por análisis automático de espacios y firmas');
+        if (detectados.length > 0) {
+          setEstadoEditorPdf(`✅ Se detectaron ${detectados.length} campos en ${state.editor.totalPages} pág.${modoTxt}. Podés arrastrarlos, redimensionarlos, editarlos o quitarlos libremente.`, 'ok');
+          notify(`PDF listo (${state.editor.totalPages} pág.): ${detectados.length} campo(s) detectado(s).`, 'success');
+        } else {
+          setEstadoEditorPdf(`ℹ️ PDF cargado (${state.editor.totalPages} pág.), sin campos auto-detectados. Usá "➕ Marcar Campo Texto", "✍️ Marcar Caja Firma" o "✨ Auto-detectar IA".`, 'warn');
+          notify('PDF cargado. Hacé clic en los botones superiores para marcar campos y firmas.', 'info');
+        }
       }
     } catch (errAn) {
-      setEstadoEditorPdf(`⚠️ PDF cargado en pantalla, pero el analizador automático no pudo responder (${errAn.message}). Podés marcar los campos y cajas de firma manualmente sobre el lienzo.`, 'warn');
+      setEstadoEditorPdf(`⚠️ PDF cargado en pantalla (${state.editor.totalPages} pág.), pero el analizador automático no pudo responder (${errAn.message}). Podés marcar los campos manualmente sobre el lienzo.`, 'warn');
     }
+  }
+
+  async function leerArchivosPdfSeleccionados_(fileList) {
+    const files = Array.from(fileList || []).filter(Boolean);
+    if (!files.length) return [];
+    const invalidos = files.filter((f) => !String(f.name || '').toLowerCase().endsWith('.pdf') && f.type !== 'application/pdf');
+    if (invalidos.length > 0) {
+      notify(`Solo se admiten archivos PDF válidos (inválido: "${invalidos[0].name}").`, 'warning');
+      return null;
+    }
+    const partes = [];
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      const b64 = await fileToBase64(f);
+      partes.push({
+        id: `pdf_${Date.now()}_${i}_${Math.random().toString(36).slice(2, 6)}`,
+        name: f.name || `documento_${i + 1}.pdf`,
+        base64: b64,
+        pages: null,
+        pageStart: null,
+        pageEnd: null,
+      });
+    }
+    return partes;
+  }
+
+  async function onArchivoPdfPlantillaSeleccionado(ev) {
+    const files = ev.target && ev.target.files;
+    if (!files || files.length === 0) return;
+    if (files.length > 15) {
+      notify('Podés seleccionar hasta 15 PDFs por plantilla.', 'warning');
+      return;
+    }
+
+    setEstadoEditorPdf(files.length > 1 ? `⏳ Leyendo ${files.length} archivos PDF...` : `⏳ Cargando vista previa local de "${files[0].name}"...`, 'info');
+    try {
+      const nuevasPartes = await leerArchivosPdfSeleccionados_(files);
+      if (!nuevasPartes || !nuevasPartes.length) return;
+      state.editor.plantillaId = null;
+      state.editor.sourcePdfParts = nuevasPartes;
+
+      const inpNom = document.getElementById('inpEditPlantillaNombre');
+      if (inpNom && !inpNom.value.trim()) {
+        const stem = (n) => String(n || '').replace(/\.pdf$/i, '').replace(/[_-]+/g, ' ').trim();
+        if (nuevasPartes.length === 1) {
+          inpNom.value = stem(nuevasPartes[0].name);
+        } else {
+          const s0 = stem(nuevasPartes[0].name);
+          const s1 = stem(nuevasPartes[1].name);
+          inpNom.value = `${s0} + ${s1}${nuevasPartes.length > 2 ? ` (+${nuevasPartes.length - 2})` : ''}`;
+        }
+      }
+      await combinarYRenderizarPartesPdfEditor_();
+    } catch (errRead) {
+      setEstadoEditorPdf(`⚠️ No se pudieron leer los PDFs (${errRead.message}).`, 'err');
+      notify('Error leyendo archivos PDF: ' + errRead.message, 'error');
+    }
+  }
+
+  async function onAgregarPdfsPlantillaSeleccionado(ev) {
+    const inputEl = ev && ev.target;
+    const files = inputEl && inputEl.files;
+    if (!files || files.length === 0) return;
+    try {
+      const prevPages = state.editor.pdfBase64 ? (state.editor.totalPages || 1) : 0;
+      const hadCampos = Array.isArray(state.editor.campos) && state.editor.campos.length > 0;
+      if ((!state.editor.sourcePdfParts || state.editor.sourcePdfParts.length === 0) && state.editor.pdfBase64) {
+        state.editor.sourcePdfParts = [{
+          id: `pdf_base_${Date.now()}`,
+          name: state.editor.archivoNombre || 'documento_base.pdf',
+          base64: state.editor.pdfBase64,
+          pages: prevPages,
+          pageStart: 1,
+          pageEnd: prevPages,
+        }];
+      }
+      const nuevasPartes = await leerArchivosPdfSeleccionados_(files);
+      if (!nuevasPartes || !nuevasPartes.length) return;
+      if ((state.editor.sourcePdfParts.length + nuevasPartes.length) > 15) {
+        notify('El máximo permitido es 15 PDFs por plantilla.', 'warning');
+        return;
+      }
+      state.editor.sourcePdfParts = (state.editor.sourcePdfParts || []).concat(nuevasPartes);
+      await combinarYRenderizarPartesPdfEditor_(prevPages > 0 && hadCampos ? { appendFromPage: prevPages + 1 } : {});
+    } catch (errAdd) {
+      notify('Error agregando PDF: ' + errAdd.message, 'error');
+    } finally {
+      if (inputEl) inputEl.value = '';
+    }
+  }
+
+  async function moverPartePdfEditor(idx, delta) {
+    const parts = Array.isArray(state.editor.sourcePdfParts) ? state.editor.sourcePdfParts : [];
+    const targetIdx = idx + delta;
+    if (idx < 0 || idx >= parts.length || targetIdx < 0 || targetIdx >= parts.length) return;
+    if ((state.editor.campos || []).length > 0) {
+      if (!global.confirm('Al cambiar el orden de los PDFs cambiarán los números de página y se volverán a detectar los campos. ¿Continuar?')) {
+        return;
+      }
+    }
+    const next = parts.slice();
+    const tmp = next[idx];
+    next[idx] = next[targetIdx];
+    next[targetIdx] = tmp;
+    state.editor.sourcePdfParts = next;
+    await combinarYRenderizarPartesPdfEditor_();
+  }
+
+  async function quitarPartePdfEditor(idx) {
+    const parts = Array.isArray(state.editor.sourcePdfParts) ? state.editor.sourcePdfParts : [];
+    if (idx < 0 || idx >= parts.length) return;
+    if ((state.editor.campos || []).length > 0 && parts.length > 1) {
+      if (!global.confirm('Al quitar este PDF cambiarán las páginas de la plantilla y se volverán a detectar los campos. ¿Continuar?')) {
+        return;
+      }
+    }
+    const next = parts.slice();
+    next.splice(idx, 1);
+    state.editor.sourcePdfParts = next;
+    await combinarYRenderizarPartesPdfEditor_();
   }
 
   async function cargarPlantillaEnEditor(plantillaId) {
@@ -2762,6 +3000,7 @@
       state.editor.pdfBase64 = res.pdfBase64;
       state.editor._loadedB64 = '';
       state.editor.pdfDoc = null;
+      state.editor.sourcePdfParts = [];
       state.editor.archivoNombre = tpl.archivo_nombre || 'plantilla.pdf';
       state.editor.totalPages = tpl.paginas || 1;
       state.editor.currentPage = 1;
@@ -2787,6 +3026,7 @@
       setChk('chkValRequierePinOtp', vals.requiere_pin_otp);
 
       await cargarPdfEnCanvasEditor(res.pdfBase64, 1);
+      renderMultiPdfQueueEditor_();
       renderInspectorCamposEditor();
       setEstadoEditorPdf(`✅ Plantilla "${tpl.nombre}" cargada para edición (${state.editor.campos.length} campos).`, 'ok');
     } catch (err) {
@@ -3703,10 +3943,13 @@
     state.editor.history = [];
     state.editor.selectedFieldId = null;
     state.editor.addModeTipo = null;
+    state.editor.sourcePdfParts = [];
 
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
     const setChk = (id, v) => { const el = document.getElementById(id); if (el) el.checked = !!v; };
     setVal('inpPlantillaPdfFile', '');
+    setVal('inpPlantillaPdfAgregar', '');
+    renderMultiPdfQueueEditor_();
     setVal('selEditarPlantillaExistente', '');
     setVal('inpEditPlantillaNombre', '');
     setVal('selEditPlantillaCategoria', 'AUTORIZACION');
@@ -5161,6 +5404,9 @@
   global.abrirAsistenteRenaperPorId = abrirAsistenteRenaperPorId;
   global.abrirAsistenteRenaperDesdeFicha = abrirAsistenteRenaperDesdeFicha;
   global.onArchivoPdfPlantillaSeleccionado = onArchivoPdfPlantillaSeleccionado;
+  global.onAgregarPdfsPlantillaSeleccionado = onAgregarPdfsPlantillaSeleccionado;
+  global.moverPartePdfEditor = moverPartePdfEditor;
+  global.quitarPartePdfEditor = quitarPartePdfEditor;
   global.reanalizarPdfConIaEditor = reanalizarPdfConIaEditor;
   global.cargarPlantillaEnEditor = cargarPlantillaEnEditor;
   global.duplicarPlantillaActualEditor = duplicarPlantillaActualEditor;

@@ -25,6 +25,10 @@
     economiaCircular: null,
     cashbackRules: [],
     auditLogs: [],
+    accesos: null,
+    accesosError: null,
+    ultimaCredencial: null,
+    lastSyncAt: 0,
     formNuevoComercioAbierto: false,
   };
 
@@ -181,9 +185,14 @@
     }
   }
 
+  function esperarMs(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
   async function verificarEstadoMutualPay(mostrarToast = false) {
     try {
-      const info = await apiMp('/estado');
+      const qs = mostrarToast ? '?force=true' : '';
+      const info = await apiMp(`/estado${qs}`);
       st.estadoS2S = info;
       if (!info.s2s_configured) {
         setNotice(
@@ -194,11 +203,19 @@
           'warn'
         );
       } else if (!info.api_online) {
-        setNotice(
-          `<strong>Mutual Pay API sin respuesta en /health:</strong> ${esc(info.api_detail)} (${esc(info.health_url)}). ` +
-          `Si está en plan Free de Render puede estar despertando; reintentá en unos segundos.`,
-          'warn'
-        );
+        if (Number(info.api_status_code) === 429 || info.rate_limited) {
+          setNotice(
+            `<strong>Mutual Pay API limitada temporalmente por Render (HTTP 429):</strong> El proxy de <code>${esc(info.health_url)}</code> (plan Free de Render) frenó una ráfaga de consultas. ` +
+            `Esperá 15–30 segundos y pulsá <strong>🔄 Actualizar Datos</strong>.`,
+            'warn'
+          );
+        } else {
+          setNotice(
+            `<strong>Mutual Pay API sin respuesta en /health:</strong> ${esc(info.api_detail)} (${esc(info.health_url)}). ` +
+            `Si está en plan Free de Render puede estar despertando; reintentá en unos segundos.`,
+            'warn'
+          );
+        }
       } else {
         if (mostrarToast) {
           setNotice(
@@ -219,7 +236,7 @@
 
   function cambiarTabMutualPay(tabId) {
     st.tabActiva = tabId;
-    const tabs = ['resumen', 'asociados', 'ayudas', 'comercios', 'cobranzas', 'admin'];
+    const tabs = ['resumen', 'asociados', 'ayudas', 'comercios', 'cobranzas', 'admin', 'accesos'];
     tabs.forEach((t) => {
       const btn = document.getElementById(`btnMpTab_${t}`);
       const panel = document.getElementById(`mpPanel_${t}`);
@@ -240,26 +257,77 @@
         renderResumenVacio();
         return;
       }
+      if (estado && !estado.api_online && (Number(estado.api_status_code) === 429 || estado.rate_limited)) {
+        return;
+      }
 
-      const [resumenRes, asocRes, ayuRes, comRes, liqRes, txRes, cobRes, convRes, regRes, cbRes, logRes] = await Promise.allSettled([
+      // Carga escalonada en olas de 3 endpoints para evitar HTTP 429 en plan Render Free
+      const [resumenRes, asocRes, accRes] = await Promise.allSettled([
         apiMp('/resumen'),
         apiMp('/asociados'),
+        apiMp('/admin/accesos'),
+      ]);
+
+      const fatalErr = [resumenRes, asocRes, accRes].find(
+        (r) =>
+          r.status === 'rejected' &&
+          r.reason &&
+          (r.reason.code === 'MUTUALPAY_S2S_NOT_CONFIGURED' ||
+            r.reason.code === 'MUTUALPAY_S2S_REJECTED' ||
+            r.reason.code === 'MUTUALPAY_RATE_LIMITED' ||
+            Number(r.reason.status) === 429)
+      );
+      if (fatalErr) {
+        setNotice(`<strong>Atención Mutual Pay:</strong> ${esc(fatalErr.reason.message)}`, 'warn');
+        if (fatalErr.reason.code !== 'MUTUALPAY_RATE_LIMITED' && Number(fatalErr.reason.status) !== 429) {
+          renderResumenVacio();
+        }
+        return;
+      }
+
+      const esRateLimit = (resList) =>
+        resList.find(
+          (r) =>
+            r &&
+            r.status === 'rejected' &&
+            r.reason &&
+            (r.reason.code === 'MUTUALPAY_RATE_LIMITED' || Number(r.reason.status) === 429)
+        );
+
+      await esperarMs(180);
+      const [ayuRes, comRes, liqRes] = await Promise.allSettled([
         apiMp('/ayudas'),
         apiMp('/comercios'),
         apiMp('/liquidaciones/resumen'),
-        apiMp('/transacciones'),
-        apiMp('/cobranzas-manuales'),
-        apiMp('/convenios'),
-        apiMp('/admin/reglas-financieras'),
-        apiMp('/backoffice/cashback-rules'),
-        apiMp('/admin/audit-logs'),
       ]);
+      let txRes = { status: 'skipped' };
+      let cobRes = { status: 'skipped' };
+      let convRes = { status: 'skipped' };
+      let regRes = { status: 'skipped' };
+      let cbRes = { status: 'skipped' };
+      let logRes = { status: 'skipped' };
 
-      const firstErr = [resumenRes, asocRes].find((r) => r.status === 'rejected');
-      if (firstErr && firstErr.reason && (firstErr.reason.code === 'MUTUALPAY_S2S_NOT_CONFIGURED' || firstErr.reason.code === 'MUTUALPAY_S2S_REJECTED')) {
-        setNotice(`<strong>Atención S2S:</strong> ${esc(firstErr.reason.message)}`, 'warn');
-        renderResumenVacio();
-        return;
+      const rl2 = esRateLimit([ayuRes, comRes, liqRes]);
+      if (rl2) {
+        setNotice(`<strong>Atención Mutual Pay (carga parcial):</strong> ${esc(rl2.reason.message)}`, 'warn');
+      } else {
+        await esperarMs(180);
+        [txRes, cobRes, convRes] = await Promise.allSettled([
+          apiMp('/transacciones'),
+          apiMp('/cobranzas-manuales'),
+          apiMp('/convenios'),
+        ]);
+        const rl3 = esRateLimit([txRes, cobRes, convRes]);
+        if (rl3) {
+          setNotice(`<strong>Atención Mutual Pay (carga parcial):</strong> ${esc(rl3.reason.message)}`, 'warn');
+        } else {
+          await esperarMs(180);
+          [regRes, cbRes, logRes] = await Promise.allSettled([
+            apiMp('/admin/reglas-financieras'),
+            apiMp('/backoffice/cashback-rules'),
+            apiMp('/admin/audit-logs'),
+          ]);
+        }
       }
 
       if (resumenRes.status === 'fulfilled') st.resumen = resumenRes.value;
@@ -273,7 +341,14 @@
       if (regRes.status === 'fulfilled') st.reglasFinancieras = regRes.value.reglas || [];
       if (cbRes.status === 'fulfilled') st.cashbackRules = cbRes.value.reglas || [];
       if (logRes.status === 'fulfilled') st.auditLogs = logRes.value.logs || [];
+      if (accRes.status === 'fulfilled') {
+        st.accesos = accRes.value || null;
+        st.accesosError = null;
+      } else if (accRes.status === 'rejected') {
+        st.accesosError = (accRes.reason && accRes.reason.message) || 'Error consultando padrón de accesos';
+      }
 
+      st.lastSyncAt = Date.now();
       renderAllMutualPay();
       const lbl = document.getElementById('mpHubLastSyncLabel');
       if (lbl) lbl.textContent = `Última sincronización: ${new Date().toLocaleTimeString('es-AR')}`;
@@ -336,6 +411,7 @@
     renderTablaTransaccionesMutualPay();
     renderTablaCobranzasMutualPay();
     renderTabAdminCircular();
+    renderTabAccesosMutualPay();
   }
 
   function renderResumenCruce() {
@@ -506,8 +582,10 @@
           <div style="font-size:0.75rem;color:#64748b;margin-top:2px;">DNI ${esc(assoc.dni || '—')} · CUIL ${esc(assoc.cuit_cuil || '—')} · ${esc(assoc.employment_condition || '')}</div>
           <div style="font-size:0.73rem;color:#64748b;">${esc(assoc.email || '')} · ${esc(assoc.phone || '')}</div>
         </div>
-        <div style="display:flex;gap:6px;align-items:center;">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
           ${badgeStatus(assoc.kyc_status)}
+          <button type="button" class="mp-btn" onclick="window.resetAccesoAsociadoMp('${esc(assoc.id)}', false)">🔑 Blanquear Clave</button>
+          <button type="button" class="mp-btn" onclick="window.resetAccesoAsociadoMp('${esc(assoc.id)}', true)">🔢 Clave + PIN</button>
           <button type="button" class="mp-btn ${isActiveAcc ? 'mp-btn-danger' : 'mp-btn-success'}" onclick="window.toggleEstadoAsociadoMp('${esc(assoc.id)}', ${!isActiveAcc})">${isActiveAcc ? 'Suspender' : 'Reactivar'}</button>
         </div>
       </div>
@@ -836,9 +914,19 @@
       branch_address: (document.getElementById('inpMpNewAddr') || {}).value || 'Paraná, Entre Ríos',
     };
     try {
-      await apiMp('/comercios', { method: 'POST', body: JSON.stringify(payload) });
+      const res = await apiMp('/comercios', { method: 'POST', body: JSON.stringify(payload) });
+      const com = (res && res.comercio) || {};
       toast('Comercio adherido creado en Mutual Pay.');
       toggleFormNuevoComercioMp();
+      if (com.temporary_password) {
+        mostrarCredencialesUnaVez({
+          tipo: 'COMERCIO',
+          nombre: com.fantasy_name || payload.fantasy_name,
+          login_email: com.login_email || payload.contact_email,
+          temporary_password: com.temporary_password,
+          supabase_auth_ok: Boolean(com.supabase_auth_created),
+        });
+      }
       await cargarTodoMutualPayBackoffice(false);
     } catch (err) {
       toast(`Error creando comercio: ${err.message}`);
@@ -867,7 +955,7 @@
         <td><input type="number" step="0.1" id="inpMpComFee_${esc(m.id)}" value="${Number(m.commission_fee_pct || 0)}" style="width:72px;padding:3px 5px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.75rem;"/>%</td>
         <td>${Number(m.settlement_timeframe_hours || 48)} hs</td>
         <td>${badgeStatus(String(m.is_active !== false).toUpperCase())}</td>
-        <td><button type="button" class="mp-btn mp-btn-primary" onclick="window.guardarParamComercioMp('${esc(m.id)}', ${m.is_active !== false})">Guardar</button></td>
+        <td><div style="display:flex;gap:4px;flex-wrap:wrap;"><button type="button" class="mp-btn mp-btn-primary" onclick="window.guardarParamComercioMp('${esc(m.id)}', ${m.is_active !== false})">Guardar</button><button type="button" class="mp-btn" onclick="window.resetAccesoComercioMp('${esc(m.id)}')" title="Generar/blanquear clave temporal">🔑 Clave</button></div></td>
       </tr>`;
     });
     html += '</tbody></table></div>';
@@ -1095,11 +1183,219 @@
     }
   }
 
+  function mostrarCredencialesUnaVez(info) {
+    st.ultimaCredencial = info || null;
+    const box = document.getElementById('mpCredencialesBox');
+    if (!box) return;
+    if (!info || !info.temporary_password) {
+      box.style.display = 'none';
+      box.innerHTML = '';
+      return;
+    }
+    const msgLines = [
+      `Hola ${info.nombre || ''}, te compartimos tus credenciales temporales para ingresar a Mutual Pay (${info.tipo || 'APP'}):`,
+      `• Usuario / Email: ${info.login_email || ''}`,
+      `• Clave temporal: ${info.temporary_password}`,
+    ];
+    if (info.temporary_pin) {
+      msgLines.push(`• PIN transaccional temporal (4 dígitos): ${info.temporary_pin}`);
+    }
+    msgLines.push('Te recomendamos cambiar la clave/PIN luego del primer ingreso.');
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(msgLines.join('\n'))}`;
+    const authWarn = info.supabase_auth_ok === false
+      ? '<div style="margin-top:6px;padding:6px 8px;border-radius:6px;background:#fef3c7;color:#92400e;font-size:0.72rem;">⚠️ <strong>Nota:</strong> <code>SUPABASE_SERVICE_ROLE_KEY</code> no estaba configurado en mutualpay-api; la clave se generó localmente pero verificá la sincronización en Supabase Auth.</div>'
+      : '';
+
+    box.style.display = 'block';
+    box.innerHTML = `
+      <div style="padding:0.95rem 1.1rem;border-radius:12px;border:2px solid #10b981;background:#ecfdf5;color:#064e3b;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:0.84rem;font-weight:800;">🔑 Credencial Temporal Única — ${esc(info.tipo || '')}: ${esc(info.nombre || '')}</div>
+            <div style="font-size:0.73rem;color:#047857;margin-top:2px;">Mostrada por única vez en esta sesión (no se guarda en base de datos ni navegador).</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button type="button" class="mp-btn mp-btn-primary" onclick="window.copiarCredencialesMp()">📋 Copiar</button>
+            <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="mp-btn mp-btn-success" style="text-decoration:none;">💬 Enviar WhatsApp</a>
+            <button type="button" class="mp-btn" onclick="window.cerrarCredencialesUnaVez()">Cerrar</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin-top:10px;background:#ffffff;padding:0.7rem;border-radius:8px;border:1px solid #a7f3d0;">
+          <div><div style="font-size:0.68rem;font-weight:700;color:#64748b;text-transform:uppercase;">Usuario / Email Login</div><code style="font-size:0.82rem;font-weight:700;color:#0f172a;">${esc(info.login_email || '—')}</code></div>
+          <div><div style="font-size:0.68rem;font-weight:700;color:#64748b;text-transform:uppercase;">Clave Temporal</div><code style="font-size:0.86rem;font-weight:800;color:#047857;">${esc(info.temporary_password)}</code></div>
+          ${info.temporary_pin ? `<div><div style="font-size:0.68rem;font-weight:700;color:#64748b;text-transform:uppercase;">PIN Transaccional Temporal</div><code style="font-size:0.86rem;font-weight:800;color:#0369a1;">${esc(info.temporary_pin)}</code></div>` : ''}
+        </div>
+        ${authWarn}
+      </div>
+    `;
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function cerrarCredencialesUnaVez() {
+    mostrarCredencialesUnaVez(null);
+  }
+
+  function copiarCredencialesMp() {
+    const info = st.ultimaCredencial;
+    if (!info) return;
+    const lines = [
+      `Mutual Pay (${info.tipo || 'APP'}) - ${info.nombre || ''}`,
+      `Usuario: ${info.login_email || ''}`,
+      `Clave temporal: ${info.temporary_password || ''}`,
+    ];
+    if (info.temporary_pin) lines.push(`PIN temporal: ${info.temporary_pin}`);
+    const text = lines.join('\n');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => toast('Credenciales copiadas al portapapeles.')).catch(() => toast('No se pudo copiar automáticamente.'));
+    } else {
+      toast('Portapapeles no disponible en este navegador.');
+    }
+  }
+
+  function renderTabAccesosMutualPay() {
+    const asocBox = document.getElementById('mpAccesosAsociadosContainer');
+    const comBox = document.getElementById('mpAccesosComerciosContainer');
+    if (!asocBox && !comBox) return;
+
+    const acc = st.accesos;
+    if (!acc) {
+      const emptyMsg = st.accesosError
+        ? `<div style="padding:1rem;color:#9f1239;background:#fff1f2;border-radius:8px;font-size:0.78rem;">No se pudo cargar el padrón de accesos: ${esc(st.accesosError)} <button type="button" class="mp-btn" style="margin-left:8px;" onclick="window.cargarTodoMutualPayBackoffice(true)">Reintentar</button></div>`
+        : '<div style="padding:1rem;color:#64748b;font-size:0.78rem;">Sincronizá para consultar el padrón de accesos.</div>';
+      if (asocBox) asocBox.innerHTML = emptyMsg;
+      if (comBox) comBox.innerHTML = emptyMsg;
+      return;
+    }
+
+    if (asocBox) {
+      const qA = String((document.getElementById('inpMpFiltroAccesosAsoc') || {}).value || '').trim().toLowerCase();
+      const fAuth = String((document.getElementById('selMpFiltroAccesosAsocAuth') || {}).value || '').trim().toUpperCase();
+      const asocs = (acc.asociados || []).filter((a) => {
+        if (fAuth === 'AUTH' && !a.has_auth_account) return false;
+        if (fAuth === 'NO_AUTH' && a.has_auth_account) return false;
+        if (fAuth === 'NO_PIN' && a.has_transaction_pin) return false;
+        if (!qA) return true;
+        return `${a.full_name || ''} ${a.dni || ''} ${a.cuit_cuil || ''} ${a.login_email || ''} ${a.email || ''}`.toLowerCase().includes(qA);
+      });
+      if (!asocs.length) {
+        asocBox.innerHTML = '<div style="padding:1rem;color:#64748b;font-size:0.78rem;">Sin asociados para el filtro seleccionado.</div>';
+      } else {
+        let html = '<div class="data-table-container"><table class="data-table"><thead><tr>' +
+          '<th>Asociado</th><th>DNI</th><th>Usuario / Email Login</th><th>Cuenta Auth</th><th>PIN App</th><th>Último Ingreso</th><th>Cruce AMMER</th><th>Acción</th>' +
+          '</tr></thead><tbody>';
+        asocs.forEach((a) => {
+          const authBadge = a.has_auth_account
+            ? `<span style="color:#059669;font-weight:700;font-size:0.74rem;">✅ Activa${a.email_confirmed ? ' (Verif.)' : ''}</span>`
+            : '<span style="color:#b45309;font-weight:700;font-size:0.74rem;">⚠️ Sin Auth</span>';
+          const pinBadge = a.has_transaction_pin
+            ? '<span style="color:#0369a1;font-weight:700;font-size:0.74rem;">🔒 Configurado</span>'
+            : '<span style="color:#94a3b8;font-size:0.74rem;">Sin PIN</span>';
+          html += `<tr>
+            <td><strong>${esc(a.full_name || '—')}</strong><div style="font-size:0.68rem;color:#64748b;">KYC: ${esc(a.kyc_status || '—')}</div></td>
+            <td><code>${esc(a.dni || '—')}</code></td>
+            <td><code>${esc(a.login_email || a.email || '—')}</code></td>
+            <td>${authBadge}</td>
+            <td>${pinBadge}</td>
+            <td style="font-size:0.73rem;">${a.last_sign_in_at ? fmtFecha(a.last_sign_in_at) : 'Nunca'}</td>
+            <td>${badgeAmmerCruce(a.ammer_cruce)}</td>
+            <td><div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <button type="button" class="mp-btn mp-btn-primary" onclick="window.resetAccesoAsociadoMp('${esc(a.id)}', false)">🔑 Blanquear Clave</button>
+              <button type="button" class="mp-btn" onclick="window.resetAccesoAsociadoMp('${esc(a.id)}', true)">🔢 + PIN</button>
+            </div></td>
+          </tr>`;
+        });
+        html += '</tbody></table></div>';
+        asocBox.innerHTML = html;
+      }
+    }
+
+    if (comBox) {
+      const qC = String((document.getElementById('inpMpFiltroAccesosCom') || {}).value || '').trim().toLowerCase();
+      const coms = (acc.comercios || []).filter((m) => {
+        if (!qC) return true;
+        return `${m.fantasy_name || ''} ${m.business_name || ''} ${m.cuit || ''} ${m.login_email || ''} ${m.contact_email || ''}`.toLowerCase().includes(qC);
+      });
+      if (!coms.length) {
+        comBox.innerHTML = '<div style="padding:1rem;color:#64748b;font-size:0.78rem;">Sin comercios para el filtro seleccionado.</div>';
+      } else {
+        let html = '<div class="data-table-container"><table class="data-table"><thead><tr>' +
+          '<th>Comercio</th><th>CUIT</th><th>Usuario / Email Login</th><th>Cuenta Auth</th><th>Último Ingreso</th><th>Estado</th><th>Acción</th>' +
+          '</tr></thead><tbody>';
+        coms.forEach((m) => {
+          const authBadge = m.has_auth_account
+            ? `<span style="color:#059669;font-weight:700;font-size:0.74rem;">✅ Activa${m.email_confirmed ? ' (Verif.)' : ''}</span>`
+            : '<span style="color:#b45309;font-weight:700;font-size:0.74rem;">⚠️ Sin Auth</span>';
+          html += `<tr>
+            <td><strong>${esc(m.fantasy_name || '—')}</strong><div style="font-size:0.68rem;color:#64748b;">${esc(m.business_name || '')}</div></td>
+            <td><code>${esc(m.cuit || '—')}</code></td>
+            <td><code>${esc(m.login_email || m.contact_email || '—')}</code></td>
+            <td>${authBadge}</td>
+            <td style="font-size:0.73rem;">${m.last_sign_in_at ? fmtFecha(m.last_sign_in_at) : 'Nunca'}</td>
+            <td>${badgeStatus(String(m.is_active !== false).toUpperCase())}</td>
+            <td><button type="button" class="mp-btn mp-btn-primary" onclick="window.resetAccesoComercioMp('${esc(m.id)}')">🔑 ${m.has_auth_account ? 'Blanquear Clave' : 'Habilitar Acceso'}</button></td>
+          </tr>`;
+        });
+        html += '</tbody></table></div>';
+        comBox.innerHTML = html;
+      }
+    }
+  }
+
+  async function resetAccesoAsociadoMp(associateId, generateTempPin = false) {
+    const msg = generateTempPin
+      ? '¿Generar nueva clave temporal y PIN de 4 dígitos temporal para este Asociado?'
+      : '¿Habilitar o blanquear la clave temporal de acceso de este Asociado?';
+    if (!confirm(msg)) return;
+    try {
+      const res = await apiMp(`/asociados/${encodeURIComponent(associateId)}/reset-access`, {
+        method: 'POST',
+        body: JSON.stringify({ generate_temp_pin: Boolean(generateTempPin) }),
+      });
+      const r = (res && res.resultado) || {};
+      mostrarCredencialesUnaVez({
+        tipo: 'ASOCIADO',
+        nombre: r.full_name || 'Asociado Mutual Pay',
+        login_email: r.login_email || '',
+        temporary_password: r.temporary_password || '',
+        temporary_pin: r.temporary_pin || null,
+        supabase_auth_ok: Boolean(r.supabase_auth_updated),
+      });
+      toast('Credencial temporal generada para el Asociado.');
+      await cargarTodoMutualPayBackoffice(false);
+    } catch (err) {
+      toast(`Error blanqueando acceso: ${err.message}`);
+    }
+  }
+
+  async function resetAccesoComercioMp(merchantId) {
+    if (!confirm('¿Habilitar o blanquear la clave temporal de acceso de este Comercio en Mutual Pay?')) return;
+    try {
+      const res = await apiMp(`/comercios/${encodeURIComponent(merchantId)}/reset-access`, {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+      const r = (res && res.resultado) || {};
+      mostrarCredencialesUnaVez({
+        tipo: 'COMERCIO',
+        nombre: r.fantasy_name || 'Comercio Mutual Pay',
+        login_email: r.login_email || '',
+        temporary_password: r.temporary_password || '',
+        supabase_auth_ok: Boolean(r.supabase_auth_updated),
+      });
+      toast('Credencial temporal generada para el Comercio.');
+      await cargarTodoMutualPayBackoffice(false);
+    } catch (err) {
+      toast(`Error blanqueando acceso del comercio: ${err.message}`);
+    }
+  }
+
   function initMutualPayBackoffice() {
     if (!st.initialized) {
       st.initialized = true;
     }
-    cargarTodoMutualPayBackoffice(false);
+    if (!st.lastSyncAt || (Date.now() - st.lastSyncAt) > 45000) {
+      cargarTodoMutualPayBackoffice(false);
+    }
   }
 
   global.initMutualPayBackoffice = initMutualPayBackoffice;
@@ -1127,4 +1423,9 @@
   global.guardarReglaFinancieraMp = guardarReglaFinancieraMp;
   global.toggleCashbackMp = toggleCashbackMp;
   global.descargarComplianceMutualPay = descargarComplianceMutualPay;
+  global.renderTabAccesosMutualPay = renderTabAccesosMutualPay;
+  global.resetAccesoAsociadoMp = resetAccesoAsociadoMp;
+  global.resetAccesoComercioMp = resetAccesoComercioMp;
+  global.cerrarCredencialesUnaVez = cerrarCredencialesUnaVez;
+  global.copiarCredencialesMp = copiarCredencialesMp;
 })(window);

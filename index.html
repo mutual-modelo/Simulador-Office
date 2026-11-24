@@ -6452,6 +6452,7 @@
           </div>
 
           <div id="mpHubNotice" style="display:none;padding:0.85rem 1.05rem;border-radius:12px;border:1px solid #cbd5e1;font-size:0.8rem;line-height:1.5;"></div>
+          <div id="mpCredencialesBox" style="display:none;margin-bottom:0.25rem;"></div>
 
           <!-- PESTAÑAS DEL MÓDULO -->
           <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;">
@@ -6476,6 +6477,9 @@
               </button>
               <button type="button" id="btnMpTab_admin" class="mp-hub-tab-btn" onclick="window.cambiarTabMutualPay('admin')">
                 <span>♻️ Economía Circular &amp; Reglas</span>
+              </button>
+              <button type="button" id="btnMpTab_accesos" class="mp-hub-tab-btn" onclick="window.cambiarTabMutualPay('accesos')">
+                <span>🔑 Accesos App</span>
               </button>
             </div>
             <div id="mpHubLastSyncLabel" style="font-size:0.73rem;color:#64748b;font-weight:600;"></div>
@@ -6654,6 +6658,45 @@
                 </div>
               </div>
               <div id="mpAuditLogsContainer" style="max-height:360px;overflow:auto;"></div>
+            </div>
+          </div>
+
+          <!-- TAB 7: PADRÓN DE ACCESOS APP (ASOCIADOS Y COMERCIOS) -->
+          <div id="mpPanel_accesos" class="mp-hub-tab-panel">
+            <div style="padding:0.85rem 1.05rem;border-radius:12px;border:1px solid #bae6fd;background:#f0f9ff;color:#0c4a6e;font-size:0.78rem;line-height:1.5;margin-bottom:0.85rem;">
+              <strong>Seguridad de credenciales:</strong> Supabase Auth almacena las contraseñas con hash <code>bcrypt</code> irreversible y Mutual Pay cifra el PIN de 4 dígitos. Desde aquí podés auditar qué usuarios tienen cuenta vinculada, su último ingreso y <strong>habilitar o blanquear una clave temporal única</strong> (se muestra una sola vez al crearla).
+            </div>
+
+            <div class="audit20-card" style="margin-bottom:1rem;">
+              <div class="audit20-card-head">
+                <div>
+                  <h3 class="audit20-card-title">🪪 Padrón de Accesos — Asociados Mutual Pay</h3>
+                  <p class="audit20-card-sub">Usuario/email de login en Supabase Auth, estado de PIN transaccional, último ingreso y cruce con AMMER Core.</p>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                  <input type="text" id="inpMpFiltroAccesosAsoc" placeholder="Filtrar asociado (nombre, DNI, email)..." oninput="window.renderTabAccesosMutualPay()" style="min-width:230px;padding:0.42rem 0.65rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.78rem;"/>
+                  <select id="selMpFiltroAccesosAsocAuth" onchange="window.renderTabAccesosMutualPay()" style="padding:0.42rem 0.65rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.78rem;">
+                    <option value="">Todos</option>
+                    <option value="AUTH">Con cuenta Auth</option>
+                    <option value="NO_AUTH">Sin cuenta Auth</option>
+                    <option value="NO_PIN">Sin PIN transaccional</option>
+                  </select>
+                </div>
+              </div>
+              <div id="mpAccesosAsociadosContainer"></div>
+            </div>
+
+            <div class="audit20-card">
+              <div class="audit20-card-head">
+                <div>
+                  <h3 class="audit20-card-title">🏪 Padrón de Accesos — Comercios Aliados</h3>
+                  <p class="audit20-card-sub">Usuario/email vinculado en Supabase Auth (`COMERCIO`) y emisión de clave temporal para la PWA.</p>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                  <input type="text" id="inpMpFiltroAccesosCom" placeholder="Filtrar comercio (fantasía, CUIT, email)..." oninput="window.renderTabAccesosMutualPay()" style="min-width:230px;padding:0.42rem 0.65rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.78rem;"/>
+                </div>
+              </div>
+              <div id="mpAccesosComerciosContainer"></div>
             </div>
           </div>
         </div>
@@ -27055,6 +27098,6 @@ ${cierreTxt}`;
   <script src="js/sidecreerWidget.js?v=11"></script>
   <script src="js/firmasAmmer.js?v=21"></script>
   <script src="js/whatsappBotAdmin.js?v=4"></script>
-  <script src="js/mutualPayBackoffice.js?v=1"></script>
+  <script src="js/mutualPayBackoffice.js?v=3"></script>
 </body>
 </html>

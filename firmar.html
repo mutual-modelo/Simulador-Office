@@ -1742,8 +1742,30 @@
               <button type="button" id="btnUifPepSi" class="uif-choice-btn">Sí</button>
             </div>
             <div id="boxUifPepDetalle" class="uif-extra-box">
-              <strong>Aclaración opcional (cargo o vínculo):</strong>
-              <input type="text" id="inpUifPepDetalle" maxlength="180" placeholder="Ej: Cargo público o vínculo familiar"/>
+              <strong style="display:block;margin-bottom:0.4rem;">Indicá en cuál(es) supuesto(s) de la Res. UIF 35/2023 y 192/2024 te encontrás y el motivo:</strong>
+              <div style="display:flex;flex-direction:column;gap:0.55rem;">
+                <div>
+                  <label style="display:flex;align-items:flex-start;gap:0.45rem;font-weight:700;font-size:0.82rem;cursor:pointer;">
+                    <input type="checkbox" id="chkUifPepArt123" style="margin-top:2px;"/>
+                    <span>Arts. 1, 2 y 3 — Ocupo actualmente un cargo público alcanzado</span>
+                  </label>
+                  <input type="text" id="inpUifPepArt123Motivo" maxlength="160" placeholder="Detallar cargo y organismo..." style="display:none;margin-top:0.25rem;"/>
+                </div>
+                <div>
+                  <label style="display:flex;align-items:flex-start;gap:0.45rem;font-weight:700;font-size:0.82rem;cursor:pointer;">
+                    <input type="checkbox" id="chkUifPepArt6" style="margin-top:2px;"/>
+                    <span>Art. 6 — Cesé en un cargo PEP dentro de los últimos 2 años</span>
+                  </label>
+                  <input type="text" id="inpUifPepArt6Motivo" maxlength="160" placeholder="Detallar cargo anterior y motivo/fecha de cese..." style="display:none;margin-top:0.25rem;"/>
+                </div>
+                <div>
+                  <label style="display:flex;align-items:flex-start;gap:0.45rem;font-weight:700;font-size:0.82rem;cursor:pointer;">
+                    <input type="checkbox" id="chkUifPepArt4" style="margin-top:2px;"/>
+                    <span>Art. 4 — Parentesco o cercanía con una Persona Expuesta Políticamente</span>
+                  </label>
+                  <input type="text" id="inpUifPepArt4Motivo" maxlength="160" placeholder="Detallar vínculo y cargo del familiar o allegado..." style="display:none;margin-top:0.25rem;"/>
+                </div>
+              </div>
             </div>
             <details class="uif-more">
               <summary>ℹ️ ¿Qué significa?</summary>
@@ -2288,7 +2310,19 @@
         dniTorchOn: false,
         dniHudRot: '0',
         dniIntroVisto: true,
-        ddjjUif: { pep: '', pepDetalle: '', sujetoObligado: '', constanciaNombre: '', repetAceptado: false },
+        ddjjUif: {
+          pep: '',
+          pepDetalle: '',
+          pepArt123: false,
+          pepArt123Motivo: '',
+          pepArt6: false,
+          pepArt6Motivo: '',
+          pepArt4: false,
+          pepArt4Motivo: '',
+          sujetoObligado: '',
+          constanciaNombre: '',
+          repetAceptado: false
+        },
         dniFallosHabilitarGaleria: 0,
         galeriaDniHabilitada: false,
         mediaRecorder: null,
@@ -2327,7 +2361,9 @@
         const k = obtenerClaveProgreso_();
         if (!k) return;
         try {
-          const inpPepDet = document.getElementById('inpUifPepDetalle');
+          const m123 = document.getElementById('inpUifPepArt123Motivo');
+          const m6 = document.getElementById('inpUifPepArt6Motivo');
+          const m4 = document.getElementById('inpUifPepArt4Motivo');
           const snap = {
             currentStepIdx: Number(appState.currentStepIdx || 0),
             pdfZoomPct: Number(appState.pdfZoomPct || 100),
@@ -2335,7 +2371,13 @@
             galeriaDniHabilitada: Boolean(appState.galeriaDniHabilitada),
             ddjjUif: {
               pep: appState.ddjjUif.pep || '',
-              pepDetalle: (inpPepDet ? String(inpPepDet.value || '').trim() : appState.ddjjUif.pepDetalle) || '',
+              pepDetalle: appState.ddjjUif.pepDetalle || '',
+              pepArt123: Boolean(appState.ddjjUif.pepArt123),
+              pepArt123Motivo: (m123 ? String(m123.value || '').trim() : appState.ddjjUif.pepArt123Motivo) || '',
+              pepArt6: Boolean(appState.ddjjUif.pepArt6),
+              pepArt6Motivo: (m6 ? String(m6.value || '').trim() : appState.ddjjUif.pepArt6Motivo) || '',
+              pepArt4: Boolean(appState.ddjjUif.pepArt4),
+              pepArt4Motivo: (m4 ? String(m4.value || '').trim() : appState.ddjjUif.pepArt4Motivo) || '',
               sujetoObligado: appState.ddjjUif.sujetoObligado || '',
               repetAceptado: Boolean(appState.ddjjUif.repetAceptado),
             },
@@ -2385,11 +2427,24 @@
             const bSi = document.getElementById('btnUifPepSi');
             const boxDet = document.getElementById('boxUifPepDetalle');
             const cardPep = document.getElementById('uifCardPep');
-            const inpDet = document.getElementById('inpUifPepDetalle');
             if (bNo) bNo.className = 'uif-choice-btn' + (uif.pep === 'no' ? ' selected-no' : '');
             if (bSi) bSi.className = 'uif-choice-btn' + (uif.pep === 'si' ? ' selected-si' : '');
             if (boxDet) boxDet.style.display = uif.pep === 'si' ? 'block' : 'none';
-            if (inpDet && uif.pepDetalle) inpDet.value = uif.pepDetalle;
+            const restoreSub = (chkId, inpId, flagVal, motVal, stateKeyFlag, stateKeyMot) => {
+              const chkEl = document.getElementById(chkId);
+              const inpEl = document.getElementById(inpId);
+              appState.ddjjUif[stateKeyFlag] = Boolean(flagVal);
+              appState.ddjjUif[stateKeyMot] = String(motVal || '');
+              if (chkEl) chkEl.checked = Boolean(flagVal);
+              if (inpEl) {
+                inpEl.value = String(motVal || '');
+                inpEl.style.display = flagVal ? 'block' : 'none';
+              }
+            };
+            restoreSub('chkUifPepArt123', 'inpUifPepArt123Motivo', uif.pepArt123, uif.pepArt123Motivo, 'pepArt123', 'pepArt123Motivo');
+            restoreSub('chkUifPepArt6', 'inpUifPepArt6Motivo', uif.pepArt6, uif.pepArt6Motivo, 'pepArt6', 'pepArt6Motivo');
+            restoreSub('chkUifPepArt4', 'inpUifPepArt4Motivo', uif.pepArt4, uif.pepArt4Motivo, 'pepArt4', 'pepArt4Motivo');
+            if (uif.pepDetalle) appState.ddjjUif.pepDetalle = String(uif.pepDetalle);
             if (cardPep) cardPep.classList.add('is-answered');
             algoRestaurado = true;
           }
@@ -2911,6 +2966,52 @@
             mostrarErrorEnPaso('Por favor respondé la pregunta 1 (¿Sos Persona Expuesta Políticamente?) marcando "No" o "Sí".');
             return;
           }
+          if (appState.ddjjUif.pep === 'si') {
+            const chk123 = document.getElementById('chkUifPepArt123');
+            const chk6 = document.getElementById('chkUifPepArt6');
+            const chk4 = document.getElementById('chkUifPepArt4');
+            const inp123 = document.getElementById('inpUifPepArt123Motivo');
+            const inp6 = document.getElementById('inpUifPepArt6Motivo');
+            const inp4 = document.getElementById('inpUifPepArt4Motivo');
+
+            appState.ddjjUif.pepArt123 = Boolean(chk123 && chk123.checked);
+            appState.ddjjUif.pepArt6 = Boolean(chk6 && chk6.checked);
+            appState.ddjjUif.pepArt4 = Boolean(chk4 && chk4.checked);
+            appState.ddjjUif.pepArt123Motivo = inp123 ? String(inp123.value || '').trim() : '';
+            appState.ddjjUif.pepArt6Motivo = inp6 ? String(inp6.value || '').trim() : '';
+            appState.ddjjUif.pepArt4Motivo = inp4 ? String(inp4.value || '').trim() : '';
+
+            if (!appState.ddjjUif.pepArt123 && !appState.ddjjUif.pepArt6 && !appState.ddjjUif.pepArt4) {
+              mostrarErrorEnPaso('Al responder "Sí" en PEP, seleccioná al menos uno de los encuadres (Arts. 1-3, Art. 6 o Art. 4).');
+              return;
+            }
+            if (appState.ddjjUif.pepArt123 && !appState.ddjjUif.pepArt123Motivo) {
+              mostrarErrorEnPaso('Por favor completá el cargo/función/motivo para Arts. 1°, 2° y 3°.');
+              return;
+            }
+            if (appState.ddjjUif.pepArt6 && !appState.ddjjUif.pepArt6Motivo) {
+              mostrarErrorEnPaso('Por favor completá el cargo/función/motivo para Art. 6°.');
+              return;
+            }
+            if (appState.ddjjUif.pepArt4 && !appState.ddjjUif.pepArt4Motivo) {
+              mostrarErrorEnPaso('Por favor completá el vínculo/parentesco o motivo para Art. 4°.');
+              return;
+            }
+
+            const partes = [];
+            if (appState.ddjjUif.pepArt123) partes.push('Arts. 1-3: ' + appState.ddjjUif.pepArt123Motivo);
+            if (appState.ddjjUif.pepArt6) partes.push('Art. 6: ' + appState.ddjjUif.pepArt6Motivo);
+            if (appState.ddjjUif.pepArt4) partes.push('Art. 4: ' + appState.ddjjUif.pepArt4Motivo);
+            appState.ddjjUif.pepDetalle = partes.join(' | ');
+          } else {
+            appState.ddjjUif.pepArt123 = false;
+            appState.ddjjUif.pepArt6 = false;
+            appState.ddjjUif.pepArt4 = false;
+            appState.ddjjUif.pepArt123Motivo = '';
+            appState.ddjjUif.pepArt6Motivo = '';
+            appState.ddjjUif.pepArt4Motivo = '';
+            appState.ddjjUif.pepDetalle = '';
+          }
           if (!appState.ddjjUif.sujetoObligado) {
             mostrarErrorEnPaso('Por favor respondé la pregunta 2 (¿Sos Sujeto Obligado ante la UIF?) marcando "No" o "Sí".');
             return;
@@ -2921,8 +3022,6 @@
             mostrarErrorEnPaso('Por favor marcá la casilla de declaración de origen lícito de fondos y control RePET para continuar.');
             return;
           }
-          const inpPepDet = document.getElementById('inpUifPepDetalle');
-          appState.ddjjUif.pepDetalle = inpPepDet ? String(inpPepDet.value || '').trim() : '';
         }
 
         if (stepKey === 'dni') {
@@ -4560,14 +4659,33 @@
           bPepSi.dataset.bound = '1';
           bPepSi.addEventListener('click', () => setPep('si'));
         }
-        const inpPepDet = document.getElementById('inpUifPepDetalle');
-        if (inpPepDet && !inpPepDet.dataset.bound) {
-          inpPepDet.dataset.bound = '1';
-          inpPepDet.addEventListener('input', () => {
-            appState.ddjjUif.pepDetalle = String(inpPepDet.value || '').trim();
-            guardarProgresoParcial_();
-          });
-        }
+        const bindSubPep = (chkId, inpId, flagKey, motKey) => {
+          const chkEl = document.getElementById(chkId);
+          const inpEl = document.getElementById(inpId);
+          if (chkEl && !chkEl.dataset.bound) {
+            chkEl.dataset.bound = '1';
+            chkEl.addEventListener('change', () => {
+              appState.ddjjUif[flagKey] = Boolean(chkEl.checked);
+              if (inpEl) inpEl.style.display = chkEl.checked ? 'block' : 'none';
+              mostrarErrorEnPaso('');
+              guardarProgresoParcial_();
+              if (chkEl.checked && inpEl) {
+                try { inpEl.focus(); } catch (_) {}
+              }
+            });
+          }
+          if (inpEl && !inpEl.dataset.bound) {
+            inpEl.dataset.bound = '1';
+            inpEl.addEventListener('input', () => {
+              appState.ddjjUif[motKey] = String(inpEl.value || '').trim();
+              mostrarErrorEnPaso('');
+              guardarProgresoParcial_();
+            });
+          }
+        };
+        bindSubPep('chkUifPepArt123', 'inpUifPepArt123Motivo', 'pepArt123', 'pepArt123Motivo');
+        bindSubPep('chkUifPepArt6', 'inpUifPepArt6Motivo', 'pepArt6', 'pepArt6Motivo');
+        bindSubPep('chkUifPepArt4', 'inpUifPepArt4Motivo', 'pepArt4', 'pepArt4Motivo');
 
         const bSujNo = document.getElementById('btnUifSujetoNo');
         const bSujSi = document.getElementById('btnUifSujetoSi');
@@ -4697,6 +4815,12 @@
               es_pep: appState.ddjjUif.pep === 'si',
               pep_respuesta: appState.ddjjUif.pep || 'no',
               pep_detalle: appState.ddjjUif.pepDetalle || '',
+              pep_art_123_respuesta: (appState.ddjjUif.pep === 'si' && appState.ddjjUif.pepArt123) ? 'si' : 'no',
+              pep_art_123_motivo: (appState.ddjjUif.pep === 'si' && appState.ddjjUif.pepArt123) ? (appState.ddjjUif.pepArt123Motivo || '') : '',
+              pep_art_6_respuesta: (appState.ddjjUif.pep === 'si' && appState.ddjjUif.pepArt6) ? 'si' : 'no',
+              pep_art_6_motivo: (appState.ddjjUif.pep === 'si' && appState.ddjjUif.pepArt6) ? (appState.ddjjUif.pepArt6Motivo || '') : '',
+              pep_art_4_respuesta: (appState.ddjjUif.pep === 'si' && appState.ddjjUif.pepArt4) ? 'si' : 'no',
+              pep_art_4_motivo: (appState.ddjjUif.pep === 'si' && appState.ddjjUif.pepArt4) ? (appState.ddjjUif.pepArt4Motivo || '') : '',
               es_sujeto_obligado: appState.ddjjUif.sujetoObligado === 'si',
               sujeto_obligado_respuesta: appState.ddjjUif.sujetoObligado || 'no',
               constancia_uif_archivo: appState.ddjjUif.constanciaNombre || '',

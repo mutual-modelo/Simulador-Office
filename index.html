@@ -1926,6 +1926,48 @@
     @media (max-width:768px){.wa-actions-bar{flex-wrap:wrap}.wa-recipient-inputs{width:100%}.wa-phone-inline-box{max-width:none}.wa-btn-group{width:100%;justify-content:flex-end}}
 
     /* ========================================================================
+       MUTUAL PAY BACKOFFICE ADMIN — CONSOLA UNIFICADA Y CRUCE AMMER
+       ======================================================================== */
+    .workspace-inner-container:has(#view-mutual-pay.active){max-width:1760px}
+    .mp-hub-shell{max-width:100%;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:0.9rem}
+    .mp-hub-hero{background:linear-gradient(135deg,#091e3a 0%,#0E4D92 58%,#1d4ed8 100%);color:#fff;border-radius:16px;padding:1.1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;box-shadow:0 10px 26px rgba(14,77,146,0.18)}
+    .mp-hub-hero-title{font-size:1.15rem;font-weight:800;letter-spacing:-0.015em;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+    .mp-hub-role-pill{padding:2px 9px;border-radius:9999px;background:rgba(255,255,255,0.16);border:1px solid rgba(255,255,255,0.28);font-size:0.65rem;font-weight:800;letter-spacing:0.05em;text-transform:uppercase}
+    .mp-hub-kpis{display:flex;gap:7px;flex-wrap:wrap;margin-top:0.65rem}
+    .mp-hub-kpi-pill{padding:0.3rem 0.7rem;border-radius:10px;background:rgba(255,255,255,0.13);border:1px solid rgba(255,255,255,0.2);font-size:0.74rem;font-weight:700;color:#f8fafc;display:inline-flex;align-items:center;gap:6px}
+    .mp-hub-tabs{display:inline-flex;gap:4px;background:#e2e8f0;padding:4px;border-radius:12px;align-self:flex-start;flex-wrap:wrap}
+    .mp-hub-tab-btn{border:none;background:transparent;color:#475569;font-family:inherit;font-size:0.79rem;font-weight:700;padding:0.48rem 0.9rem;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s ease}
+    .mp-hub-tab-btn:hover{color:#0f172a;background:rgba(255,255,255,0.6)}
+    .mp-hub-tab-btn.active{background:#ffffff;color:#0E4D92;box-shadow:0 1px 4px rgba(15,23,42,0.12)}
+    .mp-hub-tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:9999px;font-size:0.65rem;font-weight:800;background:#0E4D92;color:#fff}
+    .mp-hub-tab-badge.warn{background:#d97706}
+    .mp-hub-tab-panel{display:none;flex-direction:column;gap:0.9rem}
+    .mp-hub-tab-panel.active{display:flex}
+    .mp-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem}
+    .mp-kpi-card{background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:0.95rem 1.05rem;box-shadow:0 1px 3px rgba(15,23,42,0.03)}
+    .mp-kpi-label{font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:#64748b}
+    .mp-kpi-val{font-size:1.3rem;font-weight:800;color:#0f172a;margin-top:4px}
+    .mp-kpi-sub{font-size:0.72rem;color:#64748b;margin-top:3px}
+    .mp-split-2{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(340px,0.9fr);gap:0.9rem;align-items:start}
+    @media (max-width:1100px){.mp-split-2{grid-template-columns:1fr}}
+    .mp-btn{padding:0.46rem 0.85rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;font-family:inherit;font-size:0.76rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .14s ease}
+    .mp-btn:hover{background:#f8fafc;border-color:#94a3b8}
+    .mp-btn-primary{background:#0E4D92;border-color:#0E4D92;color:#ffffff}
+    .mp-btn-primary:hover{background:#0b3c75;border-color:#0b3c75}
+    .mp-btn-success{background:#059669;border-color:#059669;color:#ffffff}
+    .mp-btn-success:hover{background:#047857}
+    .mp-btn-danger{background:#dc2626;border-color:#dc2626;color:#ffffff}
+    .mp-btn-danger:hover{background:#b91c1c}
+    .mp-btn-indigo{background:#4f46e5;border-color:#4f46e5;color:#ffffff}
+    .mp-btn-indigo:hover{background:#4338ca}
+    .mp-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:9999px;font-size:0.68rem;font-weight:700;white-space:nowrap}
+    .mp-badge-ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+    .mp-badge-warn{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+    .mp-badge-err{background:#fff1f2;color:#9f1239;border:1px solid #fecdd3}
+    .mp-badge-info{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+    .mp-badge-neutral{background:#f1f5f9;color:#475569;border:1px solid #cbd5e1}
+
+    /* ========================================================================
        WHATSAPP BOT HUB — CENTRO MULTI-LÍNEA Y MENSAJERÍA COMPLETA
        ======================================================================== */
     .workspace-inner-container:has(#view-whatsapp-bot.active){max-width:1760px}
@@ -4253,6 +4295,15 @@
           </span>
           <span class="sidebar-nav-label sidebar-text">Padrón y Fichas</span>
         </button>
+        <button type="button" id="btnNavMutualPay" class="sidebar-nav-item" data-view="view-mutual-pay" data-tooltip="Mutual Pay" onclick="cambiarVistaPrincipal('mutual-pay')" style="display:none;">
+          <span class="sidebar-nav-icon" style="color:#60a5fa;">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+              <line x1="2" y1="10" x2="22" y2="10"></line>
+            </svg>
+          </span>
+          <span class="sidebar-nav-label sidebar-text">Mutual Pay</span>
+        </button>
       </nav>
 
       <div class="sidebar-footer">
@@ -6368,6 +6419,241 @@
                 <input type="checkbox" id="chkWaBotFallbackAuto" checked style="width:16px;height:16px;accent-color:#16a34a;"/>
                 <span>Respaldo automático: si la línea asignada está desconectada o fuera de ventana 24h, usar otra línea conectada disponible antes de pasar a enlace manual.</span>
               </label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISTA EXCLUSIVA ADMIN: BACKOFFICE MUTUAL PAY & CRUCE AMMER -->
+      <section id="view-mutual-pay" class="app-view">
+        <div class="main-panel mp-hub-shell">
+          <!-- HERO -->
+          <div class="mp-hub-hero">
+            <div style="flex:1;min-width:260px;">
+              <div class="mp-hub-hero-title">
+                <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                <span>Mutual Pay — Backoffice Unificado</span>
+                <span class="mp-hub-role-pill">Solo Admin</span>
+                <span class="mp-hub-role-pill" style="background:rgba(16,185,129,0.22);border-color:rgba(167,243,208,0.45);">Cruce AMMER Core</span>
+              </div>
+              <div style="font-size:0.79rem;color:rgba(241,245,249,0.9);margin-top:4px;line-height:1.45;max-width:860px;">
+                Administrá legajos KYC (con auditoría IA AMMER), ayudas económicas, comercios aliados, liquidaciones QR 24–48 hs, cobranzas manuales, convenios Sidecreer y economía circular desde el panel interno de la Mutual.
+              </div>
+              <div id="mpHubKpis" class="mp-hub-kpis"></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <button type="button" class="wa-hub-btn-ghost" onclick="window.verificarEstadoMutualPay(true)">
+                <span>🩺 Estado S2S</span>
+              </button>
+              <button type="button" id="btnMpRefreshAll" class="wa-hub-btn-primary" style="background:#ffffff;color:#0E4D92;" onclick="window.cargarTodoMutualPayBackoffice(true)">
+                <span>🔄 Actualizar Datos</span>
+              </button>
+            </div>
+          </div>
+
+          <div id="mpHubNotice" style="display:none;padding:0.85rem 1.05rem;border-radius:12px;border:1px solid #cbd5e1;font-size:0.8rem;line-height:1.5;"></div>
+
+          <!-- PESTAÑAS DEL MÓDULO -->
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;">
+            <div class="mp-hub-tabs" role="tablist" aria-label="Módulos de Mutual Pay Backoffice">
+              <button type="button" id="btnMpTab_resumen" class="mp-hub-tab-btn active" onclick="window.cambiarTabMutualPay('resumen')">
+                <span>📊 Resumen &amp; Cruce 360°</span>
+              </button>
+              <button type="button" id="btnMpTab_asociados" class="mp-hub-tab-btn" onclick="window.cambiarTabMutualPay('asociados')">
+                <span>🪪 Asociados, KYC &amp; Convenios</span>
+                <span id="mpBadgeTabKyc" class="mp-hub-tab-badge warn" style="display:none;">0</span>
+              </button>
+              <button type="button" id="btnMpTab_ayudas" class="mp-hub-tab-btn" onclick="window.cambiarTabMutualPay('ayudas')">
+                <span>💵 Ayudas Económicas</span>
+                <span id="mpBadgeTabAyudas" class="mp-hub-tab-badge warn" style="display:none;">0</span>
+              </button>
+              <button type="button" id="btnMpTab_comercios" class="mp-hub-tab-btn" onclick="window.cambiarTabMutualPay('comercios')">
+                <span>🏪 Comercios, POS &amp; Liquidaciones</span>
+              </button>
+              <button type="button" id="btnMpTab_cobranzas" class="mp-hub-tab-btn" onclick="window.cambiarTabMutualPay('cobranzas')">
+                <span>🧾 Cobranza Manual</span>
+                <span id="mpBadgeTabCobranzas" class="mp-hub-tab-badge warn" style="display:none;">0</span>
+              </button>
+              <button type="button" id="btnMpTab_admin" class="mp-hub-tab-btn" onclick="window.cambiarTabMutualPay('admin')">
+                <span>♻️ Economía Circular &amp; Reglas</span>
+              </button>
+            </div>
+            <div id="mpHubLastSyncLabel" style="font-size:0.73rem;color:#64748b;font-weight:600;"></div>
+          </div>
+
+          <!-- TAB 1: RESUMEN & CRUCE 360° -->
+          <div id="mpPanel_resumen" class="mp-hub-tab-panel active">
+            <div id="mpResumenKpiCards" class="mp-kpi-grid"></div>
+            <div class="audit20-card">
+              <div class="audit20-card-head">
+                <div>
+                  <h3 class="audit20-card-title">🔗 Buscador Unificado por DNI (Mutual Pay + Core AMMER)</h3>
+                  <p class="audit20-card-sub">Consultá en simultáneo el estado de billetera/QR en Mutual Pay y los antecedentes crediticios/documentales en el padrón AMMER.</p>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <input type="text" id="inpMpResumenBuscar" placeholder="DNI, CUIL, nombre o email..." onkeydown="if(event.key==='Enter'){event.preventDefault();window.buscarAsociadosMutualPay();}" style="padding:0.48rem 0.75rem;border-radius:9px;border:1px solid #cbd5e1;font-size:0.79rem;min-width:240px;"/>
+                  <button type="button" class="mp-btn mp-btn-primary" onclick="window.buscarAsociadosMutualPay()">🔍 Buscar y Cruzar</button>
+                </div>
+              </div>
+              <div id="mpResumenCruceContainer">
+                <div style="padding:1.5rem;text-align:center;color:#64748b;font-size:0.82rem;">Cargando resumen unificado de Mutual Pay...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: ASOCIADOS, KYC & CONVENIOS -->
+          <div id="mpPanel_asociados" class="mp-hub-tab-panel">
+            <div class="mp-split-2">
+              <div class="audit20-card">
+                <div class="audit20-card-head">
+                  <div>
+                    <h3 class="audit20-card-title">🪪 Padrón de Asociados &amp; Bandeja KYC</h3>
+                    <p class="audit20-card-sub">Filtrá por estado KYC y seleccioná un legajo para revisar documentos privados y cruzar con IA AMMER.</p>
+                  </div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <input type="text" id="inpMpFiltroAsoc" placeholder="DNI, nombre o email..." oninput="window.renderTablaAsociadosMutualPay()" style="padding:0.42rem 0.7rem;border-radius:8px;border:1px solid #cbd5e1;font-size:0.77rem;min-width:180px;"/>
+                    <select id="selMpFiltroKyc" onchange="window.renderTablaAsociadosMutualPay()" style="padding:0.42rem 0.7rem;border-radius:8px;border:1px solid #cbd5e1;font-size:0.77rem;font-weight:600;">
+                      <option value="">Todos los estados KYC</option>
+                      <option value="UNDER_REVIEW">En Revisión</option>
+                      <option value="PENDING_DOCUMENTATION">Doc. Pendiente</option>
+                      <option value="DRAFT">Borrador</option>
+                      <option value="APPROVED">Aprobados</option>
+                      <option value="REJECTED">Rechazados</option>
+                    </select>
+                  </div>
+                </div>
+                <div id="mpAsociadosTablaContainer" style="max-height:620px;overflow:auto;"></div>
+              </div>
+
+              <div class="audit20-card" id="mpAsociadoDetallePanel">
+                <div style="padding:2.2rem 1rem;text-align:center;color:#64748b;font-size:0.83rem;">
+                  Seleccioná un asociado de la lista para ver su legajo KYC, documentos con URL firmada, límites de crédito y cruce completo con Core AMMER.
+                </div>
+              </div>
+            </div>
+
+            <div class="audit20-card">
+              <div class="audit20-card-head">
+                <div>
+                  <h3 class="audit20-card-title">💳 Solicitudes de Convenios Especiales (Sidecreer en App)</h3>
+                  <p class="audit20-card-sub">Validación de tarjetas Sidecreer cargadas desde Mutual Pay y asignación de cupo por convenio.</p>
+                </div>
+              </div>
+              <div id="mpConveniosTablaContainer"></div>
+            </div>
+          </div>
+
+          <!-- TAB 3: AYUDAS ECONÓMICAS -->
+          <div id="mpPanel_ayudas" class="mp-hub-tab-panel">
+            <div class="audit20-card">
+              <div class="audit20-card-head">
+                <div>
+                  <h3 class="audit20-card-title">💵 Solicitudes de Ayuda Económica y Ampliación de Límites</h3>
+                  <p class="audit20-card-sub">Evaluá solicitudes iniciadas en Mutual Pay cruzadas con su disponible AMMER, con acceso directo a Simulador y Firmas AMMER.</p>
+                </div>
+                <select id="selMpFiltroAyudas" onchange="window.renderTablaAyudasMutualPay()" style="padding:0.42rem 0.7rem;border-radius:8px;border:1px solid #cbd5e1;font-size:0.77rem;font-weight:600;">
+                  <option value="">Todos los estados</option>
+                  <option value="SUBMITTED">Pendientes (SUBMITTED)</option>
+                  <option value="UNDER_EVALUATION">En Evaluación</option>
+                  <option value="APPROVED">Aprobadas</option>
+                  <option value="REJECTED">Rechazadas</option>
+                </select>
+              </div>
+              <div id="mpAyudasTablaContainer"></div>
+            </div>
+          </div>
+
+          <!-- TAB 4: COMERCIOS, POS & LIQUIDACIONES -->
+          <div id="mpPanel_comercios" class="mp-hub-tab-panel">
+            <div class="audit20-card">
+              <div class="audit20-card-head">
+                <div>
+                  <h3 class="audit20-card-title">🏦 Liquidaciones a Comercios Aliados (24–48 hs)</h3>
+                  <p class="audit20-card-sub">Consolidado de ventas QR autorizadas, arancel mutual deducido y neto a transferir por CBU/Alias.</p>
+                </div>
+                <button type="button" class="mp-btn mp-btn-success" onclick="window.exportarLiquidacionesMutualPayCsv()">⬇️ Exportar CSV Tesorería</button>
+              </div>
+              <div id="mpLiquidacionesTablaContainer"></div>
+            </div>
+
+            <div class="audit20-card">
+              <div class="audit20-card-head">
+                <div>
+                  <h3 class="audit20-card-title">🏪 Padrón de Comercios Adheridos</h3>
+                  <p class="audit20-card-sub">Alta de comercios/sucursales y edición de aranceles, plazos y estado operativo.</p>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <input type="text" id="inpMpFiltroComercio" placeholder="Buscar CUIT o comercio..." oninput="window.renderTablaComerciosMutualPay()" style="padding:0.42rem 0.7rem;border-radius:8px;border:1px solid #cbd5e1;font-size:0.77rem;"/>
+                  <button type="button" class="mp-btn mp-btn-primary" onclick="window.toggleFormNuevoComercioMp()">➕ Nuevo Comercio</button>
+                </div>
+              </div>
+              <div id="mpFormNuevoComercioWrap" style="display:none;background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px;padding:0.9rem;margin-bottom:0.9rem;"></div>
+              <div id="mpComerciosTablaContainer"></div>
+            </div>
+
+            <div class="audit20-card">
+              <div class="audit20-card-head">
+                <div>
+                  <h3 class="audit20-card-title">📲 Monitor de Transacciones QR</h3>
+                  <p class="audit20-card-sub">Operaciones realizadas en comercios con cruce de asociado y opción de anulación / contra-asiento contable.</p>
+                </div>
+              </div>
+              <div id="mpTransaccionesTablaContainer"></div>
+            </div>
+          </div>
+
+          <!-- TAB 5: COBRANZA MANUAL -->
+          <div id="mpPanel_cobranzas" class="mp-hub-tab-panel">
+            <div class="audit20-card">
+              <div class="audit20-card-head">
+                <div>
+                  <h3 class="audit20-card-title">🧾 Auditoría de Comprobantes de Transferencia (Cobranza Manual)</h3>
+                  <p class="audit20-card-sub">Verificá comprobantes subidos al bucket privado por los asociados para cancelar cuotas e imputar en el Ledger.</p>
+                </div>
+              </div>
+              <div id="mpCobranzasTablaContainer"></div>
+            </div>
+          </div>
+
+          <!-- TAB 6: ECONOMÍA CIRCULAR, REGLAS & AUDITORÍA -->
+          <div id="mpPanel_admin" class="mp-hub-tab-panel">
+            <div id="mpCircularKpiCards" class="mp-kpi-grid"></div>
+            <div class="mp-split-2">
+              <div class="audit20-card">
+                <div class="audit20-card-head">
+                  <div>
+                    <h3 class="audit20-card-title">⚙️ Reglas Financieras Paramétricas (Activos / Pasivos)</h3>
+                    <p class="audit20-card-sub">Tope de afectación sobre sueldo neto y distribución entre compras en comercios y préstamos en efectivo.</p>
+                  </div>
+                </div>
+                <div id="mpReglasFinancierasContainer"></div>
+              </div>
+
+              <div class="audit20-card">
+                <div class="audit20-card-head">
+                  <div>
+                    <h3 class="audit20-card-title">🎁 Reglas de Cashback &amp; Exportación Regulatoria</h3>
+                    <p class="audit20-card-sub">Configuración de reintegros y descarga oficial de reportes CSV.</p>
+                  </div>
+                </div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:0.85rem;">
+                  <button type="button" class="mp-btn" onclick="window.descargarComplianceMutualPay('INAES')">📄 Exportar INAES</button>
+                  <button type="button" class="mp-btn" onclick="window.descargarComplianceMutualPay('COELSA')">📄 Exportar COELSA</button>
+                  <button type="button" class="mp-btn" onclick="window.descargarComplianceMutualPay('BCRA')">📄 Exportar BCRA</button>
+                  <button type="button" class="mp-btn" onclick="window.descargarComplianceMutualPay('UIF')">📄 Exportar UIF</button>
+                </div>
+                <div id="mpCashbackRulesContainer"></div>
+              </div>
+            </div>
+
+            <div class="audit20-card">
+              <div class="audit20-card-head">
+                <div>
+                  <h3 class="audit20-card-title">🛡️ Bitácora de Auditoría Mutual Pay (`audit_logs`)</h3>
+                  <p class="audit20-card-sub">Trazabilidad de aprobaciones, cambios de límites, reglas y acciones administrativas.</p>
+                </div>
+              </div>
+              <div id="mpAuditLogsContainer" style="max-height:360px;overflow:auto;"></div>
             </div>
           </div>
         </div>
@@ -11438,7 +11724,10 @@ ${cierreTxt}`;
         'view-comercializador': 'view-comercializador',
         'whatsapp-bot': 'view-whatsapp-bot',
         'whatsapp': 'view-whatsapp-bot',
-        'view-whatsapp-bot': 'view-whatsapp-bot'
+        'view-whatsapp-bot': 'view-whatsapp-bot',
+        'mutual-pay': 'view-mutual-pay',
+        'mutualpay': 'view-mutual-pay',
+        'view-mutual-pay': 'view-mutual-pay'
       };
       const targetViewId = mapaVistas[k] || vistaKey;
       cambiarPestana(targetViewId);
@@ -11509,6 +11798,9 @@ ${cierreTxt}`;
         } else if (viewId === 'view-whatsapp-bot') {
           titleEl.textContent = 'Whatsapp Bot';
           subEl.textContent = 'Gestión multi-línea QR, sesiones conectadas y enrutamiento de acciones (Admin)';
+        } else if (viewId === 'view-mutual-pay') {
+          titleEl.textContent = 'Mutual Pay — Backoffice Admin';
+          subEl.textContent = 'Consola unificada de asociados, KYC, comercios, liquidaciones QR y cruce AMMER';
         } else if (viewId === 'view-comercializador') {
           titleEl.textContent = sess.es_titular_organizacion ? 'Gestiones Organización' : 'Mis Gestiones';
           subEl.textContent = 'Seguimiento operativo y alta de solicitudes de ayuda económica';
@@ -11531,6 +11823,16 @@ ${cierreTxt}`;
         }
         if (typeof window.initWhatsappBotPanelAdmin === 'function') {
           window.initWhatsappBotPanelAdmin();
+        }
+      }
+      if (viewId === 'view-mutual-pay') {
+        if (!tieneAccesoMutualPay(sess)) {
+          showToast('⛔ Acceso restringido: Mutual Pay solo está habilitado para rol Admin.');
+          cambiarPestana('view-simulador');
+          return;
+        }
+        if (typeof window.initMutualPayBackoffice === 'function') {
+          window.initMutualPayBackoffice();
         }
       }
       if (viewId === 'view-comercializador') {
@@ -11586,6 +11888,13 @@ ${cierreTxt}`;
       return rol === 'admin' || rol === 'administrador';
     }
     window.tieneAccesoFirmasAmmer = tieneAccesoFirmasAmmer;
+
+    function tieneAccesoMutualPay(sessObj) {
+      const s = sessObj || getSession();
+      const rol = String((s && (s.rol || s.role)) || '').trim().toLowerCase();
+      return rol === 'admin' || rol === 'administrador';
+    }
+    window.tieneAccesoMutualPay = tieneAccesoMutualPay;
 
     function tieneAccesoBotWhatsapp(sessObj) {
       const s = sessObj || getSession();
@@ -11665,6 +11974,7 @@ ${cierreTxt}`;
         const iconBoveda = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>';
         const iconAyuda = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
         const iconWhatsappBot = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>';
+        const iconMutualPay = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>';
         const esAdminMenu = Boolean(session && String(session.rol || '').toLowerCase().includes('admin'));
 
         const itemAuditoriaIA = '<button type="button" id="btnNavAuditoriaIA" class="sidebar-nav-item" data-view="vistaAuditoriaIA" data-tooltip="Auditoría IA" onclick="cambiarVistaPrincipal(\'auditoria-ia\')">' +
@@ -11702,6 +12012,9 @@ ${cierreTxt}`;
             '<span class="sidebar-nav-icon">' + iconBoveda + '</span>' +
             '<span class="sidebar-nav-label ' + textCls + '">3en1 Drive</span></a>';
           if (esAdminMenu) {
+            html += '<button type="button" id="btnNavMutualPay" class="sidebar-nav-item" data-view="view-mutual-pay" data-tooltip="Mutual Pay" onclick="cambiarVistaPrincipal(\'mutual-pay\')">' +
+              '<span class="sidebar-nav-icon" style="color:#60a5fa;">' + iconMutualPay + '</span>' +
+              '<span class="sidebar-nav-label ' + textCls + '" style="display:flex;align-items:center;gap:6px;"><span>Mutual Pay</span><span id="navMutualPayPendingBadge" style="display:none;min-width:17px;height:17px;padding:0 5px;border-radius:9999px;font-size:0.65rem;font-weight:800;background:#f59e0b;color:#0f172a;align-items:center;justify-content:center;"></span></span></button>';
             html += '<button type="button" id="btnNavWhatsappBot" class="sidebar-nav-item" data-view="view-whatsapp-bot" data-tooltip="Whatsapp Bot" onclick="cambiarPestana(\'view-whatsapp-bot\')">' +
               '<span class="sidebar-nav-icon" style="color:#4ade80;">' + iconWhatsappBot + '</span>' +
               '<span class="sidebar-nav-label ' + textCls + '" style="display:flex;align-items:center;gap:6px;"><span>Whatsapp Bot</span><span id="navWaBotStatusDot" style="display:none;min-width:17px;height:17px;padding:0 5px;border-radius:9999px;font-size:0.65rem;font-weight:800;align-items:center;justify-content:center;"></span></span></button>';
@@ -26742,5 +27055,6 @@ ${cierreTxt}`;
   <script src="js/sidecreerWidget.js?v=11"></script>
   <script src="js/firmasAmmer.js?v=21"></script>
   <script src="js/whatsappBotAdmin.js?v=4"></script>
+  <script src="js/mutualPayBackoffice.js?v=1"></script>
 </body>
 </html>

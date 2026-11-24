@@ -454,6 +454,10 @@
     if (origen === 'fecha.hoy') return now.toLocaleDateString('es-AR');
     if (origen === 'fecha.dia') return String(now.getDate()).padStart(2, '0');
     if (origen === 'fecha.mes') return String(now.getMonth() + 1).padStart(2, '0');
+    if (origen === 'fecha.mesNombre') {
+      const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+      return meses[now.getMonth()] || '';
+    }
     if (origen === 'fecha.anio') return String(now.getFullYear());
     if (origen === 'manual') return campo.valor_manual || '';
     const partes = origen.split('.');
@@ -812,6 +816,20 @@
     cargarPlantillaEnEditor(pid);
   }
 
+  function esCampoFechaAutomatico_(campo) {
+    if (!campo) return false;
+    const tipo = String(campo.tipo || '').trim().toLowerCase();
+    const org = String(campo.origen_campo || '').trim().toLowerCase();
+    return org.startsWith('fecha.') || (tipo === 'fecha' && (!org || org === 'manual' || org.startsWith('fecha.')));
+  }
+
+  function esCampoNoEditableGenerador_(campo) {
+    if (!campo) return true;
+    const tipo = String(campo.tipo || '').trim().toLowerCase();
+    const org = String(campo.origen_campo || '').trim().toLowerCase();
+    return tipo === 'firma' || tipo === 'sello' || tipo === 'borrador' || org === 'campo_vacio' || esCampoFechaAutomatico_(campo);
+  }
+
   function obtenerClaveAsignacionCampo_(campo) {
     const org = String((campo && campo.origen_campo) || 'manual').trim();
     if (org && org !== 'manual') return `origen:${org}`;
@@ -824,7 +842,7 @@
     (tplsList || []).forEach((tpl) => {
       const campos = (tpl && Array.isArray(tpl.campos_json)) ? tpl.campos_json : [];
       campos.forEach((c) => {
-        if (!c || c.tipo === 'firma' || c.tipo === 'sello' || c.tipo === 'borrador' || c.origen_campo === 'campo_vacio') return;
+        if (esCampoNoEditableGenerador_(c)) return;
         const key = obtenerClaveAsignacionCampo_(c);
         if (!Object.prototype.hasOwnProperty.call(mapa, key)) {
           mapa[key] = String(c.completar_por || 'analista').toLowerCase() === 'asociado' ? 'asociado' : 'analista';
@@ -1198,12 +1216,23 @@
       return;
     }
 
-    const camposEditables = todosCampos.filter(({ campo }) =>
-      campo.tipo !== 'firma' && campo.tipo !== 'sello' && campo.tipo !== 'borrador' && campo.origen_campo !== 'campo_vacio'
-    );
+    const camposFechaAuto = [];
+    const seenFechaKey = new Set();
+    todosCampos.forEach(({ campo }) => {
+      if (!esCampoFechaAutomatico_(campo)) return;
+      const keyF = String(campo.origen_campo || campo.etiqueta || campo.id || '');
+      if (seenFechaKey.has(keyF)) return;
+      seenFechaKey.add(keyF);
+      camposFechaAuto.push(campo);
+    });
+
+    const camposEditables = todosCampos.filter(({ campo }) => !esCampoNoEditableGenerador_(campo));
     if (camposEditables.length === 0) {
       if (modoBar) modoBar.style.display = 'none';
-      cont.innerHTML = '<div style="padding:1rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:11px;font-size:0.82rem;color:#475569;">Estas plantillas no tienen campos de texto editables (solo zonas limpiadas, firma o sello).</div>';
+      const autoFechaNote = camposFechaAuto.length > 0
+        ? ` Además, los campos de fecha automática (${camposFechaAuto.map((f) => escHtml(f.etiqueta || f.origen_campo) + ': ' + escHtml(resolverPreviewLocal(f, ctx))).join(' · ')}) se completan automáticamente al generar/firmar.`
+        : '';
+      cont.innerHTML = `<div style="padding:1rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:11px;font-size:0.82rem;color:#475569;">Estas plantillas no tienen campos de texto editables manualmente (solo zonas limpiadas, firma, sello o fecha automática).${autoFechaNote}</div>`;
       return;
     }
 
@@ -1230,6 +1259,13 @@
     let cantAsociado = 0;
     let cantAnalista = 0;
     const prevValsMap = state._valoresTempCamposGenerar || {};
+
+    const fechaAutoStripHtml = camposFechaAuto.length > 0
+      ? `<div style="margin-top:0.6rem;padding:0.48rem 0.72rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9px;font-size:0.74rem;color:#166534;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+           <span>📅 <strong>Campos automáticos (se completan solos):</strong></span>
+           ${camposFechaAuto.map((f) => `<span style="background:#ffffff;border:1px solid #86efac;padding:1px 7px;border-radius:9999px;font-weight:700;">${escHtml(f.etiqueta || f.origen_campo)}: ${escHtml(resolverPreviewLocal(f, ctx))}</span>`).join('')}
+         </div>`
+      : '';
 
     cont.innerHTML = '<div class="firmas-campos-grid">' +
       itemsUnificados.map(({ campo: c, docs, sharedOrigen }) => {
@@ -1274,7 +1310,7 @@
           </div>
         `;
       }).join('') +
-      '</div>';
+      '</div>' + fechaAutoStripHtml;
 
     if (modoBar) {
       modoBar.style.display = 'flex';
@@ -1320,7 +1356,7 @@
 
     tpls.forEach((tpl) => {
       (Array.isArray(tpl.campos_json) ? tpl.campos_json : []).forEach((c) => {
-        if (!c || c.tipo === 'firma' || c.tipo === 'sello' || c.tipo === 'borrador' || c.origen_campo === 'campo_vacio') return;
+        if (esCampoNoEditableGenerador_(c)) return;
         const key = obtenerClaveAsignacionCampo_(c);
         if (accion === 'todos_analista') {
           state.asignacionCamposGenerar[key] = 'analista';

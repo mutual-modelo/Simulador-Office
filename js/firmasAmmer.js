@@ -55,6 +55,8 @@
     bandejaEstadoFiltro: 'TODOS',
     selectedPlantillaGenerar: null,
     selectedPlantillasPaqueteIds: [],
+    filtroExpedienteGenerar: '',
+    asignacionCamposGenerar: {},
     selloPngBase64: '',
     firmantesGenerar: [
       { clave: 'firmante_1', etiqueta: 'Titular / Asociado', nombre: '', dni: '', telefono: '' },
@@ -62,6 +64,7 @@
     ultimoPdfPreviewB64: '',
     editor: {
       plantillaId: null,
+      pdfDirty: false,
       pdfBase64: '',
       pdfDoc: null,
       _loadedB64: '',
@@ -606,20 +609,229 @@
     }
   }
 
-  function poblarSelectorExpedientes() {
+  function normalizarTextoBusquedaExp_(v) {
+    return String(v || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+
+  function extraerMetaExpediente_(s) {
+    const nom = (s && s.solicitante && s.solicitante.nombre) || (s && (s.Apellido_Nombre || s.nombre)) || 'Socio';
+    const dni = String((s && s.solicitante && s.solicitante.dni) || (s && (s.dni || s.DNI)) || '').trim();
+    const cuil = String((s && s.solicitante && s.solicitante.cuil) || (s && s.cuil) || '').trim();
+    const cod = String((s && (s.id_definitivo || s.id_provisorio || s.id)) || '');
+    const linea = (s && s.prestamo && s.prestamo.lineaNombre) || (s && (s.lineaNombre || s.linea)) || '';
+    return { nom: String(nom), dni, cuil, cod, linea: String(linea || '') };
+  }
+
+  function filtrarListaExpedientes_(list, queryRaw) {
+    const q = normalizarTextoBusquedaExp_(queryRaw);
+    if (!q) return list;
+    const qNum = q.replace(/\D/g, '');
+    const tokens = q.split(/\s+/).filter(Boolean);
+    return list.filter((s) => {
+      const m = extraerMetaExpediente_(s);
+      const hay = normalizarTextoBusquedaExp_(`${m.cod} ${m.nom} ${m.dni} ${m.cuil} ${m.linea} ${s.id || ''}`);
+      const dniClean = m.dni.replace(/\D/g, '');
+      const cuilClean = m.cuil.replace(/\D/g, '');
+      if (qNum && qNum.length >= 3 && (dniClean.includes(qNum) || cuilClean.includes(qNum))) {
+        return true;
+      }
+      return tokens.every((tk) => hay.includes(tk));
+    });
+  }
+
+  function renderSugerenciasExpediente_(matches, queryRaw, mostrarLista) {
+    const box = document.getElementById('listaSugerenciasExpFirma');
+    const lblCount = document.getElementById('lblCountExpFirma');
+    const btnClr = document.getElementById('btnLimpiarBuscarExpFirma');
+    const allList = getExpedientesLocales();
+    const qTrim = String(queryRaw || '').trim();
+
+    if (btnClr) btnClr.style.display = qTrim ? 'inline-flex' : 'none';
+    if (lblCount) {
+      lblCount.textContent = qTrim
+        ? `${matches.length} de ${allList.length}`
+        : (allList.length ? `${allList.length} exp.` : '');
+    }
+    if (!box) return;
+    if (!mostrarLista || (!qTrim && matches.length === allList.length)) {
+      box.style.display = 'none';
+      box.innerHTML = '';
+      return;
+    }
+
+    if (matches.length === 0) {
+      box.innerHTML = `<div style="padding:0.65rem 0.8rem;font-size:0.78rem;color:#64748b;text-align:center;">Sin coincidencias para "<strong>${escHtml(qTrim)}</strong>"</div>`;
+      box.style.display = 'block';
+      return;
+    }
+
+    const top = matches.slice(0, 25);
+    box.innerHTML = top.map((s) => {
+      const m = extraerMetaExpediente_(s);
+      const selId = String((document.getElementById('selFirmaExpediente') || {}).value || '');
+      const isAct = selId && String(s.id) === selId;
+      return `
+        <button type="button" onclick="window.seleccionarExpedienteDesdeBusquedaFirma('${escHtml(String(s.id))}')" style="display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;padding:0.52rem 0.72rem;border:none;border-bottom:1px solid #f1f5f9;background:${isAct ? '#eff6ff' : '#ffffff'};cursor:pointer;">
+          <div style="min-width:0;flex:1;">
+            <div style="font-size:0.8rem;font-weight:800;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(m.nom)}</div>
+            <div style="font-size:0.71rem;color:#475569;margin-top:1px;">
+              <span class="font-mono">DNI ${escHtml(m.dni || '-')}</span> · Exp: <strong>${escHtml(m.cod)}</strong>${m.linea ? ' · ' + escHtml(m.linea) : ''}
+            </div>
+          </div>
+          <span style="font-size:0.7rem;font-weight:800;color:${isAct ? '#1d4ed8' : '#0f2744'};background:${isAct ? '#dbeafe' : '#f1f5f9'};padding:2px 8px;border-radius:9999px;flex-shrink:0;">${isAct ? '✓ Activo' : 'Elegir'}</span>
+        </button>
+      `;
+    }).join('') + (matches.length > 25 ? `<div style="padding:0.4rem 0.7rem;font-size:0.7rem;color:#64748b;background:#f8fafc;text-align:center;">Mostrando 25 de ${matches.length} coincidencias. Afiná la búsqueda.</div>` : '');
+    box.style.display = 'block';
+  }
+
+  function poblarSelectorExpedientes(mostrarSugerencias = false) {
     const sel = document.getElementById('selFirmaExpediente');
     if (!sel) return;
     const prev = sel.value;
-    const list = getExpedientesLocales();
+    const allList = getExpedientesLocales();
+    const queryRaw = state.filtroExpedienteGenerar || '';
+    const matches = filtrarListaExpedientes_(allList, queryRaw);
+
+    let optionsList = matches.slice();
+    if (prev && !optionsList.some((s) => String(s.id) === String(prev))) {
+      const prevObj = allList.find((s) => String(s.id) === String(prev));
+      if (prevObj) optionsList.unshift(prevObj);
+    }
+
     sel.innerHTML = '<option value="">-- Carga manual (sin expediente vinculado) --</option>' +
-      list.map((s) => {
-        const nom = (s.solicitante && s.solicitante.nombre) || s.Apellido_Nombre || s.nombre || 'Socio';
-        const dni = (s.solicitante && s.solicitante.dni) || s.dni || '';
-        const cod = s.id_definitivo || s.id_provisorio || s.id;
-        return `<option value="${escHtml(s.id)}">${escHtml(cod)} — ${escHtml(nom)} (DNI ${escHtml(dni)})</option>`;
+      optionsList.map((s) => {
+        const m = extraerMetaExpediente_(s);
+        return `<option value="${escHtml(s.id)}">${escHtml(m.cod)} — ${escHtml(m.nom)} (DNI ${escHtml(m.dni)})</option>`;
       }).join('');
-    if (prev) sel.value = prev;
+    if (prev && optionsList.some((s) => String(s.id) === String(prev))) {
+      sel.value = prev;
+    }
+    renderSugerenciasExpediente_(matches, queryRaw, Boolean(mostrarSugerencias));
     renderCamposCompletarFormulario();
+  }
+
+  function filtrarExpedientesGenerador(query, desdeFocus) {
+    state.filtroExpedienteGenerar = String(query || '');
+    const allList = getExpedientesLocales();
+    const matches = filtrarListaExpedientes_(allList, state.filtroExpedienteGenerar);
+    const sel = document.getElementById('selFirmaExpediente');
+    const prev = sel ? sel.value : '';
+    let optionsList = matches.slice();
+    if (prev && !optionsList.some((s) => String(s.id) === String(prev))) {
+      const prevObj = allList.find((s) => String(s.id) === String(prev));
+      if (prevObj) optionsList.unshift(prevObj);
+    }
+    if (sel) {
+      sel.innerHTML = '<option value="">-- Carga manual (sin expediente vinculado) --</option>' +
+        optionsList.map((s) => {
+          const m = extraerMetaExpediente_(s);
+          return `<option value="${escHtml(s.id)}">${escHtml(m.cod)} — ${escHtml(m.nom)} (DNI ${escHtml(m.dni)})</option>`;
+        }).join('');
+      if (prev && optionsList.some((s) => String(s.id) === String(prev))) {
+        sel.value = prev;
+      }
+    }
+    const debeMostrar = Boolean(String(query || '').trim()) || Boolean(desdeFocus && String(query || '').trim());
+    renderSugerenciasExpediente_(matches, state.filtroExpedienteGenerar, debeMostrar);
+  }
+
+  function seleccionarExpedienteDesdeBusquedaFirma(expId) {
+    const sel = document.getElementById('selFirmaExpediente');
+    if (!sel) return;
+    const allList = getExpedientesLocales();
+    const elegido = allList.find((s) => String(s.id) === String(expId));
+    if (!Array.from(sel.options).some((o) => String(o.value) === String(expId)) && elegido) {
+      const m = extraerMetaExpediente_(elegido);
+      const opt = document.createElement('option');
+      opt.value = String(elegido.id);
+      opt.textContent = `${m.cod} — ${m.nom} (DNI ${m.dni})`;
+      sel.appendChild(opt);
+    }
+    sel.value = String(expId || '');
+    const box = document.getElementById('listaSugerenciasExpFirma');
+    if (box) box.style.display = 'none';
+    if (elegido) {
+      const m = extraerMetaExpediente_(elegido);
+      const inp = document.getElementById('inpBuscarExpedienteFirma');
+      if (inp) inp.value = `${m.nom} (${m.dni})`;
+      state.filtroExpedienteGenerar = `${m.nom} (${m.dni})`;
+      const btnClr = document.getElementById('btnLimpiarBuscarExpFirma');
+      if (btnClr) btnClr.style.display = 'inline-flex';
+    }
+    renderCamposCompletarFormulario();
+  }
+
+  function limpiarBusquedaExpedienteFirma() {
+    state.filtroExpedienteGenerar = '';
+    const inp = document.getElementById('inpBuscarExpedienteFirma');
+    if (inp) inp.value = '';
+    const box = document.getElementById('listaSugerenciasExpFirma');
+    if (box) box.style.display = 'none';
+    poblarSelectorExpedientes(false);
+    if (inp) inp.focus();
+  }
+
+  function onKeyDownBuscarExpedienteFirma(ev) {
+    if (!ev) return;
+    if (ev.key === 'Escape') {
+      const box = document.getElementById('listaSugerenciasExpFirma');
+      if (box) box.style.display = 'none';
+      return;
+    }
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      const allList = getExpedientesLocales();
+      const matches = filtrarListaExpedientes_(allList, state.filtroExpedienteGenerar);
+      if (matches.length > 0) {
+        seleccionarExpedienteDesdeBusquedaFirma(matches[0].id);
+      }
+    }
+  }
+
+  function onExpedienteGenerarSeleccionado() {
+    const box = document.getElementById('listaSugerenciasExpFirma');
+    if (box) box.style.display = 'none';
+    renderCamposCompletarFormulario();
+  }
+
+  function editarPlantillaSeleccionadaEnGenerador() {
+    const sel = document.getElementById('selFirmaPlantilla');
+    const pid = sel ? sel.value : '';
+    if (!pid) {
+      notify('Seleccioná una plantilla PDF primero para editarla.', 'warning');
+      return;
+    }
+    cambiarTabFirmas('editor');
+    const selEdit = document.getElementById('selEditarPlantillaExistente');
+    if (selEdit) selEdit.value = pid;
+    cargarPlantillaEnEditor(pid);
+  }
+
+  function obtenerClaveAsignacionCampo_(campo) {
+    const org = String((campo && campo.origen_campo) || 'manual').trim();
+    if (org && org !== 'manual') return `origen:${org}`;
+    return `id:${String((campo && campo.id) || '')}`;
+  }
+
+  function sincronizarAsignacionCamposDesdePlantillas_(tplsList, resetearPrevios) {
+    if (resetearPrevios) state.asignacionCamposGenerar = {};
+    const mapa = state.asignacionCamposGenerar || {};
+    (tplsList || []).forEach((tpl) => {
+      const campos = (tpl && Array.isArray(tpl.campos_json)) ? tpl.campos_json : [];
+      campos.forEach((c) => {
+        if (!c || c.tipo === 'firma' || c.tipo === 'sello' || c.tipo === 'borrador' || c.origen_campo === 'campo_vacio') return;
+        const key = obtenerClaveAsignacionCampo_(c);
+        if (!Object.prototype.hasOwnProperty.call(mapa, key)) {
+          mapa[key] = String(c.completar_por || 'analista').toLowerCase() === 'asociado' ? 'asociado' : 'analista';
+        }
+      });
+    });
+    state.asignacionCamposGenerar = mapa;
   }
 
   function derivarFirmantesDePlantillas(tplsList) {
@@ -657,6 +869,7 @@
       renderSelectorPaquetePlantillas();
     }
     const activas = obtenerPlantillasSeleccionadasGenerador();
+    sincronizarAsignacionCamposDesdePlantillas_(activas, true);
     state.firmantesGenerar = derivarFirmantesDePlantillas(activas);
     renderCamposCompletarFormulario();
   }
@@ -970,12 +1183,17 @@
     const inpWa = document.getElementById('inpFirmaTelefonoWa');
     if (inpWa && ctx.solicitante.telefono) inpWa.value = ctx.solicitante.telefono;
 
+    const modoBar = document.getElementById('firmaCamposModoBar');
+    const lblModoResumen = document.getElementById('lblResumenModoCamposFirma');
+
     if (!vals.requiere_pdf) {
+      if (modoBar) modoBar.style.display = 'none';
       cont.innerHTML = '<div style="padding:1.15rem;text-align:center;color:#0f2744;font-size:0.84rem;background:#f0fdf4;border-radius:12px;border:1.5px solid #86efac;">✅ <strong>Validación modular sin PDF previo:</strong> no necesitás elegir plantilla. Al emitir el enlace, se generará una Constancia Probatoria A4 AMMER con las validaciones marcadas arriba.</div>';
       return;
     }
 
     if (tpls.length === 0) {
+      if (modoBar) modoBar.style.display = 'none';
       cont.innerHTML = '<div style="padding:1.4rem;text-align:center;color:#64748b;font-size:0.84rem;background:#f8fafc;border-radius:12px;border:1.5px dashed #cbd5e1;">Seleccioná una plantilla arriba (o desmarcá <strong>📄 Con documento PDF</strong> para solicitar solo identidad).</div>';
       return;
     }
@@ -984,9 +1202,12 @@
       campo.tipo !== 'firma' && campo.tipo !== 'sello' && campo.tipo !== 'borrador' && campo.origen_campo !== 'campo_vacio'
     );
     if (camposEditables.length === 0) {
+      if (modoBar) modoBar.style.display = 'none';
       cont.innerHTML = '<div style="padding:1rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:11px;font-size:0.82rem;color:#475569;">Estas plantillas no tienen campos de texto editables (solo zonas limpiadas, firma o sello).</div>';
       return;
     }
+
+    sincronizarAsignacionCamposDesdePlantillas_(tpls, false);
 
     // Deduplicar por origen_campo compartido (si es distinto de 'manual') para completar una sola vez para todo el paquete
     const itemsUnificados = [];
@@ -1006,29 +1227,119 @@
       }
     });
 
+    let cantAsociado = 0;
+    let cantAnalista = 0;
+    const prevValsMap = state._valoresTempCamposGenerar || {};
+
     cont.innerHTML = '<div class="firmas-campos-grid">' +
       itemsUnificados.map(({ campo: c, docs, sharedOrigen }) => {
-        const val = resolverPreviewLocal(c, ctx);
+        const asigKey = obtenerClaveAsignacionCampo_(c);
+        const modoCampo = state.asignacionCamposGenerar[asigKey] === 'asociado' ? 'asociado' : 'analista';
+        if (modoCampo === 'asociado') cantAsociado += 1;
+        else cantAnalista += 1;
+
+        let val = resolverPreviewLocal(c, ctx);
+        if (Object.prototype.hasOwnProperty.call(prevValsMap, asigKey)) {
+          val = prevValsMap[asigKey];
+        }
+
         const attr = sharedOrigen
           ? `data-firma-origen-valor="${escHtml(sharedOrigen)}"`
           : `data-firma-campo-valor="${escHtml(c.id)}"`;
         const alcance = docs.size > 1
           ? `<span style="font-weight:700;color:#1d4ed8;background:#dbeafe;padding:1px 6px;border-radius:9999px;font-size:0.65rem;">${docs.size} PDFs</span>`
           : `<span style="font-weight:600;color:#64748b;background:#ffffff;border:1px solid #e2e8f0;padding:1px 6px;border-radius:9999px;font-size:0.65rem;">${tpls.length > 1 ? escHtml([...docs][0].slice(0, 18)) : 'Pág. ' + (c.pagina || 1)}</span>`;
+        const esAsoc = modoCampo === 'asociado';
+        const cardStyle = esAsoc ? 'border-color:#0284c7;background:#f0f9ff;' : '';
+        const ph = esAsoc ? 'Opcional: valor sugerido (el asociado lo completa en Paso 1)' : 'Dejar vacío o ingresar...';
         return `
-          <div class="firmas-field-card">
-            <label class="firmas-label" style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:5px;">
-              <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(c.etiqueta || c.id)}</span>
-              ${alcance}
-            </label>
+          <div class="firmas-field-card" style="${cardStyle}">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:5px;flex-wrap:wrap;">
+              <label class="firmas-label" style="margin:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">
+                ${escHtml(c.etiqueta || c.id)}
+              </label>
+              <div style="display:inline-flex;align-items:center;gap:4px;flex-shrink:0;">
+                ${alcance}
+                <div style="display:inline-flex;border:1px solid #cbd5e1;border-radius:7px;overflow:hidden;background:#ffffff;">
+                  <button type="button" onclick="window.toggleAsignacionCampoGenerador('${escHtml(asigKey)}','analista')" style="border:none;padding:2px 6px;font-size:0.65rem;font-weight:800;cursor:pointer;background:${!esAsoc ? '#0f2744' : 'transparent'};color:${!esAsoc ? '#ffffff' : '#475569'};" title="Lo completa el analista antes de generar">👨‍💼 Analista</button>
+                  <button type="button" onclick="window.toggleAsignacionCampoGenerador('${escHtml(asigKey)}','asociado')" style="border:none;border-left:1px solid #cbd5e1;padding:2px 6px;font-size:0.65rem;font-weight:800;cursor:pointer;background:${esAsoc ? '#0284c7' : 'transparent'};color:${esAsoc ? '#ffffff' : '#475569'};" title="Lo completa el asociado en el Paso 1 antes de leer y firmar">🧑 Paso 1</button>
+                </div>
+              </div>
+            </div>
+            ${esAsoc ? '<div style="font-size:0.68rem;font-weight:700;color:#0369a1;margin-bottom:4px;">🧑 El asociado completará este campo en el Paso 1</div>' : ''}
             <div style="display:flex;gap:5px;align-items:center;">
-              <input type="text" class="firmas-input firmas-input--sm" ${attr} value="${escHtml(val)}" oninput="this.dataset.userEdited='1'" placeholder="Dejar vacío o ingresar..."/>
-              <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-icon firmas-btn-soft-blue" onclick="window.limpiarInputGenerarCampo(this)" title="Vaciar texto para dejar el campo en blanco en el PDF">🧹</button>
+              <input type="text" class="firmas-input firmas-input--sm" ${attr} value="${escHtml(val)}" oninput="this.dataset.userEdited='1'" placeholder="${escHtml(ph)}"/>
+              <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-icon firmas-btn-soft-blue" onclick="window.limpiarInputGenerarCampo(this)" title="Vaciar texto">🧹</button>
             </div>
           </div>
         `;
       }).join('') +
       '</div>';
+
+    if (modoBar) {
+      modoBar.style.display = 'flex';
+      if (lblModoResumen) {
+        lblModoResumen.textContent = cantAsociado > 0
+          ? `👨‍💼 ${cantAnalista} Analista · 🧑 ${cantAsociado} Asociado (Paso 1)`
+          : `👨‍💼 ${cantAnalista} campo(s) · Todos Analista`;
+        lblModoResumen.style.background = cantAsociado > 0 ? '#e0f2fe' : '#eff6ff';
+        lblModoResumen.style.borderColor = cantAsociado > 0 ? '#7dd3fc' : '#bfdbfe';
+        lblModoResumen.style.color = cantAsociado > 0 ? '#0369a1' : '#1e3a8a';
+      }
+    }
+  }
+
+  function capturarValoresTempInputsGenerar_() {
+    const out = {};
+    document.querySelectorAll('[data-firma-campo-valor]').forEach((inp) => {
+      const cid = inp.getAttribute('data-firma-campo-valor');
+      if (cid) out['id:' + cid] = inp.value;
+    });
+    document.querySelectorAll('[data-firma-origen-valor]').forEach((inp) => {
+      const org = inp.getAttribute('data-firma-origen-valor');
+      if (org) out['origen:' + org] = inp.value;
+    });
+    state._valoresTempCamposGenerar = out;
+    return out;
+  }
+
+  function toggleAsignacionCampoGenerador(asigKey, modo) {
+    if (!asigKey) return;
+    capturarValoresTempInputsGenerar_();
+    state.asignacionCamposGenerar = state.asignacionCamposGenerar || {};
+    state.asignacionCamposGenerar[asigKey] = modo === 'asociado' ? 'asociado' : 'analista';
+    renderCamposCompletarFormulario();
+    state._valoresTempCamposGenerar = null;
+  }
+
+  function aplicarModoCamposGenerador(accion) {
+    const tpls = obtenerPlantillasSeleccionadasGenerador();
+    if (!tpls.length) return;
+    const valsSnapshot = capturarValoresTempInputsGenerar_();
+    state.asignacionCamposGenerar = state.asignacionCamposGenerar || {};
+
+    tpls.forEach((tpl) => {
+      (Array.isArray(tpl.campos_json) ? tpl.campos_json : []).forEach((c) => {
+        if (!c || c.tipo === 'firma' || c.tipo === 'sello' || c.tipo === 'borrador' || c.origen_campo === 'campo_vacio') return;
+        const key = obtenerClaveAsignacionCampo_(c);
+        if (accion === 'todos_analista') {
+          state.asignacionCamposGenerar[key] = 'analista';
+        } else if (accion === 'todos_asociado') {
+          state.asignacionCamposGenerar[key] = 'asociado';
+        } else if (accion === 'vacios_asociado') {
+          const curVal = String(valsSnapshot[key] || '').trim();
+          state.asignacionCamposGenerar[key] = curVal ? 'analista' : 'asociado';
+        }
+      });
+    });
+    renderCamposCompletarFormulario();
+    state._valoresTempCamposGenerar = null;
+  }
+
+  function obtenerMapaAsignacionCamposGenerador() {
+    const tpls = obtenerPlantillasSeleccionadasGenerador();
+    sincronizarAsignacionCamposDesdePlantillas_(tpls, false);
+    return { ...(state.asignacionCamposGenerar || {}) };
   }
 
   function limpiarInputGenerarCampo(btn) {
@@ -1058,6 +1369,7 @@
       ? document.getElementById('canvasFirmaPruebaPresencial').toDataURL('image/png')
       : null;
     const vals = obtenerValidacionesGenerador(tpls);
+    const camposAsig = obtenerMapaAsignacionCamposGenerador();
 
     notify(tpls.length > 1 ? `Generando vista previa consolidada del paquete (${tpls.length} PDFs)...` : 'Generando vista previa del PDF estampado...', 'info');
     try {
@@ -1066,6 +1378,7 @@
         body: JSON.stringify({
           plantilla_id: tpl.id,
           plantillas_ids: tpls.map((t) => t.id),
+          campos_asignacion: camposAsig,
           contexto: ctx,
           firmaPngBase64: firmaPrueba,
           selloPngBase64: state.selloPngBase64 || null,
@@ -1153,6 +1466,7 @@
       : (tpls.length > 1
         ? `Paquete (${tpls.length} docs): ${tpls.map((t) => t.nombre).slice(0, 3).join(' + ')}`
         : tpl.nombre);
+    const camposAsig = esSinPdf ? {} : obtenerMapaAsignacionCamposGenerador();
 
     notify(
       esSinPdf
@@ -1167,6 +1481,7 @@
           plantilla_id: tpl ? tpl.id : null,
           plantillas_ids: tpls.map((t) => t.id),
           plantilla_nombre: nombreDocLabel,
+          campos_asignacion: camposAsig,
           validaciones: vals,
           expediente_id: exp ? String(exp.id_definitivo || exp.id_provisorio || exp.id) : null,
           dni_solicitante: firmantesPayload[0].dni || ctx.solicitante.dni || '',
@@ -2795,18 +3110,25 @@
     }
 
     try {
+      const keepId = Boolean(o.preservePlantillaId && state.editor.plantillaId);
+      const keepFields = Boolean(o.keepExistingFields);
       state.editor.pdfBase64 = finalB64;
       state.editor._loadedB64 = '';
       state.editor.pdfDoc = null;
+      state.editor.pdfDirty = true;
       state.editor.archivoNombre = finalNombre;
 
       if (!appendFromPage) {
-        state.editor.plantillaId = null;
+        if (!keepId) state.editor.plantillaId = null;
         state.editor.currentPage = 1;
-        state.editor.campos = [];
-        state.editor.history = [];
-        state.editor.selectedFieldId = null;
-        actualizarBotonDeshacerEditor_();
+        if (!keepFields) {
+          state.editor.campos = [];
+          state.editor.history = [];
+          state.editor.selectedFieldId = null;
+          actualizarBotonDeshacerEditor_();
+        } else {
+          pushUndoEditor_();
+        }
       } else {
         pushUndoEditor_();
       }
@@ -2820,7 +3142,19 @@
         parts[0].pageEnd = state.editor.totalPages || 1;
       }
       renderMultiPdfQueueEditor_();
+      actualizarBannerModoEditor_();
       renderInspectorCamposEditor();
+
+      if (keepFields) {
+        renderCajasOverlayEditor();
+        setEstadoEditorPdf(
+          `✅ PDF reemplazado (${state.editor.totalPages} pág.) conservando ${state.editor.campos.length} campo(s). Presioná "💾 Actualizar Plantilla" para guardar.`,
+          'ok'
+        );
+        notify('PDF reemplazado conservando tus campos. Presioná Actualizar Plantilla para guardar.', 'success');
+        return;
+      }
+
       setEstadoEditorPdf(
         `📄 PDF multipágina renderizado (${state.editor.totalPages} pág.). Analizando campos, espacios en blanco y firmas...`,
         'info'
@@ -2847,7 +3181,7 @@
           `✅ Se anexaron PDFs correctamente (${state.editor.totalPages} pág. totales, ${nuevos.length} campo(s) nuevo(s) detectado(s)).`,
           'ok'
         );
-        notify(`Plantilla actualizada: ${state.editor.totalPages} página(s).`, 'success');
+        notify(`Plantilla lista (${state.editor.totalPages} página(s)).`, 'success');
       } else {
         state.editor.campos = detectados;
         state.editor.selectedFieldId = detectados[0] ? detectados[0].id : null;
@@ -2867,6 +3201,87 @@
       }
     } catch (errAn) {
       setEstadoEditorPdf(`⚠️ PDF cargado en pantalla (${state.editor.totalPages} pág.), pero el analizador automático no pudo responder (${errAn.message}). Podés marcar los campos manualmente sobre el lienzo.`, 'warn');
+    }
+  }
+
+  function actualizarBannerModoEditor_() {
+    const banner = document.getElementById('bannerModoEdicionPlantilla');
+    const btnGuardar = document.getElementById('btnGuardarPlantillaEditor');
+    const esEdit = Boolean(state.editor.plantillaId);
+
+    if (btnGuardar) {
+      btnGuardar.textContent = esEdit ? '💾 Actualizar Plantilla' : '💾 Guardar Plantilla';
+    }
+    if (!banner) return;
+
+    if (!esEdit && !state.editor.pdfBase64) {
+      banner.style.display = 'none';
+      banner.innerHTML = '';
+      return;
+    }
+
+    const nombreCur = String((document.getElementById('inpEditPlantillaNombre') || {}).value || state.editor.archivoNombre || 'Plantilla').trim();
+    banner.style.display = 'flex';
+    if (esEdit) {
+      banner.style.background = 'linear-gradient(135deg,#eff6ff 0%,#f0fdf4 100%)';
+      banner.style.borderColor = '#93c5fd';
+      banner.innerHTML =
+        `<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">` +
+          `<span style="font-size:0.74rem;font-weight:800;padding:3px 9px;border-radius:9999px;background:#1d4ed8;color:#ffffff;flex-shrink:0;">✏️ MODO EDICIÓN</span>` +
+          `<span style="font-size:0.8rem;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Editando: <strong>${escHtml(nombreCur)}</strong> · Los cambios actualizarán esta plantilla${state.editor.pdfDirty ? ' (PDF modificado)' : ''}</span>` +
+        `</div>` +
+        `<div style="display:flex;gap:0.4rem;flex-wrap:wrap;flex-shrink:0;">` +
+          `<button type="button" class="firmas-btn firmas-btn--xs firmas-btn-soft-blue" onclick="document.getElementById('inpPlantillaPdfReemplazar')?.click()" title="Subir otro PDF para reemplazar el documento base manteniendo esta plantilla">🔄 Reemplazar PDF base</button>` +
+          `<button type="button" class="firmas-btn firmas-btn--xs" onclick="window.pasarEdicionANuevaPlantillaEditor()" title="Dejar de editar la existente y guardarlo como plantilla nueva">🆕 Convertir en nueva</button>` +
+        `</div>`;
+    } else {
+      banner.style.background = '#f8fafc';
+      banner.style.borderColor = '#cbd5e1';
+      banner.innerHTML =
+        `<div style="display:flex;align-items:center;gap:8px;">` +
+          `<span style="font-size:0.74rem;font-weight:800;padding:3px 9px;border-radius:9999px;background:#0f2744;color:#ffffff;">🆕 NUEVA PLANTILLA</span>` +
+          `<span style="font-size:0.78rem;font-weight:600;color:#475569;">Configurá nombre, campos y presioná <strong>💾 Guardar Plantilla</strong>.</span>` +
+        `</div>`;
+    }
+  }
+
+  function pasarEdicionANuevaPlantillaEditor() {
+    state.editor.plantillaId = null;
+    state.editor.pdfDirty = true;
+    const selExist = document.getElementById('selEditarPlantillaExistente');
+    if (selExist) selExist.value = '';
+    actualizarBannerModoEditor_();
+    notify('Ahora se guardará como una plantilla nueva sin modificar la original.', 'info');
+  }
+
+  async function onReemplazarPdfPlantillaEditando(ev) {
+    const inputEl = ev && ev.target;
+    const files = inputEl && inputEl.files;
+    if (!files || files.length === 0) return;
+    if (files.length > 15) {
+      notify('Podés seleccionar hasta 15 PDFs por plantilla.', 'warning');
+      return;
+    }
+    try {
+      const nuevasPartes = await leerArchivosPdfSeleccionados_(files);
+      if (!nuevasPartes || !nuevasPartes.length) return;
+      let keepFields = false;
+      if ((state.editor.campos || []).length > 0) {
+        keepFields = Boolean(global.confirm(
+          `Esta plantilla tiene ${state.editor.campos.length} campo(s) configurado(s).\n\n` +
+          `• Aceptar: conservar las posiciones de los campos actuales sobre el nuevo PDF\n` +
+          `• Cancelar: volver a detectar campos automáticamente`
+        ));
+      }
+      state.editor.sourcePdfParts = nuevasPartes;
+      await combinarYRenderizarPartesPdfEditor_({
+        preservePlantillaId: true,
+        keepExistingFields: keepFields,
+      });
+    } catch (errRep) {
+      notify('Error reemplazando PDF base: ' + errRep.message, 'error');
+    } finally {
+      if (inputEl) inputEl.value = '';
     }
   }
 
@@ -2907,7 +3322,10 @@
       const nuevasPartes = await leerArchivosPdfSeleccionados_(files);
       if (!nuevasPartes || !nuevasPartes.length) return;
       state.editor.plantillaId = null;
+      state.editor.pdfDirty = true;
       state.editor.sourcePdfParts = nuevasPartes;
+      const selExist = document.getElementById('selEditarPlantillaExistente');
+      if (selExist) selExist.value = '';
 
       const inpNom = document.getElementById('inpEditPlantillaNombre');
       if (inpNom && !inpNom.value.trim()) {
@@ -2951,7 +3369,11 @@
         return;
       }
       state.editor.sourcePdfParts = (state.editor.sourcePdfParts || []).concat(nuevasPartes);
-      await combinarYRenderizarPartesPdfEditor_(prevPages > 0 && hadCampos ? { appendFromPage: prevPages + 1 } : {});
+      await combinarYRenderizarPartesPdfEditor_(
+        prevPages > 0 && hadCampos
+          ? { appendFromPage: prevPages + 1, preservePlantillaId: true }
+          : { preservePlantillaId: Boolean(state.editor.plantillaId) }
+      );
     } catch (errAdd) {
       notify('Error agregando PDF: ' + errAdd.message, 'error');
     } finally {
@@ -2973,7 +3395,7 @@
     next[idx] = next[targetIdx];
     next[targetIdx] = tmp;
     state.editor.sourcePdfParts = next;
-    await combinarYRenderizarPartesPdfEditor_();
+    await combinarYRenderizarPartesPdfEditor_({ preservePlantillaId: Boolean(state.editor.plantillaId) });
   }
 
   async function quitarPartePdfEditor(idx) {
@@ -2987,16 +3409,20 @@
     const next = parts.slice();
     next.splice(idx, 1);
     state.editor.sourcePdfParts = next;
-    await combinarYRenderizarPartesPdfEditor_();
+    await combinarYRenderizarPartesPdfEditor_({ preservePlantillaId: Boolean(state.editor.plantillaId) });
   }
 
   async function cargarPlantillaEnEditor(plantillaId) {
-    if (!plantillaId) return;
+    if (!plantillaId) {
+      actualizarBannerModoEditor_();
+      return;
+    }
     setEstadoEditorPdf('⏳ Descargando plantilla guardada...', 'info');
     try {
       const res = await apiFetchJson(`/api/firmas/plantillas/${encodeURIComponent(plantillaId)}/pdf`, { method: 'GET' });
       const tpl = res.plantilla || {};
       state.editor.plantillaId = tpl.id;
+      state.editor.pdfDirty = false;
       state.editor.pdfBase64 = res.pdfBase64;
       state.editor._loadedB64 = '';
       state.editor.pdfDoc = null;
@@ -3027,8 +3453,9 @@
 
       await cargarPdfEnCanvasEditor(res.pdfBase64, 1);
       renderMultiPdfQueueEditor_();
+      actualizarBannerModoEditor_();
       renderInspectorCamposEditor();
-      setEstadoEditorPdf(`✅ Plantilla "${tpl.nombre}" cargada para edición (${state.editor.campos.length} campos).`, 'ok');
+      setEstadoEditorPdf(`✅ Plantilla "${tpl.nombre}" cargada para edición (${state.editor.campos.length} campos). Modificá lo que necesites y tocá "💾 Actualizar Plantilla".`, 'ok');
     } catch (err) {
       setEstadoEditorPdf(`❌ Error cargando plantilla: ${err.message}`, 'err');
       notify('Error cargando plantilla: ' + err.message, 'error');
@@ -3757,6 +4184,15 @@
               </label>
             </div>
           </div>
+          ${(c.tipo !== 'firma' && c.tipo !== 'sello' && c.origen_campo !== 'sello_institucional') ? `
+          <div>
+            <label for="editCampoCompletarPor" class="firmas-label" style="margin-bottom:4px;">Quién completa por defecto</label>
+            <select id="editCampoCompletarPor" class="firmas-select firmas-select--sm" onchange="window.actualizarPropCampoEditor('completar_por', this.value)">
+              <option value="analista" ${String(c.completar_por || 'analista').toLowerCase() !== 'asociado' ? 'selected' : ''}>👨‍💼 Analista (al generar enlace)</option>
+              <option value="asociado" ${String(c.completar_por || 'analista').toLowerCase() === 'asociado' ? 'selected' : ''}>🧑 Asociado (en el Paso 1)</option>
+            </select>
+          </div>
+          ` : ''}
           <div>
             <label for="editCampoValorManual" class="firmas-label" style="margin-bottom:4px;">Valor por defecto / texto fijo (opcional)</label>
             <div style="display:flex;gap:5px;align-items:center;">
@@ -3928,6 +4364,7 @@
       try { state.editor._renderTask.cancel(); } catch (_e) {}
     }
     state.editor.plantillaId = null;
+    state.editor.pdfDirty = false;
     state.editor.pdfBase64 = '';
     state.editor.pdfDoc = null;
     state.editor._loadedB64 = '';
@@ -3949,7 +4386,9 @@
     const setChk = (id, v) => { const el = document.getElementById(id); if (el) el.checked = !!v; };
     setVal('inpPlantillaPdfFile', '');
     setVal('inpPlantillaPdfAgregar', '');
+    setVal('inpPlantillaPdfReemplazar', '');
     renderMultiPdfQueueEditor_();
+    actualizarBannerModoEditor_();
     setVal('selEditarPlantillaExistente', '');
     setVal('inpEditPlantillaNombre', '');
     setVal('selEditPlantillaCategoria', 'AUTORIZACION');
@@ -4011,7 +4450,8 @@
       notify('Ingresá un nombre para identificar la plantilla.', 'warning');
       return;
     }
-    if (!state.editor.plantillaId && !state.editor.pdfBase64) {
+    const esUpdate = Boolean(state.editor.plantillaId);
+    if (!esUpdate && !state.editor.pdfBase64) {
       notify('Subí un archivo PDF antes de guardar.', 'warning');
       return;
     }
@@ -4021,6 +4461,7 @@
       return el ? !!el.checked : def;
     };
 
+    const enviarPdf = !esUpdate || Boolean(state.editor.pdfDirty);
     const payload = {
       id: state.editor.plantillaId || null,
       nombre,
@@ -4028,7 +4469,7 @@
       descripcion,
       archivo_nombre: state.editor.archivoNombre || `${nombre}.pdf`,
       paginas: state.editor.totalPages || 1,
-      pdfBase64: state.editor.pdfBase64 || null,
+      pdfBase64: enviarPdf ? (state.editor.pdfBase64 || null) : null,
       campos: state.editor.campos,
       validaciones: {
         firma_olografa: chk('chkValFirmaOlografa', true),
@@ -4044,17 +4485,24 @@
       activa: true,
     };
 
-    notify('Guardando plantilla PDF en AMMER...', 'info');
+    notify(esUpdate ? 'Actualizando plantilla PDF en AMMER...' : 'Guardando plantilla PDF en AMMER...', 'info');
     try {
-      const res = await apiFetchJson('/api/firmas/plantillas', {
-        method: 'POST',
+      const url = esUpdate
+        ? `/api/firmas/plantillas/${encodeURIComponent(state.editor.plantillaId)}`
+        : '/api/firmas/plantillas';
+      const res = await apiFetchJson(url, {
+        method: esUpdate ? 'PUT' : 'POST',
         body: JSON.stringify(payload),
       });
       state.editor.plantillaId = res.plantilla.id;
+      state.editor.pdfDirty = false;
       await cargarPlantillas();
       const selExist = document.getElementById('selEditarPlantillaExistente');
       if (selExist && state.editor.plantillaId) selExist.value = state.editor.plantillaId;
-      notify('Plantilla PDF guardada correctamente.', 'success');
+      actualizarBannerModoEditor_();
+      const msgOk = esUpdate ? 'Plantilla actualizada correctamente.' : 'Plantilla PDF guardada correctamente.';
+      setEstadoEditorPdf(`✅ ${msgOk} ("${nombre}" · ${(state.editor.campos || []).length} campos)`, 'ok');
+      notify(msgOk, 'success');
     } catch (err) {
       notify('Error guardando plantilla: ' + err.message, 'error');
     }
@@ -4066,8 +4514,10 @@
       return;
     }
     state.editor.plantillaId = null;
+    state.editor.pdfDirty = true;
     state.editor.history = [];
     actualizarBotonDeshacerEditor_();
+    actualizarBannerModoEditor_();
     const selExist = document.getElementById('selEditarPlantillaExistente');
     if (selExist) selExist.value = '';
     const inpNom = document.getElementById('inpEditPlantillaNombre');
@@ -5506,6 +5956,16 @@
     }
   }
 
+  if (typeof document !== 'undefined') {
+    document.addEventListener('click', (ev) => {
+      const wrap = document.getElementById('wrapBuscadorExpFirma');
+      const box = document.getElementById('listaSugerenciasExpFirma');
+      if (wrap && box && box.style.display !== 'none' && !wrap.contains(ev.target)) {
+        box.style.display = 'none';
+      }
+    });
+  }
+
   global.esAdminOAnalistaFirma = esAdminOAnalistaFirma;
   global.cargarIndiceFirmasPorExpediente = cargarIndiceFirmasPorExpediente;
   global.obtenerFirmaVinculadaAExpediente = obtenerFirmaVinculadaAExpediente;
@@ -5513,6 +5973,16 @@
   global.aplicarPresetValidacionFirmas = aplicarPresetValidacionFirmas;
   global.onToggleValidacionGenerador = onToggleValidacionGenerador;
   global.actualizarPreviewFraseVozGenerador = actualizarPreviewFraseVozGenerador;
+  global.filtrarExpedientesGenerador = filtrarExpedientesGenerador;
+  global.seleccionarExpedienteDesdeBusquedaFirma = seleccionarExpedienteDesdeBusquedaFirma;
+  global.limpiarBusquedaExpedienteFirma = limpiarBusquedaExpedienteFirma;
+  global.onKeyDownBuscarExpedienteFirma = onKeyDownBuscarExpedienteFirma;
+  global.onExpedienteGenerarSeleccionado = onExpedienteGenerarSeleccionado;
+  global.editarPlantillaSeleccionadaEnGenerador = editarPlantillaSeleccionadaEnGenerador;
+  global.toggleAsignacionCampoGenerador = toggleAsignacionCampoGenerador;
+  global.aplicarModoCamposGenerador = aplicarModoCamposGenerador;
+  global.onReemplazarPdfPlantillaEditando = onReemplazarPdfPlantillaEditando;
+  global.pasarEdicionANuevaPlantillaEditor = pasarEdicionANuevaPlantillaEditor;
   global.syncLivenessVideoMeta = syncLivenessVideoMeta;
   global.syncLivenessVideoTime = syncLivenessVideoTime;
   global.onLivenessVideoEnded = onLivenessVideoEnded;

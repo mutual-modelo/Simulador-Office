@@ -1530,7 +1530,12 @@
                       <span>Seleccionar Plantilla PDF</span>
                     </label>
                   </div>
-                  <select id="selFirmaPlantilla" class="firmas-select" onchange="onPlantillaGenerarChange()"></select>
+                  <div class="firmas-exp-row">
+                    <select id="selFirmaPlantilla" class="firmas-select" onchange="onPlantillaGenerarChange()" style="flex:1;min-width:0;"></select>
+                    <button type="button" id="btnEditarPlantillaDesdeGenerar" class="firmas-btn firmas-btn-soft-blue" onclick="editarPlantillaSeleccionadaEnGenerador()" title="Abrir esta plantilla en el Editor Visual para modificar campos, validaciones o PDF y actualizarla">
+                      <span>✏️ Editar</span>
+                    </button>
+                  </div>
                 </div>
 
                 <div class="firmas-step-card">
@@ -1539,9 +1544,17 @@
                       <span class="firmas-step-num">2</span>
                       <span>Vincular Expediente (Autocompleta)</span>
                     </label>
+                    <span id="lblCountExpFirma" style="font-size:0.69rem;font-weight:700;color:#64748b;"></span>
+                  </div>
+                  <div id="wrapBuscadorExpFirma" style="position:relative;margin-bottom:0.42rem;">
+                    <div style="display:flex;align-items:center;gap:5px;">
+                      <input type="search" id="inpBuscarExpedienteFirma" class="firmas-input firmas-input--sm" autocomplete="off" placeholder="🔎 Buscar por Nombre, DNI o N° exp..." oninput="filtrarExpedientesGenerador(this.value)" onfocus="filtrarExpedientesGenerador(this.value, true)" onkeydown="onKeyDownBuscarExpedienteFirma(event)" style="flex:1;height:34px;font-size:0.79rem;"/>
+                      <button type="button" id="btnLimpiarBuscarExpFirma" class="firmas-btn firmas-btn--xs" style="display:none;height:34px;padding:0 9px;" onclick="limpiarBusquedaExpedienteFirma()" title="Limpiar búsqueda">✕</button>
+                    </div>
+                    <div id="listaSugerenciasExpFirma" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:60;background:#ffffff;border:1.5px solid #93c5fd;border-radius:10px;box-shadow:0 12px 28px rgba(15,23,42,0.16);max-height:240px;overflow-y:auto;"></div>
                   </div>
                   <div class="firmas-exp-row">
-                    <select id="selFirmaExpediente" class="firmas-select" onchange="renderCamposCompletarFormulario()"></select>
+                    <select id="selFirmaExpediente" class="firmas-select" onchange="onExpedienteGenerarSeleccionado()"></select>
                     <button type="button" class="firmas-btn firmas-btn-soft-blue" onclick="exportarExpedienteCompletoZip()" title="Descargar el legajo completo y todas sus firmas en un archivo .ZIP">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                       <span>Legajo .ZIP</span>
@@ -1625,12 +1638,20 @@
 
               <!-- DATOS DINÁMICOS DEL DOCUMENTO -->
               <div>
-                <div class="firmas-section-head" style="margin-bottom:0.55rem;">
-                  <div class="firmas-section-title">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#135596" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-                    <span>Datos a completar en el documento</span>
+                <div class="firmas-section-head" style="margin-bottom:0.55rem;flex-wrap:wrap;gap:0.45rem;">
+                  <div>
+                    <div class="firmas-section-title">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#135596" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                      <span>Datos a completar en el documento</span>
+                    </div>
+                    <span style="font-size:0.73rem;color:#64748b;font-weight:600;">Elegí por cada campo si lo completa previamente el analista o el asociado en el Paso 1</span>
                   </div>
-                  <span style="font-size:0.73rem;color:#64748b;font-weight:600;">Podés modificar o vaciar cualquier campo antes de enviarlo</span>
+                  <div id="firmaCamposModoBar" style="display:none;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+                    <span id="lblResumenModoCamposFirma" style="font-size:0.71rem;font-weight:800;padding:3px 9px;border-radius:9999px;background:#eff6ff;color:#1e3a8a;border:1px solid #bfdbfe;"></span>
+                    <button type="button" class="firmas-btn firmas-btn--xs" onclick="aplicarModoCamposGenerador('todos_analista')" title="Todos los campos los completa previamente el analista">👨‍💼 Todos Analista</button>
+                    <button type="button" class="firmas-btn firmas-btn--xs firmas-btn-soft-blue" onclick="aplicarModoCamposGenerador('vacios_asociado')" title="Los campos sin dato cargado pasan automáticamente para que el asociado los complete en el Paso 1">✨ Vacíos al Asociado (Paso 1)</button>
+                    <button type="button" class="firmas-btn firmas-btn--xs firmas-btn-soft-blue" onclick="aplicarModoCamposGenerador('todos_asociado')" title="Todos los campos editables pasan al Paso 1 del asociado">🧑 Todos al Asociado</button>
+                  </div>
                 </div>
                 <div id="firmaCamposGenerarContainer"></div>
               </div>
@@ -1774,6 +1795,7 @@
                   <label for="inpPlantillaPdfFile" class="firmas-label">Subir uno o varios PDFs base para crear nueva plantilla:</label>
                   <input type="file" id="inpPlantillaPdfFile" class="firmas-file-input" accept="application/pdf" multiple onchange="onArchivoPdfPlantillaSeleccionado(event)"/>
                   <input type="file" id="inpPlantillaPdfAgregar" accept="application/pdf" multiple style="display:none;" onchange="onAgregarPdfsPlantillaSeleccionado(event)"/>
+                  <input type="file" id="inpPlantillaPdfReemplazar" accept="application/pdf" multiple style="display:none;" onchange="onReemplazarPdfPlantillaEditando(event)"/>
                 </div>
                 <div>
                   <label for="selEditarPlantillaExistente" class="firmas-label">O cargar una plantilla guardada para editar:</label>
@@ -1785,6 +1807,7 @@
                   </div>
                 </div>
               </div>
+              <div id="bannerModoEdicionPlantilla" style="display:none;margin-top:0.65rem;padding:0.65rem 0.85rem;border-radius:11px;background:linear-gradient(135deg,#eff6ff 0%,#f0fdf4 100%);border:1.5px solid #93c5fd;align-items:center;justify-content:space-between;gap:0.65rem;flex-wrap:wrap;"></div>
               <div id="wrapEditorMultiPdfQueue" style="display:none;margin-top:0.65rem;padding:0.7rem 0.85rem;border:1px solid #cbd5e1;border-radius:11px;background:#f8fafc;"></div>
 
               <div class="firmas-editor-meta-grid">
@@ -1887,7 +1910,7 @@
                   <div style="display:flex;gap:0.5rem;flex-wrap:wrap;padding-top:0.25rem;">
                     <button type="button" class="firmas-btn firmas-btn-danger" onclick="limpiarEditorPlantillaPdf()" title="Cancelar edición y vaciar el editor visual">✕ Cancelar</button>
                     <button type="button" class="firmas-btn firmas-btn-soft-blue" style="flex:1;" onclick="probarEstampadoEditor()" title="Descargar un PDF de prueba con datos ficticios para verificar cómo queda">🧪 Probar PDF</button>
-                    <button type="button" class="firmas-btn firmas-btn-emerald" style="flex:1;" onclick="guardarPlantillaDesdeEditor()">💾 Guardar Plantilla</button>
+                    <button type="button" id="btnGuardarPlantillaEditor" class="firmas-btn firmas-btn-emerald" style="flex:1;" onclick="guardarPlantillaDesdeEditor()">💾 Guardar Plantilla</button>
                   </div>
                 </div>
               </div>
@@ -22993,7 +23016,7 @@ ${cierreTxt}`;
   <script src="js/auditoria20.js?v=6"></script>
   <script src="js/fichasAsociados.js?v=6"></script>
   <script src="js/sidecreerWidget.js?v=11"></script>
-  <script src="js/firmasAmmer.js?v=26"></script>
+  <script src="js/firmasAmmer.js?v=27"></script>
   <script src="js/whatsappBotAdmin.js?v=5"></script>
   <script src="js/mutualPayBackoffice.js?v=6"></script>
 </body>

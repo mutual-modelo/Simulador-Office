@@ -1371,8 +1371,10 @@
       });
       if (res.enviado_por_bot) {
         notify(tipo === 'envio' ? 'Enlace enviado automáticamente por el Bot WhatsApp AMMER.' : 'Recordatorio enviado automáticamente por el Bot WhatsApp AMMER.', 'success');
+      } else if (res.disabled) {
+        notify(res.motivo || 'El envío de WhatsApp está desactivado para esta acción en Bot WhatsApp.', 'info');
       } else if (res.wa_link) {
-        notify('Bot WA desconectado; abriendo chat manual en WhatsApp Web...', 'warning');
+        notify(res.unassigned ? 'Sin línea WhatsApp asignada; abriendo chat manual en WhatsApp Web...' : 'Bot WA desconectado; abriendo chat manual en WhatsApp Web...', 'warning');
         window.open(res.wa_link, '_blank', 'noopener');
       } else {
         notify(res.motivo || 'No se pudo enviar por WhatsApp.', 'warning');
@@ -1404,15 +1406,27 @@
     const tbody = document.getElementById('tbodyBandejaFirmas');
     if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="6" style="padding:1.5rem;text-align:center;color:#64748b;font-weight:600;">Cargando solicitudes de firma...</td></tr>';
-    cargarMetricasFirmas();
-    try {
-      const data = await apiFetchJson('/api/firmas/solicitudes', { method: 'GET' });
-      state.solicitudesFirma = Array.isArray(data.solicitudes) ? data.solicitudes : [];
-      _reconstruirIndiceFirmasPorExpediente();
-      renderBandejaFirmas();
-    } catch (err) {
-      tbody.innerHTML = `<tr><td colspan="6" style="padding:1.5rem;text-align:center;color:#b91c1c;font-weight:600;">Error cargando bandeja: ${escHtml(err.message)}</td></tr>`;
+    let lastErr = null;
+    for (let intento = 0; intento < 2; intento++) {
+      try {
+        const data = await apiFetchJson('/api/firmas/solicitudes', { method: 'GET' });
+        state.solicitudesFirma = Array.isArray(data.solicitudes) ? data.solicitudes : [];
+        _reconstruirIndiceFirmasPorExpediente();
+        renderBandejaFirmas();
+        cargarMetricasFirmas();
+        return;
+      } catch (err) {
+        lastErr = err;
+        const msg = String((err && err.message) || '');
+        const esTransitorio = /failed to fetch|network|502|503|504|load failed/i.test(msg);
+        if (intento === 0 && esTransitorio) {
+          await new Promise((r) => setTimeout(r, 700));
+          continue;
+        }
+        break;
+      }
     }
+    tbody.innerHTML = `<tr><td colspan="6" style="padding:1.5rem;text-align:center;color:#b91c1c;font-weight:600;">Error cargando bandeja: ${escHtml((lastErr && lastErr.message) || 'Error de red')}</td></tr>`;
   }
 
   const ESTADOS_BAJA_FIRMA = ['ANULADO', 'CANCELADO', 'DESESTIMADO', 'ELIMINADO'];
@@ -4869,6 +4883,14 @@
           ov.style.display = 'none';
           const fichaOv = document.getElementById('modalFichaSolicitudFirmaOverlay');
           if (fichaOv) fichaOv.style.display = 'none';
+          const idxSol = Array.isArray(state.solicitudesFirma)
+            ? state.solicitudesFirma.findIndex((x) => String(x.id) === String(solId))
+            : -1;
+          if (idxSol >= 0) {
+            state.solicitudesFirma[idxSol].estado = res.estado;
+            if (res.baja_registro) state.solicitudesFirma[idxSol].baja_registro = res.baja_registro;
+            renderBandejaFirmas();
+          }
           notify(`Ficha movida a Eliminados / Cancelados (${res.estado}) por ${op.nombre} (@${op.usuario}).`, 'success');
           await cargarBandejaFirmas();
         } catch (err) {

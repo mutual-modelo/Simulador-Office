@@ -653,11 +653,12 @@
     }
   }
 
-  function _accionesAsignadasASesion(sid, rutas, acciones) {
+  function _accionesAsignadasASesion(sid, rutas, acciones, desactivadasSet) {
     const mapAcc = new Map((acciones || []).map((a) => [a.key, a.label]));
     const res = [];
     Object.keys(rutas || {}).forEach((k) => {
-      if (rutas[k] === sid) {
+      if (desactivadasSet && desactivadasSet.has(k)) return;
+      if (rutas[k] && rutas[k] === sid) {
         res.push(mapAcc.get(k) || k);
       }
     });
@@ -850,6 +851,7 @@
     const cfg = data?.config || {};
     const rutas = cfg.rutas || {};
     const aliases = cfg.aliases || {};
+    const desactivadasSet = new Set(Array.isArray(cfg.acciones_desactivadas) ? cfg.acciones_desactivadas : []);
 
     _renderMetaReadinessBanner(data?.metaStatus);
     _renderSidebarIndicator(sesiones);
@@ -922,7 +924,7 @@
         const isReady = Boolean(s.connected || s.status === 'READY');
         const isClosed = !isMeta && (s.status === 'CLOSED' || s.status === 'DISCONNECTED' || s.status === 'LOGGED_OUT');
         const hasQr = !isMeta && s.status === 'WAITING_QR' && s.qrDataUrl;
-        const asigList = _accionesAsignadasASesion(sid, rutas, acciones);
+        const asigList = _accionesAsignadasASesion(sid, rutas, acciones, desactivadasSet);
         const chipsHtml = asigList.length > 0
           ? asigList.map((lbl) => `<span style="display:inline-flex;padding:2px 7px;border-radius:6px;background:#eef2ff;color:#3730a3;font-size:0.68rem;font-weight:700;">${_esc(lbl)}</span>`).join(' ')
           : '<span style="font-size:0.7rem;color:#94a3b8;">Sin acciones asignadas</span>';
@@ -983,7 +985,7 @@
       }).join('');
     }
 
-    const optsHtml = (selectedSid, forActionKey = '') => {
+    const optsHtml = (selectedSid, forActionKey = '', includeEmptyOption = false) => {
       const seen = new Set();
       const allSids = [];
       sesiones.forEach((s) => {
@@ -995,10 +997,13 @@
       if (selectedSid && !seen.has(selectedSid)) {
         allSids.push({ sessionId: selectedSid, provider: 'baileys_qr', status: 'DISCONNECTED', alias: aliases[selectedSid] || selectedSid });
       }
-      if (allSids.length === 0) {
+      if (!includeEmptyOption && allSids.length === 0) {
         allSids.push({ sessionId: 'sidecreer_default', provider: 'baileys_qr', status: 'DISCONNECTED', alias: 'Línea Principal' });
       }
-      return allSids.map((s) => {
+      const emptyOpt = includeEmptyOption
+        ? `<option value=""${selectedSid === '' ? ' selected' : ''}>— Sin asignar (vacío) —</option>`
+        : '';
+      return emptyOpt + allSids.map((s) => {
         const sid = s.sessionId;
         const lbl = aliases[sid] || s.alias || sid;
         const prov = s.provider === 'meta_cloud_api' ? '☁️ API' : '📱 QR';
@@ -1011,16 +1016,32 @@
 
     rutasEl.innerHTML = acciones.map((acc) => {
       const aKey = String(acc.key || '');
-      const selected = rutas[aKey] || data?.defaultSessionId || 'sidecreer_default';
+      const hasExplicitRoute = Object.prototype.hasOwnProperty.call(rutas, aKey);
+      const selected = hasExplicitRoute ? String(rutas[aKey] || '') : (data?.defaultSessionId || 'sidecreer_default');
+      const isEnabled = !desactivadasSet.has(aKey);
+      const hintTxt = !isEnabled
+        ? '⏸️ Envío de mensajes desactivado para esta acción.'
+        : (!selected
+            ? (aKey === 'general_fallback'
+                ? '⚪ Sin línea predeterminada asignada.'
+                : '⚪ Sin línea asignada (usará Respaldo / Uso General si tiene línea, o enlace manual).')
+            : '');
       return (
-        `<div style="display:flex;flex-direction:column;gap:8px;padding:0.8rem 0.95rem;border:1px solid #e2e8f0;border-radius:11px;background:#f8fafc;">` +
-          `<div>` +
-            `<div style="font-size:0.83rem;font-weight:800;color:#0f172a;">${_esc(acc.label || aKey)}</div>` +
-            `<div style="font-size:0.72rem;color:#64748b;margin-top:2px;">${_esc(acc.description || '')}</div>` +
+        `<div data-wa-action-card="${_esc(aKey)}" style="display:flex;flex-direction:column;gap:8px;padding:0.8rem 0.95rem;border:1px solid ${isEnabled ? '#e2e8f0' : '#fecaca'};border-radius:11px;background:${isEnabled ? '#f8fafc' : '#fef2f2'};transition:all .15s;">` +
+          `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">` +
+            `<div style="flex:1;min-width:0;">` +
+              `<div style="font-size:0.83rem;font-weight:800;color:#0f172a;">${_esc(acc.label || aKey)}</div>` +
+              `<div style="font-size:0.72rem;color:#64748b;margin-top:2px;">${_esc(acc.description || '')}</div>` +
+            `</div>` +
+            `<label title="Activar o desactivar envío automático para esta acción" style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:9999px;font-size:0.7rem;font-weight:800;cursor:pointer;white-space:nowrap;border:1px solid ${isEnabled ? '#bbf7d0' : '#fca5a5'};background:${isEnabled ? '#dcfce7' : '#fee2e2'};color:${isEnabled ? '#166534' : '#991b1b'};">` +
+              `<input type="checkbox" data-wa-action-enabled="${_esc(aKey)}"${isEnabled ? ' checked' : ''} onchange="window._onWaAccionVisualUpdate('${_esc(aKey)}')" style="width:14px;height:14px;accent-color:#16a34a;margin:0;cursor:pointer;"/>` +
+              `<span data-wa-action-badge="${_esc(aKey)}">${isEnabled ? 'Envío activo' : 'Desactivado'}</span>` +
+            `</label>` +
           `</div>` +
-          `<select data-wa-route-action="${_esc(aKey)}" style="width:100%;padding:0.46rem 0.65rem;border-radius:8px;border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;font-size:0.79rem;font-weight:700;">` +
-            optsHtml(selected, aKey) +
+          `<select data-wa-route-action="${_esc(aKey)}" onchange="window._onWaAccionVisualUpdate('${_esc(aKey)}')" style="width:100%;padding:0.46rem 0.65rem;border-radius:8px;border:1px solid #cbd5e1;background:#ffffff;color:#0f172a;font-size:0.79rem;font-weight:700;opacity:${isEnabled ? '1' : '0.68'};">` +
+            optsHtml(selected, aKey, true) +
           `</select>` +
+          `<div data-wa-action-hint="${_esc(aKey)}" style="font-size:0.7rem;font-weight:600;color:${!isEnabled ? '#991b1b' : '#64748b'};display:${hintTxt ? 'block' : 'none'};">${_esc(hintTxt)}</div>` +
         `</div>`
       );
     }).join('');
@@ -2667,6 +2688,46 @@
     }
   }
 
+  function _onWaAccionVisualUpdate(aKey) {
+    const safeKey = String(aKey || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    const card = document.querySelector(`[data-wa-action-card="${safeKey}"]`);
+    const chk = document.querySelector(`[data-wa-action-enabled="${safeKey}"]`);
+    const badge = document.querySelector(`[data-wa-action-badge="${safeKey}"]`);
+    const sel = document.querySelector(`[data-wa-route-action="${safeKey}"]`);
+    const hint = document.querySelector(`[data-wa-action-hint="${safeKey}"]`);
+    const isEnabled = chk ? Boolean(chk.checked) : true;
+    const selected = sel ? String(sel.value || '') : '';
+
+    if (card) {
+      card.style.borderColor = isEnabled ? '#e2e8f0' : '#fecaca';
+      card.style.background = isEnabled ? '#f8fafc' : '#fef2f2';
+    }
+    if (badge) {
+      badge.textContent = isEnabled ? 'Envío activo' : 'Desactivado';
+      const lbl = badge.parentElement;
+      if (lbl) {
+        lbl.style.borderColor = isEnabled ? '#bbf7d0' : '#fca5a5';
+        lbl.style.background = isEnabled ? '#dcfce7' : '#fee2e2';
+        lbl.style.color = isEnabled ? '#166534' : '#991b1b';
+      }
+    }
+    if (sel) {
+      sel.style.opacity = isEnabled ? '1' : '0.68';
+    }
+    if (hint) {
+      const hintTxt = !isEnabled
+        ? '⏸️ Envío de mensajes desactivado para esta acción.'
+        : (!selected
+            ? (aKey === 'general_fallback'
+                ? '⚪ Sin línea predeterminada asignada.'
+                : '⚪ Sin línea asignada (usará Respaldo / Uso General si tiene línea, o enlace manual).')
+            : '');
+      hint.textContent = hintTxt;
+      hint.style.color = !isEnabled ? '#991b1b' : '#64748b';
+      hint.style.display = hintTxt ? 'block' : 'none';
+    }
+  }
+
   async function guardarConfigWhatsappBotAdmin() {
     if (!_esAdmin()) return;
     const apiBase = _getApiBase();
@@ -2683,7 +2744,13 @@
     const rutas = Object.assign({}, lastPanelData?.config?.rutas || {});
     document.querySelectorAll('[data-wa-route-action]').forEach((sel) => {
       const act = sel.getAttribute('data-wa-route-action');
-      if (act && sel.value) rutas[act] = sel.value;
+      if (act) rutas[act] = String(sel.value || '');
+    });
+
+    const accionesDesactivadas = [];
+    document.querySelectorAll('[data-wa-action-enabled]').forEach((chk) => {
+      const act = chk.getAttribute('data-wa-action-enabled');
+      if (act && !chk.checked) accionesDesactivadas.push(act);
     });
 
     const chkFallback = document.getElementById('chkWaBotFallbackAuto');
@@ -2699,6 +2766,7 @@
         body: JSON.stringify({
           aliases,
           rutas,
+          acciones_desactivadas: accionesDesactivadas,
           fallback_automatico: fallbackAuto,
           footer_enabled: footerCfg.enabled,
           footer_template: footerCfg.template
@@ -2744,8 +2812,12 @@
         _toast(`✅ Enviado automáticamente por Bot WhatsApp (${data.sessionId || 'línea comercial'}).`, 'success');
         return { ok: true, data };
       }
+      if (data && data.disabled) {
+        _toast('ℹ️ ' + (data.motivo || 'El envío automático por WhatsApp está desactivado para Propuestas y Simulaciones.'), 'info');
+        return { ok: false, disabled: true, fallback: false };
+      }
       if (data && data.wa_link) {
-        _toast('ℹ️ Bot desconectado para propuestas; abriendo WhatsApp Web...', 'info');
+        _toast(data.unassigned ? 'ℹ️ Sin línea WhatsApp asignada para propuestas; abriendo WhatsApp Web...' : 'ℹ️ Bot desconectado para propuestas; abriendo WhatsApp Web...', 'info');
         global.open(data.wa_link, '_blank', 'noopener,noreferrer');
         return { ok: false, fallback: true };
       }
@@ -2811,6 +2883,7 @@
   global.abrirSesionWhatsappBotAdmin = abrirSesionWhatsappBotAdmin;
   global.cerrarSesionWhatsappBotAdmin = cerrarSesionWhatsappBotAdmin;
   global.eliminarSesionWhatsappBotAdmin = eliminarSesionWhatsappBotAdmin;
+  global._onWaAccionVisualUpdate = _onWaAccionVisualUpdate;
   global.guardarConfigWhatsappBotAdmin = guardarConfigWhatsappBotAdmin;
   global.probarEnvioWhatsappBotAdmin = probarEnvioWhatsappBotAdmin;
   global.enviarMensajeViaBotAmmerConFallback = enviarMensajeViaBotAmmerConFallback;

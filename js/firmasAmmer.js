@@ -1253,13 +1253,13 @@
             renderQrEnElemento(`qrFirmaGenBox_${idx}`, item.url_firma, `${item.nombre || 'Firmante'} — Firma AMMER`);
           }
         });
-        if (enlacesCont) {
-          enlacesCont.querySelectorAll('.js-firmas-wa-open').forEach((btn) => {
+        if (listCont) {
+          listCont.querySelectorAll('.js-firmas-wa-open').forEach((btn) => {
             btn.addEventListener('click', () => {
               abrirWhatsAppFirmante(btn.getAttribute('data-wa-tel') || '', btn.getAttribute('data-wa-input') || '');
             });
           });
-          enlacesCont.querySelectorAll('.js-firmas-qr-zoom').forEach((btn) => {
+          listCont.querySelectorAll('.js-firmas-qr-zoom').forEach((btn) => {
             btn.addEventListener('click', () => {
               ampliarQrModal(btn.getAttribute('data-qr-url') || '', btn.getAttribute('data-qr-nombre') || 'Firmante');
             });
@@ -1466,7 +1466,7 @@
     const escCsv = (v) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
     const headers = [
       'ID', 'Asociado', 'DNI', 'WhatsApp', 'Expediente', 'Documento', 'Estado',
-      'Fecha Creacion UTC', 'Fecha Lectura UTC', 'Fecha Firma UTC', 'IP',
+      'Fecha Creacion (AR)', 'Fecha Lectura (AR)', 'Fecha Firma (AR)', 'IP',
       'GPS Lat', 'GPS Lng', 'SHA256', 'eKYC', 'Face Match %', 'Boletin ER',
       'CajaJPER', 'TSA RFC3161', 'PAdES'
     ];
@@ -1484,9 +1484,9 @@
         r.expediente_id || '',
         r.plantilla_nombre || '',
         r.estado || 'PENDIENTE',
-        r.created_at || '',
-        r.leido_en || '',
-        r.firmado_en || '',
+        r.created_at ? formatearFechaHoraAr(r.created_at) : '',
+        r.leido_en ? formatearFechaHoraAr(r.leido_en) : '',
+        r.firmado_en ? formatearFechaHoraAr(r.firmado_en) : '',
         r.ip_origen || '',
         r.geo_latitud != null ? r.geo_latitud : '',
         r.geo_longitud != null ? r.geo_longitud : '',
@@ -1514,7 +1514,11 @@
 
   function formatearFechaHoraAr(isoStr) {
     if (!isoStr) return '-';
-    const dt = new Date(isoStr);
+    let raw = String(isoStr).trim();
+    if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(raw)) {
+      raw = raw.replace(' ', 'T') + 'Z';
+    }
+    const dt = new Date(raw);
     if (Number.isNaN(dt.getTime())) return String(isoStr);
     try {
       return dt.toLocaleString('es-AR', {
@@ -1646,8 +1650,8 @@
             badgesHtml += chipBadge('🔏 PAdES (.p12)', '#eef2ff', '#3730a3', '#c7d2fe');
           }
 
-          const fechaCreadaTxt = (r.created_at || '').slice(0, 16).replace('T', ' ') || '-';
-          const fechaFirmadaTxt = r.firmado_en ? r.firmado_en.slice(0, 16).replace('T', ' ') : '';
+          const fechaCreadaTxt = formatearFechaHoraAr(r.created_at);
+          const fechaFirmadaTxt = r.firmado_en ? formatearFechaHoraAr(r.firmado_en) : '';
           const quickRecordarBtn = (est !== 'FIRMADO' && r.telefono_whatsapp)
             ? `<button type="button" class="firmas-btn firmas-btn--sm" onclick="window.notificarWhatsappSolicitud('${escHtml(r.id)}', 'recordatorio')" title="Enviar recordatorio directo por WhatsApp" style="border-color:#86efac;background:#f0fdf4;color:#15803d;">📲 Recordar</button>`
             : '';
@@ -1667,7 +1671,7 @@
               <td data-label="Estado" style="padding:0.85rem 0.78rem;text-align:center;">
                 <span style="display:inline-flex;align-items:center;padding:3px 11px;border-radius:9999px;font-size:0.7rem;font-weight:800;background:${bg};color:${col};border:1px solid ${bd};white-space:nowrap;">${escHtml(est)}</span>
               </td>
-              <td data-label="Fechas (UTC)" style="padding:0.85rem 0.78rem;font-size:0.73rem;color:#475569;white-space:nowrap;line-height:1.55;">
+              <td data-label="Fechas (AR)" style="padding:0.85rem 0.78rem;font-size:0.73rem;color:#475569;white-space:nowrap;line-height:1.55;">
                 <div>Creada: <strong class="font-mono">${escHtml(fechaCreadaTxt)}</strong></div>
                 ${fechaFirmadaTxt ? `<div style="color:#166534;font-weight:700;">Firmada: <span class="font-mono">${escHtml(fechaFirmadaTxt)}</span></div>` : ''}
               </td>
@@ -1754,7 +1758,82 @@
     pdfB64: '',
     pdfZoom: 1.0,
     data: null,
+    videoBlobUrl: null,
   };
+
+  function revocarVideoLivenessBlobUrl_() {
+    if (fichaModalState.videoBlobUrl) {
+      try {
+        URL.revokeObjectURL(fichaModalState.videoBlobUrl);
+      } catch (_e) {}
+      fichaModalState.videoBlobUrl = null;
+    }
+  }
+
+  function extraerDriveFileId_(vidMeta) {
+    if (!vidMeta || typeof vidMeta !== 'object') return '';
+    if (vidMeta.drive_file_id && /^[a-zA-Z0-9_-]{10,120}$/.test(String(vidMeta.drive_file_id).trim())) {
+      return String(vidMeta.drive_file_id).trim();
+    }
+    const candidates = [vidMeta.drive_preview_url, vidMeta.drive_url].filter(Boolean);
+    for (const u of candidates) {
+      const s = String(u).trim();
+      const m = s.match(/\/d\/([a-zA-Z0-9_-]{10,120})/) || s.match(/[?&]id=([a-zA-Z0-9_-]{10,120})/);
+      if (m && m[1]) return m[1];
+    }
+    return '';
+  }
+
+  async function cargarVideoPruebaVidaDesdeDrive_(vidDomId, driveFileId, dlName, vidMime, driveUrlFallback) {
+    const vidEl = document.getElementById(vidDomId);
+    const loadEl = document.getElementById(`vidLoad_${vidDomId}`);
+    const dlEl = document.getElementById(`dlVid_${vidDomId}`);
+    if (!vidEl || !driveFileId) return;
+
+    try {
+      const headers = obtenerAuthHeaders();
+      const resp = await fetch(`${getApiBase()}/api/drive/archivo/${encodeURIComponent(driveFileId)}`, {
+        method: 'GET',
+        headers,
+      });
+      if (!resp.ok) {
+        throw new Error(`HTTP ${resp.status}`);
+      }
+      const rawBlob = await resp.blob();
+      if (!rawBlob || rawBlob.size === 0) {
+        throw new Error('Archivo vacío');
+      }
+      const typedBlob = rawBlob.type && rawBlob.type.startsWith('video/')
+        ? rawBlob
+        : new Blob([rawBlob], { type: vidMime || 'video/webm' });
+
+      revocarVideoLivenessBlobUrl_();
+      const objUrl = URL.createObjectURL(typedBlob);
+      fichaModalState.videoBlobUrl = objUrl;
+
+      vidEl.src = objUrl;
+      vidEl.load();
+      if (loadEl) loadEl.style.display = 'none';
+      if (dlEl) {
+        dlEl.href = objUrl;
+        dlEl.download = dlName || 'prueba_vida.webm';
+        dlEl.style.display = 'inline-flex';
+      }
+    } catch (err) {
+      if (loadEl) {
+        const linkBtn = driveUrlFallback
+          ? `<a href="${escHtml(driveUrlFallback)}" target="_blank" rel="noopener" class="firmas-btn firmas-btn--xs" style="margin-top:8px;border-color:#86efac;background:#f0fdf4;color:#15803d;">▶️ Abrir video directo en Google Drive ↗</a>`
+          : '';
+        loadEl.innerHTML = `
+          <div style="text-align:center;padding:0.9rem;color:#e2e8f0;font-size:0.78rem;line-height:1.45;">
+            <div style="font-weight:800;color:#fca5a5;margin-bottom:4px;">No se pudo reproducir inline desde Drive (${escHtml(err.message || 'acceso restringido')})</div>
+            <div style="color:#94a3b8;font-size:0.72rem;">Usá el enlace seguro de Google Drive con tu cuenta autorizada.</div>
+            ${linkBtn}
+          </div>
+        `;
+      }
+    }
+  }
 
   function ensureModalFichaSolicitudShell() {
     let ov = document.getElementById('modalFichaSolicitudFirmaOverlay');
@@ -1763,7 +1842,10 @@
       ov.id = 'modalFichaSolicitudFirmaOverlay';
       ov.style.cssText = 'position:fixed;inset:0;z-index:99997;background:rgba(15,23,42,0.6);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;padding:1rem;';
       ov.addEventListener('click', (ev) => {
-        if (ev.target === ov) ov.style.display = 'none';
+        if (ev.target === ov) {
+          revocarVideoLivenessBlobUrl_();
+          ov.style.display = 'none';
+        }
       });
       document.body.appendChild(ov);
     }
@@ -2034,7 +2116,7 @@
         <div style="border-left:3.5px solid #135596;background:#f8fafc;border-top:1px solid #e2e8f0;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;border-radius:10px;padding:0.7rem 0.95rem;margin-bottom:0.6rem;">
           <div style="display:flex;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;">
             <strong style="color:#0f2744;font-size:0.83rem;">${escHtml(ev.evento || '-')}</strong>
-            <span class="font-mono" style="font-size:0.72rem;color:#475569;">${escHtml((ev.created_at || '').slice(0, 19).replace('T', ' '))} UTC</span>
+            <span class="font-mono" style="font-size:0.72rem;color:#475569;">${escHtml(formatearFechaHoraAr(ev.created_at))}</span>
           </div>
           <div style="font-size:0.72rem;color:#64748b;margin-top:3px;">IP: <span class="font-mono">${escHtml(ev.ip_origen || '-')}</span> · Navegador: ${escHtml((ev.user_agent || '-').slice(0, 90))}</div>
           ${ev.detalle_json ? `<details style="margin-top:0.35rem;"><summary style="cursor:pointer;font-size:0.72rem;color:#135596;font-weight:700;">Ver detalle técnico</summary><pre class="font-mono" style="margin:0.4rem 0 0;padding:0.55rem;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;font-size:0.69rem;overflow-x:auto;color:#334155;">${escHtml(JSON.stringify(ev.detalle_json, null, 2))}</pre></details>` : ''}
@@ -2255,7 +2337,8 @@
               const vidMeta = (ek && ek.video_prueba_vida) || {};
               const ext = vidMime.includes('mp4') ? 'mp4' : 'webm';
               const kbTxt = vidMeta.tamano_bytes ? `${Math.round(vidMeta.tamano_bytes / 1024)} KB` : '';
-              const migradoDrive = vidMeta.estado_migracion_drive === 'MIGRADO_A_DRIVE' && Boolean(vidMeta.drive_url || vidMeta.drive_preview_url);
+              const driveFileId = extraerDriveFileId_(vidMeta);
+              const migradoDrive = vidMeta.estado_migracion_drive === 'MIGRADO_A_DRIVE' && Boolean(vidMeta.drive_url || vidMeta.drive_preview_url || driveFileId);
               const destTxt = vidMeta.destino_drive === 'expediente' ? 'Carpeta del Expediente' : 'FICHAS DE IDENTIDAD (Drive)';
 
               if (!vidB64 && !migradoDrive) {
@@ -2274,8 +2357,9 @@
               const vidSrc = vidB64 ? (vidB64.startsWith('data:') ? vidB64 : `data:${vidMime};base64,${vidB64}`) : '';
               const dlName = `prueba_vida_${(r.dni_solicitante || 'firmante').replace(/\W+/g, '')}.${ext}`;
               const vidDomId = `mpVidLiv_${String(r.id || '0').replace(/[^A-Za-z0-9_-]/g, '')}`;
+              const puedeReproducirNativo = Boolean(vidSrc || driveFileId);
               return `
-                <div style="margin-top:1rem;background:#f8fafc;border:1px solid ${migradoDrive ? '#86efac' : '#cbd5e1'};border-radius:13px;padding:0.95rem 1.1rem;">
+                <div style="margin-top:1rem;background:#f8fafc;border:1px solid ${migradoDrive ? '#86efac' : '#cbd5e1'};border-radius:13px;padding:0.95rem 1.1rem;" data-vid-dom-id="${escHtml(vidDomId)}" data-vid-drive-id="${escHtml(vidSrc ? '' : driveFileId)}" data-vid-dl-name="${escHtml(dlName)}" data-vid-mime="${escHtml(vidMime)}" data-vid-drive-url="${escHtml(vidMeta.drive_url || '')}">
                   <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.65rem;">
                     <div>
                       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -2289,13 +2373,16 @@
                     <div style="display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center;">
                       ${vidMeta.drive_url ? `<a href="${escHtml(vidMeta.drive_url)}" target="_blank" rel="noopener" class="firmas-btn firmas-btn--xs" style="border-color:#86efac;background:#f0fdf4;color:#15803d;">▶️ Ver video en Drive</a>` : ''}
                       ${vidMeta.carpeta_url ? `<a href="${escHtml(vidMeta.carpeta_url)}" target="_blank" rel="noopener" class="firmas-btn firmas-btn--xs" style="border-color:#15803d;background:#ecfdf5;color:#065f46;">📁 Carpeta Drive</a>` : ''}
-                      ${vidSrc ? `<a href="${escHtml(vidSrc)}" download="${escHtml(dlName)}" class="firmas-btn firmas-btn--xs firmas-btn-navy">⬇️ Descargar video</a>` : ''}
+                      ${vidSrc
+                        ? `<a id="dlVid_${vidDomId}" href="${escHtml(vidSrc)}" download="${escHtml(dlName)}" class="firmas-btn firmas-btn--xs firmas-btn-navy">⬇️ Descargar video</a>`
+                        : (driveFileId ? `<a id="dlVid_${vidDomId}" href="#" download="${escHtml(dlName)}" class="firmas-btn firmas-btn--xs firmas-btn-navy" style="display:none;">⬇️ Descargar video</a>` : '')}
                       ${!migradoDrive ? `<button type="button" class="firmas-btn firmas-btn--xs firmas-btn-soft-blue" onclick="window.migrarVideoPruebaVidaDrive('${escHtml(r.id)}').then(()=>window.abrirFichaSolicitudFirma('${escHtml(r.id)}'))">📤 Migrar a Drive ahora</button>` : ''}
                     </div>
                   </div>
-                  ${vidSrc
-                    ? `<div id="wrap_${vidDomId}" style="width:100%;max-width:480px;border-radius:12px;overflow:hidden;border:1.5px solid #cbd5e1;background:#020617;box-shadow:0 4px 12px rgba(15,23,42,0.12);">
-                        <video id="${vidDomId}" playsinline preload="metadata" src="${escHtml(vidSrc)}" style="width:100%;height:260px;object-fit:contain;display:block;background:#020617;cursor:pointer;" onclick="window.toggleLivenessVideoPlay('${vidDomId}')" onloadedmetadata="window.syncLivenessVideoMeta('${vidDomId}')" ontimeupdate="window.syncLivenessVideoTime('${vidDomId}')" onended="window.onLivenessVideoEnded('${vidDomId}')"></video>
+                  ${puedeReproducirNativo
+                    ? `<div id="wrap_${vidDomId}" style="position:relative;width:100%;max-width:480px;border-radius:12px;overflow:hidden;border:1.5px solid ${migradoDrive ? '#86efac' : '#cbd5e1'};background:#020617;box-shadow:0 4px 12px rgba(15,23,42,0.12);">
+                        ${!vidSrc ? `<div id="vidLoad_${vidDomId}" style="position:absolute;inset:0 0 42px 0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,0.88);color:#e2e8f0;font-size:0.8rem;font-weight:700;z-index:2;">⏳ Cargando video seguro desde Drive...</div>` : ''}
+                        <video id="${vidDomId}" playsinline preload="metadata" ${vidSrc ? `src="${escHtml(vidSrc)}"` : ''} style="width:100%;height:260px;object-fit:contain;display:block;background:#020617;cursor:pointer;" onclick="window.toggleLivenessVideoPlay('${vidDomId}')" onloadedmetadata="window.syncLivenessVideoMeta('${vidDomId}')" ontimeupdate="window.syncLivenessVideoTime('${vidDomId}')" onended="window.onLivenessVideoEnded('${vidDomId}')"></video>
                         <div style="background:#0f172a;border-top:1px solid #1e293b;padding:7px 10px;display:flex;align-items:center;gap:8px;color:#f8fafc;">
                           <button type="button" id="btnPlay_${vidDomId}" onclick="window.toggleLivenessVideoPlay('${vidDomId}')" title="Reproducir / Pausar" style="border:none;background:#2563eb;color:#ffffff;width:30px;height:28px;border-radius:7px;font-size:0.78rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">▶</button>
                           <input type="range" id="rng_${vidDomId}" min="0" max="1000" value="0" oninput="window.seekLivenessVideo('${vidDomId}', this.value)" style="flex:1;min-width:80px;accent-color:#38bdf8;cursor:pointer;height:5px;"/>
@@ -2305,7 +2392,7 @@
                           <button type="button" onclick="window.fullscreenLivenessVideo('wrap_${vidDomId}')" title="Pantalla completa" style="border:1px solid #334155;background:#1e293b;color:#e2e8f0;padding:3px 7px;border-radius:6px;font-size:0.75rem;cursor:pointer;flex-shrink:0;">⛶</button>
                         </div>
                       </div>`
-                    : `<div style="width:100%;max-width:480px;border-radius:12px;overflow:hidden;border:2px solid #86efac;background:#0f172a;"><iframe src="${escHtml(vidMeta.drive_preview_url || vidMeta.drive_url)}" allow="autoplay" allowfullscreen style="width:100%;height:280px;border:none;display:block;"></iframe></div>`}
+                    : `<div style="padding:0.9rem;border-radius:10px;border:1px solid #86efac;background:#f0fdf4;color:#166534;font-size:0.78rem;">Video resguardado de forma privada en Google Drive. Usá el botón <strong>Ver video en Drive</strong> superior para abrirlo con tu sesión autorizada.</div>`}
                 </div>
               `;
             })()}
@@ -2314,9 +2401,9 @@
           <!-- TAB 3: EVIDENCIA TÉCNICA Y LEGAL -->
           <div id="pnlFichaModalTab_evidencia" style="display:none;">
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:0.65rem;">
-              ${kpiItem('Fecha Creación (UTC)', (r.created_at || '').slice(0, 19).replace('T', ' ') || '-')}
-              ${kpiItem('Primera Lectura (UTC)', (r.leido_en || '').slice(0, 19).replace('T', ' ') || '-')}
-              ${kpiItem('Fecha Firma (UTC)', (r.firmado_en || '').slice(0, 19).replace('T', ' ') || 'Pendiente')}
+              ${kpiItem('Fecha Creación (AR)', formatearFechaHoraAr(r.created_at))}
+              ${kpiItem('Primera Lectura (AR)', r.leido_en ? formatearFechaHoraAr(r.leido_en) : '-')}
+              ${kpiItem('Fecha Firma (AR)', r.firmado_en ? formatearFechaHoraAr(r.firmado_en) : 'Pendiente')}
               ${kpiItem('IP Pública del Firmante', r.ip_origen || '-')}
               ${kpiItem('PIN / OTP WhatsApp (2FA)', r.pin_otp_verificado ? 'Verificado correctamente' : (r.pin_otp_requerido ? 'Pendiente de validar' : 'No requerido'))}
               ${kpiItem('Puntos de Trazo Firma', r.puntos_trazo != null ? `${r.puntos_trazo} puntos` : '-')}
@@ -2345,6 +2432,20 @@
         ampliarFotoFichaModal(el.getAttribute('data-ampliar-foto'), el.getAttribute('data-ampliar-titulo'));
       });
     });
+
+    const vidDriveCard = ov.querySelector('[data-vid-drive-id]');
+    if (vidDriveCard) {
+      const dfId = vidDriveCard.getAttribute('data-vid-drive-id') || '';
+      if (dfId) {
+        cargarVideoPruebaVidaDesdeDrive_(
+          vidDriveCard.getAttribute('data-vid-dom-id') || '',
+          dfId,
+          vidDriveCard.getAttribute('data-vid-dl-name') || 'prueba_vida.webm',
+          vidDriveCard.getAttribute('data-vid-mime') || 'video/webm',
+          vidDriveCard.getAttribute('data-vid-drive-url') || ''
+        );
+      }
+    }
 
     await renderizarPdfEnFichaModal();
   }
@@ -4510,7 +4611,7 @@
           <div style="border-left:3.5px solid #135596;background:#f8fafc;border-top:1px solid #e2e8f0;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;border-radius:9px;padding:0.6rem 0.8rem;margin-bottom:0.55rem;">
             <div style="display:flex;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;">
               <strong style="color:#0f2744;font-size:0.82rem;">${escHtml(ev.evento || '-')}</strong>
-              <span class="font-mono" style="font-size:0.72rem;color:#475569;">${escHtml((ev.created_at || '').slice(0, 19).replace('T', ' '))} UTC</span>
+              <span class="font-mono" style="font-size:0.72rem;color:#475569;">${escHtml(formatearFechaHoraAr(ev.created_at))}</span>
             </div>
             <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">IP: <span class="font-mono">${escHtml(ev.ip_origen || '-')}</span> · UA: ${escHtml((ev.user_agent || '-').slice(0, 75))}</div>
             ${ev.detalle_json ? `<pre class="font-mono" style="margin:0.35rem 0 0;padding:0.45rem;background:#ffffff;border:1px solid #e2e8f0;border-radius:6px;font-size:0.68rem;overflow-x:auto;color:#334155;">${escHtml(JSON.stringify(ev.detalle_json, null, 2))}</pre>` : ''}
@@ -4784,7 +4885,8 @@
   async function enviarAFirmaDesdeFicha() {
     const expId = global._fichaExpedienteActivoId || (global._fichaExpedienteActivoObj && global._fichaExpedienteActivoObj.id);
     if (typeof global.cerrarModal === 'function') global.cerrarModal('modalFichaCompleta');
-    if (typeof global.cambiarPestana === 'function') global.cambiarPestana('firmasAmmer');
+    if (typeof global.cambiarVistaPrincipal === 'function') global.cambiarVistaPrincipal('firmas-ammer');
+    else if (typeof global.cambiarPestana === 'function') global.cambiarPestana('vistaFirmasAMMER');
     await initFirmasAmmerView();
     cambiarTabFirmas('generar');
     if (expId) {

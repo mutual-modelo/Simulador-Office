@@ -716,7 +716,7 @@
                   <th>Titular (Enmascarado)</th>
                   <th>DNI</th>
                   <th>Estado</th>
-                  <th>Fecha UTC</th>
+                  <th>Fecha (AR)</th>
                 </tr>
               </thead>
               <tbody id="vTablaFirmantes"></tbody>
@@ -1156,7 +1156,7 @@
         document.getElementById('vCodigo').textContent = d.codigo_verificacion || '-';
         document.getElementById('vPlantilla').textContent = d.plantilla_nombre || '-';
         document.getElementById('vExpediente').textContent = d.expediente_id || '-';
-        document.getElementById('vFecha').textContent = d.firmado_en || '-';
+        document.getElementById('vFecha').textContent = d.firmado_en ? formatearFechaAmigableAR(d.firmado_en) : '-';
         document.getElementById('vHashOrig').textContent = d.hash_sha256_original || '-';
         document.getElementById('vHashFirm').textContent = d.hash_sha256_firmado || '(Pendiente de cierre)';
 
@@ -1193,7 +1193,7 @@
             <td>${escHtml(f.nombre_enmascarado || '-')}</td>
             <td class="font-mono">${escHtml(f.dni_enmascarado || '-')}</td>
             <td>${f.firmado ? '✅ Firmado' : '⏳ Pendiente'}${f.pin_2fa_verificado ? ' · 🔐 PIN 2FA' : ''}</td>
-            <td>${escHtml(f.firmado_en || '-')}</td>
+            <td>${escHtml(f.firmado_en ? formatearFechaAmigableAR(f.firmado_en) : '-')}</td>
           </tr>
         `).join('');
 

@@ -150,6 +150,10 @@
 
   let pollTimer = null;
   let chatAutoSyncTimer = null;
+  let waSseSource = null;
+  let waSseConnected = false;
+  let waSseReconnectTimer = null;
+  let waSseDebounceTimer = null;
   let lastPanelData = null;
   let isFetching = false;
   let isSyncingChat = false;
@@ -466,6 +470,91 @@
     } catch (_) {}
   }
 
+  function _getAuthToken() {
+    if (typeof global.getApiAuthToken === 'function') {
+      return String(global.getApiAuthToken() || '').trim();
+    }
+    try {
+      if (typeof getApiAuthToken === 'function') return String(getApiAuthToken() || '').trim();
+    } catch (_) {}
+    return '';
+  }
+
+  function _detenerSseWhatsappBotAdmin() {
+    if (waSseReconnectTimer) {
+      clearTimeout(waSseReconnectTimer);
+      waSseReconnectTimer = null;
+    }
+    if (waSseDebounceTimer) {
+      clearTimeout(waSseDebounceTimer);
+      waSseDebounceTimer = null;
+    }
+    if (waSseSource) {
+      try { waSseSource.close(); } catch (_) {}
+      waSseSource = null;
+    }
+    waSseConnected = false;
+  }
+
+  function _manejarEventoSseWhatsapp() {
+    if (waSseDebounceTimer) clearTimeout(waSseDebounceTimer);
+    waSseDebounceTimer = setTimeout(() => {
+      const v = document.getElementById('view-whatsapp-bot');
+      if (!v || !v.classList.contains('active')) return;
+      cargarConversacionesServidorWa(true);
+      if (activeTab === 'mensajeria' && activeContact?.phone) {
+        cargarMensajesChatWhatsappAdmin(true);
+      }
+    }, 280);
+  }
+
+  function _iniciarSseWhatsappBotAdmin() {
+    if (typeof global.EventSource !== 'function') return;
+    if (!_esAdmin()) return;
+    const v = document.getElementById('view-whatsapp-bot');
+    if (!v || !v.classList.contains('active')) return;
+    if (waSseSource && waSseSource.readyState !== 2) return;
+
+    const apiBase = _getApiBase();
+    const tok = _getAuthToken();
+    if (!apiBase || !tok) return;
+
+    try {
+      const url = `${apiBase}/api/whatsapp/stream?token=${encodeURIComponent(tok)}`;
+      const es = new global.EventSource(url);
+      waSseSource = es;
+
+      es.addEventListener('ready', () => {
+        waSseConnected = true;
+        // Con SSE conectado, reducimos la frecuencia de polling fallback a 25s
+        if (chatAutoSyncTimer) {
+          clearInterval(chatAutoSyncTimer);
+          chatAutoSyncTimer = null;
+          _iniciarChatAutoPoll();
+        }
+      });
+      es.addEventListener('message', _manejarEventoSseWhatsapp);
+      es.addEventListener('status', _manejarEventoSseWhatsapp);
+      es.addEventListener('wa_event', _manejarEventoSseWhatsapp);
+      es.onerror = () => {
+        waSseConnected = false;
+        try { es.close(); } catch (_) {}
+        if (waSseSource === es) waSseSource = null;
+        if (!waSseReconnectTimer) {
+          waSseReconnectTimer = setTimeout(() => {
+            waSseReconnectTimer = null;
+            const viewCheck = document.getElementById('view-whatsapp-bot');
+            if (viewCheck && viewCheck.classList.contains('active')) {
+              _iniciarSseWhatsappBotAdmin();
+            }
+          }, 8000);
+        }
+      };
+    } catch (_) {
+      waSseConnected = false;
+    }
+  }
+
   function detenerPollingWhatsappBotAdmin() {
     if (pollTimer) {
       clearInterval(pollTimer);
@@ -475,10 +564,12 @@
       clearInterval(chatAutoSyncTimer);
       chatAutoSyncTimer = null;
     }
+    _detenerSseWhatsappBotAdmin();
   }
 
   function _iniciarChatAutoPoll() {
     if (chatAutoSyncTimer) return;
+    const intervalMs = waSseConnected ? 25000 : 8000;
     chatAutoSyncTimer = setInterval(() => {
       const v = document.getElementById('view-whatsapp-bot');
       if (!v || !v.classList.contains('active')) {
@@ -488,7 +579,7 @@
       }
       if (document.hidden || activeTab !== 'mensajeria' || !activeContact?.phone) return;
       cargarMensajesChatWhatsappAdmin(true);
-    }, 8000);
+    }, intervalMs);
   }
 
   function _badgeEstado(sesion) {
@@ -1018,6 +1109,7 @@
     }
     _initComposerUI();
     cargarPanelWhatsappBotAdmin(false);
+    _iniciarSseWhatsappBotAdmin();
     if (activeContact?.phone) {
       _iniciarChatAutoPoll();
     }

@@ -2755,7 +2755,59 @@
           return n === 'AbortError' || /failed to fetch|load failed|networkerror|network request failed|fetch|timeout|aborted/i.test(m);
         };
 
+        const dataUrlABlobVideo_ = (dataUrl) => {
+          const s = String(dataUrl || '');
+          const idx = s.indexOf(',');
+          if (idx === -1) return null;
+          const hdr = s.slice(0, idx);
+          const b64 = s.slice(idx + 1);
+          const m = hdr.match(/data:([^;]+)/i);
+          const mime = (m && m[1]) ? m[1].trim() : 'video/webm';
+          const bin = atob(b64);
+          const arr = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+          return new Blob([arr], { type: mime });
+        };
+
+        const preSubirVideoBinario_ = async () => {
+          if (!appState.recordedVideoDataUrl) return null;
+          if (appState._uploadedVideoCache && appState._uploadedVideoCache.source === appState.recordedVideoDataUrl) {
+            return appState._uploadedVideoCache.meta;
+          }
+          try {
+            const blob = dataUrlABlobVideo_(appState.recordedVideoDataUrl);
+            if (!blob || blob.size < 100) return null;
+            const ext = (blob.type || '').includes('mp4') ? 'mp4' : 'webm';
+            const fd = new FormData();
+            fd.append('file', blob, `prueba_vida.${ext}`);
+            const ctrlUp = typeof AbortController === 'function' ? new AbortController() : null;
+            const timerUp = ctrlUp ? setTimeout(() => ctrlUp.abort(), 30000) : null;
+            try {
+              const respUp = await fetch(`${API_BASE}/api/firmas/public/${encodeURIComponent(token)}/subir-video`, {
+                method: 'POST',
+                body: fd,
+                signal: ctrlUp ? ctrlUp.signal : undefined,
+              });
+              if (!respUp.ok) return null;
+              const upJson = await respUp.json().catch(() => null);
+              if (upJson && upJson.ok && upJson.videoStoragePath) {
+                appState._uploadedVideoCache = { source: appState.recordedVideoDataUrl, meta: upJson };
+                return upJson;
+              }
+              return null;
+            } finally {
+              if (timerUp) clearTimeout(timerUp);
+            }
+          } catch (_eUp) {
+            return null;
+          }
+        };
+
         const enviarValidacionHttp = async (tsTok, incluirVideo) => {
+          let videoMeta = null;
+          if (incluirVideo && appState.recordedVideoDataUrl) {
+            videoMeta = await preSubirVideoBinario_();
+          }
           const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
           const timerAbort = ctrl ? setTimeout(() => ctrl.abort(), 75000) : null;
           try {
@@ -2769,7 +2821,11 @@
                 selfieBase64: appState.ekycImgs.selfie1 || null,
                 selfieDesafioBase64: appState.ekycImgs.selfie2 || appState.ekycImgs.selfie3 || null,
                 selfie3Base64: appState.ekycImgs.selfie3 || null,
-                selfieVideoBase64: (incluirVideo && appState.recordedVideoDataUrl) ? appState.recordedVideoDataUrl : null,
+                selfieVideoBase64: (incluirVideo && appState.recordedVideoDataUrl && !videoMeta) ? appState.recordedVideoDataUrl : null,
+                videoStoragePath: videoMeta ? videoMeta.videoStoragePath : null,
+                videoSha256: videoMeta ? videoMeta.videoSha256 : null,
+                videoMimeType: videoMeta ? videoMeta.videoMimeType : null,
+                videoTamanoBytes: videoMeta ? videoMeta.videoTamanoBytes : null,
                 retoLiveness: appState.retoLiveness,
                 pdf417Raw: appState.ekycImgs.pdf417Raw || null,
                 qrRaw: appState.ekycImgs.qrRaw || null,

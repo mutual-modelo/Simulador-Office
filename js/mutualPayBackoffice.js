@@ -18,6 +18,7 @@
     ayudas: [],
     comercios: [],
     liquidaciones: [],
+    payoutHistorial: [],
     transacciones: [],
     cobranzas: [],
     convenios: [],
@@ -244,11 +245,13 @@
   async function cargarExtrasTabMutualPay(tabId, force = false) {
     if (tabId === 'comercios' && (!loadedTabs.comercios || force)) {
       loadedTabs.comercios = true;
-      const [liqRes, txRes] = await Promise.allSettled([
+      const [liqRes, histRes, txRes] = await Promise.allSettled([
         apiMp('/liquidaciones/resumen'),
+        apiMp('/liquidaciones/historial'),
         apiMp('/transacciones'),
       ]);
       if (liqRes.status === 'fulfilled') st.liquidaciones = liqRes.value.liquidaciones || [];
+      if (histRes.status === 'fulfilled') st.payoutHistorial = histRes.value.payouts || [];
       if (txRes.status === 'fulfilled') st.transacciones = txRes.value.transacciones || [];
       renderTablaLiquidacionesMutualPay();
       renderTablaTransaccionesMutualPay();
@@ -687,11 +690,12 @@
     }
   }
 
-  function abrirModalAccionMp({ title, description, label, placeholder, defaultValue = '', confirmLabel = 'Confirmar', confirmClass = 'mp-btn-primary', minLength = 0 }) {
+  function abrirModalAccionMp({ title, description, label, placeholder, defaultValue = '', confirmLabel = 'Confirmar', confirmClass = 'mp-btn-primary', minLength = 0, checkboxLabel = '', checkboxDefaultChecked = false }) {
     return new Promise((resolve) => {
       const prev = document.getElementById('mpInlineActionModalOverlay');
       if (prev) prev.remove();
 
+      const hasCheck = Boolean(checkboxLabel);
       const ov = document.createElement('div');
       ov.id = 'mpInlineActionModalOverlay';
       ov.setAttribute('style', 'position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.55);display:flex;align-items:center;justify-content:center;padding:1rem;');
@@ -701,6 +705,7 @@
           ${description ? `<p style="margin:0 0 10px;font-size:0.78rem;color:#475569;line-height:1.45;">${esc(description)}</p>` : ''}
           <label style="display:block;font-size:0.72rem;font-weight:700;color:#334155;margin-bottom:4px;">${esc(label || 'Observación / Motivo')}</label>
           <textarea id="mpInlineModalInput" rows="3" placeholder="${esc(placeholder || '')}" style="width:100%;box-sizing:border-box;padding:0.5rem 0.65rem;border:1px solid #cbd5e1;border-radius:10px;font-size:0.8rem;resize:vertical;">${esc(defaultValue)}</textarea>
+          ${hasCheck ? `<label style="display:flex;align-items:flex-start;gap:7px;margin-top:9px;padding:8px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-size:0.75rem;color:#1e293b;cursor:pointer;line-height:1.35;"><input type="checkbox" id="mpInlineModalCheck" ${checkboxDefaultChecked ? 'checked' : ''} style="margin-top:2px;"/><span>${esc(checkboxLabel)}</span></label>` : ''}
           <div id="mpInlineModalErr" style="display:none;color:#be123c;font-size:0.72rem;font-weight:600;margin-top:4px;"></div>
           <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
             <button type="button" id="mpInlineModalCancel" class="mp-btn">Cancelar</button>
@@ -710,6 +715,7 @@
       `;
       document.body.appendChild(ov);
       const inp = ov.querySelector('#mpInlineModalInput');
+      const chkEl = ov.querySelector('#mpInlineModalCheck');
       const errEl = ov.querySelector('#mpInlineModalErr');
       if (inp) inp.focus();
 
@@ -728,7 +734,11 @@
           }
           return;
         }
-        close(val);
+        if (hasCheck) {
+          close({ text: val, checked: Boolean(chkEl && chkEl.checked) });
+        } else {
+          close(val);
+        }
       });
     });
   }
@@ -841,6 +851,7 @@
             ${pend ? `<button type="button" class="mp-btn mp-btn-success" data-mp-action="resolver-ayuda" data-id="${esc(id)}" data-status="APPROVED" data-nombre="${esc(fullName)}" data-monto="${montoPesos}">Aprobar</button><button type="button" class="mp-btn mp-btn-danger" data-mp-action="resolver-ayuda" data-id="${esc(id)}" data-status="REJECTED" data-nombre="${esc(fullName)}" data-monto="${montoPesos}">Rechazar</button>` : ''}
             <button type="button" class="mp-btn" title="Precargar contexto completo en Simulador" data-mp-action="simular-ayuda" data-monto="${montoPesos}" data-cuotas="${cuotas}" data-dni="${esc(dniRaw)}" data-cbu="${esc(cbuRaw)}" data-nombre="${esc(fullName)}" data-id="${esc(id)}">🧮 Simular</button>
             <button type="button" class="mp-btn mp-btn-indigo" title="Ir a Firmas AMMER con datos precargados" data-mp-action="firmas-ayuda" data-monto="${montoPesos}" data-cuotas="${cuotas}" data-dni="${esc(dniRaw)}" data-nombre="${esc(fullName)}" data-phone="${esc(phoneRaw)}" data-id="${esc(id)}">✍️ Firmas</button>
+            <button type="button" class="mp-btn" title="Generar sobre automático de firma AMMER" data-mp-action="generar-sobre-ayuda" data-id="${esc(id)}" data-nombre="${esc(fullName)}">📜 Sobre Firma</button>
           </div>
         </td>
       </tr>`;
@@ -853,7 +864,7 @@
     const isApprove = statusVal === 'APPROVED';
     const nombre = metaOpt.nombre ? ` (${metaOpt.nombre})` : '';
     const montoTxt = metaOpt.monto ? ` por ${fmtArs(metaOpt.monto)}` : '';
-    const notes = await abrirModalAccionMp({
+    const modalRes = await abrirModalAccionMp({
       title: `${isApprove ? '✅ Aprobar' : '❌ Rechazar'} Ayuda Económica${nombre}`,
       description: `Solicitud #${String(requestId).slice(0, 8)}${montoTxt}. Al confirmar, se actualizará Mutual Pay y se notificará al asociado por WhatsApp.`,
       label: isApprove ? 'Referencia de transferencia / nota de aprobación' : 'Motivo de rechazo',
@@ -861,17 +872,55 @@
       confirmLabel: isApprove ? '✅ Confirmar Aprobación' : '❌ Confirmar Rechazo',
       confirmClass: isApprove ? 'mp-btn-success' : 'mp-btn-danger',
       minLength: isApprove ? 0 : 4,
+      checkboxLabel: isApprove ? '✍️ Generar automáticamente sobre de firma electrónica AMMER y adjuntar enlace al WhatsApp' : '',
+      checkboxDefaultChecked: isApprove,
     });
-    if (notes === null) return;
+    if (modalRes === null) return;
+    const notes = typeof modalRes === 'object' ? modalRes.text : modalRes;
+    const crearSobreFirma = typeof modalRes === 'object' ? Boolean(modalRes.checked) : false;
     try {
-      await apiMp(`/ayudas/${encodeURIComponent(requestId)}/resolve`, {
+      const resp = await apiMp(`/ayudas/${encodeURIComponent(requestId)}/resolve`, {
         method: 'PATCH',
-        body: JSON.stringify({ status: statusVal, resolution_notes: notes || `Resuelto (${statusVal}) desde Backoffice Admin AMMER` }),
+        body: JSON.stringify({
+          status: statusVal,
+          resolution_notes: notes || `Resuelto (${statusVal}) desde Backoffice Admin AMMER`,
+          crear_sobre_firma: isApprove ? crearSobreFirma : false,
+        }),
       });
-      toast(`Ayuda económica actualizada a ${statusVal}.`);
+      if (resp && resp.sobre_firma && resp.sobre_firma.url_firma) {
+        toast(`Ayuda aprobada y sobre de firma generado (${resp.sobre_firma.plantilla_nombre || 'AMMER'}).`);
+      } else {
+        toast(`Ayuda económica actualizada a ${statusVal}.`);
+      }
       await cargarTodoMutualPayBackoffice(false);
     } catch (err) {
       toast(`Error resolviendo ayuda: ${err.message}`);
+    }
+  }
+
+  async function generarSobreFirmaAyudaMp(requestId, nombreOpt = '') {
+    const obs = await abrirModalAccionMp({
+      title: `📜 Generar Sobre de Firma AMMER${nombreOpt ? ` (${nombreOpt})` : ''}`,
+      description: `Creará un sobre digital en Firmas AMMER vinculado al expediente Mutual Pay #${String(requestId).slice(0, 8)}.`,
+      label: 'Observaciones opcionales para el legajo',
+      placeholder: 'Ej: Documentación de ayuda económica aprobada',
+      confirmLabel: '📜 Generar Sobre de Firma',
+      confirmClass: 'mp-btn-indigo',
+      minLength: 0,
+    });
+    if (obs === null) return;
+    try {
+      const resp = await apiMp(`/ayudas/${encodeURIComponent(requestId)}/generar-sobre-firma`, {
+        method: 'POST',
+        body: JSON.stringify({ observaciones: obs || undefined }),
+      });
+      const urlFirma = resp && resp.url_firma ? String(resp.url_firma) : '';
+      if (urlFirma && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(urlFirma).catch(() => {});
+      }
+      toast(urlFirma ? 'Sobre generado y enlace copiado al portapapeles.' : 'Sobre de firma generado.');
+    } catch (err) {
+      toast(`Error generando sobre de firma: ${err.message}`);
     }
   }
 
@@ -907,29 +956,79 @@
     toast(`Contexto transferido a Firmas AMMER (${ctx.fullName || ctx.dni || 'Asociado'}).`);
   }
 
+  async function marcarLiquidacionTransferidaMp(merchantId, fantasyName = '', netoMinor = 0) {
+    const montoFmt = fmtArsFromMinor(netoMinor || 0);
+    const refTransfer = await abrirModalAccionMp({
+      title: `💸 Marcar Liquidación Transferida`,
+      description: `Comercio: ${fantasyName || merchantId}. Neto a liquidar: ${montoFmt}. Las transacciones autorizadas pendientes quedarán cerradas bajo este lote de pago.`,
+      label: 'Número de comprobante / referencia bancaria (COELSA / CBU)',
+      placeholder: 'Ej: TRF-BERSA-20261124-001',
+      confirmLabel: '💸 Confirmar Transferencia',
+      confirmClass: 'mp-btn-success',
+      minLength: 3,
+    });
+    if (refTransfer === null) return;
+    try {
+      await apiMp('/liquidaciones/marcar-transferida', {
+        method: 'POST',
+        body: JSON.stringify({
+          merchant_id: merchantId,
+          transfer_reference: refTransfer,
+          notes: `Liquidado desde Backoffice Admin AMMER (${montoFmt})`,
+        }),
+      });
+      toast(`Liquidación marcada como transferida para ${fantasyName || 'el comercio'}.`);
+      await cargarExtrasTabMutualPay('comercios', true);
+    } catch (err) {
+      toast(`Error marcando liquidación: ${err.message}`);
+    }
+  }
+
   function renderTablaLiquidacionesMutualPay() {
     const box = document.getElementById('mpLiquidacionesTablaContainer');
     if (!box) return;
+    let html = '';
     if (!st.liquidaciones.length) {
-      box.innerHTML = '<div style="padding:1rem;color:#64748b;font-size:0.78rem;">Sin liquidaciones pendientes registradas.</div>';
-      return;
+      html += '<div style="padding:1rem;color:#64748b;font-size:0.78rem;">Sin liquidaciones pendientes registradas.</div>';
+    } else {
+      html += '<div class="data-table-container"><table class="data-table"><thead><tr>' +
+        '<th>Comercio</th><th>CUIT</th><th>CBU / Alias</th><th>Ops</th><th>Ventas Brutas</th><th>Arancel</th><th>Neto a Transferir</th><th>Acreditación Est.</th><th>Acciones</th>' +
+        '</tr></thead><tbody>';
+      st.liquidaciones.forEach((m) => {
+        const netoMinor = Number(m.net_payout_minor || 0);
+        const mid = m.merchant_id || m.id || '';
+        html += `<tr>
+          <td><strong>${esc(m.fantasy_name)}</strong><div style="font-size:0.68rem;color:#64748b;">${esc(m.business_name || '')}</div></td>
+          <td><code>${esc(m.cuit || '')}</code></td>
+          <td><code>${esc(m.bank_cbu || '—')}</code><div style="font-size:0.68rem;color:#64748b;">${esc(m.bank_alias || '')}</div></td>
+          <td>${Number(m.transactions_count || 0)}</td>
+          <td>${fmtArsFromMinor(m.gross_sales_minor || 0)}</td>
+          <td>${fmtArsFromMinor(m.commission_deducted_minor || 0)} (${esc(m.commission_fee_pct || '0')}%)</td>
+          <td><strong style="color:#059669;">${fmtArsFromMinor(netoMinor)}</strong></td>
+          <td>${esc(m.estimated_settlement_date || '24-48 hs')}</td>
+          <td>${netoMinor > 0 && mid ? `<button type="button" class="mp-btn mp-btn-success" data-mp-action="marcar-liquidacion" data-id="${esc(mid)}" data-nombre="${esc(m.fantasy_name || '')}" data-neto="${netoMinor}">💸 Marcar Transferida</button>` : '<span style="font-size:0.72rem;color:#64748b;">Al día</span>'}</td>
+        </tr>`;
+      });
+      html += '</tbody></table></div>';
     }
-    let html = '<div class="data-table-container"><table class="data-table"><thead><tr>' +
-      '<th>Comercio</th><th>CUIT</th><th>CBU / Alias</th><th>Ops</th><th>Ventas Brutas</th><th>Arancel</th><th>Neto a Transferir</th><th>Acreditación Est.</th>' +
-      '</tr></thead><tbody>';
-    st.liquidaciones.forEach((m) => {
-      html += `<tr>
-        <td><strong>${esc(m.fantasy_name)}</strong><div style="font-size:0.68rem;color:#64748b;">${esc(m.business_name || '')}</div></td>
-        <td><code>${esc(m.cuit || '')}</code></td>
-        <td><code>${esc(m.bank_cbu || '—')}</code><div style="font-size:0.68rem;color:#64748b;">${esc(m.bank_alias || '')}</div></td>
-        <td>${Number(m.transactions_count || 0)}</td>
-        <td>${fmtArsFromMinor(m.gross_sales_minor || 0)}</td>
-        <td>${fmtArsFromMinor(m.commission_deducted_minor || 0)} (${esc(m.commission_fee_pct || '0')}%)</td>
-        <td><strong style="color:#059669;">${fmtArsFromMinor(m.net_payout_minor || 0)}</strong></td>
-        <td>${esc(m.estimated_settlement_date || '24-48 hs')}</td>
-      </tr>`;
-    });
-    html += '</tbody></table></div>';
+    if (Array.isArray(st.payoutHistorial) && st.payoutHistorial.length) {
+      html += '<div style="margin-top:1rem;"><div style="font-size:0.76rem;font-weight:700;color:#334155;margin-bottom:6px;">Últimas transferencias registradas</div>' +
+        '<div class="data-table-container"><table class="data-table"><thead><tr>' +
+        '<th>Fecha</th><th>Comercio</th><th>Referencia</th><th>Ops</th><th>Bruto</th><th>Arancel</th><th>Neto Transferido</th>' +
+        '</tr></thead><tbody>';
+      st.payoutHistorial.slice(0, 15).forEach((p) => {
+        html += `<tr>
+          <td>${fmtFecha(p.created_at)}</td>
+          <td><strong>${esc(p.merchant_fantasy_name || p.merchant_id || '—')}</strong></td>
+          <td><code>${esc(p.transfer_reference || '')}</code></td>
+          <td>${Number(p.transactions_count || 0)}</td>
+          <td>${fmtArsFromMinor(p.gross_sales_minor || 0)}</td>
+          <td>${fmtArsFromMinor(p.commission_deducted_minor || 0)}</td>
+          <td><strong style="color:#0f766e;">${fmtArsFromMinor(p.net_payout_minor || 0)}</strong></td>
+        </tr>`;
+      });
+      html += '</tbody></table></div></div>';
+    }
     box.innerHTML = html;
   }
 
@@ -1839,6 +1938,14 @@
           fullName: btn.getAttribute('data-nombre') || '',
           phone: btn.getAttribute('data-phone') || '',
         });
+      } else if (act === 'generar-sobre-ayuda') {
+        generarSobreFirmaAyudaMp(id, btn.getAttribute('data-nombre') || '');
+      } else if (act === 'marcar-liquidacion') {
+        marcarLiquidacionTransferidaMp(
+          id,
+          btn.getAttribute('data-nombre') || '',
+          Number(btn.getAttribute('data-neto') || 0)
+        );
       } else if (act === 'ficha-comercio') {
         verFichaComercioMp(id);
       } else if (act === 'guardar-comercio') {
@@ -1887,6 +1994,8 @@
   global.resolverConvenioMp = resolverConvenioMp;
   global.renderTablaAyudasMutualPay = renderTablaAyudasMutualPay;
   global.resolverAyudaMp = resolverAyudaMp;
+  global.generarSobreFirmaAyudaMp = generarSobreFirmaAyudaMp;
+  global.marcarLiquidacionTransferidaMp = marcarLiquidacionTransferidaMp;
   global.abrirEnSimuladorDesdeMp = abrirEnSimuladorDesdeMp;
   global.abrirFirmasDesdeMp = abrirFirmasDesdeMp;
   global.exportarLiquidacionesMutualPayCsv = exportarLiquidacionesMutualPayCsv;

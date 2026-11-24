@@ -1848,6 +1848,15 @@ body {
 .card-total .kpi-label{color:var(--text-muted)}.card-total .kpi-badge{background:var(--total-badge-bg);color:var(--total-badge-color)}.card-total .kpi-value{color:var(--total-color)}
 .card-capital{border-color:var(--capital-border);background:linear-gradient(180deg,#fff 0%,var(--capital-bg) 100%)}
 .card-capital .kpi-label{color:#b45309}.card-capital .kpi-badge{background:#fef3c7;color:#92400e}.card-capital .kpi-value{color:var(--capital-color)}
+.kpi-cards-grid--compact{display:grid;grid-template-columns:repeat(2,1fr);gap:.45rem;margin:.5rem 0}
+@media(max-width:520px){.kpi-cards-grid--compact{grid-template-columns:1fr}}
+.kpi-cards-grid--compact .kpi-card{padding:.45rem .6rem;border-width:1.5px;border-radius:9px;box-shadow:0 1px 3px rgba(0,0,0,.03)}
+.kpi-cards-grid--compact .kpi-card:hover{transform:none;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+.kpi-cards-grid--compact .kpi-card-header{margin-bottom:.18rem;gap:4px}
+.kpi-cards-grid--compact .kpi-label{font-size:.6rem;letter-spacing:.02em}
+.kpi-cards-grid--compact .kpi-badge{font-size:.56rem;padding:.1rem .35rem}
+.kpi-cards-grid--compact .kpi-value{font-size:.98rem;line-height:1.15}
+.kpi-cards-grid--compact .card-cuota-plazo .kpi-value{font-size:1.05rem}
 
 /* TABLA 3 COLUMNAS */
 .matrix-table{width:100%;border-collapse:collapse;font-size:.775rem}

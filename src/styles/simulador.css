@@ -4164,3 +4164,43 @@ a.crm-btn-docs:hover{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
   .firmas-ficha-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
   #editorPdfScrollWrap{max-height:58vh !important;padding:0.45rem !important}
 }
+
+/* DROP TARGETS EN GESTIONES Y RED COMERCIAL (ARRASTRAR ARCHIVOS SOBRE EXPEDIENTES) */
+tr.row-drop-target-active > td {
+  background: #e0f2fe !important;
+  border-top: 1.5px dashed #0284c7 !important;
+  border-bottom: 1.5px dashed #0284c7 !important;
+}
+tr.row-drop-target-active > td:first-child {
+  border-left: 3px solid #0284c7 !important;
+}
+tr.row-drop-target-active > td:last-child {
+  border-right: 3px solid #0284c7 !important;
+}
+.kanban-card.is-dragover {
+  border: 2px dashed #0284c7 !important;
+  background: #f0f9ff !important;
+  box-shadow: 0 8px 22px rgba(2, 132, 199, 0.18) !important;
+  transform: translateY(-1px);
+}
+.crm-btn-upload-lote {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.34rem 0.62rem;
+  border-radius: 0.5rem;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.crm-btn-upload-lote:hover {
+  background: #dbeafe;
+  border-color: #60a5fa;
+  color: #1e40af;
+}
+

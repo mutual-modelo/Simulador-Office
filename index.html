@@ -314,7 +314,7 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
-              <span>Se recomienda usar en MONTO DE LA CUOTA SIN DECIMALES, debido a que en la plataforma de Sidecreer no toma como valido importes con decimales</span>
+              <span>El monto TOTAL A PAGAR va a modificarse a SIN DECIMALES en la propuesta final, debido a que en la plataforma de Sidecreer no toma como valido importes con decimales, por lo que los demas valores o importes pueden sufrir una leve modificacion</span>
             </div>
 
             <!-- 3. Entrada Numérica Principal ($) -->
@@ -12319,6 +12319,9 @@ ${cierreTxt}`;
         s.Linea_Ayuda ||
         (s.planDeseado ? s.planDeseado.lineaNombre : '') ||
         'Ayuda Económica';
+      const lineaDeseadaKey = (s.prestamo && s.prestamo.linea) ||
+        (s.planDeseado && s.planDeseado.linea) ||
+        lineaDeseadaNombre;
 
       html += '<div class="section-title-divider">2. Condiciones Deseadas vs. Oferta Oficial Mutual</div>' +
         '<div class="compare-offers-grid">' +
@@ -12326,10 +12329,14 @@ ${cierreTxt}`;
           '<div class="offer-card offer-card-desired">' +
             '<div class="offer-card-title"><span style="color:#475569;">👤 Plan Deseado por el Socio</span><span class="badge-status" style="background:#e2e8f0;color:#334155;">Original</span></div>' +
             '<div><strong>Línea:</strong> ' + sanitizeHTML(lineaDeseadaNombre) + '</div>' +
-            '<div style="font-size:1.15rem;font-weight:800;color:var(--color-primary);margin:4px 0;" class="tabular-nums">' + formatMoney(montoDeseadoSocio) + '</div>' +
-            '<div><strong>Plazo:</strong> ' + cuotasDeseadasSocio + ' cuotas estimadas de <strong>' + formatMoney(cuotaEstimadaDeseadaSocio) + '</strong></div>' +
-            (totalDeseadoShow > 0 ? ('<div style="font-size:0.74rem;color:#334155;margin-top:2px;"><strong>Total a devolver:</strong> ' + formatMoney(totalDeseadoShow) + '</div>') : '') +
-            '<p style="font-size:0.68rem;color:var(--text-muted);margin-top:6px;">Referencia inicial cargada en la originación del crédito.</p>' +
+            renderKpiRecuadrosOfertaHtml({
+              linea: lineaDeseadaKey,
+              cuotas: cuotasDeseadasSocio,
+              monto: montoDeseadoSocio,
+              cuota: cuotaEstimadaDeseadaSocio,
+              total: totalDeseadoShow
+            }) +
+            '<p style="font-size:0.68rem;color:var(--text-muted);margin-top:4px;">Referencia inicial cargada en la originación del crédito.</p>' +
           '</div>' +
 
           '<!-- Tarjeta 2: Oferta Oficial de la Mutual -->' +
@@ -12357,7 +12364,7 @@ ${cierreTxt}`;
               '</select>' +
             '</div>' +
             '<div><label class="form-label" style="font-size:.65rem;">Monto Neto Ofrecido ($)</label>' +
-              '<input type="number" id="propMonto" class="input-text" style="font-size:.7rem;font-weight:700;" value="' + montoActual + '" step="1000" oninput="recalcularOfertaCuotaModal()"/>' +
+              '<input type="number" id="propMonto" class="input-text" style="font-size:.7rem;font-weight:700;" value="' + montoActual + '" min="0" step="any" oninput="recalcularOfertaCuotaModal()"/>' +
             '</div>' +
           '</div>' +
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px;">' +
@@ -12374,6 +12381,24 @@ ${cierreTxt}`;
             '<span style="font-size:.64rem;color:var(--text-muted);font-weight:600;">Tasa / Costo Financiero:</span>' +
             '<span id="propTasaCostoTexto" style="font-size:.66rem;font-weight:700;color:#0369a1;">' + tasaActual + '</span>' +
           '</div>' +
+          renderKpiRecuadrosOfertaHtml({
+            linea: lineaActual,
+            cuotas: cuotasActual,
+            monto: montoActual,
+            cuota: cuotaActual,
+            total: prop.totalAPagar,
+            capital: prop.capitalComputable,
+            ids: {
+              cuotaBadge: 'propKpiCuotaBadge',
+              cuotaVal: 'propKpiCuotaVal',
+              netoVal: 'propKpiNetoVal',
+              totalLabel: 'propKpiTotalLabel',
+              totalBadge: 'propKpiTotalBadge',
+              totalVal: 'propKpiTotalVal',
+              capitalLabel: 'propKpiCapitalLabel',
+              capitalVal: 'propKpiCapitalVal'
+            }
+          }) +
           '<div style="margin-bottom:4px;"><label class="form-label" style="font-size:.65rem;">Estado de la Propuesta</label>' +
             '<select id="propEstado" class="input-text" style="font-size:.7rem;font-weight:700;">' +
               ['En Evaluación', 'Propuesta Enviada al Comercializador', 'Aceptada por el Socio', 'Rechazada'].map(st => '<option value="' + st + '" ' + (prop.estadoPropuesta === st ? 'selected' : '') + '>' + st + '</option>').join('') +
@@ -12400,7 +12425,7 @@ ${cierreTxt}`;
             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px;">' +
               '<div>' +
                 '<label class="form-label" style="font-size:.64rem;color:#78350f;">Total Deuda Previa a Cancelar ($)</label>' +
-                '<input type="number" id="propDeudaPrevia" class="input-text" style="font-size:.68rem;font-weight:700;" placeholder="0" value="' + (refObj.montoDeudaPrevia || '') + '" oninput="recalcularRefinanciacion()"/>' +
+                '<input type="number" id="propDeudaPrevia" class="input-text" style="font-size:.68rem;font-weight:700;" min="0" step="any" placeholder="0" value="' + (refObj.montoDeudaPrevia || '') + '" oninput="recalcularRefinanciacion()"/>' +
               '</div>' +
               '<div>' +
                 '<label class="form-label" style="font-size:.64rem;color:#166534;font-weight:700;">Neto de Bolsillo Efectivo ($)</label>' +
@@ -12410,7 +12435,7 @@ ${cierreTxt}`;
             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px;">' +
               '<div>' +
                 '<label class="form-label" style="font-size:.64rem;color:#78350f;">Cuota Anterior que pagaba ($)</label>' +
-                '<input type="number" id="propCuotaAnterior" class="input-text" style="font-size:.68rem;" placeholder="0" value="' + (refObj.cuotaAnterior || '') + '" oninput="recalcularRefinanciacion()"/>' +
+                '<input type="number" id="propCuotaAnterior" class="input-text" style="font-size:.68rem;" min="0" step="any" placeholder="0" value="' + (refObj.cuotaAnterior || '') + '" oninput="recalcularRefinanciacion()"/>' +
               '</div>' +
               '<div>' +
                 '<label class="form-label" style="font-size:.64rem;color:#78350f;">Nueva Cuota Resultante ($)</label>' +
@@ -12437,10 +12462,16 @@ ${cierreTxt}`;
       } else {
         // Vista para comercializador (lectura de contrapropuesta + copiar WhatsApp)
         if (prop.activa) {
-          html += '<div><strong>Línea Ofrecida:</strong> ' + (prop.lineaNombre || prop.linea) + '</div>' +
-            '<div style="font-size:1.15rem;font-weight:800;color:#166534;margin:3px 0;">' + formatMoney(prop.monto) + '</div>' +
-            '<div><strong>Plazo Ofrecido:</strong> ' + prop.cuotas + ' cuotas de <strong>' + formatMoney(prop.cuotaEstimada) + '</strong></div>' +
-            '<div style="font-size:0.68rem;color:#0369a1;margin-top:2px;"><strong>Costo:</strong> ' + (prop.tasaCosto || 'Tasas oficiales vigentes') + '</div>';
+          html += '<div><strong>Línea Ofrecida:</strong> ' + sanitizeHTML(prop.lineaNombre || prop.linea) + '</div>' +
+            renderKpiRecuadrosOfertaHtml({
+              linea: prop.linea || prop.lineaNombre,
+              cuotas: prop.cuotas,
+              monto: prop.monto,
+              cuota: prop.cuotaEstimada,
+              total: prop.totalAPagar,
+              capital: prop.capitalComputable
+            }) +
+            '<div style="font-size:0.68rem;color:#0369a1;margin-top:2px;"><strong>Costo:</strong> ' + sanitizeHTML(prop.tasaCosto || 'Tasas oficiales vigentes') + '</div>';
 
           if (tieneRefinanciacion) {
             const r = prop.refinanciacion;
@@ -12456,7 +12487,7 @@ ${cierreTxt}`;
             '</div>';
           }
 
-          html += '<div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">Nota Mutual: <em>"' + (prop.detalle || 'Propuesta crediticia lista') + '"</em></div>' +
+          html += '<div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">Nota Mutual: <em>"' + sanitizeHTML(prop.detalle || 'Propuesta crediticia lista') + '"</em></div>' +
             '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">' +
               '<button type="button" class="btn-copy" style="font-size:0.7rem;padding:4px 8px;" onclick="copiarPropuestaWhatsApp(\'' + s.id + '\')">📲 Copiar Propuesta para WhatsApp</button>' +
               (tieneAccesoBotWhatsapp() ? ('<button type="button" class="btn-copy" style="font-size:0.7rem;padding:4px 8px;border-color:#15803d;color:#15803d;background:#f0fdf4;font-weight:700;" onclick="enviarPropuestaWhatsAppPorBot(\'' + s.id + '\')">🤖 Enviar por Bot</button>') : '') +
@@ -12490,9 +12521,17 @@ ${cierreTxt}`;
               '<span class="badge-status badge-' + String(v.estadoPropuesta || 'EnEvaluacion').replace(/\s/g, '') + '" style="font-size:0.62rem;">' + (v.estadoPropuesta || 'Emitida') + '</span>' +
             '</div>' +
             '<div style="font-size:0.72rem;margin-top:2px;">' +
-              '<strong>' + formatMoney(v.monto) + '</strong> en <strong>' + v.cuotas + ' cuotas</strong> de <strong>' + formatMoney(v.cuotaEstimada) + '</strong> (' + (v.lineaNombre || v.linea) + ') ' +
-              '<span style="color:#0369a1;font-size:0.66rem;">• ' + (v.tasaCosto || '') + '</span>' +
-            '</div>';
+              '<strong>' + sanitizeHTML(v.lineaNombre || v.linea) + '</strong> ' +
+              '<span style="color:#0369a1;font-size:0.66rem;">• ' + sanitizeHTML(v.tasaCosto || '') + '</span>' +
+            '</div>' +
+            renderKpiRecuadrosOfertaHtml({
+              linea: v.linea || v.lineaNombre,
+              cuotas: v.cuotas,
+              monto: v.monto,
+              cuota: v.cuotaEstimada,
+              total: v.totalAPagar,
+              capital: v.capitalComputable
+            });
 
           if (v.esRefinanciacion && v.refinanciacion) {
             html += '<div style="font-size:0.67rem;color:#92400e;background:#fef3c7;padding:2px 6px;border-radius:4px;margin-top:3px;display:inline-block;">' +
@@ -13142,18 +13181,80 @@ ${cierreTxt}`;
       }
     }
 
+    function _normalizarLineaKeyOferta(lineaRaw) {
+      const k = String(lineaRaw || 'fedem').toLowerCase();
+      if (k.includes('muni') || k.includes('quad') || k.includes('vikingo')) return 'muni';
+      if (k.includes('sidecreer')) return 'sidecreer';
+      return 'fedem';
+    }
+
+    function renderKpiRecuadrosOfertaHtml(opts) {
+      const o = opts || {};
+      const lineaKey = _normalizarLineaKeyOferta(o.linea);
+      const cuotas = Math.max(1, parseInt(o.cuotas, 10) || 12);
+      const monto = Number(o.monto) || 0;
+      const sim = (monto > 0 && typeof calculateSimulation === 'function')
+        ? calculateSimulation(lineaKey, cuotas, 'neto', monto)
+        : null;
+
+      const cuotaVal = (Number(o.cuota) > 0) ? Number(o.cuota) : (sim ? sim.cuota : 0);
+      const totalVal = (Number(o.total) > 0) ? Number(o.total) : (sim ? sim.totalAyuda : (cuotaVal * cuotas));
+      const capitalVal = (Number(o.capital) > 0) ? Number(o.capital) : (sim ? sim.capital : 0);
+
+      const isMuniOrSide = (lineaKey === 'muni' || lineaKey === 'sidecreer');
+      const totalLabel = isMuniOrSide ? 'TOTAL A PAGAR' : 'TOTAL AYUDA ECONÓMICA';
+      const totalBadge = (lineaKey === 'sidecreer') ? 'Importe ($) en Sidecreer' : 'Total a Devolver';
+      const capLabel = isMuniOrSide ? 'IMPORTE SOLICITADO' : 'CAPITAL';
+      const ids = o.ids || {};
+
+      return (
+        '<div class="kpi-cards-grid--compact">' +
+          '<div class="kpi-card card-cuota-plazo">' +
+            '<div class="kpi-card-header"><span class="kpi-label">MONTO DE LA CUOTA</span><span class="kpi-badge"' + (ids.cuotaBadge ? ' id="' + ids.cuotaBadge + '"' : '') + '>' + cuotas + ' cuotas fijas</span></div>' +
+            '<div class="kpi-value tabular-nums"' + (ids.cuotaVal ? ' id="' + ids.cuotaVal + '"' : '') + '>' + formatMoney(cuotaVal) + '</div>' +
+          '</div>' +
+          '<div class="kpi-card card-neto">' +
+            '<div class="kpi-card-header"><span class="kpi-label">MONTO A ENTREGAR</span><span class="kpi-badge">Neto</span></div>' +
+            '<div class="kpi-value tabular-nums"' + (ids.netoVal ? ' id="' + ids.netoVal + '"' : '') + '>' + formatMoney(monto) + '</div>' +
+          '</div>' +
+          '<div class="kpi-card card-total">' +
+            '<div class="kpi-card-header"><span class="kpi-label"' + (ids.totalLabel ? ' id="' + ids.totalLabel + '"' : '') + '>' + totalLabel + '</span><span class="kpi-badge"' + (ids.totalBadge ? ' id="' + ids.totalBadge + '"' : '') + '>' + totalBadge + '</span></div>' +
+            '<div class="kpi-value tabular-nums"' + (ids.totalVal ? ' id="' + ids.totalVal + '"' : '') + '>' + formatMoney(totalVal) + '</div>' +
+          '</div>' +
+          '<div class="kpi-card card-capital">' +
+            '<div class="kpi-card-header"><span class="kpi-label"' + (ids.capitalLabel ? ' id="' + ids.capitalLabel + '"' : '') + '>' + capLabel + '</span><span class="kpi-badge">Capital Computable</span></div>' +
+            '<div class="kpi-value tabular-nums"' + (ids.capitalVal ? ' id="' + ids.capitalVal + '"' : '') + '>' + formatMoney(capitalVal) + '</div>' +
+          '</div>' +
+        '</div>'
+      );
+    }
+
     function recalcularOfertaCuotaModal() {
-      const linea = document.getElementById('propLinea')?.value || 'fedem';
-      const monto = parseFloat(document.getElementById('propMonto')?.value) || 100000;
+      const linea = _normalizarLineaKeyOferta(document.getElementById('propLinea')?.value || 'fedem');
+      const montoParsed = parseFloat(document.getElementById('propMonto')?.value);
+      const monto = (Number.isFinite(montoParsed) && montoParsed > 0) ? montoParsed : 0;
       const plazo = parseInt(document.getElementById('propPlazo')?.value, 10) || 12;
-      const sim = calculateSimulation(linea, plazo, 'neto', monto);
+      const sim = (monto > 0) ? calculateSimulation(linea, plazo, 'neto', monto) : null;
       const cuota = sim ? sim.cuota : 0;
+      const total = sim ? sim.totalAyuda : 0;
+      const capital = sim ? sim.capital : 0;
 
       const inp = document.getElementById('propCuotaEst');
       if (inp) inp.value = formatMoney(cuota);
 
       const tasaEl = document.getElementById('propTasaCostoTexto');
       if (tasaEl) tasaEl.textContent = obtenerTasaCostoTexto(linea, plazo);
+
+      const isMuniOrSide = (linea === 'muni' || linea === 'sidecreer');
+      const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+      setTxt('propKpiCuotaBadge', plazo + ' cuotas fijas');
+      setTxt('propKpiCuotaVal', formatMoney(cuota));
+      setTxt('propKpiNetoVal', formatMoney(monto));
+      setTxt('propKpiTotalLabel', isMuniOrSide ? 'TOTAL A PAGAR' : 'TOTAL AYUDA ECONÓMICA');
+      setTxt('propKpiTotalBadge', (linea === 'sidecreer') ? 'Importe ($) en Sidecreer' : 'Total a Devolver');
+      setTxt('propKpiTotalVal', formatMoney(total));
+      setTxt('propKpiCapitalLabel', isMuniOrSide ? 'IMPORTE SOLICITADO' : 'CAPITAL');
+      setTxt('propKpiCapitalVal', formatMoney(capital));
 
       recalcularRefinanciacion();
     }
@@ -13169,6 +13270,8 @@ ${cierreTxt}`;
       const plazo = parseInt(document.getElementById('propPlazo').value, 10) || 12;
       const sim = calculateSimulation(linea, plazo, 'neto', monto);
       const cuota = sim ? sim.cuota : 0;
+      const totalAPagar = sim ? sim.totalAyuda : Number((cuota * plazo).toFixed(2));
+      const capitalComputable = sim ? sim.capital : 0;
       const tasaCosto = obtenerTasaCostoTexto(linea, plazo);
       const est = document.getElementById('propEstado').value;
       const detalle = sanitizeHTML(document.getElementById('propDetalle').value.trim());
@@ -13230,6 +13333,8 @@ ${cierreTxt}`;
         monto: monto,
         cuotas: plazo,
         cuotaEstimada: cuota,
+        totalAPagar: totalAPagar,
+        capitalComputable: capitalComputable,
         tasaCosto: tasaCosto,
         estadoPropuesta: est,
         detalle: detalle,

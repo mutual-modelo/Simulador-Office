@@ -27,6 +27,7 @@
     auditLogs: [],
     accesos: null,
     ultimaCredencial: null,
+    lastSyncAt: 0,
     formNuevoComercioAbierto: false,
   };
 
@@ -183,9 +184,14 @@
     }
   }
 
+  function esperarMs(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
   async function verificarEstadoMutualPay(mostrarToast = false) {
     try {
-      const info = await apiMp('/estado');
+      const qs = mostrarToast ? '?force=true' : '';
+      const info = await apiMp(`/estado${qs}`);
       st.estadoS2S = info;
       if (!info.s2s_configured) {
         setNotice(
@@ -196,11 +202,19 @@
           'warn'
         );
       } else if (!info.api_online) {
-        setNotice(
-          `<strong>Mutual Pay API sin respuesta en /health:</strong> ${esc(info.api_detail)} (${esc(info.health_url)}). ` +
-          `Si está en plan Free de Render puede estar despertando; reintentá en unos segundos.`,
-          'warn'
-        );
+        if (Number(info.api_status_code) === 429 || info.rate_limited) {
+          setNotice(
+            `<strong>Mutual Pay API limitada temporalmente por Render (HTTP 429):</strong> El proxy de <code>${esc(info.health_url)}</code> (plan Free de Render) frenó una ráfaga de consultas. ` +
+            `Esperá 15–30 segundos y pulsá <strong>🔄 Actualizar Datos</strong>.`,
+            'warn'
+          );
+        } else {
+          setNotice(
+            `<strong>Mutual Pay API sin respuesta en /health:</strong> ${esc(info.api_detail)} (${esc(info.health_url)}). ` +
+            `Si está en plan Free de Render puede estar despertando; reintentá en unos segundos.`,
+            'warn'
+          );
+        }
       } else {
         if (mostrarToast) {
           setNotice(
@@ -242,28 +256,54 @@
         renderResumenVacio();
         return;
       }
+      if (estado && !estado.api_online && (Number(estado.api_status_code) === 429 || estado.rate_limited)) {
+        return;
+      }
 
-      const [resumenRes, asocRes, ayuRes, comRes, liqRes, txRes, cobRes, convRes, regRes, cbRes, logRes, accRes] = await Promise.allSettled([
+      // Carga escalonada en olas de 3 endpoints para evitar HTTP 429 en plan Render Free
+      const [resumenRes, asocRes, accRes] = await Promise.allSettled([
         apiMp('/resumen'),
         apiMp('/asociados'),
-        apiMp('/ayudas'),
-        apiMp('/comercios'),
-        apiMp('/liquidaciones/resumen'),
-        apiMp('/transacciones'),
-        apiMp('/cobranzas-manuales'),
-        apiMp('/convenios'),
-        apiMp('/admin/reglas-financieras'),
-        apiMp('/backoffice/cashback-rules'),
-        apiMp('/admin/audit-logs'),
         apiMp('/admin/accesos'),
       ]);
 
-      const firstErr = [resumenRes, asocRes].find((r) => r.status === 'rejected');
-      if (firstErr && firstErr.reason && (firstErr.reason.code === 'MUTUALPAY_S2S_NOT_CONFIGURED' || firstErr.reason.code === 'MUTUALPAY_S2S_REJECTED')) {
-        setNotice(`<strong>Atención S2S:</strong> ${esc(firstErr.reason.message)}`, 'warn');
-        renderResumenVacio();
+      const fatalErr = [resumenRes, asocRes, accRes].find(
+        (r) =>
+          r.status === 'rejected' &&
+          r.reason &&
+          (r.reason.code === 'MUTUALPAY_S2S_NOT_CONFIGURED' ||
+            r.reason.code === 'MUTUALPAY_S2S_REJECTED' ||
+            r.reason.code === 'MUTUALPAY_RATE_LIMITED' ||
+            Number(r.reason.status) === 429)
+      );
+      if (fatalErr) {
+        setNotice(`<strong>Atención Mutual Pay:</strong> ${esc(fatalErr.reason.message)}`, 'warn');
+        if (fatalErr.reason.code !== 'MUTUALPAY_RATE_LIMITED' && Number(fatalErr.reason.status) !== 429) {
+          renderResumenVacio();
+        }
         return;
       }
+
+      await esperarMs(180);
+      const [ayuRes, comRes, liqRes] = await Promise.allSettled([
+        apiMp('/ayudas'),
+        apiMp('/comercios'),
+        apiMp('/liquidaciones/resumen'),
+      ]);
+
+      await esperarMs(180);
+      const [txRes, cobRes, convRes] = await Promise.allSettled([
+        apiMp('/transacciones'),
+        apiMp('/cobranzas-manuales'),
+        apiMp('/convenios'),
+      ]);
+
+      await esperarMs(180);
+      const [regRes, cbRes, logRes] = await Promise.allSettled([
+        apiMp('/admin/reglas-financieras'),
+        apiMp('/backoffice/cashback-rules'),
+        apiMp('/admin/audit-logs'),
+      ]);
 
       if (resumenRes.status === 'fulfilled') st.resumen = resumenRes.value;
       if (asocRes.status === 'fulfilled') st.asociados = asocRes.value.asociados || [];
@@ -278,6 +318,7 @@
       if (logRes.status === 'fulfilled') st.auditLogs = logRes.value.logs || [];
       if (accRes.status === 'fulfilled') st.accesos = accRes.value || null;
 
+      st.lastSyncAt = Date.now();
       renderAllMutualPay();
       const lbl = document.getElementById('mpHubLastSyncLabel');
       if (lbl) lbl.textContent = `Última sincronización: ${new Date().toLocaleTimeString('es-AR')}`;
@@ -1319,7 +1360,9 @@
     if (!st.initialized) {
       st.initialized = true;
     }
-    cargarTodoMutualPayBackoffice(false);
+    if (!st.lastSyncAt || (Date.now() - st.lastSyncAt) > 45000) {
+      cargarTodoMutualPayBackoffice(false);
+    }
   }
 
   global.initMutualPayBackoffice = initMutualPayBackoffice;

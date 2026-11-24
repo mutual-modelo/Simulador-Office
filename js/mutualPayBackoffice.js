@@ -929,16 +929,24 @@
       ? ctxOrMonto
       : { montoPesos: Number(ctxOrMonto || 0) };
     global._mpContextoParaSimulador = ctx;
-    if (typeof cambiarPestana === 'function') cambiarPestana('view-simulador');
-    const inp = document.getElementById('inputMonto');
-    if (inp && Number(ctx.montoPesos || 0) > 0) {
-      inp.value = String(ctx.montoPesos);
-      inp.dispatchEvent(new Event('input', { bubbles: true }));
+    if (typeof global.cambiarPestana === 'function') global.cambiarPestana('view-simulador');
+    const montoNum = Math.round(Number(ctx.montoPesos || 0));
+    const inp = document.getElementById('amountInput') || document.getElementById('inputMonto');
+    if (montoNum > 0) {
+      if (typeof global.handleAmountInput === 'function') {
+        global.handleAmountInput(String(montoNum));
+      }
+      if (inp) {
+        inp.value = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(montoNum);
+      }
     }
-    const selCuotas = document.getElementById('inputCuotas') || document.getElementById('selectCuotas');
-    if (selCuotas && Number(ctx.cuotas || 0) > 1) {
-      selCuotas.value = String(ctx.cuotas);
-      selCuotas.dispatchEvent(new Event('change', { bubbles: true }));
+    const cuotasNum = parseInt(ctx.cuotas || 0, 10);
+    if (cuotasNum > 1 && typeof global.setPlazo === 'function') {
+      const plazosValidos = [6, 12, 18, 24, 36, 48];
+      const plazoMatch = plazosValidos.includes(cuotasNum)
+        ? cuotasNum
+        : plazosValidos.reduce((prev, curr) => (Math.abs(curr - cuotasNum) < Math.abs(prev - cuotasNum) ? curr : prev), 12);
+      global.setPlazo(plazoMatch);
     }
     if (ctx.fullName || ctx.dni) {
       toast(`Contexto precargado en Simulador: ${ctx.fullName || ''} ${ctx.dni ? `(DNI ${ctx.dni})` : ''}`.trim());

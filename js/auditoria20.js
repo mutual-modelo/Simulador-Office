@@ -44,8 +44,16 @@
       },
       {
         id: 'tabBadgeAuditDni',
-        estado: st.dni ? st.dni.dictamen_final : null,
-        label: st.dni ? (st.dni.es_valido ? 'OK' : 'RECH') : '—'
+        estado: st.dni
+          ? (st.dni.validacion_ejemplar_manual && st.dni.validacion_ejemplar_manual.valido === false
+            ? 'RECHAZADO'
+            : st.dni.dictamen_final)
+          : null,
+        label: st.dni
+          ? (st.dni.validacion_ejemplar_manual && st.dni.validacion_ejemplar_manual.valido === false
+            ? 'RECH'
+            : (st.dni.es_valido ? 'OK' : (st.dni.validacion_ejemplar_manual && st.dni.validacion_ejemplar_manual.valido ? 'RENAPER' : 'OBS')))
+          : '—'
       },
       {
         id: 'tabBadgeAuditDomicilio',
@@ -318,7 +326,7 @@
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
-    ['resultadoDniAudit20', 'resultadoDomicilioAudit20', 'resultadoCajaJperAudit20'].forEach(id => {
+    ['audit20ManualEjemplarStatus', 'resultadoDniAudit20', 'resultadoDomicilioAudit20', 'resultadoCajaJperAudit20'].forEach(id => {
       const el = document.getElementById(id);
       if (el) { el.style.display = 'none'; el.innerHTML = ''; }
     });
@@ -380,6 +388,81 @@
     }
   }
 
+  function _buscarExpedienteContextoRenaperAudit20(dniClean) {
+    if (typeof global.getStoredSolicitudes !== 'function') return null;
+    try {
+      const all = global.getStoredSolicitudes() || [];
+      if (global.idExpedienteAuditadoActivo) {
+        const byId = all.find(x => String(x.id) === String(global.idExpedienteAuditadoActivo));
+        if (byId) return byId;
+      }
+      if (dniClean && dniClean.length >= 7) {
+        const byDni = all.find(x => {
+          const d = String((x.solicitante && x.solicitante.dni) || x.DNI_Asociado || x.dni || '').replace(/\D/g, '');
+          return d === dniClean;
+        });
+        if (byDni) return byDni;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  function abrirValidacionRenaperAudit20() {
+    if (typeof global.abrirAsistenteRenaperMiEjemplar !== 'function') {
+      if (typeof showToast === 'function') {
+        showToast('⚠️ El asistente RENAPER no está disponible en este momento.');
+      }
+      return;
+    }
+
+    const st = global._auditoria20Estado || {};
+    const dniData = st.dni || {};
+    const ext = dniData.datos_extraidos || {};
+    const det = dniData.validacion_determinista || {};
+
+    let dniClean = String(det.dni_extraido || ext.dni || '').replace(/\D/g, '').trim();
+    if (!dniClean) {
+      const cands = [
+        (document.getElementById('inputDniEsperadoAudit20') || {}).value,
+        st.dniSolicitante,
+        (document.getElementById('inputDomDniAudit20') || {}).value,
+        (document.getElementById('inputCajaJperDniAudit20') || {}).value,
+        (document.getElementById('inputBoletinDniConsulta') || {}).value,
+        st.recibo && st.recibo.dni
+      ];
+      for (const c of cands) {
+        const digits = String(c || '').replace(/\D/g, '').trim();
+        if (digits.length === 11) { dniClean = digits.slice(2, 10); break; }
+        if (digits.length >= 7) { dniClean = digits; break; }
+      }
+    }
+
+    const expMatch = _buscarExpedienteContextoRenaperAudit20(dniClean);
+    const solExp = (expMatch && expMatch.solicitante) || {};
+    const nombreExt = [ext.apellido, ext.nombres].filter(Boolean).join(', ');
+    const nombre = nombreExt || st.nombreSolicitante || (st.recibo && st.recibo.titular) || solExp.nombre || (expMatch && expMatch.Apellido_Nombre) || 'Asociado';
+
+    if (!dniClean || dniClean.length < 7) {
+      const inp = document.getElementById('inputDniEsperadoAudit20');
+      if (inp) inp.focus();
+      if (typeof showToast === 'function') {
+        showToast('Tip: ingresá el DNI en "DNI esperado del asociado" o auditá el DNI para autocompletar en RENAPER.');
+      }
+    }
+
+    global.abrirAsistenteRenaperMiEjemplar({
+      nombre,
+      dni: dniClean || '',
+      sexo: ext.sexo || solExp.sexo || (expMatch && expMatch.sexo) || '',
+      fecha_nacimiento: det.fecha_nacimiento_iso || ext.fecha_nacimiento || solExp.fechaNacimiento || solExp.fecha_nacimiento || '',
+      ejemplar: ext.ejemplar || det.ejemplar || solExp.ejemplar || '',
+      fecha_emision: det.fecha_emision_iso || ext.fecha_emision || solExp.fechaEmision || solExp.fecha_emision || '',
+      nro_tramite: ext.nro_tramite || '',
+      validacion_ejemplar_manual: dniData.validacion_ejemplar_manual || null,
+      origen: 'auditoria20'
+    });
+  }
+
   async function ejecutarValidacionDniAudit20(fileOverride) {
     const inpFile = document.getElementById('fileInputDniAudit20');
     const file = fileOverride || (global._auditoria20Files && global._auditoria20Files.dni) || (inpFile && inpFile.files && inpFile.files[0]);
@@ -399,6 +482,10 @@
     }
 
     try {
+      const prevDni = global._auditoria20Estado && global._auditoria20Estado.dni;
+      const prevManualEj = prevDni && prevDni.validacion_ejemplar_manual ? prevDni.validacion_ejemplar_manual : null;
+      const prevDniNum = String((prevDni && prevDni.validacion_determinista && prevDni.validacion_determinista.dni_extraido) || (prevDni && prevDni.datos_extraidos && prevDni.datos_extraidos.dni) || '').replace(/\D/g, '');
+
       const basePayload = await _leerArchivoPayloadAudit20(file);
       const resp = await fetchConTimeout(`${RENDER_API_URL}/api/validar-dni`, {
         method: 'POST',
@@ -411,6 +498,11 @@
       }, 65000);
       const data = await resp.json().catch(() => ({}));
       if (!resp.ok) throw new Error(data.detail || ('HTTP ' + resp.status));
+
+      const nuevoDniNum = String((data.validacion_determinista && data.validacion_determinista.dni_extraido) || (data.datos_extraidos && data.datos_extraidos.dni) || '').replace(/\D/g, '');
+      if (prevManualEj && !data.validacion_ejemplar_manual && (!prevDniNum || !nuevoDniNum || prevDniNum === nuevoDniNum)) {
+        data.validacion_ejemplar_manual = prevManualEj;
+      }
 
       global._auditoria20Estado.dni = data;
       const ext = data.datos_extraidos || {};
@@ -467,7 +559,6 @@
           '</div>' +
           '<ul style="margin:0.45rem 0 0 1.15rem;padding:0;font-size:0.76rem;">' + motivos.map(m => '<li>' + sanitizeHTML(m) + '</li>').join('') + '</ul>' +
         '</div>' +
-        '<div id="audit20ManualEjemplarStatus" style="display:none;margin-top:0.65rem;"></div>' +
         '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:0.6rem;margin-top:0.75rem;font-size:0.76rem;">' +
           '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Titular</div><div style="font-weight:800;color:#0f172a;">' + sanitizeHTML(([ext.apellido, ext.nombres].filter(Boolean).join(', ')) || 'No leído') + '</div></div>' +
           '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">DNI / CUIL</div><div style="font-weight:800;font-family:monospace;color:#0f172a;">' + sanitizeHTML(det.dni_extraido || '—') + (ext.cuil ? (' · ' + sanitizeHTML(ext.cuil)) : '') + '</div></div>' +
@@ -483,6 +574,9 @@
           (evIa.observacionesIA ? ('<div style="margin-top:6px;font-size:0.73rem;color:#475569;"><strong>Observaciones:</strong> ' + sanitizeHTML(evIa.observacionesIA) + '</div>') : '') +
         '</div>' +
         _renderBloqueForenseAudit20(data.forense);
+      if (data.validacion_ejemplar_manual) {
+        actualizarEstadoEjemplarManualAudit20(data.validacion_ejemplar_manual);
+      }
     } catch (err) {
       if (out) out.innerHTML = '<div style="padding:0.85rem;border-radius:10px;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;font-size:0.78rem;">⚠️ Error validando DNI: ' + sanitizeHTML(err.message || String(err)) + '</div>';
     } finally {
@@ -804,6 +898,7 @@
   global.actualizarEstadoEjemplarManualAudit20 = actualizarEstadoEjemplarManualAudit20;
   global.cambiarTabAuditoria20 = cambiarTabAuditoria20;
   global.ejecutarValidacionDniAudit20 = ejecutarValidacionDniAudit20;
+  global.abrirValidacionRenaperAudit20 = abrirValidacionRenaperAudit20;
   global.ejecutarValidacionDomicilioAudit20 = ejecutarValidacionDomicilioAudit20;
   global.inspeccionarSoloForenseAudit20 = inspeccionarSoloForenseAudit20;
   global.consultarCajaJperAudit20 = consultarCajaJperAudit20;

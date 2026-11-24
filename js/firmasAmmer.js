@@ -5104,9 +5104,34 @@
         if (ovFicha && ovFicha.style.display !== 'none') {
           abrirFichaSolicitudFirma(info.solicitudId);
         }
-      } else if (info.origen === 'auditoria20' && global._auditoria20Estado && global._auditoria20Estado.dni) {
+      } else if (info.origen === 'auditoria20' && global._auditoria20Estado) {
+        if (!global._auditoria20Estado.dni) {
+          global._auditoria20Estado.dni = {
+            dictamen_final: reg.valido ? 'REVISION_MANUAL' : 'RECHAZADO',
+            es_valido: false,
+            motivos: [
+              reg.valido
+                ? 'Validación manual RENAPER Mi Ejemplar marcada VÁLIDA (pendiente lectura de imagen DNI).'
+                : 'Validación manual RENAPER Mi Ejemplar marcada NO VÁLIDA.'
+            ],
+            datos_extraidos: {
+              dni: info.dni || null,
+              sexo: info.sexo || null,
+              fecha_nacimiento: info.fecha_nacimiento || null,
+              ejemplar: reg.ejemplar_renaper || info.ejemplar || null,
+              fecha_emision: reg.fecha_emision_renaper || info.fecha_emision || null
+            },
+            validacion_determinista: {
+              dni_extraido: info.dni || null,
+              ejemplar: reg.ejemplar_renaper || info.ejemplar || null
+            }
+          };
+        }
         global._auditoria20Estado.dni.validacion_ejemplar_manual = reg;
         info.validacion_ejemplar_manual = reg;
+        if (info.dni && typeof global._propagarContextoAsociadoAudit20 === 'function') {
+          global._propagarContextoAsociadoAudit20({ dni: info.dni, nombre: info.nombre || '' });
+        }
         if (typeof global.actualizarEstadoEjemplarManualAudit20 === 'function') {
           global.actualizarEstadoEjemplarManualAudit20(reg);
         }

@@ -1682,7 +1682,14 @@
       </div>
       <div id="wizardStepErrorBanner" class="alert alert-err" style="display:none;"></div>
 
-      <!-- PASO 1: REVISAR EL DOCUMENTO -->
+      <!-- PASO 1 OPCIONAL: COMPLETAR DATOS DEL ASOCIADO -->
+      <section class="card wizard-step-pane" id="paneStepDatos" style="display:none;">
+        <h1 class="step-heading">📝 Completá tus datos</h1>
+        <p class="step-lead">Ingresá la información solicitada para completar tu documento antes de leerlo y firmarlo.</p>
+        <div id="datosAsociadoFormContainer" style="display:flex;flex-direction:column;gap:0.75rem;margin-top:0.55rem;"></div>
+      </section>
+
+      <!-- PASO 1/2: REVISAR EL DOCUMENTO -->
       <section class="card wizard-step-pane" id="paneStepDoc" style="display:none;">
         <h1 class="step-heading">📄 Leé tu documento</h1>
         <p class="step-lead">Revisá tus datos y el documento. Luego tocá <strong>Continuar</strong>.</p>
@@ -2325,6 +2332,9 @@
         },
         dniFallosHabilitarGaleria: 0,
         galeriaDniHabilitada: false,
+        camposAsociado: [],
+        valoresAsociado: {},
+        camposAsociadoCompletados: false,
         mediaRecorder: null,
         recordedVideoUrl: '',
         recordedVideoDataUrl: '',
@@ -2340,6 +2350,7 @@
       };
 
       const STEP_META = {
+        datos: { paneId: 'paneStepDatos', label: 'Completar tus datos' },
         doc: { paneId: 'paneStepDoc', label: 'Revisar documento' },
         uif: { paneId: 'paneStepUif', label: 'Declaración Jurada' },
         dni: { paneId: 'paneStepDni', label: 'Fotos de tu DNI' },
@@ -2364,11 +2375,17 @@
           const m123 = document.getElementById('inpUifPepArt123Motivo');
           const m6 = document.getElementById('inpUifPepArt6Motivo');
           const m4 = document.getElementById('inpUifPepArt4Motivo');
+          const valsAsocSnap = { ...(appState.valoresAsociado || {}) };
+          document.querySelectorAll('[data-asociado-campo-clave]').forEach((inp) => {
+            const cl = inp.getAttribute('data-asociado-campo-clave');
+            if (cl) valsAsocSnap[cl] = String(inp.value || '');
+          });
           const snap = {
             currentStepIdx: Number(appState.currentStepIdx || 0),
             pdfZoomPct: Number(appState.pdfZoomPct || 100),
             dniFallosHabilitarGaleria: Number(appState.dniFallosHabilitarGaleria || 0),
             galeriaDniHabilitada: Boolean(appState.galeriaDniHabilitada),
+            valoresAsociado: valsAsocSnap,
             ddjjUif: {
               pep: appState.ddjjUif.pep || '',
               pepDetalle: appState.ddjjUif.pepDetalle || '',
@@ -2405,6 +2422,16 @@
             return;
           }
           let algoRestaurado = false;
+          if (snap.valoresAsociado && typeof snap.valoresAsociado === 'object') {
+            appState.valoresAsociado = { ...(appState.valoresAsociado || {}), ...snap.valoresAsociado };
+            document.querySelectorAll('[data-asociado-campo-clave]').forEach((inp) => {
+              const cl = inp.getAttribute('data-asociado-campo-clave');
+              if (cl && Object.prototype.hasOwnProperty.call(appState.valoresAsociado, cl) && appState.valoresAsociado[cl]) {
+                inp.value = String(appState.valoresAsociado[cl]);
+                algoRestaurado = true;
+              }
+            });
+          }
           if (snap.pdfZoomPct && snap.pdfZoomPct >= 60 && snap.pdfZoomPct <= 240) {
             appState.pdfZoomPct = snap.pdfZoomPct;
           }
@@ -2618,6 +2645,7 @@
       }
 
       const STEP_SHORT_LABELS = {
+        datos: 'Tus Datos',
         doc: 'Documento',
         uif: 'DDJJ UIF',
         dni: 'Fotos DNI',
@@ -2960,6 +2988,82 @@
       async function avanzarPaso() {
         mostrarErrorEnPaso('');
         const stepKey = appState.steps[appState.currentStepIdx];
+
+        if (stepKey === 'datos') {
+          const inputs = Array.from(document.querySelectorAll('[data-asociado-campo-clave]'));
+          const valoresMap = {};
+          let primerFaltante = null;
+          let etiquetaFaltante = '';
+
+          inputs.forEach((inp) => {
+            const cl = inp.getAttribute('data-asociado-campo-clave') || '';
+            const req = inp.getAttribute('data-asociado-campo-req') === '1';
+            const etq = inp.getAttribute('data-asociado-campo-label') || 'este campo';
+            const val = String(inp.value || '').trim();
+            if (cl) valoresMap[cl] = val;
+            if (req && !val && !primerFaltante) {
+              primerFaltante = inp;
+              etiquetaFaltante = etq;
+            }
+          });
+
+          appState.valoresAsociado = { ...(appState.valoresAsociado || {}), ...valoresMap };
+          guardarProgresoParcial_();
+
+          if (primerFaltante) {
+            mostrarErrorEnPaso(`Por favor completá "${etiquetaFaltante}" para continuar.`);
+            try { primerFaltante.focus(); } catch (_e) {}
+            return;
+          }
+
+          const btnNext = document.getElementById('btnWizardNext');
+          const origTxt = btnNext ? btnNext.textContent : 'Continuar →';
+          if (btnNext) {
+            btnNext.disabled = true;
+            btnNext.textContent = '⏳ Guardando en el documento...';
+          }
+          try {
+            const respComp = await fetch(`${API_BASE}/api/firmas/public/${encodeURIComponent(token)}/completar-campos`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ valores: valoresMap }),
+            });
+            const dataComp = await respComp.json().catch(() => ({}));
+            if (!respComp.ok) {
+              throw new Error(dataComp.detail || `Error HTTP ${respComp.status}`);
+            }
+            appState.valoresAsociado = dataComp.valores_asociado || valoresMap;
+            appState.camposAsociadoCompletados = true;
+            if (dataComp.datos_resumen && appState.docInfo) {
+              appState.docInfo.datos_resumen = dataComp.datos_resumen;
+              const solNom = (dataComp.datos_resumen.solicitante || {}).nombre;
+              const solDni = (dataComp.datos_resumen.solicitante || {}).dni;
+              if (solNom) {
+                const dfEl = document.getElementById('docFirmante');
+                if (dfEl) dfEl.textContent = `${solNom} (${appState.docInfo.firmante_etiqueta || 'Titular'})`;
+              }
+              if (solDni) {
+                const ddEl = document.getElementById('docDni');
+                if (ddEl) ddEl.textContent = solDni;
+              }
+            }
+            if (dataComp.pdfBase64) {
+              appState.pdfB64Actual = dataComp.pdfBase64;
+              if (appState.steps.includes('doc')) {
+                await renderizarPdfEnMovil(appState.pdfB64Actual);
+              }
+            }
+            guardarProgresoParcial_();
+          } catch (errComp) {
+            mostrarErrorEnPaso(errComp.message || 'No pudimos guardar tus datos en el documento. Reintentá.');
+            return;
+          } finally {
+            if (btnNext) {
+              btnNext.disabled = false;
+              btnNext.textContent = origTxt;
+            }
+          }
+        }
 
         if (stepKey === 'uif') {
           if (!appState.ddjjUif.pep) {
@@ -4569,9 +4673,22 @@
           appState.requiereFirma = valsReq.firma_olografa !== false;
           appState.requierePinOtp = Boolean(valsReq.requiere_pin_otp);
           appState.vozConfig = data.voz_consentimiento || null;
+          appState.camposAsociado = Array.isArray(data.campos_asociado) ? data.campos_asociado : [];
+          appState.valoresAsociado = (data.valores_asociado && typeof data.valores_asociado === 'object')
+            ? { ...data.valores_asociado }
+            : {};
+          appState.camposAsociadoCompletados = Boolean(data.campos_asociado_completados);
+
+          const yaCompletadoPorOtroCoFirmante = Boolean(
+            data.grupo_progreso
+            && appState.camposAsociadoCompletados
+            && Number(data.orden_firma || 1) > 1
+          );
+          const incluirPasoDatos = appState.camposAsociado.length > 0 && !yaCompletadoPorOtroCoFirmante;
 
           // Construir lista dinámica de pasos según módulos exigidos
           appState.steps = [];
+          if (incluirPasoDatos) appState.steps.push('datos');
           if (appState.requierePdf) appState.steps.push('doc');
           if (appState.requiereUif) appState.steps.push('uif');
           if (appState.requiereDni) appState.steps.push('dni');
@@ -4607,6 +4724,9 @@
             });
           }
 
+          if (incluirPasoDatos) {
+            setupSeccionDatosAsociado();
+          }
           if (appState.requierePinOtp) {
             const boxPin = document.getElementById('boxPinOtpFirma');
             if (boxPin) boxPin.style.display = 'block';
@@ -4630,6 +4750,70 @@
         } catch (err) {
           showErr('No pudimos abrir tu documento: ' + err.message);
         }
+      }
+
+      function setupSeccionDatosAsociado() {
+        const cont = document.getElementById('datosAsociadoFormContainer');
+        if (!cont) return;
+        const campos = Array.isArray(appState.camposAsociado) ? appState.camposAsociado : [];
+        if (campos.length === 0) {
+          cont.innerHTML = '';
+          return;
+        }
+        cont.innerHTML = campos.map((c, idx) => {
+          const clave = String(c.clave || c.id || `campo_${idx}`);
+          const etq = String(c.etiqueta || c.id || 'Dato requerido');
+          const orig = String(c.origen_campo || 'manual').toLowerCase();
+          const req = c.requerido !== false;
+          const valExist = Object.prototype.hasOwnProperty.call(appState.valoresAsociado || {}, clave)
+            ? appState.valoresAsociado[clave]
+            : (c.valor_inicial || '');
+          let inpType = 'text';
+          let inpMode = 'text';
+          let placeholder = `Ingresá ${etq.toLowerCase()}`;
+          if (orig.includes('email')) {
+            inpType = 'email';
+            inpMode = 'email';
+            placeholder = 'ej: tu.nombre@correo.com';
+          } else if (orig.includes('telefono')) {
+            inpType = 'tel';
+            inpMode = 'tel';
+            placeholder = 'ej: 3434123456';
+          } else if (orig.includes('dni') || orig.includes('cbu') || orig.includes('cuil')) {
+            inpMode = 'numeric';
+          } else if (orig.includes('fechanacimiento')) {
+            placeholder = 'DD/MM/AAAA';
+          }
+          const inpId = `inpDatosAsociado_${idx}`;
+          return `
+            <div style="background:#f8fafc;border:1.5px solid #cbd5e1;border-radius:12px;padding:0.78rem 0.9rem;">
+              <label for="${inpId}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:0.9rem;font-weight:800;color:#0f2744;margin-bottom:0.42rem;">
+                <span>${escHtml(etq)}</span>
+                ${req ? '<span style="font-size:0.72rem;font-weight:700;color:#dc2626;background:#fef2f2;padding:2px 8px;border-radius:9999px;">Obligatorio</span>' : '<span style="font-size:0.72rem;font-weight:600;color:#64748b;">Opcional</span>'}
+              </label>
+              <input
+                id="${inpId}"
+                type="${inpType}"
+                inputmode="${inpMode}"
+                data-asociado-campo-clave="${escHtml(clave)}"
+                data-asociado-campo-req="${req ? '1' : '0'}"
+                data-asociado-campo-label="${escHtml(etq)}"
+                value="${escHtml(valExist || '')}"
+                placeholder="${escHtml(placeholder)}"
+                style="width:100%;box-sizing:border-box;padding:0.72rem 0.85rem;font-size:1rem;font-weight:600;color:#0f172a;background:#ffffff;border:1.5px solid #94a3b8;border-radius:10px;outline:none;"
+              />
+            </div>
+          `;
+        }).join('');
+
+        cont.querySelectorAll('[data-asociado-campo-clave]').forEach((inp) => {
+          inp.addEventListener('input', () => {
+            const cl = inp.getAttribute('data-asociado-campo-clave');
+            if (cl) appState.valoresAsociado[cl] = String(inp.value || '');
+            mostrarErrorEnPaso('');
+            guardarProgresoParcial_();
+          });
+        });
       }
 
       function setupSeccionUif() {
@@ -4811,6 +4995,9 @@
             geoPrecisionMetros: appState.gps.accuracy,
             pinOtp: pinOtpVal,
             turnstileToken: tsTokenSign || null,
+            valoresCamposAsociado: (appState.camposAsociado && appState.camposAsociado.length > 0)
+              ? (appState.valoresAsociado || {})
+              : null,
             declaracionJuradaUif: appState.requiereUif ? {
               es_pep: appState.ddjjUif.pep === 'si',
               pep_respuesta: appState.ddjjUif.pep || 'no',
@@ -4825,6 +5012,11 @@
               sujeto_obligado_respuesta: appState.ddjjUif.sujetoObligado || 'no',
               constancia_uif_archivo: appState.ddjjUif.constanciaNombre || '',
               origen_licito_y_repet_aceptado: Boolean(appState.ddjjUif.repetAceptado),
+              domicilio_electronico: String(
+                (appState.valoresAsociado && appState.valoresAsociado['origen:solicitante.email'])
+                || (appState.docInfo && appState.docInfo.datos_resumen && appState.docInfo.datos_resumen.solicitante && appState.docInfo.datos_resumen.solicitante.email)
+                || ''
+              ).trim(),
               fecha_declaracion: new Date().toISOString(),
             } : null,
             telemetriaTrazo: firmaPngOpt ? {

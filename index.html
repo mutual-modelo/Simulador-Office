@@ -1211,11 +1211,15 @@
                   <button type="button" id="btnValidarDniAudit20" onclick="ejecutarValidacionDniAudit20()" class="audit20-btn audit20-btn--navy audit20-btn--lg">
                     <span>🪪 Auditar DNI</span>
                   </button>
+                  <button type="button" id="btnValidarRenaperAudit20" onclick="abrirValidacionRenaperAudit20()" class="audit20-btn audit20-btn--indigo audit20-btn--lg" title="Abrir asistente RENAPER Mi Ejemplar (Pestaña dividida Chrome) para verificar ejemplar y fecha de emisión">
+                    <span>🪪 Validar Ejemplar (RENAPER)</span>
+                  </button>
                   <button type="button" onclick="inspeccionarSoloForenseAudit20('dni')" class="audit20-btn audit20-btn--secondary audit20-btn--lg">
                     <span>🔬 Verificar Metadatos</span>
                   </button>
                 </div>
 
+                <div id="audit20ManualEjemplarStatus" style="display:none;margin-top:0.75rem;"></div>
                 <div id="resultadoDniAudit20" style="display:none;margin-top:1rem;"></div>
               </div>
             </div>
@@ -23597,10 +23601,10 @@ ${cierreTxt}`;
     })();
   </script>
   <script src="js/boletinER.js?v=6"></script>
-  <script src="js/auditoria20.js?v=6"></script>
+  <script src="js/auditoria20.js?v=7"></script>
   <script src="js/fichasAsociados.js?v=6"></script>
   <script src="js/sidecreerWidget.js?v=11"></script>
-  <script src="js/firmasAmmer.js?v=28"></script>
+  <script src="js/firmasAmmer.js?v=29"></script>
   <script src="js/whatsappBotAdmin.js?v=5"></script>
   <script src="js/mutualPayBackoffice.js?v=6"></script>
 </body>

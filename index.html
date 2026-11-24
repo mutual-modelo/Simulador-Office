@@ -4369,6 +4369,54 @@
     </div>
   </div>
 
+  <!-- MODAL 4A: CARGA POR LOTE Y DRAG & DROP EN EXPEDIENTES EXISTENTES -->
+  <div id="modalSubirLoteExpediente" class="modal-backdrop modal-backdrop-elevated" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
+    <div class="modal-window" style="max-width:680px;width:95%;">
+      <div class="modal-header-bar">
+        <div class="modal-header-title" style="display:flex;align-items:center;gap:0.5rem;color:var(--color-brand-blue);min-width:0;">
+          <span>📤 Subir Documentación por Lote</span>
+          <span id="lblLoteExpBadge" style="font-size:0.72rem;font-weight:800;padding:2px 8px;border-radius:999px;background:#dbeafe;color:#1e40af;white-space:nowrap;">EXP</span>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="cerrarModalSubirLoteExpediente()" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="modal-body-scroll" style="padding:1rem 1.2rem;">
+        <div id="lblLoteExpInfoCard" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;padding:0.6rem 0.85rem;margin-bottom:0.85rem;font-size:0.78rem;color:#334155;"></div>
+
+        <div class="document-dropzone" id="dropzoneModalLoteExp" style="cursor:pointer;" onclick="document.getElementById('inpLoteExpedienteModal').click()" ondragover="event.preventDefault(); this.classList.add('is-dragover');" ondragleave="this.classList.remove('is-dragover');" ondrop="handleDropzoneLoteExpediente(event, 'modal')">
+          <input type="file" id="inpLoteExpedienteModal" multiple accept="image/*,application/pdf" style="display:none;" onchange="agregarArchivosLoteExpediente(this.files, 'modal'); this.value='';"/>
+          <svg class="document-dropzone-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <div class="document-dropzone-text">Arrastrá varios archivos aquí o hacé clic para elegir por Lote</div>
+          <div class="document-dropzone-sub">Cada archivo se normaliza a PDF A4 y se archiva automáticamente en el Legajo Digital (PDF, JPG, PNG hasta 10 MB)</div>
+        </div>
+
+        <div id="loteExpModalPanel" style="display:none;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.85rem 1rem;margin-top:0.75rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:0.55rem;flex-wrap:wrap;margin-bottom:0.65rem;">
+            <div style="font-size:0.82rem;font-weight:700;color:#0f172a;">
+              📦 Archivos listos para subir (<span id="loteExpModalCount">0</span>)
+            </div>
+            <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+              <select id="selLoteExpTipoMasivoModal" onchange="aplicarTipoMasivoLoteExpediente(this.value, 'modal'); this.value='';" style="font-size:0.73rem;padding:0.32rem 0.45rem;border:1px solid #cbd5e1;border-radius:6px;background:#ffffff;color:#334155;">
+                <option value="">🏷️ Asignar mismo tipo a todos...</option>
+              </select>
+              <button type="button" id="btnReconocerLoteExpIA_modal" onclick="clasificarLoteExpedienteConIA('modal')" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:6px;padding:0.38rem 0.72rem;font-size:0.74rem;font-weight:600;cursor:pointer;">🤖 Reconocer con IA</button>
+              <button type="button" id="btnSubirLoteExp_modal" onclick="subirLoteExpedienteConfirmar('modal')" style="background:#059669;color:#fff;border:none;border-radius:6px;padding:0.38rem 0.8rem;font-size:0.74rem;font-weight:700;cursor:pointer;">✅ Subir al Expediente</button>
+              <button type="button" onclick="limpiarLoteExpediente('modal')" style="background:#fff;color:#64748b;border:1px solid #cbd5e1;border-radius:6px;padding:0.36rem 0.62rem;font-size:0.74rem;font-weight:600;cursor:pointer;">Limpiar</button>
+            </div>
+          </div>
+          <div id="loteExpModalLista" style="display:flex;flex-direction:column;gap:0.45rem;max-height:290px;overflow-y:auto;"></div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:0.95rem;">
+          <button type="button" class="btn-restore" onclick="cerrarModalSubirLoteExpediente()">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL 4B: CONFIRMAR ELIMINACIÓN DE DOCUMENTO DEL LEGAJO -->
   <div id="modalConfirmarEliminarDoc" class="modal-backdrop modal-backdrop-elevated" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
     <div class="modal-window" style="max-width:440px;">
@@ -11188,7 +11236,8 @@ ${cierreTxt}`;
                 '</span>')
           : '';
 
-        return '<tr>' +
+        const sIdEsc = sanitizeHTML(String(s.id || ''));
+        return '<tr ondragover="handleDragOverExpedienteRow(event, this)" ondragleave="handleDragLeaveExpedienteRow(this, event)" ondrop="handleDropEnExpedienteItem(event, this, \'' + sIdEsc + '\')">' +
           '<td>' + idBadge + '<div style="font-size:0.67rem;color:#64748b;margin-top:3px;white-space:nowrap;">' + fechaStr + '</div></td>' +
           colAsesorHtml +
           '<td><div class="text-sm font-semibold text-slate-900">' + sanitizeHTML(s.solicitante?.nombre || '—') + '</div><div class="text-xs text-slate-500" style="margin-top:2px;"><span class="font-mono text-slate-600">DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + '</span> · <span class="cell-domicilio-hist" style="max-width:150px;" title="' + domHistTxt + '">📍 ' + domHistTxt + '</span></div></td>' +
@@ -11196,10 +11245,11 @@ ${cierreTxt}`;
           '<td>' + propHtml + '</td>' +
           '<td><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + sanitizeHTML(s.estado || 'Pendiente') + '</span>' + alertaDocHtml + '</td>' +
           '<td style="text-align:center;"><div class="crm-actions-group">' +
-            '<button type="button" class="btn-ver-expediente crm-btn-expediente" data-id="' + sanitizeHTML(String(s.id || '')) + '" data-id-provisorio="' + sanitizeHTML(String(s.id_provisorio || s.idProvisorio || s.id || '')) + '" title="Abrir Ficha del Expediente">' +
+            '<button type="button" class="btn-ver-expediente crm-btn-expediente" data-id="' + sIdEsc + '" data-id-provisorio="' + sanitizeHTML(String(s.id_provisorio || s.idProvisorio || s.id || '')) + '" title="Abrir Ficha del Expediente">' +
               '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
               '<span>Ver Ficha</span>' +
             '</button>' +
+            '<button type="button" class="crm-btn-upload-lote" onclick="event.stopPropagation();abrirModalSubirLoteExpediente(\'' + sIdEsc + '\')" title="Subir uno o varios documentos al legajo (también podés arrastrar archivos sobre esta fila)">📤 Subir Docs</button>' +
             driveLinkHtml +
             (typeof renderBotonCicloVida === 'function' ? renderBotonCicloVida(s) : '') +
           '</div></td>' +
@@ -12764,13 +12814,32 @@ ${cierreTxt}`;
               '<option value="AUTORIZACION PARA DESCUENTO DE HABERES">AUTORIZACION PARA DESCUENTO DE HABERES (Uso Interno)</option>'
             ) : '') +
           '</select>' +
-          '<input type="file" id="fileFichaAdicional" class="doc-row-native-input" accept="image/*,application/pdf" onchange="handleArchivoComplementarioSeleccionado(\'' + s.id + '\', this)"/>' +
+          '<input type="file" id="fileFichaAdicional" multiple class="doc-row-native-input" accept="image/*,application/pdf" onchange="handleArchivoComplementarioSeleccionado(\'' + s.id + '\', this)"/>' +
           '<button type="button" class="btn-doc-complementaria-corp" onclick="document.getElementById(\'fileFichaAdicional\').click()">' +
             '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#135596" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
             '<span id="lblBtnDocComplementaria">Adjuntar Documentación Complementaria al Legajo</span>' +
           '</button>' +
         '</div>' +
-        '<p id="lblArchivoComplementarioEstado" style="font-size:0.68rem;color:#475569;margin-top:0.5rem;margin-bottom:0;">Seleccione el tipo de comprobante y pulse el botón superior para archivarlo automáticamente en el Legajo Digital Seguro con formato <code>' + sanitizeHTML(prefijoOficialFicha) + ' [TIPO].PDF</code>.</p>' +
+        '<div class="document-dropzone" id="dropzoneFichaLegajo" style="margin-top:0.75rem;padding:0.95rem 0.85rem;cursor:pointer;" onclick="document.getElementById(\'inpLoteFichaExpediente\').click()" ondragover="event.preventDefault(); this.classList.add(\'is-dragover\');" ondragleave="this.classList.remove(\'is-dragover\');" ondrop="handleDropzoneLoteExpediente(event, \'ficha\', \'' + s.id + '\')">' +
+          '<input type="file" id="inpLoteFichaExpediente" multiple accept="image/*,application/pdf" style="display:none;" onchange="agregarArchivosLoteExpediente(this.files, \'ficha\', \'' + s.id + '\'); this.value=\'\';"/>' +
+          '<div class="document-dropzone-text" style="font-size:0.8rem;">📂 Arrastrá varios archivos aquí o hacé clic para subir por Lote</div>' +
+          '<div class="document-dropzone-sub" style="font-size:0.71rem;">Podés arrastrar múltiples PDFs o imágenes juntos, clasificarlos automáticamente o con IA y subirlos al expediente #' + sanitizeHTML(prefijoOficialFicha) + '</div>' +
+        '</div>' +
+        '<div id="loteFichaPanel" style="display:none;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:0.75rem 0.9rem;margin-top:0.65rem;">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.55rem;">' +
+            '<div style="font-size:0.8rem;font-weight:700;color:#0f172a;">📦 Lote listo para archivar (<span id="loteExpFichaCount">0</span>)</div>' +
+            '<div style="display:flex;align-items:center;gap:0.35rem;flex-wrap:wrap;">' +
+              '<select id="selLoteExpTipoMasivoFicha" onchange="aplicarTipoMasivoLoteExpediente(this.value, \'ficha\'); this.value=\'\';" style="font-size:0.72rem;padding:0.3rem 0.42rem;border:1px solid #cbd5e1;border-radius:6px;background:#ffffff;color:#334155;">' +
+                '<option value="">🏷️ Asignar mismo tipo a todos...</option>' +
+              '</select>' +
+              '<button type="button" id="btnReconocerLoteExpIA_ficha" onclick="clasificarLoteExpedienteConIA(\'ficha\')" style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:6px;padding:0.35rem 0.68rem;font-size:0.72rem;font-weight:600;cursor:pointer;">🤖 Reconocer con IA</button>' +
+              '<button type="button" id="btnSubirLoteExp_ficha" onclick="subirLoteExpedienteConfirmar(\'ficha\')" style="background:#059669;color:#fff;border:none;border-radius:6px;padding:0.35rem 0.75rem;font-size:0.72rem;font-weight:700;cursor:pointer;">✅ Subir al Expediente</button>' +
+              '<button type="button" onclick="limpiarLoteExpediente(\'ficha\')" style="background:#fff;color:#64748b;border:1px solid #cbd5e1;border-radius:6px;padding:0.34rem 0.6rem;font-size:0.72rem;font-weight:600;cursor:pointer;">Limpiar</button>' +
+            '</div>' +
+          '</div>' +
+          '<div id="loteExpFichaLista" style="display:flex;flex-direction:column;gap:0.45rem;max-height:260px;overflow-y:auto;"></div>' +
+        '</div>' +
+        '<p id="lblArchivoComplementarioEstado" style="font-size:0.68rem;color:#475569;margin-top:0.5rem;margin-bottom:0;">Seleccione el tipo de comprobante o arrastre un lote de archivos para archivarlo automáticamente en el Legajo Digital Seguro con formato <code>' + sanitizeHTML(prefijoOficialFicha) + ' [TIPO].PDF</code>.</p>' +
       '</div>';
 
       // 6. SECCIÓN 4: CHAT DE AUDITORÍA Y LÍNEA DE TIEMPO (TÍTULO EXACTO)
@@ -12859,6 +12928,12 @@ ${cierreTxt}`;
       '</div>';
 
       body.innerHTML = html;
+      if (window.__loteExpedienteState && window.__loteExpedienteState.ficha) {
+        if (String(window.__loteExpedienteState.ficha.id || '') !== String(s.id)) {
+          window.__loteExpedienteState.ficha = { id: String(s.id), items: [] };
+        }
+        if (typeof renderLoteExpediente === 'function') renderLoteExpediente('ficha');
+      }
       const footerCiclo = document.getElementById('footerCicloVidaFicha');
       if (footerCiclo) {
         footerCiclo.innerHTML = (typeof renderBotonCicloVida === 'function') ? renderBotonCicloVida(s, true) : '';
@@ -13149,6 +13224,16 @@ ${cierreTxt}`;
 
     async function handleArchivoComplementarioSeleccionado(idSolicitud, inputEl) {
       if (!inputEl || !inputEl.files || inputEl.files.length === 0) return;
+      if (inputEl.files.length > 1) {
+        const tipoPreset = document.getElementById('cboFichaDocTipo')?.value || '';
+        agregarArchivosLoteExpediente(inputEl.files, 'ficha', idSolicitud, tipoPreset);
+        inputEl.value = '';
+        const lbl = document.getElementById('lblArchivoComplementarioEstado');
+        if (lbl) {
+          lbl.textContent = 'Se agregaron ' + (window.__loteExpedienteState?.ficha?.items?.length || 0) + ' archivos al lote. Revisalos abajo y hacé clic en "✅ Subir al Expediente".';
+        }
+        return;
+      }
       const lbl = document.getElementById('lblArchivoComplementarioEstado');
       if (lbl) {
         lbl.textContent = 'Subiendo archivo seleccionado: ' + inputEl.files[0].name + '...';
@@ -14298,6 +14383,485 @@ ${cierreTxt}`;
       actualizarContadorBoveda(s.id);
       verFichaCompleta(id);
       showToast('Documento archivado exitosamente como ' + nombreFinalGuardado + ' 📄');
+    }
+
+    /* ========================================================================
+       6.B CARGA POR LOTE Y DRAG & DROP EN EXPEDIENTES EXISTENTES (GESTIONES / RED / FICHA)
+       ======================================================================== */
+    window.__loteExpedienteState = {
+      modal: { id: null, items: [] },
+      ficha: { id: null, items: [] }
+    };
+
+    function obtenerOpcionesTipoDocLoteExpediente() {
+      const base = [
+        { value: 'DNI (FRENTE Y DORSO)', label: 'DNI (FRENTE Y DORSO)' },
+        { value: 'RECIBO DE SUELDO', label: 'RECIBO DE SUELDO' },
+        { value: 'SERVICIO', label: 'SERVICIO' },
+        { value: 'CONSTANCIA DE CBU', label: 'CONSTANCIA DE CBU' },
+        { value: 'CERTIFICADO SAGE', label: 'CERTIFICADO SAGE' },
+        { value: 'COMPROBANTE DE MOVIMIENTOS BANCARIOS', label: 'COMPROBANTE DE MOVIMIENTOS BANCARIOS' },
+        { value: 'CONTRATO DE SERVICIO', label: 'CONTRATO DE SERVICIO' },
+        { value: 'NOTA DE SERVICIO OFICIAL', label: 'NOTA DE SERVICIO OFICIAL' },
+        { value: 'TARJETA SIDECREER', label: 'TARJETA SIDECREER' },
+        { value: 'OTROS DOCUMENTOS', label: 'OTROS DOCUMENTOS' }
+      ];
+      if (typeof esUsuarioRolMutualOAdmin === 'function' && esUsuarioRolMutualOAdmin()) {
+        base.push(
+          { value: 'TRANSFERENCIA', label: 'TRANSFERENCIA (Uso Interno)' },
+          { value: 'SOLICITUD DE AYUDA ECONOMICA', label: 'SOLICITUD DE AYUDA ECONOMICA (Uso Interno)' },
+          { value: 'AUTORIZACION PARA DESCUENTO DE HABERES', label: 'AUTORIZACION PARA DESCUENTO DE HABERES (Uso Interno)' }
+        );
+      }
+      return base;
+    }
+
+    function resolverTipoCanonicoLoteExp(fileName, tipoForzado) {
+      if (tipoForzado && String(tipoForzado).trim()) {
+        return String(tipoForzado).trim();
+      }
+      if (typeof inferirTipoDocPorNombre === 'function') {
+        const key = inferirTipoDocPorNombre(fileName);
+        if (key && typeof MAPA_ID_TIPO_DOC === 'object' && MAPA_ID_TIPO_DOC[key]) {
+          return MAPA_ID_TIPO_DOC[key];
+        }
+      }
+      return 'OTROS DOCUMENTOS';
+    }
+
+    function poblarSelectTipoMasivoLoteExp(selectId) {
+      const sel = document.getElementById(selectId);
+      if (!sel) return;
+      const opciones = obtenerOpcionesTipoDocLoteExpediente();
+      sel.innerHTML = '<option value="">🏷️ Asignar mismo tipo a todos...</option>' +
+        opciones.map(o => '<option value="' + sanitizeHTML(o.value) + '">' + sanitizeHTML(o.label) + '</option>').join('');
+    }
+
+    function abrirModalSubirLoteExpediente(idSolicitud, initialFilesOpt) {
+      const all = getStoredSolicitudes();
+      const s = all.find(x => String(x.id) === String(idSolicitud));
+      if (!s) {
+        showToast('No se encontró el expediente seleccionado');
+        return;
+      }
+      const idStr = String(s.id);
+      const badgeEl = document.getElementById('lblLoteExpBadge');
+      const infoEl = document.getElementById('lblLoteExpInfoCard');
+      const prefijo = (typeof obtenerPrefijoOficialExpediente === 'function')
+        ? obtenerPrefijoOficialExpediente(s)
+        : (s.id_definitivo || s.id_provisorio || idStr);
+
+      if (badgeEl) badgeEl.textContent = prefijo;
+      if (infoEl) {
+        infoEl.innerHTML =
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;">' +
+            '<div>' +
+              '<strong style="color:#0f172a;">' + sanitizeHTML(s.solicitante?.nombre || 'Sin nombre') + '</strong> · ' +
+              '<span style="font-family:monospace;">DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + '</span> · ' +
+              '<span>' + sanitizeHTML(s.solicitante?.organismo || '—') + '</span>' +
+            '</div>' +
+            '<span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + sanitizeHTML(s.estado || 'Pendiente') + '</span>' +
+          '</div>' +
+          '<div style="font-size:0.71rem;color:#64748b;margin-top:0.25rem;">Los archivos se renombrarán con el formato oficial <code>' + sanitizeHTML(prefijo) + ' [TIPO].PDF</code> en el Legajo Digital.</div>';
+      }
+
+      window.__loteExpedienteState.modal = { id: idStr, items: [] };
+      const inp = document.getElementById('inpLoteExpedienteModal');
+      if (inp) inp.value = '';
+      poblarSelectTipoMasivoLoteExp('selLoteExpTipoMasivoModal');
+      renderLoteExpediente('modal');
+      abrirModal('modalSubirLoteExpediente');
+
+      if (initialFilesOpt && initialFilesOpt.length > 0) {
+        agregarArchivosLoteExpediente(initialFilesOpt, 'modal', idStr);
+      }
+    }
+
+    function cerrarModalSubirLoteExpediente() {
+      window.__loteExpedienteState.modal = { id: null, items: [] };
+      const inp = document.getElementById('inpLoteExpedienteModal');
+      if (inp) inp.value = '';
+      renderLoteExpediente('modal');
+      cerrarModal('modalSubirLoteExpediente');
+    }
+
+    function _esDragConArchivos(ev) {
+      const types = ev?.dataTransfer?.types;
+      if (!types) return false;
+      return Array.from(types).includes('Files');
+    }
+
+    function handleDragOverExpedienteRow(ev, el) {
+      if (!_esDragConArchivos(ev)) return;
+      ev.preventDefault();
+      if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'copy';
+      if (!el) return;
+      if (el.tagName === 'TR') el.classList.add('row-drop-target-active');
+      else el.classList.add('is-dragover');
+    }
+
+    function handleDragLeaveExpedienteRow(el, ev) {
+      if (!el) return;
+      if (ev && ev.relatedTarget && el.contains(ev.relatedTarget)) return;
+      el.classList.remove('row-drop-target-active', 'is-dragover');
+    }
+
+    function handleDropEnExpedienteItem(ev, el, idSolicitud) {
+      if (el) el.classList.remove('row-drop-target-active', 'is-dragover');
+      const files = ev?.dataTransfer?.files;
+      if (!files || files.length === 0) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      abrirModalSubirLoteExpediente(idSolicitud, files);
+    }
+
+    function handleDropzoneLoteExpediente(ev, scope, idOpt) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (ev.currentTarget) ev.currentTarget.classList.remove('is-dragover');
+      const files = ev?.dataTransfer?.files;
+      if (!files || files.length === 0) return;
+      agregarArchivosLoteExpediente(files, scope, idOpt);
+    }
+
+    function agregarArchivosLoteExpediente(fileList, scope, idOpt, tipoForzadoOpt) {
+      const key = (scope === 'ficha') ? 'ficha' : 'modal';
+      const state = window.__loteExpedienteState[key];
+      if (!state) return;
+      if (idOpt) state.id = String(idOpt);
+
+      const files = Array.from(fileList || []);
+      if (!files.length) return;
+
+      let agregados = 0;
+      let rechazados = 0;
+      files.forEach(file => {
+        const check = validarArchivoAdjunto(file);
+        if (!check.valido) {
+          rechazados++;
+          showToast('⚠️ ' + file.name + ': ' + check.error);
+          return;
+        }
+        state.items.push({
+          file,
+          tipo: resolverTipoCanonicoLoteExp(file.name, tipoForzadoOpt),
+          iaDetectado: false,
+          confianza: null
+        });
+        agregados++;
+      });
+
+      renderLoteExpediente(key);
+      if (agregados > 0) {
+        showToast('📦 ' + agregados + ' archivo(s) listos para subir al expediente' + (rechazados ? ' (' + rechazados + ' omitido/s)' : ''));
+      }
+    }
+
+    function cambiarTipoLoteExpediente(scope, idx, tipo) {
+      const key = (scope === 'ficha') ? 'ficha' : 'modal';
+      const item = window.__loteExpedienteState[key]?.items?.[idx];
+      if (item) {
+        item.tipo = tipo;
+        item.iaDetectado = false;
+        item.confianza = null;
+      }
+    }
+
+    function aplicarTipoMasivoLoteExpediente(tipo, scope) {
+      if (!tipo) return;
+      const key = (scope === 'ficha') ? 'ficha' : 'modal';
+      const items = window.__loteExpedienteState[key]?.items || [];
+      items.forEach(it => {
+        it.tipo = tipo;
+        it.iaDetectado = false;
+        it.confianza = null;
+      });
+      renderLoteExpediente(key);
+    }
+
+    function quitarArchivoLoteExpediente(scope, idx) {
+      const key = (scope === 'ficha') ? 'ficha' : 'modal';
+      const items = window.__loteExpedienteState[key]?.items;
+      if (!Array.isArray(items)) return;
+      items.splice(idx, 1);
+      renderLoteExpediente(key);
+    }
+
+    function limpiarLoteExpediente(scope) {
+      const key = (scope === 'ficha') ? 'ficha' : 'modal';
+      if (window.__loteExpedienteState[key]) {
+        window.__loteExpedienteState[key].items = [];
+      }
+      renderLoteExpediente(key);
+    }
+
+    function renderLoteExpediente(scope) {
+      const key = (scope === 'ficha') ? 'ficha' : 'modal';
+      const panelId = key === 'ficha' ? 'loteFichaPanel' : 'loteExpModalPanel';
+      const listaId = key === 'ficha' ? 'loteExpFichaLista' : 'loteExpModalLista';
+      const countId = key === 'ficha' ? 'loteExpFichaCount' : 'loteExpModalCount';
+      const selMasivoId = key === 'ficha' ? 'selLoteExpTipoMasivoFicha' : 'selLoteExpTipoMasivoModal';
+
+      const panel = document.getElementById(panelId);
+      const lista = document.getElementById(listaId);
+      const countEl = document.getElementById(countId);
+      if (!panel || !lista) return;
+
+      poblarSelectTipoMasivoLoteExp(selMasivoId);
+      const items = window.__loteExpedienteState[key]?.items || [];
+      if (countEl) countEl.textContent = String(items.length);
+
+      if (items.length === 0) {
+        panel.style.display = 'none';
+        lista.innerHTML = '';
+        return;
+      }
+
+      const opciones = obtenerOpcionesTipoDocLoteExpediente();
+      panel.style.display = 'block';
+      lista.innerHTML = items.map((item, idx) => {
+        const sizeKb = Math.max(1, Math.round(item.file.size / 1024));
+        const optionsHtml = opciones.map(opt =>
+          '<option value="' + sanitizeHTML(opt.value) + '"' + (item.tipo === opt.value ? ' selected' : '') + '>' + sanitizeHTML(opt.label) + '</option>'
+        ).join('');
+        const iaBadge = item.iaDetectado
+          ? '<span style="background:#dbeafe;color:#1d4ed8;font-size:0.67rem;font-weight:700;padding:0.15rem 0.45rem;border-radius:999px;white-space:nowrap;">✨ IA' + (item.confianza ? ' ' + sanitizeHTML(String(item.confianza)) : '') + '</span>'
+          : '';
+        const safeName = sanitizeHTML(item.file.name);
+        return '<div style="display:flex;align-items:center;justify-content:space-between;gap:0.6rem;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:0.45rem 0.65rem;flex-wrap:wrap;">' +
+          '<div style="display:flex;align-items:center;gap:0.45rem;min-width:170px;flex:1;">' +
+            '<span style="font-size:0.85rem;">📄</span>' +
+            '<div style="min-width:0;">' +
+              '<div style="font-size:0.78rem;font-weight:600;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px;" title="' + safeName + '">' + safeName + '</div>' +
+              '<div style="font-size:0.68rem;color:#64748b;">' + sizeKb + ' KB</div>' +
+            '</div>' +
+            iaBadge +
+          '</div>' +
+          '<div style="display:flex;align-items:center;gap:0.4rem;">' +
+            '<select onchange="cambiarTipoLoteExpediente(\'' + key + '\', ' + idx + ', this.value)" style="font-size:0.74rem;padding:0.32rem 0.48rem;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;color:#0f172a;max-width:230px;">' +
+              optionsHtml +
+            '</select>' +
+            '<button type="button" onclick="quitarArchivoLoteExpediente(\'' + key + '\', ' + idx + ')" title="Quitar del lote" style="background:none;border:none;color:#94a3b8;font-size:1rem;font-weight:700;cursor:pointer;padding:0 0.25rem;line-height:1;">×</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    async function clasificarLoteExpedienteConIA(scope) {
+      const key = (scope === 'ficha') ? 'ficha' : 'modal';
+      const items = window.__loteExpedienteState[key]?.items || [];
+      if (!items.length) return;
+
+      const btn = document.getElementById('btnReconocerLoteExpIA_' + key);
+      const prevText = btn ? btn.textContent : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Analizando lote con IA...';
+      }
+
+      let reconocidos = 0;
+      try {
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          try {
+            const b64 = await archivoABase64Puro(item.file);
+            const resp = await fetchConTimeout(RENDER_API_URL + '/api/clasificar-documento', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                file_base64: b64,
+                mime_type: item.file.type || 'application/octet-stream',
+                filename: item.file.name
+              })
+            }, 30000);
+            if (resp.ok) {
+              const data = await resp.json();
+              if (data && data.tipo && typeof MAPA_ID_TIPO_DOC === 'object' && MAPA_ID_TIPO_DOC[data.tipo]) {
+                item.tipo = MAPA_ID_TIPO_DOC[data.tipo];
+                item.iaDetectado = true;
+                item.confianza = data.confianza || null;
+                reconocidos++;
+              }
+            }
+          } catch (errItem) {
+            console.warn('Error clasificando archivo del lote:', item.file.name, errItem);
+          }
+        }
+        renderLoteExpediente(key);
+        showToast('✨ IA clasificó ' + reconocidos + ' de ' + items.length + ' archivo(s)');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = prevText || '🤖 Reconocer con IA';
+        }
+      }
+    }
+
+    async function subirLoteExpedienteConfirmar(scope) {
+      const key = (scope === 'ficha') ? 'ficha' : 'modal';
+      const state = window.__loteExpedienteState[key];
+      const items = state?.items || [];
+      const id = state?.id || (typeof obtenerIdSolicitudActiva === 'function' ? obtenerIdSolicitudActiva() : null);
+      if (!items.length || !id) {
+        showToast('Agregá al menos un archivo para subir');
+        return;
+      }
+
+      const session = getSession(); if (!session) return;
+      const operadorActual = obtenerNombreOperadorActivo();
+      const all = getStoredSolicitudes();
+      const s = all.find(x => String(x.id) === String(id));
+      if (!s) {
+        showToast('No se encontró el expediente destino');
+        return;
+      }
+
+      const btnSubir = document.getElementById('btnSubirLoteExp_' + key);
+      const prevBtnText = btnSubir ? btnSubir.textContent : '';
+      if (btnSubir) {
+        btnSubir.disabled = true;
+        btnSubir.textContent = '⏳ Subiendo...';
+      }
+
+      const prefijoOficial = obtenerPrefijoOficialExpediente(s);
+      const expDefinitivo = (s.idDefinitivoExpediente || s.ID_Definitivo_Expediente || s.id_definitivo || s.Nro_Definitivo || '').toString().trim();
+      const rolTxt = session.rol + (session.es_titular_organizacion ? ' - Titular' : ' - Asesor');
+
+      const fallidos = [];
+      const nombresGuardados = [];
+      const auditoriaPayload = [];
+      let subidosOk = 0;
+
+      try {
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          const progreso = '(' + (i + 1) + '/' + items.length + ')';
+          mostrarCargando(
+            'Subiendo documentación por lote ' + progreso + '...',
+            'Procesando ' + item.file.name + ' hacia el Legajo #' + prefijoOficial
+          );
+
+          let b64Data = null;
+          try {
+            b64Data = await fileToBase64(item.file);
+          } catch (errConv) {
+            console.warn('Error convirtiendo archivo:', item.file.name, errConv);
+            fallidos.push({ item, motivo: errConv?.message || 'Error procesando archivo' });
+            continue;
+          }
+
+          const tipo = item.tipo || 'OTROS DOCUMENTOS';
+          const generatedName = normalizarNombreArchivoDrive(prefijoOficial, tipo, 'PDF');
+          const nowStr = obtenerFechaHora24hs();
+
+          const resApi = await callApi({
+            action: 'subirAdjuntoAdicional',
+            id: s.id,
+            idSolicitud: s.id,
+            idDefinitivoExpediente: expDefinitivo,
+            ID_Definitivo_Expediente: expDefinitivo,
+            tipo: tipo,
+            nombre: generatedName,
+            base64: b64Data ? b64Data.base64 : '',
+            tipoMime: 'application/pdf',
+            usuarioOperador: operadorActual,
+            cargadoPor: operadorActual,
+            autor: operadorActual,
+            rol: rolTxt
+          }, {
+            title: '🔒 Subiendo archivo ' + progreso + '...',
+            sub: 'Archivando ' + generatedName + ' en Legajo #' + prefijoOficial
+          });
+
+          if (resApi && resApi.ok === false) {
+            fallidos.push({ item, motivo: resApi.error || 'Error al guardar en backend' });
+            continue;
+          }
+
+          const localItem = {
+            tipo,
+            nombre: generatedName,
+            fecha: nowStr,
+            cargadoPor: operadorActual,
+            autor: operadorActual,
+            dataUrl: b64Data ? b64Data.dataUrl : '',
+            tipoMime: 'application/pdf',
+            fileId: '',
+            urlDrive: '',
+            previewUrl: '',
+            observado: false
+          };
+          const listaSync = sincronizarAdjuntosSolicitudLocal(s, resApi, localItem);
+          const docSubido = (resApi && resApi.data && resApi.data.archivoSubido) ||
+            (listaSync.length > 0 ? listaSync[listaSync.length - 1] : localItem);
+          const nombreFinalGuardado = (docSubido && docSubido.nombre) || generatedName;
+
+          if (Array.isArray(s.requerimientosDocumentales)) {
+            s.requerimientosDocumentales.forEach(r => {
+              if (r.tipo === tipo) r.resuelto = true;
+            });
+          }
+
+          if (!s.observaciones) s.observaciones = [];
+          s.observaciones.push({
+            autor: operadorActual,
+            rol: rolTxt,
+            fecha: nowStr,
+            texto: 'Documentación adicional adjuntada (lote): ' + tipo + ' (' + nombreFinalGuardado + ')'
+          });
+
+          subidosOk++;
+          nombresGuardados.push(nombreFinalGuardado);
+          if (b64Data) {
+            auditoriaPayload.push({
+              nombre: nombreFinalGuardado,
+              mimeType: b64Data.tipoMime,
+              base64: b64Data.base64
+            });
+          }
+        }
+      } finally {
+        ocultarCargando();
+        if (btnSubir) {
+          btnSubir.disabled = false;
+          btnSubir.textContent = prevBtnText || '✅ Subir al Expediente';
+        }
+      }
+
+      if (subidosOk > 0) {
+        verificarSalidaEstadoObservado(s);
+        saveStoredSolicitudes(all);
+
+        if (auditoriaPayload.length > 0) {
+          ejecutarAuditoriaAutomaticaExpediente(s.id, auditoriaPayload);
+        }
+
+        actualizarCentroNotificaciones();
+        renderModuloComercializador();
+        renderModuloMutualPropias();
+        renderModuloMutual();
+        actualizarContadorBoveda(s.id);
+      }
+
+      state.items = fallidos.map(f => f.item);
+      renderLoteExpediente(key);
+
+      if (fallidos.length === 0 && subidosOk > 0) {
+        showToast('✅ ' + subidosOk + ' documento(s) archivado(s) en el expediente #' + prefijoOficial + ' 📄');
+        if (key === 'modal') {
+          cerrarModalSubirLoteExpediente();
+        }
+        const modalFichaAbierto = document.getElementById('modalFichaCompleta')?.classList.contains('open');
+        const activeId = (typeof obtenerIdSolicitudActiva === 'function') ? obtenerIdSolicitudActiva() : null;
+        if (key === 'ficha' || (modalFichaAbierto && String(activeId) === String(s.id))) {
+          verFichaCompleta(s.id);
+        }
+      } else if (subidosOk > 0) {
+        showToast('⚠️ Se subieron ' + subidosOk + ' archivo(s), pero ' + fallidos.length + ' fallaron. Podés reintentarlos.');
+        if (key === 'ficha') verFichaCompleta(s.id);
+      } else if (fallidos.length > 0) {
+        showToast('⚠️ No se pudieron subir los archivos: ' + (fallidos[0].motivo || 'Error de conexión'));
+      }
     }
 
     let _docAEliminarPending = null;
@@ -15583,7 +16147,7 @@ ${cierreTxt}`;
               '<span data-boveda-count="1">' + docsCount + '</span>' +
             '</span>';
 
-        return '<tr>' +
+        return '<tr ondragover="handleDragOverExpedienteRow(event, this)" ondragleave="handleDragLeaveExpedienteRow(this, event)" ondrop="handleDropEnExpedienteItem(event, this, \'' + sanitizeHTML(String(s.id || '')) + '\')">' +
           '<td>' + idBadge + '<div style="font-size:0.67rem;color:#64748b;margin-top:3px;white-space:nowrap;">' + fechaStr + '</div></td>' +
           '<td>' + canalTag + '</td>' +
           '<td><div class="text-sm font-semibold text-slate-900">' + sanitizeHTML(s.solicitante?.nombre || '—') + '</div><div class="text-xs text-slate-500" style="margin-top:2px;"><span class="font-mono text-slate-600">DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + '</span> · <span class="cell-domicilio-hist" style="max-width:145px;" title="' + domHistTxt + '">📍 ' + domHistTxt + '</span></div></td>' +
@@ -15595,6 +16159,7 @@ ${cierreTxt}`;
               '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
               '<span>Ver Ficha</span>' +
             '</button>' +
+            '<button type="button" class="crm-btn-upload-lote" onclick="event.stopPropagation();abrirModalSubirLoteExpediente(\'' + sanitizeHTML(String(s.id || '')) + '\')" title="Subir documentación por lote o arrastrar archivos a la fila">📤 Subir Docs</button>' +
             renderBotonVerValidacionExpediente(s) +
             driveLinkHtml +
             (typeof renderBotonCicloVida === 'function' ? renderBotonCicloVida(s) : '') +
@@ -15723,7 +16288,7 @@ ${cierreTxt}`;
               '<span data-boveda-count="1">' + docsCount + '</span>' +
             '</span>';
 
-        return '<tr>' +
+        return '<tr ondragover="handleDragOverExpedienteRow(event, this)" ondragleave="handleDragLeaveExpedienteRow(this, event)" ondrop="handleDropEnExpedienteItem(event, this, \'' + sanitizeHTML(String(s.id || '')) + '\')">' +
           '<td>' + idBadge + '<div style="font-size:0.67rem;color:#64748b;margin-top:3px;white-space:nowrap;">' + fechaStr + '</div></td>' +
           '<td><div style="font-weight:700;color:#0f172a;font-size:0.74rem;">' + sanitizeHTML(s.comercializador || '—') + '</div><span class="badge-org-tag" style="display:inline-block;margin-top:2px;white-space:nowrap;">' + sanitizeHTML(s.nombre_organizacion || 'Paraná Centro') + '</span></td>' +
           '<td><div class="text-sm font-semibold text-slate-900">' + sanitizeHTML(s.solicitante?.nombre || '—') + '</div><div class="text-xs text-slate-500" style="margin-top:2px;"><span class="font-mono text-slate-600">DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + '</span> · <span class="cell-domicilio-hist" style="max-width:145px;" title="' + domHistTxt + '">📍 ' + domHistTxt + '</span></div></td>' +
@@ -15735,6 +16300,7 @@ ${cierreTxt}`;
               '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
               '<span>Ver Ficha</span>' +
             '</button>' +
+            '<button type="button" class="crm-btn-upload-lote" onclick="event.stopPropagation();abrirModalSubirLoteExpediente(\'' + sanitizeHTML(String(s.id || '')) + '\')" title="Subir documentación por lote o arrastrar archivos a la fila">📤 Subir Docs</button>' +
             renderBotonVerValidacionExpediente(s) +
             driveLinkHtml +
             (typeof renderBotonCicloVida === 'function' ? renderBotonCicloVida(s) : '') +
@@ -15861,7 +16427,7 @@ ${cierreTxt}`;
             ? '<a href="' + (sanitizeSafeUrl(s.carpetaDriveUrl) || '#') + '" target="_blank" rel="noopener noreferrer" class="badge-drive-mini" data-boveda-id="' + sanitizeHTML(String(s.id)) + '" onclick="event.stopPropagation()">📂 Bóveda Digital (' + docsCount + ')</a>'
             : '<span style="font-size:0.64rem;color:var(--text-muted);" data-boveda-id="' + sanitizeHTML(String(s.id)) + '">📎 ' + docsCount + ' docs</span>';
 
-          return '<div class="kanban-card" onclick="verFichaCompleta(\'' + s.id + '\')">' +
+          return '<div class="kanban-card" onclick="verFichaCompleta(\'' + sanitizeHTML(String(s.id || '')) + '\')" ondragover="handleDragOverExpedienteRow(event, this)" ondragleave="handleDragLeaveExpedienteRow(this, event)" ondrop="handleDropEnExpedienteItem(event, this, \'' + sanitizeHTML(String(s.id || '')) + '\')">' +
             '<div class="kanban-card-top">' +
               idBadge +
               subBadge +
@@ -15875,7 +16441,10 @@ ${cierreTxt}`;
             (cantObsDocs > 0 ? '<div style="font-size:0.64rem;color:#b45309;font-weight:700;margin-top:3px;">⚠️ ' + cantObsDocs + ' alerta documental</div>' : '') +
             '<div class="kanban-card-foot">' +
               '<span style="font-weight:700;color:var(--color-brand-blue);font-size:0.75rem;">' + formatMoney(s.prestamo?.monto || 0) + ' (' + (s.prestamo?.cuotas || '—') + 'c)</span>' +
-              driveBtn +
+              '<div style="display:flex;align-items:center;gap:0.35rem;">' +
+                '<button type="button" class="crm-btn-upload-lote" style="padding:2px 6px;font-size:0.65rem;" onclick="event.stopPropagation();abrirModalSubirLoteExpediente(\'' + sanitizeHTML(String(s.id || '')) + '\')" title="Subir documentación por lote o arrastrar archivos a la tarjeta">📤 Docs</button>' +
+                driveBtn +
+              '</div>' +
             '</div>' +
           '</div>';
         }).join('') : '<div style="font-size:0.7rem;color:var(--text-muted);text-align:center;padding:1.5rem 0.5rem;font-style:italic;">Sin solicitudes en esta etapa</div>';
@@ -22730,6 +23299,21 @@ ${cierreTxt}`;
     window.descargarDocumentoOnline = descargarDocumentoOnline;
     window.reemplazarDocumentoExistente = reemplazarDocumentoExistente;
     window.adjuntarDocumentoAdicionalFicha = adjuntarDocumentoAdicionalFicha;
+    window.handleArchivoComplementarioSeleccionado = handleArchivoComplementarioSeleccionado;
+    window.abrirModalSubirLoteExpediente = abrirModalSubirLoteExpediente;
+    window.cerrarModalSubirLoteExpediente = cerrarModalSubirLoteExpediente;
+    window.handleDragOverExpedienteRow = handleDragOverExpedienteRow;
+    window.handleDragLeaveExpedienteRow = handleDragLeaveExpedienteRow;
+    window.handleDropEnExpedienteItem = handleDropEnExpedienteItem;
+    window.handleDropzoneLoteExpediente = handleDropzoneLoteExpediente;
+    window.agregarArchivosLoteExpediente = agregarArchivosLoteExpediente;
+    window.cambiarTipoLoteExpediente = cambiarTipoLoteExpediente;
+    window.aplicarTipoMasivoLoteExpediente = aplicarTipoMasivoLoteExpediente;
+    window.quitarArchivoLoteExpediente = quitarArchivoLoteExpediente;
+    window.limpiarLoteExpediente = limpiarLoteExpediente;
+    window.renderLoteExpediente = renderLoteExpediente;
+    window.clasificarLoteExpedienteConIA = clasificarLoteExpedienteConIA;
+    window.subirLoteExpedienteConfirmar = subirLoteExpedienteConfirmar;
     window.solicitarEliminarDocumento = solicitarEliminarDocumento;
     window.confirmarEliminarDocumento = confirmarEliminarDocumento;
     window.cerrarConfirmarEliminarDoc = cerrarConfirmarEliminarDoc;

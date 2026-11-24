@@ -26,6 +26,7 @@
     cashbackRules: [],
     auditLogs: [],
     accesos: null,
+    accesosError: null,
     ultimaCredencial: null,
     lastSyncAt: 0,
     formNuevoComercioAbierto: false,
@@ -284,26 +285,50 @@
         return;
       }
 
+      const esRateLimit = (resList) =>
+        resList.find(
+          (r) =>
+            r &&
+            r.status === 'rejected' &&
+            r.reason &&
+            (r.reason.code === 'MUTUALPAY_RATE_LIMITED' || Number(r.reason.status) === 429)
+        );
+
       await esperarMs(180);
       const [ayuRes, comRes, liqRes] = await Promise.allSettled([
         apiMp('/ayudas'),
         apiMp('/comercios'),
         apiMp('/liquidaciones/resumen'),
       ]);
+      let txRes = { status: 'skipped' };
+      let cobRes = { status: 'skipped' };
+      let convRes = { status: 'skipped' };
+      let regRes = { status: 'skipped' };
+      let cbRes = { status: 'skipped' };
+      let logRes = { status: 'skipped' };
 
-      await esperarMs(180);
-      const [txRes, cobRes, convRes] = await Promise.allSettled([
-        apiMp('/transacciones'),
-        apiMp('/cobranzas-manuales'),
-        apiMp('/convenios'),
-      ]);
-
-      await esperarMs(180);
-      const [regRes, cbRes, logRes] = await Promise.allSettled([
-        apiMp('/admin/reglas-financieras'),
-        apiMp('/backoffice/cashback-rules'),
-        apiMp('/admin/audit-logs'),
-      ]);
+      const rl2 = esRateLimit([ayuRes, comRes, liqRes]);
+      if (rl2) {
+        setNotice(`<strong>Atención Mutual Pay (carga parcial):</strong> ${esc(rl2.reason.message)}`, 'warn');
+      } else {
+        await esperarMs(180);
+        [txRes, cobRes, convRes] = await Promise.allSettled([
+          apiMp('/transacciones'),
+          apiMp('/cobranzas-manuales'),
+          apiMp('/convenios'),
+        ]);
+        const rl3 = esRateLimit([txRes, cobRes, convRes]);
+        if (rl3) {
+          setNotice(`<strong>Atención Mutual Pay (carga parcial):</strong> ${esc(rl3.reason.message)}`, 'warn');
+        } else {
+          await esperarMs(180);
+          [regRes, cbRes, logRes] = await Promise.allSettled([
+            apiMp('/admin/reglas-financieras'),
+            apiMp('/backoffice/cashback-rules'),
+            apiMp('/admin/audit-logs'),
+          ]);
+        }
+      }
 
       if (resumenRes.status === 'fulfilled') st.resumen = resumenRes.value;
       if (asocRes.status === 'fulfilled') st.asociados = asocRes.value.asociados || [];
@@ -316,7 +341,12 @@
       if (regRes.status === 'fulfilled') st.reglasFinancieras = regRes.value.reglas || [];
       if (cbRes.status === 'fulfilled') st.cashbackRules = cbRes.value.reglas || [];
       if (logRes.status === 'fulfilled') st.auditLogs = logRes.value.logs || [];
-      if (accRes.status === 'fulfilled') st.accesos = accRes.value || null;
+      if (accRes.status === 'fulfilled') {
+        st.accesos = accRes.value || null;
+        st.accesosError = null;
+      } else if (accRes.status === 'rejected') {
+        st.accesosError = (accRes.reason && accRes.reason.message) || 'Error consultando padrón de accesos';
+      }
 
       st.lastSyncAt = Date.now();
       renderAllMutualPay();
@@ -1229,8 +1259,11 @@
 
     const acc = st.accesos;
     if (!acc) {
-      if (asocBox) asocBox.innerHTML = '<div style="padding:1rem;color:#64748b;font-size:0.78rem;">Sincronizá para consultar el padrón de accesos.</div>';
-      if (comBox) comBox.innerHTML = '<div style="padding:1rem;color:#64748b;font-size:0.78rem;">Sincronizá para consultar el padrón de comercios.</div>';
+      const emptyMsg = st.accesosError
+        ? `<div style="padding:1rem;color:#9f1239;background:#fff1f2;border-radius:8px;font-size:0.78rem;">No se pudo cargar el padrón de accesos: ${esc(st.accesosError)} <button type="button" class="mp-btn" style="margin-left:8px;" onclick="window.cargarTodoMutualPayBackoffice(true)">Reintentar</button></div>`
+        : '<div style="padding:1rem;color:#64748b;font-size:0.78rem;">Sincronizá para consultar el padrón de accesos.</div>';
+      if (asocBox) asocBox.innerHTML = emptyMsg;
+      if (comBox) comBox.innerHTML = emptyMsg;
       return;
     }
 

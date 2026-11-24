@@ -135,27 +135,52 @@
     let guardados = 0;
     let ultimoError = '';
     try {
-      for (const it of items) {
-        const resp = await fetchConTimeout(`${RENDER_API_URL}/api/asociados/guardar-validacion`, {
+      const payloadItems = items.map((it) => ({
+        dni,
+        tipoValidacion: it.tipoValidacion,
+        resultado: it.resultado,
+        nombreSolicitante: nombre,
+        analistaUsuario,
+        analistaNombre,
+        crearAsociadoSiNoExiste: true
+      }));
+
+      let usedBatch = false;
+      try {
+        const respBatch = await fetchConTimeout(`${RENDER_API_URL}/api/asociados/guardar-validaciones-batch`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            dni,
-            tipoValidacion: it.tipoValidacion,
-            resultado: it.resultado,
-            nombreSolicitante: nombre,
-            analistaUsuario,
-            analistaNombre,
-            crearAsociadoSiNoExiste: true
-          })
-        }, 25000);
-        const data = await resp.json().catch(() => ({}));
-        if (!resp.ok || data.ok === false) {
-          ultimoError = data.detail || ('HTTP ' + resp.status);
-        } else {
-          guardados++;
+          body: JSON.stringify({ items: payloadItems })
+        }, 30000);
+        if (respBatch.status !== 404 && respBatch.status !== 405) {
+          usedBatch = true;
+          const dataBatch = await respBatch.json().catch(() => ({}));
+          if (!respBatch.ok || dataBatch.ok === false) {
+            ultimoError = dataBatch.detail || ('HTTP ' + respBatch.status);
+          } else {
+            guardados = Number(dataBatch.saved || payloadItems.length);
+          }
+        }
+      } catch (_batchErr) {
+        usedBatch = false;
+      }
+
+      if (!usedBatch) {
+        for (const pItem of payloadItems) {
+          const resp = await fetchConTimeout(`${RENDER_API_URL}/api/asociados/guardar-validacion`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(pItem)
+          }, 25000);
+          const data = await resp.json().catch(() => ({}));
+          if (!resp.ok || data.ok === false) {
+            ultimoError = data.detail || ('HTTP ' + resp.status);
+          } else {
+            guardados++;
+          }
         }
       }
+
       if (guardados > 0) {
         showToast('✅ Se guardaron ' + guardados + ' registro(s) en la ficha histórica del DNI ' + dni + '.');
         if (global._fichaPadronDniActivo === dni) {
@@ -281,7 +306,7 @@
             '<div style="font-weight:700;color:#334155;font-size:0.84rem;">No hay asociados registrados' + (q ? ' para esa búsqueda' : '') + '</div>' +
             '<div style="font-size:0.75rem;color:#64748b;margin-top:4px;">Cuando registres o audites documentación de un asociado aparecerá listado aquí.</div>' +
             (cleanDig.length >= 7
-              ? ('<button type="button" onclick="cargarFichaDetalleAsociado(\'' + sanitizeHTML(cleanDig) + '\')" style="margin-top:0.75rem;padding:0.42rem 0.85rem;border-radius:8px;border:1px solid #cbd5e1;background:#ffffff;color:#135596;font-size:0.76rem;font-weight:700;cursor:pointer;">Consultar DNI ' + sanitizeHTML(cleanDig) + ' →</button>')
+              ? ('<button type="button" data-ficha-action="detalle" data-dni="' + sanitizeHTML(cleanDig) + '" style="margin-top:0.75rem;padding:0.42rem 0.85rem;border-radius:8px;border:1px solid #cbd5e1;background:#ffffff;color:#135596;font-size:0.76rem;font-weight:700;cursor:pointer;">Consultar DNI ' + sanitizeHTML(cleanDig) + ' →</button>')
               : '') +
           '</div>';
         return;
@@ -298,7 +323,7 @@
           : '—';
         const orgLabel = _limpiarTextoFicha(a.organismo, 'Organismo sin especificar');
 
-        return '<button type="button" onclick="cargarFichaDetalleAsociado(\'' + sanitizeHTML(dniVal) + '\')" class="padron-card-item" style="width:100%;text-align:left;padding:0.85rem 0.95rem;border-radius:12px;' + bord + 'cursor:pointer;margin-bottom:0.55rem;transition:all .15s ease;display:block;">' +
+        return '<button type="button" data-ficha-action="detalle" data-dni="' + sanitizeHTML(dniVal) + '" class="padron-card-item" style="width:100%;text-align:left;padding:0.85rem 0.95rem;border-radius:12px;' + bord + 'cursor:pointer;margin-bottom:0.55rem;transition:all .15s ease;display:block;">' +
           '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;">' +
             '<div style="font-weight:800;font-size:0.86rem;color:#0f172a;line-height:1.25;">' + sanitizeHTML(a.apellido_nombres || ('Asociado DNI ' + (dniVal || '—'))) + '</div>' +
             _badgeEstadoFichaHtml(a.perfil_validacion_estado || 'PENDIENTE', true) +
@@ -338,7 +363,7 @@
           '<div style="padding:2rem 1.25rem;border-radius:14px;background:#f8fafc;border:1px dashed #cbd5e1;text-align:center;">' +
             '<div style="font-weight:800;color:#0f172a;font-size:0.95rem;">Sin registros previos para el DNI ' + sanitizeHTML(dniClean) + '</div>' +
             '<p style="font-size:0.8rem;color:#64748b;margin:6px 0 14px 0;">Podés iniciar la auditoría documental en Auditoría IA y guardarla aquí para registrar su historial.</p>' +
-            '<button type="button" onclick="irAAuditoria20DesdeFicha(\'' + sanitizeHTML(dniClean) + '\', \'\')" class="audit20-btn audit20-btn--navy">🔎 Auditar en IA</button>' +
+            '<button type="button" data-ficha-action="auditar" data-dni="' + sanitizeHTML(dniClean) + '" data-nombre="" class="audit20-btn audit20-btn--navy">🔎 Auditar en IA</button>' +
           '</div>';
         return;
       }
@@ -422,9 +447,9 @@
               '<div style="font-size:0.78rem;color:#475569;margin-top:4px;">Domicilio: ' + sanitizeHTML(domLimpio) + (asoc.localidad ? (' (' + sanitizeHTML(asoc.localidad) + ')') : '') + '</div>' +
             '</div>' +
             '<div style="display:flex;flex-wrap:wrap;gap:0.45rem;align-items:center;">' +
-              '<button type="button" onclick="irAAuditoria20DesdeFicha(\'' + sanitizeHTML(dniClean) + '\', \'' + sanitizeHTML(nombreEsc) + '\')" class="audit20-btn audit20-btn--navy">🔎 Auditar en IA</button>' +
+              '<button type="button" data-ficha-action="auditar" data-dni="' + sanitizeHTML(dniClean) + '" data-nombre="' + sanitizeHTML(nombreEsc) + '" class="audit20-btn audit20-btn--navy">🔎 Auditar en IA</button>' +
               (safeDriveUrl ? ('<a href="' + safeDriveUrl + '" target="_blank" rel="noopener noreferrer" class="audit20-btn audit20-btn--secondary">📁 Carpeta Drive ↗</a>') : '') +
-              '<button type="button" onclick="eliminarAsociadoPadron(\'' + sanitizeHTML(dniClean) + '\', \'' + sanitizeHTML(nombreEsc) + '\')" class="audit20-btn audit20-btn--secondary" style="color:#be123c;border-color:#fecdd3;background:#fff1f2;" title="Eliminar ficha del padrón">🗑️ Eliminar</button>' +
+              '<button type="button" data-ficha-action="eliminar" data-dni="' + sanitizeHTML(dniClean) + '" data-nombre="' + sanitizeHTML(nombreEsc) + '" class="audit20-btn audit20-btn--secondary" style="color:#be123c;border-color:#fecdd3;background:#fff1f2;" title="Eliminar ficha del padrón">🗑️ Eliminar</button>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -442,6 +467,20 @@
     } catch (err) {
       detEl.innerHTML = '<div style="padding:0.9rem;border-radius:10px;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;font-size:0.78rem;">⚠️ Error consultando ficha: ' + sanitizeHTML(err.message || String(err)) + '</div>';
     }
+  }
+
+  if (!global.__fichasAsociadosDelegatedInit && typeof document !== 'undefined') {
+    global.__fichasAsociadosDelegatedInit = true;
+    document.addEventListener('click', (ev) => {
+      const btn = ev.target && ev.target.closest ? ev.target.closest('[data-ficha-action]') : null;
+      if (!btn) return;
+      const act = btn.getAttribute('data-ficha-action');
+      const dni = btn.getAttribute('data-dni') || '';
+      const nombre = btn.getAttribute('data-nombre') || '';
+      if (act === 'detalle') cargarFichaDetalleAsociado(dni);
+      else if (act === 'auditar') irAAuditoria20DesdeFicha(dni, nombre);
+      else if (act === 'eliminar') eliminarAsociadoPadron(dni, nombre);
+    });
   }
 
   global.guardarValidacionesEnFichaAsociado = guardarValidacionesEnFichaAsociado;

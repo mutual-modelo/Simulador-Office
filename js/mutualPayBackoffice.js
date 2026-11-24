@@ -42,8 +42,11 @@
   }
 
   function esc(v) {
-    if (typeof sanitizeHTML === 'function') return sanitizeHTML(v == null ? '' : String(v));
-    return String(v == null ? '' : v)
+    const raw = String(v == null ? '' : v);
+    if (typeof sanitizeHTML === 'function') {
+      return String(sanitizeHTML(raw)).replace(/'/g, '&#39;');
+    }
+    return raw
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
@@ -429,7 +432,7 @@
         <td>${fmtArsFromMinor(a.net_salary_cents || 0)}</td>
         <td>${badgeAmmerCruce(cr)}</td>
         <td><strong>${disp}</strong></td>
-        <td><button type="button" class="mp-btn mp-btn-primary" onclick="window.abrirFichaUnificadaMp('${esc(a.id)}', true)">Ver Ficha 360°</button></td>
+        <td><button type="button" class="mp-btn mp-btn-primary" data-mp-action="ver-ficha" data-id="${esc(a.id)}" data-switch="1">Ver Ficha 360°</button></td>
       </tr>`;
     });
     html += '</tbody></table></div>';
@@ -474,7 +477,7 @@
         <td><code>${esc(a.dni || '—')}</code></td>
         <td>${badgeStatus(a.kyc_status)}</td>
         <td>${badgeAmmerCruce(a.ammer_cruce)}</td>
-        <td style="text-align:right;"><button type="button" class="mp-btn" onclick="window.abrirFichaUnificadaMp('${esc(a.id)}', false)">Revisar</button></td>
+        <td style="text-align:right;"><button type="button" class="mp-btn" data-mp-action="ver-ficha" data-id="${esc(a.id)}" data-switch="0">Revisar</button></td>
       </tr>`;
     });
     html += '</tbody></table></div>';
@@ -521,6 +524,7 @@
     const lineCash = lines.find((l) => l.line_type === 'CASH_LOAN');
     const merchPesos = lineMerch ? Math.round(Number(lineMerch.total_credit_limit_minor || 0) / 100) : Math.round(sugTotal * 0.6);
     const cashPesos = lineCash ? Math.round(Number(lineCash.total_credit_limit_minor || 0) / 100) : Math.round(sugTotal * 0.4);
+    const fullName = `${assoc.first_name || ''} ${assoc.last_name || ''}`.trim();
 
     let docsHtml = '';
     if (!docs.length) {
@@ -535,7 +539,7 @@
           <span style="font-size:0.75rem;font-weight:700;">📄 ${esc(docType)}</span>
           <div style="display:flex;gap:5px;">
             ${sUrl ? `<a href="${sUrl}" target="_blank" rel="noopener noreferrer" class="mp-btn">👁️ Ver</a>` : '<span style="font-size:0.7rem;color:#94a3b8;">Sin URL</span>'}
-            ${canAuditIa ? `<button type="button" class="mp-btn mp-btn-indigo" onclick="window.auditarDocMutualPayConIA('${esc(assoc.id)}','${esc(docType)}','${sUrl}','${esc(assoc.dni || '')}','${esc(`${assoc.first_name || ''} ${assoc.last_name || ''}`.trim())}')">🤖 Auditar IA AMMER</button>` : ''}
+            ${canAuditIa ? `<button type="button" class="mp-btn mp-btn-indigo" data-mp-action="auditar-doc" data-assoc-id="${esc(assoc.id)}" data-doc-type="${esc(docType)}" data-signed-url="${sUrl}" data-dni="${esc(assoc.dni || '')}" data-nombre="${esc(fullName)}">🤖 Auditar IA AMMER</button>` : ''}
           </div>
         </div>`;
       });
@@ -554,11 +558,11 @@
         <div>DNI: ${badgeStatus(ammerAsoc.dni_estado)} · Domicilio: ${badgeStatus(ammerAsoc.servicio_estado)} · Boletín ER: ${badgeStatus(ammerAsoc.boletin_estado)} (${Number(ammerAsoc.boletin_menciones_count || 0)} menc.)</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
           ${driveLink ? `<a href="${driveLink}" target="_blank" rel="noopener noreferrer" class="mp-btn">📁 Carpeta Drive</a>` : ''}
-          <button type="button" class="mp-btn" onclick="window.auditarDocMutualPayConIA('${esc(assoc.id)}','BOLETIN_ER','','${esc(assoc.dni || '')}','${esc(`${assoc.first_name || ''} ${assoc.last_name || ''}`.trim())}')">📰 Consultar Boletín ER</button>
+          <button type="button" class="mp-btn" data-mp-action="auditar-doc" data-assoc-id="${esc(assoc.id)}" data-doc-type="BOLETIN_ER" data-signed-url="" data-dni="${esc(assoc.dni || '')}" data-nombre="${esc(fullName)}">📰 Consultar Boletín ER</button>
         </div>
       </div>`;
     } else if (assoc.dni) {
-      ammerHtml += `<div style="margin-top:6px;"><button type="button" class="mp-btn" onclick="window.auditarDocMutualPayConIA('${esc(assoc.id)}','BOLETIN_ER','','${esc(assoc.dni || '')}','${esc(`${assoc.first_name || ''} ${assoc.last_name || ''}`.trim())}')">📰 Verificar Boletín ER por DNI</button></div>`;
+      ammerHtml += `<div style="margin-top:6px;"><button type="button" class="mp-btn" data-mp-action="auditar-doc" data-assoc-id="${esc(assoc.id)}" data-doc-type="BOLETIN_ER" data-signed-url="" data-dni="${esc(assoc.dni || '')}" data-nombre="${esc(fullName)}">📰 Verificar Boletín ER por DNI</button></div>`;
     }
 
     const isActiveAcc = assoc.is_active !== false;
@@ -566,15 +570,14 @@
     panel.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;border-bottom:1px solid #e2e8f0;padding-bottom:0.75rem;margin-bottom:0.85rem;flex-wrap:wrap;">
         <div>
-          <h4 style="margin:0;font-size:1rem;font-weight:800;color:#0f172a;">${esc(`${assoc.first_name || ''} ${assoc.last_name || ''}`.trim() || 'Asociado')}</h4>
+          <h4 style="margin:0;font-size:1rem;font-weight:800;color:#0f172a;">${esc(fullName || 'Asociado')}</h4>
           <div style="font-size:0.75rem;color:#64748b;margin-top:2px;">DNI ${esc(assoc.dni || '—')} · CUIL ${esc(assoc.cuit_cuil || '—')} · ${esc(assoc.employment_condition || '')}</div>
           <div style="font-size:0.73rem;color:#64748b;">${esc(assoc.email || '')} · ${esc(assoc.phone || '')}</div>
         </div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
           ${badgeStatus(assoc.kyc_status)}
-          <button type="button" class="mp-btn" onclick="window.resetAccesoAsociadoMp('${esc(assoc.id)}', false)">🔑 Blanquear Clave</button>
-          <button type="button" class="mp-btn" onclick="window.resetAccesoAsociadoMp('${esc(assoc.id)}', true)">🔢 Clave + PIN</button>
-          <button type="button" class="mp-btn ${isActiveAcc ? 'mp-btn-danger' : 'mp-btn-success'}" onclick="window.toggleEstadoAsociadoMp('${esc(assoc.id)}', ${!isActiveAcc})">${isActiveAcc ? 'Suspender' : 'Reactivar'}</button>
+          <button type="button" class="mp-btn" data-mp-action="reset-asoc" data-id="${esc(assoc.id)}" data-pin="0">🔑 Blanquear Clave</button>
+          <button type="button" class="mp-btn ${isActiveAcc ? 'mp-btn-danger' : 'mp-btn-success'}" data-mp-action="toggle-asoc" data-id="${esc(assoc.id)}" data-next-active="${isActiveAcc ? '0' : '1'}">${isActiveAcc ? 'Suspender' : 'Reactivar'}</button>
         </div>
       </div>
 
@@ -604,9 +607,9 @@
             <input type="text" id="inpMpKycNotes" placeholder="Ej: Aprobado tras auditoría documental AMMER" style="width:100%;padding:0.4rem 0.55rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.78rem;"/>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">
-            <button type="button" class="mp-btn mp-btn-success" onclick="window.resolverKycMp('${esc(assoc.id)}','APPROVED', ${Number(assoc.net_salary_cents || 0)})">✅ Aprobar KYC</button>
-            <button type="button" class="mp-btn mp-btn-danger" onclick="window.resolverKycMp('${esc(assoc.id)}','REJECTED', ${Number(assoc.net_salary_cents || 0)})">❌ Rechazar KYC</button>
-            <button type="button" class="mp-btn mp-btn-primary" onclick="window.ajustarLimitesMp('${esc(assoc.id)}')">💾 Guardar Ajuste Límites</button>
+            <button type="button" class="mp-btn mp-btn-success" data-mp-action="resolver-kyc" data-id="${esc(assoc.id)}" data-status="APPROVED" data-salary="${Number(assoc.net_salary_cents || 0)}">✅ Aprobar KYC</button>
+            <button type="button" class="mp-btn mp-btn-danger" data-mp-action="resolver-kyc" data-id="${esc(assoc.id)}" data-status="REJECTED" data-salary="${Number(assoc.net_salary_cents || 0)}">❌ Rechazar KYC</button>
+            <button type="button" class="mp-btn mp-btn-primary" data-mp-action="ajustar-limites" data-id="${esc(assoc.id)}">💾 Guardar Ajuste Límites</button>
           </div>
         </div>
       </div>
@@ -684,12 +687,68 @@
     }
   }
 
+  function abrirModalAccionMp({ title, description, label, placeholder, defaultValue = '', confirmLabel = 'Confirmar', confirmClass = 'mp-btn-primary', minLength = 0 }) {
+    return new Promise((resolve) => {
+      const prev = document.getElementById('mpInlineActionModalOverlay');
+      if (prev) prev.remove();
+
+      const ov = document.createElement('div');
+      ov.id = 'mpInlineActionModalOverlay';
+      ov.setAttribute('style', 'position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.55);display:flex;align-items:center;justify-content:center;padding:1rem;');
+      ov.innerHTML = `
+        <div style="width:100%;max-width:440px;background:#ffffff;border-radius:16px;padding:1.15rem 1.25rem;box-shadow:0 20px 50px rgba(15,23,42,0.28);border:1px solid #cbd5e1;">
+          <h4 style="margin:0 0 6px;font-size:0.98rem;font-weight:800;color:#0f172a;">${esc(title || 'Confirmar acción')}</h4>
+          ${description ? `<p style="margin:0 0 10px;font-size:0.78rem;color:#475569;line-height:1.45;">${esc(description)}</p>` : ''}
+          <label style="display:block;font-size:0.72rem;font-weight:700;color:#334155;margin-bottom:4px;">${esc(label || 'Observación / Motivo')}</label>
+          <textarea id="mpInlineModalInput" rows="3" placeholder="${esc(placeholder || '')}" style="width:100%;box-sizing:border-box;padding:0.5rem 0.65rem;border:1px solid #cbd5e1;border-radius:10px;font-size:0.8rem;resize:vertical;">${esc(defaultValue)}</textarea>
+          <div id="mpInlineModalErr" style="display:none;color:#be123c;font-size:0.72rem;font-weight:600;margin-top:4px;"></div>
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
+            <button type="button" id="mpInlineModalCancel" class="mp-btn">Cancelar</button>
+            <button type="button" id="mpInlineModalConfirm" class="mp-btn ${esc(confirmClass)}">${esc(confirmLabel)}</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(ov);
+      const inp = ov.querySelector('#mpInlineModalInput');
+      const errEl = ov.querySelector('#mpInlineModalErr');
+      if (inp) inp.focus();
+
+      const close = (val) => {
+        ov.remove();
+        resolve(val);
+      };
+      ov.querySelector('#mpInlineModalCancel').addEventListener('click', () => close(null));
+      ov.addEventListener('click', (e) => { if (e.target === ov) close(null); });
+      ov.querySelector('#mpInlineModalConfirm').addEventListener('click', () => {
+        const val = String((inp && inp.value) || '').trim();
+        if (minLength > 0 && val.length < minLength) {
+          if (errEl) {
+            errEl.textContent = `Ingresá al menos ${minLength} caracteres.`;
+            errEl.style.display = 'block';
+          }
+          return;
+        }
+        close(val);
+      });
+    });
+  }
+
   async function toggleEstadoAsociadoMp(associateId, nextActive) {
-    const reason = prompt(nextActive ? 'Motivo de reactivación:' : 'Motivo de suspensión:') || 'Gestión Admin AMMER';
+    const reason = await abrirModalAccionMp({
+      title: nextActive ? 'Reactivar cuenta de Asociado' : 'Suspender cuenta de Asociado',
+      description: nextActive
+        ? 'El asociado volverá a operar compras QR y solicitudes en Mutual Pay.'
+        : 'La cuenta quedará suspendida temporalmente para nuevas operaciones.',
+      label: nextActive ? 'Motivo de reactivación' : 'Motivo de suspensión',
+      defaultValue: 'Gestión Admin AMMER',
+      confirmLabel: nextActive ? '✅ Reactivar' : '🚫 Suspender',
+      confirmClass: nextActive ? 'mp-btn-success' : 'mp-btn-danger',
+    });
+    if (reason === null) return;
     try {
       await apiMp(`/asociados/${encodeURIComponent(associateId)}/status`, {
         method: 'PATCH',
-        body: JSON.stringify({ is_active: nextActive, reason }),
+        body: JSON.stringify({ is_active: nextActive, reason: reason || 'Gestión Admin AMMER' }),
       });
       toast(nextActive ? 'Cuenta reactivada.' : 'Cuenta suspendida.');
       await cargarTodoMutualPayBackoffice(false);
@@ -721,7 +780,7 @@
         <td>${badgeStatus(c.status)}</td>
         <td><input type="number" id="inpConvMerch_${esc(c.id)}" value="100000" style="width:95px;padding:3px 6px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.75rem;"/></td>
         <td><input type="number" id="inpConvCash_${esc(c.id)}" value="50000" style="width:95px;padding:3px 6px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.75rem;"/></td>
-        <td>${pend ? `<div style="display:flex;gap:4px;"><button type="button" class="mp-btn mp-btn-success" onclick="window.resolverConvenioMp('${esc(c.id)}','APPROVED')">Aprobar</button><button type="button" class="mp-btn mp-btn-danger" onclick="window.resolverConvenioMp('${esc(c.id)}','REJECTED')">Rechazar</button></div>` : 'Resuelto'}</td>
+        <td>${pend ? `<div style="display:flex;gap:4px;"><button type="button" class="mp-btn mp-btn-success" data-mp-action="resolver-convenio" data-id="${esc(c.id)}" data-decision="APPROVED">Aprobar</button><button type="button" class="mp-btn mp-btn-danger" data-mp-action="resolver-convenio" data-id="${esc(c.id)}" data-decision="REJECTED">Rechazar</button></div>` : 'Resuelto'}</td>
       </tr>`;
     });
     html += '</tbody></table></div>';
@@ -764,19 +823,24 @@
       const id = r.id || r.request_id;
       const pend = ['SUBMITTED', 'UNDER_EVALUATION'].includes(String(r.status || '').toUpperCase());
       const montoPesos = Math.round(Number(r.requested_amount_minor || 0) / 100);
+      const cuotas = Number(r.installments_plan || 1);
+      const fullName = String(r.associate_full_name || r.associate_name || '');
+      const dniRaw = String(r.associate_dni || r.dni || '').replace(/\D/g, '');
+      const cbuRaw = String(r.cbu_cvu_destination || '');
+      const phoneRaw = String((r.ammer_cruce && r.ammer_cruce.asociado && (r.ammer_cruce.asociado.telefono || r.ammer_cruce.asociado.celular)) || r.associate_phone || '');
       html += `<tr>
         <td>${fmtFecha(r.created_at)}</td>
-        <td><strong>${esc(r.associate_full_name || r.associate_name || '—')}</strong><div style="font-size:0.68rem;color:#64748b;">${esc(r.associate_cuit || '')}</div></td>
+        <td><strong>${esc(fullName || '—')}</strong><div style="font-size:0.68rem;color:#64748b;">${esc(r.associate_cuit || '')}</div></td>
         <td><code>${esc(r.request_type || '')}</code></td>
-        <td><strong>${fmtArsFromMinor(r.requested_amount_minor || 0)}</strong><div style="font-size:0.68rem;color:#64748b;">${Number(r.installments_plan || 1)} cuotas</div></td>
-        <td><code>${esc(r.cbu_cvu_destination || '—')}</code><div style="font-size:0.68rem;color:#64748b;">${esc(r.bank_name || '')}</div></td>
+        <td><strong>${fmtArsFromMinor(r.requested_amount_minor || 0)}</strong><div style="font-size:0.68rem;color:#64748b;">${cuotas} cuotas</div></td>
+        <td><code>${esc(cbuRaw || '—')}</code><div style="font-size:0.68rem;color:#64748b;">${esc(r.bank_name || '')}</div></td>
         <td>${badgeAmmerCruce(r.ammer_cruce)}</td>
         <td>${badgeStatus(r.status)}</td>
         <td>
           <div style="display:flex;gap:4px;flex-wrap:wrap;">
-            ${pend ? `<button type="button" class="mp-btn mp-btn-success" onclick="window.resolverAyudaMp('${esc(id)}','APPROVED')">Aprobar</button><button type="button" class="mp-btn mp-btn-danger" onclick="window.resolverAyudaMp('${esc(id)}','REJECTED')">Rechazar</button>` : ''}
-            <button type="button" class="mp-btn" title="Precargar monto en Simulador" onclick="window.abrirEnSimuladorDesdeMp(${montoPesos})">🧮 Simular</button>
-            <button type="button" class="mp-btn mp-btn-indigo" title="Ir a Firmas AMMER" onclick="cambiarVistaPrincipal('firmas-ammer')">✍️ Firmas</button>
+            ${pend ? `<button type="button" class="mp-btn mp-btn-success" data-mp-action="resolver-ayuda" data-id="${esc(id)}" data-status="APPROVED" data-nombre="${esc(fullName)}" data-monto="${montoPesos}">Aprobar</button><button type="button" class="mp-btn mp-btn-danger" data-mp-action="resolver-ayuda" data-id="${esc(id)}" data-status="REJECTED" data-nombre="${esc(fullName)}" data-monto="${montoPesos}">Rechazar</button>` : ''}
+            <button type="button" class="mp-btn" title="Precargar contexto completo en Simulador" data-mp-action="simular-ayuda" data-monto="${montoPesos}" data-cuotas="${cuotas}" data-dni="${esc(dniRaw)}" data-cbu="${esc(cbuRaw)}" data-nombre="${esc(fullName)}" data-id="${esc(id)}">🧮 Simular</button>
+            <button type="button" class="mp-btn mp-btn-indigo" title="Ir a Firmas AMMER con datos precargados" data-mp-action="firmas-ayuda" data-monto="${montoPesos}" data-cuotas="${cuotas}" data-dni="${esc(dniRaw)}" data-nombre="${esc(fullName)}" data-phone="${esc(phoneRaw)}" data-id="${esc(id)}">✍️ Firmas</button>
           </div>
         </td>
       </tr>`;
@@ -785,8 +849,20 @@
     box.innerHTML = html;
   }
 
-  async function resolverAyudaMp(requestId, statusVal) {
-    const notes = prompt(statusVal === 'APPROVED' ? 'Referencia de transferencia / nota de aprobación:' : 'Motivo de rechazo:') || '';
+  async function resolverAyudaMp(requestId, statusVal, metaOpt = {}) {
+    const isApprove = statusVal === 'APPROVED';
+    const nombre = metaOpt.nombre ? ` (${metaOpt.nombre})` : '';
+    const montoTxt = metaOpt.monto ? ` por ${fmtArs(metaOpt.monto)}` : '';
+    const notes = await abrirModalAccionMp({
+      title: `${isApprove ? '✅ Aprobar' : '❌ Rechazar'} Ayuda Económica${nombre}`,
+      description: `Solicitud #${String(requestId).slice(0, 8)}${montoTxt}. Al confirmar, se actualizará Mutual Pay y se notificará al asociado por WhatsApp.`,
+      label: isApprove ? 'Referencia de transferencia / nota de aprobación' : 'Motivo de rechazo',
+      placeholder: isApprove ? 'Ej: Transferencia CBU #12345 o habilitado por comité' : 'Ingresá el motivo de rechazo...',
+      confirmLabel: isApprove ? '✅ Confirmar Aprobación' : '❌ Confirmar Rechazo',
+      confirmClass: isApprove ? 'mp-btn-success' : 'mp-btn-danger',
+      minLength: isApprove ? 0 : 4,
+    });
+    if (notes === null) return;
     try {
       await apiMp(`/ayudas/${encodeURIComponent(requestId)}/resolve`, {
         method: 'PATCH',
@@ -799,13 +875,36 @@
     }
   }
 
-  function abrirEnSimuladorDesdeMp(montoPesos) {
+  function abrirEnSimuladorDesdeMp(ctxOrMonto) {
+    const ctx = (typeof ctxOrMonto === 'object' && ctxOrMonto !== null)
+      ? ctxOrMonto
+      : { montoPesos: Number(ctxOrMonto || 0) };
+    global._mpContextoParaSimulador = ctx;
     if (typeof cambiarPestana === 'function') cambiarPestana('view-simulador');
     const inp = document.getElementById('inputMonto');
-    if (inp && montoPesos > 0) {
-      inp.value = String(montoPesos);
+    if (inp && Number(ctx.montoPesos || 0) > 0) {
+      inp.value = String(ctx.montoPesos);
       inp.dispatchEvent(new Event('input', { bubbles: true }));
     }
+    const selCuotas = document.getElementById('inputCuotas') || document.getElementById('selectCuotas');
+    if (selCuotas && Number(ctx.cuotas || 0) > 1) {
+      selCuotas.value = String(ctx.cuotas);
+      selCuotas.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    if (ctx.fullName || ctx.dni) {
+      toast(`Contexto precargado en Simulador: ${ctx.fullName || ''} ${ctx.dni ? `(DNI ${ctx.dni})` : ''}`.trim());
+    }
+  }
+
+  function abrirFirmasDesdeMp(ctx = {}) {
+    global._mpContextoParaFirmas = Object.assign({}, ctx, { _forceApply: true });
+    if (typeof global.cambiarVistaPrincipal === 'function') {
+      global.cambiarVistaPrincipal('firmas-ammer');
+    }
+    if (typeof global.renderFirmantesGenerar === 'function') {
+      global.renderFirmantesGenerar();
+    }
+    toast(`Contexto transferido a Firmas AMMER (${ctx.fullName || ctx.dni || 'Asociado'}).`);
   }
 
   function renderTablaLiquidacionesMutualPay() {
@@ -921,6 +1020,41 @@
     }
   }
 
+  async function verFichaComercioMp(merchantId) {
+    try {
+      const res = await apiMp(`/comercios/${encodeURIComponent(merchantId)}/ficha`);
+      const f = (res && res.ficha) || {};
+      const m = f.merchant || f || {};
+      const branches = Array.isArray(f.branches) ? f.branches : (Array.isArray(m.branches) ? m.branches : []);
+      const prev = document.getElementById('mpComercioFichaModalOverlay');
+      if (prev) prev.remove();
+      const ov = document.createElement('div');
+      ov.id = 'mpComercioFichaModalOverlay';
+      ov.setAttribute('style', 'position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.55);display:flex;align-items:center;justify-content:center;padding:1rem;');
+      ov.innerHTML = `
+        <div style="width:100%;max-width:520px;background:#ffffff;border-radius:16px;padding:1.15rem 1.3rem;box-shadow:0 20px 50px rgba(15,23,42,0.28);border:1px solid #cbd5e1;max-height:86vh;overflow:auto;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <h4 style="margin:0;font-size:1rem;font-weight:800;color:#0f172a;">🏪 ${esc(m.fantasy_name || 'Comercio')}</h4>
+            <button type="button" class="mp-btn" id="btnCloseMpComFicha">✕</button>
+          </div>
+          <div style="font-size:0.78rem;color:#334155;line-height:1.6;">
+            <div><strong>Razón Social:</strong> ${esc(m.business_name || '—')}</div>
+            <div><strong>CUIT:</strong> <code>${esc(m.cuit || '—')}</code> · <strong>Rubro:</strong> ${esc(m.category || '—')}</div>
+            <div><strong>CBU / Alias:</strong> <code>${esc(m.bank_cbu || '—')}</code> (${esc(m.bank_alias || '—')})</div>
+            <div><strong>Comisión:</strong> ${Number(m.commission_fee_pct || 0)}% · <strong>Plazo:</strong> ${Number(m.settlement_timeframe_hours || 48)} hs</div>
+            <div><strong>Saldo Wallet Comercio:</strong> ${fmtArsFromMinor(m.wallet_balance_minor || f.wallet_balance_minor || 0)}</div>
+          </div>
+          ${branches.length ? `<div style="margin-top:10px;border-top:1px solid #e2e8f0;padding-top:8px;"><div style="font-size:0.74rem;font-weight:800;color:#475569;margin-bottom:4px;">Sucursales (${branches.length})</div>${branches.map((b) => `<div style="font-size:0.75rem;padding:4px 0;border-bottom:1px dashed #f1f5f9;">📍 <strong>${esc(b.branch_name || 'Sucursal')}</strong> — ${esc(b.address || '')}</div>`).join('')}</div>` : ''}
+        </div>
+      `;
+      document.body.appendChild(ov);
+      ov.querySelector('#btnCloseMpComFicha').addEventListener('click', () => ov.remove());
+      ov.addEventListener('click', (e) => { if (e.target === ov) ov.remove(); });
+    } catch (err) {
+      toast(`Error cargando ficha de comercio: ${err.message}`);
+    }
+  }
+
   function renderTablaComerciosMutualPay() {
     const box = document.getElementById('mpComerciosTablaContainer');
     if (!box) return;
@@ -943,7 +1077,11 @@
         <td><input type="number" step="0.1" id="inpMpComFee_${esc(m.id)}" value="${Number(m.commission_fee_pct || 0)}" style="width:72px;padding:3px 5px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.75rem;"/>%</td>
         <td>${Number(m.settlement_timeframe_hours || 48)} hs</td>
         <td>${badgeStatus(String(m.is_active !== false).toUpperCase())}</td>
-        <td><div style="display:flex;gap:4px;flex-wrap:wrap;"><button type="button" class="mp-btn mp-btn-primary" onclick="window.guardarParamComercioMp('${esc(m.id)}', ${m.is_active !== false})">Guardar</button><button type="button" class="mp-btn" onclick="window.resetAccesoComercioMp('${esc(m.id)}')" title="Generar/blanquear clave temporal">🔑 Clave</button></div></td>
+        <td><div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <button type="button" class="mp-btn" data-mp-action="ficha-comercio" data-id="${esc(m.id)}" title="Ver ficha completa y sucursales">👁️ Ficha</button>
+          <button type="button" class="mp-btn mp-btn-primary" data-mp-action="guardar-comercio" data-id="${esc(m.id)}" data-active="${m.is_active !== false ? '1' : '0'}">Guardar</button>
+          <button type="button" class="mp-btn" data-mp-action="reset-comercio" data-id="${esc(m.id)}" title="Generar/blanquear clave temporal">🔑 Clave</button>
+        </div></td>
       </tr>`;
     });
     html += '</tbody></table></div>';
@@ -986,7 +1124,7 @@
         <td>${fmtArsFromMinor(t.net_merchant_minor || 0)}</td>
         <td>${Number(t.installments_count || 1)}</td>
         <td>${badgeStatus(t.status)}</td>
-        <td>${canCancel ? `<button type="button" class="mp-btn mp-btn-danger" onclick="window.anularTxMp('${esc(txId)}')">Anular</button>` : '—'}</td>
+        <td>${canCancel ? `<button type="button" class="mp-btn mp-btn-danger" data-mp-action="anular-tx" data-id="${esc(txId)}">Anular</button>` : '—'}</td>
       </tr>`;
     });
     html += '</tbody></table></div>';
@@ -994,7 +1132,15 @@
   }
 
   async function anularTxMp(txId) {
-    const reason = prompt('Motivo de anulación / contra-asiento contable:');
+    const reason = await abrirModalAccionMp({
+      title: 'Anular Transacción QR',
+      description: 'Se generará un contra-asiento contable en Ledger, liberando el cupo del asociado y revirtiendo la acreditación al comercio.',
+      label: 'Motivo de anulación',
+      placeholder: 'Ej: Devolución de compra acordada con el comercio',
+      confirmLabel: 'Confirmar Anulación',
+      confirmClass: 'mp-btn-danger',
+      minLength: 3,
+    });
     if (!reason || reason.trim().length < 3) return;
     try {
       await apiMp(`/transacciones/${encodeURIComponent(txId)}/anular`, {
@@ -1029,7 +1175,7 @@
         <td><strong>${fmtArsFromMinor(monto)}</strong></td>
         <td>${pUrl ? `<a href="${pUrl}" target="_blank" rel="noopener noreferrer" class="mp-btn">👁️ Ver Comprobante</a>` : '<span style="color:#94a3b8;">Sin archivo</span>'}</td>
         <td>${badgeStatus(c.status)}</td>
-        <td>${canVerify ? `<div style="display:flex;gap:5px;"><button type="button" class="mp-btn mp-btn-success" onclick="window.verificarCobranzaMp('${esc(id)}', true)">✅ Imputar</button><button type="button" class="mp-btn mp-btn-danger" onclick="window.verificarCobranzaMp('${esc(id)}', false)">❌ Rechazar</button></div>` : 'Verificado'}</td>
+        <td>${canVerify ? `<div style="display:flex;gap:5px;"><button type="button" class="mp-btn mp-btn-success" data-mp-action="verificar-cobranza" data-id="${esc(id)}" data-approved="1">✅ Imputar</button><button type="button" class="mp-btn mp-btn-danger" data-mp-action="verificar-cobranza" data-id="${esc(id)}" data-approved="0">❌ Rechazar</button></div>` : 'Verificado'}</td>
       </tr>`;
     });
     html += '</tbody></table></div>';
@@ -1039,7 +1185,16 @@
   async function verificarCobranzaMp(settlementId, approved) {
     let rejection_reason = null;
     if (!approved) {
-      rejection_reason = prompt('Motivo de rechazo del comprobante:') || 'Comprobante inválido o no acreditado.';
+      const r = await abrirModalAccionMp({
+        title: 'Rechazar Comprobante de Pago',
+        label: 'Motivo de rechazo',
+        defaultValue: 'Comprobante inválido o no acreditado.',
+        confirmLabel: 'Confirmar Rechazo',
+        confirmClass: 'mp-btn-danger',
+        minLength: 4,
+      });
+      if (r === null) return;
+      rejection_reason = r || 'Comprobante inválido o no acreditado.';
     }
     try {
       await apiMp(`/cobranzas-manuales/${encodeURIComponent(settlementId)}/verificar`, {
@@ -1050,6 +1205,63 @@
       await cargarTodoMutualPayBackoffice(false);
     } catch (err) {
       toast(`Error verificando cobranza: ${err.message}`);
+    }
+  }
+
+  async function crearReglaCashbackMp() {
+    const pct = parseFloat((document.getElementById('inpMpNewCbPct') || {}).value || '0');
+    const maxPesos = parseFloat((document.getElementById('inpMpNewCbMax') || {}).value || '0');
+    const merchId = String((document.getElementById('selMpNewCbMerchant') || {}).value || '').trim() || null;
+    const splitMerch = parseFloat((document.getElementById('inpMpNewCbSplitMerch') || {}).value || '50');
+    const splitMutual = Math.max(0, 100 - splitMerch);
+    if (!Number.isFinite(pct) || pct <= 0 || pct > 50) {
+      toast('Ingresá un porcentaje de cashback válido (0.1% a 50%).');
+      return;
+    }
+    try {
+      await apiMp('/backoffice/cashback-rules', {
+        method: 'POST',
+        body: JSON.stringify({
+          merchant_id: merchId,
+          cashback_pct: pct,
+          max_cashback_minor: maxPesos > 0 ? Math.round(maxPesos * 100) : null,
+          split_merchant_pct: splitMerch,
+          split_mutual_pct: splitMutual,
+        }),
+      });
+      toast('Regla de cashback creada.');
+      await cargarTodoMutualPayBackoffice(false);
+    } catch (err) {
+      toast(`Error creando regla de cashback: ${err.message}`);
+    }
+  }
+
+  async function crearStaffMp() {
+    const email = String((document.getElementById('inpMpStaffEmail') || {}).value || '').trim().toLowerCase();
+    const role = String((document.getElementById('selMpStaffRole') || {}).value || 'ASESOR').trim();
+    if (!email.includes('@')) {
+      toast('Ingresá un email válido para el miembro de staff.');
+      return;
+    }
+    try {
+      const res = await apiMp('/admin/staff', {
+        method: 'POST',
+        body: JSON.stringify({ email, role }),
+      });
+      const r = (res && res.resultado) || {};
+      toast(`Staff ${role} habilitado en Mutual Pay.`);
+      if (r.temporary_password) {
+        mostrarCredencialesUnaVez({
+          tipo: `STAFF ${role}`,
+          nombre: email,
+          login_email: email,
+          temporary_password: r.temporary_password,
+          supabase_auth_ok: Boolean(r.supabase_auth_created),
+        });
+      }
+      await cargarTodoMutualPayBackoffice(false);
+    } catch (err) {
+      toast(`Error habilitando staff: ${err.message}`);
     }
   }
 
@@ -1066,10 +1278,11 @@
 
     const regBox = document.getElementById('mpReglasFinancierasContainer');
     if (regBox) {
+      let regHtml = '';
       if (!st.reglasFinancieras.length) {
-        regBox.innerHTML = '<div style="color:#64748b;font-size:0.78rem;">Sin reglas financieras cargadas.</div>';
+        regHtml = '<div style="color:#64748b;font-size:0.78rem;">Sin reglas financieras cargadas.</div>';
       } else {
-        regBox.innerHTML = st.reglasFinancieras.map((r) => `
+        regHtml = st.reglasFinancieras.map((r) => `
           <div style="padding:0.65rem;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:8px;background:#f8fafc;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
               <strong>${esc(r.rule_name)} (${esc(r.employment_condition)})</strong>
@@ -1078,28 +1291,58 @@
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:0.76rem;">
               <label>Tope Sueldo %: <input type="number" id="inpMpRuleDebt_${esc(r.id)}" value="${Number(r.max_debt_ratio_pct)}" step="0.5" style="width:65px;padding:3px;border:1px solid #cbd5e1;border-radius:6px;"/></label>
               <label>Comercios %: <input type="number" id="inpMpRuleMerch_${esc(r.id)}" value="${Number(r.default_merchant_line_pct)}" step="1" style="width:65px;padding:3px;border:1px solid #cbd5e1;border-radius:6px;"/></label>
-              <button type="button" class="mp-btn mp-btn-primary" onclick="window.guardarReglaFinancieraMp('${esc(r.id)}', ${Boolean(r.is_active)})">Guardar</button>
+              <button type="button" class="mp-btn mp-btn-primary" data-mp-action="guardar-regla" data-id="${esc(r.id)}" data-active="${r.is_active ? '1' : '0'}">Guardar</button>
             </div>
           </div>
         `).join('');
       }
+      regHtml += `
+        <div style="margin-top:12px;padding:0.75rem;border:1px dashed #cbd5e1;border-radius:10px;background:#ffffff;">
+          <div style="font-size:0.74rem;font-weight:800;color:#0f172a;margin-bottom:6px;">👥 Alta de Staff Backoffice (Asesor / Admin Mutual Pay)</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <input type="email" id="inpMpStaffEmail" placeholder="email@mutualmodelo.org.ar" style="flex:1;min-width:170px;padding:0.38rem 0.55rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.76rem;"/>
+            <select id="selMpStaffRole" style="padding:0.38rem 0.55rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.76rem;">
+              <option value="ASESOR">ASESOR</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+            <button type="button" class="mp-btn mp-btn-indigo" data-mp-action="crear-staff">➕ Habilitar Staff</button>
+          </div>
+        </div>
+      `;
+      regBox.innerHTML = regHtml;
     }
 
     const cbBox = document.getElementById('mpCashbackRulesContainer');
     if (cbBox) {
+      const merchantOpts = ['<option value="">Global (todos los comercios)</option>']
+        .concat(st.comercios.map((m) => `<option value="${esc(m.id)}">${esc(m.fantasy_name || m.business_name)}</option>`))
+        .join('');
+      let cbHtml = `
+        <div style="padding:0.65rem;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;margin-bottom:10px;">
+          <div style="font-size:0.74rem;font-weight:800;color:#0f172a;margin-bottom:6px;">➕ Nueva Regla de Cashback</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px;align-items:center;">
+            <select id="selMpNewCbMerchant" style="padding:0.35rem 0.5rem;border:1px solid #cbd5e1;border-radius:7px;font-size:0.74rem;">${merchantOpts}</select>
+            <input type="number" id="inpMpNewCbPct" placeholder="% Cashback (ej: 5)" step="0.5" min="0.5" max="50" style="padding:0.35rem 0.5rem;border:1px solid #cbd5e1;border-radius:7px;font-size:0.74rem;"/>
+            <input type="number" id="inpMpNewCbMax" placeholder="Tope $ ARS (opc)" min="0" style="padding:0.35rem 0.5rem;border:1px solid #cbd5e1;border-radius:7px;font-size:0.74rem;"/>
+            <input type="number" id="inpMpNewCbSplitMerch" value="50" min="0" max="100" title="% a cargo del comercio" style="padding:0.35rem 0.5rem;border:1px solid #cbd5e1;border-radius:7px;font-size:0.74rem;"/>
+            <button type="button" class="mp-btn mp-btn-success" data-mp-action="crear-cashback">💾 Crear Regla</button>
+          </div>
+        </div>
+      `;
       if (!st.cashbackRules.length) {
-        cbBox.innerHTML = '<div style="color:#64748b;font-size:0.78rem;">Sin reglas de cashback configuradas.</div>';
+        cbHtml += '<div style="color:#64748b;font-size:0.78rem;">Sin reglas de cashback configuradas.</div>';
       } else {
-        cbBox.innerHTML = st.cashbackRules.map((r) => `
+        cbHtml += st.cashbackRules.map((r) => `
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:0.5rem 0.7rem;border:1px solid #e2e8f0;border-radius:9px;margin-bottom:6px;font-size:0.76rem;">
             <div>
               <strong>${esc(r.merchant_name || 'Global')}</strong> · ${Number(r.cashback_pct)}%
               <div style="font-size:0.68rem;color:#64748b;">Split Comercio ${Number(r.split_merchant_pct)}% / Mutual ${Number(r.split_mutual_pct)}%</div>
             </div>
-            <button type="button" class="mp-btn" onclick="window.toggleCashbackMp('${esc(r.id)}')">${r.is_active ? '⏸️ Pausar' : '▶️ Activar'}</button>
+            <button type="button" class="mp-btn" data-mp-action="toggle-cashback" data-id="${esc(r.id)}">${r.is_active ? '⏸️ Pausar' : '▶️ Activar'}</button>
           </div>
         `).join('');
       }
+      cbBox.innerHTML = cbHtml;
     }
 
     const logBox = document.getElementById('mpAuditLogsContainer');
@@ -1186,9 +1429,11 @@
       `• Clave temporal: ${info.temporary_password}`,
     ];
     if (info.temporary_pin) {
-      msgLines.push(`• PIN transaccional temporal (4 dígitos): ${info.temporary_pin}`);
+      msgLines.push(`• PIN legado temporal (4 dígitos): ${info.temporary_pin}`);
+    } else if (info.tipo === 'ASOCIADO') {
+      msgLines.push('• Confirmación QR: Token único autogenerado enviado a tu WhatsApp al pagar.');
     }
-    msgLines.push('Te recomendamos cambiar la clave/PIN luego del primer ingreso.');
+    msgLines.push('Te recomendamos cambiar tu contraseña luego del primer ingreso.');
     const waUrl = `https://wa.me/?text=${encodeURIComponent(msgLines.join('\n'))}`;
     const authWarn = info.supabase_auth_ok === false
       ? '<div style="margin-top:6px;padding:6px 8px;border-radius:6px;background:#fef3c7;color:#92400e;font-size:0.72rem;">⚠️ <strong>Nota:</strong> <code>SUPABASE_SERVICE_ROLE_KEY</code> no estaba configurado en mutualpay-api; la clave se generó localmente pero verificá la sincronización en Supabase Auth.</div>'
@@ -1211,7 +1456,7 @@
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin-top:10px;background:#ffffff;padding:0.7rem;border-radius:8px;border:1px solid #a7f3d0;">
           <div><div style="font-size:0.68rem;font-weight:700;color:#64748b;text-transform:uppercase;">Usuario / Email Login</div><code style="font-size:0.82rem;font-weight:700;color:#0f172a;">${esc(info.login_email || '—')}</code></div>
           <div><div style="font-size:0.68rem;font-weight:700;color:#64748b;text-transform:uppercase;">Clave Temporal</div><code style="font-size:0.86rem;font-weight:800;color:#047857;">${esc(info.temporary_password)}</code></div>
-          ${info.temporary_pin ? `<div><div style="font-size:0.68rem;font-weight:700;color:#64748b;text-transform:uppercase;">PIN Transaccional Temporal</div><code style="font-size:0.86rem;font-weight:800;color:#0369a1;">${esc(info.temporary_pin)}</code></div>` : ''}
+          ${info.temporary_pin ? `<div><div style="font-size:0.68rem;font-weight:700;color:#64748b;text-transform:uppercase;">PIN Legado Temporal</div><code style="font-size:0.86rem;font-weight:800;color:#0369a1;">${esc(info.temporary_pin)}</code></div>` : '<div><div style="font-size:0.68rem;font-weight:700;color:#64748b;text-transform:uppercase;">Autorización QR</div><span style="font-size:0.78rem;font-weight:700;color:#059669;">📲 Token OTP por WhatsApp</span></div>'}
         </div>
         ${authWarn}
       </div>
@@ -1231,7 +1476,7 @@
       `Usuario: ${info.login_email || ''}`,
       `Clave temporal: ${info.temporary_password || ''}`,
     ];
-    if (info.temporary_pin) lines.push(`PIN temporal: ${info.temporary_pin}`);
+    if (info.temporary_pin) lines.push(`PIN legado: ${info.temporary_pin}`);
     const text = lines.join('\n');
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(() => toast('Credenciales copiadas al portapapeles.')).catch(() => toast('No se pudo copiar automáticamente.'));
@@ -1269,15 +1514,13 @@
         asocBox.innerHTML = '<div style="padding:1rem;color:#64748b;font-size:0.78rem;">Sin asociados para el filtro seleccionado.</div>';
       } else {
         let html = '<div class="data-table-container"><table class="data-table"><thead><tr>' +
-          '<th>Asociado</th><th>DNI</th><th>Usuario / Email Login</th><th>Cuenta Auth</th><th>PIN App</th><th>Último Ingreso</th><th>Cruce AMMER</th><th>Acción</th>' +
+          '<th>Asociado</th><th>DNI</th><th>Usuario / Email Login</th><th>Cuenta Auth</th><th>Autorización QR</th><th>Último Ingreso</th><th>Cruce AMMER</th><th>Acción</th>' +
           '</tr></thead><tbody>';
         asocs.forEach((a) => {
           const authBadge = a.has_auth_account
             ? `<span style="color:#059669;font-weight:700;font-size:0.74rem;">✅ Activa${a.email_confirmed ? ' (Verif.)' : ''}</span>`
             : '<span style="color:#b45309;font-weight:700;font-size:0.74rem;">⚠️ Sin Auth</span>';
-          const pinBadge = a.has_transaction_pin
-            ? '<span style="color:#0369a1;font-weight:700;font-size:0.74rem;">🔒 Configurado</span>'
-            : '<span style="color:#94a3b8;font-size:0.74rem;">Sin PIN</span>';
+          const pinBadge = '<span style="color:#059669;font-weight:700;font-size:0.74rem;">📲 Token WhatsApp</span>';
           html += `<tr>
             <td><strong>${esc(a.full_name || '—')}</strong><div style="font-size:0.68rem;color:#64748b;">KYC: ${esc(a.kyc_status || '—')}</div></td>
             <td><code>${esc(a.dni || '—')}</code></td>
@@ -1287,8 +1530,7 @@
             <td style="font-size:0.73rem;">${a.last_sign_in_at ? fmtFecha(a.last_sign_in_at) : 'Nunca'}</td>
             <td>${badgeAmmerCruce(a.ammer_cruce)}</td>
             <td><div style="display:flex;gap:4px;flex-wrap:wrap;">
-              <button type="button" class="mp-btn mp-btn-primary" onclick="window.resetAccesoAsociadoMp('${esc(a.id)}', false)">🔑 Blanquear Clave</button>
-              <button type="button" class="mp-btn" onclick="window.resetAccesoAsociadoMp('${esc(a.id)}', true)">🔢 + PIN</button>
+              <button type="button" class="mp-btn mp-btn-primary" data-mp-action="reset-asoc" data-id="${esc(a.id)}" data-pin="0">🔑 Blanquear Clave</button>
             </div></td>
           </tr>`;
         });
@@ -1320,7 +1562,7 @@
             <td>${authBadge}</td>
             <td style="font-size:0.73rem;">${m.last_sign_in_at ? fmtFecha(m.last_sign_in_at) : 'Nunca'}</td>
             <td>${badgeStatus(String(m.is_active !== false).toUpperCase())}</td>
-            <td><button type="button" class="mp-btn mp-btn-primary" onclick="window.resetAccesoComercioMp('${esc(m.id)}')">🔑 ${m.has_auth_account ? 'Blanquear Clave' : 'Habilitar Acceso'}</button></td>
+            <td><button type="button" class="mp-btn mp-btn-primary" data-mp-action="reset-comercio" data-id="${esc(m.id)}">🔑 ${m.has_auth_account ? 'Blanquear Clave' : 'Habilitar Acceso'}</button></td>
           </tr>`;
         });
         html += '</tbody></table></div>';
@@ -1331,8 +1573,8 @@
 
   async function resetAccesoAsociadoMp(associateId, generateTempPin = false) {
     const msg = generateTempPin
-      ? '¿Generar nueva clave temporal y PIN de 4 dígitos temporal para este Asociado?'
-      : '¿Habilitar o blanquear la clave temporal de acceso de este Asociado?';
+      ? '¿Generar nueva clave temporal y PIN legado de 4 dígitos para este Asociado?'
+      : '¿Habilitar o blanquear la clave temporal de acceso de este Asociado? Se le notificará por WhatsApp.';
     if (!confirm(msg)) return;
     try {
       const res = await apiMp(`/asociados/${encodeURIComponent(associateId)}/reset-access`, {
@@ -1399,7 +1641,7 @@
     wrap.style.display = 'block';
     wrap.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-        <div style="font-size:0.82rem;font-weight:800;color:#0f172a;">Alta de Asociado en Mutual Pay (con usuario Supabase Auth)</div>
+        <div style="font-size:0.82rem;font-weight:800;color:#0f172a;">Alta de Asociado en Mutual Pay (con usuario Supabase Auth + Token WhatsApp)</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
           <input type="text" id="inpMpBuscarAmmerAlta" placeholder="Buscar DNI o Apellido en AMMER..." style="min-width:220px;padding:0.38rem 0.6rem;border:1px solid #93c5fd;border-radius:8px;font-size:0.76rem;background:#ffffff;"/>
           <button type="button" class="mp-btn mp-btn-primary" onclick="window.buscarEnAmmerParaAltaMp()">🔎 Traer de Padrón AMMER</button>
@@ -1424,12 +1666,12 @@
         </select>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;">
-        <label style="display:inline-flex;align-items:center;gap:6px;font-size:0.76rem;color:#334155;font-weight:600;cursor:pointer;">
-          <input type="checkbox" id="chkMpAsocPin" checked />
-          Generar PIN transaccional QR temporal (4 dígitos)
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:0.74rem;color:#475569;font-weight:600;cursor:pointer;">
+          <input type="checkbox" id="chkMpAsocPin" />
+          Generar PIN legado opcional (por defecto usa Token OTP por WhatsApp)
         </label>
         <div style="display:flex;gap:8px;">
-          <button type="button" id="btnMpCrearAsociadoSubmit" class="mp-btn mp-btn-success" onclick="window.crearAsociadoMp()">💾 Crear Asociado y Generar Clave</button>
+          <button type="button" id="btnMpCrearAsociadoSubmit" class="mp-btn mp-btn-success" onclick="window.crearAsociadoMp()">💾 Crear Asociado y Enviar Acceso</button>
           <button type="button" class="mp-btn" onclick="window.toggleFormNuevoAsociadoMp(false)">Cancelar</button>
         </div>
       </div>
@@ -1455,7 +1697,7 @@
       }
       let html = '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
       list.slice(0, 8).forEach((row, idx) => {
-        html += `<button type="button" class="mp-btn" style="background:#eff6ff;border-color:#93c5fd;color:#1e3a8a;font-size:0.72rem;" onclick="window.usarAsociadoAmmerEnFormMp(${idx})">` +
+        html += `<button type="button" class="mp-btn" style="background:#eff6ff;border-color:#93c5fd;color:#1e3a8a;font-size:0.72rem;" data-mp-action="usar-ammer-alta" data-idx="${idx}">` +
           `Usar: <strong>${esc(row.nombre_completo || 'Asociado')}</strong> (DNI ${esc(row.dni || '—')}${row.organismo ? ` · ${esc(row.organismo)}` : ''})` +
           `</button>`;
       });
@@ -1526,7 +1768,7 @@
         }),
       });
       const asoc = (res && res.asociado) || {};
-      toast('Asociado creado en Mutual Pay.');
+      toast('Asociado creado en Mutual Pay y notificado por WhatsApp.');
       toggleFormNuevoAsociadoMp(false);
       if (asoc.temporary_password) {
         mostrarCredencialesUnaVez({
@@ -1546,7 +1788,83 @@
     }
   }
 
+  function bindMutualPayDelegatedEvents() {
+    if (global.__mpBackofficeDelegatedBound || typeof document === 'undefined') return;
+    global.__mpBackofficeDelegatedBound = true;
+    document.addEventListener('click', (ev) => {
+      const btn = ev.target && ev.target.closest ? ev.target.closest('[data-mp-action]') : null;
+      if (!btn) return;
+      const act = btn.getAttribute('data-mp-action');
+      const id = btn.getAttribute('data-id') || '';
+      if (act === 'ver-ficha') {
+        abrirFichaUnificadaMp(id, btn.getAttribute('data-switch') === '1');
+      } else if (act === 'auditar-doc') {
+        auditarDocMutualPayConIA(
+          btn.getAttribute('data-assoc-id') || '',
+          btn.getAttribute('data-doc-type') || '',
+          btn.getAttribute('data-signed-url') || '',
+          btn.getAttribute('data-dni') || '',
+          btn.getAttribute('data-nombre') || ''
+        );
+      } else if (act === 'reset-asoc') {
+        resetAccesoAsociadoMp(id, btn.getAttribute('data-pin') === '1');
+      } else if (act === 'toggle-asoc') {
+        toggleEstadoAsociadoMp(id, btn.getAttribute('data-next-active') === '1');
+      } else if (act === 'resolver-kyc') {
+        resolverKycMp(id, btn.getAttribute('data-status') || 'APPROVED', Number(btn.getAttribute('data-salary') || 0));
+      } else if (act === 'ajustar-limites') {
+        ajustarLimitesMp(id);
+      } else if (act === 'resolver-convenio') {
+        resolverConvenioMp(id, btn.getAttribute('data-decision') || 'APPROVED');
+      } else if (act === 'resolver-ayuda') {
+        resolverAyudaMp(id, btn.getAttribute('data-status') || 'APPROVED', {
+          nombre: btn.getAttribute('data-nombre') || '',
+          monto: Number(btn.getAttribute('data-monto') || 0),
+        });
+      } else if (act === 'simular-ayuda') {
+        abrirEnSimuladorDesdeMp({
+          requestId: id,
+          montoPesos: Number(btn.getAttribute('data-monto') || 0),
+          cuotas: Number(btn.getAttribute('data-cuotas') || 1),
+          dni: btn.getAttribute('data-dni') || '',
+          cbu: btn.getAttribute('data-cbu') || '',
+          fullName: btn.getAttribute('data-nombre') || '',
+        });
+      } else if (act === 'firmas-ayuda') {
+        abrirFirmasDesdeMp({
+          requestId: id,
+          montoPesos: Number(btn.getAttribute('data-monto') || 0),
+          cuotas: Number(btn.getAttribute('data-cuotas') || 1),
+          dni: btn.getAttribute('data-dni') || '',
+          fullName: btn.getAttribute('data-nombre') || '',
+          phone: btn.getAttribute('data-phone') || '',
+        });
+      } else if (act === 'ficha-comercio') {
+        verFichaComercioMp(id);
+      } else if (act === 'guardar-comercio') {
+        guardarParamComercioMp(id, btn.getAttribute('data-active') !== '0');
+      } else if (act === 'reset-comercio') {
+        resetAccesoComercioMp(id);
+      } else if (act === 'anular-tx') {
+        anularTxMp(id);
+      } else if (act === 'verificar-cobranza') {
+        verificarCobranzaMp(id, btn.getAttribute('data-approved') === '1');
+      } else if (act === 'guardar-regla') {
+        guardarReglaFinancieraMp(id, btn.getAttribute('data-active') !== '0');
+      } else if (act === 'toggle-cashback') {
+        toggleCashbackMp(id);
+      } else if (act === 'crear-cashback') {
+        crearReglaCashbackMp();
+      } else if (act === 'crear-staff') {
+        crearStaffMp();
+      } else if (act === 'usar-ammer-alta') {
+        usarAsociadoAmmerEnFormMp(Number(btn.getAttribute('data-idx') || 0));
+      }
+    });
+  }
+
   function initMutualPayBackoffice() {
+    bindMutualPayDelegatedEvents();
     if (!st.initialized) {
       st.initialized = true;
     }
@@ -1570,15 +1888,19 @@
   global.renderTablaAyudasMutualPay = renderTablaAyudasMutualPay;
   global.resolverAyudaMp = resolverAyudaMp;
   global.abrirEnSimuladorDesdeMp = abrirEnSimuladorDesdeMp;
+  global.abrirFirmasDesdeMp = abrirFirmasDesdeMp;
   global.exportarLiquidacionesMutualPayCsv = exportarLiquidacionesMutualPayCsv;
   global.toggleFormNuevoComercioMp = toggleFormNuevoComercioMp;
   global.crearComercioMp = crearComercioMp;
+  global.verFichaComercioMp = verFichaComercioMp;
   global.renderTablaComerciosMutualPay = renderTablaComerciosMutualPay;
   global.guardarParamComercioMp = guardarParamComercioMp;
   global.anularTxMp = anularTxMp;
   global.verificarCobranzaMp = verificarCobranzaMp;
   global.guardarReglaFinancieraMp = guardarReglaFinancieraMp;
   global.toggleCashbackMp = toggleCashbackMp;
+  global.crearReglaCashbackMp = crearReglaCashbackMp;
+  global.crearStaffMp = crearStaffMp;
   global.descargarComplianceMutualPay = descargarComplianceMutualPay;
   global.renderTabAccesosMutualPay = renderTabAccesosMutualPay;
   global.resetAccesoAsociadoMp = resetAccesoAsociadoMp;

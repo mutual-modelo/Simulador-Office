@@ -9301,8 +9301,6 @@
 
     async function verificarEstadoSistema() {
       try {
-        const activeBypass = localStorage.getItem('ammer_admin_bypass');
-
         if (!RENDER_API_URL || RENDER_API_URL.includes('[TU_API]')) {
           return true;
         }
@@ -9314,9 +9312,6 @@
         }, 5000) : null;
 
         const headers = {};
-        if (activeBypass) {
-          headers['X-Admin-Key'] = activeBypass;
-        }
 
         let response;
         try {
@@ -16228,10 +16223,10 @@ ${cierreTxt}`;
       if (typeof renderModuloMutual === 'function') renderModuloMutual();
       actualizarCentroNotificaciones();
 
-      // Reconciliación diferida con Google Sheets una vez completada la réplica en segundo plano (~5 seg en Render)
+      // Reconciliación diferida con Supabase / Google Sheets una vez confirmada la solicitud
       setTimeout(() => {
         cargarSolicitudesDesdeNube(true);
-      }, 6500);
+      }, 1500);
     }
 
     /* ========================================================================
@@ -18774,6 +18769,41 @@ ${cierreTxt}`;
       }
     }
 
+    async function _actualizarEstadoCanonicoConFallback(solicitudId, nuevoEstado, analista, comentario) {
+      if (typeof RENDER_API_URL === 'string' && RENDER_API_URL.startsWith('http')) {
+        try {
+          const resp = await fetchConTimeout(`${RENDER_API_URL.replace(/\/$/, '')}/api/solicitudes/${encodeURIComponent(solicitudId)}/estado`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              estado: nuevoEstado,
+              comentario: comentario || `Estado actualizado a ${nuevoEstado}`,
+              replicar_gas: true
+            })
+          }, 20000);
+          if (resp.ok) {
+            return await resp.json().catch(() => ({ ok: true }));
+          }
+          if (resp.status !== 404 && resp.status !== 405) {
+            const errJson = await resp.json().catch(() => ({}));
+            throw new Error(errJson.detail || `HTTP ${resp.status}`);
+          }
+        } catch (errPatch) {
+          console.warn('PATCH estado canónico fallback a GAS:', errPatch);
+        }
+      }
+      return callApi({
+        action: 'actualizarEstado',
+        id: solicitudId,
+        estado: nuevoEstado,
+        analista: analista,
+        comentario: comentario || ('Estado actualizado a ' + nuevoEstado)
+      }, {
+        title: 'Actualizando estado en servidor...',
+        sub: 'Guardando estado "' + nuevoEstado + '" en Servidor Central'
+      });
+    }
+
     /* CAMBIO DIRECTO DE ESTADO (EXCLUSIVO ANALISTA / ADMIN) */
     async function actualizarEstadoDirectoFicha(id) {
       const all = getStoredSolicitudes(); const s = all.find(x => String(x.id) === String(id)); if (!s) return;
@@ -18802,16 +18832,12 @@ ${cierreTxt}`;
       });
 
       saveStoredSolicitudes(all);
-      callApi({
-        action: 'actualizarEstado',
-        id: s.id,
-        estado: nuevo,
-        analista: s.analistaAsignado || session.nombre,
-        comentario: 'Estado actualizado a ' + nuevo
-      }, {
-        title: 'Actualizando estado en servidor...',
-        sub: 'Guardando estado "' + nuevo + '" en Servidor Central'
-      }).catch(console.warn);
+      _actualizarEstadoCanonicoConFallback(
+        s.id,
+        nuevo,
+        s.analistaAsignado || session.nombre,
+        'Estado actualizado a ' + nuevo
+      ).catch(console.warn);
 
       showToast('Estado actualizado a "' + nuevo + '" exitosamente ⚡');
       renderModuloMutualPropias();
@@ -19846,16 +19872,12 @@ ${cierreTxt}`;
         fecha: now, texto: 'Estado de la solicitud actualizado a: ' + nuevo
       });
 
-      const res = await callApi({
-        action: 'actualizarEstado',
-        id: s.id,
-        estado: nuevo,
-        analista: s.analistaAsignado || session?.nombre || 'Analista Mutual',
-        comentario: 'Estado de la solicitud actualizado a: ' + nuevo
-      }, {
-        title: 'Actualizando estado en servidor...',
-        sub: 'Guardando estado ' + nuevo + ' en Servidor Central'
-      });
+      const res = await _actualizarEstadoCanonicoConFallback(
+        s.id,
+        nuevo,
+        s.analistaAsignado || session?.nombre || 'Analista Mutual',
+        'Estado de la solicitud actualizado a: ' + nuevo
+      );
 
       saveStoredSolicitudes(all);
       renderModuloMutualPropias();

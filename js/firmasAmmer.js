@@ -2239,6 +2239,7 @@
 
               const vidSrc = vidB64 ? (vidB64.startsWith('data:') ? vidB64 : `data:${vidMime};base64,${vidB64}`) : '';
               const dlName = `prueba_vida_${(r.dni_solicitante || 'firmante').replace(/\W+/g, '')}.${ext}`;
+              const vidDomId = `mpVidLiv_${String(r.id || '0').replace(/[^A-Za-z0-9_-]/g, '')}`;
               return `
                 <div style="margin-top:1rem;background:#f8fafc;border:1px solid ${migradoDrive ? '#86efac' : '#cbd5e1'};border-radius:13px;padding:0.95rem 1.1rem;">
                   <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.65rem;">
@@ -2259,8 +2260,18 @@
                     </div>
                   </div>
                   ${vidSrc
-                    ? `<video controls playsinline preload="metadata" src="${escHtml(vidSrc)}" style="width:100%;max-width:420px;max-height:280px;border-radius:11px;background:#0f172a;display:block;border:2px solid #cbd5e1;"></video>`
-                    : `<iframe src="${escHtml(vidMeta.drive_preview_url || vidMeta.drive_url)}" allow="autoplay" style="width:100%;max-width:480px;height:280px;border-radius:11px;border:2px solid #86efac;background:#0f172a;display:block;"></iframe>`}
+                    ? `<div id="wrap_${vidDomId}" style="width:100%;max-width:480px;border-radius:12px;overflow:hidden;border:1.5px solid #cbd5e1;background:#020617;box-shadow:0 4px 12px rgba(15,23,42,0.12);">
+                        <video id="${vidDomId}" playsinline preload="metadata" src="${escHtml(vidSrc)}" style="width:100%;height:260px;object-fit:contain;display:block;background:#020617;cursor:pointer;" onclick="window.toggleLivenessVideoPlay('${vidDomId}')" onloadedmetadata="window.syncLivenessVideoMeta('${vidDomId}')" ontimeupdate="window.syncLivenessVideoTime('${vidDomId}')" onended="window.onLivenessVideoEnded('${vidDomId}')"></video>
+                        <div style="background:#0f172a;border-top:1px solid #1e293b;padding:7px 10px;display:flex;align-items:center;gap:8px;color:#f8fafc;">
+                          <button type="button" id="btnPlay_${vidDomId}" onclick="window.toggleLivenessVideoPlay('${vidDomId}')" title="Reproducir / Pausar" style="border:none;background:#2563eb;color:#ffffff;width:30px;height:28px;border-radius:7px;font-size:0.78rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">▶</button>
+                          <input type="range" id="rng_${vidDomId}" min="0" max="1000" value="0" oninput="window.seekLivenessVideo('${vidDomId}', this.value)" style="flex:1;min-width:80px;accent-color:#38bdf8;cursor:pointer;height:5px;"/>
+                          <span id="lblTime_${vidDomId}" style="font-size:0.71rem;color:#cbd5e1;font-variant-numeric:tabular-nums;white-space:nowrap;">00:00 / 00:00</span>
+                          <button type="button" id="btnSpd_${vidDomId}" onclick="window.toggleLivenessVideoSpeed('${vidDomId}')" title="Cambiar velocidad (1x / 0.5x)" style="border:1px solid #334155;background:#1e293b;color:#e2e8f0;padding:3px 7px;border-radius:6px;font-size:0.7rem;font-weight:700;cursor:pointer;flex-shrink:0;">1x</button>
+                          <button type="button" id="btnMute_${vidDomId}" onclick="window.toggleLivenessVideoMute('${vidDomId}')" title="Silenciar / Activar audio" style="border:1px solid #334155;background:#1e293b;color:#e2e8f0;padding:3px 7px;border-radius:6px;font-size:0.75rem;cursor:pointer;flex-shrink:0;">🔊</button>
+                          <button type="button" onclick="window.fullscreenLivenessVideo('wrap_${vidDomId}')" title="Pantalla completa" style="border:1px solid #334155;background:#1e293b;color:#e2e8f0;padding:3px 7px;border-radius:6px;font-size:0.75rem;cursor:pointer;flex-shrink:0;">⛶</button>
+                        </div>
+                      </div>`
+                    : `<div style="width:100%;max-width:480px;border-radius:12px;overflow:hidden;border:2px solid #86efac;background:#0f172a;"><iframe src="${escHtml(vidMeta.drive_preview_url || vidMeta.drive_url)}" allow="autoplay" allowfullscreen style="width:100%;height:280px;border:none;display:block;"></iframe></div>`}
                 </div>
               `;
             })()}
@@ -5017,6 +5028,80 @@
   global.guardarPlantillaDesdeEditor = guardarPlantillaDesdeEditor;
   global.probarEstampadoEditor = probarEstampadoEditor;
   global.exportarExpedienteCompletoZip = exportarExpedienteCompletoZip;
+  function _fmtVidSec(sec) {
+    if (!Number.isFinite(sec) || sec < 0) return '00:00';
+    const s = Math.floor(sec);
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    return `${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
+  }
+
+  function syncLivenessVideoTime(vidId) {
+    const v = document.getElementById(vidId);
+    const rng = document.getElementById(`rng_${vidId}`);
+    const lbl = document.getElementById(`lblTime_${vidId}`);
+    if (!v) return;
+    const dur = Number.isFinite(v.duration) && v.duration > 0 ? v.duration : 0;
+    const cur = Number.isFinite(v.currentTime) ? v.currentTime : 0;
+    if (rng && dur > 0) rng.value = String(Math.min(1000, Math.round((cur / dur) * 1000)));
+    if (lbl) lbl.textContent = `${_fmtVidSec(cur)} / ${dur > 0 ? _fmtVidSec(dur) : '--:--'}`;
+  }
+
+  function syncLivenessVideoMeta(vidId) {
+    syncLivenessVideoTime(vidId);
+  }
+
+  function onLivenessVideoEnded(vidId) {
+    const btn = document.getElementById(`btnPlay_${vidId}`);
+    if (btn) btn.textContent = '▶';
+    syncLivenessVideoTime(vidId);
+  }
+
+  function toggleLivenessVideoPlay(vidId) {
+    const v = document.getElementById(vidId);
+    const btn = document.getElementById(`btnPlay_${vidId}`);
+    if (!v) return;
+    if (v.paused) {
+      v.play().then(() => { if (btn) btn.textContent = '⏸'; }).catch(() => {});
+    } else {
+      v.pause();
+      if (btn) btn.textContent = '▶';
+    }
+  }
+
+  function seekLivenessVideo(vidId, rawVal) {
+    const v = document.getElementById(vidId);
+    if (!v || !Number.isFinite(v.duration) || v.duration <= 0) return;
+    v.currentTime = (Number(rawVal || 0) / 1000) * v.duration;
+    syncLivenessVideoTime(vidId);
+  }
+
+  function toggleLivenessVideoSpeed(vidId) {
+    const v = document.getElementById(vidId);
+    const btn = document.getElementById(`btnSpd_${vidId}`);
+    if (!v) return;
+    v.playbackRate = v.playbackRate === 1 ? 0.5 : 1;
+    if (btn) btn.textContent = `${v.playbackRate}x`;
+  }
+
+  function toggleLivenessVideoMute(vidId) {
+    const v = document.getElementById(vidId);
+    const btn = document.getElementById(`btnMute_${vidId}`);
+    if (!v) return;
+    v.muted = !v.muted;
+    if (btn) btn.textContent = v.muted ? '🔇' : '🔊';
+  }
+
+  function fullscreenLivenessVideo(wrapId) {
+    const el = document.getElementById(wrapId);
+    if (!el) return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else if (el.requestFullscreen) {
+      el.requestFullscreen().catch(() => {});
+    }
+  }
+
   global.esAdminOAnalistaFirma = esAdminOAnalistaFirma;
   global.cargarIndiceFirmasPorExpediente = cargarIndiceFirmasPorExpediente;
   global.obtenerFirmaVinculadaAExpediente = obtenerFirmaVinculadaAExpediente;
@@ -5024,4 +5109,12 @@
   global.aplicarPresetValidacionFirmas = aplicarPresetValidacionFirmas;
   global.onToggleValidacionGenerador = onToggleValidacionGenerador;
   global.actualizarPreviewFraseVozGenerador = actualizarPreviewFraseVozGenerador;
+  global.syncLivenessVideoMeta = syncLivenessVideoMeta;
+  global.syncLivenessVideoTime = syncLivenessVideoTime;
+  global.onLivenessVideoEnded = onLivenessVideoEnded;
+  global.toggleLivenessVideoPlay = toggleLivenessVideoPlay;
+  global.seekLivenessVideo = seekLivenessVideo;
+  global.toggleLivenessVideoSpeed = toggleLivenessVideoSpeed;
+  global.toggleLivenessVideoMute = toggleLivenessVideoMute;
+  global.fullscreenLivenessVideo = fullscreenLivenessVideo;
 })(window);

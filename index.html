@@ -6514,7 +6514,7 @@
                     <h3 class="audit20-card-title">🪪 Padrón de Asociados &amp; Bandeja KYC</h3>
                     <p class="audit20-card-sub">Filtrá por estado KYC y seleccioná un legajo para revisar documentos privados y cruzar con IA AMMER.</p>
                   </div>
-                  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
                     <input type="text" id="inpMpFiltroAsoc" placeholder="DNI, nombre o email..." oninput="window.renderTablaAsociadosMutualPay()" style="padding:0.42rem 0.7rem;border-radius:8px;border:1px solid #cbd5e1;font-size:0.77rem;min-width:180px;"/>
                     <select id="selMpFiltroKyc" onchange="window.renderTablaAsociadosMutualPay()" style="padding:0.42rem 0.7rem;border-radius:8px;border:1px solid #cbd5e1;font-size:0.77rem;font-weight:600;">
                       <option value="">Todos los estados KYC</option>
@@ -6524,6 +6524,7 @@
                       <option value="APPROVED">Aprobados</option>
                       <option value="REJECTED">Rechazados</option>
                     </select>
+                    <button type="button" class="mp-btn mp-btn-primary" onclick="window.abrirAltaAsociadoDesdeTabMp()">+ Alta Asociado App</button>
                   </div>
                 </div>
                 <div id="mpAsociadosTablaContainer" style="max-height:620px;overflow:auto;"></div>
@@ -6681,8 +6682,10 @@
                     <option value="NO_AUTH">Sin cuenta Auth</option>
                     <option value="NO_PIN">Sin PIN transaccional</option>
                   </select>
+                  <button type="button" class="mp-btn mp-btn-primary" onclick="window.toggleFormNuevoAsociadoMp()">+ Alta Asociado App</button>
                 </div>
               </div>
+              <div id="mpFormNuevoAsociadoWrap" style="display:none;padding:0.85rem;border:1px solid #cbd5e1;border-radius:10px;background:#f8fafc;margin-bottom:0.85rem;"></div>
               <div id="mpAccesosAsociadosContainer"></div>
             </div>
 
@@ -27098,6 +27101,6 @@ ${cierreTxt}`;
   <script src="js/sidecreerWidget.js?v=11"></script>
   <script src="js/firmasAmmer.js?v=21"></script>
   <script src="js/whatsappBotAdmin.js?v=4"></script>
-  <script src="js/mutualPayBackoffice.js?v=3"></script>
+  <script src="js/mutualPayBackoffice.js?v=4"></script>
 </body>
 </html>

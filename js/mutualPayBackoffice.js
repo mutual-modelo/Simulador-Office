@@ -30,6 +30,8 @@
     ultimaCredencial: null,
     lastSyncAt: 0,
     formNuevoComercioAbierto: false,
+    formNuevoAsociadoAbierto: false,
+    ammerBusquedaResultados: [],
   };
 
   function getApiBase() {
@@ -1389,6 +1391,175 @@
     }
   }
 
+  function abrirAltaAsociadoDesdeTabMp() {
+    cambiarTabMutualPay('accesos');
+    if (!st.formNuevoAsociadoAbierto) {
+      toggleFormNuevoAsociadoMp(true);
+    }
+    const wrap = document.getElementById('mpFormNuevoAsociadoWrap');
+    if (wrap) wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function toggleFormNuevoAsociadoMp(forceOpen = null) {
+    st.formNuevoAsociadoAbierto = forceOpen === true ? true : !st.formNuevoAsociadoAbierto;
+    const wrap = document.getElementById('mpFormNuevoAsociadoWrap');
+    if (!wrap) return;
+    if (!st.formNuevoAsociadoAbierto) {
+      wrap.style.display = 'none';
+      wrap.innerHTML = '';
+      st.ammerBusquedaResultados = [];
+      return;
+    }
+    wrap.style.display = 'block';
+    wrap.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <div style="font-size:0.82rem;font-weight:800;color:#0f172a;">Alta de Asociado en Mutual Pay (con usuario Supabase Auth)</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <input type="text" id="inpMpBuscarAmmerAlta" placeholder="Buscar DNI o Apellido en AMMER..." style="min-width:220px;padding:0.38rem 0.6rem;border:1px solid #93c5fd;border-radius:8px;font-size:0.76rem;background:#ffffff;"/>
+          <button type="button" class="mp-btn mp-btn-primary" onclick="window.buscarEnAmmerParaAltaMp()">🔎 Traer de Padrón AMMER</button>
+        </div>
+      </div>
+      <div id="mpAmmerAltaResultados" style="margin-bottom:8px;"></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:8px;">
+        <input type="text" id="inpMpAsocDni" placeholder="DNI (sin puntos, 8 dígitos)" style="padding:0.42rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.77rem;"/>
+        <input type="text" id="inpMpAsocCuil" placeholder="CUIL (20-XXXXXXXX-X)" style="padding:0.42rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.77rem;"/>
+        <input type="text" id="inpMpAsocFirst" placeholder="Nombre" style="padding:0.42rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.77rem;"/>
+        <input type="text" id="inpMpAsocLast" placeholder="Apellido" style="padding:0.42rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.77rem;"/>
+        <input type="email" id="inpMpAsocEmail" placeholder="Email de acceso a la App" style="padding:0.42rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.77rem;"/>
+        <input type="text" id="inpMpAsocPhone" placeholder="Teléfono / WhatsApp (+549...)" style="padding:0.42rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.77rem;"/>
+        <select id="selMpAsocCond" style="padding:0.42rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.77rem;">
+          <option value="ACTIVO">ACTIVO (35% ratio)</option>
+          <option value="PASIVO">PASIVO / Jubilado (20% ratio)</option>
+        </select>
+        <input type="number" id="inpMpAsocSalary" placeholder="Sueldo / Haber Neto ($ ARS)" min="0" step="1000" value="800000" style="padding:0.42rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.77rem;"/>
+        <select id="selMpAsocKyc" style="padding:0.42rem 0.6rem;border:1px solid #cbd5e1;border-radius:8px;font-size:0.77rem;">
+          <option value="APPROVED">KYC APPROVED (habilitado ya con cupo)</option>
+          <option value="UNDER_REVIEW">KYC UNDER_REVIEW (pendiente)</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;">
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:0.76rem;color:#334155;font-weight:600;cursor:pointer;">
+          <input type="checkbox" id="chkMpAsocPin" checked />
+          Generar PIN transaccional QR temporal (4 dígitos)
+        </label>
+        <div style="display:flex;gap:8px;">
+          <button type="button" id="btnMpCrearAsociadoSubmit" class="mp-btn mp-btn-success" onclick="window.crearAsociadoMp()">💾 Crear Asociado y Generar Clave</button>
+          <button type="button" class="mp-btn" onclick="window.toggleFormNuevoAsociadoMp(false)">Cancelar</button>
+        </div>
+      </div>
+    `;
+  }
+
+  async function buscarEnAmmerParaAltaMp() {
+    const q = String((document.getElementById('inpMpBuscarAmmerAlta') || {}).value || '').trim();
+    const out = document.getElementById('mpAmmerAltaResultados');
+    if (q.length < 2) {
+      toast('Ingresá al menos 2 caracteres (DNI o apellido).');
+      return;
+    }
+    if (out) out.innerHTML = '<div style="font-size:0.74rem;color:#64748b;">Buscando en Padrón AMMER Core...</div>';
+    try {
+      const res = await apiMp(`/ammer-padron/buscar?q=${encodeURIComponent(q)}`);
+      const list = (res && res.asociados) || [];
+      st.ammerBusquedaResultados = list;
+      if (!out) return;
+      if (!list.length) {
+        out.innerHTML = '<div style="font-size:0.74rem;color:#b45309;">Sin coincidencias en el padrón AMMER; podés completar los datos manualmente abajo.</div>';
+        return;
+      }
+      let html = '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+      list.slice(0, 8).forEach((row, idx) => {
+        html += `<button type="button" class="mp-btn" style="background:#eff6ff;border-color:#93c5fd;color:#1e3a8a;font-size:0.72rem;" onclick="window.usarAsociadoAmmerEnFormMp(${idx})">` +
+          `Usar: <strong>${esc(row.nombre_completo || 'Asociado')}</strong> (DNI ${esc(row.dni || '—')}${row.organismo ? ` · ${esc(row.organismo)}` : ''})` +
+          `</button>`;
+      });
+      html += '</div>';
+      out.innerHTML = html;
+    } catch (err) {
+      if (out) out.innerHTML = `<div style="font-size:0.74rem;color:#9f1239;">Error buscando en AMMER: ${esc(err.message)}</div>`;
+    }
+  }
+
+  function usarAsociadoAmmerEnFormMp(idx) {
+    const row = (st.ammerBusquedaResultados || [])[idx];
+    if (!row) return;
+    const setVal = (id, v) => {
+      const el = document.getElementById(id);
+      if (el && v != null && String(v).trim() !== '') el.value = String(v).trim();
+    };
+    setVal('inpMpAsocDni', row.dni);
+    setVal('inpMpAsocCuil', row.cuil);
+    setVal('inpMpAsocFirst', row.first_name);
+    setVal('inpMpAsocLast', row.last_name);
+    setVal('inpMpAsocEmail', row.email);
+    setVal('inpMpAsocPhone', row.telefono);
+    if (row.ultimo_sueldo != null && Number(row.ultimo_sueldo) > 0) {
+      setVal('inpMpAsocSalary', Math.round(Number(row.ultimo_sueldo)));
+    }
+    const orgUp = String(row.organismo || '').toUpperCase();
+    const selCond = document.getElementById('selMpAsocCond');
+    if (selCond && (orgUp.includes('CAJA') || orgUp.includes('PASIV') || orgUp.includes('JUB'))) {
+      selCond.value = 'PASIVO';
+    }
+    toast(`Datos cargados desde AMMER (${row.dni || ''}). Completá email/CUIL si falta alguno y guardá.`);
+  }
+
+  async function crearAsociadoMp() {
+    const dni = String((document.getElementById('inpMpAsocDni') || {}).value || '').replace(/\D/g, '');
+    const cuitCuil = String((document.getElementById('inpMpAsocCuil') || {}).value || '').trim();
+    const firstName = String((document.getElementById('inpMpAsocFirst') || {}).value || '').trim();
+    const lastName = String((document.getElementById('inpMpAsocLast') || {}).value || '').trim();
+    const email = String((document.getElementById('inpMpAsocEmail') || {}).value || '').trim().toLowerCase();
+    const phone = String((document.getElementById('inpMpAsocPhone') || {}).value || '').trim();
+    const employmentCondition = String((document.getElementById('selMpAsocCond') || {}).value || 'ACTIVO').trim();
+    const salaryPesos = Number((document.getElementById('inpMpAsocSalary') || {}).value || 0);
+    const kycStatus = String((document.getElementById('selMpAsocKyc') || {}).value || 'APPROVED').trim();
+    const generateTempPin = Boolean((document.getElementById('chkMpAsocPin') || {}).checked);
+
+    if (dni.length < 7 || !cuitCuil || !firstName || !lastName || !email.includes('@') || phone.length < 6) {
+      toast('Completá DNI, CUIL (con guiones XX-XXXXXXXX-X), Nombre, Apellido, Email y Teléfono.');
+      return;
+    }
+
+    const btn = document.getElementById('btnMpCrearAsociadoSubmit');
+    if (btn) btn.disabled = true;
+    try {
+      const res = await apiMp('/asociados', {
+        method: 'POST',
+        body: JSON.stringify({
+          dni,
+          cuit_cuil: cuitCuil,
+          first_name: firstName,
+          last_name: lastName,
+          email,
+          phone,
+          employment_condition: employmentCondition,
+          net_salary_cents: Math.max(0, Math.round(salaryPesos * 100)),
+          kyc_status: kycStatus,
+          generate_temp_pin: generateTempPin,
+        }),
+      });
+      const asoc = (res && res.asociado) || {};
+      toast('Asociado creado en Mutual Pay.');
+      toggleFormNuevoAsociadoMp(false);
+      if (asoc.temporary_password) {
+        mostrarCredencialesUnaVez({
+          tipo: 'ASOCIADO',
+          nombre: asoc.full_name || `${firstName} ${lastName}`,
+          login_email: asoc.login_email || email,
+          temporary_password: asoc.temporary_password,
+          temporary_pin: asoc.temporary_pin || null,
+          supabase_auth_ok: Boolean(asoc.supabase_auth_created),
+        });
+      }
+      await cargarTodoMutualPayBackoffice(false);
+    } catch (err) {
+      toast(`Error creando asociado: ${err.message}`);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
   function initMutualPayBackoffice() {
     if (!st.initialized) {
       st.initialized = true;
@@ -1428,4 +1599,9 @@
   global.resetAccesoComercioMp = resetAccesoComercioMp;
   global.cerrarCredencialesUnaVez = cerrarCredencialesUnaVez;
   global.copiarCredencialesMp = copiarCredencialesMp;
+  global.abrirAltaAsociadoDesdeTabMp = abrirAltaAsociadoDesdeTabMp;
+  global.toggleFormNuevoAsociadoMp = toggleFormNuevoAsociadoMp;
+  global.buscarEnAmmerParaAltaMp = buscarEnAmmerParaAltaMp;
+  global.usarAsociadoAmmerEnFormMp = usarAsociadoAmmerEnFormMp;
+  global.crearAsociadoMp = crearAsociadoMp;
 })(window);

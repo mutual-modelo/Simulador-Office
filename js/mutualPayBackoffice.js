@@ -236,6 +236,33 @@
     }
   }
 
+  const loadedTabs = { comercios: false, admin: false };
+
+  async function cargarExtrasTabMutualPay(tabId, force = false) {
+    if (tabId === 'comercios' && (!loadedTabs.comercios || force)) {
+      loadedTabs.comercios = true;
+      const [liqRes, txRes] = await Promise.allSettled([
+        apiMp('/liquidaciones/resumen'),
+        apiMp('/transacciones'),
+      ]);
+      if (liqRes.status === 'fulfilled') st.liquidaciones = liqRes.value.liquidaciones || [];
+      if (txRes.status === 'fulfilled') st.transacciones = txRes.value.transacciones || [];
+      renderTablaLiquidacionesMutualPay();
+      renderTablaTransaccionesMutualPay();
+    } else if (tabId === 'admin' && (!loadedTabs.admin || force)) {
+      loadedTabs.admin = true;
+      const [regRes, cbRes, logRes] = await Promise.allSettled([
+        apiMp('/admin/reglas-financieras'),
+        apiMp('/backoffice/cashback-rules'),
+        apiMp('/admin/audit-logs'),
+      ]);
+      if (regRes.status === 'fulfilled') st.reglasFinancieras = regRes.value.reglas || [];
+      if (cbRes.status === 'fulfilled') st.cashbackRules = cbRes.value.reglas || [];
+      if (logRes.status === 'fulfilled') st.auditLogs = logRes.value.logs || [];
+      renderTabAdminCircular();
+    }
+  }
+
   function cambiarTabMutualPay(tabId) {
     st.tabActiva = tabId;
     const tabs = ['resumen', 'asociados', 'ayudas', 'comercios', 'cobranzas', 'admin', 'accesos'];
@@ -245,6 +272,9 @@
       if (btn) btn.classList.toggle('active', t === tabId);
       if (panel) panel.classList.toggle('active', t === tabId);
     });
+    if (tabId === 'comercios' || tabId === 'admin') {
+      cargarExtrasTabMutualPay(tabId, false);
+    }
   }
 
   async function cargarTodoMutualPayBackoffice(forceToast = false) {
@@ -254,23 +284,20 @@
     if (btn) btn.disabled = true;
 
     try {
-      const estado = await verificarEstadoMutualPay(false);
+      const [estadoRes, resumenRes, accRes, comRes] = await Promise.allSettled([
+        verificarEstadoMutualPay(false),
+        apiMp('/resumen'),
+        apiMp('/admin/accesos'),
+        apiMp('/comercios'),
+      ]);
+
+      const estado = estadoRes.status === 'fulfilled' ? estadoRes.value : null;
       if (estado && !estado.s2s_configured) {
         renderResumenVacio();
         return;
       }
-      if (estado && !estado.api_online && (Number(estado.api_status_code) === 429 || estado.rate_limited)) {
-        return;
-      }
 
-      // Carga escalonada en olas de 3 endpoints para evitar HTTP 429 en plan Render Free
-      const [resumenRes, asocRes, accRes] = await Promise.allSettled([
-        apiMp('/resumen'),
-        apiMp('/asociados'),
-        apiMp('/admin/accesos'),
-      ]);
-
-      const fatalErr = [resumenRes, asocRes, accRes].find(
+      const fatalErr = [resumenRes, accRes, comRes].find(
         (r) =>
           r.status === 'rejected' &&
           r.reason &&
@@ -287,62 +314,15 @@
         return;
       }
 
-      const esRateLimit = (resList) =>
-        resList.find(
-          (r) =>
-            r &&
-            r.status === 'rejected' &&
-            r.reason &&
-            (r.reason.code === 'MUTUALPAY_RATE_LIMITED' || Number(r.reason.status) === 429)
-        );
-
-      await esperarMs(180);
-      const [ayuRes, comRes, liqRes] = await Promise.allSettled([
-        apiMp('/ayudas'),
-        apiMp('/comercios'),
-        apiMp('/liquidaciones/resumen'),
-      ]);
-      let txRes = { status: 'skipped' };
-      let cobRes = { status: 'skipped' };
-      let convRes = { status: 'skipped' };
-      let regRes = { status: 'skipped' };
-      let cbRes = { status: 'skipped' };
-      let logRes = { status: 'skipped' };
-
-      const rl2 = esRateLimit([ayuRes, comRes, liqRes]);
-      if (rl2) {
-        setNotice(`<strong>Atención Mutual Pay (carga parcial):</strong> ${esc(rl2.reason.message)}`, 'warn');
-      } else {
-        await esperarMs(180);
-        [txRes, cobRes, convRes] = await Promise.allSettled([
-          apiMp('/transacciones'),
-          apiMp('/cobranzas-manuales'),
-          apiMp('/convenios'),
-        ]);
-        const rl3 = esRateLimit([txRes, cobRes, convRes]);
-        if (rl3) {
-          setNotice(`<strong>Atención Mutual Pay (carga parcial):</strong> ${esc(rl3.reason.message)}`, 'warn');
-        } else {
-          await esperarMs(180);
-          [regRes, cbRes, logRes] = await Promise.allSettled([
-            apiMp('/admin/reglas-financieras'),
-            apiMp('/backoffice/cashback-rules'),
-            apiMp('/admin/audit-logs'),
-          ]);
-        }
+      if (resumenRes.status === 'fulfilled') {
+        const resVal = resumenRes.value || {};
+        st.resumen = resVal;
+        if (Array.isArray(resVal.asociados)) st.asociados = resVal.asociados;
+        if (Array.isArray(resVal.ayudas)) st.ayudas = resVal.ayudas;
+        if (Array.isArray(resVal.cobranzas)) st.cobranzas = resVal.cobranzas;
+        if (Array.isArray(resVal.convenios)) st.convenios = resVal.convenios;
       }
-
-      if (resumenRes.status === 'fulfilled') st.resumen = resumenRes.value;
-      if (asocRes.status === 'fulfilled') st.asociados = asocRes.value.asociados || [];
-      if (ayuRes.status === 'fulfilled') st.ayudas = ayuRes.value.ayudas || [];
       if (comRes.status === 'fulfilled') st.comercios = comRes.value.comercios || [];
-      if (liqRes.status === 'fulfilled') st.liquidaciones = liqRes.value.liquidaciones || [];
-      if (txRes.status === 'fulfilled') st.transacciones = txRes.value.transacciones || [];
-      if (cobRes.status === 'fulfilled') st.cobranzas = cobRes.value.cobranzas || [];
-      if (convRes.status === 'fulfilled') st.convenios = convRes.value.convenios || [];
-      if (regRes.status === 'fulfilled') st.reglasFinancieras = regRes.value.reglas || [];
-      if (cbRes.status === 'fulfilled') st.cashbackRules = cbRes.value.reglas || [];
-      if (logRes.status === 'fulfilled') st.auditLogs = logRes.value.logs || [];
       if (accRes.status === 'fulfilled') {
         st.accesos = accRes.value || null;
         st.accesosError = null;
@@ -350,8 +330,14 @@
         st.accesosError = (accRes.reason && accRes.reason.message) || 'Error consultando padrón de accesos';
       }
 
+      loadedTabs.comercios = false;
+      loadedTabs.admin = false;
       st.lastSyncAt = Date.now();
       renderAllMutualPay();
+      if (st.tabActiva === 'comercios' || st.tabActiva === 'admin') {
+        await cargarExtrasTabMutualPay(st.tabActiva, true);
+      }
+
       const lbl = document.getElementById('mpHubLastSyncLabel');
       if (lbl) lbl.textContent = `Última sincronización: ${new Date().toLocaleTimeString('es-AR')}`;
       if (forceToast) toast('Mutual Pay sincronizado con Core AMMER.');

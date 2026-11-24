@@ -1371,8 +1371,10 @@
       });
       if (res.enviado_por_bot) {
         notify(tipo === 'envio' ? 'Enlace enviado automáticamente por el Bot WhatsApp AMMER.' : 'Recordatorio enviado automáticamente por el Bot WhatsApp AMMER.', 'success');
+      } else if (res.disabled) {
+        notify(res.motivo || 'El envío de WhatsApp está desactivado para esta acción en Bot WhatsApp.', 'info');
       } else if (res.wa_link) {
-        notify('Bot WA desconectado; abriendo chat manual en WhatsApp Web...', 'warning');
+        notify(res.unassigned ? 'Sin línea WhatsApp asignada; abriendo chat manual en WhatsApp Web...' : 'Bot WA desconectado; abriendo chat manual en WhatsApp Web...', 'warning');
         window.open(res.wa_link, '_blank', 'noopener');
       } else {
         notify(res.motivo || 'No se pudo enviar por WhatsApp.', 'warning');

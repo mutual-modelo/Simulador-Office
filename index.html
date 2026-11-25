@@ -11084,6 +11084,11 @@ ${cierreTxt}`;
       _cloudSyncPromise = (async () => {
         const syncBadge = document.getElementById('topbarSyncBadge');
         if (syncBadge) syncBadge.style.display = 'inline-flex';
+        if ((!Array.isArray(window.solicitudesNube) || window.solicitudesNube.length === 0) && typeof window.renderSkeletonRows === 'function') {
+          window.renderSkeletonRows('tablaMisSolicitudesBody', 7, 5);
+          window.renderSkeletonRows('tablaRedSolicitudesBody', 8, 5);
+          window.renderSkeletonRows('tablaMutualBody', 8, 5);
+        }
         if (!silencioso) {
           mostrarCargando('🔄 Actualizando expedientes desde la base central...', 'Consultando expedientes y Legajos Digitales en tiempo real');
         }

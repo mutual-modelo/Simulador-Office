@@ -395,6 +395,8 @@
             const jsonBlock = mostrarJsonTecnico
               ? ('<details style="margin-top:6px;"><summary style="font-size:11px;color:#135596;font-weight:600;cursor:pointer;">Ver detalle técnico</summary><pre style="margin-top:4px;padding:0.5rem;border-radius:8px;background:#0f172a;color:#e2e8f0;font-size:10px;max-height:180px;overflow:auto;">' + sanitizeHTML(JSON.stringify(ev.datos_extraidos_json || {}, null, 2)) + '</pre></details>')
               : '';
+            const evExpId = String(ev.expediente_id || ev.solicitud_id || ev.id_expediente || '').trim();
+            const evSafeExpId = evExpId.replace(/'/g, "\\'");
             return '<div style="padding:0.85rem 1rem;border-radius:12px;border:1px solid #e2e8f0;background:#ffffff;margin-bottom:0.55rem;">' +
               '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0.4rem;">' +
                 '<div style="display:flex;align-items:center;gap:0.45rem;flex-wrap:wrap;">' +
@@ -402,7 +404,10 @@
                   _badgeEstadoFichaHtml(ev.estado_resultado, true) +
                   badgeVig +
                 '</div>' +
-                '<span style="font-size:11px;color:#64748b;">' + sanitizeHTML(fechaTxt) + (ev.analista_nombre ? (' · ' + sanitizeHTML(ev.analista_nombre)) : '') + '</span>' +
+                '<div style="display:flex;align-items:center;gap:0.45rem;flex-wrap:wrap;">' +
+                  '<span style="font-size:11px;color:#64748b;">' + sanitizeHTML(fechaTxt) + (ev.analista_nombre ? (' · ' + sanitizeHTML(ev.analista_nombre)) : '') + '</span>' +
+                  (evSafeExpId ? '<button type="button" onclick="if(typeof verFichaCompleta===\'function\'){verFichaCompleta(\'' + evSafeExpId + '\');}" style="padding:2px 8px;border-radius:7px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-size:0.7rem;font-weight:700;cursor:pointer;">👁️ Ver Ficha</button>' : '') +
+                '</div>' +
               '</div>' +
               (ev.resumen ? ('<div style="font-size:0.78rem;color:#334155;margin-top:5px;">' + sanitizeHTML(ev.resumen) + '</div>') : '') +
               (alertas.length > 0 ? ('<ul style="margin:5px 0 0 1.1rem;padding:0;font-size:0.74rem;color:#9f1239;">' + alertas.map(a => '<li>' + sanitizeHTML(a) + '</li>').join('') + '</ul>') : '') +

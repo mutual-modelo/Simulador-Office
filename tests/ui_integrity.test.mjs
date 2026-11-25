@@ -33,7 +33,9 @@ test('UI Integrity: funciones críticas de onclick en index.html están definida
     'setLinea',
     'setModo',
     'setPlazo',
-    'normalizarNombreArchivoDrive'
+    'normalizarNombreArchivoDrive',
+    'toggleMenuAccionesFila',
+    'cambiarTabFichaCompleta'
   ];
 
   const jsBundle = [

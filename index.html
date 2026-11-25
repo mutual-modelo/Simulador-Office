@@ -612,15 +612,6 @@
           </div>
 
           <div class="filter-select-box">
-            <select id="filtroComercialLinea" class="filter-select" onchange="filtrarGestionesComercializador()" title="Línea de Ayuda Económica">
-              <option value="">Todas las Líneas</option>
-              <option value="FEDEM Provincial">FEDEM Provincial</option>
-              <option value="QUAD Municipal">QUAD Municipal</option>
-              <option value="Convenio Sidecreer">Convenio Sidecreer</option>
-            </select>
-          </div>
-
-          <div class="filter-select-box">
             <select id="filtroComercialEstado" class="filter-select" onchange="filtrarGestionesComercializador()" title="Estado de Solicitud">
               <option value="">Todos los Estados</option>
               <option value="Pendiente">Pendiente 🟡</option>
@@ -632,19 +623,6 @@
             </select>
           </div>
 
-          <div class="filter-date-group">
-            <span class="date-label">Desde</span>
-            <input type="date" id="filtroComercialFechaDesde" class="filter-date-input" onchange="filtrarGestionesComercializador()"/>
-            <span class="date-label">Hasta</span>
-            <input type="date" id="filtroComercialFechaHasta" class="filter-date-input" onchange="filtrarGestionesComercializador()"/>
-          </div>
-
-          <div class="filter-select-box" id="wrapFiltroComercialAsesor" style="display:none;">
-            <select id="filtroComercialAsesor" class="filter-select" onchange="filtrarGestionesComercializador()" title="Comercializador / Asesor">
-              <option value="">Todos los Asesores</option>
-            </select>
-          </div>
-
           <button type="button" class="btn-filter-clear" onclick="limpiarFiltros('comercializador')" title="Restablecer todos los filtros de búsqueda">
             <svg class="clear-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -653,6 +631,35 @@
             <span>Limpiar</span>
           </button>
         </div>
+
+        <details class="ui-accordion filters-adv-accordion">
+          <summary>⚙️ Más filtros (Línea, Fechas, Asesor)</summary>
+          <div class="ui-accordion-body">
+            <div class="filters-grid-row">
+              <div class="filter-select-box">
+                <select id="filtroComercialLinea" class="filter-select" onchange="filtrarGestionesComercializador()" title="Línea de Ayuda Económica">
+                  <option value="">Todas las Líneas</option>
+                  <option value="FEDEM Provincial">FEDEM Provincial</option>
+                  <option value="QUAD Municipal">QUAD Municipal</option>
+                  <option value="Convenio Sidecreer">Convenio Sidecreer</option>
+                </select>
+              </div>
+
+              <div class="filter-date-group">
+                <span class="date-label">Desde</span>
+                <input type="date" id="filtroComercialFechaDesde" class="filter-date-input" onchange="filtrarGestionesComercializador()"/>
+                <span class="date-label">Hasta</span>
+                <input type="date" id="filtroComercialFechaHasta" class="filter-date-input" onchange="filtrarGestionesComercializador()"/>
+              </div>
+
+              <div class="filter-select-box" id="wrapFiltroComercialAsesor" style="display:none;">
+                <select id="filtroComercialAsesor" class="filter-select" onchange="filtrarGestionesComercializador()" title="Comercializador / Asesor">
+                  <option value="">Todos los Asesores</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </details>
 
         <div class="filters-footer-meta">
           <span class="count-badge" id="lblTotalComercializador">0 solicitudes registradas</span>
@@ -785,15 +792,6 @@
           </div>
 
           <div class="filter-select-box">
-            <select id="filtroMutualPropiasLinea" class="filter-select" onchange="filtrarGestionesMutualPropias()" title="Línea de Ayuda Económica">
-              <option value="">Todas las Líneas</option>
-              <option value="FEDEM Provincial">FEDEM Provincial</option>
-              <option value="QUAD Municipal">QUAD Municipal</option>
-              <option value="Convenio Sidecreer">Convenio Sidecreer</option>
-            </select>
-          </div>
-
-          <div class="filter-select-box">
             <select id="filtroMutualPropiasEstado" class="filter-select" onchange="filtrarGestionesMutualPropias()" title="Estado de Gestión">
               <option value="">Todos los Estados</option>
               <option value="Pendiente">Pendiente 🟡</option>
@@ -805,30 +803,6 @@
             </select>
           </div>
 
-          <div class="filter-date-group">
-            <span class="date-label">Desde</span>
-            <input type="date" id="filtroMutualPropiasFechaDesde" class="filter-date-input" onchange="filtrarGestionesMutualPropias()"/>
-            <span class="date-label">Hasta</span>
-            <input type="date" id="filtroMutualPropiasFechaHasta" class="filter-date-input" onchange="filtrarGestionesMutualPropias()"/>
-          </div>
-
-          <div class="filter-select-box">
-            <select id="filtroMutualPropiasCanal" class="filter-select" onchange="filtrarGestionesMutualPropias()" title="Canal de Ingreso">
-              <option value="">Todos los Canales</option>
-              <option value="Presencial Sede Central">🏛️ Presencial Sede Social</option>
-              <option value="WhatsApp Oficial">💬 WhatsApp Oficial</option>
-              <option value="Telefónico">📞 Telefónico</option>
-            </select>
-          </div>
-
-          <div class="filter-select-box">
-            <select id="filtroMutualPropiasOrganismo" class="filter-select" onchange="filtrarGestionesMutualPropias()" title="Tipo de Organismo">
-              <option value="">Todos los Organismos</option>
-              <option value="Provincial">Provincial</option>
-              <option value="Municipal">Municipal</option>
-            </select>
-          </div>
-
           <button type="button" class="btn-filter-clear" onclick="limpiarFiltros('mutualPropias')" title="Restablecer filtros de búsqueda">
             <svg class="clear-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -837,6 +811,46 @@
             <span>Limpiar</span>
           </button>
         </div>
+
+        <details class="ui-accordion filters-adv-accordion">
+          <summary>⚙️ Más filtros (Línea, Fechas, Canal, Organismo)</summary>
+          <div class="ui-accordion-body">
+            <div class="filters-grid-row">
+              <div class="filter-select-box">
+                <select id="filtroMutualPropiasLinea" class="filter-select" onchange="filtrarGestionesMutualPropias()" title="Línea de Ayuda Económica">
+                  <option value="">Todas las Líneas</option>
+                  <option value="FEDEM Provincial">FEDEM Provincial</option>
+                  <option value="QUAD Municipal">QUAD Municipal</option>
+                  <option value="Convenio Sidecreer">Convenio Sidecreer</option>
+                </select>
+              </div>
+
+              <div class="filter-date-group">
+                <span class="date-label">Desde</span>
+                <input type="date" id="filtroMutualPropiasFechaDesde" class="filter-date-input" onchange="filtrarGestionesMutualPropias()"/>
+                <span class="date-label">Hasta</span>
+                <input type="date" id="filtroMutualPropiasFechaHasta" class="filter-date-input" onchange="filtrarGestionesMutualPropias()"/>
+              </div>
+
+              <div class="filter-select-box">
+                <select id="filtroMutualPropiasCanal" class="filter-select" onchange="filtrarGestionesMutualPropias()" title="Canal de Ingreso">
+                  <option value="">Todos los Canales</option>
+                  <option value="Presencial Sede Central">🏛️ Presencial Sede Social</option>
+                  <option value="WhatsApp Oficial">💬 WhatsApp Oficial</option>
+                  <option value="Telefónico">📞 Telefónico</option>
+                </select>
+              </div>
+
+              <div class="filter-select-box">
+                <select id="filtroMutualPropiasOrganismo" class="filter-select" onchange="filtrarGestionesMutualPropias()" title="Tipo de Organismo">
+                  <option value="">Todos los Organismos</option>
+                  <option value="Provincial">Provincial</option>
+                  <option value="Municipal">Municipal</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </details>
 
         <div class="filters-footer-meta">
           <span class="count-badge" id="lblTotalMutualPropias">0 solicitudes sede</span>
@@ -950,15 +964,6 @@
           </div>
 
           <div class="filter-select-box">
-            <select id="filtroMutualLinea" class="filter-select" onchange="filtrarGestionesMutual()" title="Línea de Ayuda Económica">
-              <option value="">Todas las Líneas</option>
-              <option value="FEDEM Provincial">FEDEM Provincial</option>
-              <option value="QUAD Municipal">QUAD Municipal</option>
-              <option value="Convenio Sidecreer">Convenio Sidecreer</option>
-            </select>
-          </div>
-
-          <div class="filter-select-box">
             <select id="filtroMutualEstado" class="filter-select" onchange="filtrarGestionesMutual()" title="Estado de Gestión">
               <option value="">Todos los Estados</option>
               <option value="Pendiente">Pendiente 🟡</option>
@@ -970,33 +975,6 @@
             </select>
           </div>
 
-          <div class="filter-date-group">
-            <span class="date-label">Desde</span>
-            <input type="date" id="filtroMutualFechaDesde" class="filter-date-input" onchange="filtrarGestionesMutual()"/>
-            <span class="date-label">Hasta</span>
-            <input type="date" id="filtroMutualFechaHasta" class="filter-date-input" onchange="filtrarGestionesMutual()"/>
-          </div>
-
-          <div class="filter-select-box">
-            <select id="filtroMutualOrganizacion" class="filter-select" onchange="filtrarGestionesMutual()" title="Organización Comercial">
-              <option value="">Todas las Organizaciones</option>
-            </select>
-          </div>
-
-          <div class="filter-select-box">
-            <select id="filtroMutualComercial" class="filter-select" onchange="filtrarGestionesMutual()" title="Comercializador / Asesor">
-              <option value="">Todos los Asesores</option>
-            </select>
-          </div>
-
-          <div class="filter-select-box">
-            <select id="filtroMutualOrganismo" class="filter-select" onchange="filtrarGestionesMutual()" title="Tipo de Organismo">
-              <option value="">Todos los Organismos</option>
-              <option value="Provincial">Provincial</option>
-              <option value="Municipal">Municipal</option>
-            </select>
-          </div>
-
           <button type="button" class="btn-filter-clear" onclick="limpiarFiltros('mutual')" title="Restablecer filtros de búsqueda">
             <svg class="clear-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1005,6 +983,49 @@
             <span>Limpiar</span>
           </button>
         </div>
+
+        <details class="ui-accordion filters-adv-accordion">
+          <summary>⚙️ Más filtros (Línea, Fechas, Organización, Asesor, Organismo)</summary>
+          <div class="ui-accordion-body">
+            <div class="filters-grid-row">
+              <div class="filter-select-box">
+                <select id="filtroMutualLinea" class="filter-select" onchange="filtrarGestionesMutual()" title="Línea de Ayuda Económica">
+                  <option value="">Todas las Líneas</option>
+                  <option value="FEDEM Provincial">FEDEM Provincial</option>
+                  <option value="QUAD Municipal">QUAD Municipal</option>
+                  <option value="Convenio Sidecreer">Convenio Sidecreer</option>
+                </select>
+              </div>
+
+              <div class="filter-date-group">
+                <span class="date-label">Desde</span>
+                <input type="date" id="filtroMutualFechaDesde" class="filter-date-input" onchange="filtrarGestionesMutual()"/>
+                <span class="date-label">Hasta</span>
+                <input type="date" id="filtroMutualFechaHasta" class="filter-date-input" onchange="filtrarGestionesMutual()"/>
+              </div>
+
+              <div class="filter-select-box">
+                <select id="filtroMutualOrganizacion" class="filter-select" onchange="filtrarGestionesMutual()" title="Organización Comercial">
+                  <option value="">Todas las Organizaciones</option>
+                </select>
+              </div>
+
+              <div class="filter-select-box">
+                <select id="filtroMutualComercial" class="filter-select" onchange="filtrarGestionesMutual()" title="Comercializador / Asesor">
+                  <option value="">Todos los Asesores</option>
+                </select>
+              </div>
+
+              <div class="filter-select-box">
+                <select id="filtroMutualOrganismo" class="filter-select" onchange="filtrarGestionesMutual()" title="Tipo de Organismo">
+                  <option value="">Todos los Organismos</option>
+                  <option value="Provincial">Provincial</option>
+                  <option value="Municipal">Municipal</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </details>
 
         <div class="filters-footer-meta">
           <span class="count-badge" id="lblTotalMutual">0 solicitudes</span>
@@ -7836,6 +7857,83 @@ ${cierreTxt}`;
     window.cargarModuloOnDemand = cargarModuloOnDemand;
     window.filtrarGestionesDebounced = filtrarGestionesDebounced;
 
+    function cerrarMenusAccionesFila() {
+      document.querySelectorAll('.crm-row-menu-popover.is-open').forEach((pop) => {
+        pop.classList.remove('is-open');
+        const btn = pop.parentElement && pop.parentElement.querySelector('.crm-row-menu-btn');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      });
+    }
+
+    function toggleMenuAccionesFila(ev, btn) {
+      if (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+      }
+      if (!btn || !btn.parentElement) return;
+      const pop = btn.parentElement.querySelector('.crm-row-menu-popover');
+      if (!pop) return;
+      const yaAbierto = pop.classList.contains('is-open');
+      cerrarMenusAccionesFila();
+      if (yaAbierto) return;
+
+      pop.classList.add('is-open');
+      btn.setAttribute('aria-expanded', 'true');
+      const rect = btn.getBoundingClientRect();
+      const popH = pop.offsetHeight || 160;
+      const popW = pop.offsetWidth || 220;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const topPos = spaceBelow >= popH + 10 ? (rect.bottom + 4) : Math.max(8, rect.top - popH - 4);
+      const leftPos = Math.max(8, Math.min(window.innerWidth - popW - 8, rect.right - popW));
+      pop.style.top = topPos + 'px';
+      pop.style.left = leftPos + 'px';
+    }
+
+    function renderMenuAccionesFilaCrm_(s, driveLinkHtml, validacionHtml) {
+      const sIdEsc = sanitizeHTML(String((s && s.id) || ''));
+      const cicloHtml = (typeof renderBotonCicloVida === 'function') ? renderBotonCicloVida(s) : '';
+      return '<div class="crm-row-menu-wrap">' +
+        '<button type="button" class="crm-row-menu-btn" onclick="toggleMenuAccionesFila(event, this)" aria-haspopup="true" aria-expanded="false" title="Más acciones (Subir Docs, Drive, Ciclo de vida)">⋮</button>' +
+        '<div class="crm-row-menu-popover" role="menu" onclick="cerrarMenusAccionesFila()">' +
+          '<button type="button" role="menuitem" onclick="event.stopPropagation();cerrarMenusAccionesFila();abrirModalSubirLoteExpediente(\'' + sIdEsc + '\')">📤 Subir Docs (Lote)</button>' +
+          (validacionHtml || '') +
+          (driveLinkHtml || '') +
+          (cicloHtml || '') +
+        '</div>' +
+      '</div>';
+    }
+
+    document.addEventListener('click', (ev) => {
+      if (!ev.target || !ev.target.closest || !ev.target.closest('.crm-row-menu-wrap')) {
+        cerrarMenusAccionesFila();
+      }
+    });
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape') cerrarMenusAccionesFila();
+    });
+    window.addEventListener('scroll', cerrarMenusAccionesFila, true);
+
+    window._fichaTabActivaState = { id: null, tab: 'resumen' };
+    function cambiarTabFichaCompleta(tabKey) {
+      const valid = ['resumen', 'solicitante', 'legajo', 'bitacora'].includes(tabKey) ? tabKey : 'resumen';
+      window._fichaTabActivaState.tab = valid;
+      document.querySelectorAll('#fichaModalBody .ficha-tab-btn').forEach((btn) => {
+        const active = btn.getAttribute('data-ficha-tab') === valid;
+        btn.classList.toggle('is-active', active);
+        btn.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      document.querySelectorAll('#fichaModalBody .ficha-tab-panel').forEach((pnl) => {
+        pnl.classList.toggle('is-active', pnl.getAttribute('data-ficha-panel') === valid);
+      });
+      if (valid === 'bitacora') {
+        const ch = document.getElementById('fichaChatContainer');
+        if (ch) ch.scrollTop = ch.scrollHeight;
+      }
+    }
+    window.cerrarMenusAccionesFila = cerrarMenusAccionesFila;
+    window.toggleMenuAccionesFila = toggleMenuAccionesFila;
+    window.cambiarTabFichaCompleta = cambiarTabFichaCompleta;
+
     function tieneAccesoPadronFichas(sessObj) {
       const s = sessObj || getSession();
       const rol = String((s && (s.rol || s.role)) || '').trim().toLowerCase();
@@ -11334,9 +11432,7 @@ ${cierreTxt}`;
               '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
               '<span>Ver Ficha</span>' +
             '</button>' +
-            '<button type="button" class="crm-btn-upload-lote" onclick="event.stopPropagation();abrirModalSubirLoteExpediente(\'' + sIdEsc + '\')" title="Subir uno o varios documentos al legajo (también podés arrastrar archivos sobre esta fila)">📤 Subir Docs</button>' +
-            driveLinkHtml +
-            (typeof renderBotonCicloVida === 'function' ? renderBotonCicloVida(s) : '') +
+            renderMenuAccionesFilaCrm_(s, driveLinkHtml, '') +
           '</div></td>' +
           '</tr>';
       }).join('');
@@ -12370,8 +12466,22 @@ ${cierreTxt}`;
       }
       html += idBoxHtml;
 
+      const docsCountFicha = (s.archivosAdjuntos ? s.archivosAdjuntos.length : (s.adjuntos ? s.adjuntos.length : 0));
+      const bitacoraPreviewCount = normalizarBitacoraComentarios(s).length;
+      if (!window._fichaTabActivaState || String(window._fichaTabActivaState.id || '') !== String(s.id)) {
+        window._fichaTabActivaState = { id: String(s.id), tab: 'resumen' };
+      }
+      const tabFichaAct = window._fichaTabActivaState.tab || 'resumen';
+      html += '<div class="ficha-tabs-bar" role="tablist" aria-label="Secciones de la ficha del expediente">' +
+        '<button type="button" role="tab" class="ficha-tab-btn' + (tabFichaAct === 'resumen' ? ' is-active' : '') + '" data-ficha-tab="resumen" aria-selected="' + (tabFichaAct === 'resumen') + '" onclick="cambiarTabFichaCompleta(\'resumen\')">📋 Resumen y Oferta</button>' +
+        '<button type="button" role="tab" class="ficha-tab-btn' + (tabFichaAct === 'solicitante' ? ' is-active' : '') + '" data-ficha-tab="solicitante" aria-selected="' + (tabFichaAct === 'solicitante') + '" onclick="cambiarTabFichaCompleta(\'solicitante\')">👤 Solicitante</button>' +
+        '<button type="button" role="tab" class="ficha-tab-btn' + (tabFichaAct === 'legajo' ? ' is-active' : '') + '" data-ficha-tab="legajo" aria-selected="' + (tabFichaAct === 'legajo') + '" onclick="cambiarTabFichaCompleta(\'legajo\')">📁 Legajo (' + docsCountFicha + ')</button>' +
+        '<button type="button" role="tab" class="ficha-tab-btn' + (tabFichaAct === 'bitacora' ? ' is-active' : '') + '" data-ficha-tab="bitacora" aria-selected="' + (tabFichaAct === 'bitacora') + '" onclick="cambiarTabFichaCompleta(\'bitacora\')">💬 Bitácora (' + bitacoraPreviewCount + ')</button>' +
+      '</div>';
+
       // 3. SECCIÓN 1: FORMULARIO DE EDICIÓN INTEGRAL DE DATOS DEL ASOCIADO
-      html += '<div class="section-title-divider">1. Datos Personales y Laborales del Asociado (Modificables)</div>' +
+      html += '<div class="ficha-tab-panel' + (tabFichaAct === 'solicitante' ? ' is-active' : '') + '" data-ficha-panel="solicitante">' +
+        '<div class="section-title-divider">1. Datos Personales y Laborales del Asociado (Modificables)</div>' +
         '<form onsubmit="guardarEdicionSolicitante(event, \'' + s.id + '\')" id="formEditSolicitante">' +
           '<div class="grid-3-cols">' +
             '<div class="form-group"><label class="form-label">DNI *</label><input type="text" id="editDni" class="input-text" value="' + (s.solicitante?.dni || '') + '" required/></div>' +
@@ -12481,7 +12591,8 @@ ${cierreTxt}`;
         (s.planDeseado && s.planDeseado.linea) ||
         lineaDeseadaNombre;
 
-      html += '<div class="section-title-divider">2. Condiciones Deseadas vs. Oferta Oficial Mutual</div>' +
+      html += '</div><div class="ficha-tab-panel' + (tabFichaAct === 'resumen' ? ' is-active' : '') + '" data-ficha-panel="resumen">' +
+        '<div class="section-title-divider">2. Condiciones Deseadas vs. Oferta Oficial Mutual</div>' +
         '<div class="compare-offers-grid">' +
           '<!-- Tarjeta 1: Plan Deseado Solicitante -->' +
           '<div class="offer-card offer-card-desired">' +
@@ -12721,7 +12832,8 @@ ${cierreTxt}`;
       }
 
       // 5. SECCIÓN 3: GESTOR Y VISOR DOCUMENTAL ONLINE (VER, DESCARGAR, REEMPLAZAR, OBSERVAR)
-      html += '<div class="section-title-divider" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">' +
+      html += '</div><div class="ficha-tab-panel' + (tabFichaAct === 'legajo' ? ' is-active' : '') + '" data-ficha-panel="legajo">' +
+        '<div class="section-title-divider" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">' +
         '<span>3. Legajo Documental Online (Ver, Descargar, Reemplazar)</span>' +
         (isAnalistaOAdmin ?
           '<button type="button" class="btn-doc-observe" onclick="abrirPanelObservarDocumento(\'' + s.id + '\', -1)">⚠️ Solicitar / Observar Documento</button>' : '') +
@@ -12933,7 +13045,8 @@ ${cierreTxt}`;
       s.historialComentarios = listaBitacora;
       s.comentarios = listaBitacora;
 
-      html += '<div class="section-title-divider">Chat de Auditoría y Línea de Tiempo (' + listaBitacora.length + ')</div>' +
+      html += '</div><div class="ficha-tab-panel' + (tabFichaAct === 'bitacora' ? ' is-active' : '') + '" data-ficha-panel="bitacora">' +
+        '<div class="section-title-divider">Chat de Auditoría y Línea de Tiempo (' + listaBitacora.length + ')</div>' +
         '<div class="chat-container" id="fichaChatContainer">';
 
       if (listaBitacora.length === 0) {
@@ -13012,6 +13125,7 @@ ${cierreTxt}`;
         '</div>' +
       '</div>';
 
+      html += '</div>';
       body.innerHTML = html;
       if (window.__loteExpedienteState && window.__loteExpedienteState.ficha) {
         if (String(window.__loteExpedienteState.ficha.id || '') !== String(s.id)) {
@@ -16244,10 +16358,7 @@ ${cierreTxt}`;
               '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
               '<span>Ver Ficha</span>' +
             '</button>' +
-            '<button type="button" class="crm-btn-upload-lote" onclick="event.stopPropagation();abrirModalSubirLoteExpediente(\'' + sanitizeHTML(String(s.id || '')) + '\')" title="Subir documentación por lote o arrastrar archivos a la fila">📤 Subir Docs</button>' +
-            renderBotonVerValidacionExpediente(s) +
-            driveLinkHtml +
-            (typeof renderBotonCicloVida === 'function' ? renderBotonCicloVida(s) : '') +
+            renderMenuAccionesFilaCrm_(s, driveLinkHtml, renderBotonVerValidacionExpediente(s)) +
           '</div></td>' +
           '</tr>';
       }).join('');
@@ -16385,10 +16496,7 @@ ${cierreTxt}`;
               '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
               '<span>Ver Ficha</span>' +
             '</button>' +
-            '<button type="button" class="crm-btn-upload-lote" onclick="event.stopPropagation();abrirModalSubirLoteExpediente(\'' + sanitizeHTML(String(s.id || '')) + '\')" title="Subir documentación por lote o arrastrar archivos a la fila">📤 Subir Docs</button>' +
-            renderBotonVerValidacionExpediente(s) +
-            driveLinkHtml +
-            (typeof renderBotonCicloVida === 'function' ? renderBotonCicloVida(s) : '') +
+            renderMenuAccionesFilaCrm_(s, driveLinkHtml, renderBotonVerValidacionExpediente(s)) +
           '</div></td>' +
           '</tr>';
       }).join('');

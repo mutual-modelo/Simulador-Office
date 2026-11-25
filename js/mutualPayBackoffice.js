@@ -382,7 +382,8 @@
       heroKpis.innerHTML =
         `<span class="mp-hub-kpi-pill">👥 Asociados App: <strong>${Number(c.asociados_total ?? ov.associates_count ?? 0)}</strong></span>` +
         `<span class="mp-hub-kpi-pill">🔗 Cruzados AMMER: <strong>${Number(c.asociados_en_ammer || 0)}</strong></span>` +
-        `<span class="mp-hub-kpi-pill">🪪 KYC Pendientes: <strong>${Number(c.kyc_pendientes || 0)}</strong></span>` +
+        `<button type="button" class="mp-hub-kpi-pill" onclick="cambiarTabMutualPay('mpTabKyc')" style="cursor:pointer;" title="Ir a KYC Pendientes">🪪 KYC Pendientes: <strong>${Number(c.kyc_pendientes || 0)}</strong></button>` +
+        `<button type="button" class="mp-hub-kpi-pill" onclick="cambiarTabMutualPay('mpTabAyudas')" style="cursor:pointer;" title="Ir a Ayudas Pendientes">💸 Ayudas Pendientes: <strong>${Number(c.ayudas_pendientes || 0)}</strong></button>` +
         `<span class="mp-hub-kpi-pill">🏪 Comercios Activos: <strong>${Number(ov.active_merchants_count || st.comercios.length || 0)}</strong></span>` +
         `<span class="mp-hub-kpi-pill">♻️ Retención Circular: <strong>${Number(circ.circular_retention_index_pct || 0)}%</strong></span>`;
     }
@@ -838,8 +839,14 @@
       const dniRaw = String(r.associate_dni || r.dni || '').replace(/\D/g, '');
       const cbuRaw = String(r.cbu_cvu_destination || '');
       const phoneRaw = String((r.ammer_cruce && r.ammer_cruce.asociado && (r.ammer_cruce.asociado.telefono || r.ammer_cruce.asociado.celular)) || r.associate_phone || '');
+      const ageHrs = r.created_at ? ((Date.now() - new Date(r.created_at).getTime()) / 3600000) : 0;
+      const slaBadge = (pend && ageHrs >= 48)
+        ? '<span style="display:inline-block;margin-top:2px;padding:1px 6px;border-radius:999px;font-size:10px;font-weight:700;background:#fee2e2;color:#991b1b;">🔥 >48h</span>'
+        : ((pend && ageHrs >= 24)
+          ? '<span style="display:inline-block;margin-top:2px;padding:1px 6px;border-radius:999px;font-size:10px;font-weight:700;background:#fef3c7;color:#92400e;">⏱️ >24h</span>'
+          : '');
       html += `<tr>
-        <td>${fmtFecha(r.created_at)}</td>
+        <td>${fmtFecha(r.created_at)}<div>${slaBadge}</div></td>
         <td><strong>${esc(fullName || '—')}</strong><div style="font-size:0.68rem;color:#64748b;">${esc(r.associate_cuit || '')}</div></td>
         <td><code>${esc(r.request_type || '')}</code></td>
         <td><strong>${fmtArsFromMinor(r.requested_amount_minor || 0)}</strong><div style="font-size:0.68rem;color:#64748b;">${cuotas} cuotas</div></td>
@@ -847,11 +854,16 @@
         <td>${badgeAmmerCruce(r.ammer_cruce)}</td>
         <td>${badgeStatus(r.status)}</td>
         <td>
-          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
             ${pend ? `<button type="button" class="mp-btn mp-btn-success" data-mp-action="resolver-ayuda" data-id="${esc(id)}" data-status="APPROVED" data-nombre="${esc(fullName)}" data-monto="${montoPesos}">Aprobar</button><button type="button" class="mp-btn mp-btn-danger" data-mp-action="resolver-ayuda" data-id="${esc(id)}" data-status="REJECTED" data-nombre="${esc(fullName)}" data-monto="${montoPesos}">Rechazar</button>` : ''}
-            <button type="button" class="mp-btn" title="Precargar contexto completo en Simulador" data-mp-action="simular-ayuda" data-monto="${montoPesos}" data-cuotas="${cuotas}" data-dni="${esc(dniRaw)}" data-cbu="${esc(cbuRaw)}" data-nombre="${esc(fullName)}" data-id="${esc(id)}">🧮 Simular</button>
-            <button type="button" class="mp-btn mp-btn-indigo" title="Ir a Firmas AMMER con datos precargados" data-mp-action="firmas-ayuda" data-monto="${montoPesos}" data-cuotas="${cuotas}" data-dni="${esc(dniRaw)}" data-nombre="${esc(fullName)}" data-phone="${esc(phoneRaw)}" data-id="${esc(id)}">✍️ Firmas</button>
-            <button type="button" class="mp-btn" title="Generar sobre automático de firma AMMER" data-mp-action="generar-sobre-ayuda" data-id="${esc(id)}" data-nombre="${esc(fullName)}">📜 Sobre Firma</button>
+            <div class="crm-row-menu-wrap">
+              <button type="button" class="crm-row-menu-btn" onclick="if(typeof toggleMenuAccionesFila==='function')toggleMenuAccionesFila(event,this)" aria-haspopup="true" aria-expanded="false" title="Más acciones">⋮</button>
+              <div class="crm-row-menu-popover" role="menu" onclick="if(typeof cerrarMenusAccionesFila==='function')cerrarMenusAccionesFila()">
+                <button type="button" title="Simular" data-mp-action="simular-ayuda" data-monto="${montoPesos}" data-cuotas="${cuotas}" data-dni="${esc(dniRaw)}" data-cbu="${esc(cbuRaw)}" data-nombre="${esc(fullName)}" data-id="${esc(id)}">🧮</button>
+                <button type="button" title="Firmas AMMER" data-mp-action="firmas-ayuda" data-monto="${montoPesos}" data-cuotas="${cuotas}" data-dni="${esc(dniRaw)}" data-nombre="${esc(fullName)}" data-phone="${esc(phoneRaw)}" data-id="${esc(id)}">✍️</button>
+                <button type="button" title="Sobre Firma" data-mp-action="generar-sobre-ayuda" data-id="${esc(id)}" data-nombre="${esc(fullName)}">📜</button>
+              </div>
+            </div>
           </div>
         </td>
       </tr>`;

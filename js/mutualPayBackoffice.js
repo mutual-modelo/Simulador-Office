@@ -382,8 +382,8 @@
       heroKpis.innerHTML =
         `<span class="mp-hub-kpi-pill">👥 Asociados App: <strong>${Number(c.asociados_total ?? ov.associates_count ?? 0)}</strong></span>` +
         `<span class="mp-hub-kpi-pill">🔗 Cruzados AMMER: <strong>${Number(c.asociados_en_ammer || 0)}</strong></span>` +
-        `<button type="button" class="mp-hub-kpi-pill" onclick="cambiarTabMutualPay('mpTabKyc')" style="cursor:pointer;" title="Ir a KYC Pendientes">🪪 KYC Pendientes: <strong>${Number(c.kyc_pendientes || 0)}</strong></button>` +
-        `<button type="button" class="mp-hub-kpi-pill" onclick="cambiarTabMutualPay('mpTabAyudas')" style="cursor:pointer;" title="Ir a Ayudas Pendientes">💸 Ayudas Pendientes: <strong>${Number(c.ayudas_pendientes || 0)}</strong></button>` +
+        `<button type="button" class="mp-hub-kpi-pill" onclick="cambiarTabMutualPay('asociados')" style="cursor:pointer;" title="Ir a Asociados y KYC Pendientes">🪪 KYC Pendientes: <strong>${Number(c.kyc_pendientes || 0)}</strong></button>` +
+        `<button type="button" class="mp-hub-kpi-pill" onclick="cambiarTabMutualPay('ayudas')" style="cursor:pointer;" title="Ir a Ayudas Pendientes">💸 Ayudas Pendientes: <strong>${Number(c.ayudas_pendientes || 0)}</strong></button>` +
         `<span class="mp-hub-kpi-pill">🏪 Comercios Activos: <strong>${Number(ov.active_merchants_count || st.comercios.length || 0)}</strong></span>` +
         `<span class="mp-hub-kpi-pill">♻️ Retención Circular: <strong>${Number(circ.circular_retention_index_pct || 0)}%</strong></span>`;
     }
@@ -499,8 +499,13 @@
     }
 
     try {
-      const data = await apiMp(`/asociados/${encodeURIComponent(associateId)}/ficha`);
-      st.fichaUnificada = data;
+      const [fichaRes, logsRes] = await Promise.allSettled([
+        apiMp(`/asociados/${encodeURIComponent(associateId)}/ficha`),
+        apiMp(`/admin/audit-logs?target_id=${encodeURIComponent(associateId)}`),
+      ]);
+      if (fichaRes.status !== 'fulfilled') throw fichaRes.reason;
+      st.fichaUnificada = fichaRes.value;
+      st.fichaAuditLogs = (logsRes.status === 'fulfilled' && Array.isArray(logsRes.value.logs)) ? logsRes.value.logs : [];
       renderPanelDetalleAsociadoMp();
     } catch (err) {
       if (panel) {
@@ -616,6 +621,23 @@
             <button type="button" class="mp-btn mp-btn-primary" data-mp-action="ajustar-limites" data-id="${esc(assoc.id)}">💾 Guardar Ajuste Límites</button>
           </div>
         </div>
+
+        <details class="ui-accordion">
+          <summary>🛡️ Trazabilidad y Cambios del Asociado (${Array.isArray(st.fichaAuditLogs) ? st.fichaAuditLogs.length : 0})</summary>
+          <div class="ui-accordion-body">
+            ${(!Array.isArray(st.fichaAuditLogs) || !st.fichaAuditLogs.length)
+              ? '<div style="font-size:0.75rem;color:#64748b;">Sin eventos registrados en bitácora para este asociado.</div>'
+              : '<div style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;">' + st.fichaAuditLogs.slice(0, 25).map((l) => (
+                `<div style="padding:0.45rem 0.65rem;border-radius:8px;border:1px solid #e2e8f0;background:#ffffff;font-size:0.74rem;">` +
+                  `<div style="display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap;">` +
+                    `<code>${esc(l.action || '')}</code>` +
+                    `<span style="font-size:0.68rem;color:#64748b;">${fmtFecha(l.created_at)} · ${esc(l.actor_email || 'Sistema')}</span>` +
+                  `</div>` +
+                  `<div style="color:#334155;margin-top:3px;">${esc(l.details || '')}</div>` +
+                `</div>`
+              )).join('') + '</div>'}
+          </div>
+        </details>
       </div>
     `;
   }
@@ -1464,25 +1486,101 @@
       cbBox.innerHTML = cbHtml;
     }
 
-    const logBox = document.getElementById('mpAuditLogsContainer');
-    if (logBox) {
-      if (!st.auditLogs.length) {
-        logBox.innerHTML = '<div style="color:#64748b;font-size:0.78rem;">Sin eventos recientes de auditoría.</div>';
-      } else {
-        let html = '<table class="data-table"><thead><tr><th>Fecha</th><th>Actor</th><th>Acción</th><th>Entidad</th><th>Detalle</th></tr></thead><tbody>';
-        st.auditLogs.slice(0, 50).forEach((l) => {
-          html += `<tr>
-            <td>${fmtFecha(l.created_at)}</td>
-            <td>${esc(l.actor_email || 'Sistema')} <span style="font-size:0.68rem;color:#64748b;">(${esc(l.actor_role || '')})</span></td>
-            <td><code>${esc(l.action || '')}</code></td>
-            <td>${esc(l.target_entity || '')}</td>
-            <td>${esc(l.details || '')}</td>
-          </tr>`;
-        });
-        html += '</tbody></table>';
-        logBox.innerHTML = html;
+    renderTablaAuditLogsMp();
+  }
+
+  function _filtrarAuditLogsMp() {
+    const q = String((document.getElementById('inpMpAuditBuscar') || {}).value || '').trim().toLowerCase();
+    const act = String((document.getElementById('selMpAuditAccion') || {}).value || '').trim().toUpperCase();
+    return (Array.isArray(st.auditLogs) ? st.auditLogs : []).filter((l) => {
+      if (act && !String(l.action || '').toUpperCase().startsWith(act)) return false;
+      if (q) {
+        const hay = `${l.actor_email || ''} ${l.action || ''} ${l.target_entity || ''} ${l.target_id || ''} ${l.details || ''}`.toLowerCase();
+        if (!hay.includes(q)) return false;
       }
+      return true;
+    });
+  }
+
+  function renderTablaAuditLogsMp() {
+    const logBox = document.getElementById('mpAuditLogsContainer');
+    if (!logBox) return;
+    const filtered = _filtrarAuditLogsMp();
+    if (!filtered.length) {
+      logBox.innerHTML = '<div style="color:#64748b;font-size:0.78rem;">Sin eventos de auditoría que coincidan con el filtro.</div>';
+      return;
     }
+    let html = '<table class="data-table"><thead><tr><th>Fecha</th><th>Actor</th><th>Acción</th><th>Entidad</th><th>Detalle</th></tr></thead><tbody>';
+    filtered.slice(0, 100).forEach((l) => {
+      html += `<tr>
+        <td>${fmtFecha(l.created_at)}</td>
+        <td>${esc(l.actor_email || 'Sistema')} <span style="font-size:0.68rem;color:#64748b;">(${esc(l.actor_role || '')})</span></td>
+        <td><code>${esc(l.action || '')}</code></td>
+        <td>${esc(l.target_entity || '')}</td>
+        <td>${esc(l.details || '')}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    logBox.innerHTML = html;
+  }
+
+  function exportarAyudasMutualPayCsv() {
+    const f = String((document.getElementById('selMpFiltroAyudas') || {}).value || '').trim().toUpperCase();
+    const list = (Array.isArray(st.ayudas) ? st.ayudas : []).filter((r) => !f || String(r.status || '').toUpperCase() === f);
+    if (!list.length) {
+      toast('No hay solicitudes de ayuda para exportar.');
+      return;
+    }
+    const headers = ['Fecha', 'Asociado', 'CUIT', 'Tipo', 'Monto_ARS', 'Cuotas', 'CBU_Destino', 'Banco', 'Estado', 'Revisado_Por', 'Notas'];
+    const rows = list.map((r) => [
+      r.created_at || '',
+      `"${String(r.associate_full_name || r.associate_name || '').replace(/"/g, '""')}"`,
+      r.associate_cuit || '',
+      r.request_type || '',
+      (Number(r.requested_amount_minor || 0) / 100).toFixed(2),
+      r.installments_plan || 1,
+      `'${r.cbu_cvu_destination || ''}`,
+      `"${String(r.bank_name || '').replace(/"/g, '""')}"`,
+      r.status || '',
+      `"${String(r.reviewed_by || '').replace(/"/g, '""')}"`,
+      `"${String(r.resolution_notes || '').replace(/"/g, '""')}"`,
+    ]);
+    const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ayudas_mutualpay_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('CSV de ayudas exportado.');
+  }
+
+  function exportarAuditLogsMutualPayCsv() {
+    const filtered = _filtrarAuditLogsMp();
+    if (!filtered.length) {
+      toast('No hay registros de auditoría para exportar.');
+      return;
+    }
+    const headers = ['Fecha', 'Actor', 'Rol', 'Accion', 'Entidad', 'Target_ID', 'Detalle'];
+    const rows = filtered.map((l) => [
+      l.created_at || '',
+      `"${String(l.actor_email || '').replace(/"/g, '""')}"`,
+      l.actor_role || '',
+      l.action || '',
+      l.target_entity || '',
+      l.target_id || '',
+      `"${String(l.details || '').replace(/"/g, '""')}"`,
+    ]);
+    const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bitacora_auditoria_mutualpay_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('Bitácora de auditoría exportada.');
   }
 
   async function guardarReglaFinancieraMp(ruleId, isActive) {
@@ -2019,6 +2117,9 @@
   global.abrirEnSimuladorDesdeMp = abrirEnSimuladorDesdeMp;
   global.abrirFirmasDesdeMp = abrirFirmasDesdeMp;
   global.exportarLiquidacionesMutualPayCsv = exportarLiquidacionesMutualPayCsv;
+  global.renderTablaAuditLogsMp = renderTablaAuditLogsMp;
+  global.exportarAyudasMutualPayCsv = exportarAyudasMutualPayCsv;
+  global.exportarAuditLogsMutualPayCsv = exportarAuditLogsMutualPayCsv;
   global.toggleFormNuevoComercioMp = toggleFormNuevoComercioMp;
   global.crearComercioMp = crearComercioMp;
   global.verFichaComercioMp = verFichaComercioMp;

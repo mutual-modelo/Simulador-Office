@@ -224,7 +224,7 @@
         '<button type="button" role="tab" class="ficha-tab-btn' + (tabFichaAct === 'resumen' ? ' is-active' : '') + '" data-ficha-tab="resumen" aria-selected="' + (tabFichaAct === 'resumen') + '" onclick="cambiarTabFichaCompleta(\'resumen\')">📋 Resumen y Oferta</button>' +
         '<button type="button" role="tab" class="ficha-tab-btn' + (tabFichaAct === 'solicitante' ? ' is-active' : '') + '" data-ficha-tab="solicitante" aria-selected="' + (tabFichaAct === 'solicitante') + '" onclick="cambiarTabFichaCompleta(\'solicitante\')">👤 Solicitante</button>' +
         '<button type="button" role="tab" class="ficha-tab-btn' + (tabFichaAct === 'legajo' ? ' is-active' : '') + '" data-ficha-tab="legajo" aria-selected="' + (tabFichaAct === 'legajo') + '" onclick="cambiarTabFichaCompleta(\'legajo\')">📁 Legajo (' + docsCountFicha + ')</button>' +
-        '<button type="button" role="tab" class="ficha-tab-btn' + (tabFichaAct === 'bitacora' ? ' is-active' : '') + (bitacoraPreviewCount > 0 ? ' has-unread' : '') + '" data-ficha-tab="bitacora" aria-selected="' + (tabFichaAct === 'bitacora') + '" onclick="cambiarTabFichaCompleta(\'bitacora\')">💬 Bitácora (' + bitacoraPreviewCount + ')</button>' +
+        '<button type="button" role="tab" class="ficha-tab-btn' + (tabFichaAct === 'bitacora' ? ' is-active' : '') + (function () { try { const map = JSON.parse(localStorage.getItem('AMMER_BITACORA_LEIDA_V1') || '{}'); return bitacoraPreviewCount > Number(map[String(s.id)] || 0) ? ' has-unread' : ''; } catch (_) { return bitacoraPreviewCount > 0 ? ' has-unread' : ''; } })() + '" data-ficha-tab="bitacora" aria-selected="' + (tabFichaAct === 'bitacora') + '" onclick="try{const m=JSON.parse(localStorage.getItem(\'AMMER_BITACORA_LEIDA_V1\')||\'{}\');m[\'' + String(s.id).replace(/'/g, '') + '\']=' + bitacoraPreviewCount + ';localStorage.setItem(\'AMMER_BITACORA_LEIDA_V1\',JSON.stringify(m));this.classList.remove(\'has-unread\');}catch(_){}cambiarTabFichaCompleta(\'bitacora\')">💬 Bitácora (' + bitacoraPreviewCount + ')</button>' +
       '</div>';
 
       // 3. SECCIÓN 1: FORMULARIO DE EDICIÓN INTEGRAL DE DATOS DEL ASOCIADO
@@ -235,14 +235,14 @@
             '<div class="form-group"><label class="form-label">DNI *</label><input type="text" id="editDni" class="input-text" value="' + (s.solicitante?.dni || '') + '" required/></div>' +
             '<div class="form-group"><label class="form-label">CUIL</label><input type="text" id="editCuil" class="input-text" value="' + sanitizeHTML(s.solicitante?.cuil || '') + '" placeholder="Ej: 20-32111222-9"/></div>' +
             '<div class="form-group"><label class="form-label">Nombre y Apellido *</label><input type="text" id="editNombre" class="input-text" value="' + (s.solicitante?.nombre || '') + '" required/></div>' +
-            '<div class="form-group"><label class="form-label">Fecha Nacimiento *</label><input type="date" id="editFechaNac" class="input-text" value="' + sanitizeHTML(normalizarFechaInput(s.solicitante?.fechaNac || s.solicitante?.fechaNacimiento || '')) + '" required/></div>' +
+            '<div class="form-group"><label class="form-label">Fecha Nacimiento *</label><input type="date" id="editFechaNac" class="input-text" onchange="(function(v){var el=document.getElementById(\'editEdadAuto\');if(!el)return;if(!v){el.value=\'—\';return;}var d=new Date(v);if(isNaN(d.getTime())){el.value=\'—\';return;}var h=new Date(),ed=h.getFullYear()-d.getFullYear(),m=h.getMonth()-d.getMonth();if(m<0||(m===0&&h.getDate()<d.getDate()))ed--;el.value=ed>=0?(ed+\' años\'):\'—\';})(this.value)" value="' + sanitizeHTML(normalizarFechaInput(s.solicitante?.fechaNac || s.solicitante?.fechaNacimiento || '')) + '" required/></div>' +
             '<div class="form-group"><label class="form-label">Sexo</label>' +
               '<select id="editSexo" class="input-text">' +
                 ['', 'Masculino', 'Femenino', 'Otro'].map(sx => '<option value="' + sx + '" ' + (s.solicitante?.sexo === sx ? 'selected' : '') + '>' + (sx || 'Seleccionar...') + '</option>').join('') +
               '</select>' +
             '</div>' +
             '<div class="form-group"><label class="form-label">Estado Civil</label>' +
-              '<select id="editEstadoCivil" class="input-text">' +
+              '<select id="editEstadoCivil" class="input-text" onchange="(function(v){var w=document.getElementById(\'editParejaWrap\');if(w)w.style.display=/casad|pareja|concub|uni[oó]n/i.test(String(v||\'\'))?\'\':\'none\';})(this.value)">' +
                 ['', 'Soltero/a', 'Casado/a', 'Divorciado/a', 'Viudo/a', 'Unión Convivencial'].map(ec => '<option value="' + ec + '" ' + (s.solicitante?.estadoCivil === ec ? 'selected' : '') + '>' + (ec || 'Seleccionar...') + '</option>').join('') +
               '</select>' +
             '</div>' +
@@ -962,6 +962,15 @@
       s.solicitante.fechaNacimiento = s.solicitante.fechaNac;
       s.solicitante.sexo = sanitizeHTML(document.getElementById('editSexo')?.value || '');
       s.solicitante.estadoCivil = sanitizeHTML(document.getElementById('editEstadoCivil')?.value || '');
+      s.solicitante.banco = sanitizeHTML(document.getElementById('editBanco')?.value?.trim() || '');
+      s.solicitante.tipoCuenta = sanitizeHTML(document.getElementById('editTipoCuenta')?.value || '');
+      s.solicitante.nroCuenta = sanitizeHTML(document.getElementById('editNroCuenta')?.value?.trim() || '');
+      s.solicitante.cbu = sanitizeHTML(document.getElementById('editCbu')?.value?.trim() || '');
+      s.solicitante.alias = sanitizeHTML(document.getElementById('editAlias')?.value?.trim() || '');
+      s.solicitante.parejaNombre = sanitizeHTML(document.getElementById('editParejaNombre')?.value?.trim() || '');
+      s.solicitante.parejaDni = sanitizeHTML(document.getElementById('editParejaDni')?.value?.trim() || '');
+      s.solicitante.parejaEmail = sanitizeHTML(document.getElementById('editParejaEmail')?.value?.trim() || '');
+      s.solicitante.parejaTelefono = sanitizeHTML(document.getElementById('editParejaTelefono')?.value?.trim() || '');
       s.solicitante.celular = sanitizeHTML(editCelVal);
       s.solicitante.email = sanitizeHTML(editEmailVal);
       s.solicitante.localidad = sanitizeHTML(document.getElementById('editLocalidad')?.value?.trim() || '');

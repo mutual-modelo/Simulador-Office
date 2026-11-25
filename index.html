@@ -2489,13 +2489,16 @@
                   <h3 class="audit20-card-title">💵 Solicitudes de Ayuda Económica y Ampliación de Límites</h3>
                   <p class="audit20-card-sub">Evaluá solicitudes iniciadas en Mutual Pay cruzadas con su disponible AMMER, con acceso directo a Simulador y Firmas AMMER.</p>
                 </div>
-                <select id="selMpFiltroAyudas" onchange="window.renderTablaAyudasMutualPay()" style="padding:0.42rem 0.7rem;border-radius:8px;border:1px solid #cbd5e1;font-size:0.77rem;font-weight:600;">
-                  <option value="">Todos los estados</option>
-                  <option value="SUBMITTED">Pendientes (SUBMITTED)</option>
-                  <option value="UNDER_EVALUATION">En Evaluación</option>
-                  <option value="APPROVED">Aprobadas</option>
-                  <option value="REJECTED">Rechazadas</option>
-                </select>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                  <select id="selMpFiltroAyudas" onchange="window.renderTablaAyudasMutualPay()" style="padding:0.42rem 0.7rem;border-radius:8px;border:1px solid #cbd5e1;font-size:0.77rem;font-weight:600;">
+                    <option value="">Todos los estados</option>
+                    <option value="SUBMITTED">Pendientes (SUBMITTED)</option>
+                    <option value="UNDER_EVALUATION">En Evaluación</option>
+                    <option value="APPROVED">Aprobadas</option>
+                    <option value="REJECTED">Rechazadas</option>
+                  </select>
+                  <button type="button" class="mp-btn mp-btn-success" onclick="window.exportarAyudasMutualPayCsv()">⬇️ Exportar CSV</button>
+                </div>
               </div>
               <div id="mpAyudasTablaContainer"></div>
             </div>
@@ -2589,6 +2592,18 @@
                 <div>
                   <h3 class="audit20-card-title">🛡️ Bitácora de Auditoría Mutual Pay (`audit_logs`)</h3>
                   <p class="audit20-card-sub">Trazabilidad de aprobaciones, cambios de límites, reglas y acciones administrativas.</p>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                  <input type="text" id="inpMpAuditBuscar" placeholder="Buscar actor, acción o detalle..." oninput="window.renderTablaAuditLogsMp()" style="padding:0.4rem 0.65rem;border-radius:8px;border:1px solid #cbd5e1;font-size:0.76rem;"/>
+                  <select id="selMpAuditAccion" onchange="window.renderTablaAuditLogsMp()" style="padding:0.4rem 0.65rem;border-radius:8px;border:1px solid #cbd5e1;font-size:0.76rem;font-weight:600;">
+                    <option value="">Todas las acciones</option>
+                    <option value="KYC_">KYC</option>
+                    <option value="MANUAL_LIMIT_ADJUST">Ajuste Límites</option>
+                    <option value="ECONOMIC_AID_">Ayudas Económicas</option>
+                    <option value="ACCOUNT_">Suspensión / Reactivación</option>
+                    <option value="MERCHANT_">Comercios / Liquidaciones</option>
+                  </select>
+                  <button type="button" class="mp-btn mp-btn-success" onclick="window.exportarAuditLogsMutualPayCsv()">⬇️ Exportar Bitácora CSV</button>
                 </div>
               </div>
               <div id="mpAuditLogsContainer" style="max-height:360px;overflow:auto;"></div>

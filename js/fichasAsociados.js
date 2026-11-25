@@ -412,15 +412,20 @@
         : '<div style="padding:1rem;border-radius:10px;background:#f8fafc;border:1px dashed #e2e8f0;color:#64748b;font-size:0.78rem;text-align:center;">Aún no hay validaciones registradas en el historial.</div>';
 
       const solsHtml = sols.length > 0
-        ? sols.map(s =>
-            '<tr style="border-bottom:1px solid #f1f5f9;">' +
+        ? sols.map(s => {
+            const solId = String(s.id_definitivo || s.id_provisorio || s.id || '').trim();
+            const safeId = solId.replace(/'/g, "\\'");
+            return '<tr style="border-bottom:1px solid #f1f5f9;">' +
               '<td style="padding:0.55rem 0.75rem;font-weight:700;color:#0f172a;">' + sanitizeHTML(s.id_definitivo || s.id_provisorio || String(s.id || '').slice(0, 8)) + '</td>' +
               '<td style="padding:0.55rem 0.75rem;color:#334155;">' + sanitizeHTML(sCapitalize(s.linea_ayuda || '—')) + '</td>' +
               '<td style="padding:0.55rem 0.75rem;font-weight:700;color:#0f172a;">$' + Number(s.monto_solicitado || 0).toLocaleString('es-AR') + ' <span style="font-weight:500;color:#64748b;">(' + sanitizeHTML(String(s.cuotas_pactadas || 0)) + ' cuotas)</span></td>' +
               '<td style="padding:0.55rem 0.75rem;">' + _badgeEstadoFichaHtml(s.estado || 'INGRESADO', true) + '</td>' +
-            '</tr>'
-          ).join('')
-        : '<tr><td colspan="4" style="padding:1rem;color:#64748b;text-align:center;font-size:0.78rem;">No hay solicitudes registradas para este asociado.</td></tr>';
+              '<td style="padding:0.55rem 0.75rem;text-align:right;">' +
+                (safeId ? '<button type="button" onclick="if(typeof verFichaCompleta===\'function\'){verFichaCompleta(\'' + safeId + '\');}" style="padding:4px 9px;border-radius:7px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-size:0.72rem;font-weight:700;cursor:pointer;">👁️ Ver Ficha</button>' : '—') +
+              '</td>' +
+            '</tr>';
+          }).join('')
+        : '<tr><td colspan="5" style="padding:1rem;color:#64748b;text-align:center;font-size:0.78rem;">No hay solicitudes registradas para este asociado.</td></tr>';
 
       const safeDriveUrl = _safeUrl(asoc.drive_folder_url);
       const cuilLimpio = _limpiarTextoFicha(asoc.cuil, '');
@@ -460,7 +465,7 @@
         '<h5 style="margin:0 0 0.6rem 0;font-size:0.84rem;font-weight:800;color:#0f172a;">📄 Solicitudes Registradas (' + sols.length + ')</h5>' +
         '<div style="overflow-x:auto;border:1px solid #e2e8f0;border-radius:12px;background:#ffffff;">' +
           '<table style="width:100%;border-collapse:collapse;font-size:0.78rem;text-align:left;">' +
-            '<thead style="background:#f8fafc;border-bottom:1px solid #e2e8f0;color:#475569;font-size:11px;text-transform:uppercase;"><tr><th style="padding:0.55rem 0.75rem;">Expediente</th><th style="padding:0.55rem 0.75rem;">Línea</th><th style="padding:0.55rem 0.75rem;">Monto / Cuotas</th><th style="padding:0.55rem 0.75rem;">Estado</th></tr></thead>' +
+            '<thead style="background:#f8fafc;border-bottom:1px solid #e2e8f0;color:#475569;font-size:11px;text-transform:uppercase;"><tr><th style="padding:0.55rem 0.75rem;">Expediente</th><th style="padding:0.55rem 0.75rem;">Línea</th><th style="padding:0.55rem 0.75rem;">Monto / Cuotas</th><th style="padding:0.55rem 0.75rem;">Estado</th><th style="padding:0.55rem 0.75rem;text-align:right;">Acción</th></tr></thead>' +
             '<tbody>' + solsHtml + '</tbody>' +
           '</table>' +
         '</div>';

@@ -1645,6 +1645,27 @@
                     <input type="checkbox" id="chkEnviarWaAutoFirma"/>
                     <span>🤖 Enviar enlace por WhatsApp automáticamente al generar</span>
                   </label>
+                  <div style="margin-top:0.55rem;padding-top:0.55rem;border-top:1px dashed #cbd5e1;display:flex;flex-direction:column;gap:0.42rem;">
+                    <div style="display:flex;gap:0.45rem;flex-wrap:wrap;align-items:center;">
+                      <label for="selFirmaCanalPin" class="firmas-label" style="margin:0;font-size:0.74rem;color:#4c1d95;">🔐 Canal PIN 2FA:</label>
+                      <select id="selFirmaCanalPin" class="firmas-select" onchange="if(window.onToggleCanalPinGenerador)window.onToggleCanalPinGenerador()" style="flex:1;min-width:155px;height:32px;font-size:0.76rem;">
+                        <option value="whatsapp">WhatsApp (actual)</option>
+                        <option value="email">Email (valida domicilio electrónico)</option>
+                        <option value="ambos">Ambos (WhatsApp + Email)</option>
+                      </select>
+                    </div>
+                    <div id="wrapFirmaEmailPin" style="display:none;flex-direction:column;gap:0.38rem;">
+                      <input type="email" id="inpFirmaEmailPin" class="firmas-input firmas-input--sm" placeholder="Email del firmante (ej: socio@gmail.com)" style="height:34px;font-size:0.78rem;"/>
+                      <div style="display:flex;gap:0.4rem;align-items:center;">
+                        <label for="selFirmaEmailProvider" class="firmas-label" style="margin:0;font-size:0.71rem;color:#475569;">Proveedor:</label>
+                        <select id="selFirmaEmailProvider" class="firmas-select" style="flex:1;height:30px;font-size:0.74rem;">
+                          <option value="auto">Automático (Resend → fallback MailApp)</option>
+                          <option value="resend">Resend API</option>
+                          <option value="apps_script">Google Apps Script (MailApp)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 

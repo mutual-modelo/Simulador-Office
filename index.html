@@ -6453,7 +6453,20 @@
       if (RENDER_API_URL && !RENDER_API_URL.includes('[TU_API]')) {
         mostrarCargando('Verificando Credenciales...', 'Validando sesión segura y protección anti-bots AMMER');
         try {
-          const tsTokLogin = await obtenerTokenTurnstileLogin_();
+          let tsTokLogin = await obtenerTokenTurnstileLogin_();
+          if (!tsTokLogin) {
+            await new Promise(r => setTimeout(r, 900));
+            tsTokLogin = await obtenerTokenTurnstileLogin_();
+          }
+          if (!tsTokLogin && window.turnstile) {
+            ocultarCargando();
+            reiniciarTurnstileLogin_();
+            if (err) {
+              err.textContent = '⏳ Verificando seguridad anti-bots, aguardá 1 segundo y volvé a presionar Ingresar.';
+              err.style.display = 'block';
+            }
+            return;
+          }
           const respAuth = await fetchConTimeout(`${RENDER_API_URL}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

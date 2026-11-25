@@ -255,6 +255,11 @@
       if (txRes.status === 'fulfilled') st.transacciones = txRes.value.transacciones || [];
       renderTablaLiquidacionesMutualPay();
       renderTablaTransaccionesMutualPay();
+    } else if (tabId === 'cobranzas' && (!loadedTabs.cobranzas || force)) {
+      loadedTabs.cobranzas = true;
+      const [moraRes] = await Promise.allSettled([apiMp('/cobranzas/mora-temprana')]);
+      st.moraTemprana = (moraRes.status === 'fulfilled' && Array.isArray(moraRes.value.cuotas)) ? moraRes.value.cuotas : [];
+      renderTablaMoraTempranaMp();
     } else if (tabId === 'admin' && (!loadedTabs.admin || force)) {
       loadedTabs.admin = true;
       const [regRes, cbRes, logRes] = await Promise.allSettled([
@@ -278,7 +283,7 @@
       if (btn) btn.classList.toggle('active', t === tabId);
       if (panel) panel.classList.toggle('active', t === tabId);
     });
-    if (tabId === 'comercios' || tabId === 'admin') {
+    if (tabId === 'comercios' || tabId === 'admin' || tabId === 'cobranzas') {
       cargarExtrasTabMutualPay(tabId, false);
     }
   }
@@ -1253,8 +1258,13 @@
             <summary>📍 Sucursales Adheridas (${branches.length})</summary>
             <div class="ui-accordion-body">
               ${branches.length
-                ? branches.map((b) => `<div style="font-size:0.75rem;padding:4px 0;border-bottom:1px dashed #f1f5f9;">📍 <strong>${esc(b.branch_name || 'Sucursal')}</strong> — ${esc(b.address || '')}</div>`).join('')
+                ? branches.map((b) => `<div style="font-size:0.75rem;padding:4px 0;border-bottom:1px dashed #f1f5f9;">📍 <strong>${esc(b.branch_name || 'Sucursal')}</strong> — ${esc(b.address || '')}${b.phone ? (' · ' + esc(b.phone)) : ''}</div>`).join('')
                 : '<div style="font-size:0.75rem;color:#64748b;">Sin sucursales adicionales cargadas.</div>'}
+              <div style="margin-top:8px;padding-top:8px;border-top:1px solid #e2e8f0;display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center;">
+                <input type="text" id="inpMpNewBranchName" placeholder="Nombre sucursal (Ej: Centro)" style="padding:0.36rem 0.5rem;border:1px solid #cbd5e1;border-radius:7px;font-size:0.74rem;"/>
+                <input type="text" id="inpMpNewBranchAddr" placeholder="Dirección..." style="padding:0.36rem 0.5rem;border:1px solid #cbd5e1;border-radius:7px;font-size:0.74rem;"/>
+                <button type="button" class="mp-btn mp-btn-success" id="btnAgregarSucursalMp">+ Sucursal + QR</button>
+              </div>
             </div>
           </details>
         </div>
@@ -1287,6 +1297,26 @@
           await cargarTodoMutualPayBackoffice(false);
         } catch (eSave) {
           toast(`Error guardando comercio: ${eSave.message}`);
+        }
+      });
+      ov.querySelector('#btnAgregarSucursalMp').addEventListener('click', async () => {
+        const branchName = (ov.querySelector('#inpMpNewBranchName').value || '').trim();
+        const addr = (ov.querySelector('#inpMpNewBranchAddr').value || '').trim();
+        if (branchName.length < 2 || addr.length < 3) {
+          toast('Completá nombre y dirección de la sucursal.');
+          return;
+        }
+        try {
+          const bRes = await apiMp(`/comercios/${encodeURIComponent(merchantId)}/sucursales`, {
+            method: 'POST',
+            body: JSON.stringify({ branch_name: branchName, address: addr }),
+          });
+          const tok = (bRes && bRes.sucursal && bRes.sucursal.qr_token) || '';
+          toast(`Sucursal creada${tok ? ' (QR: ' + tok + ')' : ''}.`);
+          ov.remove();
+          await verFichaComercioMp(merchantId);
+        } catch (eBr) {
+          toast(`Error creando sucursal: ${eBr.message}`);
         }
       });
     } catch (err) {
@@ -1390,6 +1420,97 @@
       await cargarTodoMutualPayBackoffice(false);
     } catch (err) {
       toast(`Error anulando transacción: ${err.message}`);
+    }
+  }
+
+  function renderTablaMoraTempranaMp() {
+    const box = document.getElementById('mpMoraTempranaContainer');
+    if (!box) return;
+    const rows = Array.isArray(st.moraTemprana) ? st.moraTemprana : [];
+    if (!rows.length) {
+      box.innerHTML = '<div style="padding:0.9rem;color:#64748b;font-size:0.78rem;">Sin cuotas próximas a vencer (≤ 5 días) ni vencidas en este momento.</div>';
+      return;
+    }
+    let html = '<div class="data-table-container"><table class="data-table"><thead><tr>' +
+      '<th>Asociado</th><th>Cuota</th><th>Vencimiento</th><th>Estado</th><th>Importe</th><th>Recordatorio</th>' +
+      '</tr></thead><tbody>';
+    rows.forEach((c) => {
+      const days = Number(c.days_until_due || 0);
+      const pill = days < -30
+        ? `<span style="padding:2px 7px;border-radius:999px;font-size:10px;font-weight:700;background:#fee2e2;color:#991b1b;">Vencida +30d (${Math.abs(days)}d)</span>`
+        : (days < 0
+          ? `<span style="padding:2px 7px;border-radius:999px;font-size:10px;font-weight:700;background:#ffedd5;color:#9a3412;">Vencida (${Math.abs(days)}d)</span>`
+          : `<span style="padding:2px 7px;border-radius:999px;font-size:10px;font-weight:700;background:#fef9c3;color:#854d0e;">Vence en ${days}d</span>`);
+      const tel = String(c.associate_phone || '').replace(/\D/g, '');
+      const montoTxt = fmtArsFromMinor(c.amount_minor || 0);
+      const msgWa = encodeURIComponent(
+        `Hola ${c.associate_name || 'Asociado/a'}, te recordamos desde Mutual Modelo (Mutual Pay) tu cuota ${c.installment_number}/${c.installments_count} por ${montoTxt} con vencimiento ${c.due_date}. ¡Muchas gracias!`
+      );
+      html += `<tr>
+        <td><strong>${esc(c.associate_name || '—')}</strong><div style="font-size:0.68rem;color:#64748b;">DNI ${esc(c.associate_dni || '')}</div></td>
+        <td>Cuota ${Number(c.installment_number || 1)}/${Number(c.installments_count || 1)}</td>
+        <td>${esc(c.due_date || '—')}</td>
+        <td>${pill}</td>
+        <td><strong>${montoTxt}</strong></td>
+        <td>${tel ? `<a href="https://wa.me/${tel}?text=${msgWa}" target="_blank" rel="noopener noreferrer" class="mp-btn mp-btn-success">📱 WhatsApp</a>` : '<span style="font-size:0.72rem;color:#94a3b8;">Sin teléfono</span>'}</td>
+      </tr>`;
+    });
+    html += '</tbody></table></div>';
+    box.innerHTML = html;
+  }
+
+  async function conciliarLiquidacionesDesdeCsvMp(inputEl) {
+    const file = inputEl && inputEl.files && inputEl.files[0];
+    if (!file) return;
+    try {
+      const txt = await file.text();
+      const lines = txt.split(/\r?\n/).filter((l) => l.trim().length > 0);
+      const pendientes = (Array.isArray(st.liquidaciones) ? st.liquidaciones : []).filter((m) => Number(m.net_payout_minor || 0) > 0 && (m.merchant_id || m.id));
+      const matches = [];
+      pendientes.forEach((m) => {
+        const cbu = String(m.bank_cbu || '').replace(/\D/g, '');
+        const alias = String(m.bank_alias || '').trim().toLowerCase();
+        const foundLine = lines.find((ln) => {
+          const low = ln.toLowerCase();
+          return (cbu && cbu.length >= 10 && ln.replace(/\D/g, '').includes(cbu)) || (alias && alias.length >= 4 && low.includes(alias));
+        });
+        if (foundLine) {
+          matches.push({ merchant: m, line: foundLine.slice(0, 80) });
+        }
+      });
+      if (!matches.length) {
+        toast('No se encontraron liquidaciones pendientes que coincidan por CBU/Alias en el extracto.');
+        inputEl.value = '';
+        return;
+      }
+      const refPrompt = await abrirModalAccionMp({
+        title: `📑 Conciliación CSV (${matches.length} coincidencia/s)`,
+        description: `Se detectaron ${matches.length} comercio(s) con transferencia coincidente en el extracto (${matches.map((x) => x.merchant.fantasy_name).join(', ')}). Ingresá el prefijo de referencia bancaria para marcarlas como transferidas:`,
+        label: 'Referencia de lote / extracto bancario',
+        defaultValue: `EXTRACTO-${new Date().toISOString().slice(0, 10)}`,
+        confirmLabel: `💸 Conciliar y Marcar ${matches.length}`,
+        confirmClass: 'mp-btn-success',
+        minLength: 3,
+      });
+      if (refPrompt !== null) {
+        for (const item of matches) {
+          const mid = item.merchant.merchant_id || item.merchant.id;
+          await apiMp('/liquidaciones/marcar-transferida', {
+            method: 'POST',
+            body: JSON.stringify({
+              merchant_id: mid,
+              transfer_reference: refPrompt,
+              notes: `Conciliado por extracto CSV (${file.name})`,
+            }),
+          });
+        }
+        toast(`${matches.length} liquidación(es) conciliadas y marcadas como transferidas.`);
+        await cargarExtrasTabMutualPay('comercios', true);
+      }
+    } catch (err) {
+      toast(`Error conciliando CSV: ${err.message}`);
+    } finally {
+      inputEl.value = '';
     }
   }
 
@@ -2215,6 +2336,8 @@
   global.abrirEnSimuladorDesdeMp = abrirEnSimuladorDesdeMp;
   global.abrirFirmasDesdeMp = abrirFirmasDesdeMp;
   global.exportarLiquidacionesMutualPayCsv = exportarLiquidacionesMutualPayCsv;
+  global.conciliarLiquidacionesDesdeCsvMp = conciliarLiquidacionesDesdeCsvMp;
+  global.renderTablaMoraTempranaMp = renderTablaMoraTempranaMp;
   global.renderTablaAuditLogsMp = renderTablaAuditLogsMp;
   global.exportarAyudasMutualPayCsv = exportarAyudasMutualPayCsv;
   global.exportarAuditLogsMutualPayCsv = exportarAuditLogsMutualPayCsv;

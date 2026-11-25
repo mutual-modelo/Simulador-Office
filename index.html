@@ -1986,6 +1986,112 @@
       </section>
 
       <!-- VISTA EXCLUSIVA ADMIN: CENTRO MULTI-LÍNEA Y MENSAJERÍA WHATSAPP AMMER -->
+      <section id="vistaAnalisisCarteras" class="app-view" style="display:none;padding:24px;max-width:1280px;margin:0 auto;">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;">
+          <div>
+            <h2 style="margin:0;font-size:1.4rem;font-weight:800;color:#0f172a;">Análisis Documental de Carteras</h2>
+            <p style="margin:4px 0 0;font-size:0.86rem;color:#64748b;">Control de legajos (6 documentos obligatorios), cruce contra Cartera Base y registro de alertas.</p>
+          </div>
+          <button type="button" onclick="window.cargarAuditoriasCarteras && window.cargarAuditoriasCarteras()" style="padding:8px 14px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;color:#0f172a;font-weight:600;font-size:0.84rem;cursor:pointer;">Actualizar</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;">
+          <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px;">
+            <div style="font-size:0.75rem;color:#64748b;font-weight:600;">TOTAL AUDITADOS</div>
+            <div id="carterasKpiTotal" style="font-size:1.5rem;font-weight:800;color:#0f172a;margin-top:4px;">0</div>
+          </div>
+          <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px;">
+            <div style="font-size:0.75rem;color:#166534;font-weight:600;">APROBADOS</div>
+            <div id="carterasKpiAprobados" style="font-size:1.5rem;font-weight:800;color:#15803d;margin-top:4px;">0</div>
+          </div>
+          <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px;">
+            <div style="font-size:0.75rem;color:#854d0e;font-weight:600;">OBSERVADOS</div>
+            <div id="carterasKpiObservados" style="font-size:1.5rem;font-weight:800;color:#b45309;margin-top:4px;">0</div>
+          </div>
+          <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px;">
+            <div style="font-size:0.75rem;color:#991b1b;font-weight:600;">RECHAZADOS</div>
+            <div id="carterasKpiRechazados" style="font-size:1.5rem;font-weight:800;color:#dc2626;margin-top:4px;">0</div>
+          </div>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;margin-bottom:20px;">
+          <h3 style="margin:0 0 12px;font-size:1rem;font-weight:700;color:#0f172a;">Nueva Carga de Legajo</h3>
+          <div style="display:grid;grid-template-columns:1fr 2fr;gap:16px;align-items:start;">
+            <div>
+              <label for="carterasIdOperacion" style="display:block;font-size:0.8rem;font-weight:600;color:#334155;margin-bottom:6px;">ID Operación</label>
+              <input id="carterasIdOperacion" type="text" placeholder="Ej: 12345" style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.9rem;margin-bottom:12px;" />
+              <div style="display:flex;gap:8px;">
+                <button type="button" onclick="window.ejecutarAnalisisCartera && window.ejecutarAnalisisCartera()" style="flex:1;padding:10px 14px;border-radius:8px;border:none;background:#0284c7;color:#fff;font-weight:700;font-size:0.86rem;cursor:pointer;">Analizar Legajo</button>
+                <button type="button" onclick="window.limpiarColaCarteras && window.limpiarColaCarteras()" style="padding:10px 12px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;color:#475569;font-weight:600;font-size:0.84rem;cursor:pointer;">Limpiar</button>
+              </div>
+              <div id="carterasEstadoProceso" style="display:none;margin-top:10px;font-size:0.82rem;"></div>
+            </div>
+            <div>
+              <label style="display:block;font-size:0.8rem;font-weight:600;color:#334155;margin-bottom:6px;">Documentación (DNI, Recibo, Servicio, Transferencia, Solicitud, Autorización)</label>
+              <div style="border:2px dashed #cbd5e1;border-radius:10px;padding:16px;text-align:center;background:#f8fafc;">
+                <input id="carterasFileInput" type="file" multiple accept=".pdf,image/*" onchange="window.manejarArchivosCarteras && window.manejarArchivosCarteras(this.files)" style="font-size:0.82rem;" />
+              </div>
+              <div id="carterasColaLista" style="margin-top:8px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;">
+          <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <h3 style="margin:0;font-size:1rem;font-weight:700;color:#0f172a;">Registro de Auditorías y Alertas</h3>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <input id="carterasFiltroTexto" type="text" placeholder="Buscar ID o Titular..." oninput="window.cargarAuditoriasCarteras && window.cargarAuditoriasCarteras()" style="padding:7px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;" />
+              <select id="carterasFiltroEstado" onchange="window.cargarAuditoriasCarteras && window.cargarAuditoriasCarteras()" style="padding:7px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;">
+                <option value="TODOS">Todos los estados</option>
+                <option value="APROBADO">Aprobados</option>
+                <option value="OBSERVADO">Observados</option>
+                <option value="RECHAZADO">Rechazados</option>
+              </select>
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+              <thead>
+                <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;text-align:left;color:#475569;">
+                  <th style="padding:10px 12px;">ID Op.</th>
+                  <th style="padding:10px 12px;">Titular</th>
+                  <th style="padding:10px 12px;">Estado</th>
+                  <th style="padding:10px 12px;">Score</th>
+                  <th style="padding:10px 12px;">Alertas / Diferencias</th>
+                  <th style="padding:10px 12px;text-align:right;">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="carterasTablaBody">
+                <tr><td colspan="6" style="text-align:center;padding:24px;color:#64748b;">Cargando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="modalDetalleCartera" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:9999;align-items:center;justify-content:center;padding:16px;">
+          <div style="background:#fff;border-radius:14px;max-width:620px;width:100%;padding:20px;box-shadow:0 20px 40px rgba(0,0,0,0.2);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h3 style="margin:0;font-size:1.05rem;font-weight:800;color:#0f172a;">Detalle de Auditoría y Resolución</h3>
+              <button type="button" onclick="window.cerrarDetalleCartera && window.cerrarDetalleCartera()" style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;color:#64748b;">✕</button>
+            </div>
+            <div id="modalDetalleCarteraBody" style="font-size:0.85rem;color:#334155;max-height:260px;overflow-y:auto;margin-bottom:14px;padding:10px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;"></div>
+            <div style="display:grid;gap:10px;">
+              <select id="modalCarteraEstado" style="padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.85rem;">
+                <option value="APROBADO">APROBADO</option>
+                <option value="OBSERVADO">OBSERVADO</option>
+                <option value="RECHAZADO">RECHAZADO</option>
+                <option value="PENDIENTE_REVISION">PENDIENTE_REVISION</option>
+              </select>
+              <textarea id="modalCarteraResolucion" rows="3" placeholder="Observaciones de resolución manual..." style="padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.85rem;"></textarea>
+              <div style="display:flex;justify-content:flex-end;gap:8px;">
+                <button type="button" onclick="window.cerrarDetalleCartera && window.cerrarDetalleCartera()" style="padding:8px 14px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;cursor:pointer;font-weight:600;">Cancelar</button>
+                <button type="button" onclick="window.guardarResolucionCartera && window.guardarResolucionCartera()" style="padding:8px 14px;border-radius:8px;border:none;background:#0284c7;color:#fff;cursor:pointer;font-weight:700;">Guardar Resolución</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="view-whatsapp-bot" class="app-view">
         <div class="main-panel wa-hub-shell">
           <!-- HERO COMPACTO & CONTROLES GLOBALES -->
@@ -7113,6 +7219,9 @@
             html += '<button type="button" id="btnNavWhatsappBot" class="sidebar-nav-item" data-view="view-whatsapp-bot" data-tooltip="Whatsapp Bot" onclick="cambiarPestana(\'view-whatsapp-bot\')">' +
               '<span class="sidebar-nav-icon" style="color:#4ade80;">' + iconWhatsappBot + '</span>' +
               '<span class="sidebar-nav-label ' + textCls + '" style="display:flex;align-items:center;gap:6px;"><span>Whatsapp Bot</span><span id="navWaBotStatusDot" style="display:none;min-width:17px;height:17px;padding:0 5px;border-radius:9999px;font-size:0.65rem;font-weight:800;align-items:center;justify-content:center;"></span></span></button>';
+            html += '<button type="button" id="btnNavAnalisisCarteras" class="sidebar-nav-item" data-view="vistaAnalisisCarteras" data-tooltip="Análisis Carteras" onclick="cambiarPestana(\'vistaAnalisisCarteras\'); if (window.cargarAuditoriasCarteras) window.cargarAuditoriasCarteras();">' +
+              '<span class="sidebar-nav-icon" style="color:#38bdf8;">📂</span>' +
+              '<span class="sidebar-nav-label ' + textCls + '">Análisis Carteras</span></button>';
           }
         } else {
           const tabName = session.es_titular_organizacion ? 'Gestiones Org.' : 'Mis Gestiones';
@@ -11121,5 +11230,6 @@
       }
     })();
   </script>
+<script src="js/analisisCarteras.js?v=1" defer></script>
 </body>
 </html>

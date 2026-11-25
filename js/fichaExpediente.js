@@ -404,7 +404,13 @@
                 '<option value="sidecreer" ' + (lineaActual === 'sidecreer' ? 'selected' : '') + '>Tarjeta Sidecreer</option>' +
               '</select>' +
             '</div>' +
-            '<div><label class="form-label" style="font-size:.65rem;">Monto Neto Ofrecido ($)</label>' +
+            '<div><label class="form-label" style="font-size:.65rem;">Simular por</label>' +
+              '<select id="propModoSim" class="input-text" style="font-size:.7rem;" onchange="recalcularOfertaCuotaModal()">' +
+                '<option value="neto" selected>💵 Monto Neto a Entregar</option>' +
+                '<option value="cuota">📅 Monto de Cuota</option>' +
+              '</select>' +
+            '</div>' +
+            '<div><label id="propMontoLabel" class="form-label" style="font-size:.65rem;">Monto Neto Ofrecido ($)</label>' +
               '<input type="number" id="propMonto" class="input-text" style="font-size:.7rem;font-weight:700;" value="' + montoActual + '" min="0" step="any" oninput="recalcularOfertaCuotaModal()"/>' +
             '</div>' +
           '</div>' +
@@ -1319,16 +1325,24 @@
 
     function recalcularOfertaCuotaModal() {
       const linea = _normalizarLineaKeyOferta(document.getElementById('propLinea')?.value || 'fedem');
+      const modo = document.getElementById('propModoSim')?.value === 'cuota' ? 'cuota' : 'neto';
       const montoParsed = parseFloat(document.getElementById('propMonto')?.value);
-      const monto = (Number.isFinite(montoParsed) && montoParsed > 0) ? montoParsed : 0;
+      const inputVal = (Number.isFinite(montoParsed) && montoParsed > 0) ? montoParsed : 0;
       const plazo = parseInt(document.getElementById('propPlazo')?.value, 10) || 12;
-      const sim = (monto > 0) ? calculateSimulation(linea, plazo, 'neto', monto) : null;
-      const cuota = sim ? sim.cuota : 0;
+      const sim = (inputVal > 0) ? calculateSimulation(linea, plazo, modo, inputVal) : null;
+      const neto = sim ? sim.neto : (modo === 'neto' ? inputVal : 0);
+      const cuota = sim ? sim.cuota : (modo === 'cuota' ? inputVal : 0);
       const total = sim ? sim.totalAyuda : 0;
       const capital = sim ? sim.capital : 0;
 
+      const lbl = document.getElementById('propMontoLabel');
+      if (lbl) lbl.textContent = modo === 'cuota' ? 'Monto de Cuota Deseada ($)' : 'Monto Neto Ofrecido ($)';
+
       const inp = document.getElementById('propCuotaEst');
-      if (inp) inp.value = formatMoney(cuota);
+      if (inp) inp.value = modo === 'cuota' ? ('Neto: ' + formatMoney(neto)) : formatMoney(cuota);
+
+      const propMontoEl = document.getElementById('propMonto');
+      if (propMontoEl) propMontoEl.dataset.netoCalculado = String(Math.round(neto));
 
       const tasaEl = document.getElementById('propTasaCostoTexto');
       if (tasaEl) tasaEl.textContent = obtenerTasaCostoTexto(linea, plazo);
@@ -1337,7 +1351,7 @@
       const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
       setTxt('propKpiCuotaBadge', plazo + ' cuotas fijas');
       setTxt('propKpiCuotaVal', formatMoney(cuota));
-      setTxt('propKpiNetoVal', formatMoney(monto));
+      setTxt('propKpiNetoVal', formatMoney(neto));
       setTxt('propKpiTotalLabel', isMuniOrSide ? 'TOTAL A PAGAR' : 'TOTAL AYUDA ECONÓMICA');
       setTxt('propKpiTotalBadge', (linea === 'sidecreer') ? 'Importe ($) en Sidecreer' : 'Total a Devolver');
       setTxt('propKpiTotalVal', formatMoney(total));

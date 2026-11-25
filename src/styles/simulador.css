@@ -4392,9 +4392,8 @@ details.ui-accordion > .ui-accordion-body {
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
   border-radius: 11px;
-  position: sticky;
-  top: 0;
-  z-index: var(--z-sticky, 20);
+  position: static;
+  z-index: auto;
 }
 
 .ficha-tab-btn {
@@ -4632,6 +4631,29 @@ details.ui-accordion > .ui-accordion-body {
     display: none;
   }
 }
+
+/* --- FASE 5: ETIQUETAS EN MENÚ KEBAB CRM Y ALERTA BITÁCORA --- */
+.crm-row-menu-popover > button[title]:not([title=""])::after,
+.crm-row-menu-popover > a[title]:not([title=""])::after {
+  content: attr(title);
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.ficha-tab-btn.has-unread {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+.ficha-tab-btn.has-unread.is-active {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+}
+
 
 
 

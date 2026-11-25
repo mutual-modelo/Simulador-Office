@@ -226,6 +226,12 @@
             <span class="btn-top-help-label">Instalar App</span>
           </button>
 
+          <!-- BOTÓN INSTALAR EXTENSIÓN CHROME -->
+          <button class="btn-top-help" id="btnTopInstallExt" type="button" onclick="window.abrirModalInstalarExtensionAmmer()" style="background:#f0fdf4;border-color:#86efac;color:#166534;" title="Descargar e instalar Extensión Chrome AMMER RENAPER Split View" aria-label="Instalar Extensión">
+            <span aria-hidden="true">🧩</span>
+            <span class="btn-top-help-label">Instalar Extensión</span>
+          </button>
+
           <!-- BOTÓN CENTRO DE AYUDA / WIKI -->
           <button class="btn-top-help" id="btnOpenFaqWiki" type="button" onclick="abrirModalFaqWiki()" title="Base de Conocimiento y Preguntas Frecuentes (FAQ)" aria-label="Centro de Ayuda y Preguntas Frecuentes">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
@@ -1704,13 +1710,13 @@
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#135596" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
                       <span>Datos a completar en el documento</span>
                     </div>
-                    <span style="font-size:0.73rem;color:#64748b;font-weight:600;">Elegí por cada campo si lo completa previamente el analista o el asociado en el Paso 1</span>
+                    <span style="font-size:0.73rem;color:#64748b;font-weight:600;">Elegí por cada campo si lo completa previamente el analista o el asociado en Solicitante</span>
                   </div>
                   <div id="firmaCamposModoBar" style="display:none;align-items:center;gap:0.4rem;flex-wrap:wrap;">
                     <span id="lblResumenModoCamposFirma" style="font-size:0.71rem;font-weight:800;padding:3px 9px;border-radius:9999px;background:#eff6ff;color:#1e3a8a;border:1px solid #bfdbfe;"></span>
                     <button type="button" class="firmas-btn firmas-btn--xs" onclick="aplicarModoCamposGenerador('todos_analista')" title="Todos los campos los completa previamente el analista">👨‍💼 Todos Analista</button>
-                    <button type="button" class="firmas-btn firmas-btn--xs firmas-btn-soft-blue" onclick="aplicarModoCamposGenerador('vacios_asociado')" title="Los campos sin dato cargado pasan automáticamente para que el asociado los complete en el Paso 1">✨ Vacíos al Asociado (Paso 1)</button>
-                    <button type="button" class="firmas-btn firmas-btn--xs firmas-btn-soft-blue" onclick="aplicarModoCamposGenerador('todos_asociado')" title="Todos los campos editables pasan al Paso 1 del asociado">🧑 Todos al Asociado</button>
+                    <button type="button" class="firmas-btn firmas-btn--xs firmas-btn-soft-blue" onclick="aplicarModoCamposGenerador('vacios_asociado')" title="Los campos sin dato cargado pasan automáticamente para que el asociado los complete en Solicitante">✨ Vacíos al Asociado (Solicitante)</button>
+                    <button type="button" class="firmas-btn firmas-btn--xs firmas-btn-soft-blue" onclick="aplicarModoCamposGenerador('todos_asociado')" title="Todos los campos editables pasan a Solicitante del asociado">🧑 Todos al Asociado</button>
                   </div>
                 </div>
                 <div id="firmaCamposGenerarContainer"></div>
@@ -23952,7 +23958,56 @@ ${cierreTxt}`;
         item.run();
       }
 
+      function tieneAccesoCommandMenu() {
+        const sess = (typeof getSession === 'function') ? getSession() : null;
+        if (!sess) return false;
+        if (typeof tieneAccesoPadronFichas === 'function') return tieneAccesoPadronFichas(sess);
+        const r = String(sess.rol || '').toLowerCase();
+        return r === 'admin' || r === 'analista';
+      }
+
+      function actualizarVisibilidadCommandBtn() {
+        const btn = document.getElementById('btnCommandMenuTopbar');
+        if (btn) btn.style.display = tieneAccesoCommandMenu() ? 'inline-flex' : 'none';
+      }
+      actualizarVisibilidadCommandBtn();
+      window.addEventListener('storage', actualizarVisibilidadCommandBtn);
+
+      window.abrirModalInstalarExtensionAmmer = function () {
+        const zipUrl = 'https://mutual-modelo.github.io/Simulador-Office/downloads/ammer-renaper-split-view-ext.zip';
+        let modal = document.getElementById('ammerInstallExtModal');
+        if (!modal) {
+          modal = document.createElement('div');
+          modal.id = 'ammerInstallExtModal';
+          modal.className = 'cmd-k-backdrop';
+          modal.setAttribute('role', 'dialog');
+          modal.setAttribute('aria-modal', 'true');
+          modal.onclick = function (ev) { if (ev.target === modal) modal.classList.remove('is-open'); };
+          modal.innerHTML =
+            '<div class="cmd-k-dialog" style="padding:1.1rem 1.25rem;max-width:520px;">' +
+              '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">' +
+                '<strong style="font-size:0.98rem;color:#0f2744;">🧩 Instalar Extensión AMMER (Chrome)</strong>' +
+                '<button type="button" onclick="document.getElementById(\'ammerInstallExtModal\').classList.remove(\'is-open\')" style="border:none;background:transparent;font-size:1rem;cursor:pointer;color:#64748b;">✕</button>' +
+              '</div>' +
+              '<p style="font-size:0.8rem;color:#334155;margin:0 0 0.8rem 0;">Descargá la última versión de la extensión para habilitar la vista dividida con RENAPER:</p>' +
+              '<a href="' + zipUrl + '" target="_blank" rel="noopener" download style="display:inline-flex;align-items:center;gap:0.45rem;padding:0.55rem 0.95rem;border-radius:9px;background:#166534;color:#ffffff;font-size:0.82rem;font-weight:700;text-decoration:none;margin-bottom:0.9rem;">⬇️ Descargar Extensión (.zip)</a>' +
+              '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0.75rem 0.9rem;font-size:0.76rem;color:#334155;line-height:1.45;">' +
+                '<div style="font-weight:800;color:#0f172a;margin-bottom:0.35rem;">Mini guía de instalación rápida:</div>' +
+                '<ol style="margin:0;padding-left:1.15rem;">' +
+                  '<li>Descomprimí el archivo <code>.zip</code> descargado en una carpeta fija.</li>' +
+                  '<li>Abrí Chrome y entrá a <code>chrome://extensions</code>.</li>' +
+                  '<li>Activá <strong>Modo de desarrollador</strong> (arriba a la derecha).</li>' +
+                  '<li>Tocá <strong>Cargar descomprimida</strong> y seleccioná la carpeta descomprimida.</li>' +
+                '</ol>' +
+              '</div>' +
+            '</div>';
+          document.body.appendChild(modal);
+        }
+        modal.classList.add('is-open');
+      };
+
       window.abrirCommandMenuAmmer = function () {
+        if (!tieneAccesoCommandMenu()) return;
         const modal = document.getElementById('ammerCommandMenuModal');
         const input = document.getElementById('ammerCommandInput');
         if (!modal || !input) return;
@@ -23969,6 +24024,7 @@ ${cierreTxt}`;
 
       document.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+          if (!tieneAccesoCommandMenu()) return;
           e.preventDefault();
           const modal = document.getElementById('ammerCommandMenuModal');
           if (modal && modal.classList.contains('is-open')) cerrarCommandMenuAmmer();

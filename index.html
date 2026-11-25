@@ -188,6 +188,7 @@
         </div>
 
         <div class="header-right">
+          <span id="topbarSyncBadge" class="topbar-sync-badge" style="display:none;" aria-live="polite">🔄 Sincronizando...</span>
           <!-- CENTRO DE NOTIFICACIONES FLOTANTE -->
           <div class="notif-wrapper" id="notifWrapper">
             <button class="btn-notif-bell" id="btnNotifBell" type="button" onclick="toggleDropdownNotificaciones(event)" title="Centro de Notificaciones y Novedades" aria-label="Notificaciones">
@@ -607,7 +608,7 @@
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <input type="text" id="filtroComercialTexto" class="filter-input-text search-with-icon" placeholder="Buscar por Nombre, DNI o N° Solicitud..." oninput="filtrarGestionesComercializador()"/>
+            <input type="text" id="filtroComercialTexto" class="filter-input-text search-with-icon" placeholder="Buscar por Nombre, DNI o N° Solicitud..." oninput="filtrarGestionesDebounced('comercial')"/>
           </div>
 
           <div class="filter-select-box">
@@ -780,7 +781,7 @@
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <input type="text" id="filtroMutualPropiasTexto" class="filter-input-text search-with-icon" placeholder="Buscar por Nombre, DNI o N° Solicitud..." oninput="filtrarGestionesMutualPropias()"/>
+            <input type="text" id="filtroMutualPropiasTexto" class="filter-input-text search-with-icon" placeholder="Buscar por Nombre, DNI o N° Solicitud..." oninput="filtrarGestionesDebounced('mutualPropias')"/>
           </div>
 
           <div class="filter-select-box">
@@ -945,7 +946,7 @@
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <input type="text" id="filtroMutualTexto" class="filter-input-text search-with-icon" placeholder="Buscar por Nombre, DNI, N° o Asesor..." oninput="filtrarGestionesMutual()"/>
+            <input type="text" id="filtroMutualTexto" class="filter-input-text search-with-icon" placeholder="Buscar por Nombre, DNI, N° o Asesor..." oninput="filtrarGestionesDebounced('mutual')"/>
           </div>
 
           <div class="filter-select-box">
@@ -7517,7 +7518,7 @@ ${cierreTxt}`;
         if (loginClaveEl) loginClaveEl.value = '';
         const sess = getSession() || normalizarObjetoSesionUsuario_(loggedUser);
         checkAuthAndInit();
-        await cargarSolicitudesDesdeNube(false);
+        cargarSolicitudesDesdeNube(true);
         showToast('Bienvenido/a, ' + ((sess && sess.nombre) || loggedUser.nombre || loggedUser.usuario || 'Usuario'));
       } else {
         if (err) {
@@ -7704,9 +7705,11 @@ ${cierreTxt}`;
           cambiarPestana('view-simulador');
           return;
         }
-        if (typeof window.initWhatsappBotPanelAdmin === 'function') {
-          window.initWhatsappBotPanelAdmin();
-        }
+        cargarModuloOnDemand('whatsappBot').then(() => {
+          if (typeof window.initWhatsappBotPanelAdmin === 'function') {
+            window.initWhatsappBotPanelAdmin();
+          }
+        }).catch((err) => showToast('⚠️ No se pudo cargar Whatsapp Bot: ' + (err && err.message || 'Error de red')));
       }
       if (viewId === 'view-mutual-pay') {
         if (!tieneAccesoMutualPay(sess)) {
@@ -7714,9 +7717,11 @@ ${cierreTxt}`;
           cambiarPestana('view-simulador');
           return;
         }
-        if (typeof window.initMutualPayBackoffice === 'function') {
-          window.initMutualPayBackoffice();
-        }
+        cargarModuloOnDemand('mutualPay').then(() => {
+          if (typeof window.initMutualPayBackoffice === 'function') {
+            window.initMutualPayBackoffice();
+          }
+        }).catch((err) => showToast('⚠️ No se pudo cargar Mutual Pay: ' + (err && err.message || 'Error de red')));
       }
       if (viewId === 'view-comercializador') {
         renderModuloComercializador();
@@ -7733,8 +7738,16 @@ ${cierreTxt}`;
       if (viewId === 'view-simulador') {
         renderApp();
       }
-      if (viewId === 'vistaAuditoriaIA' && typeof cargarEstadoBoletinOficialAuditoria === 'function') {
-        cargarEstadoBoletinOficialAuditoria();
+      if (viewId === 'vistaAuditoriaIA') {
+        Promise.all([
+          cargarModuloOnDemand('boletin'),
+          cargarModuloOnDemand('auditoria20'),
+          cargarModuloOnDemand('fichas')
+        ]).then(() => {
+          if (typeof window.cargarEstadoBoletinOficialAuditoria === 'function') {
+            window.cargarEstadoBoletinOficialAuditoria();
+          }
+        }).catch((err) => console.warn('Error cargando módulos de Auditoría IA:', err));
       }
       if (viewId === 'vistaFirmasAMMER') {
         if (!tieneAccesoFirmasAmmer(sess)) {
@@ -7742,9 +7755,11 @@ ${cierreTxt}`;
           cambiarPestana('view-simulador');
           return;
         }
-        if (typeof window.initFirmasAmmerView === 'function') {
-          window.initFirmasAmmerView();
-        }
+        cargarModuloOnDemand('firmas').then(() => {
+          if (typeof window.initFirmasAmmerView === 'function') {
+            window.initFirmasAmmerView();
+          }
+        }).catch((err) => showToast('⚠️ No se pudo cargar Firmas AMMER: ' + (err && err.message || 'Error de red')));
       }
       if (viewId === 'view-ficha-asociado') {
         if (!tieneAccesoPadronFichas(sess)) {
@@ -7752,11 +7767,74 @@ ${cierreTxt}`;
           cambiarPestana('view-simulador');
           return;
         }
-        if (typeof buscarPadronFichasAsociados === 'function') {
-          buscarPadronFichasAsociados();
-        }
+        cargarModuloOnDemand('fichas').then(() => {
+          if (typeof window.buscarPadronFichasAsociados === 'function') {
+            window.buscarPadronFichasAsociados();
+          }
+        }).catch((err) => showToast('⚠️ No se pudo cargar Padrón y Fichas: ' + (err && err.message || 'Error de red')));
       }
     }
+
+    const MODULOS_LAZY_AMMER = {
+      boletin: { src: 'js/boletinER.js?v=6', check: () => typeof window.cargarEstadoBoletinOficialAuditoria === 'function' },
+      auditoria20: { src: 'js/auditoria20.js?v=7', check: () => typeof window.ejecutarValidacionDniAudit20 === 'function' },
+      fichas: { src: 'js/fichasAsociados.js?v=6', check: () => typeof window.buscarPadronFichasAsociados === 'function' },
+      firmas: { src: 'js/firmasAmmer.js?v=29', check: () => typeof window.initFirmasAmmerView === 'function' },
+      whatsappBot: { src: 'js/whatsappBotAdmin.js?v=5', check: () => typeof window.initWhatsappBotPanelAdmin === 'function' },
+      mutualPay: { src: 'js/mutualPayBackoffice.js?v=6', check: () => typeof window.initMutualPayBackoffice === 'function' }
+    };
+    const _modulosLazyPromesas = {};
+
+    function cargarModuloOnDemand(moduloKey) {
+      const cfg = MODULOS_LAZY_AMMER[moduloKey];
+      if (!cfg) return Promise.resolve();
+      if (cfg.check()) return Promise.resolve();
+      if (_modulosLazyPromesas[moduloKey]) return _modulosLazyPromesas[moduloKey];
+      _modulosLazyPromesas[moduloKey] = new Promise((resolve, reject) => {
+        const sc = document.createElement('script');
+        sc.src = cfg.src;
+        sc.async = true;
+        sc.onload = () => resolve();
+        sc.onerror = () => {
+          delete _modulosLazyPromesas[moduloKey];
+          reject(new Error('No se pudo cargar ' + cfg.src));
+        };
+        document.body.appendChild(sc);
+      });
+      return _modulosLazyPromesas[moduloKey];
+    }
+
+    function _registrarProxyLazyModulo(fnName, moduloKey) {
+      if (typeof window[fnName] === 'function') return;
+      const stub = async function (...args) {
+        await cargarModuloOnDemand(moduloKey);
+        if (typeof window[fnName] === 'function' && window[fnName] !== stub) {
+          return window[fnName](...args);
+        }
+      };
+      window[fnName] = stub;
+    }
+
+    [
+      ['abrirAsistenteRenaperMiEjemplar', 'firmas'],
+      ['abrirAsistenteRenaperDesdeFicha', 'firmas'],
+      ['enviarAFirmaDesdeFicha', 'firmas'],
+      ['abrirValidacionFirmaExpediente', 'firmas'],
+      ['abrirFichaHistoricaAsociado', 'fichas'],
+      ['guardarValidacionesEnFichaAsociado', 'fichas']
+    ].forEach(([fn, mod]) => _registrarProxyLazyModulo(fn, mod));
+
+    const _debounceFiltrosTimer = {};
+    function filtrarGestionesDebounced(scope) {
+      clearTimeout(_debounceFiltrosTimer[scope]);
+      _debounceFiltrosTimer[scope] = setTimeout(() => {
+        if (scope === 'comercial') filtrarGestionesComercializador();
+        else if (scope === 'mutualPropias') filtrarGestionesMutualPropias();
+        else if (scope === 'mutual') filtrarGestionesMutual();
+      }, 200);
+    }
+    window.cargarModuloOnDemand = cargarModuloOnDemand;
+    window.filtrarGestionesDebounced = filtrarGestionesDebounced;
 
     function tieneAccesoPadronFichas(sessObj) {
       const s = sessObj || getSession();
@@ -10851,6 +10929,8 @@ ${cierreTxt}`;
       if (_cloudSyncPromise) return _cloudSyncPromise;
 
       _cloudSyncPromise = (async () => {
+        const syncBadge = document.getElementById('topbarSyncBadge');
+        if (syncBadge) syncBadge.style.display = 'inline-flex';
         if (!silencioso) {
           mostrarCargando('🔄 Actualizando expedientes desde la base central...', 'Consultando expedientes y Legajos Digitales en tiempo real');
         }
@@ -10922,6 +11002,7 @@ ${cierreTxt}`;
           return null;
         } finally {
           _cloudSyncPromise = null;
+          if (syncBadge) syncBadge.style.display = 'none';
           if (!silencioso) {
             ocultarCargando();
           }
@@ -23600,12 +23681,7 @@ ${cierreTxt}`;
       }
     })();
   </script>
-  <script src="js/boletinER.js?v=6"></script>
-  <script src="js/auditoria20.js?v=7"></script>
-  <script src="js/fichasAsociados.js?v=6"></script>
   <script src="js/sidecreerWidget.js?v=11"></script>
-  <script src="js/firmasAmmer.js?v=29"></script>
-  <script src="js/whatsappBotAdmin.js?v=5"></script>
-  <script src="js/mutualPayBackoffice.js?v=6"></script>
+  <!-- Módulos pesados (boletinER, auditoria20, fichasAsociados, firmasAmmer, whatsappBotAdmin, mutualPayBackoffice) se cargan bajo demanda vía cargarModuloOnDemand() -->
 </body>
 </html>

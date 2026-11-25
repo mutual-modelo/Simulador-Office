@@ -2512,7 +2512,11 @@
                   <h3 class="audit20-card-title">🏦 Liquidaciones a Comercios Aliados (24–48 hs)</h3>
                   <p class="audit20-card-sub">Consolidado de ventas QR autorizadas, arancel mutual deducido y neto a transferir por CBU/Alias.</p>
                 </div>
-                <button type="button" class="mp-btn mp-btn-success" onclick="window.exportarLiquidacionesMutualPayCsv()">⬇️ Exportar CSV Tesorería</button>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                  <input type="file" id="inpMpConciliarCsv" accept=".csv,.txt" style="display:none;" onchange="window.conciliarLiquidacionesDesdeCsvMp(this)"/>
+                  <button type="button" class="mp-btn mp-btn-primary" onclick="document.getElementById('inpMpConciliarCsv')?.click()">📑 Conciliar Extracto CSV</button>
+                  <button type="button" class="mp-btn mp-btn-success" onclick="window.exportarLiquidacionesMutualPayCsv()">⬇️ Exportar CSV Tesorería</button>
+                </div>
               </div>
               <div id="mpLiquidacionesTablaContainer"></div>
             </div>
@@ -2543,8 +2547,17 @@
             </div>
           </div>
 
-          <!-- TAB 5: COBRANZA MANUAL -->
+          <!-- TAB 5: COBRANZA MANUAL & MORA TEMPRANA -->
           <div id="mpPanel_cobranzas" class="mp-hub-tab-panel">
+            <div class="audit20-card" style="margin-bottom:1rem;">
+              <div class="audit20-card-head">
+                <div>
+                  <h3 class="audit20-card-title">⚠️ Tablero de Mora Temprana y Vencimientos (Próximos 5 días / Vencidas)</h3>
+                  <p class="audit20-card-sub">Cuotas impagas próximas a vencer o vencidas con envío directo de recordatorio por WhatsApp.</p>
+                </div>
+              </div>
+              <div id="mpMoraTempranaContainer"></div>
+            </div>
             <div class="audit20-card">
               <div class="audit20-card-head">
                 <div>

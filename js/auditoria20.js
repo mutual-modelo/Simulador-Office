@@ -340,15 +340,17 @@
   function _renderBloqueForenseAudit20(forense) {
     if (!forense) return '';
     const alertas = Array.isArray(forense.alertas) ? forense.alertas : [];
-    return '<div style="margin-top:0.75rem;padding:0.75rem 0.9rem;border-radius:10px;background:#f8fafc;border:1px solid #cbd5e1;color:#334155;font-size:0.75rem;">' +
-      '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:0.4rem;font-weight:700;">' +
-        '<span>🔍 Revisión de archivo · <span style="font-weight:600;color:#475569;">Comentario informativo (a criterio del asesor)</span></span>' +
+    const badgeCount = alertas.length > 0 ? (' · ' + alertas.length + ' obs.') : ' · Sin observaciones';
+    return '<details class="ui-accordion" style="margin-top:0.75rem;">' +
+      '<summary>🔍 Revisión técnica de archivo (Metadatos forenses' + badgeCount + ')</summary>' +
+      '<div class="ui-accordion-body" style="color:#334155;font-size:0.75rem;">' +
+        '<div style="font-weight:600;color:#475569;margin-bottom:0.35rem;">Comentario informativo (a criterio del asesor)</div>' +
+        (alertas.length > 0
+          ? ('<ul style="margin:0.35rem 0 0 1.1rem;padding:0;color:#334155;">' + alertas.map(a => '<li>' + sanitizeHTML(a) + '</li>').join('') + '</ul>' +
+             '<div style="margin-top:0.35rem;font-size:11px;color:#64748b;">ℹ️ Las observaciones sobre el archivo tienen carácter meramente informativo; queda a criterio del asesor tomarlas como alerta o no.</div>')
+          : '<div style="margin-top:3px;color:#475569;">Sin observaciones técnicas relevantes en el archivo.</div>') +
       '</div>' +
-      (alertas.length > 0
-        ? ('<ul style="margin:0.4rem 0 0 1.1rem;padding:0;color:#334155;">' + alertas.map(a => '<li>' + sanitizeHTML(a) + '</li>').join('') + '</ul>' +
-           '<div style="margin-top:0.35rem;font-size:11px;color:#64748b;">ℹ️ Las observaciones sobre el archivo tienen carácter meramente informativo; queda a criterio del asesor tomarlas como alerta o no.</div>')
-        : '<div style="margin-top:3px;color:#475569;">Sin observaciones técnicas relevantes en el archivo.</div>') +
-    '</div>';
+    '</details>';
   }
 
   async function _leerArchivoPayloadAudit20(file) {
@@ -568,11 +570,13 @@
           '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Trámite N° / Of. Ident.</div><div style="font-weight:700;font-family:monospace;color:#0f172a;">' + sanitizeHTML(ext.nro_tramite || '—') + (ext.oficina_identificadora ? (' · Of. ' + sanitizeHTML(ext.oficina_identificadora)) : '') + (ext.nro_serie ? (' · Serie ' + sanitizeHTML(ext.nro_serie)) : '') + '</div></div>' +
           '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;grid-column:span 2;"><div style="color:#64748b;font-size:11px;">Domicilio DNI</div><div style="font-weight:700;color:#0f172a;">' + sanitizeHTML(ext.domicilio_dni || 'No visible (requiere dorso)') + (ext.progenitores ? (' · Hijo/a de: ' + sanitizeHTML(ext.progenitores)) : '') + '</div></div>' +
         '</div>' +
-        '<div style="margin-top:0.75rem;padding:0.7rem 0.85rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;">' +
-          '<div style="font-size:0.74rem;font-weight:800;color:#0f172a;margin-bottom:5px;">🔐 Verificación MRZ & Códigos de Seguridad' + (codUbicTxt ? (' · <span style="color:#0369a1;">' + sanitizeHTML(codUbicTxt) + '</span>') : '') + ':</div>' +
-          '<div style="display:flex;flex-wrap:wrap;gap:0.4rem;">' + checksMrzHtml + '</div>' +
-          (evIa.observacionesIA ? ('<div style="margin-top:6px;font-size:0.73rem;color:#475569;"><strong>Observaciones:</strong> ' + sanitizeHTML(evIa.observacionesIA) + '</div>') : '') +
-        '</div>' +
+        '<details class="ui-accordion" style="margin-top:0.75rem;">' +
+          '<summary>🔐 Verificación MRZ &amp; Códigos de Seguridad' + (codUbicTxt ? (' · ' + sanitizeHTML(codUbicTxt)) : '') + '</summary>' +
+          '<div class="ui-accordion-body">' +
+            '<div style="display:flex;flex-wrap:wrap;gap:0.4rem;">' + checksMrzHtml + '</div>' +
+            (evIa.observacionesIA ? ('<div style="margin-top:6px;font-size:0.73rem;color:#475569;"><strong>Observaciones:</strong> ' + sanitizeHTML(evIa.observacionesIA) + '</div>') : '') +
+          '</div>' +
+        '</details>' +
         _renderBloqueForenseAudit20(data.forense);
       if (data.validacion_ejemplar_manual) {
         actualizarEstadoEjemplarManualAudit20(data.validacion_ejemplar_manual);

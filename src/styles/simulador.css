@@ -4435,6 +4435,53 @@ details.ui-accordion > .ui-accordion-body {
   display: block;
 }
 
+/* ========================================================================
+   FASE 2B: SPLIT-SCREEN 50/50 EN AUDITORÍA IA Y DESGLOSE ADMIN SIMULADOR
+   ======================================================================== */
+.audit20-split-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .audit20-split-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  }
+}
+
+.audit20-split-pane {
+  min-width: 0;
+}
+
+.sim-admin-desglose-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 0.65rem;
+  font-size: 0.76rem;
+}
+
+.sim-admin-desglose-item {
+  padding: 0.55rem 0.7rem;
+  border-radius: 9px;
+  background: #f8fafc;
+  border: 1px solid var(--border-subtle, #e2e8f0);
+}
+
+.sim-admin-desglose-lbl {
+  font-size: 0.68rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.sim-admin-desglose-val {
+  font-weight: 800;
+  color: #0f172a;
+}
+
+
 
 
 

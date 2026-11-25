@@ -412,6 +412,19 @@
             </button>
           </div>
 
+          <!-- 1.6. DESGLOSE TÉCNICO DE TASAS, GASTOS E INTERESES (EXCLUSIVO ROL ADMIN) -->
+          <details id="simuladorDesgloseAdminAccordion" class="ui-accordion" style="display:none;">
+            <summary>
+              <span style="display:inline-flex;align-items:center;gap:6px;">
+                <span>📊 Ver desglose de tasas, gastos administrativos e intereses</span>
+                <span style="font-size:0.66rem;font-weight:700;padding:1px 7px;border-radius:9999px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">Solo Admin</span>
+              </span>
+            </summary>
+            <div class="ui-accordion-body">
+              <div id="simuladorDesgloseAdminBody" class="sim-admin-desglose-grid"></div>
+            </div>
+          </details>
+
           <!-- 2. TABLA DE PLANES (3 COLUMNAS EXACTAS) -->
           <div class="panel">
             <div class="panel-header">
@@ -494,11 +507,14 @@
               </div>
             </div>
 
-            <!-- SELECTOR INTERACTIVO DE 6 PLANES EN WHATSAPP -->
-            <div class="wa-plan-filter-bar" style="background:#f8fafc;padding:0.45rem 0.75rem;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;flex-wrap:wrap;gap:0.45rem;font-size:0.72rem;">
-              <span style="font-weight:700;color:#334155;white-space:nowrap;">Planes incluidos:</span>
-              <div id="waPlazosSelectorContainer" style="display:inline-flex;gap:0.35rem;flex-wrap:wrap;align-items:center;"></div>
-            </div>
+            <!-- SELECTOR INTERACTIVO DE 6 PLANES EN WHATSAPP (DESPLEGABLE COMPACTO) -->
+            <details class="ui-accordion" style="border-radius:0;border-left:none;border-right:none;border-top:none;">
+              <summary style="padding:0.42rem 0.75rem;font-size:0.72rem;color:#475569;">⚙️ Seleccionar planes incluidos en el mensaje</summary>
+              <div class="wa-plan-filter-bar" style="background:#f8fafc;padding:0.45rem 0.75rem;border-top:1px solid #e2e8f0;display:flex;align-items:center;flex-wrap:wrap;gap:0.45rem;font-size:0.72rem;">
+                <span style="font-weight:700;color:#334155;white-space:nowrap;">Planes incluidos:</span>
+                <div id="waPlazosSelectorContainer" style="display:inline-flex;gap:0.35rem;flex-wrap:wrap;align-items:center;"></div>
+              </div>
+            </details>
 
             <div class="wa-chat-canvas">
               <div class="wa-bubble-msg">
@@ -1198,51 +1214,57 @@
                   </div>
                 </div>
 
-                <div class="audit20-form-grid">
-                  <div class="audit20-field">
-                    <label for="inputDniEsperadoAudit20" class="audit20-label">DNI esperado del asociado (opcional)</label>
-                    <input id="inputDniEsperadoAudit20" type="text" inputmode="numeric" placeholder="Ej: 40838259" class="audit20-input is-mono" />
+                <div class="audit20-split-grid">
+                  <div class="audit20-split-pane">
+                    <div class="audit20-form-grid">
+                      <div class="audit20-field">
+                        <label for="inputDniEsperadoAudit20" class="audit20-label">DNI esperado del asociado (opcional)</label>
+                        <input id="inputDniEsperadoAudit20" type="text" inputmode="numeric" placeholder="Ej: 40838259" class="audit20-input is-mono" />
+                      </div>
+                      <div class="audit20-field" style="justify-content:flex-end;">
+                        <label class="audit20-label">¿Tenés frente y dorso por separado?</label>
+                        <button type="button" onclick="abrirAsistenteFrenteDorso('fileInputDniAudit20', 'DNI COMPLETO', 'audit20_dni')" class="audit20-btn audit20-btn--indigo audit20-btn--lg" style="width:100%;">
+                          <span>🪪 Unificar Frente y Dorso (PDF A4)</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div id="dniDropzoneAudit20"
+                         class="ai-dropzone-box"
+                         style="margin-top:0.75rem;"
+                         role="button"
+                         tabindex="0"
+                         aria-label="Subir o arrastrar DNI en PDF o Imagen"
+                         onclick="document.getElementById('fileInputDniAudit20').click()"
+                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('fileInputDniAudit20').click();}"
+                         ondragover="manejarDragOverAudit20(event)"
+                         ondragleave="manejarDragLeaveAudit20(event)"
+                         ondrop="manejarDropAudit20(event, 'dni')">
+                      <input id="fileInputDniAudit20" type="file" accept="application/pdf,image/*" style="display:none;" onchange="manejarArchivoDniAudit20(this.files[0])" />
+                      <div style="font-weight:800;font-size:.92rem;color:var(--color-primary);">
+                        📁 Subir o arrastrar DNI (PDF o Imagen)
+                      </div>
+                      <div id="dniArchivoSeleccionadoPill" style="margin-top:.5rem;"></div>
+                    </div>
+
+                    <div class="audit20-actions" style="margin-top:0.85rem;">
+                      <button type="button" id="btnValidarDniAudit20" onclick="ejecutarValidacionDniAudit20()" class="audit20-btn audit20-btn--navy audit20-btn--lg">
+                        <span>🪪 Auditar DNI</span>
+                      </button>
+                      <button type="button" id="btnValidarRenaperAudit20" onclick="abrirValidacionRenaperAudit20()" class="audit20-btn audit20-btn--indigo audit20-btn--lg" title="Abrir asistente RENAPER Mi Ejemplar (Pestaña dividida Chrome) para verificar ejemplar y fecha de emisión">
+                        <span>🪪 Validar Ejemplar (RENAPER)</span>
+                      </button>
+                      <button type="button" onclick="inspeccionarSoloForenseAudit20('dni')" class="audit20-btn audit20-btn--secondary audit20-btn--lg">
+                        <span>🔬 Verificar Metadatos</span>
+                      </button>
+                    </div>
                   </div>
-                  <div class="audit20-field" style="justify-content:flex-end;">
-                    <label class="audit20-label">¿Tenés frente y dorso por separado?</label>
-                    <button type="button" onclick="abrirAsistenteFrenteDorso('fileInputDniAudit20', 'DNI COMPLETO', 'audit20_dni')" class="audit20-btn audit20-btn--indigo audit20-btn--lg" style="width:100%;">
-                      <span>🪪 Unificar Frente y Dorso (PDF A4)</span>
-                    </button>
+
+                  <div class="audit20-split-pane">
+                    <div id="audit20ManualEjemplarStatus" style="display:none;margin-bottom:0.75rem;"></div>
+                    <div id="resultadoDniAudit20" style="display:none;"></div>
                   </div>
                 </div>
-
-                <div id="dniDropzoneAudit20"
-                     class="ai-dropzone-box"
-                     style="margin-top:0.75rem;"
-                     role="button"
-                     tabindex="0"
-                     aria-label="Subir o arrastrar DNI en PDF o Imagen"
-                     onclick="document.getElementById('fileInputDniAudit20').click()"
-                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('fileInputDniAudit20').click();}"
-                     ondragover="manejarDragOverAudit20(event)"
-                     ondragleave="manejarDragLeaveAudit20(event)"
-                     ondrop="manejarDropAudit20(event, 'dni')">
-                  <input id="fileInputDniAudit20" type="file" accept="application/pdf,image/*" style="display:none;" onchange="manejarArchivoDniAudit20(this.files[0])" />
-                  <div style="font-weight:800;font-size:.92rem;color:var(--color-primary);">
-                    📁 Subir o arrastrar DNI (PDF o Imagen)
-                  </div>
-                  <div id="dniArchivoSeleccionadoPill" style="margin-top:.5rem;"></div>
-                </div>
-
-                <div class="audit20-actions" style="margin-top:0.85rem;">
-                  <button type="button" id="btnValidarDniAudit20" onclick="ejecutarValidacionDniAudit20()" class="audit20-btn audit20-btn--navy audit20-btn--lg">
-                    <span>🪪 Auditar DNI</span>
-                  </button>
-                  <button type="button" id="btnValidarRenaperAudit20" onclick="abrirValidacionRenaperAudit20()" class="audit20-btn audit20-btn--indigo audit20-btn--lg" title="Abrir asistente RENAPER Mi Ejemplar (Pestaña dividida Chrome) para verificar ejemplar y fecha de emisión">
-                    <span>🪪 Validar Ejemplar (RENAPER)</span>
-                  </button>
-                  <button type="button" onclick="inspeccionarSoloForenseAudit20('dni')" class="audit20-btn audit20-btn--secondary audit20-btn--lg">
-                    <span>🔬 Verificar Metadatos</span>
-                  </button>
-                </div>
-
-                <div id="audit20ManualEjemplarStatus" style="display:none;margin-top:0.75rem;"></div>
-                <div id="resultadoDniAudit20" style="display:none;margin-top:1rem;"></div>
               </div>
             </div>
 
@@ -1255,49 +1277,55 @@
                   </div>
                 </div>
 
-                <div class="audit20-form-grid">
-                  <div class="audit20-field">
-                    <label for="inputDomNombreAudit20" class="audit20-label">Apellido y Nombre del solicitante</label>
-                    <input id="inputDomNombreAudit20" type="text" placeholder="Ej: LOZA FRANCISCO ADRIEL" class="audit20-input" />
+                <div class="audit20-split-grid">
+                  <div class="audit20-split-pane">
+                    <div class="audit20-form-grid">
+                      <div class="audit20-field">
+                        <label for="inputDomNombreAudit20" class="audit20-label">Apellido y Nombre del solicitante</label>
+                        <input id="inputDomNombreAudit20" type="text" placeholder="Ej: LOZA FRANCISCO ADRIEL" class="audit20-input" />
+                      </div>
+                      <div class="audit20-field">
+                        <label for="inputDomDniAudit20" class="audit20-label">DNI del solicitante</label>
+                        <input id="inputDomDniAudit20" type="text" inputmode="numeric" placeholder="Ej: 40838259" class="audit20-input is-mono" />
+                      </div>
+                      <div class="audit20-field" style="grid-column:1 / -1;">
+                        <label for="inputDomDirDniAudit20" class="audit20-label">Domicilio en el DNI (opcional)</label>
+                        <input id="inputDomDirDniAudit20" type="text" placeholder="Ej: Av. Ramírez 1450, Paraná" class="audit20-input" />
+                      </div>
+                    </div>
+
+                    <div id="domDropzoneAudit20"
+                         class="ai-dropzone-box"
+                         style="margin-top:0.75rem;"
+                         role="button"
+                         tabindex="0"
+                         aria-label="Subir o arrastrar Boleta de Servicio o Constancia Policial en PDF o Imagen"
+                         onclick="document.getElementById('fileInputDomAudit20').click()"
+                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('fileInputDomAudit20').click();}"
+                         ondragover="manejarDragOverAudit20(event)"
+                         ondragleave="manejarDragLeaveAudit20(event)"
+                         ondrop="manejarDropAudit20(event, 'domicilio')">
+                      <input id="fileInputDomAudit20" type="file" accept="application/pdf,image/*" style="display:none;" onchange="manejarArchivoDomAudit20(this.files[0])" />
+                      <div style="font-weight:800;font-size:.92rem;color:var(--color-primary);">
+                        📁 Subir o arrastrar Boleta de Servicio o Constancia Policial (PDF o Imagen)
+                      </div>
+                      <div id="domArchivoSeleccionadoPill" style="margin-top:.5rem;"></div>
+                    </div>
+
+                    <div class="audit20-actions">
+                      <button type="button" id="btnValidarDomAudit20" onclick="ejecutarValidacionDomicilioAudit20()" class="audit20-btn audit20-btn--navy audit20-btn--lg">
+                        <span>🏠 Validar Domicilio</span>
+                      </button>
+                      <button type="button" onclick="inspeccionarSoloForenseAudit20('domicilio')" class="audit20-btn audit20-btn--secondary audit20-btn--lg">
+                        <span>🔬 Verificar Metadatos</span>
+                      </button>
+                    </div>
                   </div>
-                  <div class="audit20-field">
-                    <label for="inputDomDniAudit20" class="audit20-label">DNI del solicitante</label>
-                    <input id="inputDomDniAudit20" type="text" inputmode="numeric" placeholder="Ej: 40838259" class="audit20-input is-mono" />
-                  </div>
-                  <div class="audit20-field" style="grid-column:1 / -1;">
-                    <label for="inputDomDirDniAudit20" class="audit20-label">Domicilio en el DNI (opcional)</label>
-                    <input id="inputDomDirDniAudit20" type="text" placeholder="Ej: Av. Ramírez 1450, Paraná" class="audit20-input" />
+
+                  <div class="audit20-split-pane">
+                    <div id="resultadoDomicilioAudit20" style="display:none;"></div>
                   </div>
                 </div>
-
-                <div id="domDropzoneAudit20"
-                     class="ai-dropzone-box"
-                     style="margin-top:0.75rem;"
-                     role="button"
-                     tabindex="0"
-                     aria-label="Subir o arrastrar Boleta de Servicio o Constancia Policial en PDF o Imagen"
-                     onclick="document.getElementById('fileInputDomAudit20').click()"
-                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('fileInputDomAudit20').click();}"
-                     ondragover="manejarDragOverAudit20(event)"
-                     ondragleave="manejarDragLeaveAudit20(event)"
-                     ondrop="manejarDropAudit20(event, 'domicilio')">
-                  <input id="fileInputDomAudit20" type="file" accept="application/pdf,image/*" style="display:none;" onchange="manejarArchivoDomAudit20(this.files[0])" />
-                  <div style="font-weight:800;font-size:.92rem;color:var(--color-primary);">
-                    📁 Subir o arrastrar Boleta de Servicio o Constancia Policial (PDF o Imagen)
-                  </div>
-                  <div id="domArchivoSeleccionadoPill" style="margin-top:.5rem;"></div>
-                </div>
-
-                <div class="audit20-actions">
-                  <button type="button" id="btnValidarDomAudit20" onclick="ejecutarValidacionDomicilioAudit20()" class="audit20-btn audit20-btn--navy audit20-btn--lg">
-                    <span>🏠 Validar Domicilio</span>
-                  </button>
-                  <button type="button" onclick="inspeccionarSoloForenseAudit20('domicilio')" class="audit20-btn audit20-btn--secondary audit20-btn--lg">
-                    <span>🔬 Verificar Metadatos</span>
-                  </button>
-                </div>
-
-                <div id="resultadoDomicilioAudit20" style="display:none;margin-top:1rem;"></div>
               </div>
             </div>
 
@@ -1506,16 +1534,21 @@
                   <button type="button" id="btnPresetFirma_dni_firma" class="firmas-btn firmas-btn--sm firmas-btn-soft-blue" onclick="aplicarPresetValidacionFirmas('dni_firma')">✍️ DNI + Firma (sin PDF)</button>
                 </div>
 
-                <div style="display:flex;gap:0.42rem;flex-wrap:wrap;">
-                  <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkGenReqPdf" checked onchange="onToggleValidacionGenerador()"/> 📄 Con documento PDF</label>
-                  <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkGenReqUif" checked onchange="onToggleValidacionGenerador()"/> 📋 DDJJ UIF</label>
-                  <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkGenReqDni" onchange="onToggleValidacionGenerador()"/> 🪪 Fotos DNI (Frente/Dorso)</label>
-                  <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkGenReqSelfie" onchange="onToggleValidacionGenerador()"/> 🤳 Video Selfie Liveness</label>
-                  <label class="firmas-check-pill firmas-check-pill--emerald firmas-check-pill--compact"><input type="checkbox" id="chkGenReqVoz" onchange="onToggleValidacionGenerador()"/> 🎙️ Validación Extra Voz + Frase</label>
-                  <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkGenReqFirma" checked onchange="onToggleValidacionGenerador()"/> ✍️ Firma Ológrafa</label>
-                  <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkGenReqGps" onchange="onToggleValidacionGenerador()"/> 📍 GPS</label>
-                  <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkGenReqPin" onchange="onToggleValidacionGenerador()"/> 🔐 PIN 2FA</label>
-                </div>
+                <details class="ui-accordion" style="margin-top:0.45rem;">
+                  <summary>⚙️ Personalizar validaciones de seguridad (PDF, UIF, DNI, Selfie, Voz, Firma, GPS, PIN)</summary>
+                  <div class="ui-accordion-body">
+                    <div style="display:flex;gap:0.42rem;flex-wrap:wrap;">
+                      <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkGenReqPdf" checked onchange="onToggleValidacionGenerador()"/> 📄 Con documento PDF</label>
+                      <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkGenReqUif" checked onchange="onToggleValidacionGenerador()"/> 📋 DDJJ UIF</label>
+                      <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkGenReqDni" onchange="onToggleValidacionGenerador()"/> 🪪 Fotos DNI (Frente/Dorso)</label>
+                      <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkGenReqSelfie" onchange="onToggleValidacionGenerador()"/> 🤳 Video Selfie Liveness</label>
+                      <label class="firmas-check-pill firmas-check-pill--emerald firmas-check-pill--compact"><input type="checkbox" id="chkGenReqVoz" onchange="onToggleValidacionGenerador()"/> 🎙️ Validación Extra Voz + Frase</label>
+                      <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkGenReqFirma" checked onchange="onToggleValidacionGenerador()"/> ✍️ Firma Ológrafa</label>
+                      <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkGenReqGps" onchange="onToggleValidacionGenerador()"/> 📍 GPS</label>
+                      <label class="firmas-check-pill firmas-check-pill--compact"><input type="checkbox" id="chkGenReqPin" onchange="onToggleValidacionGenerador()"/> 🔐 PIN 2FA</label>
+                    </div>
+                  </div>
+                </details>
 
                 <div id="firmaTituloSinPdfWrap" style="display:none;margin-top:0.7rem;background:#ffffff;border:1px solid #cbd5e1;border-radius:11px;padding:0.65rem 0.85rem;">
                   <label for="inpFirmaTituloSinPdf" class="firmas-label" style="margin-bottom:4px;">Título de la Constancia de Validación (sin PDF previo)</label>
@@ -6273,6 +6306,27 @@ Aguardo su respuesta. Muchas gracias.`;
 
       renderMatrixTable();
       actualizarBannerFechaCobroSimulador();
+      const adminDesgloseAcc = document.getElementById('simuladorDesgloseAdminAccordion');
+      const adminDesgloseBody = document.getElementById('simuladorDesgloseAdminBody');
+      if (adminDesgloseAcc && adminDesgloseBody) {
+        const esAdminSim = (typeof esAdminAuditoria === 'function') && esAdminAuditoria();
+        if (esAdminSim) {
+          adminDesgloseAcc.style.display = '';
+          const gastosAdmin = Math.max(0, Number(result.capital || 0) - Number(result.neto || 0));
+          const tasaTxt = (typeof obtenerTasaCostoTexto === 'function') ? obtenerTasaCostoTexto(state.linea, state.plazo) : '—';
+          adminDesgloseBody.innerHTML =
+            '<div class="sim-admin-desglose-grid">' +
+              '<div class="sim-admin-desglose-item"><span>Tasa / Costo Ref.</span><strong class="tabular-nums">' + sanitizeHTML(tasaTxt) + '</strong></div>' +
+              '<div class="sim-admin-desglose-item"><span>Capital Computable</span><strong class="tabular-nums">' + formatMoney(result.capital) + '</strong></div>' +
+              '<div class="sim-admin-desglose-item"><span>Gastos Administrativos</span><strong class="tabular-nums">' + formatMoney(gastosAdmin) + '</strong></div>' +
+              '<div class="sim-admin-desglose-item"><span>Total a Devolver</span><strong class="tabular-nums">' + formatMoney(result.totalAyuda) + '</strong></div>' +
+            '</div>';
+        } else {
+          adminDesgloseAcc.style.display = 'none';
+          adminDesgloseAcc.removeAttribute('open');
+          adminDesgloseBody.innerHTML = '';
+        }
+      }
       renderWaPlazosSelector();
       updateWhatsAppPreview();
     }
@@ -7798,7 +7852,7 @@ ${cierreTxt}`;
 
     const MODULOS_LAZY_AMMER = {
       boletin: { src: 'js/boletinER.js?v=6', check: () => typeof window.cargarEstadoBoletinOficialAuditoria === 'function' },
-      auditoria20: { src: 'js/auditoria20.js?v=7', check: () => typeof window.ejecutarValidacionDniAudit20 === 'function' },
+      auditoria20: { src: 'js/auditoria20.js?v=8', check: () => typeof window.ejecutarValidacionDniAudit20 === 'function' },
       fichas: { src: 'js/fichasAsociados.js?v=6', check: () => typeof window.buscarPadronFichasAsociados === 'function' },
       firmas: { src: 'js/firmasAmmer.js?v=29', check: () => typeof window.initFirmasAmmerView === 'function' },
       whatsappBot: { src: 'js/whatsappBotAdmin.js?v=5', check: () => typeof window.initWhatsappBotPanelAdmin === 'function' },

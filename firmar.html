@@ -2051,9 +2051,10 @@
         </div>
 
         <div id="boxPinOtpFirma" style="display:none;margin:0.6rem 0;padding:0.68rem 0.85rem;border-radius:11px;background:#f5f3ff;border:1.5px solid #c4b5fd;">
-          <label for="inpPinOtpFirma" style="display:block;font-size:0.88rem;font-weight:800;color:#5b21b6;margin-bottom:3px;">
+          <label for="inpPinOtpFirma" id="lblPinOtpCanalTitle" style="display:block;font-size:0.88rem;font-weight:800;color:#5b21b6;margin-bottom:3px;">
             🔐 Código de seguridad (WhatsApp)
           </label>
+          <div id="lblPinOtpEmailHint" style="display:none;font-size:0.78rem;color:#6d28d9;margin-bottom:6px;line-height:1.35;"></div>
           <input type="text" id="inpPinOtpFirma" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" style="width:185px;padding:0.45rem 0.7rem;border:2px solid #8b5cf6;border-radius:9px;font-size:1.2rem;font-weight:800;letter-spacing:6px;text-align:center;color:#4c1d95;background:#ffffff;"/>
         </div>
 
@@ -4729,6 +4730,29 @@
           }
           if (appState.requierePinOtp) {
             const boxPin = document.getElementById('boxPinOtpFirma');
+            const lblPinTitle = document.getElementById('lblPinOtpCanalTitle');
+            const lblPinHint = document.getElementById('lblPinOtpEmailHint');
+            const canalPin = String(data.canal_pin || 'whatsapp').toLowerCase();
+            const emailMask = String(data.email_pin_enmascarado || '').trim();
+            if (lblPinTitle) {
+              if (canalPin === 'email') {
+                lblPinTitle.textContent = '📧 Código PIN enviado a tu Email (Domicilio Electrónico)';
+              } else if (canalPin === 'ambos') {
+                lblPinTitle.textContent = '🔐 Código PIN de seguridad (WhatsApp y Email)';
+              } else {
+                lblPinTitle.textContent = '🔐 Código de seguridad (WhatsApp)';
+              }
+            }
+            if (lblPinHint) {
+              if (canalPin === 'email' || canalPin === 'ambos') {
+                lblPinHint.textContent = emailMask
+                  ? `Revisá tu casilla ${emailMask}. Ingresar este PIN valida tu domicilio electrónico declarado ante AMMER.`
+                  : 'Revisá tu correo electrónico. Ingresar este PIN valida tu domicilio electrónico declarado ante AMMER.';
+                lblPinHint.style.display = 'block';
+              } else {
+                lblPinHint.style.display = 'none';
+              }
+            }
             if (boxPin) boxPin.style.display = 'block';
           }
           if (appState.requiereUif) {

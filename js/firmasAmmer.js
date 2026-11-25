@@ -1459,6 +1459,14 @@
     }
   }
 
+  window.onToggleCanalPinGenerador = function () {
+    const sel = document.getElementById('selFirmaCanalPin');
+    const wrap = document.getElementById('wrapFirmaEmailPin');
+    if (!sel || !wrap) return;
+    const val = String(sel.value || 'whatsapp').toLowerCase();
+    wrap.style.display = (val === 'email' || val === 'ambos') ? 'flex' : 'none';
+  };
+
   async function generarEnlaceFirmaMovil() {
     const valsBase = obtenerValidacionesGenerador();
     const esSinPdf = valsBase.requiere_pdf === false;
@@ -1482,6 +1490,17 @@
     const ctx = construirContextoDesdeExpediente(exp);
     const inpWa = document.getElementById('inpFirmaTelefonoWa');
     const telWa = (inpWa && inpWa.value.trim()) || ctx.solicitante.telefono || '';
+    const selCanalPin = document.getElementById('selFirmaCanalPin');
+    const canalPin = String((selCanalPin && selCanalPin.value) || 'whatsapp').trim().toLowerCase();
+    const inpEmailPin = document.getElementById('inpFirmaEmailPin');
+    const emailPin = String((inpEmailPin && inpEmailPin.value) || (ctx.solicitante && (ctx.solicitante.email || ctx.solicitante.correo)) || '').trim().toLowerCase();
+    const selEmailProv = document.getElementById('selFirmaEmailProvider');
+    const emailProvider = String((selEmailProv && selEmailProv.value) || 'auto').trim().toLowerCase();
+    if (vals.requiere_pin_otp && (canalPin === 'email' || canalPin === 'ambos') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailPin)) {
+      notify('Para enviar el PIN 2FA por Email, ingresá un correo electrónico válido del firmante.', 'warning');
+      if (inpEmailPin) inpEmailPin.focus();
+      return;
+    }
     const baseFirma = new URL('firmar.html', window.location.href).href.split('?')[0];
     const ordenSecuencial = Boolean((document.getElementById('chkOrdenSecuencialFirma') || {}).checked);
     const enviarWaAuto = Boolean((document.getElementById('chkEnviarWaAutoFirma') || {}).checked);
@@ -1492,6 +1511,8 @@
       nombre: f.nombre || (idx === 0 ? (ctx.solicitante.nombre || 'Asociado/a') : `Firmante ${idx + 1}`),
       dni: f.dni || (idx === 0 ? (ctx.solicitante.dni || '') : ''),
       telefono: f.telefono || (idx === 0 ? telWa : ''),
+      email: f.email || (idx === 0 ? emailPin : ''),
+      canal_pin: f.canal_pin || canalPin,
       orden: idx + 1,
     }));
 
@@ -1523,6 +1544,9 @@
           dni_solicitante: firmantesPayload[0].dni || ctx.solicitante.dni || '',
           nombre_solicitante: firmantesPayload[0].nombre || ctx.solicitante.nombre || 'Asociado/a',
           telefono_whatsapp: firmantesPayload[0].telefono || telWa,
+          email_solicitante: firmantesPayload[0].email || emailPin || null,
+          canal_pin: canalPin,
+          email_provider: emailProvider,
           contexto: ctx,
           selloPngBase64: (!esSinPdf && state.selloPngBase64) ? state.selloPngBase64 : null,
           firmantes: firmantesPayload,
@@ -1541,7 +1565,7 @@
 
       const enlaces = Array.isArray(res.enlaces_firmantes) && res.enlaces_firmantes.length > 0
         ? res.enlaces_firmantes
-        : [{ solicitud_id: res.solicitud_id, etiqueta: 'Firmante 1', nombre: firmantesPayload[0].nombre, telefono: telWa, url_firma: res.url_firma, pin_otp: res.pin_otp, orden: 1 }];
+        : [{ solicitud_id: res.solicitud_id, etiqueta: 'Firmante 1', nombre: firmantesPayload[0].nombre, telefono: telWa, email_enmascarado: res.email_enmascarado, canal_pin: res.canal_pin || canalPin, url_firma: res.url_firma, pin_otp: res.pin_otp, email_auto: res.email_auto, orden: 1 }];
 
       enlaces.forEach((item, idx) => {
         const sId = item.solicitud_id || (idx === 0 ? res.solicitud_id : null);
@@ -1557,10 +1581,18 @@
       if (listCont) {
         listCont.innerHTML = enlaces.map((item, idx) => {
           const sId = item.solicitud_id || (idx === 0 ? res.solicitud_id : '');
-          const pinNote = item.pin_otp ? `\n\n🔐 Tu código PIN de seguridad para confirmar la firma es: *${item.pin_otp}*` : '';
+          const itemCanalPin = String(item.canal_pin || canalPin || 'whatsapp').toLowerCase();
+          const pinNote = (item.pin_otp && itemCanalPin !== 'email')
+            ? `\n\n🔐 Tu código PIN de seguridad para confirmar la firma es: *${item.pin_otp}*`
+            : (item.pin_otp && itemCanalPin === 'email'
+              ? `\n\n📧 Tu código PIN de seguridad fue enviado a tu correo electrónico (${item.email_enmascarado || 'registrado'}) para validar tu domicilio electrónico.`
+              : '');
           const msg = `Hola ${item.nombre || 'Estimado/a'}, te compartimos desde Asociación Mutual Modelo de Entre Ríos (AMMER) el enlace seguro para revisar y firmar "${nombreDocLabel}" (${item.etiqueta || 'Firmante'}):\n\n${item.url_firma}${pinNote}\n\nEste enlace es personal y tiene vigencia de 24 horas.`;
           const pinBadge = item.pin_otp
-            ? `<div style="display:inline-flex;align-items:center;gap:6px;margin-bottom:0.55rem;padding:0.35rem 0.72rem;border-radius:9px;background:#f5f3ff;border:1px solid #ddd6fe;color:#5b21b6;font-size:0.78rem;font-weight:800;">🔐 PIN 2FA para firmar: <span class="font-mono" style="font-size:0.92rem;letter-spacing:2px;">${escHtml(item.pin_otp)}</span></div>`
+            ? `<div style="display:inline-flex;align-items:center;gap:6px;margin-bottom:0.55rem;padding:0.35rem 0.72rem;border-radius:9px;background:#f5f3ff;border:1px solid #ddd6fe;color:#5b21b6;font-size:0.78rem;font-weight:800;">🔐 PIN 2FA (${itemCanalPin === 'email' ? 'Email' : (itemCanalPin === 'ambos' ? 'WA + Email' : 'WhatsApp')}): <span class="font-mono" style="font-size:0.92rem;letter-spacing:2px;">${escHtml(item.pin_otp)}</span></div>`
+            : '';
+          const emailAutoBadge = item.email_auto && item.email_auto.ok
+            ? `<span style="display:inline-flex;align-items:center;margin-left:6px;padding:2px 8px;border-radius:9999px;background:#e0f2fe;border:1px solid #7dd3fc;color:#0369a1;font-size:0.68rem;font-weight:800;">📧 Email (${escHtml(item.email_auto.provider || 'auto')}) → ${escHtml(item.email_enmascarado || '')}</span>`
             : '';
           const waAutoBadge = item.whatsapp_auto && item.whatsapp_auto.ok
             ? '<span style="display:inline-flex;align-items:center;margin-left:6px;padding:2px 8px;border-radius:9999px;background:#dcfce7;border:1px solid #86efac;color:#166534;font-size:0.68rem;font-weight:800;">🤖 Enviado por Bot WA</span>'
@@ -1576,7 +1608,7 @@
                 <div style="font-size:0.84rem;font-weight:800;color:#065f46;margin-bottom:0.5rem;display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
                   <span>👤 ${ordenSecuencial ? `[Turno #${item.orden || idx + 1}] ` : ''}${escHtml(item.etiqueta || `Firmante ${idx + 1}`)}: ${escHtml(item.nombre || '-')}</span>
                   ${item.dni ? `<span class="font-mono" style="font-weight:600;color:#047857;font-size:0.77rem;">(DNI ${escHtml(item.dni)})</span>` : ''}
-                  ${waAutoBadge}
+                  ${waAutoBadge}${emailAutoBadge}
                 </div>
                 ${pinBadge}
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.55rem;">
@@ -2771,7 +2803,7 @@
               ${kpiItem('Primera Lectura (AR)', r.leido_en ? formatearFechaHoraAr(r.leido_en) : '-')}
               ${kpiItem('Fecha Firma (AR)', r.firmado_en ? formatearFechaHoraAr(r.firmado_en) : 'Pendiente')}
               ${kpiItem('IP Pública del Firmante', r.ip_origen || '-')}
-              ${kpiItem('PIN / OTP WhatsApp (2FA)', r.pin_otp_verificado ? 'Verificado correctamente' : (r.pin_otp_requerido ? 'Pendiente de validar' : 'No requerido'))}
+              ${kpiItem('PIN / OTP (2FA)', r.pin_otp_verificado ? (r.domicilio_electronico_validado ? `Verificado · Domicilio electrónico (${r.email_pin_enmascarado || 'Email'})` : 'Verificado correctamente') : (r.pin_otp_requerido ? `Pendiente (${r.canal_pin === 'email' ? 'Email' : (r.canal_pin === 'ambos' ? 'WA + Email' : 'WhatsApp')})` : 'No requerido'))}
               ${kpiItem('Puntos de Trazo Firma', r.puntos_trazo != null ? `${r.puntos_trazo} puntos` : '-')}
               ${kpiItem('Impacto en Padrón / Ficha', (r.impacto_expediente && r.impacto_expediente.ok) ? `Impactado (${r.impacto_expediente.tipo_validacion || 'OK'})` : 'Pendiente / Sin expediente')}
               ${kpiItem('Sello Temporal TSA RFC 3161', tsa.ok ? `${tsa.authority || 'TSA'} (${tsa.timestamp_utc || 'OK'})` : 'No emitido')}

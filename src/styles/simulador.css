@@ -4204,3 +4204,68 @@ tr.row-drop-target-active > td:last-child {
   color: #1e40af;
 }
 
+/* ========================================================================
+   FASE 0: TOKENS DE DISEÑO FINTECH, Z-INDEX Y ACORDEONES (.ui-accordion)
+   ======================================================================== */
+:root {
+  --surface-canvas: #f4f7fb;
+  --surface-card: #ffffff;
+  --border-subtle: #e2e8f0;
+  --radius-card: 14px;
+  --z-base: 1;
+  --z-sticky: 20;
+  --z-dropdown: 60;
+  --z-modal: 1000;
+  --z-modal-elevated: 1200;
+  --z-toast: 1400;
+  --z-loader: 1600;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+details.ui-accordion {
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--surface-card);
+  overflow: hidden;
+}
+
+details.ui-accordion > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0f172a;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  user-select: none;
+}
+
+details.ui-accordion > summary::-webkit-details-marker {
+  display: none;
+}
+
+details.ui-accordion > summary::after {
+  content: '▾';
+  font-size: 0.78rem;
+  color: #64748b;
+  transition: transform 0.16s ease;
+}
+
+details.ui-accordion[open] > summary::after {
+  transform: rotate(180deg);
+}
+
+details.ui-accordion > .ui-accordion-body {
+  padding: 0.85rem 0.95rem;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-card);
+}
+
+

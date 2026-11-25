@@ -4283,5 +4283,158 @@ details.ui-accordion > .ui-accordion-body {
   white-space: nowrap;
 }
 
+/* ========================================================================
+   FASE 2A: MENÚ ⋮ DE ACCIONES EN TABLAS, FILTROS COLAPSABLES Y TABS DE FICHA
+   ======================================================================== */
+.crm-row-menu-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.crm-row-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 0.5rem;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+
+.crm-row-menu-btn:hover,
+.crm-row-menu-btn[aria-expanded="true"] {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.crm-row-menu-popover {
+  display: none;
+  position: fixed;
+  z-index: var(--z-dropdown, 60);
+  min-width: 210px;
+  max-width: 260px;
+  padding: 0.35rem;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 11px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+  flex-direction: column;
+  gap: 0.2rem;
+  text-align: left;
+}
+
+.crm-row-menu-popover.is-open {
+  display: flex;
+}
+
+.crm-row-menu-popover > button,
+.crm-row-menu-popover > a,
+.crm-row-menu-popover > span {
+  width: 100%;
+  justify-content: flex-start !important;
+  text-align: left;
+  padding: 0.46rem 0.65rem !important;
+  border-radius: 7px !important;
+  font-size: 0.76rem !important;
+  font-weight: 600 !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: #1e293b !important;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+}
+
+.crm-row-menu-popover > button:hover,
+.crm-row-menu-popover > a:hover {
+  background: #f1f5f9 !important;
+  color: #0f2744 !important;
+}
+
+.filters-adv-accordion {
+  margin-top: 0.55rem;
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.filters-adv-accordion > summary {
+  padding: 0.45rem 0.75rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #475569;
+  background: transparent;
+}
+
+.filters-adv-accordion > .ui-accordion-body {
+  padding: 0.65rem 0.75rem;
+  background: #ffffff;
+}
+
+.ficha-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  padding: 0.35rem;
+  margin: 0.65rem 0 0.9rem;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 11px;
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky, 20);
+}
+
+.ficha-tab-btn {
+  flex: 1 1 130px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.48rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #475569;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.14s ease;
+  white-space: nowrap;
+}
+
+.ficha-tab-btn:hover {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.ficha-tab-btn.is-active {
+  background: #ffffff;
+  color: #0f2744;
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+}
+
+.ficha-tab-panel {
+  display: none;
+}
+
+.ficha-tab-panel.is-active {
+  display: block;
+}
+
+
 
 

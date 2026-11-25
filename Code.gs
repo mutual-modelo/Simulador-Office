@@ -196,6 +196,9 @@ function doPost(e) {
       case 'privatizarDriveHistorico':
         return crearRespuestaJSON(privatizarDriveHistoricoBackend_(payload));
 
+      case 'enviarPinFirmaEmail':
+        return crearRespuestaJSON(enviarPinFirmaEmailBackend_(payload));
+
       default:
         return crearRespuestaJSON({
           ok: false,
@@ -4974,3 +4977,120 @@ function auditarLegajoConIA(payload) {
     };
   }
 }
+
+function escHtmlPinEmail_(val) {
+  return String(val == null ? '' : val)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function enviarPinFirmaEmailBackend_(payload) {
+  try {
+    const p = payload || {};
+    const email = String(p.email || p.to || '').trim().toLowerCase();
+    if (!/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email)) {
+      return {
+        ok: false,
+        provider: 'mailapp',
+        status: 400,
+        error: 'Email de destino inválido o vacío.'
+      };
+    }
+
+    const nombre = String(p.nombre || 'Estimado/a').trim();
+    const plantillaNombre = String(p.plantillaNombre || p.documento || 'Documento AMMER').trim();
+    const pin = String(p.pin || p.pinOtp || '').trim();
+    const urlFirma = String(p.urlFirma || '').trim();
+    const etiqueta = String(p.etiqueta || '').trim();
+    const solicitudId = String(p.solicitudId || '').trim();
+    const esRecordatorio = Boolean(p.esRecordatorio);
+
+    const asuntoBase = pin
+      ? 'Código PIN de Firma Electrónica AMMER — ' + plantillaNombre
+      : 'Enlace para Firma Electrónica AMMER — ' + plantillaNombre;
+    const subject = (esRecordatorio ? '[Recordatorio] ' : '') + asuntoBase;
+
+    const lineasTexto = [
+      'Hola ' + nombre + ',',
+      '',
+      esRecordatorio
+        ? 'Te recordamos desde Asociación Mutual Modelo de Entre Ríos (AMMER) tu trámite de firma electrónica para "' + plantillaNombre + '"' + (etiqueta ? ' (' + etiqueta + ')' : '') + '.'
+        : 'Te compartimos desde Asociación Mutual Modelo de Entre Ríos (AMMER) los datos para completar tu firma electrónica en "' + plantillaNombre + '"' + (etiqueta ? ' (' + etiqueta + ')' : '') + '.'
+    ];
+    if (pin) {
+      lineasTexto.push('', 'Código PIN de seguridad: ' + pin, 'Este código valida tu domicilio electrónico declarado ante AMMER.');
+    }
+    if (urlFirma) {
+      lineasTexto.push('', 'Enlace seguro para firmar: ' + urlFirma);
+    }
+    lineasTexto.push('', 'Vigencia: 24 horas. Por seguridad no compartas este código con terceros.');
+    if (solicitudId) {
+      lineasTexto.push('Referencia: ' + solicitudId);
+    }
+
+    const pinHtml = pin
+      ? '<div style="margin:20px 0;padding:16px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;text-align:center;">'
+        + '<div style="font-size:12px;color:#5b21b6;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">Tu código PIN de seguridad</div>'
+        + '<div style="margin-top:6px;font-size:30px;font-weight:800;letter-spacing:0.22em;color:#4c1d95;font-family:monospace;">' + escHtmlPinEmail_(pin) + '</div>'
+        + '<div style="margin-top:6px;font-size:12px;color:#6d28d9;">Valida tu domicilio electrónico declarado ante AMMER</div>'
+        + '</div>'
+      : '';
+
+    const ctaHtml = urlFirma
+      ? '<div style="margin:22px 0;text-align:center;">'
+        + '<a href="' + escHtmlPinEmail_(urlFirma) + '" style="display:inline-block;padding:12px 24px;background:#0f2744;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;">Abrir documento para firmar</a>'
+        + '<div style="margin-top:8px;font-size:11px;color:#64748b;word-break:break-all;">' + escHtmlPinEmail_(urlFirma) + '</div>'
+        + '</div>'
+      : '';
+
+    const htmlBody = ''
+      + '<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#f8fafc;color:#0f172a;">'
+      + '<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;">'
+      + '<div style="font-size:12px;font-weight:700;color:#0f2744;text-transform:uppercase;letter-spacing:0.05em;">Asociación Mutual Modelo de Entre Ríos (AMMER)</div>'
+      + '<h2 style="margin:8px 0 12px;font-size:18px;color:#0f172a;">Validación de Firma Electrónica y Domicilio Electrónico</h2>'
+      + '<p style="margin:0 0 12px;font-size:14px;line-height:1.5;">Hola <strong>' + escHtmlPinEmail_(nombre) + '</strong>,</p>'
+      + '<p style="margin:0 0 12px;font-size:14px;line-height:1.5;">'
+      + (esRecordatorio ? 'Te recordamos tu solicitud de firma pendiente para ' : 'Tenés disponible para revisar y firmar el documento ')
+      + '<strong>&ldquo;' + escHtmlPinEmail_(plantillaNombre) + '&rdquo;</strong>'
+      + (etiqueta ? ' (' + escHtmlPinEmail_(etiqueta) + ')' : '')
+      + '.</p>'
+      + pinHtml
+      + ctaHtml
+      + '<p style="margin:16px 0 0;font-size:12px;color:#475569;line-height:1.5;">Vigencia del enlace y código: <strong>24 horas</strong>. Si no reconocés esta operación, ignorá este correo y no compartas tu PIN.</p>'
+      + (solicitudId ? '<p style="margin:8px 0 0;font-size:11px;color:#94a3b8;">Ref. solicitud: ' + escHtmlPinEmail_(solicitudId) + '</p>' : '')
+      + '</div></div>';
+
+    MailApp.sendEmail({
+      to: email,
+      subject: subject,
+      body: lineasTexto.join('\n'),
+      htmlBody: htmlBody,
+      name: 'Mutual Modelo — Firmas AMMER',
+      noReply: true
+    });
+
+    let remainingDailyQuota = null;
+    try {
+      if (typeof MailApp.getRemainingDailyQuota === 'function') {
+        remainingDailyQuota = MailApp.getRemainingDailyQuota();
+      }
+    } catch (_quotaErr) {}
+
+    return {
+      ok: true,
+      provider: 'mailapp',
+      email: email,
+      remainingDailyQuota: remainingDailyQuota
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      provider: 'mailapp',
+      error: 'No se pudo enviar el correo vía MailApp: ' + (err && err.message ? err.message : String(err))
+    };
+  }
+}
+

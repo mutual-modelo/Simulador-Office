@@ -4268,4 +4268,20 @@ details.ui-accordion > .ui-accordion-body {
   background: var(--surface-card);
 }
 
+/* FASE 1: INDICADOR DISCRETO DE SINCRONIZACIÓN SWR EN TOPBAR */
+.topbar-sync-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  white-space: nowrap;
+}
+
+
 

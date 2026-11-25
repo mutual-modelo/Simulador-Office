@@ -6,13 +6,15 @@ import path from 'node:path';
 const ROOT = path.resolve(import.meta.dirname, '..');
 const indexHtml = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 
-test('UI Integrity: todos los scripts locales referenciados en index.html existen en disco', () => {
+test('UI Integrity: todos los scripts locales (eager y lazy) referenciados en index.html existen en disco', () => {
   const scriptMatches = [...indexHtml.matchAll(/<script\s+[^>]*src="([^"]+)"/gi)];
-  const localScripts = scriptMatches
-    .map((m) => m[1])
-    .filter((src) => !/^https?:\/\//i.test(src) && !src.startsWith('data:'));
+  const lazyMatches = [...indexHtml.matchAll(/src:\s*'(js\/[^']+)'/gi)];
+  const localScripts = [
+    ...scriptMatches.map((m) => m[1]),
+    ...lazyMatches.map((m) => m[1])
+  ].filter((src) => !/^https?:\/\//i.test(src) && !src.startsWith('data:'));
 
-  assert.ok(localScripts.length > 0, 'Debe haber scripts locales en index.html');
+  assert.ok(localScripts.length >= 7, 'Debe haber scripts eager y lazy declarados en index.html');
   for (const src of localScripts) {
     const cleanPath = src.split('?')[0].replace(/^\.\//, '');
     const fullPath = path.join(ROOT, cleanPath);

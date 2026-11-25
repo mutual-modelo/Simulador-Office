@@ -10,13 +10,25 @@
   function getAuthHeaders() {
     let token = '';
     try {
-      const raw =
-        localStorage.getItem('ammer_session') ||
-        sessionStorage.getItem('ammer_session') ||
-        localStorage.getItem('session') ||
-        '{}';
-      const parsed = JSON.parse(raw);
-      token = parsed.token || parsed.access_token || '';
+      if (typeof window.getAuthToken === 'function') {
+        token = window.getAuthToken() || '';
+      }
+      if (!token) {
+        token =
+          sessionStorage.getItem('AMMER_AUTH_TOKEN') ||
+          localStorage.getItem('AMMER_AUTH_TOKEN') ||
+          '';
+      }
+      if (!token) {
+        const raw =
+          sessionStorage.getItem('sesion_mutual') ||
+          sessionStorage.getItem('AMMER_AUTH_SESSION') ||
+          localStorage.getItem('sesion_mutual') ||
+          localStorage.getItem('AMMER_AUTH_SESSION') ||
+          '{}';
+        const parsed = JSON.parse(raw);
+        token = parsed.token || parsed.access_token || parsed.authToken || '';
+      }
     } catch (_) {}
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = 'Bearer ' + token;

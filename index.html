@@ -6935,7 +6935,7 @@
       }
       if (viewId === 'vistaFirmasAMMER') {
         if (!tieneAccesoFirmasAmmer(sess)) {
-          showToast('⛔ Acceso restringido: Firmas AMMER solo está habilitado para rol Admin.');
+          showToast('⛔ Acceso restringido: Firmas AMMER solo está habilitado para rol Analista o Admin.');
           cambiarPestana('view-simulador');
           return;
         }
@@ -7107,7 +7107,7 @@
     function tieneAccesoFirmasAmmer(sessObj) {
       const s = sessObj || getSession();
       const rol = String((s && (s.rol || s.role)) || '').trim().toLowerCase();
-      return rol === 'admin' || rol === 'administrador';
+      return rol === 'analista' || rol === 'admin' || rol === 'administrador';
     }
     window.tieneAccesoFirmasAmmer = tieneAccesoFirmasAmmer;
 
@@ -7240,6 +7240,8 @@
             html += '<button type="button" id="btnNavWhatsappBot" class="sidebar-nav-item" data-view="view-whatsapp-bot" data-tooltip="Whatsapp Bot" onclick="cambiarPestana(\'view-whatsapp-bot\')">' +
               '<span class="sidebar-nav-icon" style="color:#4ade80;">' + iconWhatsappBot + '</span>' +
               '<span class="sidebar-nav-label ' + textCls + '" style="display:flex;align-items:center;gap:6px;"><span>Whatsapp Bot</span><span id="navWaBotStatusDot" style="display:none;min-width:17px;height:17px;padding:0 5px;border-radius:9999px;font-size:0.65rem;font-weight:800;align-items:center;justify-content:center;"></span></span></button>';
+          }
+          if (esAdminMenu || String(session.rol || '').trim().toLowerCase() === 'analista') {
             html += '<button type="button" id="btnNavAnalisisCarteras" class="sidebar-nav-item" data-view="vistaAnalisisCarteras" data-tooltip="Análisis Carteras" onclick="cambiarPestana(\'vistaAnalisisCarteras\'); if (window.cargarAuditoriasCarteras) window.cargarAuditoriasCarteras();">' +
               '<span class="sidebar-nav-icon" style="color:#38bdf8;">📂</span>' +
               '<span class="sidebar-nav-label ' + textCls + '">Análisis Carteras</span></button>';
@@ -11098,7 +11100,7 @@
           { label: '🔄 Sincronizar gestiones ahora', meta: 'Acción', run: () => { if (typeof cargarSolicitudesDesdeNube === 'function') cargarSolicitudesDesdeNube(false); } }
         ];
         if (typeof tieneAccesoFirmasAmmer === 'function' && tieneAccesoFirmasAmmer(sess)) {
-          base.push({ label: '✍️ Ir a Firmas AMMER', meta: 'Admin', run: () => cambiarPestana('vistaFirmasAMMER') });
+          base.push({ label: '✍️ Ir a Firmas AMMER', meta: 'Analista/Admin', run: () => cambiarPestana('vistaFirmasAMMER') });
         }
         if (typeof tieneAccesoPadronFichas === 'function' && tieneAccesoPadronFichas(sess)) {
           base.push({ label: '🗂️ Ir a Padrón y Fichas', meta: 'Analista/Admin', run: () => cambiarPestana('view-ficha-asociado') });

@@ -188,6 +188,7 @@
         </div>
 
         <div class="header-right">
+          <button type="button" id="btnCommandMenuTopbar" class="topbar-cmd-btn" onclick="abrirCommandMenuAmmer()" title="Buscar vistas, acciones o gestiones (Ctrl+K)">🔍 Buscar <span class="topbar-cmd-kbd">Ctrl+K</span></button>
           <span id="topbarSyncBadge" class="topbar-sync-badge" style="display:none;" aria-live="polite">🔄 Sincronizando...</span>
           <!-- CENTRO DE NOTIFICACIONES FLOTANTE -->
           <div class="notif-wrapper" id="notifWrapper">
@@ -23845,5 +23846,154 @@ ${cierreTxt}`;
   </script>
   <script src="js/sidecreerWidget.js?v=11"></script>
   <!-- Módulos pesados (boletinER, auditoria20, fichasAsociados, firmasAmmer, whatsappBotAdmin, mutualPayBackoffice) se cargan bajo demanda vía cargarModuloOnDemand() -->
+  <div id="ammerCommandMenuModal" class="cmd-k-backdrop" role="dialog" aria-modal="true" aria-label="Menú rápido de comandos" onclick="if(event.target===this)cerrarCommandMenuAmmer();">
+    <div class="cmd-k-dialog">
+      <div class="cmd-k-input-wrap">
+        <span aria-hidden="true">🔍</span>
+        <input id="ammerCommandInput" class="cmd-k-input" type="text" placeholder="Ir a vista, acción o buscar gestión por nombre / DNI..." autocomplete="off" />
+        <button type="button" onclick="cerrarCommandMenuAmmer()" style="border:none;background:transparent;color:#64748b;font-size:0.75rem;cursor:pointer;">Esc</button>
+      </div>
+      <div id="ammerCommandList" class="cmd-k-list"></div>
+      <div class="cmd-k-footer">
+        <span>↑↓ navegar · Enter ejecutar</span>
+        <span>Ctrl+K / Cmd+K</span>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function initFase3UxHelpers() {
+      let cmdIdx = 0;
+      let cmdItems = [];
+
+      window.renderSkeletonRows = function (tbodyId, cols, rows) {
+        const tb = document.getElementById(tbodyId);
+        if (!tb) return;
+        const c = Math.max(1, Number(cols) || 6);
+        const r = Math.max(1, Number(rows) || 4);
+        let html = '';
+        for (let i = 0; i < r; i++) {
+          html += '<tr>';
+          for (let j = 0; j < c; j++) {
+            html += '<td><span class="ui-skeleton" style="width:' + (60 + ((i + j) % 3) * 15) + '%;"></span></td>';
+          }
+          html += '</tr>';
+        }
+        tb.innerHTML = html;
+      };
+
+      function obtenerComandosBase() {
+        const sess = (typeof getSession === 'function') ? getSession() : null;
+        const base = [
+          { label: '🧮 Ir a Simulador', meta: 'Vista', run: () => cambiarPestana('view-simulador') },
+          { label: '📋 Ir a Mis Gestiones', meta: 'CRM', run: () => cambiarPestana('view-mis-solicitudes') },
+          { label: '🌐 Ir a Toda la Red', meta: 'CRM', run: () => cambiarPestana('view-red') },
+          { label: '🏛️ Ir a Mutual', meta: 'CRM', run: () => cambiarPestana('view-mutual') },
+          { label: '🤖 Ir a Auditoría IA', meta: 'Auditoría', run: () => cambiarPestana('vistaAuditoriaIA') },
+          { label: '🔄 Sincronizar gestiones ahora', meta: 'Acción', run: () => { if (typeof cargarSolicitudesDesdeNube === 'function') cargarSolicitudesDesdeNube(false); } }
+        ];
+        if (typeof tieneAccesoFirmasAmmer === 'function' && tieneAccesoFirmasAmmer(sess)) {
+          base.push({ label: '✍️ Ir a Firmas AMMER', meta: 'Admin', run: () => cambiarPestana('vistaFirmasAMMER') });
+        }
+        if (typeof tieneAccesoPadronFichas === 'function' && tieneAccesoPadronFichas(sess)) {
+          base.push({ label: '🗂️ Ir a Padrón y Fichas', meta: 'Analista/Admin', run: () => cambiarPestana('view-ficha-asociado') });
+        }
+        return base;
+      }
+
+      function renderListaComandos(qRaw) {
+        const listEl = document.getElementById('ammerCommandList');
+        if (!listEl) return;
+        const q = String(qRaw || '').trim().toLowerCase();
+        const base = obtenerComandosBase();
+        const filtrados = q ? base.filter(c => c.label.toLowerCase().includes(q) || c.meta.toLowerCase().includes(q)) : base;
+        if (q.length >= 2 && Array.isArray(window.solicitudesNube)) {
+          const matches = window.solicitudesNube.filter(s => {
+            const txt = [s.nombre, s.apellido, s.dni, s.id].filter(Boolean).join(' ').toLowerCase();
+            return txt.includes(q);
+          }).slice(0, 6);
+          matches.forEach(s => {
+            const nombre = [s.apellido, s.nombre].filter(Boolean).join(', ') || ('Gestión #' + s.id);
+            filtrados.push({
+              label: '👤 ' + nombre + (s.dni ? (' · DNI ' + s.dni) : ''),
+              meta: 'Abrir Ficha',
+              run: () => { if (typeof verFichaCompleta === 'function') verFichaCompleta(s.id); }
+            });
+          });
+        }
+        cmdItems = filtrados;
+        cmdIdx = 0;
+        if (!cmdItems.length) {
+          listEl.innerHTML = '<div style="padding:0.9rem;text-align:center;color:#64748b;font-size:0.78rem;">Sin resultados para "' + (typeof sanitizeHTML === 'function' ? sanitizeHTML(qRaw) : qRaw) + '"</div>';
+          return;
+        }
+        listEl.innerHTML = cmdItems.map((it, i) =>
+          '<button type="button" class="cmd-k-item' + (i === 0 ? ' is-active' : '') + '" data-cmd-idx="' + i + '">' +
+            '<span>' + (typeof sanitizeHTML === 'function' ? sanitizeHTML(it.label) : it.label) + '</span>' +
+            '<span class="cmd-k-item-meta">' + (typeof sanitizeHTML === 'function' ? sanitizeHTML(it.meta) : it.meta) + '</span>' +
+          '</button>'
+        ).join('');
+        listEl.querySelectorAll('.cmd-k-item').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const idx = Number(btn.getAttribute('data-cmd-idx'));
+            ejecutarComando(idx);
+          });
+        });
+      }
+
+      function ejecutarComando(idx) {
+        const item = cmdItems[idx];
+        if (!item) return;
+        cerrarCommandMenuAmmer();
+        item.run();
+      }
+
+      window.abrirCommandMenuAmmer = function () {
+        const modal = document.getElementById('ammerCommandMenuModal');
+        const input = document.getElementById('ammerCommandInput');
+        if (!modal || !input) return;
+        modal.classList.add('is-open');
+        input.value = '';
+        renderListaComandos('');
+        setTimeout(() => input.focus(), 10);
+      };
+
+      window.cerrarCommandMenuAmmer = function () {
+        const modal = document.getElementById('ammerCommandMenuModal');
+        if (modal) modal.classList.remove('is-open');
+      };
+
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          const modal = document.getElementById('ammerCommandMenuModal');
+          if (modal && modal.classList.contains('is-open')) cerrarCommandMenuAmmer();
+          else abrirCommandMenuAmmer();
+          return;
+        }
+        const modal = document.getElementById('ammerCommandMenuModal');
+        if (!modal || !modal.classList.contains('is-open')) return;
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          cerrarCommandMenuAmmer();
+        } else if (e.key === 'ArrowDown' && cmdItems.length) {
+          e.preventDefault();
+          cmdIdx = (cmdIdx + 1) % cmdItems.length;
+          document.querySelectorAll('#ammerCommandList .cmd-k-item').forEach((el, i) => el.classList.toggle('is-active', i === cmdIdx));
+        } else if (e.key === 'ArrowUp' && cmdItems.length) {
+          e.preventDefault();
+          cmdIdx = (cmdIdx - 1 + cmdItems.length) % cmdItems.length;
+          document.querySelectorAll('#ammerCommandList .cmd-k-item').forEach((el, i) => el.classList.toggle('is-active', i === cmdIdx));
+        } else if (e.key === 'Enter' && cmdItems.length) {
+          e.preventDefault();
+          ejecutarComando(cmdIdx);
+        }
+      });
+
+      const cmdInput = document.getElementById('ammerCommandInput');
+      if (cmdInput) {
+        cmdInput.addEventListener('input', (e) => renderListaComandos(e.target.value));
+      }
+    })();
+  </script>
 </body>
 </html>

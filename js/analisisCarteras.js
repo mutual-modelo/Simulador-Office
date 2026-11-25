@@ -10,11 +10,13 @@
   function getAuthHeaders() {
     let token = '';
     try {
-      if (typeof window.getAuthToken === 'function') {
-        token = window.getAuthToken() || '';
+      if (typeof window.getApiAuthToken === 'function') {
+        token = window.getApiAuthToken() || '';
       }
       if (!token) {
         token =
+          sessionStorage.getItem('AMMER_API_TOKEN') ||
+          localStorage.getItem('AMMER_API_TOKEN') ||
           sessionStorage.getItem('AMMER_AUTH_TOKEN') ||
           localStorage.getItem('AMMER_AUTH_TOKEN') ||
           '';

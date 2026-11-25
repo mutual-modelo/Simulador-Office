@@ -12542,7 +12542,7 @@ ${cierreTxt}`;
         '<button type="button" role="tab" class="ficha-tab-btn' + (tabFichaAct === 'resumen' ? ' is-active' : '') + '" data-ficha-tab="resumen" aria-selected="' + (tabFichaAct === 'resumen') + '" onclick="cambiarTabFichaCompleta(\'resumen\')">📋 Resumen y Oferta</button>' +
         '<button type="button" role="tab" class="ficha-tab-btn' + (tabFichaAct === 'solicitante' ? ' is-active' : '') + '" data-ficha-tab="solicitante" aria-selected="' + (tabFichaAct === 'solicitante') + '" onclick="cambiarTabFichaCompleta(\'solicitante\')">👤 Solicitante</button>' +
         '<button type="button" role="tab" class="ficha-tab-btn' + (tabFichaAct === 'legajo' ? ' is-active' : '') + '" data-ficha-tab="legajo" aria-selected="' + (tabFichaAct === 'legajo') + '" onclick="cambiarTabFichaCompleta(\'legajo\')">📁 Legajo (' + docsCountFicha + ')</button>' +
-        '<button type="button" role="tab" class="ficha-tab-btn' + (tabFichaAct === 'bitacora' ? ' is-active' : '') + '" data-ficha-tab="bitacora" aria-selected="' + (tabFichaAct === 'bitacora') + '" onclick="cambiarTabFichaCompleta(\'bitacora\')">💬 Bitácora (' + bitacoraPreviewCount + ')</button>' +
+        '<button type="button" role="tab" class="ficha-tab-btn' + (tabFichaAct === 'bitacora' ? ' is-active' : '') + (bitacoraPreviewCount > 0 ? ' has-unread' : '') + '" data-ficha-tab="bitacora" aria-selected="' + (tabFichaAct === 'bitacora') + '" onclick="cambiarTabFichaCompleta(\'bitacora\')">💬 Bitácora (' + bitacoraPreviewCount + ')</button>' +
       '</div>';
 
       // 3. SECCIÓN 1: FORMULARIO DE EDICIÓN INTEGRAL DE DATOS DEL ASOCIADO
@@ -12612,7 +12612,31 @@ ${cierreTxt}`;
               '</div>' +
             '</div>' +
           '</div>' +
-          '<div style="text-align:right;margin-top:.4rem;margin-bottom:1rem;">' +
+          '<div style="margin-top:0.85rem;padding:0.85rem;border-radius:11px;background:#f8fafc;border:1px solid #e2e8f0;">' +
+            '<div style="font-size:0.78rem;font-weight:800;color:#0f2744;margin-bottom:0.6rem;">🏦 Datos Bancarios del Asociado</div>' +
+            '<div class="grid-3-cols">' +
+              '<div class="form-group"><label class="form-label">Banco</label><input type="text" id="editBanco" class="input-text" value="' + sanitizeHTML(s.solicitante?.banco || '') + '" placeholder="Ej: Banco de Entre Ríos"/></div>' +
+              '<div class="form-group"><label class="form-label">Tipo de Cuenta</label>' +
+                '<select id="editTipoCuenta" class="input-text">' +
+                  ['', 'Caja de Ahorro', 'Cuenta Corriente', 'Cuenta Sueldo'].map(tc => '<option value="' + tc + '" ' + (s.solicitante?.tipoCuenta === tc ? 'selected' : '') + '>' + (tc || 'Seleccionar...') + '</option>').join('') +
+                '</select>' +
+              '</div>' +
+              '<div class="form-group"><label class="form-label">N° de Cuenta</label><input type="text" id="editNroCuenta" class="input-text" value="' + sanitizeHTML(s.solicitante?.nroCuenta || '') + '"/></div>' +
+              '<div class="form-group"><label class="form-label">CBU (22 dígitos)</label><input type="text" id="editCbu" class="input-text" maxlength="22" value="' + sanitizeHTML(s.solicitante?.cbu || '') + '"/></div>' +
+              '<div class="form-group"><label class="form-label">Alias CBU</label><input type="text" id="editAlias" class="input-text" value="' + sanitizeHTML(s.solicitante?.alias || '') + '"/></div>' +
+              '<div class="form-group"><label class="form-label">Edad (Automático)</label><input type="text" id="editEdadAuto" class="input-text" readonly value="' + (function () { const fn = normalizarFechaInput(s.solicitante?.fechaNac || s.solicitante?.fechaNacimiento || ''); if (!fn) return '—'; const d = new Date(fn); if (isNaN(d.getTime())) return '—'; const h = new Date(); let ed = h.getFullYear() - d.getFullYear(); const m = h.getMonth() - d.getMonth(); if (m < 0 || (m === 0 && h.getDate() < d.getDate())) ed--; return ed >= 0 ? (ed + ' años') : '—'; })() + '" style="background:#f1f5f9;font-weight:700;color:#0f2744;"/></div>' +
+            '</div>' +
+          '</div>' +
+          '<div id="editParejaWrap" style="margin-top:0.75rem;padding:0.85rem;border-radius:11px;background:#f8fafc;border:1px solid #e2e8f0;' + ((/casad|pareja|concub/i.test(String(s.solicitante?.estadoCivil || ''))) ? '' : 'display:none;') + '">' +
+            '<div style="font-size:0.78rem;font-weight:800;color:#0f2744;margin-bottom:0.6rem;">👥 Datos de la Pareja / Cónyuge (Opcional)</div>' +
+            '<div class="grid-3-cols">' +
+              '<div class="form-group"><label class="form-label">Apellido y Nombre</label><input type="text" id="editParejaNombre" class="input-text" value="' + sanitizeHTML(s.solicitante?.parejaNombre || '') + '"/></div>' +
+              '<div class="form-group"><label class="form-label">DNI Pareja</label><input type="text" id="editParejaDni" class="input-text" value="' + sanitizeHTML(s.solicitante?.parejaDni || '') + '"/></div>' +
+              '<div class="form-group"><label class="form-label">Email Pareja</label><input type="email" id="editParejaEmail" class="input-text" value="' + sanitizeHTML(s.solicitante?.parejaEmail || '') + '"/></div>' +
+              '<div class="form-group"><label class="form-label">Teléfono Pareja</label><input type="text" id="editParejaTelefono" class="input-text" value="' + sanitizeHTML(s.solicitante?.parejaTelefono || '') + '"/></div>' +
+            '</div>' +
+          '</div>' +
+          '<div style="text-align:right;margin-top:.65rem;margin-bottom:1rem;">' +
             '<button type="submit" class="btn-restore" style="border-color:#3b82f6;color:#1d4ed8;font-weight:700;">💾 Guardar Cambios del Solicitante</button>' +
           '</div>' +
         '</form>';

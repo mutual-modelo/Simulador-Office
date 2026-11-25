@@ -4654,6 +4654,26 @@ details.ui-accordion > .ui-accordion-body {
   color: #ffffff;
 }
 
+.compare-offers-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.9rem;
+}
+
+#formEditSolicitante .grid-3-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+}
+
+#formEditSolicitante .input-text {
+  width: 100%;
+  min-height: 38px;
+  box-sizing: border-box;
+}
+
+
 
 
 

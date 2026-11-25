@@ -566,6 +566,7 @@
         <div>Organismo: <strong>${esc(ammerAsoc.organismo || 'N/D')}</strong> · Disponible: <strong>${ammerAsoc.ultimo_disponible != null ? fmtArs(ammerAsoc.ultimo_disponible) : 'N/D'}</strong></div>
         <div>DNI: ${badgeStatus(ammerAsoc.dni_estado)} · Domicilio: ${badgeStatus(ammerAsoc.servicio_estado)} · Boletín ER: ${badgeStatus(ammerAsoc.boletin_estado)} (${Number(ammerAsoc.boletin_menciones_count || 0)} menc.)</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
+          ${assoc.dni ? `<button type="button" class="mp-btn mp-btn-primary" onclick="if(typeof abrirFichaHistoricaAsociado==='function'){cambiarVistaPrincipal('view-ficha-asociado');abrirFichaHistoricaAsociado('${esc(String(assoc.dni).replace(/'/g, ''))}');}">👁️ Ver Ficha AMMER</button>` : ''}
           ${driveLink ? `<a href="${driveLink}" target="_blank" rel="noopener noreferrer" class="mp-btn">📁 Carpeta Drive</a>` : ''}
           <button type="button" class="mp-btn" data-mp-action="auditar-doc" data-assoc-id="${esc(assoc.id)}" data-doc-type="BOLETIN_ER" data-signed-url="" data-dni="${esc(assoc.dni || '')}" data-nombre="${esc(fullName)}">📰 Consultar Boletín ER</button>
         </div>
@@ -575,6 +576,18 @@
     }
 
     const isActiveAcc = assoc.is_active !== false;
+    const renderUsageBar = (lbl, lineObj, fallbackTotalPesos) => {
+      const totM = lineObj ? Number(lineObj.total_credit_limit_minor || 0) : Math.round(fallbackTotalPesos * 100);
+      const usedM = lineObj ? Number(lineObj.used_credit_minor || 0) : 0;
+      const availM = lineObj && lineObj.available_credit_minor != null ? Number(lineObj.available_credit_minor) : Math.max(0, totM - usedM);
+      const pct = totM > 0 ? Math.min(100, Math.round((usedM / totM) * 100)) : 0;
+      const barCol = pct >= 85 ? '#dc2626' : (pct >= 60 ? '#d97706' : '#0284c7');
+      return `<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:0.45rem 0.6rem;">` +
+        `<div style="display:flex;justify-content:space-between;font-size:0.7rem;font-weight:700;color:#334155;"><span>${lbl}</span><span class="tabular-nums">${pct}% usado</span></div>` +
+        `<div style="height:6px;border-radius:999px;background:#e2e8f0;overflow:hidden;margin:4px 0;"><div style="height:100%;width:${pct}%;background:${barCol};"></div></div>` +
+        `<div style="display:flex;justify-content:space-between;font-size:0.67rem;color:#64748b;" class="tabular-nums"><span>Consumido: ${fmtArsFromMinor(usedM)}</span><span>Disp: <strong style="color:#0f766e;">${fmtArsFromMinor(availM)}</strong></span></div>` +
+      `</div>`;
+    };
 
     panel.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;border-bottom:1px solid #e2e8f0;padding-bottom:0.75rem;margin-bottom:0.85rem;flex-wrap:wrap;">
@@ -600,7 +613,11 @@
         </div>
 
         <div style="padding:0.75rem;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;">
-          <div style="font-size:0.74rem;font-weight:800;color:#334155;margin-bottom:6px;">LÍMITES DE CRÉDITO (Sueldo Neto App: ${fmtArs(netSalaryPesos)})</div>
+          <div style="font-size:0.74rem;font-weight:800;color:#334155;margin-bottom:6px;">LÍMITES DE CRÉDITO Y CONSUMO (Sueldo Neto App: ${fmtArs(netSalaryPesos)})</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+            ${renderUsageBar('🛒 Línea Comercios', lineMerch, merchPesos)}
+            ${renderUsageBar('💵 Línea Efectivo', lineCash, cashPesos)}
+          </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
             <div>
               <label style="display:block;font-size:0.7rem;font-weight:700;color:#475569;margin-bottom:3px;">Límite Comercios ($ ARS)</label>
@@ -1166,31 +1183,112 @@
       const res = await apiMp(`/comercios/${encodeURIComponent(merchantId)}/ficha`);
       const f = (res && res.ficha) || {};
       const m = f.merchant || f || {};
+      const metrics = f.metrics || {};
       const branches = Array.isArray(f.branches) ? f.branches : (Array.isArray(m.branches) ? m.branches : []);
+      const qrs = Array.isArray(f.qr_codes) ? f.qr_codes : [];
+      const txs = Array.isArray(f.transactions) ? f.transactions : [];
+      const qrPrincipal = qrs[0] || null;
+      const qrPayload = qrPrincipal ? (qrPrincipal.raw_emvco_payload || qrPrincipal.token_code || '') : '';
       const prev = document.getElementById('mpComercioFichaModalOverlay');
       if (prev) prev.remove();
       const ov = document.createElement('div');
       ov.id = 'mpComercioFichaModalOverlay';
       ov.setAttribute('style', 'position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.55);display:flex;align-items:center;justify-content:center;padding:1rem;');
       ov.innerHTML = `
-        <div style="width:100%;max-width:520px;background:#ffffff;border-radius:16px;padding:1.15rem 1.3rem;box-shadow:0 20px 50px rgba(15,23,42,0.28);border:1px solid #cbd5e1;max-height:86vh;overflow:auto;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <h4 style="margin:0;font-size:1rem;font-weight:800;color:#0f172a;">🏪 ${esc(m.fantasy_name || 'Comercio')}</h4>
+        <div style="width:100%;max-width:680px;background:#ffffff;border-radius:16px;padding:1.2rem 1.35rem;box-shadow:0 20px 50px rgba(15,23,42,0.28);border:1px solid #cbd5e1;max-height:88vh;overflow:auto;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1px solid #e2e8f0;padding-bottom:8px;">
+            <div>
+              <h4 style="margin:0;font-size:1.05rem;font-weight:800;color:#0f172a;">🏪 ${esc(m.fantasy_name || 'Comercio')}</h4>
+              <div style="font-size:0.74rem;color:#64748b;">${esc(m.business_name || '—')} · CUIT <code>${esc(m.cuit || '—')}</code></div>
+            </div>
             <button type="button" class="mp-btn" id="btnCloseMpComFicha">✕</button>
           </div>
-          <div style="font-size:0.78rem;color:#334155;line-height:1.6;">
-            <div><strong>Razón Social:</strong> ${esc(m.business_name || '—')}</div>
-            <div><strong>CUIT:</strong> <code>${esc(m.cuit || '—')}</code> · <strong>Rubro:</strong> ${esc(m.category || '—')}</div>
-            <div><strong>CBU / Alias:</strong> <code>${esc(m.bank_cbu || '—')}</code> (${esc(m.bank_alias || '—')})</div>
-            <div><strong>Comisión:</strong> ${Number(m.commission_fee_pct || 0)}% · <strong>Plazo:</strong> ${Number(m.settlement_timeframe_hours || 48)} hs</div>
-            <div><strong>Saldo Wallet Comercio:</strong> ${fmtArsFromMinor(m.wallet_balance_minor || f.wallet_balance_minor || 0)}</div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:12px;">
+            <div style="padding:0.55rem 0.7rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="font-size:0.68rem;color:#64748b;">Ventas Brutas</div><strong class="tabular-nums" style="font-size:0.86rem;">${fmtArsFromMinor(metrics.gross_sales_minor || 0)}</strong></div>
+            <div style="padding:0.55rem 0.7rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="font-size:0.68rem;color:#64748b;">Comisión Retenida</div><strong class="tabular-nums" style="font-size:0.86rem;">${fmtArsFromMinor(metrics.commission_retained_minor || 0)}</strong></div>
+            <div style="padding:0.55rem 0.7rem;border-radius:10px;background:#f0fdf4;border:1px solid #bbf7d0;"><div style="font-size:0.68rem;color:#166534;">Neto Comercio</div><strong class="tabular-nums" style="font-size:0.86rem;color:#15803d;">${fmtArsFromMinor(metrics.net_settled_minor || 0)}</strong></div>
+            <div style="padding:0.55rem 0.7rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="font-size:0.68rem;color:#64748b;">Operaciones QR</div><strong class="tabular-nums" style="font-size:0.86rem;">${Number(metrics.transactions_count || txs.length || 0)}</strong></div>
           </div>
-          ${branches.length ? `<div style="margin-top:10px;border-top:1px solid #e2e8f0;padding-top:8px;"><div style="font-size:0.74rem;font-weight:800;color:#475569;margin-bottom:4px;">Sucursales (${branches.length})</div>${branches.map((b) => `<div style="font-size:0.75rem;padding:4px 0;border-bottom:1px dashed #f1f5f9;">📍 <strong>${esc(b.branch_name || 'Sucursal')}</strong> — ${esc(b.address || '')}</div>`).join('')}</div>` : ''}
+
+          <div style="padding:0.85rem;border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0;margin-bottom:10px;">
+            <div style="font-size:0.75rem;font-weight:800;color:#0f2744;margin-bottom:8px;">⚙️ Editar Datos Bancarios y Comerciales</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;">
+              <div><label style="display:block;font-size:0.69rem;font-weight:700;color:#475569;margin-bottom:2px;">Rubro</label><input type="text" id="inpMpComEditCat" value="${esc(m.category || '')}" style="width:100%;padding:0.38rem 0.55rem;border:1px solid #cbd5e1;border-radius:7px;font-size:0.77rem;"/></div>
+              <div><label style="display:block;font-size:0.69rem;font-weight:700;color:#475569;margin-bottom:2px;">CBU (22 dígitos)</label><input type="text" id="inpMpComEditCbu" maxlength="22" value="${esc(m.bank_cbu || '')}" style="width:100%;padding:0.38rem 0.55rem;border:1px solid #cbd5e1;border-radius:7px;font-size:0.77rem;"/></div>
+              <div><label style="display:block;font-size:0.69rem;font-weight:700;color:#475569;margin-bottom:2px;">Alias CBU</label><input type="text" id="inpMpComEditAlias" value="${esc(m.bank_alias || '')}" style="width:100%;padding:0.38rem 0.55rem;border:1px solid #cbd5e1;border-radius:7px;font-size:0.77rem;"/></div>
+              <div><label style="display:block;font-size:0.69rem;font-weight:700;color:#475569;margin-bottom:2px;">Arancel (%)</label><input type="number" step="0.1" id="inpMpComEditFee" value="${Number(m.commission_fee_pct || 0)}" style="width:100%;padding:0.38rem 0.55rem;border:1px solid #cbd5e1;border-radius:7px;font-size:0.77rem;"/></div>
+              <div><label style="display:block;font-size:0.69rem;font-weight:700;color:#475569;margin-bottom:2px;">Plazo Liquidación (hs)</label><input type="number" min="12" max="168" id="inpMpComEditHours" value="${Number(m.settlement_timeframe_hours || 48)}" style="width:100%;padding:0.38rem 0.55rem;border:1px solid #cbd5e1;border-radius:7px;font-size:0.77rem;"/></div>
+              <div><label style="display:block;font-size:0.69rem;font-weight:700;color:#475569;margin-bottom:2px;">Estado</label><select id="selMpComEditActive" style="width:100%;padding:0.38rem 0.55rem;border:1px solid #cbd5e1;border-radius:7px;font-size:0.77rem;"><option value="1" ${m.is_active !== false ? 'selected' : ''}>Activo</option><option value="0" ${m.is_active === false ? 'selected' : ''}>Pausado</option></select></div>
+            </div>
+            <div style="text-align:right;margin-top:8px;">
+              <button type="button" class="mp-btn mp-btn-primary" id="btnGuardarMpCom360">💾 Guardar Cambios del Comercio</button>
+            </div>
+          </div>
+
+          ${qrPayload ? `
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:0.8rem;border-radius:12px;border:1px solid #bfdbfe;background:#eff6ff;margin-bottom:10px;">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(qrPayload)}" alt="QR Comercio" width="110" height="110" style="border-radius:8px;background:#fff;padding:4px;border:1px solid #cbd5e1;"/>
+              <div style="flex:1;min-width:210px;font-size:0.74rem;color:#1e293b;">
+                <div style="font-weight:800;color:#0f2744;margin-bottom:4px;">📲 QR Oficial del Comercio (${esc(qrPrincipal.qr_type || 'STATIC')})</div>
+                <div><strong>Token:</strong> <code>${esc(qrPrincipal.token_code || '—')}</code></div>
+                <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">
+                  <button type="button" class="mp-btn" id="btnCopyMpQrPayload">📋 Copiar Payload EMVCo</button>
+                  <a href="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrPayload)}" target="_blank" rel="noopener noreferrer" class="mp-btn mp-btn-success">⬇️ Abrir / Imprimir QR</a>
+                </div>
+              </div>
+            </div>
+          ` : ''}
+
+          <details class="ui-accordion" style="margin-bottom:8px;">
+            <summary>🧾 Últimas Ventas QR del Comercio (${txs.length})</summary>
+            <div class="ui-accordion-body">
+              ${txs.length
+                ? `<table class="data-table"><thead><tr><th>Fecha</th><th>Asociado</th><th>Bruto</th><th>Comisión</th><th>Estado</th></tr></thead><tbody>${txs.slice(0, 20).map((t) => `<tr><td>${fmtFecha(t.created_at)}</td><td>${esc(t.associate_name || 'Asociado')}</td><td>${fmtArsFromMinor(t.gross_amount_minor || 0)}</td><td>${fmtArsFromMinor(t.commission_minor || 0)}</td><td>${badgeStatus(t.status)}</td></tr>`).join('')}</tbody></table>`
+                : '<div style="font-size:0.75rem;color:#64748b;">Sin ventas registradas.</div>'}
+            </div>
+          </details>
+
+          <details class="ui-accordion">
+            <summary>📍 Sucursales Adheridas (${branches.length})</summary>
+            <div class="ui-accordion-body">
+              ${branches.length
+                ? branches.map((b) => `<div style="font-size:0.75rem;padding:4px 0;border-bottom:1px dashed #f1f5f9;">📍 <strong>${esc(b.branch_name || 'Sucursal')}</strong> — ${esc(b.address || '')}</div>`).join('')
+                : '<div style="font-size:0.75rem;color:#64748b;">Sin sucursales adicionales cargadas.</div>'}
+            </div>
+          </details>
         </div>
       `;
       document.body.appendChild(ov);
       ov.querySelector('#btnCloseMpComFicha').addEventListener('click', () => ov.remove());
       ov.addEventListener('click', (e) => { if (e.target === ov) ov.remove(); });
+      const btnCopyQr = ov.querySelector('#btnCopyMpQrPayload');
+      if (btnCopyQr) {
+        btnCopyQr.addEventListener('click', () => {
+          if (navigator.clipboard) navigator.clipboard.writeText(qrPayload).catch(() => {});
+          toast('Payload EMVCo copiado al portapapeles.');
+        });
+      }
+      ov.querySelector('#btnGuardarMpCom360').addEventListener('click', async () => {
+        try {
+          await apiMp(`/comercios/${encodeURIComponent(merchantId)}/params`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+              category: (ov.querySelector('#inpMpComEditCat').value || '').trim(),
+              bank_cbu: (ov.querySelector('#inpMpComEditCbu').value || '').trim(),
+              bank_alias: (ov.querySelector('#inpMpComEditAlias').value || '').trim(),
+              commission_fee_pct: parseFloat(ov.querySelector('#inpMpComEditFee').value || '0'),
+              settlement_timeframe_hours: parseInt(ov.querySelector('#inpMpComEditHours').value || '48', 10),
+              is_active: ov.querySelector('#selMpComEditActive').value === '1',
+            }),
+          });
+          toast('Ficha de comercio actualizada.');
+          ov.remove();
+          await cargarTodoMutualPayBackoffice(false);
+        } catch (eSave) {
+          toast(`Error guardando comercio: ${eSave.message}`);
+        }
+      });
     } catch (err) {
       toast(`Error cargando ficha de comercio: ${err.message}`);
     }

@@ -137,7 +137,7 @@
       } else {
         estadoSelectorHtml = '<div style="display:flex;align-items:center;gap:0.4rem;">' +
           '<span style="font-size:0.72rem;color:var(--text-muted);font-weight:600;">Estado:</span>' +
-          '<span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '" style="font-size:.8rem;padding:.25rem .65rem;">' + s.estado + '</span>' +
+          '<span class="badge-status badge-' + (window.normalizarEstadoCanonico_ ? window.normalizarEstadoCanonico_(s.estado) : String(s.estado || 'Pendiente')).replace(/\s/g, '') + '" style="font-size:.8rem;padding:.25rem .65rem;">' + (window.normalizarEstadoCanonico_ ? window.normalizarEstadoCanonico_(s.estado) : (s.estado || 'Pendiente')) + '</span>' +
         '</div>';
       }
 
@@ -2454,7 +2454,7 @@
               '<span style="font-family:monospace;">DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + '</span> · ' +
               '<span>' + sanitizeHTML(s.solicitante?.organismo || '—') + '</span>' +
             '</div>' +
-            '<span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + sanitizeHTML(s.estado || 'Pendiente') + '</span>' +
+            '<span class="badge-status badge-' + (window.normalizarEstadoCanonico_ ? window.normalizarEstadoCanonico_(s.estado) : String(s.estado || 'Pendiente')).replace(/\s/g, '') + '">' + sanitizeHTML(window.normalizarEstadoCanonico_ ? window.normalizarEstadoCanonico_(s.estado) : (s.estado || 'Pendiente')) + '</span>' +
           '</div>' +
           '<div style="font-size:0.71rem;color:#64748b;margin-top:0.25rem;">Los archivos se renombrarán con el formato oficial <code>' + sanitizeHTML(prefijo) + ' [TIPO].PDF</code> en el Legajo Digital.</div>';
       }

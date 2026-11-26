@@ -67,9 +67,14 @@ function construirListaFuentes(data, fuentePrioritaria) {
 }
 
 function construirRutaDestino(data, config) {
-  const hoy = new Date().toISOString().split("T")[0];
+  const now = new Date();
+  const hoy = now.toISOString().split("T")[0];
+  const meses = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
+  const mesAnio = `${meses[now.getMonth()]} ${now.getFullYear()}`;
   const tokens = {
     "{CARPETA_RAIZ}": sanitizarSegmentoRuta(config.carpetaRaiz, "AMMER_Legajos"),
+    "{MES_ANIO}": mesAnio,
+    "{NOMBRE_COMPLETO}": sanitizarSegmentoRuta(data.nombreCompleto || data.apellido, "SOCIO"),
     "{DNI}": sanitizarSegmentoRuta(data.dni, "SIN_DNI"),
     "{ID_EXPEDIENTE}": sanitizarSegmentoRuta(data.idExpediente, "EXP-S_N"),
     "{ORGANIZACION}": sanitizarSegmentoRuta(data.organizacion, "GENERAL"),
@@ -79,13 +84,14 @@ function construirRutaDestino(data, config) {
     "{TIPO_DOC}": sanitizarSegmentoRuta(data.tipoDoc, "DOC"),
     "{EXT}": sanitizarSegmentoRuta(data.extension, "PDF"),
   };
-  let carpetaRelativa = config.patronCarpetas || "{CARPETA_RAIZ}/{DNI}";
+  let carpetaRelativa = config.patronCarpetas || "{CARPETA_RAIZ}/{MES_ANIO}/{NOMBRE_COMPLETO} {ID_EXPEDIENTE}";
   let nombreArchivo = config.patronNombreArchivo || "{ID_EXPEDIENTE} {TIPO_DOC}.{EXT}";
   for (const [clave, valor] of Object.entries(tokens)) {
     carpetaRelativa = carpetaRelativa.replaceAll(clave, valor);
     nombreArchivo = nombreArchivo.replaceAll(clave, valor);
   }
   if (config.forzarMayusculas) {
+    carpetaRelativa = carpetaRelativa.toUpperCase();
     nombreArchivo = nombreArchivo.toUpperCase();
   }
   return `${carpetaRelativa}/${nombreArchivo}`.replace(/\/+/g, "/").replace(/^\/+/, "");
@@ -319,11 +325,18 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     });
     return true;
   }
+  if (request.accion === "OBTENER_ESTADO_GRABACION") {
+    chrome.storage.local.get({ ammerGrabandoMacro: false }, (res) => {
+      sendResponse({ ok: true, grabando: Boolean(res.ammerGrabandoMacro) });
+    });
+    return true;
+  }
   if (request.accion === "INICIAR_GRABACION_DOM" || request.accion === "DETENER_GRABACION_DOM") {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const tabId = tabs && tabs[0] && tabs[0].id;
       if (!tabId) return sendResponse({ ok: false, error: "No hay pestaña activa." });
       const iniciar = request.accion === "INICIAR_GRABACION_DOM";
+      chrome.storage.local.set({ ammerGrabandoMacro: iniciar });
       chrome.scripting.executeScript(
         {
           target: { tabId },
@@ -339,10 +352,18 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
                 ? "." + el.className.trim().split(/\s+/).slice(0, 2).map((c) => CSS.escape(c)).join(".")
                 : "");
             }
+            const oldBanner = document.getElementById("ammerMacroRecBanner");
+            if (oldBanner) oldBanner.remove();
             if (start) {
               window.__ammerMacroPasos = [];
               if (window.__ammerMacroCleanup) window.__ammerMacroCleanup();
+              const banner = document.createElement("div");
+              banner.id = "ammerMacroRecBanner";
+              banner.textContent = "🔴 Grabando Macro AMMER… (hacé tus clics/inputs y luego abrí la extensión para Detener)";
+              banner.style.cssText = "position:fixed;bottom:14px;right:14px;z-index:2147483647;background:#dc2626;color:#fff;padding:8px 14px;border-radius:999px;font:700 12px/1.2 sans-serif;box-shadow:0 6px 20px rgba(0,0,0,0.28);pointer-events:none;";
+              document.body.appendChild(banner);
               const onClick = (ev) => {
+                if (ev.target && ev.target.id === "ammerMacroRecBanner") return;
                 const sel = selectorParaEl(ev.target);
                 if (sel) window.__ammerMacroPasos.push({ tipo: "click", selector: sel });
               };
@@ -368,6 +389,7 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
         },
         (results) => {
           if (chrome.runtime.lastError) {
+            chrome.storage.local.set({ ammerGrabandoMacro: false });
             return sendResponse({ ok: false, error: chrome.runtime.lastError.message });
           }
           const res = results && results[0] && results[0].result;
@@ -376,6 +398,33 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
       );
     });
     return true;
+  }
+  if (request.type === "AMMER_OPEN_RENAPER_SPLIT" || request.type === "AMMER_OPEN_URL_SPLIT") {
+    const targetUrl = request.type === "AMMER_OPEN_URL_SPLIT"
+      ? (request.payload && request.payload.url)
+      : "https://tramites.renaper.gob.ar/mi_ejemplar/";
+    const openerTabId = _sender && _sender.tab && _sender.tab.id;
+    if (!openerTabId || !targetUrl) {
+      sendResponse({ ok: false, error: "Pestaña o URL inválida" });
+      return;
+    }
+    if (String(targetUrl).includes("tramites.renaper.gob.ar")) {
+      chrome.storage.local.set({ ammerPendingRenaper: { ...(request.payload || {}), openerTabId, ts: Date.now() } });
+    }
+    chrome.tabs.create({ url: targetUrl, splitWithTabId: openerTabId, index: (_sender.tab.index || 0) + 1, active: true })
+      .then((tab) => sendResponse({ ok: true, tabId: tab.id, splitUsed: true }))
+      .catch(() =>
+        chrome.tabs.create({ url: targetUrl, index: (_sender.tab.index || 0) + 1, active: true })
+          .then((tab) => sendResponse({ ok: true, tabId: tab.id, splitUsed: false }))
+          .catch((e) => sendResponse({ ok: false, error: e.message }))
+      );
+    return true;
+  }
+  if (request.type === "AMMER_CLOSE_RENAPER_SPLIT") {
+    const tId = (request.payload && request.payload.tabId) || (_sender && _sender.tab && _sender.tab.id);
+    if (tId) chrome.tabs.remove(tId).catch(() => {});
+    sendResponse({ ok: true });
+    return;
   }
   if (request.accion === "EJECUTAR_MACRO_DOM") {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {

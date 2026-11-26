@@ -3802,6 +3802,7 @@
               idExpediente: idExp,
               dni: dni,
               apellido: apellido,
+              nombreCompleto: String(s.solicitante?.nombre || 'SOCIO').trim(),
               organizacion: org,
               linea: linea,
               tipoDoc: tipoDoc,

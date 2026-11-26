@@ -2009,14 +2009,19 @@
 
       <!-- VISTA EXCLUSIVA ADMIN: CENTRO MULTI-LÍNEA Y MENSAJERÍA WHATSAPP AMMER -->
       <section id="vistaAnalisisCarteras" class="app-view" style="display:none;padding:24px;max-width:1280px;margin:0 auto;">
-        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
           <div>
             <h2 style="margin:0;font-size:1.4rem;font-weight:800;color:#0f172a;">Análisis Documental de Carteras</h2>
-            <p style="margin:4px 0 0;font-size:0.86rem;color:#64748b;">Control de legajos (6 documentos obligatorios), cruce contra Cartera Base y registro de alertas.</p>
+            <p style="margin:4px 0 0;font-size:0.86rem;color:#64748b;">Control de legajos, detección automática de ID Operación, cruce contra Cartera Base y registro de auditorías.</p>
           </div>
-          <button type="button" onclick="window.cargarAuditoriasCarteras && window.cargarAuditoriasCarteras()" style="padding:8px 14px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;color:#0f172a;font-weight:600;font-size:0.84rem;cursor:pointer;">Actualizar</button>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button type="button" id="tabBtnCarterasAuditoria" onclick="window.cambiarTabCarteras && window.cambiarTabCarteras('auditoria')" style="padding:8px 14px;border-radius:8px;border:1px solid #0284c7;background:#0284c7;color:#fff;font-weight:700;font-size:0.84rem;cursor:pointer;">🔍 Auditoría de Legajos</button>
+            <button type="button" id="tabBtnCarterasBase" onclick="window.cambiarTabCarteras && window.cambiarTabCarteras('base')" style="padding:8px 14px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;color:#334155;font-weight:700;font-size:0.84rem;cursor:pointer;">🗄️ Cartera Base (Fuente)</button>
+            <button type="button" onclick="window.cargarAuditoriasCarteras && window.cargarAuditoriasCarteras()" style="padding:8px 14px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;color:#0f172a;font-weight:600;font-size:0.84rem;cursor:pointer;">🔄 Actualizar</button>
+          </div>
         </div>
 
+        <div id="panelCarterasAuditoria">
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;">
           <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px;">
             <div style="font-size:0.75rem;color:#64748b;font-weight:600;">TOTAL AUDITADOS</div>
@@ -2036,24 +2041,30 @@
           </div>
         </div>
 
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;margin-bottom:20px;">
-          <h3 style="margin:0 0 12px;font-size:1rem;font-weight:700;color:#0f172a;">Nueva Carga de Legajo</h3>
-          <div style="display:grid;grid-template-columns:1fr 2fr;gap:16px;align-items:start;">
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(15,23,42,0.04);">
+          <h3 style="margin:0 0 14px;font-size:1.02rem;font-weight:800;color:#0f172a;">Nueva Carga de Legajo</h3>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;align-items:start;">
             <div>
-              <label for="carterasIdOperacion" style="display:block;font-size:0.8rem;font-weight:600;color:#334155;margin-bottom:6px;">ID Operación</label>
-              <input id="carterasIdOperacion" type="text" placeholder="Ej: 12345" style="width:100%;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.9rem;margin-bottom:12px;" />
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                <label for="carterasIdOperacion" style="font-size:0.82rem;font-weight:700;color:#334155;">ID Operación</label>
+                <span id="carterasIdAutoBadge" style="display:none;font-size:0.7rem;font-weight:700;color:#0369a1;background:#e0f2fe;padding:2px 8px;border-radius:9999px;">✨ Sincronizado del archivo</span>
+              </div>
+              <input id="carterasIdOperacion" type="text" placeholder="Se detecta automáticamente o ingresalo (Ej: 12345)" style="width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.9rem;margin-bottom:12px;" />
               <div style="display:flex;gap:8px;">
-                <button type="button" onclick="window.ejecutarAnalisisCartera && window.ejecutarAnalisisCartera()" style="flex:1;padding:10px 14px;border-radius:8px;border:none;background:#0284c7;color:#fff;font-weight:700;font-size:0.86rem;cursor:pointer;">Analizar Legajo</button>
-                <button type="button" onclick="window.limpiarColaCarteras && window.limpiarColaCarteras()" style="padding:10px 12px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;color:#475569;font-weight:600;font-size:0.84rem;cursor:pointer;">Limpiar</button>
+                <button type="button" onclick="window.ejecutarAnalisisCartera && window.ejecutarAnalisisCartera()" style="flex:1;padding:11px 16px;border-radius:9px;border:none;background:#0284c7;color:#fff;font-weight:700;font-size:0.88rem;cursor:pointer;box-shadow:0 2px 6px rgba(2,132,199,0.25);">🔍 Analizar Legajo</button>
+                <button type="button" onclick="window.limpiarColaCarteras && window.limpiarColaCarteras()" style="padding:11px 14px;border-radius:9px;border:1px solid #cbd5e1;background:#fff;color:#475569;font-weight:600;font-size:0.85rem;cursor:pointer;">Limpiar</button>
               </div>
               <div id="carterasEstadoProceso" style="display:none;margin-top:10px;font-size:0.82rem;"></div>
             </div>
             <div>
-              <label style="display:block;font-size:0.8rem;font-weight:600;color:#334155;margin-bottom:6px;">Documentación (DNI, Recibo, Servicio, Transferencia, Solicitud, Autorización)</label>
-              <div style="border:2px dashed #cbd5e1;border-radius:10px;padding:16px;text-align:center;background:#f8fafc;">
-                <input id="carterasFileInput" type="file" multiple accept=".pdf,image/*" onchange="window.manejarArchivosCarteras && window.manejarArchivosCarteras(this.files)" style="font-size:0.82rem;" />
+              <label style="display:block;font-size:0.82rem;font-weight:700;color:#334155;margin-bottom:6px;">Documentación (DNI, Recibo, Servicio, Transferencia, Solicitud, Autorización)</label>
+              <div id="carterasDropZone" onclick="document.getElementById('carterasFileInput').click()" style="border:2px dashed #93c5fd;border-radius:12px;padding:22px 16px;text-align:center;background:#f8fafc;cursor:pointer;transition:all 0.15s ease;">
+                <div style="font-size:1.75rem;margin-bottom:6px;">📂</div>
+                <div style="font-size:0.9rem;font-weight:700;color:#0f2744;">Arrastrá o soltá uno o más archivos aquí</div>
+                <div style="font-size:0.78rem;color:#64748b;margin-top:4px;">o hacé clic para seleccionarlos desde tu equipo (PDF, JPG, PNG)</div>
+                <input id="carterasFileInput" type="file" multiple accept=".pdf,image/*" onchange="window.manejarArchivosCarteras && window.manejarArchivosCarteras(this.files)" style="display:none;" />
               </div>
-              <div id="carterasColaLista" style="margin-top:8px;"></div>
+              <div id="carterasColaLista" style="margin-top:10px;"></div>
             </div>
           </div>
         </div>
@@ -2079,7 +2090,7 @@
                   <th style="padding:10px 12px;">Titular</th>
                   <th style="padding:10px 12px;">Estado</th>
                   <th style="padding:10px 12px;">Score</th>
-                  <th style="padding:10px 12px;">Alertas / Diferencias</th>
+                  <th style="padding:10px 12px;">Resumen / Alertas</th>
                   <th style="padding:10px 12px;text-align:right;">Acción</th>
                 </tr>
               </thead>
@@ -2089,14 +2100,52 @@
             </table>
           </div>
         </div>
+        </div>
+
+        <div id="panelCarterasBase" style="display:none;">
+          <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;margin-bottom:18px;">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;">
+              <div>
+                <h3 style="margin:0;font-size:1rem;font-weight:800;color:#0f172a;">🗄️ Base de Datos / Cartera Fuente</h3>
+                <p style="margin:3px 0 0;font-size:0.8rem;color:#64748b;">Administrá los registros de referencia contra los cuales se cruzan los legajos.</p>
+              </div>
+              <input id="carteraBaseFiltro" type="text" placeholder="Buscar por ID, DNI o Titular..." oninput="window.renderCarteraBaseTabla && window.renderCarteraBaseTabla()" style="padding:7px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;min-width:220px;" />
+            </div>
+            <form onsubmit="window.agregarRegistroCarteraBase && window.agregarRegistroCarteraBase(event)" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:14px;">
+              <input id="cbIdOp" type="text" placeholder="ID Operación *" required style="padding:7px 9px;border:1px solid #cbd5e1;border-radius:7px;font-size:0.82rem;" />
+              <input id="cbDni" type="text" placeholder="DNI *" required style="padding:7px 9px;border:1px solid #cbd5e1;border-radius:7px;font-size:0.82rem;" />
+              <input id="cbNombre" type="text" placeholder="Apellido y Nombre *" required style="padding:7px 9px;border:1px solid #cbd5e1;border-radius:7px;font-size:0.82rem;" />
+              <input id="cbLinea" type="text" placeholder="Línea (ej: FEDEM)" style="padding:7px 9px;border:1px solid #cbd5e1;border-radius:7px;font-size:0.82rem;" />
+              <input id="cbMonto" type="number" placeholder="Monto ($)" style="padding:7px 9px;border:1px solid #cbd5e1;border-radius:7px;font-size:0.82rem;" />
+              <button type="submit" style="padding:7px 12px;border-radius:7px;border:none;background:#0f766e;color:#fff;font-weight:700;font-size:0.82rem;cursor:pointer;">+ Añadir</button>
+            </form>
+            <div style="overflow-x:auto;">
+              <table style="width:100%;border-collapse:collapse;font-size:0.84rem;">
+                <thead>
+                  <tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;text-align:left;color:#475569;">
+                    <th style="padding:9px 10px;">ID Op.</th>
+                    <th style="padding:9px 10px;">DNI</th>
+                    <th style="padding:9px 10px;">Titular</th>
+                    <th style="padding:9px 10px;">Línea</th>
+                    <th style="padding:9px 10px;">Monto</th>
+                    <th style="padding:9px 10px;text-align:right;">Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="carteraBaseTablaBody">
+                  <tr><td colspan="6" style="text-align:center;padding:20px;color:#64748b;">Cargando cartera...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
 
         <div id="modalDetalleCartera" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:9999;align-items:center;justify-content:center;padding:16px;">
-          <div style="background:#fff;border-radius:14px;max-width:620px;width:100%;padding:20px;box-shadow:0 20px 40px rgba(0,0,0,0.2);">
+          <div style="background:#fff;border-radius:14px;max-width:720px;width:100%;padding:22px;box-shadow:0 20px 40px rgba(0,0,0,0.22);max-height:90vh;overflow-y:auto;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-              <h3 style="margin:0;font-size:1.05rem;font-weight:800;color:#0f172a;">Detalle de Auditoría y Resolución</h3>
+              <h3 style="margin:0;font-size:1.08rem;font-weight:800;color:#0f172a;">📋 Ficha Completa de Auditoría</h3>
               <button type="button" onclick="window.cerrarDetalleCartera && window.cerrarDetalleCartera()" style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;color:#64748b;">✕</button>
             </div>
-            <div id="modalDetalleCarteraBody" style="font-size:0.85rem;color:#334155;max-height:260px;overflow-y:auto;margin-bottom:14px;padding:10px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;"></div>
+            <div id="modalDetalleCarteraBody" style="font-size:0.85rem;color:#334155;max-height:360px;overflow-y:auto;margin-bottom:14px;padding:12px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;"></div>
             <div style="display:grid;gap:10px;">
               <select id="modalCarteraEstado" style="padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.85rem;">
                 <option value="APROBADO">APROBADO</option>

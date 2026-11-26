@@ -2,10 +2,20 @@
   const API_BASE =
     (typeof window.RENDER_API_URL === 'string' && window.RENDER_API_URL) ||
     'https://ammer-auditor-api.onrender.com';
+  const LS_CARTERA_BASE_KEY = 'AMMER_CARTERA_BASE_LOCAL_V1';
 
   let colaArchivos = [];
   let auditoriasCache = [];
+  let carteraBaseCache = [];
   let auditoriaSeleccionadaId = null;
+
+  function escHtml(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
 
   function getAuthHeaders() {
     let token = '';
@@ -46,7 +56,55 @@
     });
   }
 
+  function detectarIdOperacionDesdeNombre(nombre) {
+    const s = String(nombre || '');
+    const mPref = s.match(/(?:EXP|SOL|OP|ID)[-_ ]?(\d{3,10})/i);
+    if (mPref) return mPref[1];
+    const mNum = s.match(/\b(\d{4,8})\b/);
+    return mNum ? mNum[1] : '';
+  }
+
+  function sincronizarIdOperacionDesdeCola() {
+    const inp = document.getElementById('carterasIdOperacion');
+    const badge = document.getElementById('carterasIdAutoBadge');
+    if (!inp) return '';
+    if (inp.value.trim()) return inp.value.trim();
+    for (const f of colaArchivos) {
+      const det = detectarIdOperacionDesdeNombre(f.nombre);
+      if (det) {
+        inp.value = det;
+        if (badge) badge.style.display = 'inline-block';
+        return det;
+      }
+    }
+    return '';
+  }
+
+  function initDropZone() {
+    const dz = document.getElementById('carterasDropZone');
+    if (!dz || dz.dataset.dzBound === '1') return;
+    dz.dataset.dzBound = '1';
+    dz.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dz.style.borderColor = '#0284c7';
+      dz.style.background = '#e0f2fe';
+    });
+    dz.addEventListener('dragleave', () => {
+      dz.style.borderColor = '#93c5fd';
+      dz.style.background = '#f8fafc';
+    });
+    dz.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dz.style.borderColor = '#93c5fd';
+      dz.style.background = '#f8fafc';
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+        window.manejarArchivosCarteras(e.dataTransfer.files);
+      }
+    });
+  }
+
   function renderCola() {
+    initDropZone();
     const cont = document.getElementById('carterasColaLista');
     if (!cont) return;
     if (!colaArchivos.length) {
@@ -57,8 +115,8 @@
     cont.innerHTML = colaArchivos
       .map(
         (f, idx) =>
-          `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:6px;background:#f8fafc;">
-            <span style="font-size:0.82rem;font-weight:600;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.nombre}</span>
+          `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:6px;background:#f8fafc;">
+            <span style="font-size:0.82rem;font-weight:600;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📄 ${escHtml(f.nombre)}</span>
             <button type="button" onclick="window.quitarArchivoCartera(${idx})" style="border:none;background:transparent;color:#ef4444;cursor:pointer;font-weight:700;font-size:0.85rem;">✕</button>
           </div>`
       )
@@ -74,6 +132,8 @@
     colaArchivos = [];
     const input = document.getElementById('carterasFileInput');
     if (input) input.value = '';
+    const badge = document.getElementById('carterasIdAutoBadge');
+    if (badge) badge.style.display = 'none';
     renderCola();
   };
 
@@ -87,27 +147,51 @@
         base64: b64,
       });
     }
+    sincronizarIdOperacionDesdeCola();
     renderCola();
+  };
+
+  window.cambiarTabCarteras = function (tab) {
+    const pAud = document.getElementById('panelCarterasAuditoria');
+    const pBase = document.getElementById('panelCarterasBase');
+    const bAud = document.getElementById('tabBtnCarterasAuditoria');
+    const bBase = document.getElementById('tabBtnCarterasBase');
+    const esBase = tab === 'base';
+    if (pAud) pAud.style.display = esBase ? 'none' : 'block';
+    if (pBase) pBase.style.display = esBase ? 'block' : 'none';
+    if (bAud) {
+      bAud.style.background = esBase ? '#fff' : '#0284c7';
+      bAud.style.color = esBase ? '#334155' : '#fff';
+      bAud.style.borderColor = esBase ? '#cbd5e1' : '#0284c7';
+    }
+    if (bBase) {
+      bBase.style.background = esBase ? '#0284c7' : '#fff';
+      bBase.style.color = esBase ? '#fff' : '#334155';
+      bBase.style.borderColor = esBase ? '#0284c7' : '#cbd5e1';
+    }
+    if (esBase) window.cargarCarteraBase();
   };
 
   window.ejecutarAnalisisCartera = async function () {
     const idOpInput = document.getElementById('carterasIdOperacion');
-    const idOp = (idOpInput ? idOpInput.value : '').trim();
+    let idOp = (idOpInput ? idOpInput.value : '').trim();
+    if (!idOp) idOp = sincronizarIdOperacionDesdeCola();
     const statusEl = document.getElementById('carterasEstadoProceso');
 
-    if (!idOp) {
-      alert('Ingresa un ID_OPERACION válido.');
-      return;
-    }
     if (!colaArchivos.length) {
       alert('Adjunta al menos un documento (PDF o imagen) para analizar.');
+      return;
+    }
+    if (!idOp) {
+      alert('No se pudo detectar el ID Operación desde los archivos. Ingresalo manualmente.');
+      if (idOpInput) idOpInput.focus();
       return;
     }
 
     if (statusEl) {
       statusEl.style.display = 'block';
       statusEl.innerHTML =
-        '<span style="color:#0284c7;font-weight:600;">Analizando documentación con IA y cruzando contra Cartera Base...</span>';
+        '<span style="color:#0284c7;font-weight:600;">⏳ Analizando documentación con IA y cruzando contra Cartera Base...</span>';
     }
 
     try {
@@ -125,29 +209,31 @@
       }
       if (statusEl) {
         const aud = data.auditoria || {};
-        statusEl.innerHTML = `<span style="color:#15803d;font-weight:700;">Auditoría completada: ${aud.estado || 'OK'} (Score ${aud.score ?? 0}/100)</span>`;
+        statusEl.innerHTML = `<span style="color:#15803d;font-weight:700;">✅ Auditoría completada: ${escHtml(aud.estado || 'OK')} (Score ${aud.score ?? 0}/100)</span>`;
       }
       window.limpiarColaCarteras();
       await window.cargarAuditoriasCarteras();
     } catch (err) {
       if (statusEl) {
-        statusEl.innerHTML = `<span style="color:#dc2626;font-weight:600;">Error: ${err.message}</span>`;
+        statusEl.innerHTML = `<span style="color:#dc2626;font-weight:600;">❌ Error: ${escHtml(err.message)}</span>`;
       }
     }
   };
 
   function badgeEstado(estado) {
+    const up = String(estado || '').toUpperCase();
     const map = {
-      APROBADO: 'background:#dcfce7;color:#166534;',
-      OBSERVADO: 'background:#fef9c3;color:#854d0e;',
-      RECHAZADO: 'background:#fee2e2;color:#991b1b;',
-      PENDIENTE_REVISION: 'background:#e0f2fe;color:#075985;',
+      APROBADO: { label: 'Aprobado', style: 'background:#dcfce7;color:#166534;' },
+      OBSERVADO: { label: 'Observado', style: 'background:#ffedd5;color:#9a3412;' },
+      RECHAZADO: { label: 'Rechazado', style: 'background:#fee2e2;color:#991b1b;' },
+      PENDIENTE_REVISION: { label: 'Pendiente Revisión', style: 'background:#e0f2fe;color:#075985;' },
     };
-    const style = map[estado] || 'background:#f1f5f9;color:#334155;';
-    return `<span style="padding:3px 9px;border-radius:9999px;font-size:0.72rem;font-weight:700;${style}">${estado || '-'}</span>`;
+    const cfg = map[up] || { label: estado || '-', style: 'background:#f1f5f9;color:#334155;' };
+    return `<span style="padding:3px 9px;border-radius:9999px;font-size:0.72rem;font-weight:700;${cfg.style}">${escHtml(cfg.label)}</span>`;
   }
 
   window.cargarAuditoriasCarteras = async function () {
+    initDropZone();
     const tbody = document.getElementById('carterasTablaBody');
     const filtroEstado = (document.getElementById('carterasFiltroEstado') || {}).value || 'TODOS';
     const filtroTexto = ((document.getElementById('carterasFiltroTexto') || {}).value || '').trim();
@@ -187,25 +273,29 @@
             (item.discrepancias || []).length +
             (item.faltantes || []).length +
             (item.alertas_forenses || []).length;
+          const resumenCorto = String(item.resumen_ia || item.resolucion_manual || '').trim();
           return `<tr style="border-bottom:1px solid #e2e8f0;">
-            <td style="padding:10px 12px;font-weight:700;color:#0f172a;">${item.id_operacion || '-'}</td>
-            <td style="padding:10px 12px;color:#334155;">${item.apellido_nombre || '-'}</td>
+            <td style="padding:10px 12px;font-weight:700;color:#0f172a;">${escHtml(item.id_operacion || '-')}</td>
+            <td style="padding:10px 12px;color:#334155;">${escHtml(item.apellido_nombre || '-')}</td>
             <td style="padding:10px 12px;">${badgeEstado(item.estado)}</td>
             <td style="padding:10px 12px;font-weight:700;">${item.score ?? 0}/100</td>
-            <td style="padding:10px 12px;">${
-              alertasCount > 0
-                ? `<span style="color:#b45309;font-weight:700;">${alertasCount} alerta(s)</span>`
-                : '<span style="color:#15803d;">Sin diferencias</span>'
-            }</td>
+            <td style="padding:10px 12px;max-width:300px;">
+              ${resumenCorto ? `<div style="font-size:0.78rem;color:#334155;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(resumenCorto)}">${escHtml(resumenCorto)}</div>` : ''}
+              ${
+                alertasCount > 0
+                  ? `<span style="color:#b45309;font-weight:700;font-size:0.76rem;">⚠️ ${alertasCount} alerta(s)</span>`
+                  : '<span style="color:#15803d;font-size:0.76rem;font-weight:600;">✓ Sin diferencias</span>'
+              }
+            </td>
             <td style="padding:10px 12px;text-align:right;">
-              <button type="button" onclick="window.abrirDetalleCartera('${item.id}')" style="padding:5px 10px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;cursor:pointer;font-size:0.78rem;font-weight:600;">Ver / Resolver</button>
+              <button type="button" onclick="window.abrirDetalleCartera('${escHtml(item.id)}')" style="padding:5px 10px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;cursor:pointer;font-size:0.78rem;font-weight:600;">📋 Ficha</button>
             </td>
           </tr>`;
         })
         .join('');
     } catch (err) {
       if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:#dc2626;">${err.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:#dc2626;">${escHtml(err.message)}</td></tr>`;
       }
     }
   };
@@ -224,13 +314,40 @@
     if (txtObs) txtObs.value = item.resolucion_manual || '';
 
     if (body) {
-      const discs = (item.discrepancias || []).map((d) => `<li>${d}</li>`).join('') || '<li>Ninguna</li>';
-      const falts = (item.faltantes || []).map((f) => `<li>${f}</li>`).join('') || '<li>Ninguno</li>';
+      const discs = (item.discrepancias || []).map((d) => `<li>${escHtml(d)}</li>`).join('') || '<li>Ninguna</li>';
+      const falts = (item.faltantes || []).map((f) => `<li>${escHtml(f)}</li>`).join('') || '<li>Ninguno</li>';
+      const forenses = (item.alertas_forenses || []).map((a) => `<li>${escHtml(a)}</li>`).join('') || '<li>Sin alertas forenses</li>';
+      const score = Number(item.score ?? 0);
+      const scoreColor = score >= 80 ? '#16a34a' : (score >= 55 ? '#d97706' : '#dc2626');
       body.innerHTML = `
-        <div style="margin-bottom:10px;"><strong>Operación:</strong> ${item.id_operacion} — ${item.apellido_nombre || ''}</div>
-        <div style="margin-bottom:10px;"><strong>Resumen IA:</strong> ${item.resumen_ia || '-'}</div>
-        <div style="margin-bottom:10px;"><strong>Diferencias / Alertas:</strong><ul style="margin:4px 0 0 18px;color:#b91c1c;">${discs}</ul></div>
-        <div><strong>Faltantes:</strong><ul style="margin:4px 0 0 18px;color:#b45309;">${falts}</ul></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid #e2e8f0;">
+          <div>
+            <div style="font-size:0.72rem;color:#64748b;font-weight:700;text-transform:uppercase;">Operación #${escHtml(item.id_operacion)}</div>
+            <div style="font-size:1.02rem;font-weight:800;color:#0f172a;">${escHtml(item.apellido_nombre || 'Titular sin nombre')}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            ${badgeEstado(item.estado)}
+            <span style="font-weight:800;color:${scoreColor};font-size:0.9rem;">Score ${score}/100</span>
+          </div>
+        </div>
+        <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:8px;padding:10px;margin-bottom:10px;">
+          <div style="font-size:0.75rem;font-weight:800;color:#0f2744;margin-bottom:4px;">📝 Comentario / Resumen del Análisis</div>
+          <div style="font-size:0.84rem;color:#1e293b;line-height:1.45;">${escHtml(item.resumen_ia || 'Sin resumen automático registrado.')}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">
+          <div style="background:#fff;border:1px solid #fecaca;border-radius:8px;padding:8px 10px;">
+            <strong style="font-size:0.78rem;color:#991b1b;">⚠️ Diferencias / Discrepancias</strong>
+            <ul style="margin:4px 0 0 16px;padding:0;font-size:0.8rem;color:#b91c1c;">${discs}</ul>
+          </div>
+          <div style="background:#fff;border:1px solid #fed7aa;border-radius:8px;padding:8px 10px;">
+            <strong style="font-size:0.78rem;color:#9a3412;">📄 Documentos Faltantes</strong>
+            <ul style="margin:4px 0 0 16px;padding:0;font-size:0.8rem;color:#b45309;">${falts}</ul>
+          </div>
+          <div style="background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;">
+            <strong style="font-size:0.78rem;color:#334155;">🔎 Alertas Forenses</strong>
+            <ul style="margin:4px 0 0 16px;padding:0;font-size:0.8rem;color:#475569;">${forenses}</ul>
+          </div>
+        </div>
       `;
     }
     if (modal) modal.style.display = 'flex';
@@ -260,5 +377,115 @@
     } catch (err) {
       alert('Error: ' + err.message);
     }
+  };
+
+  function leerCarteraBaseLocal() {
+    try {
+      return JSON.parse(localStorage.getItem(LS_CARTERA_BASE_KEY) || '[]') || [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  function guardarCarteraBaseLocal(lista) {
+    try {
+      localStorage.setItem(LS_CARTERA_BASE_KEY, JSON.stringify(lista || []));
+    } catch (_) {}
+  }
+
+  window.cargarCarteraBase = async function () {
+    try {
+      const resp = await fetch(`${API_BASE}/api/carteras/base`, { headers: getAuthHeaders() });
+      if (resp.ok) {
+        const data = await resp.json();
+        carteraBaseCache = Array.isArray(data.items) ? data.items : [];
+        guardarCarteraBaseLocal(carteraBaseCache);
+      } else {
+        carteraBaseCache = leerCarteraBaseLocal();
+      }
+    } catch (_) {
+      carteraBaseCache = leerCarteraBaseLocal();
+    }
+    window.renderCarteraBaseTabla();
+  };
+
+  window.renderCarteraBaseTabla = function () {
+    const tbody = document.getElementById('carteraBaseTablaBody');
+    if (!tbody) return;
+    const q = ((document.getElementById('carteraBaseFiltro') || {}).value || '').trim().toLowerCase();
+    const filtrados = q
+      ? carteraBaseCache.filter((r) =>
+          [r.id_operacion, r.dni, r.apellido_nombre, r.linea].some((v) =>
+            String(v || '').toLowerCase().includes(q)
+          )
+        )
+      : carteraBaseCache;
+    if (!filtrados.length) {
+      tbody.innerHTML =
+        '<tr><td colspan="6" style="text-align:center;padding:20px;color:#64748b;">No hay registros en la cartera base.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = filtrados
+      .map(
+        (r, idx) => `<tr style="border-bottom:1px solid #e2e8f0;">
+          <td style="padding:8px 10px;font-weight:700;">${escHtml(r.id_operacion || '-')}</td>
+          <td style="padding:8px 10px;font-family:monospace;">${escHtml(r.dni || '-')}</td>
+          <td style="padding:8px 10px;">${escHtml(r.apellido_nombre || '-')}</td>
+          <td style="padding:8px 10px;">${escHtml(r.linea || '-')}</td>
+          <td style="padding:8px 10px;font-family:monospace;">$${Number(r.monto || 0).toLocaleString('es-AR')}</td>
+          <td style="padding:8px 10px;text-align:right;">
+            <button type="button" onclick="window.eliminarRegistroCarteraBase('${escHtml(r.id || r.id_operacion)}', ${idx})" style="padding:4px 9px;border-radius:6px;border:1px solid #fecaca;background:#fff1f2;color:#be123c;font-size:0.76rem;font-weight:700;cursor:pointer;">Eliminar</button>
+          </td>
+        </tr>`
+      )
+      .join('');
+  };
+
+  window.agregarRegistroCarteraBase = async function (e) {
+    if (e) e.preventDefault();
+    const reg = {
+      id: 'cb_' + Date.now(),
+      id_operacion: (document.getElementById('cbIdOp') || {}).value.trim(),
+      dni: (document.getElementById('cbDni') || {}).value.trim(),
+      apellido_nombre: (document.getElementById('cbNombre') || {}).value.trim(),
+      linea: (document.getElementById('cbLinea') || {}).value.trim() || 'FEDEM',
+      monto: Number((document.getElementById('cbMonto') || {}).value || 0),
+    };
+    if (!reg.id_operacion || !reg.dni || !reg.apellido_nombre) return;
+    try {
+      const resp = await fetch(`${API_BASE}/api/carteras/base`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(reg),
+      });
+      if (resp.ok) {
+        await window.cargarCarteraBase();
+      } else {
+        carteraBaseCache.unshift(reg);
+        guardarCarteraBaseLocal(carteraBaseCache);
+        window.renderCarteraBaseTabla();
+      }
+    } catch (_) {
+      carteraBaseCache.unshift(reg);
+      guardarCarteraBaseLocal(carteraBaseCache);
+      window.renderCarteraBaseTabla();
+    }
+    ['cbIdOp', 'cbDni', 'cbNombre', 'cbLinea', 'cbMonto'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+  };
+
+  window.eliminarRegistroCarteraBase = async function (id, idx) {
+    if (!confirm('¿Eliminar este registro de la Cartera Base?')) return;
+    try {
+      await fetch(`${API_BASE}/api/carteras/base/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+    } catch (_) {}
+    carteraBaseCache = carteraBaseCache.filter((r, i) => String(r.id || r.id_operacion) !== String(id) && i !== idx);
+    guardarCarteraBaseLocal(carteraBaseCache);
+    window.renderCarteraBaseTabla();
   };
 })();

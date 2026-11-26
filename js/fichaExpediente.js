@@ -317,24 +317,24 @@
           '</div>' +
           '<div style="margin-top:0.85rem;padding:0.85rem;border-radius:11px;background:#f8fafc;border:1px solid #e2e8f0;">' +
             '<div style="font-size:0.78rem;font-weight:800;color:#0f2744;margin-bottom:0.6rem;">🏦 Datos Bancarios del Asociado</div>' +
-            '<div class="grid-3-cols">' +
-              '<div class="form-group"><label class="form-label">Banco</label><input type="text" id="editBanco" class="input-text" value="' + sanitizeHTML(s.solicitante?.banco || '') + '" placeholder="Ej: Banco de Entre Ríos"/></div>' +
-              '<div class="form-group"><label class="form-label">Tipo de Cuenta</label>' +
+            '<div class="form-grid-12">' +
+              '<div class="form-group col-12 col-sm-4"><label class="form-label">Banco</label><input type="text" id="editBanco" class="input-text" value="' + sanitizeHTML(s.solicitante?.banco || '') + '" placeholder="Ej: Banco de Entre Ríos"/></div>' +
+              '<div class="form-group col-12 col-sm-4"><label class="form-label">Tipo de Cuenta</label>' +
                 '<select id="editTipoCuenta" class="input-text">' +
                   ['', 'Caja de Ahorro', 'Cuenta Corriente', 'Cuenta Sueldo'].map(tc => '<option value="' + tc + '" ' + (s.solicitante?.tipoCuenta === tc ? 'selected' : '') + '>' + (tc || 'Seleccionar...') + '</option>').join('') +
                 '</select>' +
               '</div>' +
-              '<div class="form-group"><label class="form-label">N° de Cuenta</label><input type="text" id="editNroCuenta" class="input-text" value="' + sanitizeHTML(s.solicitante?.nroCuenta || '') + '"/></div>' +
-              '<div class="form-group"><label class="form-label">CBU (22 dígitos)</label><input type="text" id="editCbu" class="input-text" maxlength="22" value="' + sanitizeHTML(s.solicitante?.cbu || '') + '"/></div>' +
-              '<div class="form-group"><label class="form-label">Alias CBU</label><input type="text" id="editAlias" class="input-text" value="' + sanitizeHTML(s.solicitante?.alias || '') + '"/></div>' +
+              '<div class="form-group col-12 col-sm-4"><label class="form-label">N° de Cuenta</label><input type="text" id="editNroCuenta" class="input-text" value="' + sanitizeHTML(s.solicitante?.nroCuenta || '') + '"/></div>' +
+              '<div class="form-group col-12 col-sm-7"><label class="form-label">CBU (22 dígitos)</label><input type="text" id="editCbu" class="input-text" maxlength="22" value="' + sanitizeHTML(s.solicitante?.cbu || '') + '"/></div>' +
+              '<div class="form-group col-12 col-sm-5"><label class="form-label">Alias CBU</label><input type="text" id="editAlias" class="input-text" value="' + sanitizeHTML(s.solicitante?.alias || '') + '"/></div>' +
             '</div>' +
           '</div>' +
           '<div style="margin-top:0.75rem;padding:0.85rem;border-radius:11px;background:#f8fafc;border:1px solid #e2e8f0;">' +
             '<div style="font-size:0.78rem;font-weight:800;color:#0f2744;margin-bottom:0.6rem;">💳 Datos Tarjeta Sidecreer</div>' +
-            '<div class="grid-3-cols">' +
-              '<div class="form-group"><label class="form-label">Número de Tarjeta</label><input type="text" id="editTarjetaSidecreerNumero" class="input-text" maxlength="24" placeholder="Ej: 4507 0000 0000 0000" value="' + sanitizeHTML(s.solicitante?.tarjetaSidecreerNumero || '') + '"/></div>' +
-              '<div class="form-group"><label class="form-label">Fecha de Vencimiento</label><input type="text" id="editTarjetaSidecreerVencimiento" class="input-text" maxlength="7" placeholder="MM/AA" value="' + sanitizeHTML(s.solicitante?.tarjetaSidecreerVencimiento || '') + '"/></div>' +
-              '<div class="form-group"><label class="form-label">Código de Seguridad</label><input type="text" id="editTarjetaSidecreerCvv" class="input-text" maxlength="4" placeholder="Ej: 123" value="' + sanitizeHTML(s.solicitante?.tarjetaSidecreerCvv || '') + '"/></div>' +
+            '<div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:0.75rem;align-items:end;">' +
+              '<div class="form-group" style="margin-bottom:0;"><label class="form-label">Número de Tarjeta</label><input type="text" id="editTarjetaSidecreerNumero" class="input-text" maxlength="24" placeholder="Ej: 4507 0000 0000 0000" value="' + sanitizeHTML(s.solicitante?.tarjetaSidecreerNumero || '') + '"/></div>' +
+              '<div class="form-group" style="margin-bottom:0;"><label class="form-label">Fecha de Vencimiento</label><input type="text" id="editTarjetaSidecreerVencimiento" class="input-text" maxlength="7" placeholder="MM/AA" value="' + sanitizeHTML(s.solicitante?.tarjetaSidecreerVencimiento || '') + '"/></div>' +
+              '<div class="form-group" style="margin-bottom:0;"><label class="form-label">Código de Seguridad</label><input type="text" id="editTarjetaSidecreerCvv" class="input-text" maxlength="4" placeholder="Ej: 123" value="' + sanitizeHTML(s.solicitante?.tarjetaSidecreerCvv || '') + '"/></div>' +
             '</div>' +
           '</div>' +
           '<div id="editParejaWrap" style="margin-top:0.75rem;padding:0.85rem;border-radius:11px;background:#f8fafc;border:1px solid #e2e8f0;' + ((/casad|pareja|concub/i.test(String(s.solicitante?.estadoCivil || ''))) ? '' : 'display:none;') + '">' +

@@ -6232,3 +6232,22 @@
       return guardarDictamenEnBitacoraExpediente(idExpedienteAuditadoActivo);
     }
 
+
+window.ejecutarValidacionLocalAmmer = async function ejecutarValidacionLocalAmmer({ dniFrenteBase64, selfieBase64, firmaBase64 } = {}) {
+  const apiBase = (typeof getApiBase === 'function' ? getApiBase() : window.AMMER_API_BASE || '').replace(/\/+$/, '');
+  const headers = Object.assign({ 'Content-Type': 'application/json' }, typeof obtenerAuthHeaders === 'function' ? obtenerAuthHeaders() : {});
+  const resp = await fetch(`${apiBase}/api/auditoria/validacion-local-ammer`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      dniFrenteBase64: dniFrenteBase64 || null,
+      selfieBase64: selfieBase64 || null,
+      firmaBase64: firmaBase64 || null,
+    }),
+  });
+  if (!resp.ok) {
+    const errTxt = await resp.text().catch(() => '');
+    throw new Error(`Error motor local AMMER (${resp.status}): ${errTxt || 'solicitud fallida'}`);
+  }
+  return await resp.json();
+};

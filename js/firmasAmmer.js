@@ -1144,7 +1144,8 @@
       selfie_voz_consentimiento: reqVoz,
       firma_olografa: getC('chkGenReqFirma', reqPdf),
       gps_obligatorio: getC('chkGenReqGps', false) || Boolean(baseTpl.gps_obligatorio),
-      requiere_pin_otp: getC('chkGenReqPin', false) || Boolean(baseTpl.requiere_pin_otp),
+      requiere_pin_otp: getC('chkGenReqPin', false) || Boolean(baseTpl.requiere_pin_otp) || Boolean(baseTpl.requiere_pin_email),
+      requiere_pin_email: Boolean(baseTpl.requiere_pin_email),
       requiere_sello_png: reqPdf ? Boolean(baseTpl.requiere_sello_png) : false,
       tapar_resaltados: reqPdf ? (baseTpl.tapar_resaltados !== false) : true,
     };
@@ -3538,6 +3539,7 @@
       setChk('chkValSelfieLiveness', vals.selfie_liveness);
       setChk('chkValSelfieVozConsentimiento', vals.selfie_voz_consentimiento);
       setChk('chkValRequierePinOtp', vals.requiere_pin_otp);
+      setChk('chkValRequierePinEmail', Boolean(vals.requiere_pin_email));
 
       await cargarPdfEnCanvasEditor(res.pdfBase64, 1);
       renderMultiPdfQueueEditor_();
@@ -4491,6 +4493,7 @@
     setChk('chkValSelfieLiveness', false);
     setChk('chkValSelfieVozConsentimiento', false);
     setChk('chkValRequierePinOtp', false);
+    setChk('chkValRequierePinEmail', false);
     setChk('chkEditorVistaLimpia', false);
     setChk('chkEditorGrillaSnap', false);
     sincronizarSelectZoomEditor();
@@ -4568,7 +4571,11 @@
         dni_frente_dorso: chk('chkValDniFrenteDorso', false),
         selfie_liveness: chk('chkValSelfieLiveness', false) || chk('chkValSelfieVozConsentimiento', false),
         selfie_voz_consentimiento: chk('chkValSelfieVozConsentimiento', false),
-        requiere_pin_otp: chk('chkValRequierePinOtp', false),
+        requiere_pin_otp: chk('chkValRequierePinOtp', false) || chk('chkValRequierePinEmail', false),
+        requiere_pin_email: chk('chkValRequierePinEmail', false),
+        canal_pin_default: (chk('chkValRequierePinOtp', false) && chk('chkValRequierePinEmail', false))
+          ? 'ambos'
+          : (chk('chkValRequierePinEmail', false) ? 'email' : 'whatsapp'),
       },
       activa: true,
     };

@@ -148,6 +148,23 @@
 
       const btnRespaldoExtHtml = '<button type="button" onclick="window.respaldarLegajoLocalExtension && window.respaldarLegajoLocalExtension(\'' + sanitizeHTML(String(s.id)) + '\', \'manual\')" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;font-size:0.72rem;font-weight:700;cursor:pointer;" title="Enviar adjuntos del legajo a la Extensión Chrome AMMER">📥 Respaldar Legajo Local</button>';
 
+      try {
+        window.postMessage(
+          {
+            tipo: 'AMMER_CONTEXTO_EXPEDIENTE',
+            payload: {
+              idExpediente: s.id_definitivo || s.id_provisorio || ('EXP-' + s.id),
+              dni: String(s.solicitante?.dni || '').replace(/\D/g, ''),
+              cuil: String(s.solicitante?.cuil || ''),
+              nombre: String(s.solicitante?.nombre || ''),
+              cbu: String(s.solicitante?.cbu || ''),
+              monto: s.prestamo?.monto || '',
+            },
+          },
+          window.location.origin
+        );
+      } catch (_) {}
+
       let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.6rem;background:#f8fafc;padding:.75rem;border-radius:8px;border:1px solid var(--border-color);">' +
         '<div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">' +
           estadoSelectorHtml +

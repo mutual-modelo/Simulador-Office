@@ -2,36 +2,84 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>AMMER — Historial de Respaldos</title>
+  <title>AMMER — Gestor y Macros</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; width: 380px; margin: 0; padding: 14px; background: #f8fafc; color: #0f172a; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; width: 390px; margin: 0; padding: 14px; background: #f8fafc; color: #0f172a; }
     .hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .hdr h1 { font-size: 0.98rem; margin: 0; color: #0f2744; }
-    .btns { display: flex; gap: 6px; }
-    .btn { padding: 5px 9px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; font-size: 0.74rem; font-weight: 600; cursor: pointer; color: #334155; }
+    .hdr h1 { font-size: 0.96rem; margin: 0; color: #0f2744; }
+    .btns { display: flex; gap: 5px; }
+    .btn { padding: 5px 8px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; font-size: 0.73rem; font-weight: 600; cursor: pointer; color: #334155; }
     .btn-pri { background: #0284c7; color: #fff; border-color: #0284c7; }
-    .list { max-height: 360px; overflow-y: auto; display: flex; flex-direction: column; gap: 7px; }
+    .btn-red { background: #dc2626; color: #fff; border-color: #dc2626; }
+    .btn-green { background: #16a34a; color: #fff; border-color: #16a34a; }
+    .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+    .tab { flex: 1; padding: 6px; border-radius: 7px; border: 1px solid #cbd5e1; background: #fff; font-size: 0.76rem; font-weight: 700; cursor: pointer; text-align: center; }
+    .tab.active { background: #0f2744; color: #fff; border-color: #0f2744; }
+    .list { max-height: 340px; overflow-y: auto; display: flex; flex-direction: column; gap: 7px; }
     .item { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px; font-size: 0.76rem; }
     .item-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 4px; }
     .badge { padding: 1px 6px; border-radius: 999px; font-size: 0.66rem; font-weight: 700; }
     .ok { background: #dcfce7; color: #166534; }
     .err { background: #fee2e2; color: #991b1b; }
     .ruta { color: #334155; font-family: monospace; font-size: 0.71rem; word-break: break-all; margin-bottom: 5px; }
-    .empty { text-align: center; color: #64748b; padding: 24px 8px; font-size: 0.8rem; }
+    .empty { text-align: center; color: #64748b; padding: 20px 8px; font-size: 0.8rem; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 9px 10px; margin-bottom: 8px; font-size: 0.76rem; }
+    .card h3 { margin: 0 0 6px; font-size: 0.8rem; color: #0f2744; }
+    select, input[type="text"] { width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.76rem; box-sizing: border-box; margin-bottom: 6px; }
   </style>
 </head>
 <body>
   <div class="hdr">
-    <h1>📥 Respaldos AMMER</h1>
+    <h1>📥 Asistente AMMER</h1>
     <div class="btns">
-      <button id="btn_carpeta_def" class="btn" title="Abrir carpeta Descargas">📁 Carpeta</button>
+      <button id="btn_carpeta_def" class="btn" title="Abrir carpeta Descargas">📁</button>
       <button id="btn_limpiar" class="btn" title="Limpiar historial">🗑️</button>
       <button id="btn_opciones" class="btn btn-pri">⚙️ Opciones</button>
     </div>
   </div>
-  <div id="lista_historial" class="list">
-    <div class="empty">Cargando historial...</div>
+
+  <div class="tabs">
+    <button id="tab_hist" class="tab active">📥 Historial</button>
+    <button id="tab_macros" class="tab">⚡ Macros (3 modos)</button>
   </div>
+
+  <div id="panel_hist">
+    <div id="lista_historial" class="list">
+      <div class="empty">Cargando historial...</div>
+    </div>
+  </div>
+
+  <div id="panel_macros" style="display:none;">
+    <div id="exp_activo_box" class="card" style="background:#eff6ff;border-color:#bfdbfe;color:#1e3a8a;">
+      Sin expediente activo. Abrí una ficha en Simulador-Office.
+    </div>
+
+    <div class="card">
+      <h3>1. 🌐 Macro Web por DOM (Chrome)</h3>
+      <div style="display:flex;gap:6px;margin-bottom:6px;">
+        <button id="btn_grabar_dom" class="btn btn-red" style="flex:1;">🔴 Grabar pasos</button>
+        <button id="btn_detener_dom" class="btn" style="flex:1;display:none;">⏹️ Detener y guardar</button>
+      </div>
+      <select id="sel_macro_dom"><option value="">-- Sin macros guardadas --</option></select>
+      <div style="display:flex;gap:6px;">
+        <button id="btn_ejecutar_dom" class="btn btn-green" style="flex:1;">▶️ Ejecutar en pestaña</button>
+        <button id="btn_eliminar_dom" class="btn" title="Eliminar macro">🗑️</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>2. 🤖 Microsoft Power Automate Desktop</h3>
+      <button id="btn_power_automate" class="btn btn-pri" style="width:100%;">📤 Exportar Trigger JSON (Power Automate)</button>
+    </div>
+
+    <div class="card">
+      <h3>3. ⌨️ AutoHotkey (.ahk)</h3>
+      <button id="btn_ahk" class="btn" style="width:100%;border-color:#0f2744;color:#0f2744;">⬇️ Descargar Script .ahk con datos</button>
+    </div>
+
+    <div id="macro_status" style="font-size:0.74rem;color:#0369a1;font-weight:600;text-align:center;"></div>
+  </div>
+
   <script src="popup.js"></script>
 </body>
 </html>

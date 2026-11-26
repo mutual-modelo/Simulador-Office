@@ -14,6 +14,9 @@ const DEFAULT_CONFIG = {
   carpetaRaiz: "AMMER_Legajos",
   patronCarpetas: "{CARPETA_RAIZ}/{DNI}",
   patronNombreArchivo: "{ID_EXPEDIENTE} {TIPO_DOC}.{EXT}",
+  carpetaPowerAutomate: "AMMER_Trigger",
+  flujoPowerAutomate: "",
+  plantillaAhk: "; Macro AMMER AutoHotkey\n; Expediente: {ID_EXPEDIENTE}\n^!a::\n{\n  SendText \"{DNI}{Tab}{NOMBRE}{Tab}{CBU}{Tab}{MONTO}\"\n}\n",
 };
 
 function leerFormulario() {
@@ -35,6 +38,9 @@ function leerFormulario() {
     patronNombreArchivo:
       document.getElementById("patron_nombre_archivo").value.trim() ||
       "{ID_EXPEDIENTE} {TIPO_DOC}.{EXT}",
+    carpetaPowerAutomate: document.getElementById("carpeta_power_automate").value.trim() || "AMMER_Trigger",
+    flujoPowerAutomate: document.getElementById("flujo_power_automate").value.trim(),
+    plantillaAhk: document.getElementById("plantilla_ahk").value,
   };
 }
 
@@ -53,6 +59,9 @@ function aplicarFormulario(items) {
   document.getElementById("carpeta_raiz").value = cfg.carpetaRaiz;
   document.getElementById("patron_carpetas").value = cfg.patronCarpetas;
   document.getElementById("patron_nombre_archivo").value = cfg.patronNombreArchivo;
+  document.getElementById("carpeta_power_automate").value = cfg.carpetaPowerAutomate;
+  document.getElementById("flujo_power_automate").value = cfg.flujoPowerAutomate;
+  document.getElementById("plantilla_ahk").value = cfg.plantillaAhk;
   actualizarVistaPrevia();
 }
 

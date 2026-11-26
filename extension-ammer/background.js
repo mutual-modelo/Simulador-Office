@@ -274,5 +274,220 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
       chrome.downloads.showDefaultFolder();
     }
     sendResponse({ ok: true });
+    return;
+  }
+  if (request.accion === "GUARDAR_EXPEDIENTE_ACTIVO") {
+    chrome.storage.local.set({ ammerExpedienteActivo: request.payload || {} }, () => {
+      sendResponse({ ok: true });
+    });
+    return true;
+  }
+  if (request.accion === "OBTENER_EXPEDIENTE_ACTIVO") {
+    chrome.storage.local.get({ ammerExpedienteActivo: null }, (res) => {
+      sendResponse({ ok: true, expediente: res.ammerExpedienteActivo });
+    });
+    return true;
+  }
+  if (request.accion === "OBTENER_MACROS_DOM") {
+    chrome.storage.local.get({ ammerMacrosDom: [] }, (res) => {
+      sendResponse({ ok: true, macros: res.ammerMacrosDom || [] });
+    });
+    return true;
+  }
+  if (request.accion === "GUARDAR_MACRO_DOM") {
+    chrome.storage.local.get({ ammerMacrosDom: [] }, (res) => {
+      const lista = Array.isArray(res.ammerMacrosDom) ? res.ammerMacrosDom : [];
+      const macro = request.macro || {};
+      const nueva = {
+        id: macro.id || `mac_${Date.now()}`,
+        nombre: String(macro.nombre || "Macro AMMER").trim(),
+        pasos: Array.isArray(macro.pasos) ? macro.pasos : [],
+        creadaEn: new Date().toISOString(),
+      };
+      const filtrada = lista.filter((m) => m.id !== nueva.id);
+      filtrada.unshift(nueva);
+      chrome.storage.local.set({ ammerMacrosDom: filtrada.slice(0, 30) }, () => {
+        sendResponse({ ok: true, macro: nueva });
+      });
+    });
+    return true;
+  }
+  if (request.accion === "ELIMINAR_MACRO_DOM") {
+    chrome.storage.local.get({ ammerMacrosDom: [] }, (res) => {
+      const filtrada = (res.ammerMacrosDom || []).filter((m) => m.id !== request.id);
+      chrome.storage.local.set({ ammerMacrosDom: filtrada }, () => sendResponse({ ok: true }));
+    });
+    return true;
+  }
+  if (request.accion === "INICIAR_GRABACION_DOM" || request.accion === "DETENER_GRABACION_DOM") {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tabId = tabs && tabs[0] && tabs[0].id;
+      if (!tabId) return sendResponse({ ok: false, error: "No hay pestaña activa." });
+      const iniciar = request.accion === "INICIAR_GRABACION_DOM";
+      chrome.scripting.executeScript(
+        {
+          target: { tabId },
+          func: (start) => {
+            function selectorParaEl(el) {
+              if (!el || el.nodeType !== 1) return "";
+              if (el.id) return "#" + CSS.escape(el.id);
+              const name = el.getAttribute("name");
+              if (name) return `${el.tagName.toLowerCase()}[name="${name.replace(/"/g, '\\"')}"]`;
+              const tid = el.getAttribute("data-testid");
+              if (tid) return `[data-testid="${tid.replace(/"/g, '\\"')}"]`;
+              return el.tagName.toLowerCase() + (el.className && typeof el.className === "string"
+                ? "." + el.className.trim().split(/\s+/).slice(0, 2).map((c) => CSS.escape(c)).join(".")
+                : "");
+            }
+            if (start) {
+              window.__ammerMacroPasos = [];
+              if (window.__ammerMacroCleanup) window.__ammerMacroCleanup();
+              const onClick = (ev) => {
+                const sel = selectorParaEl(ev.target);
+                if (sel) window.__ammerMacroPasos.push({ tipo: "click", selector: sel });
+              };
+              const onChange = (ev) => {
+                const el = ev.target;
+                if (!el || !("value" in el)) return;
+                const sel = selectorParaEl(el);
+                if (sel) window.__ammerMacroPasos.push({ tipo: "input", selector: sel, valor: String(el.value || "") });
+              };
+              document.addEventListener("click", onClick, true);
+              document.addEventListener("change", onChange, true);
+              window.__ammerMacroCleanup = () => {
+                document.removeEventListener("click", onClick, true);
+                document.removeEventListener("change", onChange, true);
+              };
+              return { grabando: true, pasos: [] };
+            }
+            if (window.__ammerMacroCleanup) window.__ammerMacroCleanup();
+            const pasos = Array.isArray(window.__ammerMacroPasos) ? window.__ammerMacroPasos : [];
+            return { grabando: false, pasos };
+          },
+          args: [iniciar],
+        },
+        (results) => {
+          if (chrome.runtime.lastError) {
+            return sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+          }
+          const res = results && results[0] && results[0].result;
+          sendResponse({ ok: true, ...(res || {}) });
+        }
+      );
+    });
+    return true;
+  }
+  if (request.accion === "EJECUTAR_MACRO_DOM") {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tabId = tabs && tabs[0] && tabs[0].id;
+      if (!tabId) return sendResponse({ ok: false, error: "No hay pestaña activa." });
+      chrome.storage.local.get({ ammerExpedienteActivo: {}, ammerMacrosDom: [] }, (st) => {
+        const macro = (st.ammerMacrosDom || []).find((m) => m.id === request.id) || request.macro;
+        if (!macro || !Array.isArray(macro.pasos) || !macro.pasos.length) {
+          return sendResponse({ ok: false, error: "La macro no tiene pasos." });
+        }
+        const exp = st.ammerExpedienteActivo || {};
+        chrome.scripting.executeScript(
+          {
+            target: { tabId },
+            func: async (pasos, ctxExp) => {
+              const tokens = {
+                "{DNI}": String(ctxExp.dni || ""),
+                "{CUIL}": String(ctxExp.cuil || ""),
+                "{NOMBRE}": String(ctxExp.nombre || ""),
+                "{CBU}": String(ctxExp.cbu || ""),
+                "{MONTO}": String(ctxExp.monto || ""),
+                "{ID_EXPEDIENTE}": String(ctxExp.idExpediente || ""),
+              };
+              const resolverTokens = (txt) => {
+                let out = String(txt || "");
+                for (const [k, v] of Object.entries(tokens)) out = out.replaceAll(k, v);
+                return out;
+              };
+              const esperarSelector = (sel, ms = 4000) =>
+                new Promise((res) => {
+                  const found = document.querySelector(sel);
+                  if (found) return res(found);
+                  const obs = new MutationObserver(() => {
+                    const f = document.querySelector(sel);
+                    if (f) { obs.disconnect(); res(f); }
+                  });
+                  obs.observe(document.body, { childList: true, subtree: true });
+                  setTimeout(() => { obs.disconnect(); res(document.querySelector(sel)); }, ms);
+                });
+              let ejecutados = 0;
+              for (const p of pasos) {
+                const el = await esperarSelector(p.selector);
+                if (!el) continue;
+                if (p.tipo === "input") {
+                  el.focus();
+                  el.value = resolverTokens(p.valor);
+                  el.dispatchEvent(new Event("input", { bubbles: true }));
+                  el.dispatchEvent(new Event("change", { bubbles: true }));
+                } else {
+                  el.click();
+                }
+                ejecutados += 1;
+              }
+              return { ejecutados, total: pasos.length };
+            },
+            args: [macro.pasos, exp],
+          },
+          (results) => {
+            if (chrome.runtime.lastError) {
+              return sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+            }
+            const r = results && results[0] && results[0].result;
+            sendResponse({ ok: true, ...(r || {}) });
+          }
+        );
+      });
+    });
+    return true;
+  }
+  if (request.accion === "GENERAR_TRIGGER_POWER_AUTOMATE" || request.accion === "GENERAR_SCRIPT_AHK") {
+    chrome.storage.sync.get(
+      {
+        carpetaPowerAutomate: "AMMER_Trigger",
+        flujoPowerAutomate: "",
+        plantillaAhk: "; Macro AMMER AutoHotkey\n; Expediente: {ID_EXPEDIENTE}\n^!a::\n{\n  SendText \"{DNI}{Tab}{NOMBRE}{Tab}{CBU}{Tab}{MONTO}\"\n}\n",
+      },
+      (cfg) => {
+        chrome.storage.local.get({ ammerExpedienteActivo: {} }, (st) => {
+          const exp = st.ammerExpedienteActivo || {};
+          const idExp = sanitizarSegmentoRuta(exp.idExpediente, "SIN_EXP");
+          if (request.accion === "GENERAR_TRIGGER_POWER_AUTOMATE") {
+            const payload = {
+              generadoEn: new Date().toISOString(),
+              flujo: cfg.flujoPowerAutomate || "AMMER_Default",
+              expediente: exp,
+            };
+            const dataUrl = `data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(payload, null, 2))}`;
+            const carpetaPa = sanitizarSegmentoRuta(cfg.carpetaPowerAutomate, "AMMER_Trigger");
+            chrome.downloads.download(
+              { url: dataUrl, filename: `${carpetaPa}/trigger_${idExp}.json`, conflictAction: "overwrite" },
+              (id) => sendResponse({ ok: Boolean(id), downloadId: id, flujo: cfg.flujoPowerAutomate || "" })
+            );
+          } else {
+            let script = String(cfg.plantillaAhk || "");
+            const tokens = {
+              "{DNI}": String(exp.dni || ""),
+              "{CUIL}": String(exp.cuil || ""),
+              "{NOMBRE}": String(exp.nombre || ""),
+              "{CBU}": String(exp.cbu || ""),
+              "{MONTO}": String(exp.monto || ""),
+              "{ID_EXPEDIENTE}": String(exp.idExpediente || ""),
+            };
+            for (const [k, v] of Object.entries(tokens)) script = script.replaceAll(k, v);
+            const dataUrl = `data:text/plain;charset=utf-8,${encodeURIComponent(script)}`;
+            chrome.downloads.download(
+              { url: dataUrl, filename: `AMMER_Macros/macro_${idExp}.ahk`, conflictAction: "overwrite" },
+              (id) => sendResponse({ ok: Boolean(id), downloadId: id })
+            );
+          }
+        });
+      }
+    );
+    return true;
   }
 });

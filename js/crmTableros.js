@@ -647,22 +647,30 @@
       if (up === 'PENDIENTE') return 'Pendiente';
       if (up === 'OBSERVADO') return 'Observado';
       if (up === 'LIQUIDADO') return 'Liquidado';
+      if (up === 'DESESTIMADO') return 'Desestimado';
+      if (up === 'ANULADO') return 'Anulado';
+      if (up === 'CANCELADO') return 'Cancelado';
       if (up === 'EN ANÁLISIS' || up === 'EN ANALISIS') return 'En Análisis';
+      if (up === 'EN GESTIÓN' || up === 'EN GESTION') return 'En Gestión';
+      if (up === 'EN EVALUACIÓN' || up === 'EN EVALUACION') return 'En Evaluación';
+      if (up === 'PROPUESTA ENVIADA') return 'Propuesta Enviada';
       if (up === 'TRANSFERENCIA PENDIENTE') return 'Transferencia Pendiente';
-      return raw || 'Pendiente';
+      if (up === 'TRANSFERENCIA') return 'Transferencia';
+      if (!raw) return 'Pendiente';
+      return raw === up ? raw.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()) : raw;
     }
     window.normalizarEstadoCanonico_ = normalizarEstadoCanonico_;
 
     function obtenerSubEstadoBadge(estado) {
       const e = normalizarEstadoCanonico_(estado);
       let cssClass = 'badge-Pendiente';
-      if (e === 'En Análisis') cssClass = 'badge-EnAnalisis';
+      if (e === 'En Análisis' || e === 'En Gestión' || e === 'En Evaluación' || e === 'Propuesta Enviada') cssClass = 'badge-EnAnalisis';
       else if (e === 'Observado') cssClass = 'badge-Observado';
-      else if (e === 'Propuesta Enviada') cssClass = 'badge-EnAnalisis';
       else if (e === 'Aprobado') cssClass = 'badge-Aprobado';
       else if (e === 'Transferencia Pendiente' || e === 'Transferencia') cssClass = 'badge-Transferencia';
       else if (e === 'Liquidado') cssClass = 'badge-Liquidado';
       else if (e === 'Rechazado') cssClass = 'badge-Rechazado';
+      else if (e === 'Desestimado' || e === 'Anulado' || e === 'Cancelado') cssClass = 'badge-Desestimado';
       return '<span class="badge-status ' + cssClass + '" style="font-size:0.62rem;padding:2px 6px;">' + e + '</span>';
     }
 

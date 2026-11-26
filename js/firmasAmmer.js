@@ -1519,6 +1519,42 @@
     }
   }
 
+  window.limpiarPantallaGeneradorFirmas = function () {
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+    const setChk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = Boolean(val); };
+
+    setVal('selFirmaExpediente', '');
+    setVal('inpBuscarExpedienteFirma', '');
+    setVal('inpFirmaTelefonoWa', '');
+    setVal('inpFirmaEmailPin', '');
+    setVal('selFirmaCanalPin', 'whatsapp');
+    setVal('selFirmaEmailProvider', 'auto');
+    setChk('chkEnviarWaAutoFirma', false);
+    setChk('chkOrdenSecuencialFirma', false);
+    if (typeof window.onToggleCanalPinGenerador === 'function') window.onToggleCanalPinGenerador();
+
+    state._valoresTempCamposGenerar = {};
+    state.asignacionCamposGenerar = {};
+    state.ultimoPdfPreviewB64 = '';
+    state.filtroExpedienteGenerar = '';
+    state.firmantesGenerar = [
+      { clave: 'firmante_1', etiqueta: 'Titular / Asociado', nombre: '', dni: '', telefono: '' },
+    ];
+
+    const box = document.getElementById('firmaEnlaceGeneradoBox');
+    if (box) box.style.display = 'none';
+    const listCont = document.getElementById('firmaEnlacesListaContainer');
+    if (listCont) listCont.innerHTML = '';
+    const lblHash = document.getElementById('lblFirmaHashOriginal');
+    if (lblHash) lblHash.textContent = '-';
+    const prevBox = document.getElementById('firmaPdfPreviewBox');
+    if (prevBox) prevBox.style.display = 'none';
+
+    if (typeof onPlantillaGenerarChange === 'function') onPlantillaGenerarChange();
+    if (typeof renderListaFirmantesGenerar === 'function') renderListaFirmantesGenerar();
+    notify('🧹 Pantalla limpia. Lista para una nueva gestión.', 'info');
+  };
+
   window.onToggleCanalPinGenerador = function () {
     const sel = document.getElementById('selFirmaCanalPin');
     const wrap = document.getElementById('wrapFirmaEmailPin');

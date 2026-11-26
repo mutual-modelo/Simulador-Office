@@ -6,7 +6,9 @@
   "permissions": [
     "downloads",
     "storage",
-    "notifications"
+    "notifications",
+    "scripting",
+    "activeTab"
   ],
   "host_permissions": [
     "https://mutual-modelo.github.io/*",

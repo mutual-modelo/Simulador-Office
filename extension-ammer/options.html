@@ -98,6 +98,23 @@
     </div>
   </div>
 
+  <div class="section">
+    <div class="section-title">4. ⚡ Macros y Automatización (DOM · Power Automate · AutoHotkey)</div>
+    <div class="form-group">
+      <label for="carpeta_power_automate">Carpeta vigilada por Microsoft Power Automate Desktop:</label>
+      <input type="text" id="carpeta_power_automate" value="AMMER_Trigger">
+      <div class="help-text">El trigger JSON del expediente se guardará en <span class="badge">Downloads/[Carpeta]/trigger_EXP.json</span>.</div>
+    </div>
+    <div class="form-group">
+      <label for="flujo_power_automate">Nombre / URI opcional de Power Automate:</label>
+      <input type="text" id="flujo_power_automate" placeholder="Ej: AMMER_Cargar_Sistema_Contable">
+    </div>
+    <div class="form-group">
+      <label for="plantilla_ahk">Plantilla AutoHotkey (.ahk) — Variables: <span class="badge">{DNI}</span> <span class="badge">{CUIL}</span> <span class="badge">{NOMBRE}</span> <span class="badge">{CBU}</span> <span class="badge">{MONTO}</span> <span class="badge">{ID_EXPEDIENTE}</span></label>
+      <textarea id="plantilla_ahk" rows="4" style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;font-family:monospace;font-size:0.82rem;box-sizing:border-box;"></textarea>
+    </div>
+  </div>
+
   <div class="actions-row">
     <button id="btn_guardar" class="btn-save">💾 Guardar Preferencias</button>
     <button id="btn_exportar" type="button" class="btn-sec">📤 Exportar Perfil JSON</button>

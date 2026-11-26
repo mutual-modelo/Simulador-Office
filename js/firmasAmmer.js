@@ -1316,29 +1316,29 @@
           ? `data-firma-origen-valor="${escHtml(sharedOrigen)}"`
           : `data-firma-campo-valor="${escHtml(c.id)}"`;
         const alcance = docs.size > 1
-          ? `<span style="font-weight:700;color:#1d4ed8;background:#dbeafe;padding:1px 6px;border-radius:9999px;font-size:0.65rem;">${docs.size} PDFs</span>`
-          : `<span style="font-weight:600;color:#64748b;background:#ffffff;border:1px solid #e2e8f0;padding:1px 6px;border-radius:9999px;font-size:0.65rem;">${tpls.length > 1 ? escHtml([...docs][0].slice(0, 18)) : 'Pág. ' + (c.pagina || 1)}</span>`;
+          ? `<span style="font-weight:700;color:#1d4ed8;background:#dbeafe;padding:2px 8px;border-radius:9999px;font-size:0.68rem;">${docs.size} PDFs</span>`
+          : `<span style="font-weight:600;color:#475569;background:#f8fafc;border:1px solid #cbd5e1;padding:2px 8px;border-radius:9999px;font-size:0.68rem;">${tpls.length > 1 ? escHtml([...docs][0].slice(0, 22)) : 'Pág. ' + (c.pagina || 1)}</span>`;
         const esAsoc = modoCampo === 'asociado';
-        const cardStyle = esAsoc ? 'border-color:#0284c7;background:#f0f9ff;' : '';
-        const ph = esAsoc ? 'Opcional: valor sugerido (el asociado lo completa en Paso 1)' : 'Dejar vacío o ingresar...';
+        const cardStyle = esAsoc
+          ? 'border:1.5px solid #0284c7;background:#f0f9ff;border-radius:12px;padding:0.75rem 0.85rem;display:flex;flex-direction:column;gap:0.45rem;'
+          : 'border:1px solid #cbd5e1;background:#ffffff;border-radius:12px;padding:0.75rem 0.85rem;display:flex;flex-direction:column;gap:0.45rem;';
+        const ph = esAsoc ? 'Opcional: valor sugerido para el asociado' : 'Ingresá el valor o dejá vacío...';
         return `
           <div class="firmas-field-card" style="${cardStyle}">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:5px;flex-wrap:wrap;">
-              <label class="firmas-label" style="margin:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">
-                ${escHtml(c.etiqueta || c.id)}
-              </label>
-              <div style="display:inline-flex;align-items:center;gap:4px;flex-shrink:0;">
-                ${alcance}
-                <div style="display:inline-flex;border:1px solid #cbd5e1;border-radius:7px;overflow:hidden;background:#ffffff;">
-                  <button type="button" onclick="window.toggleAsignacionCampoGenerador('${escHtml(asigKey)}','analista')" style="border:none;padding:2px 6px;font-size:0.65rem;font-weight:800;cursor:pointer;background:${!esAsoc ? '#0f2744' : 'transparent'};color:${!esAsoc ? '#ffffff' : '#475569'};" title="Lo completa el analista antes de generar">👨‍💼 Analista</button>
-                  <button type="button" onclick="window.toggleAsignacionCampoGenerador('${escHtml(asigKey)}','asociado')" style="border:none;border-left:1px solid #cbd5e1;padding:2px 6px;font-size:0.65rem;font-weight:800;cursor:pointer;background:${esAsoc ? '#0284c7' : 'transparent'};color:${esAsoc ? '#ffffff' : '#475569'};" title="Lo completa el asociado antes de leer y firmar">🧑 Asociado</button>
-                </div>
+            <label class="firmas-label" style="margin:0;font-size:0.82rem;font-weight:700;color:#0f172a;line-height:1.3;white-space:normal;word-break:break-word;">
+              ${escHtml(c.etiqueta || c.id)}
+            </label>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+              ${alcance}
+              <div style="display:inline-flex;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden;background:#f8fafc;">
+                <button type="button" onclick="window.toggleAsignacionCampoGenerador('${escHtml(asigKey)}','analista')" style="border:none;padding:3px 9px;font-size:0.69rem;font-weight:800;cursor:pointer;background:${!esAsoc ? '#0f2744' : 'transparent'};color:${!esAsoc ? '#ffffff' : '#475569'};" title="Lo completa el analista antes de generar">👨‍💼 Analista</button>
+                <button type="button" onclick="window.toggleAsignacionCampoGenerador('${escHtml(asigKey)}','asociado')" style="border:none;border-left:1px solid #cbd5e1;padding:3px 9px;font-size:0.69rem;font-weight:800;cursor:pointer;background:${esAsoc ? '#0284c7' : 'transparent'};color:${esAsoc ? '#ffffff' : '#475569'};" title="Lo completa el asociado antes de leer y firmar">🧑 Asociado</button>
               </div>
             </div>
-            ${esAsoc ? '<div style="font-size:0.68rem;font-weight:700;color:#0369a1;margin-bottom:4px;">🧑 El asociado completará este campo en el Paso 1</div>' : ''}
-            <div style="display:flex;gap:5px;align-items:center;">
-              <input type="text" class="firmas-input firmas-input--sm" ${attr} value="${escHtml(val)}" oninput="this.dataset.userEdited='1'" placeholder="${escHtml(ph)}"/>
-              <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-icon firmas-btn-soft-blue" onclick="window.limpiarInputGenerarCampo(this)" title="Vaciar texto">🧹</button>
+            ${esAsoc ? '<div style="font-size:0.71rem;font-weight:700;color:#0369a1;">🧑 El asociado completará este campo al abrir el enlace</div>' : ''}
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="text" class="firmas-input firmas-input--sm" ${attr} value="${escHtml(val)}" oninput="this.dataset.userEdited='1'" placeholder="${escHtml(ph)}" style="flex:1;min-width:0;height:36px;font-size:0.82rem;"/>
+              <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-icon firmas-btn-soft-blue" onclick="window.limpiarInputGenerarCampo(this)" title="Vaciar texto" style="height:36px;">🧹</button>
             </div>
           </div>
         `;

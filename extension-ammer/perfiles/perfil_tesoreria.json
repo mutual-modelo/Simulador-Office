@@ -1,0 +1,17 @@
+{
+  "docs": {
+    "recibo": false,
+    "dni": false,
+    "mutuo": true,
+    "pagare": true,
+    "transferencia": true,
+    "scoring": false
+  },
+  "fuentePrioritaria": "supabase",
+  "modoDescarga": "al_liquidar",
+  "notifWindows": true,
+  "forzarMayusculas": true,
+  "carpetaRaiz": "AMMER_Tesoreria",
+  "patronCarpetas": "{CARPETA_RAIZ}/{ORGANIZACION}/{LINEA}/{DNI}",
+  "patronNombreArchivo": "{ID_EXPEDIENTE} {TIPO_DOC}.{EXT}"
+}

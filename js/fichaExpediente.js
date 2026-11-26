@@ -329,6 +329,14 @@
               '<div class="form-group"><label class="form-label">Alias CBU</label><input type="text" id="editAlias" class="input-text" value="' + sanitizeHTML(s.solicitante?.alias || '') + '"/></div>' +
             '</div>' +
           '</div>' +
+          '<div style="margin-top:0.75rem;padding:0.85rem;border-radius:11px;background:#f8fafc;border:1px solid #e2e8f0;">' +
+            '<div style="font-size:0.78rem;font-weight:800;color:#0f2744;margin-bottom:0.6rem;">💳 Datos Tarjeta Sidecreer</div>' +
+            '<div class="grid-3-cols">' +
+              '<div class="form-group"><label class="form-label">Número de Tarjeta</label><input type="text" id="editTarjetaSidecreerNumero" class="input-text" maxlength="24" placeholder="Ej: 4507 0000 0000 0000" value="' + sanitizeHTML(s.solicitante?.tarjetaSidecreerNumero || '') + '"/></div>' +
+              '<div class="form-group"><label class="form-label">Fecha de Vencimiento</label><input type="text" id="editTarjetaSidecreerVencimiento" class="input-text" maxlength="7" placeholder="MM/AA" value="' + sanitizeHTML(s.solicitante?.tarjetaSidecreerVencimiento || '') + '"/></div>' +
+              '<div class="form-group"><label class="form-label">Código de Seguridad</label><input type="text" id="editTarjetaSidecreerCvv" class="input-text" maxlength="4" placeholder="Ej: 123" value="' + sanitizeHTML(s.solicitante?.tarjetaSidecreerCvv || '') + '"/></div>' +
+            '</div>' +
+          '</div>' +
           '<div id="editParejaWrap" style="margin-top:0.75rem;padding:0.85rem;border-radius:11px;background:#f8fafc;border:1px solid #e2e8f0;' + ((/casad|pareja|concub/i.test(String(s.solicitante?.estadoCivil || ''))) ? '' : 'display:none;') + '">' +
             '<div style="font-size:0.78rem;font-weight:800;color:#0f2744;margin-bottom:0.6rem;">👥 Datos de la Pareja / Cónyuge (Opcional)</div>' +
             '<div class="grid-3-cols">' +
@@ -993,6 +1001,9 @@
       s.solicitante.nroCuenta = sanitizeHTML(document.getElementById('editNroCuenta')?.value?.trim() || '');
       s.solicitante.cbu = sanitizeHTML(document.getElementById('editCbu')?.value?.trim() || '');
       s.solicitante.alias = sanitizeHTML(document.getElementById('editAlias')?.value?.trim() || '');
+      s.solicitante.tarjetaSidecreerNumero = sanitizeHTML(document.getElementById('editTarjetaSidecreerNumero')?.value?.trim() || '');
+      s.solicitante.tarjetaSidecreerVencimiento = sanitizeHTML(document.getElementById('editTarjetaSidecreerVencimiento')?.value?.trim() || '');
+      s.solicitante.tarjetaSidecreerCvv = sanitizeHTML(document.getElementById('editTarjetaSidecreerCvv')?.value?.trim() || '');
       s.solicitante.parejaNombre = sanitizeHTML(document.getElementById('editParejaNombre')?.value?.trim() || '');
       s.solicitante.parejaDni = sanitizeHTML(document.getElementById('editParejaDni')?.value?.trim() || '');
       s.solicitante.parejaEmail = sanitizeHTML(document.getElementById('editParejaEmail')?.value?.trim() || '');

@@ -29,6 +29,18 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   const data = request.payload || {};
 
   chrome.storage.sync.get(DEFAULT_EXT_CONFIG, (config) => {
+    const disparador = String(data.disparador || "auto").toLowerCase();
+    if (config.modoDescarga === "manual" && disparador !== "manual") {
+      return sendResponse({ ok: false, motivo: "OMITIDO_POR_MODO_MANUAL" });
+    }
+    if (
+      config.modoDescarga === "al_liquidar" &&
+      disparador !== "manual" &&
+      String(data.estado || "").toUpperCase() !== "LIQUIDADO"
+    ) {
+      return sendResponse({ ok: false, motivo: "ESPERANDO_LIQUIDADO" });
+    }
+
     const tipoKey = String(data.tipoDoc || "").toLowerCase();
     if (config.docs && config.docs[tipoKey] === false) {
       return sendResponse({ ok: false, motivo: "OMITIDO_POR_FILTRO" });

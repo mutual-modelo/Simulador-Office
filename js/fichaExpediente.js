@@ -146,10 +146,13 @@
         ? '<button type="button" onclick="cerrarModal(\'modalFichaCompleta\');abrirFichaHistoricaAsociado(\'' + sanitizeHTML(dniSocioFicha) + '\')" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;border:1px solid #1e3a8a;background:#eef2ff;color:#1e3a8a;font-size:0.72rem;font-weight:700;cursor:pointer;">🗂️ Ver Ficha Histórica (Padrón)</button>'
         : '';
 
+      const btnRespaldoExtHtml = '<button type="button" onclick="window.respaldarLegajoLocalExtension && window.respaldarLegajoLocalExtension(\'' + sanitizeHTML(String(s.id)) + '\', \'manual\')" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;border:1px solid #0284c7;background:#f0f9ff;color:#0369a1;font-size:0.72rem;font-weight:700;cursor:pointer;" title="Enviar adjuntos del legajo a la Extensión Chrome AMMER">📥 Respaldar Legajo Local</button>';
+
       let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.6rem;background:#f8fafc;padding:.75rem;border-radius:8px;border:1px solid var(--border-color);">' +
         '<div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">' +
           estadoSelectorHtml +
           btnFichaHistHtml +
+          btnRespaldoExtHtml +
           (isObservado ? '<span style="font-size:0.7rem;color:#b45309;font-weight:700;background:#fffbeb;padding:2px 6px;border-radius:4px;border:1px solid #fef3c7;">⚠️ Observado por Auditoría</span>' : '') +
         '</div>' +
         '<div style="font-size:.72rem;color:var(--text-muted);">' +
@@ -3738,4 +3741,60 @@
       showToast('Gestión desestimada correctamente');
       mostrarNotificacionToast('Gestión desestimada correctamente', 'success');
     }
+
+    window.respaldarLegajoLocalExtension = function (id, disparador) {
+      const s = (window.solicitudesNube || []).find((x) => String(x.id) === String(id));
+      if (!s) return;
+      const adj = Array.isArray(s.archivosAdjuntos) ? s.archivosAdjuntos : (Array.isArray(s.adjuntos) ? s.adjuntos : []);
+      if (!adj.length) {
+        if (disparador === 'manual' && typeof showToast === 'function') {
+          showToast('Este expediente no tiene documentos adjuntos para respaldar.');
+        }
+        return;
+      }
+      const idExp = s.id_definitivo || s.id_provisorio || ('EXP-' + s.id);
+      const dni = String(s.solicitante?.dni || '').replace(/\D/g, '');
+      const apellido = String(s.solicitante?.nombre || 'SOCIO').trim().split(/\s+/)[0] || 'SOCIO';
+      const org = String(s.nombre_organizacion || 'GENERAL').trim();
+      const linea = String(s.prestamo?.lineaNombre || 'GENERAL').trim();
+
+      let enviados = 0;
+      adj.forEach((doc, idx) => {
+        const urlDrive = doc.url || doc.driveUrl || doc.webViewLink || '';
+        const urlSup = doc.supabaseUrl || doc.urlSupabase || '';
+        if (!urlDrive && !urlSup) return;
+        const nom = String(doc.nombre || doc.name || ('DOC_' + (idx + 1))).toUpperCase();
+        const tipoDoc = nom.includes('DNI') ? 'dni'
+          : (nom.includes('RECIBO') ? 'recibo'
+          : (nom.includes('MUTUO') ? 'mutuo'
+          : (nom.includes('PAGARE') || nom.includes('PAGARÉ') ? 'pagare'
+          : (nom.includes('TRANSF') ? 'transferencia' : 'recibo'))));
+        const ext = (nom.split('.').pop() || 'PDF').slice(0, 5);
+        window.postMessage(
+          {
+            tipo: 'AMMER_SINCRONIZAR_EXPEDIENTE',
+            requestId: 'exp_' + s.id + '_' + idx,
+            payload: {
+              idExpediente: idExp,
+              dni: dni,
+              apellido: apellido,
+              organizacion: org,
+              linea: linea,
+              tipoDoc: tipoDoc,
+              extension: ext,
+              estado: s.estado || '',
+              disparador: disparador || 'manual',
+              urlSupabase: urlSup,
+              urlDrive: urlDrive,
+            },
+          },
+          window.location.origin
+        );
+        enviados += 1;
+      });
+      if (disparador === 'manual' && typeof showToast === 'function') {
+        showToast('📥 ' + enviados + ' documento(s) enviado(s) a la Extensión AMMER.');
+      }
+    };
+
 

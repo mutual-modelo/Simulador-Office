@@ -786,9 +786,29 @@
       const params = new URLSearchParams(window.location.search);
 
       let _tsVerifWidgets = {};
-      function obtenerTokenTurnstileVerif_(containerId, actionName) {
+      function esperarTurnstileListoVerif_(maxMs = 6000) {
         return new Promise((resolve) => {
-          if (!window.turnstile || typeof window.turnstile.render !== 'function') {
+          if (window.turnstile && typeof window.turnstile.render === 'function') {
+            resolve(true);
+            return;
+          }
+          const inicio = Date.now();
+          const iv = setInterval(() => {
+            if (window.turnstile && typeof window.turnstile.render === 'function') {
+              clearInterval(iv);
+              resolve(true);
+            } else if (Date.now() - inicio >= maxMs) {
+              clearInterval(iv);
+              resolve(false);
+            }
+          }, 120);
+        });
+      }
+
+      function obtenerTokenTurnstileVerif_(containerId, actionName) {
+        return new Promise(async (resolve) => {
+          const listo = await esperarTurnstileListoVerif_(6000);
+          if (!listo || !window.turnstile || typeof window.turnstile.render !== 'function') {
             resolve('');
             return;
           }

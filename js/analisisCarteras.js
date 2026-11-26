@@ -488,4 +488,174 @@
     guardarCarteraBaseLocal(carteraBaseCache);
     window.renderCarteraBaseTabla();
   };
+
+  function setImportStatus(msg, isError) {
+    const el = document.getElementById('cbImportStatus');
+    if (!el) return;
+    el.style.display = msg ? 'block' : 'none';
+    el.style.color = isError ? '#dc2626' : '#0369a1';
+    el.textContent = msg || '';
+  }
+
+  function normalizarFilaCartera(obj, idx) {
+    const lower = {};
+    Object.keys(obj || {}).forEach((k) => {
+      lower[String(k).trim().toLowerCase().replace(/\s+/g, '_')] = obj[k];
+    });
+    const idOp = String(
+      lower.id_operacion || lower.id_op || lower.operacion || lower.expediente || lower.id || ''
+    ).trim();
+    const dni = String(lower.dni || lower.documento || lower.nro_dni || '').replace(/\D/g, '');
+    const nombre = String(
+      lower.apellido_nombre || lower.titular || lower.nombre || lower.asociado || ''
+    ).trim();
+    const linea = String(lower.linea || lower.linea_ayuda || lower.producto || 'FEDEM').trim() || 'FEDEM';
+    const montoRaw = String(lower.monto || lower.importe || lower.capital || '0').replace(/[^\d.,-]/g, '').replace(',', '.');
+    const monto = Number(montoRaw) || 0;
+    if (!idOp && !dni && !nombre) return null;
+    return {
+      id: 'cb_' + Date.now() + '_' + idx,
+      id_operacion: idOp || dni || String(idx + 1),
+      dni: dni || '-',
+      apellido_nombre: nombre || 'Sin nombre',
+      linea,
+      monto,
+    };
+  }
+
+  function parsearTextoDelimitado(texto) {
+    const lines = String(texto || '')
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
+    if (!lines.length) return [];
+    const sep = lines[0].includes('\t') ? '\t' : (lines[0].includes(';') ? ';' : ',');
+    const splitLine = (l) => l.split(sep).map((c) => c.replace(/^"|"$/g, '').trim());
+    const firstCols = splitLine(lines[0]);
+    const looksLikeHeader = firstCols.some((c) => /id|dni|nombre|titular|monto|linea|operacion/i.test(c));
+    const headers = looksLikeHeader ? firstCols : ['id_operacion', 'dni', 'apellido_nombre', 'linea', 'monto'];
+    const startIdx = looksLikeHeader ? 1 : 0;
+    const out = [];
+    for (let i = startIdx; i < lines.length; i++) {
+      const cols = splitLine(lines[i]);
+      const obj = {};
+      headers.forEach((h, j) => { obj[h] = cols[j] || ''; });
+      const norm = normalizarFilaCartera(obj, i);
+      if (norm) out.push(norm);
+    }
+    return out;
+  }
+
+  async function guardarLoteCarteraBase(nuevos) {
+    if (!nuevos.length) {
+      setImportStatus('No se encontraron registros válidos para importar.', true);
+      return;
+    }
+    let syncBackend = false;
+    try {
+      const resp = await fetch(`${API_BASE}/api/carteras/base/bulk`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ items: nuevos }),
+      });
+      if (resp.ok) syncBackend = true;
+    } catch (_) {}
+
+    const existentes = new Set(carteraBaseCache.map((r) => String(r.id_operacion)));
+    const filtrados = nuevos.filter((r) => !existentes.has(String(r.id_operacion)));
+    carteraBaseCache = [...filtrados, ...carteraBaseCache];
+    guardarCarteraBaseLocal(carteraBaseCache);
+    window.renderCarteraBaseTabla();
+    setImportStatus(
+      `✅ Se importaron ${filtrados.length} registro(s) nuevos (${nuevos.length - filtrados.length} ya existentes).` +
+        (syncBackend ? ' Sincronizado con servidor.' : ' Guardado en almacenamiento local.'),
+      false
+    );
+  }
+
+  function cargarSheetJsSiFalta() {
+    if (window.XLSX) return Promise.resolve(window.XLSX);
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+      s.onload = () => resolve(window.XLSX);
+      s.onerror = () => reject(new Error('No se pudo cargar el lector de Excel (SheetJS).'));
+      document.head.appendChild(s);
+    });
+  }
+
+  window.importarArchivoCarteraBase = async function (fileList) {
+    if (!fileList || !fileList.length) return;
+    const file = fileList[0];
+    setImportStatus(`⏳ Procesando "${file.name}"...`, false);
+    try {
+      const ext = file.name.split('.').pop().toLowerCase();
+      let registros = [];
+      if (ext === 'json') {
+        const parsed = JSON.parse(await file.text());
+        const arr = Array.isArray(parsed) ? parsed : (parsed.items || parsed.data || []);
+        registros = arr.map((r, i) => normalizarFilaCartera(r, i)).filter(Boolean);
+      } else if (ext === 'csv' || ext === 'txt') {
+        registros = parsearTextoDelimitado(await file.text());
+      } else {
+        const XLSX = await cargarSheetJsSiFalta();
+        const buf = await file.arrayBuffer();
+        const wb = XLSX.read(buf, { type: 'array' });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+        registros = rows.map((r, i) => normalizarFilaCartera(r, i)).filter(Boolean);
+      }
+      await guardarLoteCarteraBase(registros);
+    } catch (err) {
+      setImportStatus('❌ Error al importar archivo: ' + err.message, true);
+    } finally {
+      const inp = document.getElementById('cbFileImport');
+      if (inp) inp.value = '';
+    }
+  };
+
+  window.sincronizarGoogleSheetCarteraBase = async function () {
+    const inp = document.getElementById('cbGoogleSheetUrl');
+    const rawUrl = (inp ? inp.value : '').trim();
+    if (!rawUrl) {
+      setImportStatus('Pegá la URL o ID del Google Sheet primero.', true);
+      return;
+    }
+    setImportStatus('⏳ Sincronizando desde Google Sheets...', false);
+    try {
+      let csvUrl = rawUrl;
+      const mId = rawUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+      if (mId) {
+        const gidMatch = rawUrl.match(/gid=(\d+)/);
+        const gid = gidMatch ? gidMatch[1] : '0';
+        csvUrl = `https://docs.google.com/spreadsheets/d/${mId[1]}/gviz/tq?tqx=out:csv&gid=${gid}`;
+      } else if (/^[a-zA-Z0-9-_]{25,}$/.test(rawUrl)) {
+        csvUrl = `https://docs.google.com/spreadsheets/d/${rawUrl}/gviz/tq?tqx=out:csv&gid=0`;
+      }
+      const resp = await fetch(csvUrl);
+      if (!resp.ok) throw new Error('Asegurate de que el Google Sheet esté compartido como "Cualquier persona con el enlace (Lector)".');
+      const csvText = await resp.text();
+      const registros = parsearTextoDelimitado(csvText);
+      await guardarLoteCarteraBase(registros);
+    } catch (err) {
+      setImportStatus('❌ ' + err.message, true);
+    }
+  };
+
+  window.pegarDesdeExcelCarteraBase = async function () {
+    const texto = prompt('Pegá aquí las filas copiadas desde Excel o Google Sheets (formato: ID_OPERACION, DNI, TITULAR, LINEA, MONTO):');
+    if (!texto) return;
+    const registros = parsearTextoDelimitado(texto);
+    await guardarLoteCarteraBase(registros);
+  };
+
+  window.vaciarCarteraBase = function () {
+    if (!confirm('¿Vaciar todos los registros locales de la Cartera Base?')) return;
+    carteraBaseCache = [];
+    guardarCarteraBaseLocal([]);
+    window.renderCarteraBaseTabla();
+    setImportStatus('🗑️ Cartera Base vaciada.', false);
+  };
 })();

@@ -394,17 +394,23 @@
   }
 
   window.cargarCarteraBase = async function () {
+    const locales = leerCarteraBaseLocal();
     try {
       const resp = await fetch(`${API_BASE}/api/carteras/base`, { headers: getAuthHeaders() });
       if (resp.ok) {
         const data = await resp.json();
-        carteraBaseCache = Array.isArray(data.items) ? data.items : [];
-        guardarCarteraBaseLocal(carteraBaseCache);
+        const remotos = Array.isArray(data.items) ? data.items : [];
+        if (remotos.length > 0) {
+          carteraBaseCache = remotos;
+          guardarCarteraBaseLocal(carteraBaseCache);
+        } else {
+          carteraBaseCache = locales;
+        }
       } else {
-        carteraBaseCache = leerCarteraBaseLocal();
+        carteraBaseCache = locales;
       }
     } catch (_) {
-      carteraBaseCache = leerCarteraBaseLocal();
+      carteraBaseCache = locales;
     }
     window.renderCarteraBaseTabla();
   };

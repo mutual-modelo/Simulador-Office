@@ -84,7 +84,8 @@
     <div class="form-group">
       <label for="patron_carpetas">Estructura de Subdirectorios:</label>
       <select id="patron_carpetas">
-        <option value="{CARPETA_RAIZ}/{DNI}">Por DNI: [Base] / [DNI] (Recomendada)</option>
+        <option value="{CARPETA_RAIZ}/{MES_ANIO}/{NOMBRE_COMPLETO} {ID_EXPEDIENTE}">Por Mes/Año y Asociado: [Base] / [MES AÑO] / [APELLIDO Y NOMBRES] [EXP]</option>
+        <option value="{CARPETA_RAIZ}/{DNI}">Por DNI: [Base] / [DNI]</option>
         <option value="{CARPETA_RAIZ}/{ORGANIZACION}/{LINEA}/{DNI}">Por Repartición: [Base] / [Org] / [Línea] / [DNI]</option>
         <option value="{CARPETA_RAIZ}/{FECHA}/{ID_EXPEDIENTE}">Por Fecha: [Base] / [AAAA-MM-DD] / [ID_Expediente]</option>
         <option value="{CARPETA_RAIZ}">Plana: Todos los archivos en la carpeta base</option>

@@ -101,6 +101,16 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarContextoYMacros();
   });
 
+  chrome.runtime.sendMessage({ accion: "OBTENER_ESTADO_GRABACION" }, (st) => {
+    const grabando = Boolean(st && st.grabando);
+    document.getElementById("btn_grabar_dom").style.display = grabando ? "none" : "inline-block";
+    document.getElementById("btn_detener_dom").style.display = grabando ? "inline-block" : "none";
+    if (grabando) {
+      document.getElementById("tab_macros").click();
+      setMacroStatus("🔴 Grabación en curso en la pestaña actual. Tocá 'Detener y guardar' al terminar.");
+    }
+  });
+
   document.getElementById("btn_opciones").addEventListener("click", () => chrome.runtime.openOptionsPage());
   document.getElementById("btn_carpeta_def").addEventListener("click", () => chrome.runtime.sendMessage({ accion: "ABRIR_CARPETA_DESCARGA" }));
   document.getElementById("btn_limpiar").addEventListener("click", () => chrome.runtime.sendMessage({ accion: "LIMPIAR_HISTORIAL" }, cargarHistorial));

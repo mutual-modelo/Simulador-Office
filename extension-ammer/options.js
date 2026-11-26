@@ -67,9 +67,14 @@ function aplicarFormulario(items) {
 
 function actualizarVistaPrevia() {
   const cfg = leerFormulario();
-  const hoy = new Date().toISOString().split("T")[0];
+  const now = new Date();
+  const hoy = now.toISOString().split("T")[0];
+  const meses = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
+  const mesAnio = `${meses[now.getMonth()]} ${now.getFullYear()}`;
   const tokens = {
     "{CARPETA_RAIZ}": cfg.carpetaRaiz,
+    "{MES_ANIO}": mesAnio,
+    "{NOMBRE_COMPLETO}": "RAMIREZ JUAN CARLOS",
     "{DNI}": "32456789",
     "{ID_EXPEDIENTE}": "SOL-575776",
     "{ORGANIZACION}": "FEDEM",
@@ -85,7 +90,10 @@ function actualizarVistaPrevia() {
     carpeta = carpeta.replaceAll(k, v);
     archivo = archivo.replaceAll(k, v);
   }
-  if (cfg.forzarMayusculas) archivo = archivo.toUpperCase();
+  if (cfg.forzarMayusculas) {
+    carpeta = carpeta.toUpperCase();
+    archivo = archivo.toUpperCase();
+  }
   const el = document.getElementById("ruta_preview");
   if (el) el.textContent = `Vista previa: Downloads/${carpeta}/${archivo}`.replace(/\/+/g, "/");
 }

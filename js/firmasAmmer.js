@@ -2278,6 +2278,46 @@
     return '';
   }
 
+  function dataUriVideoABlobUrl_(dataUri, fallbackMime) {
+    try {
+      if (!dataUri || typeof dataUri !== 'string' || !dataUri.startsWith('data:')) return '';
+      const commaIdx = dataUri.indexOf(',');
+      if (commaIdx < 0) return '';
+      const header = dataUri.slice(5, commaIdx);
+      const mime = (header.split(';')[0] || fallbackMime || 'video/webm').trim();
+      const b64 = dataUri.slice(commaIdx + 1);
+      const binStr = atob(b64);
+      const len = binStr.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) bytes[i] = binStr.charCodeAt(i);
+      const blob = new Blob([bytes], { type: mime });
+      revocarVideoLivenessBlobUrl_();
+      const objUrl = URL.createObjectURL(blob);
+      fichaModalState.videoBlobUrl = objUrl;
+      return objUrl;
+    } catch (_e) {
+      return '';
+    }
+  }
+
+  function mostrarErrorVideoLiveness_(vidDomId, errMsg, driveUrlFallback) {
+    const loadEl = document.getElementById(`vidLoad_${vidDomId}`);
+    if (!loadEl) return;
+    loadEl.style.display = 'flex';
+    const linkBtn = driveUrlFallback
+      ? `<a href="${escHtml(driveUrlFallback)}" target="_blank" rel="noopener" class="firmas-btn firmas-btn--xs" style="margin-top:8px;border-color:#86efac;background:#f0fdf4;color:#15803d;">▶️ Abrir video directo en Google Drive ↗</a>`
+      : '';
+    loadEl.innerHTML = `
+      <div style="text-align:center;padding:0.9rem;color:#e2e8f0;font-size:0.78rem;line-height:1.45;">
+        <div style="font-weight:800;color:#fca5a5;margin-bottom:4px;">No se pudo reproducir inline (${escHtml(errMsg || 'formato o acceso restringido')})</div>
+        <div style="color:#94a3b8;font-size:0.72rem;">Podés descargarlo o abrirlo directamente en Google Drive.</div>
+        ${linkBtn}
+      </div>
+    `;
+  }
+
+  window.mostrarErrorVideoLiveness_ = mostrarErrorVideoLiveness_;
+
   async function cargarVideoPruebaVidaDesdeDrive_(vidDomId, driveFileId, dlName, vidMime, driveUrlFallback) {
     const vidEl = document.getElementById(vidDomId);
     const loadEl = document.getElementById(`vidLoad_${vidDomId}`);
@@ -2305,6 +2345,7 @@
       const objUrl = URL.createObjectURL(typedBlob);
       fichaModalState.videoBlobUrl = objUrl;
 
+      vidEl.onerror = () => mostrarErrorVideoLiveness_(vidDomId, 'codec no soportado por el navegador', driveUrlFallback);
       vidEl.src = objUrl;
       vidEl.load();
       if (loadEl) loadEl.style.display = 'none';
@@ -2314,18 +2355,7 @@
         dlEl.style.display = 'inline-flex';
       }
     } catch (err) {
-      if (loadEl) {
-        const linkBtn = driveUrlFallback
-          ? `<a href="${escHtml(driveUrlFallback)}" target="_blank" rel="noopener" class="firmas-btn firmas-btn--xs" style="margin-top:8px;border-color:#86efac;background:#f0fdf4;color:#15803d;">▶️ Abrir video directo en Google Drive ↗</a>`
-          : '';
-        loadEl.innerHTML = `
-          <div style="text-align:center;padding:0.9rem;color:#e2e8f0;font-size:0.78rem;line-height:1.45;">
-            <div style="font-weight:800;color:#fca5a5;margin-bottom:4px;">No se pudo reproducir inline desde Drive (${escHtml(err.message || 'acceso restringido')})</div>
-            <div style="color:#94a3b8;font-size:0.72rem;">Usá el enlace seguro de Google Drive con tu cuenta autorizada.</div>
-            ${linkBtn}
-          </div>
-        `;
-      }
+      mostrarErrorVideoLiveness_(vidDomId, err.message || 'acceso restringido', driveUrlFallback);
     }
   }
 
@@ -2848,7 +2878,8 @@
                 ? `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;background:#dcfce7;color:#166534;font-size:0.69rem;font-weight:800;">☁️ Migrado a Drive (${escHtml(destTxt)}) · Copia Supabase liberada</span>`
                 : `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;background:#fef3c7;color:#92400e;font-size:0.69rem;font-weight:800;">🗄️ En Supabase (pendiente migrar a Drive)</span>`;
 
-              const vidSrc = vidB64 ? (vidB64.startsWith('data:') ? vidB64 : `data:${vidMime};base64,${vidB64}`) : '';
+              const vidSrcRaw = vidB64 ? (vidB64.startsWith('data:') ? vidB64 : `data:${vidMime};base64,${vidB64}`) : '';
+              const vidSrc = vidSrcRaw ? (dataUriVideoABlobUrl_(vidSrcRaw, vidMime) || vidSrcRaw) : '';
               const dlName = `prueba_vida_${(r.dni_solicitante || 'firmante').replace(/\W+/g, '')}.${ext}`;
               const vidDomId = `mpVidLiv_${String(r.id || '0').replace(/[^A-Za-z0-9_-]/g, '')}`;
               const puedeReproducirNativo = Boolean(vidSrc || driveFileId);
@@ -2875,8 +2906,8 @@
                   </div>
                   ${puedeReproducirNativo
                     ? `<div id="wrap_${vidDomId}" style="position:relative;width:100%;max-width:480px;border-radius:12px;overflow:hidden;border:1.5px solid ${migradoDrive ? '#86efac' : '#cbd5e1'};background:#020617;box-shadow:0 4px 12px rgba(15,23,42,0.12);">
-                        ${!vidSrc ? `<div id="vidLoad_${vidDomId}" style="position:absolute;inset:0 0 42px 0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,0.88);color:#e2e8f0;font-size:0.8rem;font-weight:700;z-index:2;">⏳ Cargando video seguro desde Drive...</div>` : ''}
-                        <video id="${vidDomId}" playsinline preload="metadata" ${vidSrc ? `src="${escHtml(vidSrc)}"` : ''} style="width:100%;height:260px;object-fit:contain;display:block;background:#020617;cursor:pointer;" onclick="window.toggleLivenessVideoPlay('${vidDomId}')" onloadedmetadata="window.syncLivenessVideoMeta('${vidDomId}')" ontimeupdate="window.syncLivenessVideoTime('${vidDomId}')" onended="window.onLivenessVideoEnded('${vidDomId}')"></video>
+                        <div id="vidLoad_${vidDomId}" style="position:absolute;inset:0 0 42px 0;display:${!vidSrc ? 'flex' : 'none'};align-items:center;justify-content:center;background:rgba(2,6,23,0.88);color:#e2e8f0;font-size:0.8rem;font-weight:700;z-index:2;">⏳ Cargando video seguro desde Drive...</div>
+                        <video id="${vidDomId}" playsinline preload="metadata" ${vidSrc ? `src="${escHtml(vidSrc)}"` : ''} style="width:100%;height:260px;object-fit:contain;display:block;background:#020617;cursor:pointer;" onclick="window.toggleLivenessVideoPlay('${vidDomId}')" onloadedmetadata="window.syncLivenessVideoMeta('${vidDomId}')" ontimeupdate="window.syncLivenessVideoTime('${vidDomId}')" onended="window.onLivenessVideoEnded('${vidDomId}')" onerror="window.mostrarErrorVideoLiveness_ && window.mostrarErrorVideoLiveness_('${vidDomId}', 'codec no soportado por el navegador', '${escHtml(vidMeta.drive_url || '')}')"></video>
                         <div style="background:#0f172a;border-top:1px solid #1e293b;padding:7px 10px;display:flex;align-items:center;gap:8px;color:#f8fafc;">
                           <button type="button" id="btnPlay_${vidDomId}" onclick="window.toggleLivenessVideoPlay('${vidDomId}')" title="Reproducir / Pausar" style="border:none;background:#2563eb;color:#ffffff;width:30px;height:28px;border-radius:7px;font-size:0.78rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">▶</button>
                           <input type="range" id="rng_${vidDomId}" min="0" max="1000" value="0" oninput="window.seekLivenessVideo('${vidDomId}', this.value)" style="flex:1;min-width:80px;accent-color:#38bdf8;cursor:pointer;height:5px;"/>

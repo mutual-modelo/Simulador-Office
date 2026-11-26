@@ -2111,6 +2111,17 @@
               </div>
               <input id="carteraBaseFiltro" type="text" placeholder="Buscar por ID, DNI o Titular..." oninput="window.renderCarteraBaseTabla && window.renderCarteraBaseTabla()" style="padding:7px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.82rem;min-width:220px;" />
             </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;margin-bottom:12px;">
+              <button type="button" onclick="document.getElementById('cbFileImport').click()" style="padding:7px 12px;border-radius:7px;border:1px solid #0284c7;background:#0284c7;color:#fff;font-weight:700;font-size:0.8rem;cursor:pointer;">📥 Importar Excel / CSV / JSON</button>
+              <input id="cbFileImport" type="file" accept=".xlsx,.xls,.csv,.json" onchange="window.importarArchivoCarteraBase && window.importarArchivoCarteraBase(this.files)" style="display:none;" />
+              <div style="display:flex;flex:1;min-width:240px;gap:6px;">
+                <input id="cbGoogleSheetUrl" type="text" placeholder="Pegar URL de Google Sheet (compartido o publicado)..." style="flex:1;padding:7px 10px;border:1px solid #93c5fd;border-radius:7px;font-size:0.8rem;background:#fff;" />
+                <button type="button" onclick="window.sincronizarGoogleSheetCarteraBase && window.sincronizarGoogleSheetCarteraBase()" style="padding:7px 12px;border-radius:7px;border:1px solid #16a34a;background:#16a34a;color:#fff;font-weight:700;font-size:0.8rem;cursor:pointer;white-space:nowrap;">🔄 Sincronizar Sheet</button>
+              </div>
+              <button type="button" onclick="window.pegarDesdeExcelCarteraBase && window.pegarDesdeExcelCarteraBase()" style="padding:7px 11px;border-radius:7px;border:1px solid #cbd5e1;background:#fff;color:#0f172a;font-weight:600;font-size:0.8rem;cursor:pointer;">📋 Pegar filas</button>
+              <button type="button" onclick="window.vaciarCarteraBase && window.vaciarCarteraBase()" style="padding:7px 11px;border-radius:7px;border:1px solid #fecaca;background:#fff1f2;color:#be123c;font-weight:700;font-size:0.8rem;cursor:pointer;">🗑️ Vaciar</button>
+              <div id="cbImportStatus" style="width:100%;font-size:0.78rem;color:#0369a1;display:none;"></div>
+            </div>
             <form onsubmit="window.agregarRegistroCarteraBase && window.agregarRegistroCarteraBase(event)" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:14px;">
               <input id="cbIdOp" type="text" placeholder="ID Operación *" required style="padding:7px 9px;border:1px solid #cbd5e1;border-radius:7px;font-size:0.82rem;" />
               <input id="cbDni" type="text" placeholder="DNI *" required style="padding:7px 9px;border:1px solid #cbd5e1;border-radius:7px;font-size:0.82rem;" />

@@ -3758,11 +3758,18 @@
       const org = String(s.nombre_organizacion || 'GENERAL').trim();
       const linea = String(s.prestamo?.lineaNombre || 'GENERAL').trim();
 
+      let authTok = '';
+      try {
+        authTok = (typeof window.getApiAuthToken === 'function' ? window.getApiAuthToken() : '') ||
+          sessionStorage.getItem('AMMER_API_TOKEN') || sessionStorage.getItem('AMMER_AUTH_TOKEN') || '';
+      } catch (_) {}
+
       let enviados = 0;
       adj.forEach((doc, idx) => {
         const urlDrive = doc.url || doc.driveUrl || doc.webViewLink || '';
         const urlSup = doc.supabaseUrl || doc.urlSupabase || '';
-        if (!urlDrive && !urlSup) return;
+        const urlRen = doc.renderUrl || doc.urlRender || '';
+        if (!urlDrive && !urlSup && !urlRen) return;
         const nom = String(doc.nombre || doc.name || ('DOC_' + (idx + 1))).toUpperCase();
         const tipoDoc = nom.includes('DNI') ? 'dni'
           : (nom.includes('RECIBO') ? 'recibo'
@@ -3785,7 +3792,9 @@
               estado: s.estado || '',
               disparador: disparador || 'manual',
               urlSupabase: urlSup,
+              urlRender: urlRen,
               urlDrive: urlDrive,
+              authToken: authTok,
             },
           },
           window.location.origin

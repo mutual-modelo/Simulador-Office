@@ -21,7 +21,16 @@
     { group: 'Solicitante', value: 'solicitante.organismo', label: 'Solicitante: Organismo / Repartición' },
     { group: 'Solicitante', value: 'solicitante.legajo', label: 'Solicitante: N° Legajo' },
     { group: 'Solicitante', value: 'solicitante.estadoCivil', label: 'Solicitante: Estado Civil' },
+    { group: 'Solicitante', value: 'solicitante.sexo', label: 'Solicitante: Sexo / Género' },
     { group: 'Solicitante', value: 'solicitante.fechaNacimiento', label: 'Solicitante: Fecha Nacimiento' },
+    { group: 'Solicitante', value: 'solicitante.domicilio_historico', label: 'Solicitante: Domicilio Histórico' },
+    { group: 'Solicitante', value: 'solicitante.condicion', label: 'Solicitante: Condición Laboral' },
+    { group: 'Solicitante', value: 'solicitante.dependencia', label: 'Solicitante: Dependencia / Ministerio' },
+    { group: 'Solicitante', value: 'solicitante.cargo', label: 'Solicitante: Cargo / Puesto' },
+    { group: 'Solicitante', value: 'solicitante.categoriaMunicipal', label: 'Solicitante: Categoría Municipal' },
+    { group: 'Solicitante', value: 'solicitante.situacionRevista', label: 'Solicitante: Situación de Revista' },
+    { group: 'Solicitante', value: 'solicitante.fechaIngresoLaboral', label: 'Solicitante: Fecha Ingreso Laboral' },
+    { group: 'Solicitante', value: 'solicitante.antiguedad', label: 'Solicitante: Antigüedad Laboral' },
     { group: 'Préstamo', value: 'prestamo.lineaNombre', label: 'Préstamo: Línea de Ayuda' },
     { group: 'Préstamo', value: 'prestamo.monto', label: 'Préstamo: Monto Neto ($)' },
     { group: 'Préstamo', value: 'prestamo.cuotas', label: 'Préstamo: Cantidad de Cuotas' },
@@ -383,6 +392,8 @@
   function construirContextoDesdeExpediente(expObj) {
     const e = expObj || {};
     const sol = e.solicitante || {};
+    const dc = e.datosContacto || {};
+    const dl = e.datosLaborales || {};
     const prest = e.prestamo || {};
     const expId = String(e.id_definitivo || e.ID_Definitivo_Expediente || e.Nro_Definitivo || e.id_provisorio || e.id || '');
 
@@ -398,18 +409,27 @@
       solicitante: {
         nombre: sol.nombre || e.Apellido_Nombre || e.nombre || '',
         dni: String(sol.dni || e.dni || e.DNI || '').replace(/\D/g, ''),
-        cuil: sol.cuil || e.cuil || '',
-        domicilio: sol.domicilio || e.domicilio || e.Domicilio || '',
-        localidad: sol.localidad || e.localidad || '',
-        telefono: sol.telefono || sol.celular || e.telefono || e.celular || '',
-        email: sol.email || sol.Email || sol.correo || e.email || e.Email || e.correo || '',
+        cuil: sol.cuil || dc.cuil || e.cuil || '',
+        domicilio: sol.domicilio || dc.domicilio || e.domicilio || e.Domicilio || '',
+        domicilio_historico: sol.domicilio_historico || e.domicilio_historico || '',
+        localidad: sol.localidad || dc.localidad || e.localidad || '',
+        telefono: sol.telefono || sol.celular || dc.celular || e.telefono || e.celular || '',
+        email: sol.email || sol.Email || sol.correo || dc.email || e.email || e.Email || e.correo || '',
         cbu: sol.cbu || e.cbu || '',
         alias: sol.alias || e.alias || '',
         banco: sol.banco || e.banco || '',
-        organismo: sol.organismo || e.organismo || e.reparticion || '',
-        legajo: sol.legajo || e.legajo || '',
-        estadoCivil: sol.estadoCivil || e.estadoCivil || '',
-        fechaNacimiento: sol.fechaNacimiento || sol.fecha_nacimiento || e.fechaNacimiento || e.fecha_nacimiento || '',
+        organismo: sol.organismo || dl.organismo || e.organismo || e.reparticion || '',
+        dependencia: sol.dependencia || dl.dependencia || e.dependencia || '',
+        condicion: sol.condicion || dl.condicion || e.condicion || '',
+        cargo: sol.cargo || dl.cargo || e.cargo || '',
+        legajo: sol.legajo || dl.legajo || e.legajo || '',
+        categoriaMunicipal: sol.categoriaMunicipal || dl.categoriaMunicipal || e.categoriaMunicipal || e.Categoria_Municipal || '',
+        situacionRevista: sol.situacionRevista || dl.situacionRevista || e.situacionRevista || '',
+        fechaIngresoLaboral: sol.fechaIngresoLaboral || sol.Fecha_Ingreso_Laboral || dl.fechaIngresoLaboral || dl.Fecha_Ingreso_Laboral || e.fechaIngresoLaboral || e.Fecha_Ingreso_Laboral || '',
+        antiguedad: sol.antiguedad || dl.antiguedad || e.antiguedad || '',
+        estadoCivil: sol.estadoCivil || dc.estadoCivil || e.estadoCivil || '',
+        sexo: sol.sexo || dc.sexo || e.sexo || '',
+        fechaNacimiento: sol.fechaNacimiento || sol.fecha_nacimiento || dc.fechaNacimiento || dc.fechaNac || e.fechaNacimiento || e.fecha_nacimiento || '',
       },
       prestamo: {
         lineaNombre: prest.lineaNombre || e.lineaNombre || e.linea || '',

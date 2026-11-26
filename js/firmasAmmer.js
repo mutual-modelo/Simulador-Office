@@ -921,6 +921,19 @@
       renderSelectorPaquetePlantillas();
     }
     const activas = obtenerPlantillasSeleccionadasGenerador();
+    const valsTpl = combinarValidacionesPaquete(activas);
+    const setC = (id, v) => {
+      const el = document.getElementById(id);
+      if (el) el.checked = Boolean(v);
+    };
+    setC('chkGenReqUif', valsTpl.declaracion_uif);
+    setC('chkGenReqDni', valsTpl.dni_frente_dorso);
+    setC('chkGenReqSelfie', valsTpl.selfie_liveness || valsTpl.selfie_voz_consentimiento);
+    setC('chkGenReqVoz', valsTpl.selfie_voz_consentimiento);
+    setC('chkGenReqFirma', valsTpl.firma_olografa !== false);
+    setC('chkGenReqGps', valsTpl.gps_obligatorio);
+    setC('chkGenReqPin', valsTpl.requiere_pin_otp && !valsTpl.requiere_pin_email);
+    setC('chkGenReqPinEmail', Boolean(valsTpl.requiere_pin_email));
     sincronizarAsignacionCamposDesdePlantillas_(activas, true);
     state.firmantesGenerar = derivarFirmantesDePlantillas(activas);
     renderCamposCompletarFormulario();

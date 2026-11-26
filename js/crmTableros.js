@@ -640,7 +640,8 @@
     ];
 
     function obtenerSubEstadoBadge(estado) {
-      const e = String(estado || 'Pendiente').trim();
+      let e = String(estado || 'Pendiente').trim();
+      if (e.toUpperCase() === 'APROBADO') e = 'Aprobado';
       let cssClass = 'badge-Pendiente';
       if (e === 'En Análisis') cssClass = 'badge-EnAnalisis';
       else if (e === 'Observado') cssClass = 'badge-Observado';

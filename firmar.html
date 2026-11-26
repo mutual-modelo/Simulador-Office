@@ -2941,21 +2941,29 @@
             return false;
           }
           let resJson;
+          mostrarProcesandoGlobal_(
+            'Procesando todo…',
+            'Estamos subiendo y verificando tus fotos y video de prueba de vida de forma segura. Esto puede demorar unos segundos, por favor no cierres esta pantalla.'
+          );
           try {
-            resJson = await enviarValidacionHttp(tsToken, true);
-          } catch (errPrimero) {
-            if (appState.recordedVideoDataUrl && esErrorRed(errPrimero)) {
-              if (btnDirecto) btnDirecto.textContent = '⏳ Reintentando…';
-              btnNext.textContent = '⏳ Reintentando envío liviano...';
-              reiniciarTurnstile_();
-              const tsRetry = await obtenerTokenTurnstile_('firmar_identidad', { focusOnWait: true });
-              if (!tsRetry && !isLocal) {
+            try {
+              resJson = await enviarValidacionHttp(tsToken, true);
+            } catch (errPrimero) {
+              if (appState.recordedVideoDataUrl && esErrorRed(errPrimero)) {
+                if (btnDirecto) btnDirecto.textContent = '⏳ Reintentando…';
+                btnNext.textContent = '⏳ Reintentando envío liviano...';
+                reiniciarTurnstile_();
+                const tsRetry = await obtenerTokenTurnstile_('firmar_identidad', { focusOnWait: true });
+                if (!tsRetry && !isLocal) {
+                  throw errPrimero;
+                }
+                resJson = await enviarValidacionHttp(tsRetry, false);
+              } else {
                 throw errPrimero;
               }
-              resJson = await enviarValidacionHttp(tsRetry, false);
-            } else {
-              throw errPrimero;
             }
+          } finally {
+            ocultarProcesandoGlobal_();
           }
           reiniciarTurnstile_();
           mostrarResultadoEkyc(resJson);
@@ -5117,7 +5125,11 @@
 
         const btn = document.getElementById('btnConfirmarFirmar');
         btn.disabled = true;
-        btn.textContent = '⏳ Guardando tu firma, por favor esperá...';
+        btn.textContent = '⏳ Procesando todo, por favor esperá...';
+        mostrarProcesandoGlobal_(
+          'Procesando todo…',
+          'Estamos registrando tu firma electrónica, validando las evidencias y generando el documento final. Por favor esperá sin cerrar esta pantalla.'
+        );
 
         try {
           const canvas = document.getElementById('canvasFirmaMovil');
@@ -5129,8 +5141,25 @@
           mostrarErrorEnPaso('No se pudo guardar tu firma: ' + err.message);
           btn.disabled = false;
           btn.textContent = '✅ Confirmar y Firmar';
+        } finally {
+          ocultarProcesandoGlobal_();
         }
       });
+
+      function mostrarProcesandoGlobal_(titulo, subtitulo) {
+        const ov = document.getElementById('ammerProcessingOverlay');
+        if (!ov) return;
+        const tEl = document.getElementById('ammerProcessingTitle');
+        const sEl = document.getElementById('ammerProcessingSub');
+        if (tEl) tEl.textContent = titulo || 'Procesando todo…';
+        if (sEl) sEl.textContent = subtitulo || 'Por favor esperá un momento, no cierres esta pantalla.';
+        ov.style.display = 'flex';
+      }
+
+      function ocultarProcesandoGlobal_() {
+        const ov = document.getElementById('ammerProcessingOverlay');
+        if (ov) ov.style.display = 'none';
+      }
 
       window.addEventListener('beforeunload', () => {
         detenerCamaraEkyc();
@@ -5139,5 +5168,19 @@
       window.addEventListener('DOMContentLoaded', inicializar);
     })();
   </script>
+  <style>
+    @keyframes ammerSpinClock { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes ammerBarSlide { 0% { transform: translateX(-100%); } 100% { transform: translateX(260%); } }
+  </style>
+  <div id="ammerProcessingOverlay" role="status" aria-live="polite" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.72);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:1.25rem;">
+    <div style="background:#ffffff;border-radius:18px;max-width:390px;width:100%;padding:1.6rem 1.4rem;text-align:center;box-shadow:0 24px 48px rgba(15,23,42,0.35);border:1px solid #e2e8f0;">
+      <div style="width:54px;height:54px;margin:0 auto 0.9rem;border-radius:50%;background:#eff6ff;border:3px solid #bfdbfe;border-top-color:#1d4ed8;animation:ammerSpinClock 1s linear infinite;display:flex;align-items:center;justify-content:center;font-size:1.35rem;">⏳</div>
+      <div id="ammerProcessingTitle" style="font-size:1.05rem;font-weight:800;color:#0f172a;margin-bottom:0.45rem;">Procesando todo…</div>
+      <div id="ammerProcessingSub" style="font-size:0.84rem;color:#475569;line-height:1.45;margin-bottom:1rem;">Estamos procesando tu solicitud, por favor no cierres esta pantalla.</div>
+      <div style="width:100%;height:7px;background:#e2e8f0;border-radius:999px;overflow:hidden;">
+        <div style="width:42%;height:100%;background:linear-gradient(90deg,#2563eb,#0ea5e9);border-radius:999px;animation:ammerBarSlide 1.35s ease-in-out infinite;"></div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

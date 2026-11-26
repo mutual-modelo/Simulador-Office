@@ -1116,6 +1116,19 @@
     if (elVoz && elVoz.checked && elSelfie && !elSelfie.checked) {
       elSelfie.checked = true;
     }
+    const elPinWa = document.getElementById('chkGenReqPin');
+    const elPinEmail = document.getElementById('chkGenReqPinEmail');
+    const selCanal = document.getElementById('selFirmaCanalPin');
+    if (selCanal && (elPinWa || elPinEmail)) {
+      const waOn = Boolean(elPinWa && elPinWa.checked);
+      const emOn = Boolean(elPinEmail && elPinEmail.checked);
+      if (waOn && emOn) selCanal.value = 'ambos';
+      else if (emOn) selCanal.value = 'email';
+      else if (waOn) selCanal.value = 'whatsapp';
+      if (typeof window.onToggleCanalPinGenerador === 'function') {
+        window.onToggleCanalPinGenerador();
+      }
+    }
     state.genPresetId = 'custom';
     _sincronizarBotonesPresetFirmas('');
     renderCamposCompletarFormulario();
@@ -1318,7 +1331,7 @@
                 ${alcance}
                 <div style="display:inline-flex;border:1px solid #cbd5e1;border-radius:7px;overflow:hidden;background:#ffffff;">
                   <button type="button" onclick="window.toggleAsignacionCampoGenerador('${escHtml(asigKey)}','analista')" style="border:none;padding:2px 6px;font-size:0.65rem;font-weight:800;cursor:pointer;background:${!esAsoc ? '#0f2744' : 'transparent'};color:${!esAsoc ? '#ffffff' : '#475569'};" title="Lo completa el analista antes de generar">👨‍💼 Analista</button>
-                  <button type="button" onclick="window.toggleAsignacionCampoGenerador('${escHtml(asigKey)}','asociado')" style="border:none;border-left:1px solid #cbd5e1;padding:2px 6px;font-size:0.65rem;font-weight:800;cursor:pointer;background:${esAsoc ? '#0284c7' : 'transparent'};color:${esAsoc ? '#ffffff' : '#475569'};" title="Lo completa el asociado en el Paso 1 antes de leer y firmar">🧑 Paso 1</button>
+                  <button type="button" onclick="window.toggleAsignacionCampoGenerador('${escHtml(asigKey)}','asociado')" style="border:none;border-left:1px solid #cbd5e1;padding:2px 6px;font-size:0.65rem;font-weight:800;cursor:pointer;background:${esAsoc ? '#0284c7' : 'transparent'};color:${esAsoc ? '#ffffff' : '#475569'};" title="Lo completa el asociado antes de leer y firmar">🧑 Asociado</button>
                 </div>
               </div>
             </div>

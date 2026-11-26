@@ -11454,5 +11454,89 @@
     })();
   </script>
 <script src="js/analisisCarteras.js?v=1" defer></script>
+  <style>
+    .doc-dropzone-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      padding: 0.45rem 0.75rem;
+      border: 1.5px dashed #94a3b8;
+      border-radius: 10px;
+      background: #f8fafc;
+      color: #334155;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.16s ease;
+      text-align: center;
+      min-height: 36px;
+    }
+    .doc-dropzone-wrap:hover,
+    .doc-dropzone-wrap.is-dragover {
+      border-color: #2563eb;
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+    .doc-dropzone-wrap input.doc-row-native-input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+  </style>
+  <script>
+    (function initDocDropzones() {
+      function enhanceInput(inp) {
+        if (!inp || inp.dataset.dropzoneReady === '1') return;
+        inp.dataset.dropzoneReady = '1';
+        inp.multiple = true;
+        const wrap = document.createElement('div');
+        wrap.className = 'doc-dropzone-wrap';
+        const lbl = document.createElement('span');
+        lbl.className = 'doc-dropzone-label';
+        lbl.textContent = '📎 Arrastrá y soltá o elegí archivos';
+        inp.parentNode.insertBefore(wrap, inp);
+        wrap.appendChild(lbl);
+        wrap.appendChild(inp);
+
+        const syncLabel = () => {
+          const n = inp.files ? inp.files.length : 0;
+          lbl.textContent = n > 0
+            ? `✅ ${n} archivo${n > 1 ? 's' : ''} seleccionado${n > 1 ? 's' : ''} (arrastrá para reemplazar)`
+            : '📎 Arrastrá y soltá o elegí archivos';
+        };
+        inp.addEventListener('change', syncLabel);
+        wrap.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          wrap.classList.add('is-dragover');
+        });
+        wrap.addEventListener('dragleave', () => wrap.classList.remove('is-dragover'));
+        wrap.addEventListener('drop', (e) => {
+          e.preventDefault();
+          wrap.classList.remove('is-dragover');
+          if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+            try {
+              const dt = new DataTransfer();
+              Array.from(e.dataTransfer.files).forEach((f) => dt.items.add(f));
+              inp.files = dt.files;
+              inp.dispatchEvent(new Event('change', { bubbles: true }));
+            } catch (_err) { /* fallback */ }
+          }
+        });
+      }
+      function scan() {
+        document.querySelectorAll('input.doc-row-native-input[type="file"]').forEach(enhanceInput);
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', scan);
+      } else {
+        scan();
+      }
+    })();
+  </script>
 </body>
 </html>

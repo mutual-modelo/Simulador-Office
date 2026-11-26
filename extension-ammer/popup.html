@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>AMMER — Historial de Respaldos</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; width: 380px; margin: 0; padding: 14px; background: #f8fafc; color: #0f172a; }
+    .hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .hdr h1 { font-size: 0.98rem; margin: 0; color: #0f2744; }
+    .btns { display: flex; gap: 6px; }
+    .btn { padding: 5px 9px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; font-size: 0.74rem; font-weight: 600; cursor: pointer; color: #334155; }
+    .btn-pri { background: #0284c7; color: #fff; border-color: #0284c7; }
+    .list { max-height: 360px; overflow-y: auto; display: flex; flex-direction: column; gap: 7px; }
+    .item { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px; font-size: 0.76rem; }
+    .item-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .badge { padding: 1px 6px; border-radius: 999px; font-size: 0.66rem; font-weight: 700; }
+    .ok { background: #dcfce7; color: #166534; }
+    .err { background: #fee2e2; color: #991b1b; }
+    .ruta { color: #334155; font-family: monospace; font-size: 0.71rem; word-break: break-all; margin-bottom: 5px; }
+    .empty { text-align: center; color: #64748b; padding: 24px 8px; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <div class="hdr">
+    <h1>📥 Respaldos AMMER</h1>
+    <div class="btns">
+      <button id="btn_carpeta_def" class="btn" title="Abrir carpeta Descargas">📁 Carpeta</button>
+      <button id="btn_limpiar" class="btn" title="Limpiar historial">🗑️</button>
+      <button id="btn_opciones" class="btn btn-pri">⚙️ Opciones</button>
+    </div>
+  </div>
+  <div id="lista_historial" class="list">
+    <div class="empty">Cargando historial...</div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -406,7 +406,7 @@
           '<td><div class="text-sm font-semibold text-slate-900">' + sanitizeHTML(s.solicitante?.nombre || '—') + '</div><div class="text-xs text-slate-500" style="margin-top:2px;"><span class="font-mono text-slate-600">DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + '</span> · <span class="cell-domicilio-hist" style="max-width:145px;" title="' + domHistTxt + '">📍 ' + domHistTxt + '</span></div></td>' +
           '<td><div class="text-xs font-mono font-bold text-slate-900" style="white-space:nowrap;">' + formatMoney(s.prestamo?.monto || 0) + ' <span class="font-semibold text-slate-500">(' + (s.prestamo?.cuotas || '—') + 'c)</span></div><div class="text-[11px] font-medium text-slate-500" style="margin-top:1px;">' + sanitizeHTML(s.prestamo?.lineaNombre || 'Ayuda') + ' · ' + sanitizeHTML(s.solicitante?.organismo || '—') + '</div></td>' +
           '<td>' + propHtml + '<div style="font-size:0.68rem;color:#64748b;margin-top:2px;">👤 ' + sanitizeHTML(s.analistaAsignado || 'Sin Asignar') + '</div></td>' +
-          '<td><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + sanitizeHTML(s.estado || 'Pendiente') + '</span>' + alertaDocHtml + '</td>' +
+          '<td><span class="badge-status badge-' + normalizarEstadoCanonico_(s.estado).replace(/\s/g, '') + '">' + sanitizeHTML(normalizarEstadoCanonico_(s.estado)) + '</span>' + alertaDocHtml + '</td>' +
           '<td style="text-align:center;"><div class="crm-actions-group">' +
             '<button type="button" class="btn-ver-expediente crm-btn-expediente" data-id="' + sanitizeHTML(String(s.id || '')) + '" data-id-provisorio="' + sanitizeHTML(String(s.id_provisorio || s.idProvisorio || s.id || '')) + '" title="Abrir Ficha del Expediente">' +
               '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
@@ -544,7 +544,7 @@
           '<td><div class="text-sm font-semibold text-slate-900">' + sanitizeHTML(s.solicitante?.nombre || '—') + '</div><div class="text-xs text-slate-500" style="margin-top:2px;"><span class="font-mono text-slate-600">DNI ' + sanitizeHTML(s.solicitante?.dni || '—') + '</span> · <span class="cell-domicilio-hist" style="max-width:145px;" title="' + domHistTxt + '">📍 ' + domHistTxt + '</span></div></td>' +
           '<td><div class="text-xs font-mono font-bold text-slate-900" style="white-space:nowrap;">' + formatMoney(s.prestamo?.monto || 0) + ' <span class="font-semibold text-slate-500">(' + (s.prestamo?.cuotas || '—') + 'c)</span></div><div class="text-[11px] font-medium text-slate-500" style="margin-top:1px;">' + sanitizeHTML(s.prestamo?.lineaNombre || 'Ayuda') + ' · ' + sanitizeHTML(s.solicitante?.organismo || '—') + '</div></td>' +
           '<td>' + propHtml + '<div style="font-size:0.68rem;color:#64748b;margin-top:2px;">👤 ' + sanitizeHTML(s.analistaAsignado || 'Sin Asignar') + '</div></td>' +
-          '<td><span class="badge-status badge-' + String(s.estado || 'Pendiente').replace(/\s/g, '') + '">' + sanitizeHTML(s.estado || 'Pendiente') + '</span>' + alertaDocHtml + '</td>' +
+          '<td><span class="badge-status badge-' + normalizarEstadoCanonico_(s.estado).replace(/\s/g, '') + '">' + sanitizeHTML(normalizarEstadoCanonico_(s.estado)) + '</span>' + alertaDocHtml + '</td>' +
           '<td style="text-align:center;"><div class="crm-actions-group">' +
             '<button type="button" class="btn-ver-expediente crm-btn-expediente" data-id="' + sanitizeHTML(String(s.id || '')) + '" data-id-provisorio="' + sanitizeHTML(String(s.id_provisorio || s.idProvisorio || s.id || '')) + '" title="Abrir Ficha del Expediente">' +
               '<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
@@ -639,9 +639,22 @@
       }
     ];
 
+    function normalizarEstadoCanonico_(estado) {
+      const raw = String(estado || 'Pendiente').trim();
+      const up = raw.toUpperCase();
+      if (up === 'APROBADO') return 'Aprobado';
+      if (up === 'RECHAZADO') return 'Rechazado';
+      if (up === 'PENDIENTE') return 'Pendiente';
+      if (up === 'OBSERVADO') return 'Observado';
+      if (up === 'LIQUIDADO') return 'Liquidado';
+      if (up === 'EN ANÁLISIS' || up === 'EN ANALISIS') return 'En Análisis';
+      if (up === 'TRANSFERENCIA PENDIENTE') return 'Transferencia Pendiente';
+      return raw || 'Pendiente';
+    }
+    window.normalizarEstadoCanonico_ = normalizarEstadoCanonico_;
+
     function obtenerSubEstadoBadge(estado) {
-      let e = String(estado || 'Pendiente').trim();
-      if (e.toUpperCase() === 'APROBADO') e = 'Aprobado';
+      const e = normalizarEstadoCanonico_(estado);
       let cssClass = 'badge-Pendiente';
       if (e === 'En Análisis') cssClass = 'badge-EnAnalisis';
       else if (e === 'Observado') cssClass = 'badge-Observado';

@@ -787,7 +787,15 @@
           situacionRevista: sanitizeHTML(situacionRevistaVal),
           fechaIngresoLaboral: sanitizeHTML(fechaIngresoVal),
           Fecha_Ingreso_Laboral: sanitizeHTML(fechaIngresoVal),
-          antiguedad: sanitizeHTML(antiguedadVal)
+          antiguedad: sanitizeHTML(antiguedadVal),
+          banco: sanitizeHTML((document.getElementById('altaBanco')?.value || '').trim()),
+          tipoCuenta: sanitizeHTML(document.getElementById('altaTipoCuenta')?.value || ''),
+          nroCuenta: sanitizeHTML((document.getElementById('altaNroCuenta')?.value || '').trim()),
+          cbu: sanitizeHTML((document.getElementById('altaCbu')?.value || '').trim()),
+          alias: sanitizeHTML((document.getElementById('altaAlias')?.value || '').trim()),
+          tarjetaSidecreerNumero: sanitizeHTML((document.getElementById('altaTarjetaSidecreerNumero')?.value || '').trim()),
+          tarjetaSidecreerVencimiento: sanitizeHTML((document.getElementById('altaTarjetaSidecreerVencimiento')?.value || '').trim()),
+          tarjetaSidecreerCvv: sanitizeHTML((document.getElementById('altaTarjetaSidecreerCvv')?.value || '').trim())
         },
         prestamo: {
           linea: lineaKey,

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>AMMER — Configuración de Respaldo Documental</title>
+  <style>
+    :root {
+      --primary: #0f2744;
+      --accent: #0284c7;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --border: #cbd5e1;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 24px; margin: 0; }
+    .container { max-width: 820px; margin: 0 auto; background: var(--card); border-radius: 14px; box-shadow: 0 8px 24px rgba(15,23,42,0.08); padding: 28px; border: 1px solid #e2e8f0; }
+    h1 { color: var(--primary); font-size: 1.4rem; margin: 0 0 6px; display: flex; align-items: center; gap: 10px; }
+    .section { margin-bottom: 22px; border-bottom: 1px solid #e2e8f0; padding-bottom: 18px; }
+    .section-title { font-weight: 700; font-size: 1.02rem; margin-bottom: 12px; color: var(--primary); }
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem; }
+    input[type="text"], select { width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; font-size: 0.9rem; }
+    .help-text { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
+    .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 8px; }
+    .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; font-weight: 500; cursor: pointer; }
+    .badge { background: #f1f5f9; padding: 2px 6px; border-radius: 5px; font-family: monospace; font-size: 0.82rem; color: #334155; border: 1px solid #e2e8f0; }
+    .preview-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 12px; font-family: monospace; font-size: 0.84rem; color: #1e3a8a; margin-top: 8px; word-break: break-all; }
+    .actions-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+    .btn-save { flex: 1; background: var(--accent); color: #fff; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.96rem; }
+    .btn-sec { background: #fff; color: #334155; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.86rem; }
+    #status { margin-top: 14px; padding: 10px; border-radius: 8px; display: none; text-align: center; font-weight: 600; font-size: 0.9rem; }
+    .status-success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .status-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>⚙️ AMMER — Centro de Respaldo y Sincronización Local</h1>
+  <p class="help-text">Configurá qué documentos se respaldan, cuándo se descargan y cómo se organizan en tu PC.</p>
+
+  <div class="section">
+    <div class="section-title">1. Documentos y Fuentes a Respaldar</div>
+    <div class="checkbox-grid">
+      <label class="checkbox-item"><input type="checkbox" id="doc_recibo" checked> Recibo de Haberes</label>
+      <label class="checkbox-item"><input type="checkbox" id="doc_dni" checked> DNI (Frente y Dorso)</label>
+      <label class="checkbox-item"><input type="checkbox" id="doc_mutuo" checked> Contrato / Mutuo Firmado</label>
+      <label class="checkbox-item"><input type="checkbox" id="doc_pagare" checked> Pagaré Electrónico</label>
+      <label class="checkbox-item"><input type="checkbox" id="doc_transferencia" checked> Comprobante de Transferencia</label>
+      <label class="checkbox-item"><input type="checkbox" id="doc_scoring"> Reporte de Auditoría / Scoring IA</label>
+    </div>
+    <div class="form-group" style="margin-top: 14px;">
+      <label for="fuente_prioritaria">Fuente de Descarga Primaria:</label>
+      <select id="fuente_prioritaria">
+        <option value="supabase">Supabase Storage (Nube de alta disponibilidad)</option>
+        <option value="render">Backend Render (ammer-auditor-api)</option>
+        <option value="drive">Enlace Respaldo Google Drive</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. Modo de Operación y Disparadores</div>
+    <div class="form-group">
+      <label for="modo_descarga">¿Cuándo realizar la copia local?</label>
+      <select id="modo_descarga">
+        <option value="automatico_silencioso">Automático Silencioso (Apenas se genera o aprueba)</option>
+        <option value="al_liquidar">Solo al pasar a estado "Liquidado" (Legajo Completo)</option>
+        <option value="preguntar">Preguntar / Confirmar antes de guardar</option>
+        <option value="manual">Manual (Únicamente al presionar el botón en el Simulador)</option>
+      </select>
+    </div>
+    <div class="checkbox-grid">
+      <label class="checkbox-item"><input type="checkbox" id="notif_windows" checked> Mostrar notificación en Windows al guardar</label>
+      <label class="checkbox-item"><input type="checkbox" id="forzar_mayusculas" checked> Forzar nombres y extensiones en MAYÚSCULAS</label>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. Directorio Local y Nomenclatura</div>
+    <div class="form-group">
+      <label for="carpeta_raiz">Carpeta Base de Descarga:</label>
+      <input type="text" id="carpeta_raiz" value="AMMER_Legajos">
+    </div>
+    <div class="form-group">
+      <label for="patron_carpetas">Estructura de Subdirectorios:</label>
+      <select id="patron_carpetas">
+        <option value="{CARPETA_RAIZ}/{DNI}">Por DNI: [Base] / [DNI] (Recomendada)</option>
+        <option value="{CARPETA_RAIZ}/{ORGANIZACION}/{LINEA}/{DNI}">Por Repartición: [Base] / [Org] / [Línea] / [DNI]</option>
+        <option value="{CARPETA_RAIZ}/{FECHA}/{ID_EXPEDIENTE}">Por Fecha: [Base] / [AAAA-MM-DD] / [ID_Expediente]</option>
+        <option value="{CARPETA_RAIZ}">Plana: Todos los archivos en la carpeta base</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="patron_nombre_archivo">Formato del Nombre de Archivo:</label>
+      <input type="text" id="patron_nombre_archivo" value="{ID_EXPEDIENTE} {TIPO_DOC}.{EXT}">
+      <div class="help-text">Variables: <span class="badge">{ID_EXPEDIENTE}</span> <span class="badge">{DNI}</span> <span class="badge">{APELLIDO}</span> <span class="badge">{TIPO_DOC}</span> <span class="badge">{FECHA}</span> <span class="badge">{EXT}</span></div>
+      <div class="preview-box" id="ruta_preview">Vista previa: Downloads/AMMER_Legajos/32456789/SOL-575776 RECIBO.PDF</div>
+    </div>
+  </div>
+
+  <div class="actions-row">
+    <button id="btn_guardar" class="btn-save">💾 Guardar Preferencias</button>
+    <button id="btn_exportar" type="button" class="btn-sec">📤 Exportar Perfil JSON</button>
+    <button id="btn_importar" type="button" class="btn-sec">📥 Importar Perfil JSON</button>
+    <input id="inp_importar_json" type="file" accept=".json" style="display:none;">
+  </div>
+  <div id="status"></div>
+</div>
+<script src="options.js"></script>
+</body>
+</html>

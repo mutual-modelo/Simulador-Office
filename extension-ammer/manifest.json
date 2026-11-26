@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Asistente AMMER — Gestor Documental",
+  "version": "2.1.0",
+  "description": "Centro de respaldo y sincronización documental local para Simulador-Office y Mutual Pay.",
+  "permissions": [
+    "downloads",
+    "storage",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://mutual-modelo.github.io/*",
+    "https://*.onrender.com/*",
+    "https://*.supabase.co/*",
+    "https://drive.google.com/*",
+    "http://localhost:*/*"
+  ],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}

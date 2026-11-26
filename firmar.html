@@ -4269,24 +4269,19 @@
               detenerCamaraEkyc();
               const videoConstraints = { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } };
               let stream = null;
-              if (appState.requiereVoz) {
-                try {
-                  stream = await navigator.mediaDevices.getUserMedia({
-                    video: videoConstraints,
-                    audio: { echoCancellation: true, noiseSuppression: true },
-                  });
-                } catch (_errMic) {
-                  stream = await navigator.mediaDevices.getUserMedia({
-                    video: videoConstraints,
-                    audio: false,
-                  });
-                  mostrarErrorEnPaso('No pudimos activar el micrófono; igual grabaremos tu video facial para revisión.');
-                }
-              } else {
+              try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                  video: videoConstraints,
+                  audio: { echoCancellation: true, noiseSuppression: true },
+                });
+              } catch (_errMic) {
                 stream = await navigator.mediaDevices.getUserMedia({
                   video: videoConstraints,
                   audio: false,
                 });
+                if (appState.requiereVoz) {
+                  mostrarErrorEnPaso('No pudimos activar el micrófono; igual grabaremos tu video facial para revisión.');
+                }
               }
               const vTrack = stream.getVideoTracks && stream.getVideoTracks()[0];
               const trackLbl = String((vTrack && vTrack.label) || '').toLowerCase();

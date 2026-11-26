@@ -497,6 +497,43 @@
     el.textContent = msg || '';
   }
 
+  function parsearMonedaAr(val) {
+    if (typeof val === 'number') return Number.isFinite(val) ? val : 0;
+    const s = String(val || '').replace(/[$\s]/g, '').trim();
+    if (!s) return 0;
+    if (s.includes(',') && s.includes('.')) {
+      return Number(s.replace(/\./g, '').replace(',', '.')) || 0;
+    }
+    if (s.includes(',')) {
+      return Number(s.replace(',', '.')) || 0;
+    }
+    return Number(s) || 0;
+  }
+
+  function parsearLineaCsv(linea, sep) {
+    const out = [];
+    let cur = '';
+    let inQuotes = false;
+    for (let i = 0; i < linea.length; i++) {
+      const ch = linea[i];
+      if (ch === '"') {
+        if (inQuotes && linea[i + 1] === '"') {
+          cur += '"';
+          i += 1;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (ch === sep && !inQuotes) {
+        out.push(cur.trim());
+        cur = '';
+      } else {
+        cur += ch;
+      }
+    }
+    out.push(cur.trim());
+    return out;
+  }
+
   function normalizarFilaCartera(obj, idx) {
     const lower = {};
     Object.keys(obj || {}).forEach((k) => {
@@ -505,21 +542,33 @@
     const idOp = String(
       lower.id_operacion || lower.id_op || lower.operacion || lower.expediente || lower.id || ''
     ).trim();
-    const dni = String(lower.dni || lower.documento || lower.nro_dni || '').replace(/\D/g, '');
+    const cuitRaw = String(lower.cuit || lower.cuil || '').replace(/\D/g, '');
+    let dni = String(lower.dni || lower.documento || lower.nro_dni || '').replace(/\D/g, '');
+    if (!dni && cuitRaw.length === 11) {
+      dni = cuitRaw.slice(2, 10);
+    }
     const nombre = String(
       lower.apellido_nombre || lower.titular || lower.nombre || lower.asociado || ''
     ).trim();
-    const linea = String(lower.linea || lower.linea_ayuda || lower.producto || 'FEDEM').trim() || 'FEDEM';
-    const montoRaw = String(lower.monto || lower.importe || lower.capital || '0').replace(/[^\d.,-]/g, '').replace(',', '.');
-    const monto = Number(montoRaw) || 0;
+    const linea = String(
+      lower.linea || lower.linea_ayuda || lower.origen_fondos || lower.tipo_de_descuento || lower.producto || 'FEDEM'
+    ).trim() || 'FEDEM';
+    const monto = parsearMonedaAr(
+      lower.capital_original || lower.monto || lower.transferencia || lower.capital_a_ceder || lower.monto_pagare || lower.importe || 0
+    );
+    const cuota = parsearMonedaAr(lower.cuota || 0);
+    const plazo = parseInt(lower.plazo || lower.cuotas_a_ceder || lower.cuotas || 0, 10) || 0;
     if (!idOp && !dni && !nombre) return null;
     return {
       id: 'cb_' + Date.now() + '_' + idx,
       id_operacion: idOp || dni || String(idx + 1),
       dni: dni || '-',
+      cuit: cuitRaw || '',
       apellido_nombre: nombre || 'Sin nombre',
       linea,
       monto,
+      cuota,
+      plazo,
     };
   }
 
@@ -532,16 +581,18 @@
       .filter(Boolean);
     if (!lines.length) return [];
     const sep = lines[0].includes('\t') ? '\t' : (lines[0].includes(';') ? ';' : ',');
-    const splitLine = (l) => l.split(sep).map((c) => c.replace(/^"|"$/g, '').trim());
-    const firstCols = splitLine(lines[0]);
-    const looksLikeHeader = firstCols.some((c) => /id|dni|nombre|titular|monto|linea|operacion/i.test(c));
+    const firstCols = parsearLineaCsv(lines[0], sep);
+    const looksLikeHeader = firstCols.some((c) => /id|dni|cuit|nombre|titular|monto|capital|linea|operacion/i.test(c));
     const headers = looksLikeHeader ? firstCols : ['id_operacion', 'dni', 'apellido_nombre', 'linea', 'monto'];
     const startIdx = looksLikeHeader ? 1 : 0;
     const out = [];
     for (let i = startIdx; i < lines.length; i++) {
-      const cols = splitLine(lines[i]);
+      const cols = parsearLineaCsv(lines[i], sep);
       const obj = {};
-      headers.forEach((h, j) => { obj[h] = cols[j] || ''; });
+      headers.forEach((h, j) => {
+        const key = String(h || '').trim();
+        if (key && !(key in obj)) obj[key] = cols[j] || '';
+      });
       const norm = normalizarFilaCartera(obj, i);
       if (norm) out.push(norm);
     }

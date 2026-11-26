@@ -1522,6 +1522,24 @@
           <!-- SUB-PANEL 1: GENERAR Y ENVIAR A FIRMA -->
           <div id="panelFirmas_generar" style="display:block;">
             <div class="firmas-card">
+              <!-- BARRA PRINCIPAL DE ACCIONES -->
+              <div class="firmas-cta-bar" style="margin-bottom:0.85rem;">
+                <button type="button" class="firmas-btn" onclick="previsualizarPdfGenerado(false)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  <span>Vista Previa del PDF</span>
+                </button>
+                <button type="button" class="firmas-btn firmas-btn-soft-blue" onclick="descargarUltimoPreviewPdfFirma()">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  <span>Descargar PDF Generado</span>
+                </button>
+                <button type="button" class="firmas-btn firmas-btn-emerald firmas-cta-primary" onclick="generarEnlaceFirmaMovil()">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                  <span>Generar Enlace(s) de Firma (24 h)</span>
+                </button>
+                <button type="button" class="firmas-btn" onclick="window.limpiarPantallaGeneradorFirmas && window.limpiarPantallaGeneradorFirmas()" title="Vaciar todos los campos, expediente y enlaces generados para iniciar una nueva gestión" style="border-color:#cbd5e1;color:#475569;background:#fff;">
+                  <span>🧹 Limpiar Pantalla</span>
+                </button>
+              </div>
               <!-- MODALIDAD Y VALIDACIONES MODULARES (CON O SIN PDF + VOZ MULTIMODAL) -->
               <div class="firmas-section-box" style="margin-bottom:0.25rem;background:linear-gradient(135deg,#f8fafc 0%,#eff6ff 100%);border-color:#bfdbfe;">
                 <div class="firmas-section-head" style="margin-bottom:0.55rem;">
@@ -1757,25 +1775,6 @@
                   </div>
                 </div>
               </details>
-
-              <!-- BARRA PRINCIPAL DE ACCIONES -->
-              <div class="firmas-cta-bar">
-                <button type="button" class="firmas-btn" onclick="previsualizarPdfGenerado(false)">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                  <span>Vista Previa del PDF</span>
-                </button>
-                <button type="button" class="firmas-btn firmas-btn-soft-blue" onclick="descargarUltimoPreviewPdfFirma()">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                  <span>Descargar PDF Generado</span>
-                </button>
-                <button type="button" class="firmas-btn firmas-btn-emerald firmas-cta-primary" onclick="generarEnlaceFirmaMovil()">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                  <span>Generar Enlace(s) de Firma (24 h)</span>
-                </button>
-                <button type="button" class="firmas-btn" onclick="window.limpiarPantallaGeneradorFirmas && window.limpiarPantallaGeneradorFirmas()" title="Vaciar todos los campos, expediente y enlaces generados para iniciar una nueva gestión" style="border-color:#cbd5e1;color:#475569;background:#fff;">
-                  <span>🧹 Limpiar Pantalla</span>
-                </button>
-              </div>
 
               <!-- RESULTADO ENLACE GENERADO -->
               <div id="firmaEnlaceGeneradoBox" style="display:none;background:linear-gradient(135deg,#ecfdf5 0%,#f0fdf4 100%);border:1px solid #6ee7b7;border-radius:14px;padding:1.1rem;">

@@ -1,0 +1,49 @@
+======================================================================
+EXTENSIÓN CHROME AMMER — GESTOR DOCUMENTAL Y MACROS (v2.1.0)
+GUÍA DE INSTALACIÓN, CONFIGURACIÓN POR PUESTO Y EMPAQUETADO
+======================================================================
+
+1. INSTALACIÓN EN GOOGLE CHROME / MICROSOFT EDGE
+----------------------------------------------------------------------
+1) Descomprimí el archivo .zip en una carpeta fija de tu PC
+   (ejemplo recomendado: C:\AMMER\extension-ammer).
+2) Abrí Google Chrome y entrá a: chrome://extensions/
+3) Activá el interruptor "Modo de desarrollador" (arriba a la derecha).
+4) Hacé clic en "Cargar descomprimida" y seleccioná la carpeta donde
+   descomprimiste la extensión (la que contiene manifest.json).
+5) Fijá el ícono "Asistente AMMER" en la barra superior de Chrome.
+
+2. CONFIGURACIÓN POR PUESTO (1 CLIC)
+----------------------------------------------------------------------
+1) Hacé clic en el ícono de la extensión -> "Opciones"
+   (o clic derecho en el ícono -> Opciones).
+2) Hacé clic en "Importar Perfil JSON" y elegí según el puesto:
+   - perfiles/perfil_mesa_entradas.json
+     -> Guarda Recibos y DNI automáticamente en Downloads/AMMER_MesaEntradas/{DNI}/
+   - perfiles/perfil_tesoreria.json
+     -> Guarda Mutuo, Pagaré y Transferencia al pasar a Liquidado en
+        Downloads/AMMER_Tesoreria/{ORGANIZACION}/{LINEA}/{DNI}/
+   - perfiles/perfil_auditoria.json
+     -> Guarda todos los documentos + Scoring IA en modo manual en
+        Downloads/AMMER_Auditoria/{FECHA}/{ID_EXPEDIENTE}/
+3) Hacé clic en "Guardar Preferencias".
+
+3. USO DE MACROS Y AUTOMATIZACIÓN (PESTAÑA "MACROS" DEL POPUP)
+----------------------------------------------------------------------
+- Macros Web por DOM: grabá clics e inputs en cualquier portal web y
+  reproducilos inyectando {DNI}, {CUIL}, {NOMBRE}, {CBU}, {MONTO},
+  {ID_EXPEDIENTE} del expediente abierto en Simulador-Office.
+- Power Automate Desktop: exporta trigger_{ID_EXPEDIENTE}.json en
+  Downloads/AMMER_Trigger/.
+- AutoHotkey (.ahk): descarga macro_{ID_EXPEDIENTE}.ahk en
+  Downloads/AMMER_Macros/ listo para ejecutar con doble clic.
+
+4. EMPAQUETADO (.ZIP) PARA DISTRIBUCIÓN INTERNA
+----------------------------------------------------------------------
+Desde la carpeta raíz del repositorio Simulador-Office:
+  mkdir -p downloads
+  cd extension-ammer
+  zip -r ../downloads/ammer-extension-v2.1.0.zip \
+    manifest.json background.js content.js options.html options.js \
+    popup.html popup.js perfiles/ README.md GUIA_INSTALACION_Y_EMPAQUETADO.txt
+======================================================================

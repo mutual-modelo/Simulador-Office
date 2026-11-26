@@ -1,0 +1,17 @@
+{
+  "docs": {
+    "recibo": true,
+    "dni": true,
+    "mutuo": true,
+    "pagare": true,
+    "transferencia": true,
+    "scoring": true
+  },
+  "fuentePrioritaria": "render",
+  "modoDescarga": "manual",
+  "notifWindows": true,
+  "forzarMayusculas": true,
+  "carpetaRaiz": "AMMER_Auditoria",
+  "patronCarpetas": "{CARPETA_RAIZ}/{FECHA}/{ID_EXPEDIENTE}",
+  "patronNombreArchivo": "{ID_EXPEDIENTE} {TIPO_DOC}.{EXT}"
+}

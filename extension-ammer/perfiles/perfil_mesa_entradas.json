@@ -1,0 +1,17 @@
+{
+  "docs": {
+    "recibo": true,
+    "dni": true,
+    "mutuo": false,
+    "pagare": false,
+    "transferencia": false,
+    "scoring": false
+  },
+  "fuentePrioritaria": "supabase",
+  "modoDescarga": "automatico_silencioso",
+  "notifWindows": true,
+  "forzarMayusculas": true,
+  "carpetaRaiz": "AMMER_MesaEntradas",
+  "patronCarpetas": "{CARPETA_RAIZ}/{DNI}",
+  "patronNombreArchivo": "{ID_EXPEDIENTE} {TIPO_DOC}.{EXT}"
+}

@@ -269,8 +269,8 @@
             '</div>' +
             '<div class="form-group"><label class="form-label">Celular / Teléfono *</label><input type="tel" id="editCelular" class="input-text" value="' + (s.solicitante?.celular || '') + '" required/></div>' +
             '<div class="form-group"><label class="form-label">Email</label><input type="email" id="editEmail" class="input-text" value="' + (s.solicitante?.email || '') + '"/></div>' +
-            '<div class="form-group"><label class="form-label">Localidad</label><input type="text" id="editLocalidad" class="input-text" value="' + sanitizeHTML(s.solicitante?.localidad || '') + '"/></div>' +
-            '<div class="form-group"><label class="form-label">Legajo Municipal</label><input type="text" id="editLegajo" class="input-text" value="' + (s.solicitante?.legajo || '') + '"/></div>' +
+            '<div class="form-group" style="margin-bottom:0;"><label class="form-label">Localidad</label><input type="text" id="editLocalidad" class="input-text" value="' + sanitizeHTML(s.solicitante?.localidad || '') + '"/></div>' +
+            '<div class="form-group" style="margin-bottom:0;"><label class="form-label">Legajo Municipal</label><input type="text" id="editLegajo" class="input-text" value="' + (s.solicitante?.legajo || '') + '"/></div>' +
           '</div>' +
           '<div class="form-group"><label class="form-label">Domicilio Completo *</label><input type="text" id="editDomicilio" class="input-text" value="' + (s.solicitante?.domicilio || '') + '" required/></div>' +
           '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:6px 10px;margin-bottom:0.75rem;font-size:0.75rem;color:#166534;font-weight:700;">🏠 Domicilio al momento de la solicitud: <span style="font-weight:500;color:#1e293b;">' + (s.domicilio_historico || s.solicitante?.domicilio_historico || s.solicitante?.domicilio || 'No especificado') + '</span></div>' +

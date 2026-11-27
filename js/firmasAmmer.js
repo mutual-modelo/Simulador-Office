@@ -3793,6 +3793,91 @@
     }
   }
 
+  function bytesToBase64Pdf_(u8) {
+    let bin = '';
+    const chunk = 0x8000;
+    for (let i = 0; i < u8.length; i += chunk) {
+      bin += String.fromCharCode.apply(null, u8.subarray(i, i + chunk));
+    }
+    return btoa(bin);
+  }
+
+  async function agregarHojaBlancoEditorPdf() {
+    if (!state.editor.pdfBase64) return notify('Primero cargá un PDF en el editor.', 'warning');
+    if (typeof PDFLib === 'undefined' || !PDFLib.PDFDocument) return notify('Librería PDFLib no disponible.', 'error');
+    try {
+      const rawB64 = state.editor.pdfBase64.includes(',') ? state.editor.pdfBase64.split(',')[1] : state.editor.pdfBase64;
+      const pdfDoc = await PDFLib.PDFDocument.load(Uint8Array.from(atob(rawB64), (c) => c.charCodeAt(0)));
+      const insertIdx = Math.min(pdfDoc.getPageCount(), Math.max(0, state.editor.currentPage));
+      pdfDoc.insertPage(insertIdx, [595.28, 841.89]);
+      (state.editor.campos || []).forEach((c) => {
+        if (Number(c.pagina || 1) > state.editor.currentPage) c.pagina = Number(c.pagina) + 1;
+      });
+      const outBytes = await pdfDoc.save();
+      const newB64 = 'data:application/pdf;base64,' + bytesToBase64Pdf_(outBytes);
+      state.editor.pdfBase64 = newB64;
+      await cargarPdfEnCanvasEditor(newB64, insertIdx + 1);
+      notify('Hoja A4 en blanco añadida correctamente.', 'success');
+    } catch (e) {
+      notify('No se pudo añadir la hoja: ' + (e.message || e), 'error');
+    }
+  }
+
+  async function insertarHojasDesdePdfEditor(inputEl) {
+    const file = inputEl && inputEl.files && inputEl.files[0];
+    if (inputEl) inputEl.value = '';
+    if (!file) return;
+    if (!state.editor.pdfBase64) return notify('Primero cargá un PDF base en el editor.', 'warning');
+    if (typeof PDFLib === 'undefined' || !PDFLib.PDFDocument) return notify('Librería PDFLib no disponible.', 'error');
+    try {
+      const rawB64 = state.editor.pdfBase64.includes(',') ? state.editor.pdfBase64.split(',')[1] : state.editor.pdfBase64;
+      const pdfDoc = await PDFLib.PDFDocument.load(Uint8Array.from(atob(rawB64), (c) => c.charCodeAt(0)));
+      const srcBuf = await file.arrayBuffer();
+      const srcDoc = await PDFLib.PDFDocument.load(srcBuf);
+      const copied = await pdfDoc.copyPages(srcDoc, srcDoc.getPageIndices());
+      const insertIdx = Math.min(pdfDoc.getPageCount(), Math.max(0, state.editor.currentPage));
+      copied.forEach((p, idx) => pdfDoc.insertPage(insertIdx + idx, p));
+      (state.editor.campos || []).forEach((c) => {
+        if (Number(c.pagina || 1) > state.editor.currentPage) c.pagina = Number(c.pagina) + copied.length;
+      });
+      const outBytes = await pdfDoc.save();
+      const newB64 = 'data:application/pdf;base64,' + bytesToBase64Pdf_(outBytes);
+      state.editor.pdfBase64 = newB64;
+      await cargarPdfEnCanvasEditor(newB64, insertIdx + 1);
+      notify(`Se insertaron ${copied.length} hoja(s) desde "${file.name}".`, 'success');
+    } catch (e) {
+      notify('No se pudieron insertar hojas del PDF: ' + (e.message || e), 'error');
+    }
+  }
+
+  async function eliminarHojaActualEditorPdf() {
+    if (!state.editor.pdfBase64) return notify('Primero cargá un PDF en el editor.', 'warning');
+    if (state.editor.totalPages <= 1) return notify('El PDF debe conservar al menos 1 página.', 'warning');
+    if (!confirm(`¿Eliminar la página ${state.editor.currentPage} de ${state.editor.totalPages}? Los campos mapeados en esta página también se quitarán.`)) return;
+    if (typeof PDFLib === 'undefined' || !PDFLib.PDFDocument) return notify('Librería PDFLib no disponible.', 'error');
+    try {
+      const rawB64 = state.editor.pdfBase64.includes(',') ? state.editor.pdfBase64.split(',')[1] : state.editor.pdfBase64;
+      const pdfDoc = await PDFLib.PDFDocument.load(Uint8Array.from(atob(rawB64), (c) => c.charCodeAt(0)));
+      const delPage = state.editor.currentPage;
+      pdfDoc.removePage(delPage - 1);
+      state.editor.campos = (state.editor.campos || [])
+        .filter((c) => Number(c.pagina || 1) !== delPage)
+        .map((c) => (Number(c.pagina || 1) > delPage ? Object.assign({}, c, { pagina: Number(c.pagina) - 1 }) : c));
+      const outBytes = await pdfDoc.save();
+      const newB64 = 'data:application/pdf;base64,' + bytesToBase64Pdf_(outBytes);
+      state.editor.pdfBase64 = newB64;
+      const nextPage = Math.min(delPage, pdfDoc.getPageCount());
+      await cargarPdfEnCanvasEditor(newB64, nextPage);
+      notify(`Página ${delPage} eliminada correctamente.`, 'success');
+    } catch (e) {
+      notify('No se pudo eliminar la página: ' + (e.message || e), 'error');
+    }
+  }
+
+  window.agregarHojaBlancoEditorPdf = agregarHojaBlancoEditorPdf;
+  window.insertarHojasDesdePdfEditor = insertarHojasDesdePdfEditor;
+  window.eliminarHojaActualEditorPdf = eliminarHojaActualEditorPdf;
+
   function actualizarBotonesModoEditor() {
     ['texto', 'borrador', 'firma', 'sello', 'pan'].forEach((k) => {
       const btn = document.getElementById('btnModoCampo_' + k);

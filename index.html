@@ -11444,8 +11444,80 @@
       actualizarVisibilidadCommandBtn();
       window.addEventListener('storage', actualizarVisibilidadCommandBtn);
 
+      const AMMER_EXT_LATEST_VER = '2.5.4';
+      const AMMER_EXT_ZIP_URL = 'https://mutual-modelo.github.io/Simulador-Office/downloads/ammer-extension-v2.5.4.zip';
+
+      function compararVersionesAmmer(a, b) {
+        const pa = String(a || '0').replace(/[^0-9.]/g, '').split('.').map(Number);
+        const pb = String(b || '0').replace(/[^0-9.]/g, '').split('.').map(Number);
+        const len = Math.max(pa.length, pb.length);
+        for (let i = 0; i < len; i++) {
+          const va = pa[i] || 0;
+          const vb = pb[i] || 0;
+          if (va < vb) return -1;
+          if (va > vb) return 1;
+        }
+        return 0;
+      }
+
+      function obtenerVersionExtInstaladaAmmer() {
+        return String((document.documentElement && document.documentElement.dataset && document.documentElement.dataset.ammerSplitExt) || '').trim();
+      }
+
+      function actualizarBotonEstadoExtensionAmmer() {
+        const btn = document.getElementById('btnTopInstallExt');
+        if (!btn) return;
+        const verInst = obtenerVersionExtInstaladaAmmer();
+        if (!verInst) {
+          btn.style.background = '#f0fdf4';
+          btn.style.borderColor = '#86efac';
+          btn.style.color = '#166534';
+          btn.title = 'Descargar e instalar Extensión Chrome AMMER v' + AMMER_EXT_LATEST_VER;
+          btn.innerHTML = '<span aria-hidden="true">🧩</span><span class="btn-top-help-label">Instalar Extensión</span>';
+          return;
+        }
+        const cmp = compararVersionesAmmer(verInst, AMMER_EXT_LATEST_VER);
+        if (cmp < 0) {
+          btn.style.background = '#fffbeb';
+          btn.style.borderColor = '#f59e0b';
+          btn.style.color = '#92400e';
+          btn.title = 'Nueva versión v' + AMMER_EXT_LATEST_VER + ' disponible (tenés v' + verInst + '). Clic para actualizar.';
+          btn.innerHTML =
+            '<span aria-hidden="true">🔄</span>' +
+            '<span class="btn-top-help-label">Actualizar Extensión</span>' +
+            '<span style="background:#dc2626;color:#ffffff;font-size:0.62rem;font-weight:800;padding:1px 5px;border-radius:999px;margin-left:3px;line-height:1.2;">v' + AMMER_EXT_LATEST_VER + '</span>';
+          if (!window._ammerExtUpdNotified && typeof showToast === 'function') {
+            window._ammerExtUpdNotified = true;
+            setTimeout(() => showToast('🔄 Hay una actualización de la Extensión AMMER (v' + AMMER_EXT_LATEST_VER + '). Tocá "Actualizar Extensión" arriba.'), 1400);
+          }
+        } else {
+          btn.style.background = '#f8fafc';
+          btn.style.borderColor = '#cbd5e1';
+          btn.style.color = '#334155';
+          btn.title = 'Extensión Chrome AMMER instalada y al día (v' + verInst + ')';
+          btn.innerHTML = '<span aria-hidden="true">✅</span><span class="btn-top-help-label">Extensión v' + verInst + '</span>';
+        }
+      }
+
+      window.addEventListener('ammer-split-ext-ready', actualizarBotonEstadoExtensionAmmer);
+      window.addEventListener('message', (ev) => {
+        if (ev.source === window && ev.data && ev.data.type === 'AMMER_PONG_EXT') {
+          if (ev.data.version && document.documentElement) {
+            document.documentElement.dataset.ammerSplitExt = String(ev.data.version);
+          }
+          actualizarBotonEstadoExtensionAmmer();
+        }
+      });
+      setTimeout(() => {
+        actualizarBotonEstadoExtensionAmmer();
+        try { window.postMessage({ type: 'AMMER_PING_EXT' }, window.location.origin); } catch (_e) {}
+      }, 300);
+
       window.abrirModalInstalarExtensionAmmer = function () {
-        const zipUrl = 'https://mutual-modelo.github.io/Simulador-Office/downloads/ammer-extension-v2.5.4.zip';
+        const verInst = obtenerVersionExtInstaladaAmmer();
+        const hayUpdate = Boolean(verInst && compararVersionesAmmer(verInst, AMMER_EXT_LATEST_VER) < 0);
+        const alDia = Boolean(verInst && !hayUpdate);
+
         let modal = document.getElementById('ammerInstallExtModal');
         if (!modal) {
           modal = document.createElement('div');
@@ -11454,26 +11526,51 @@
           modal.setAttribute('role', 'dialog');
           modal.setAttribute('aria-modal', 'true');
           modal.onclick = function (ev) { if (ev.target === modal) modal.classList.remove('is-open'); };
-          modal.innerHTML =
-            '<div class="cmd-k-dialog" style="padding:1.1rem 1.25rem;max-width:520px;">' +
-              '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">' +
-                '<strong style="font-size:0.98rem;color:#0f2744;">🧩 Instalar Extensión AMMER v2.5.4 (Chrome)</strong>' +
-                '<button type="button" onclick="document.getElementById(\'ammerInstallExtModal\').classList.remove(\'is-open\')" style="border:none;background:transparent;font-size:1rem;cursor:pointer;color:#64748b;">✕</button>' +
-              '</div>' +
-              '<p style="font-size:0.8rem;color:#334155;margin:0 0 0.8rem 0;">Descargá la última versión (<strong>v2.5.4</strong>) para guardar legajos en tu carpeta dedicada sin alterar Descargas de Chrome, con auto-consulta RENAPER y Datuar:</p>' +
-              '<a href="' + zipUrl + '" target="_blank" rel="noopener" download style="display:inline-flex;align-items:center;gap:0.45rem;padding:0.55rem 0.95rem;border-radius:9px;background:#166534;color:#ffffff;font-size:0.82rem;font-weight:700;text-decoration:none;margin-bottom:0.9rem;">⬇️ Descargar Extensión v2.5.4 (.zip)</a>' +
-              '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0.75rem 0.9rem;font-size:0.76rem;color:#334155;line-height:1.45;">' +
-                '<div style="font-weight:800;color:#0f172a;margin-bottom:0.35rem;">Mini guía de instalación rápida:</div>' +
-                '<ol style="margin:0;padding-left:1.15rem;">' +
-                  '<li>Descomprimí el archivo <code>.zip</code> descargado en una carpeta fija.</li>' +
-                  '<li>Abrí Chrome y entrá a <code>chrome://extensions</code>.</li>' +
-                  '<li>Activá <strong>Modo de desarrollador</strong> (arriba a la derecha).</li>' +
-                  '<li>Tocá <strong>Cargar descomprimida</strong> y seleccioná la carpeta descomprimida.</li>' +
-                '</ol>' +
-              '</div>' +
-            '</div>';
           document.body.appendChild(modal);
         }
+
+        const tituloModal = hayUpdate
+          ? ('🔄 Actualizar Extensión AMMER (v' + verInst + ' → v' + AMMER_EXT_LATEST_VER + ')')
+          : (alDia
+            ? ('✅ Extensión AMMER al día (v' + verInst + ')')
+            : ('🧩 Instalar Extensión AMMER v' + AMMER_EXT_LATEST_VER + ' (Chrome)'));
+
+        const descModal = hayUpdate
+          ? ('Tenés instalada la versión <strong>v' + verInst + '</strong> y ya está disponible la <strong>v' + AMMER_EXT_LATEST_VER + '</strong>. Tus macros guardadas, historial y carpeta elegida se conservan intactos al actualizar.')
+          : (alDia
+            ? ('Ya tenés la última versión instalada (<strong>v' + verInst + '</strong>). Podés volver a descargarla si necesitás reinstalarla en otra PC.')
+            : ('Descargá la última versión (<strong>v' + AMMER_EXT_LATEST_VER + '</strong>) para guardar legajos en tu carpeta dedicada sin alterar Descargas de Chrome, con auto-consulta RENAPER y Datuar:'));
+
+        const textoBtnDescarga = hayUpdate
+          ? ('⬇️ Descargar Actualización v' + AMMER_EXT_LATEST_VER + ' (.zip)')
+          : ('⬇️ Descargar Extensión v' + AMMER_EXT_LATEST_VER + ' (.zip)');
+
+        const pasosHtml = (hayUpdate || alDia)
+          ? ('<li>Descomprimí el <code>.zip</code> <strong>reemplazando</strong> los archivos dentro de tu carpeta fija de la extensión.</li>' +
+             '<li>Abrí <code>chrome://extensions</code> (usá el botón de copiar abajo) y tocá <strong>↻ Recargar</strong> en <em>Asistente AMMER</em>.</li>' +
+             '<li>Recargá esta pestaña de Simulador-Office (<code>F5</code>).</li>')
+          : ('<li>Descomprimí el archivo <code>.zip</code> descargado en una carpeta fija.</li>' +
+             '<li>Abrí Chrome y entrá a <code>chrome://extensions</code>.</li>' +
+             '<li>Activá <strong>Modo de desarrollador</strong> (arriba a la derecha).</li>' +
+             '<li>Tocá <strong>Cargar descomprimida</strong> y seleccioná la carpeta descomprimida.</li>');
+
+        modal.innerHTML =
+          '<div class="cmd-k-dialog" style="padding:1.1rem 1.25rem;max-width:530px;">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">' +
+              '<strong style="font-size:0.98rem;color:#0f2744;">' + tituloModal + '</strong>' +
+              '<button type="button" onclick="document.getElementById(\'ammerInstallExtModal\').classList.remove(\'is-open\')" style="border:none;background:transparent;font-size:1rem;cursor:pointer;color:#64748b;">✕</button>' +
+            '</div>' +
+            '<p style="font-size:0.8rem;color:#334155;margin:0 0 0.8rem 0;">' + descModal + '</p>' +
+            '<div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;margin-bottom:0.9rem;">' +
+              '<a href="' + AMMER_EXT_ZIP_URL + '" target="_blank" rel="noopener" download style="display:inline-flex;align-items:center;gap:0.45rem;padding:0.55rem 0.95rem;border-radius:9px;background:' + (hayUpdate ? '#d97706' : '#166534') + ';color:#ffffff;font-size:0.82rem;font-weight:700;text-decoration:none;">' + textoBtnDescarga + '</a>' +
+              '<button type="button" onclick="if(navigator.clipboard){navigator.clipboard.writeText(\'chrome://extensions\').then(()=>{if(typeof showToast===\'function\')showToast(\'📋 Copiado chrome://extensions — pegalo en una pestaña nueva\');});}" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.52rem 0.8rem;border-radius:9px;border:1px solid #cbd5e1;background:#ffffff;color:#0f2744;font-size:0.76rem;font-weight:700;cursor:pointer;">📋 Copiar chrome://extensions</button>' +
+            '</div>' +
+            '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0.75rem 0.9rem;font-size:0.76rem;color:#334155;line-height:1.45;">' +
+              '<div style="font-weight:800;color:#0f172a;margin-bottom:0.35rem;">' + (hayUpdate ? 'Cómo actualizar en 20 segundos:' : 'Mini guía de instalación rápida:') + '</div>' +
+              '<ol style="margin:0;padding-left:1.15rem;">' + pasosHtml + '</ol>' +
+              '<div style="margin-top:0.55rem;padding-top:0.5rem;border-top:1px dashed #cbd5e1;font-size:0.71rem;color:#64748b;">ℹ️ Por seguridad de Chrome, las extensiones cargadas en <em>Modo desarrollador</em> requieren reemplazar la carpeta y pulsar Recargar (para actualización 100% silenciosa de fondo se publica en Chrome Web Store privada/no listada).</div>' +
+            '</div>' +
+          '</div>';
         modal.classList.add('is-open');
       };
 

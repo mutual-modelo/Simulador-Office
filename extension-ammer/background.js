@@ -492,16 +492,52 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     sendResponse({ ok: true });
     return;
   }
+  if (request.accion === "ABRIR_URL_SPLIT_DESDE_POPUP") {
+    const targetUrl = String(request.url || "").trim();
+    if (!targetUrl) return sendResponse({ ok: false, error: "URL vacía." });
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const curTab = tabs && tabs[0];
+      if (!curTab || !curTab.id) return sendResponse({ ok: false, error: "Sin pestaña activa." });
+      if (/drive\.google\.com/i.test(targetUrl)) {
+        chrome.storage.local.set({ ammerPendingUrlSplit: { url: targetUrl, openerTabId: curTab.id, ts: Date.now() } });
+      }
+      chrome.tabs.create({ url: targetUrl, splitWithTabId: curTab.id, index: (curTab.index || 0) + 1, active: true })
+        .then((tab) => sendResponse({ ok: true, tabId: tab.id, splitUsed: true }))
+        .catch(() =>
+          chrome.tabs.create({ url: targetUrl, index: (curTab.index || 0) + 1, active: true })
+            .then((tab) => sendResponse({ ok: true, tabId: tab.id, splitUsed: false }))
+            .catch((e) => sendResponse({ ok: false, error: e.message }))
+        );
+    });
+    return true;
+  }
   if (request.accion === "EJECUTAR_MACRO_DOM") {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const tabId = tabs && tabs[0] && tabs[0].id;
+      const tabIdx = tabs && tabs[0] ? (tabs[0].index || 0) : 0;
       if (!tabId) return sendResponse({ ok: false, error: "No hay pestaña activa." });
-      chrome.storage.local.get({ ammerExpedienteActivo: {}, ammerMacrosDom: [] }, (st) => {
+      chrome.storage.local.get({ ammerExpedienteActivo: {}, ammerMacrosDom: [] }, async (st) => {
         const macro = (st.ammerMacrosDom || []).find((m) => m.id === request.id) || request.macro;
         if (!macro || !Array.isArray(macro.pasos) || !macro.pasos.length) {
           return sendResponse({ ok: false, error: "La macro no tiene pasos." });
         }
         const exp = st.ammerExpedienteActivo || {};
+        const domPasos = [];
+        for (const p of macro.pasos) {
+          if (p.tipo === "abrir_split" && p.valor) {
+            try {
+              await chrome.tabs.create({ url: p.valor, splitWithTabId: tabId, index: tabIdx + 1, active: false });
+            } catch (_e) {
+              await chrome.tabs.create({ url: p.valor, index: tabIdx + 1, active: false }).catch(() => {});
+            }
+            domPasos.push({ tipo: "esperar", valor: 600 });
+          } else if (p.tipo === "abrir_url" && p.valor) {
+            await chrome.tabs.update(tabId, { url: p.valor }).catch(() => {});
+            domPasos.push({ tipo: "esperar", valor: 1500 });
+          } else {
+            domPasos.push(p);
+          }
+        }
         chrome.scripting.executeScript(
           {
             target: { tabId },
@@ -519,8 +555,9 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
                 for (const [k, v] of Object.entries(tokens)) out = out.replaceAll(k, v);
                 return out;
               };
-              const esperarSelector = (sel, ms = 4000) =>
-                new Promise((res) => {
+              const esperarSelector = (sel, ms = 4000) => {
+                if (!sel) return Promise.resolve(document.activeElement || document.body);
+                return new Promise((res) => {
                   const found = document.querySelector(sel);
                   if (found) return res(found);
                   const obs = new MutationObserver(() => {
@@ -530,8 +567,15 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
                   obs.observe(document.body, { childList: true, subtree: true });
                   setTimeout(() => { obs.disconnect(); res(document.querySelector(sel)); }, ms);
                 });
+              };
               let ejecutados = 0;
+              let clipMem = "";
               for (const p of pasos) {
+                if (p.tipo === "esperar") {
+                  await new Promise((r) => setTimeout(r, Math.max(100, Number(p.valor || 500))));
+                  ejecutados += 1;
+                  continue;
+                }
                 const el = await esperarSelector(p.selector);
                 if (!el) continue;
                 if (p.tipo === "input") {
@@ -539,6 +583,36 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
                   el.value = resolverTokens(p.valor);
                   el.dispatchEvent(new Event("input", { bubbles: true }));
                   el.dispatchEvent(new Event("change", { bubbles: true }));
+                } else if (p.tipo === "seleccionar_todo") {
+                  el.focus();
+                  if (typeof el.select === "function") el.select();
+                  else document.execCommand("selectAll");
+                } else if (p.tipo === "copiar") {
+                  el.focus();
+                  clipMem = el.value !== undefined ? String(el.value) : (window.getSelection ? String(window.getSelection()) : "");
+                  try { document.execCommand("copy"); } catch (_e) {}
+                } else if (p.tipo === "cortar") {
+                  el.focus();
+                  clipMem = el.value !== undefined ? String(el.value) : "";
+                  if (el.value !== undefined) {
+                    el.value = "";
+                    el.dispatchEvent(new Event("input", { bubbles: true }));
+                  }
+                  try { document.execCommand("cut"); } catch (_e) {}
+                } else if (p.tipo === "pegar") {
+                  el.focus();
+                  const valP = p.valor ? resolverTokens(p.valor) : clipMem;
+                  if (el.value !== undefined && valP) {
+                    el.value = valP;
+                    el.dispatchEvent(new Event("input", { bubbles: true }));
+                    el.dispatchEvent(new Event("change", { bubbles: true }));
+                  } else {
+                    try { document.execCommand("paste"); } catch (_e) {}
+                  }
+                } else if (p.tipo === "tecla_enter") {
+                  el.focus();
+                  el.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", code: "Enter", keyCode: 13, bubbles: true }));
+                  el.dispatchEvent(new KeyboardEvent("keyup", { key: "Enter", code: "Enter", keyCode: 13, bubbles: true }));
                 } else {
                   el.click();
                 }
@@ -546,7 +620,7 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
               }
               return { ejecutados, total: pasos.length };
             },
-            args: [macro.pasos, exp],
+            args: [domPasos, exp],
           },
           (results) => {
             if (chrome.runtime.lastError) {

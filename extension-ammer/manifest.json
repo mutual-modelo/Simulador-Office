@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Asistente AMMER — Split View, Gestor Documental y Macros",
-  "version": "2.3.1",
+  "version": "2.4.0",
   "description": "Extensión unificada AMMER: RENAPER & Drive Split View, respaldo documental local configurable y automatización con macros.",
   "icons": {
     "16": "icons/icon16.png",

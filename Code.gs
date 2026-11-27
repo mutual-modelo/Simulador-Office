@@ -1170,6 +1170,32 @@ function registrarNuevoAsociado(payload) {
     set('Antiguedad', payload.Antiguedad || payload.antiguedad || asoc.antiguedad || '');
     set('Fecha_Alta', asoc.fechaAlta || Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'yyyy-MM-dd'));
     set('Creado_Por', asoc.creadoPor || 'Usuario');
+    set('Banco', payload.Banco || payload.banco || asoc.banco || '');
+    set('Tipo_Cuenta', payload.Tipo_Cuenta || payload.tipoCuenta || asoc.tipoCuenta || '');
+    set('Nro_Cuenta', payload.Nro_Cuenta || payload.nroCuenta || asoc.nroCuenta || '');
+    set('CBU', payload.CBU || payload.cbu || asoc.cbu || '');
+    set('Alias', payload.Alias || payload.alias || asoc.alias || '');
+    set('Tarjeta_Sidecreer_Numero', payload.Tarjeta_Sidecreer_Numero || payload.tarjetaSidecreerNumero || asoc.tarjetaSidecreerNumero || '');
+    set('Tarjeta_Sidecreer_Vencimiento', payload.Tarjeta_Sidecreer_Vencimiento || payload.tarjetaSidecreerVencimiento || asoc.tarjetaSidecreerVencimiento || '');
+    set('Tarjeta_Sidecreer_CVV', payload.Tarjeta_Sidecreer_CVV || payload.tarjetaSidecreerCvv || asoc.tarjetaSidecreerCvv || '');
+    set('Datos_Contacto_JSON', JSON.stringify({
+      cuil: payload.CUIL || payload.cuil || asoc.cuil || '',
+      fechaNac: payload.Fecha_Nacimiento || payload.fechaNacimiento || asoc.fechaNacimiento || asoc.fechaNac || '',
+      sexo: payload.Sexo || payload.sexo || asoc.sexo || '',
+      estadoCivil: payload.Estado_Civil || payload.estadoCivil || asoc.estadoCivil || '',
+      celular: payload.Celular || asoc.celular || '',
+      email: payload.Email || asoc.email || '',
+      domicilio: payload.Domicilio || asoc.domicilio || '',
+      localidad: payload.Localidad || payload.localidad || asoc.localidad || '',
+      banco: payload.Banco || payload.banco || asoc.banco || '',
+      tipoCuenta: payload.Tipo_Cuenta || payload.tipoCuenta || asoc.tipoCuenta || '',
+      nroCuenta: payload.Nro_Cuenta || payload.nroCuenta || asoc.nroCuenta || '',
+      cbu: payload.CBU || payload.cbu || asoc.cbu || '',
+      alias: payload.Alias || payload.alias || asoc.alias || '',
+      tarjetaSidecreerNumero: payload.Tarjeta_Sidecreer_Numero || payload.tarjetaSidecreerNumero || asoc.tarjetaSidecreerNumero || '',
+      tarjetaSidecreerVencimiento: payload.Tarjeta_Sidecreer_Vencimiento || payload.tarjetaSidecreerVencimiento || asoc.tarjetaSidecreerVencimiento || '',
+      tarjetaSidecreerCvv: payload.Tarjeta_Sidecreer_CVV || payload.tarjetaSidecreerCvv || asoc.tarjetaSidecreerCvv || ''
+    }));
     set('Carpeta_Drive_URL', carpetaUrl);
     set('Archivos_Adjuntos_JSON', JSON.stringify(adjuntosGuardados));
 
@@ -1258,7 +1284,19 @@ function registrarNuevaSolicitud(payload) {
       estadoCivil: solicitante.estadoCivil || solContacto.estadoCivil || sol.estadoCivil || payload.Estado_Civil || payload.estadoCivil || contactoExtra.estadoCivil || '',
       email: solicitante.email || solContacto.email || sol.email || payload.Email || payload.email || contactoExtra.email || '',
       celular: solicitante.celular || solContacto.celular || solContacto.telefono || sol.telefono || sol.celular || payload.Celular || payload.celular || contactoExtra.celular || '',
-      domicilio: domicilioHistorico
+      domicilio: domicilioHistorico,
+      banco: solicitante.banco || solContacto.banco || sol.banco || contactoExtra.banco || '',
+      tipoCuenta: solicitante.tipoCuenta || solContacto.tipoCuenta || sol.tipoCuenta || contactoExtra.tipoCuenta || '',
+      nroCuenta: solicitante.nroCuenta || solContacto.nroCuenta || sol.nroCuenta || contactoExtra.nroCuenta || '',
+      cbu: solicitante.cbu || solContacto.cbu || sol.cbu || contactoExtra.cbu || '',
+      alias: solicitante.alias || solContacto.alias || sol.alias || contactoExtra.alias || '',
+      tarjetaSidecreerNumero: solicitante.tarjetaSidecreerNumero || solContacto.tarjetaSidecreerNumero || sol.tarjetaSidecreerNumero || contactoExtra.tarjetaSidecreerNumero || '',
+      tarjetaSidecreerVencimiento: solicitante.tarjetaSidecreerVencimiento || solContacto.tarjetaSidecreerVencimiento || sol.tarjetaSidecreerVencimiento || contactoExtra.tarjetaSidecreerVencimiento || '',
+      tarjetaSidecreerCvv: solicitante.tarjetaSidecreerCvv || solContacto.tarjetaSidecreerCvv || sol.tarjetaSidecreerCvv || contactoExtra.tarjetaSidecreerCvv || '',
+      parejaNombre: solicitante.parejaNombre || solContacto.parejaNombre || contactoExtra.parejaNombre || '',
+      parejaDni: solicitante.parejaDni || solContacto.parejaDni || contactoExtra.parejaDni || '',
+      parejaEmail: solicitante.parejaEmail || solContacto.parejaEmail || contactoExtra.parejaEmail || '',
+      parejaTelefono: solicitante.parejaTelefono || solContacto.parejaTelefono || contactoExtra.parejaTelefono || ''
     };
 
     const fechaIngresoLab = solicitante.fechaIngresoLaboral || solicitante.fechaIngreso || solLaborales.fechaIngresoLaboral || solLaborales.fechaIngreso || sol.fechaIngresoLaboral || sol.fechaIngreso || payload.Fecha_Ingreso_Laboral || payload.fechaIngresoLaboral || payload.fechaIngreso || laboralesExtra.fechaIngresoLaboral || '';
@@ -1521,6 +1559,19 @@ function listarSolicitudes(usuarioActivoInput) {
         domicilio: String(get('Domicilio_Historico_Solicitud') || contacto.domicilio || ''),
         domicilio_historico: String(get('Domicilio_Historico_Solicitud') || contacto.domicilio || ''),
         localidad: contacto.localidad || '',
+        banco: contacto.banco || '',
+        tipoCuenta: contacto.tipoCuenta || '',
+        nroCuenta: contacto.nroCuenta || '',
+        cbu: contacto.cbu || '',
+        alias: contacto.alias || '',
+        tarjetaSidecreerNumero: contacto.tarjetaSidecreerNumero || '',
+        tarjetaSidecreerVencimiento: contacto.tarjetaSidecreerVencimiento || '',
+        tarjetaSidecreerCvv: contacto.tarjetaSidecreerCvv || '',
+        parejaNombre: contacto.parejaNombre || '',
+        parejaDni: contacto.parejaDni || '',
+        parejaEmail: contacto.parejaEmail || '',
+        parejaTelefono: contacto.parejaTelefono || '',
+        categoriaMunicipal: laborales.categoriaMunicipal || '',
         condicion: laborales.condicion || 'Activo',
         organismo: laborales.organismo || 'Provincial',
         dependencia: laborales.dependencia || '',
@@ -2697,7 +2748,19 @@ function actualizarDatosSolicitanteBackend(payload) {
       localidad: sol.localidad !== undefined ? sol.localidad : (prevContacto.localidad || ''),
       email: sol.email !== undefined ? sol.email : (prevContacto.email || ''),
       celular: sol.celular !== undefined ? sol.celular : (prevContacto.celular || ''),
-      domicilio: sol.domicilio !== undefined ? sol.domicilio : (prevContacto.domicilio || '')
+      domicilio: sol.domicilio !== undefined ? sol.domicilio : (prevContacto.domicilio || ''),
+      banco: sol.banco !== undefined ? sol.banco : (prevContacto.banco || ''),
+      tipoCuenta: sol.tipoCuenta !== undefined ? sol.tipoCuenta : (prevContacto.tipoCuenta || ''),
+      nroCuenta: sol.nroCuenta !== undefined ? sol.nroCuenta : (prevContacto.nroCuenta || ''),
+      cbu: sol.cbu !== undefined ? sol.cbu : (prevContacto.cbu || ''),
+      alias: sol.alias !== undefined ? sol.alias : (prevContacto.alias || ''),
+      tarjetaSidecreerNumero: sol.tarjetaSidecreerNumero !== undefined ? sol.tarjetaSidecreerNumero : (prevContacto.tarjetaSidecreerNumero || ''),
+      tarjetaSidecreerVencimiento: sol.tarjetaSidecreerVencimiento !== undefined ? sol.tarjetaSidecreerVencimiento : (prevContacto.tarjetaSidecreerVencimiento || ''),
+      tarjetaSidecreerCvv: sol.tarjetaSidecreerCvv !== undefined ? sol.tarjetaSidecreerCvv : (prevContacto.tarjetaSidecreerCvv || ''),
+      parejaNombre: sol.parejaNombre !== undefined ? sol.parejaNombre : (prevContacto.parejaNombre || ''),
+      parejaDni: sol.parejaDni !== undefined ? sol.parejaDni : (prevContacto.parejaDni || ''),
+      parejaEmail: sol.parejaEmail !== undefined ? sol.parejaEmail : (prevContacto.parejaEmail || ''),
+      parejaTelefono: sol.parejaTelefono !== undefined ? sol.parejaTelefono : (prevContacto.parejaTelefono || '')
     };
     if (map['Datos_Contacto_JSON'] !== undefined) {
       sheet.getRange(rowNum, map['Datos_Contacto_JSON'] + 1).setValue(JSON.stringify(nuevoContacto));

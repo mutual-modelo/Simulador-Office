@@ -699,7 +699,15 @@
         email: sanitizeHTML(emailVal),
         celular: sanitizeHTML(celVal),
         telefono: sanitizeHTML(celVal),
-        domicilio: domHistVal
+        domicilio: domHistVal,
+        banco: sanitizeHTML((document.getElementById('altaBanco')?.value || '').trim()),
+        tipoCuenta: sanitizeHTML(document.getElementById('altaTipoCuenta')?.value || ''),
+        nroCuenta: sanitizeHTML((document.getElementById('altaNroCuenta')?.value || '').trim()),
+        cbu: sanitizeHTML((document.getElementById('altaCbu')?.value || '').trim()),
+        alias: sanitizeHTML((document.getElementById('altaAlias')?.value || '').trim()),
+        tarjetaSidecreerNumero: sanitizeHTML((document.getElementById('altaTarjetaSidecreerNumero')?.value || '').trim()),
+        tarjetaSidecreerVencimiento: sanitizeHTML((document.getElementById('altaTarjetaSidecreerVencimiento')?.value || '').trim()),
+        tarjetaSidecreerCvv: sanitizeHTML((document.getElementById('altaTarjetaSidecreerCvv')?.value || '').trim())
       };
       const datosLaboralesObj = {
         condicion: sanitizeHTML(condicionVal),

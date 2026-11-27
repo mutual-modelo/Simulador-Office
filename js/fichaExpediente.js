@@ -421,6 +421,10 @@
         const tasaActual = prop.tasaCosto || obtenerTasaCostoTexto(lineaActual, cuotasActual);
         const montoActual = prop.monto || s.prestamo?.monto || 100000;
         const cuotaActual = prop.cuotaEstimada || s.prestamo?.cuotaEstimada || 0;
+        const modoSimActual = prop.modoSimulacion === 'cuota' ? 'cuota' : 'neto';
+        const valorInputSim = modoSimActual === 'cuota' ? (cuotaActual || montoActual) : montoActual;
+        const labelInputSim = modoSimActual === 'cuota' ? 'Monto de Cuota Deseada ($)' : 'Monto Neto Ofrecido ($)';
+        const valorResSim = modoSimActual === 'cuota' ? ('Neto: ' + formatMoney(montoActual)) : formatMoney(cuotaActual);
         const refObj = prop.refinanciacion || {};
 
         html += '<form onsubmit="guardarPropuestaMutual(event, \'' + s.id + '\')">' +
@@ -434,12 +438,12 @@
             '</div>' +
             '<div><label class="form-label" style="font-size:.65rem;">Simular por</label>' +
               '<select id="propModoSim" class="input-text" style="font-size:.7rem;" onchange="recalcularOfertaCuotaModal()">' +
-                '<option value="neto" selected>💵 Monto Neto a Entregar</option>' +
-                '<option value="cuota">📅 Monto de Cuota</option>' +
+                '<option value="neto" ' + (modoSimActual === 'neto' ? 'selected' : '') + '>💵 Monto Neto a Entregar</option>' +
+                '<option value="cuota" ' + (modoSimActual === 'cuota' ? 'selected' : '') + '>📅 Monto de Cuota</option>' +
               '</select>' +
             '</div>' +
-            '<div><label id="propMontoLabel" class="form-label" style="font-size:.65rem;">Monto Neto Ofrecido ($)</label>' +
-              '<input type="number" id="propMonto" class="input-text" style="font-size:.7rem;font-weight:700;" value="' + montoActual + '" min="0" step="any" oninput="recalcularOfertaCuotaModal()"/>' +
+            '<div><label id="propMontoLabel" class="form-label" style="font-size:.65rem;">' + labelInputSim + '</label>' +
+              '<input type="number" id="propMonto" class="input-text" style="font-size:.7rem;font-weight:700;" value="' + valorInputSim + '" min="0" step="any" oninput="recalcularOfertaCuotaModal()"/>' +
             '</div>' +
           '</div>' +
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px;">' +
@@ -449,7 +453,7 @@
               '</select>' +
             '</div>' +
             '<div><label class="form-label" style="font-size:.65rem;">Monto de Cuota Resultante</label>' +
-              '<input type="text" id="propCuotaEst" class="input-text" style="font-size:.7rem;font-weight:700;color:var(--cuota-color);" readonly value="' + formatMoney(cuotaActual) + '"/>' +
+              '<input type="text" id="propCuotaEst" class="input-text" style="font-size:.7rem;font-weight:700;color:var(--cuota-color);" readonly value="' + valorResSim + '"/>' +
             '</div>' +
           '</div>' +
           '<div style="margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;background:#f8fafc;padding:3px 6px;border-radius:4px;border:1px solid #e2e8f0;">' +
@@ -574,39 +578,43 @@
 
       html += '</div></div>';
 
-      // 4.B HISTORIAL COMPLETO DE OFERTAS PRESENTADAS (LINEA DE TIEMPO / VERSIONES)
+      // 4.B HISTORIAL COMPLETO DE OFERTAS PRESENTADAS (LINEA DE TIEMPO / VERSIONES EN ACORDEÓN)
       if (historial.length > 0) {
-        html += '<div style="background:#fff;border:1px solid var(--border-color);border-radius:8px;padding:.75rem;margin-bottom:1rem;">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;border-bottom:1px solid var(--border-color);padding-bottom:.35rem;">' +
-            '<strong style="font-size:0.75rem;color:var(--color-primary);text-transform:uppercase;">📜 Historial de Ofertas Emitidas (' + historial.length + ' versiones)</strong>' +
-            '<span style="font-size:0.65rem;color:var(--text-muted);">Auditoría inmutable de contrapropuestas</span>' +
-          '</div>' +
-          '<div class="proposal-timeline">';
+        html += '<details class="proposal-history-accordion" style="background:#fff;border:1px solid var(--border-color);border-radius:8px;padding:.65rem .75rem;margin-bottom:1rem;">' +
+          '<summary style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;list-style:none;gap:8px;flex-wrap:wrap;">' +
+            '<strong style="font-size:0.75rem;color:var(--color-primary);text-transform:uppercase;">📜 Historial de Ofertas Emitidas (' + historial.length + ' ' + (historial.length === 1 ? 'versión' : 'versiones') + ') ▾</strong>' +
+            '<span style="font-size:0.65rem;color:var(--text-muted);">Clic para desplegar / contraer auditoría de contrapropuestas</span>' +
+          '</summary>' +
+          '<div class="proposal-timeline" style="margin-top:.6rem;border-top:1px solid var(--border-color);padding-top:.55rem;">';
 
         const reversedHistory = [...historial].reverse();
         reversedHistory.forEach((v) => {
           const isCurrent = prop.version ? (v.version === prop.version) : (v === historial[historial.length - 1]);
-          html += '<div class="proposal-history-card ' + (isCurrent ? 'is-current' : '') + '">' +
-            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;flex-wrap:wrap;gap:4px;">' +
-              '<div style="display:flex;align-items:center;gap:6px;">' +
+          html += '<details class="proposal-history-card ' + (isCurrent ? 'is-current' : '') + '" ' + (isCurrent ? 'open' : '') + ' style="padding:.5rem .65rem;">' +
+            '<summary style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;list-style:none;flex-wrap:wrap;gap:6px;">' +
+              '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
                 '<span class="version-pill">v' + (v.version || 1) + '</span>' +
                 (isCurrent ? '<span class="badge-status badge-Aprobado" style="font-size:0.6rem;padding:1px 5px;">Versión Vigente</span>' : '') +
-                '<span style="font-size:0.68rem;color:var(--text-muted);">' + formatearFechaHoraChat(v.fecha) + ' por <strong>' + sanitizeHTML(v.analista || 'Analista') + '</strong></span>' +
+                '<strong style="font-size:0.72rem;color:#0f172a;">' + formatMoney(v.monto || 0) + '</strong>' +
+                '<span style="font-size:0.68rem;color:#334155;">· ' + (v.cuotas || 0) + ' cuotas de <strong>' + formatMoney(v.cuotaEstimada || 0) + '</strong></span>' +
+                '<span style="font-size:0.66rem;color:var(--text-muted);">(' + formatearFechaHoraChat(v.fecha) + ' · ' + sanitizeHTML(v.analista || 'Analista') + ')</span>' +
               '</div>' +
-              '<span class="badge-status badge-' + String(v.estadoPropuesta || 'EnEvaluacion').replace(/\s/g, '') + '" style="font-size:0.62rem;">' + (v.estadoPropuesta || 'Emitida') + '</span>' +
-            '</div>' +
-            '<div style="font-size:0.72rem;margin-top:2px;">' +
-              '<strong>' + sanitizeHTML(v.lineaNombre || v.linea) + '</strong> ' +
-              '<span style="color:#0369a1;font-size:0.66rem;">• ' + sanitizeHTML(v.tasaCosto || '') + '</span>' +
-            '</div>' +
-            renderKpiRecuadrosOfertaHtml({
-              linea: v.linea || v.lineaNombre,
-              cuotas: v.cuotas,
-              monto: v.monto,
-              cuota: v.cuotaEstimada,
-              total: v.totalAPagar,
-              capital: v.capitalComputable
-            });
+              '<span class="badge-status badge-' + String(v.estadoPropuesta || 'EnEvaluacion').replace(/\s/g, '') + '" style="font-size:0.62rem;">' + (v.estadoPropuesta || 'Emitida') + ' ▾</span>' +
+            '</summary>' +
+            '<div style="margin-top:.45rem;padding-top:.4rem;border-top:1px dashed #e2e8f0;">' +
+              '<div style="font-size:0.72rem;margin-bottom:4px;">' +
+                '<strong>' + sanitizeHTML(v.lineaNombre || v.linea) + '</strong> ' +
+                '<span style="color:#0369a1;font-size:0.66rem;">• ' + sanitizeHTML(v.tasaCosto || '') + '</span>' +
+                (v.modoSimulacion ? (' <span style="font-size:0.62rem;color:#475569;background:#f1f5f9;padding:1px 6px;border-radius:999px;">Modo: ' + (v.modoSimulacion === 'cuota' ? 'Por Cuota' : 'Por Neto') + '</span>') : '') +
+              '</div>' +
+              renderKpiRecuadrosOfertaHtml({
+                linea: v.linea || v.lineaNombre,
+                cuotas: v.cuotas,
+                monto: v.monto,
+                cuota: v.cuotaEstimada,
+                total: v.totalAPagar,
+                capital: v.capitalComputable
+              });
 
           if (v.esRefinanciacion && v.refinanciacion) {
             html += '<div style="font-size:0.67rem;color:#92400e;background:#fef3c7;padding:2px 6px;border-radius:4px;margin-top:3px;display:inline-block;">' +
@@ -624,12 +632,13 @@
           }
 
           html += '<div style="margin-top:4px;text-align:right;">' +
-            '<button type="button" class="btn-copy" style="font-size:0.64rem;padding:2px 6px;" onclick="copiarPropuestaWhatsApp(\'' + s.id + '\', ' + (v.version || 1) + ')">📋 Copiar v' + (v.version || 1) + ' para WhatsApp</button>' +
-          '</div>' +
-        '</div>';
+              '<button type="button" class="btn-copy" style="font-size:0.64rem;padding:2px 6px;" onclick="copiarPropuestaWhatsApp(\'' + s.id + '\', ' + (v.version || 1) + ')">📋 Copiar v' + (v.version || 1) + ' para WhatsApp</button>' +
+            '</div>' +
+            '</div>' +
+          '</details>';
         });
 
-        html += '</div></div>';
+        html += '</div></details>';
       }
 
       // APARTADO EJECUTIVO EN LA FICHA DE LA MUTUAL (EXCLUSIVO ANALISTAS Y ADMIN)
@@ -1398,13 +1407,23 @@
       const s = all.find(x => String(x.id) === String(id)); if (!s) return;
       const session = getSession();
 
-      const linea = document.getElementById('propLinea').value;
-      const monto = parseFloat(document.getElementById('propMonto').value) || 100000;
+      const linea = _normalizarLineaKeyOferta(document.getElementById('propLinea').value);
+      const modoSim = document.getElementById('propModoSim')?.value === 'cuota' ? 'cuota' : 'neto';
+      const inputValor = parseFloat(document.getElementById('propMonto').value);
       const plazo = parseInt(document.getElementById('propPlazo').value, 10) || 12;
-      const sim = calculateSimulation(linea, plazo, 'neto', monto);
-      const cuota = sim ? sim.cuota : 0;
-      const totalAPagar = sim ? sim.totalAyuda : Number((cuota * plazo).toFixed(2));
-      const capitalComputable = sim ? sim.capital : 0;
+      if (!Number.isFinite(inputValor) || inputValor <= 0) {
+        showToast('⚠️ Ingresá un importe válido mayor a $ 0 para la propuesta.');
+        return;
+      }
+      const sim = calculateSimulation(linea, plazo, modoSim, inputValor);
+      if (!sim) {
+        showToast('⚠️ El plazo de ' + plazo + ' cuotas no está habilitado para la línea seleccionada.');
+        return;
+      }
+      const monto = Number((sim.neto || 0).toFixed(2));
+      const cuota = Number((sim.cuota || 0).toFixed(2));
+      const totalAPagar = Number((sim.totalAyuda || (cuota * plazo)).toFixed(2));
+      const capitalComputable = Number((sim.capital || 0).toFixed(2));
       const tasaCosto = obtenerTasaCostoTexto(linea, plazo);
       const est = document.getElementById('propEstado').value;
       const detalle = sanitizeHTML(document.getElementById('propDetalle').value.trim());
@@ -1461,6 +1480,7 @@
       const nuevaProp = {
         version: nextVersion,
         activa: true,
+        modoSimulacion: modoSim,
         linea: linea,
         lineaNombre: FINANCIAL_DATA[linea].name,
         monto: monto,

@@ -4003,6 +4003,7 @@
       state.editor.pdfBase64 = newB64;
       state.editor.pdfDirty = true;
       await cargarPdfEnCanvasEditor(newB64, insertIdx + 1);
+      renderInspectorCamposEditor();
       notify('Hoja A4 en blanco añadida correctamente.', 'success');
     } catch (e) {
       notify('No se pudo añadir la hoja: ' + (e.message || e), 'error');
@@ -4031,6 +4032,7 @@
       state.editor.pdfBase64 = newB64;
       state.editor.pdfDirty = true;
       await cargarPdfEnCanvasEditor(newB64, insertIdx + 1);
+      renderInspectorCamposEditor();
       notify(`Se insertaron ${copied.length} hoja(s) desde "${file.name}".`, 'success');
     } catch (e) {
       notify('No se pudieron insertar hojas del PDF: ' + (e.message || e), 'error');
@@ -4050,12 +4052,16 @@
       state.editor.campos = (state.editor.campos || [])
         .filter((c) => Number(c.pagina || 1) !== delPage)
         .map((c) => (Number(c.pagina || 1) > delPage ? Object.assign({}, c, { pagina: Number(c.pagina) - 1 }) : c));
+      if (state.editor.selectedFieldId && !state.editor.campos.some((c) => c.id === state.editor.selectedFieldId)) {
+        state.editor.selectedFieldId = null;
+      }
       const outBytes = await pdfDoc.save();
       const newB64 = 'data:application/pdf;base64,' + bytesToBase64Pdf_(outBytes);
       state.editor.pdfBase64 = newB64;
       state.editor.pdfDirty = true;
       const nextPage = Math.min(delPage, pdfDoc.getPageCount());
       await cargarPdfEnCanvasEditor(newB64, nextPage);
+      renderInspectorCamposEditor();
       notify(`Página ${delPage} eliminada correctamente.`, 'success');
     } catch (e) {
       notify('No se pudo eliminar la página: ' + (e.message || e), 'error');

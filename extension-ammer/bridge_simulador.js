@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const EXT_VERSION = '2.5.1';
+  const EXT_VERSION = '2.5.2';
 
   function marcarDisponible() {
     if (document.documentElement) {
@@ -51,11 +51,13 @@
       return;
     }
 
-    if (t === 'AMMER_OPEN_RENAPER_SPLIT' || t === 'AMMER_OPEN_SPLIT_URL') {
+    if (t === 'AMMER_OPEN_RENAPER_SPLIT' || t === 'AMMER_OPEN_SPLIT_URL' || t === 'AMMER_OPEN_DATUAR_SPLIT') {
+      const isUrl = t === 'AMMER_OPEN_SPLIT_URL' || t === 'AMMER_OPEN_DATUAR_SPLIT';
+      const defaultUrl = t === 'AMMER_OPEN_DATUAR_SPLIT' ? 'https://datuar.com/' : null;
       chrome.runtime.sendMessage(
         {
-          action: t === 'AMMER_OPEN_SPLIT_URL' ? 'OPEN_SPLIT_URL' : 'OPEN_RENAPER_SPLIT',
-          url: ev.data.url || null,
+          action: isUrl ? 'OPEN_SPLIT_URL' : 'OPEN_RENAPER_SPLIT',
+          url: ev.data.url || defaultUrl,
           payload: ev.data.payload || {},
         },
         (resp) => {

@@ -489,6 +489,8 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     const payload = request.payload || {};
     if (String(targetUrl).includes("tramites.renaper.gob.ar")) {
       chrome.storage.local.set({ ammerPendingRenaper: { ...payload, openerTabId, ts: Date.now() } });
+    } else if (/datuar\.com/i.test(String(targetUrl))) {
+      chrome.storage.local.set({ ammerPendingDatuarSplit: { ...payload, url: targetUrl, openerTabId, ts: Date.now() } });
     } else if (isOpenUrlSplit) {
       chrome.storage.local.set({ ammerPendingUrlSplit: { ...payload, url: targetUrl, openerTabId, ts: Date.now() } });
     }
@@ -529,6 +531,19 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
       if (!curTab || !curTab.id) return sendResponse({ ok: false, error: "Sin pestaña activa." });
       if (/drive\.google\.com/i.test(targetUrl)) {
         chrome.storage.local.set({ ammerPendingUrlSplit: { url: targetUrl, openerTabId: curTab.id, ts: Date.now() } });
+      } else if (/datuar\.com/i.test(targetUrl)) {
+        chrome.storage.local.get({ ammerExpedienteActivo: {} }, (stExp) => {
+          const exp = stExp.ammerExpedienteActivo || {};
+          chrome.storage.local.set({
+            ammerPendingDatuarSplit: {
+              url: targetUrl,
+              openerTabId: curTab.id,
+              dni: String(exp.dni || "").replace(/\D/g, ""),
+              nombre: exp.nombre || "",
+              ts: Date.now(),
+            },
+          });
+        });
       }
       chrome.tabs.create({ url: targetUrl, splitWithTabId: curTab.id, index: (curTab.index || 0) + 1, active: true })
         .then((tab) => sendResponse({ ok: true, tabId: tab.id, splitUsed: true }))

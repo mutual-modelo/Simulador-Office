@@ -147,7 +147,28 @@
     }
   }
 
-  const isDrive = /drive\.google\.com/i.test(window.location.hostname || '');
+  function autocompletarDatuar(data) {
+    const dni = String((data && data.dni) || '').replace(/\D/g, '');
+    if (!dni) return false;
+    const inputs = Array.from(
+      document.querySelectorAll('input[type="search"], input[type="text"], input:not([type]), input[type="number"]')
+    ).filter((el) => {
+      if (el.disabled || el.readOnly) return false;
+      const hint = getFieldHint(el);
+      if (/cf-|turnstile|captcha|token|email|correo/.test(hint)) return false;
+      const rect = el.getBoundingClientRect();
+      return rect.width > 60 && rect.height > 18;
+    });
+    const target = inputs.find((el) => /dni|cuil|nombre|buscar|person|search/.test(getFieldHint(el))) || inputs[0];
+    if (!target) return false;
+    target.focus();
+    setNativeValue(target, dni);
+    return true;
+  }
+
+  const host = String(window.location.hostname || '');
+  const isDrive = /drive\.google\.com/i.test(host);
+  const isDatuar = /(^|\.)datuar\.com$/i.test(host);
   if (isDrive) {
     chrome.storage.local.get('ammerPendingUrlSplit', (res) => {
       const data = res && res.ammerPendingUrlSplit;
@@ -155,6 +176,25 @@
       renderBarraFlotante({ nombre: 'Google Drive (3en1)', dni: 'Split View AMMER' });
       const btnAuto = document.getElementById('ammerBtnReAutocompletar');
       if (btnAuto) btnAuto.style.display = 'none';
+    });
+  } else if (isDatuar) {
+    chrome.storage.local.get('ammerPendingDatuarSplit', (res) => {
+      const data = res && res.ammerPendingDatuarSplit;
+      if (!data || !data.ts || (Date.now() - Number(data.ts)) > MAX_AGE_MS) return;
+      renderBarraFlotante({ nombre: data.nombre || 'Datuar', dni: data.dni || '' });
+      const btnAuto = document.getElementById('ammerBtnReAutocompletar');
+      if (btnAuto) {
+        btnAuto.textContent = '✨ Completar DNI';
+        const clone = btnAuto.cloneNode(true);
+        btnAuto.parentNode.replaceChild(clone, btnAuto);
+        clone.addEventListener('click', () => {
+          const ok = autocompletarDatuar(data);
+          clone.textContent = ok ? '✓ DNI completado' : '⚠️ Completar manual';
+          setTimeout(() => { clone.textContent = '✨ Completar DNI'; }, 2000);
+        });
+      }
+      setTimeout(() => autocompletarDatuar(data), 450);
+      setTimeout(() => autocompletarDatuar(data), 1400);
     });
   } else {
     chrome.storage.local.get('ammerPendingRenaper', (res) => {

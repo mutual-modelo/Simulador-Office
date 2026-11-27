@@ -475,6 +475,81 @@
     });
   }
 
+  function abrirConsultaDatuarAudit20() {
+    const st = global._auditoria20Estado || {};
+    const dniData = st.dni || {};
+    const ext = dniData.datos_extraidos || {};
+    const det = dniData.validacion_determinista || {};
+
+    let dniClean = String(det.dni_extraido || ext.dni || '').replace(/\D/g, '').trim();
+    if (!dniClean) {
+      const cands = [
+        (document.getElementById('inputDniEsperadoAudit20') || {}).value,
+        st.dniSolicitante,
+        (document.getElementById('inputDomDniAudit20') || {}).value,
+        (document.getElementById('inputCajaJperDniAudit20') || {}).value,
+        (document.getElementById('inputBoletinDniConsulta') || {}).value,
+        st.recibo && st.recibo.dni
+      ];
+      for (const c of cands) {
+        const digits = String(c || '').replace(/\D/g, '').trim();
+        if (digits.length === 11) { dniClean = digits.slice(2, 10); break; }
+        if (digits.length >= 7) { dniClean = digits; break; }
+      }
+    }
+
+    if (!dniClean || dniClean.length < 7) {
+      const ingresado = typeof global.prompt === 'function'
+        ? global.prompt('Ingresá el DNI del asociado para consultar en Datuar:', '')
+        : '';
+      if (!ingresado) return;
+      dniClean = String(ingresado).replace(/\D/g, '').trim();
+      if (dniClean.length === 11) dniClean = dniClean.slice(2, 10);
+      if (dniClean.length < 7) {
+        if (typeof showToast === 'function') showToast('Ingresá un DNI válido (al menos 7 dígitos).');
+        return;
+      }
+    }
+
+    const nombre = [ext.apellido, ext.nombres].filter(Boolean).join(', ')
+      || st.nombreSolicitante
+      || (st.recibo && st.recibo.titular)
+      || 'Asociado';
+
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      navigator.clipboard.writeText(dniClean).catch(() => {});
+    }
+
+    const tieneExt = Boolean(
+      document.documentElement &&
+      document.documentElement.dataset &&
+      document.documentElement.dataset.ammerSplitExt
+    );
+
+    if (tieneExt) {
+      global.postMessage(
+        {
+          type: 'AMMER_OPEN_DATUAR_SPLIT',
+          url: 'https://datuar.com/',
+          payload: { dni: dniClean, nombre, origen: 'auditoria20' },
+          requestId: String(Date.now())
+        },
+        global.location.origin
+      );
+      if (typeof showToast === 'function') {
+        showToast('🔎 Datuar abierto en Split View con DNI ' + dniClean + '. Completá la verificación y tocá Buscar.');
+      }
+    } else {
+      const w = Math.min(720, Math.round((screen.availWidth || 1280) * 0.52));
+      const h = Math.max(640, Math.round((screen.availHeight || 860) * 0.9));
+      const left = Math.max(0, (screen.availWidth || 1280) - w);
+      global.open('https://datuar.com/', 'ammerDatuarWin', `width=${w},height=${h},left=${left},top=30,resizable=yes,scrollbars=yes`);
+      if (typeof showToast === 'function') {
+        showToast('🔎 DNI ' + dniClean + ' copiado al portapapeles. Pegalo en Datuar (o instalá la extensión AMMER para autocompletarlo).');
+      }
+    }
+  }
+
   async function ejecutarValidacionDniAudit20(fileOverride) {
     const inpFile = document.getElementById('fileInputDniAudit20');
     const file = fileOverride || (global._auditoria20Files && global._auditoria20Files.dni) || (inpFile && inpFile.files && inpFile.files[0]);
@@ -918,6 +993,7 @@
   global.cambiarTabAuditoria20 = cambiarTabAuditoria20;
   global.ejecutarValidacionDniAudit20 = ejecutarValidacionDniAudit20;
   global.abrirValidacionRenaperAudit20 = abrirValidacionRenaperAudit20;
+  global.abrirConsultaDatuarAudit20 = abrirConsultaDatuarAudit20;
   global.ejecutarValidacionDomicilioAudit20 = ejecutarValidacionDomicilioAudit20;
   global.inspeccionarSoloForenseAudit20 = inspeccionarSoloForenseAudit20;
   global.consultarCajaJperAudit20 = consultarCajaJperAudit20;

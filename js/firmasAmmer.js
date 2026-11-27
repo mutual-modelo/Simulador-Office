@@ -2760,6 +2760,39 @@
             </div>
 
             ${(() => {
+              const sc = r.score_riesgo_consolidado || (ek && ek.score_riesgo_consolidado) || null;
+              if (!sc || sc.confianza_pct == null) return '';
+              const conf = Number(sc.confianza_pct);
+              const nivel = String(sc.nivel_riesgo || 'BAJO').toUpperCase();
+              const scBg = nivel === 'BAJO' ? '#f0fdf4' : (nivel === 'MEDIO' ? '#fffbeb' : '#fef2f2');
+              const scBorder = nivel === 'BAJO' ? '#86efac' : (nivel === 'MEDIO' ? '#fde68a' : '#fecaca');
+              const scCol = nivel === 'BAJO' ? '#166534' : (nivel === 'MEDIO' ? '#92400e' : '#b91c1c');
+              const dup = (ek && ek.duplicado_facial_1n) || sc.duplicado_facial_1n || {};
+              const red = sc.riesgo_red || (ek && ek.riesgo_red) || {};
+              const facs = Array.isArray(sc.factores) ? sc.factores : [];
+              return `
+                <div style="margin-bottom:0.9rem;background:${scBg};border:1.5px solid ${scBorder};border-radius:12px;padding:0.8rem 1rem;color:${scCol};">
+                  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.45rem;">
+                    <div style="font-size:0.84rem;font-weight:800;">🛡️ Score de Confianza AMMER (Estilo MetaMap/Didit): ${conf}/100 · Riesgo ${escHtml(nivel)}</div>
+                    <div style="display:flex;gap:0.4rem;flex-wrap:wrap;font-size:0.71rem;font-weight:700;">
+                      ${dup.duplicado_detectado ? `<span style="background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;padding:2px 8px;border-radius:999px;">🚨 Rostro duplicado 1:N</span>` : (dup.ejecutado ? `<span style="background:#ffffff;border:1px solid ${scBorder};padding:2px 8px;border-radius:999px;">✅ 1:N sin duplicados (${dup.total_comparados || 0})</span>` : '')}
+                      ${(red.posible_vpn_proxy || red.ua_automatizado) ? `<span style="background:#fef3c7;border:1px solid #fcd34d;color:#92400e;padding:2px 8px;border-radius:999px;">🌐 Alerta IP/VPN</span>` : (red.ip ? `<span style="background:#ffffff;border:1px solid ${scBorder};padding:2px 8px;border-radius:999px;">🌐 Red OK (${escHtml(red.ip)})</span>` : '')}
+                    </div>
+                  </div>
+                  ${facs.length ? `
+                    <div style="display:flex;flex-wrap:wrap;gap:0.35rem;font-size:0.73rem;">
+                      ${facs.map((f) => {
+                        const fCol = f.estado === 'CRITICO' ? '#b91c1c' : (f.estado === 'ALERTA' ? '#b45309' : '#166534');
+                        const fIco = f.estado === 'CRITICO' ? '⛔' : (f.estado === 'ALERTA' ? '⚠️' : '✅');
+                        return `<span style="background:rgba(255,255,255,0.85);border:1px solid #e2e8f0;color:${fCol};padding:2px 8px;border-radius:8px;font-weight:600;">${fIco} ${escHtml(f.detalle || f.clave)}</span>`;
+                      }).join('')}
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            })()}
+
+            ${(() => {
               const valsR = r.validaciones_requeridas_json || {};
               if (valsR.requiere_pdf !== false && valsR.firma_olografa !== false) return '';
               return `

@@ -4001,6 +4001,7 @@
       const outBytes = await pdfDoc.save();
       const newB64 = 'data:application/pdf;base64,' + bytesToBase64Pdf_(outBytes);
       state.editor.pdfBase64 = newB64;
+      state.editor.pdfDirty = true;
       await cargarPdfEnCanvasEditor(newB64, insertIdx + 1);
       notify('Hoja A4 en blanco añadida correctamente.', 'success');
     } catch (e) {
@@ -4028,6 +4029,7 @@
       const outBytes = await pdfDoc.save();
       const newB64 = 'data:application/pdf;base64,' + bytesToBase64Pdf_(outBytes);
       state.editor.pdfBase64 = newB64;
+      state.editor.pdfDirty = true;
       await cargarPdfEnCanvasEditor(newB64, insertIdx + 1);
       notify(`Se insertaron ${copied.length} hoja(s) desde "${file.name}".`, 'success');
     } catch (e) {
@@ -4051,6 +4053,7 @@
       const outBytes = await pdfDoc.save();
       const newB64 = 'data:application/pdf;base64,' + bytesToBase64Pdf_(outBytes);
       state.editor.pdfBase64 = newB64;
+      state.editor.pdfDirty = true;
       const nextPage = Math.min(delPage, pdfDoc.getPageCount());
       await cargarPdfEnCanvasEditor(newB64, nextPage);
       notify(`Página ${delPage} eliminada correctamente.`, 'success');

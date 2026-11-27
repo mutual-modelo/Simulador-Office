@@ -1977,6 +1977,11 @@
                         <button type="button" class="firmas-btn firmas-btn--xs" style="width:26px;padding:0;height:25px;" onclick="cambiarPaginaEditor(-1)" title="Página anterior">◀</button>
                         <span id="lblEditorPaginaActual" style="font-size:0.73rem;font-weight:800;color:#0f172a;padding:0 3px;">Página 1 de 1</span>
                         <button type="button" class="firmas-btn firmas-btn--xs" style="width:26px;padding:0;height:25px;" onclick="cambiarPaginaEditor(1)" title="Página siguiente">▶</button>
+                        <span style="width:1px;height:16px;background:#cbd5e1;margin:0 2px;"></span>
+                        <button type="button" class="firmas-btn firmas-btn--xs firmas-btn-soft-blue" style="height:25px;padding:0 7px;" onclick="window.agregarHojaBlancoEditorPdf && window.agregarHojaBlancoEditorPdf()" title="Añadir una hoja A4 en blanco después de la página actual">➕ Hoja</button>
+                        <button type="button" class="firmas-btn firmas-btn--xs firmas-btn-soft-blue" style="height:25px;padding:0 7px;" onclick="document.getElementById('inpInsertarPdfEditor')?.click()" title="Insertar hojas desde otro archivo PDF después de la página actual">📄➕ PDF</button>
+                        <input type="file" id="inpInsertarPdfEditor" accept="application/pdf" style="display:none;" onchange="window.insertarHojasDesdePdfEditor && window.insertarHojasDesdePdfEditor(this)"/>
+                        <button type="button" class="firmas-btn firmas-btn--xs" style="height:25px;padding:0 7px;border-color:#fecaca;background:#fef2f2;color:#b91c1c;" onclick="window.eliminarHojaActualEditorPdf && window.eliminarHojaActualEditorPdf()" title="Eliminar la página actual del PDF">🗑️ Hoja</button>
                       </div>
                     </div>
                   </div>
@@ -7151,7 +7156,7 @@
       boletin: { src: 'js/boletinER.js?v=6', check: () => typeof window.cargarEstadoBoletinOficialAuditoria === 'function' },
       auditoria20: { src: 'js/auditoria20.js?v=8', check: () => typeof window.ejecutarValidacionDniAudit20 === 'function' },
       fichas: { src: 'js/fichasAsociados.js?v=6', check: () => typeof window.buscarPadronFichasAsociados === 'function' },
-      firmas: { src: 'js/firmasAmmer.js?v=34', check: () => typeof window.initFirmasAmmerView === 'function' },
+      firmas: { src: 'js/firmasAmmer.js?v=35', check: () => typeof window.initFirmasAmmerView === 'function' },
       whatsappBot: { src: 'js/whatsappBotAdmin.js?v=5', check: () => typeof window.initWhatsappBotPanelAdmin === 'function' },
       mutualPay: { src: 'js/mutualPayBackoffice.js?v=6', check: () => typeof window.initMutualPayBackoffice === 'function' }
     };

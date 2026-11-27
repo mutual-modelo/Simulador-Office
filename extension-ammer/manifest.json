@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Asistente AMMER — Split View, Gestor Documental y Macros",
-  "version": "2.2.0",
-  "description": "Extensión unificada AMMER: RENAPER Split View, respaldo documental local configurable y automatización con macros.",
+  "version": "2.3.0",
+  "description": "Extensión unificada AMMER: RENAPER & Drive Split View, respaldo documental local configurable y automatización con macros.",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
@@ -55,7 +55,8 @@
     },
     {
       "matches": [
-        "https://tramites.renaper.gob.ar/*"
+        "https://tramites.renaper.gob.ar/*",
+        "https://drive.google.com/*"
       ],
       "js": ["renaper_helper.js"],
       "run_at": "document_idle"

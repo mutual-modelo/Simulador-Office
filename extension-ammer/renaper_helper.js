@@ -147,12 +147,23 @@
     }
   }
 
-  chrome.storage.local.get('ammerPendingRenaper', (res) => {
-    const data = res && res.ammerPendingRenaper;
-    if (!data || !data.ts || (Date.now() - Number(data.ts)) > MAX_AGE_MS) return;
+  const isDrive = /drive\.google\.com/i.test(window.location.hostname || '');
+  if (isDrive) {
+    chrome.storage.local.get('ammerPendingUrlSplit', (res) => {
+      const data = res && res.ammerPendingUrlSplit;
+      if (!data || !data.ts || (Date.now() - Number(data.ts)) > MAX_AGE_MS) return;
+      renderBarraFlotante({ nombre: 'Google Drive (3en1)', dni: 'Split View AMMER' });
+      const btnAuto = document.getElementById('ammerBtnReAutocompletar');
+      if (btnAuto) btnAuto.style.display = 'none';
+    });
+  } else {
+    chrome.storage.local.get('ammerPendingRenaper', (res) => {
+      const data = res && res.ammerPendingRenaper;
+      if (!data || !data.ts || (Date.now() - Number(data.ts)) > MAX_AGE_MS) return;
 
-    renderBarraFlotante(data);
-    setTimeout(() => autocompletarFormulario(data), 350);
-    setTimeout(() => autocompletarFormulario(data), 1100);
-  });
+      renderBarraFlotante(data);
+      setTimeout(() => autocompletarFormulario(data), 350);
+      setTimeout(() => autocompletarFormulario(data), 1100);
+    });
+  }
 })();

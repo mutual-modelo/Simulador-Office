@@ -116,11 +116,14 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn_limpiar").addEventListener("click", () => chrome.runtime.sendMessage({ accion: "LIMPIAR_HISTORIAL" }, cargarHistorial));
 
   document.getElementById("btn_grabar_dom").addEventListener("click", () => {
-    chrome.runtime.sendMessage({ accion: "INICIAR_GRABACION_DOM" }, (resp) => {
-      if (!resp || !resp.ok) return setMacroStatus(resp && resp.error ? resp.error : "No se pudo grabar.", true);
-      document.getElementById("btn_grabar_dom").style.display = "none";
-      document.getElementById("btn_detener_dom").style.display = "inline-block";
-      setMacroStatus("🔴 Grabando clics e inputs en la pestaña actual...");
+    const nomPre = String((document.getElementById("inp_macro_nombre") || {}).value || "").trim();
+    chrome.storage.local.set({ ammerPendingMacroName: nomPre }, () => {
+      chrome.runtime.sendMessage({ accion: "INICIAR_GRABACION_DOM" }, (resp) => {
+        if (!resp || !resp.ok) return setMacroStatus(resp && resp.error ? resp.error : "No se pudo grabar.", true);
+        document.getElementById("btn_grabar_dom").style.display = "none";
+        document.getElementById("btn_detener_dom").style.display = "inline-block";
+        setMacroStatus(nomPre ? `🔴 Grabando "${nomPre}" en la pestaña actual...` : "🔴 Grabando clics e inputs en la pestaña actual...");
+      });
     });
   });
 
@@ -130,11 +133,16 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("btn_detener_dom").style.display = "none";
       const pasos = (resp && resp.pasos) || [];
       if (!pasos.length) return setMacroStatus("No se registraron pasos.", true);
-      const nombre = prompt("Nombre de la macro:", `Macro ${new Date().toLocaleTimeString("es-AR")}`);
-      if (!nombre) return;
-      chrome.runtime.sendMessage({ accion: "GUARDAR_MACRO_DOM", macro: { nombre, pasos } }, () => {
-        cargarContextoYMacros();
-        setMacroStatus(`✅ Macro "${nombre}" guardada (${pasos.length} pasos).`);
+      chrome.storage.local.get({ ammerPendingMacroName: "" }, (st) => {
+        const nomGuardado = String(st.ammerPendingMacroName || "").trim();
+        const nombre = nomGuardado || prompt("Nombre de la macro:", `Macro ${new Date().toLocaleTimeString("es-AR")}`);
+        if (!nombre) return;
+        chrome.storage.local.remove("ammerPendingMacroName");
+        if (document.getElementById("inp_macro_nombre")) document.getElementById("inp_macro_nombre").value = "";
+        chrome.runtime.sendMessage({ accion: "GUARDAR_MACRO_DOM", macro: { nombre, pasos } }, () => {
+          cargarContextoYMacros();
+          setMacroStatus(`✅ Macro "${nombre}" guardada (${pasos.length} pasos).`);
+        });
       });
     });
   });
@@ -146,6 +154,55 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!resp || !resp.ok) return setMacroStatus(resp && resp.error ? resp.error : "Error ejecutando macro.", true);
       setMacroStatus(`▶️ Ejecutados ${resp.ejecutados}/${resp.total} pasos.`);
     });
+  });
+
+  document.getElementById("btn_exportar_dom").addEventListener("click", () => {
+    const id = document.getElementById("sel_macro_dom").value;
+    if (!id) return setMacroStatus("Seleccioná una macro para exportar.", true);
+    chrome.runtime.sendMessage({ accion: "OBTENER_MACROS_DOM" }, (resp) => {
+      const m = ((resp && resp.macros) || []).find((x) => x.id === id);
+      if (!m) return setMacroStatus("No se encontró la macro seleccionada.", true);
+      const payload = JSON.stringify({ formato: "AMMER_MACRO_V1", exportadoEn: new Date().toISOString(), macro: m }, null, 2);
+      const blob = new Blob([payload], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `macro_${String(m.nombre || "ammer").replace(/[^a-zA-Z0-9_-]+/g, "_")}.json`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      setMacroStatus(`⬇️ Macro "${m.nombre}" exportada (.json).`);
+    });
+  });
+
+  document.getElementById("btn_importar_dom").addEventListener("click", () => {
+    const inp = document.getElementById("inp_importar_dom");
+    if (inp) inp.click();
+  });
+
+  document.getElementById("inp_importar_dom").addEventListener("change", (ev) => {
+    const f = ev.target && ev.target.files && ev.target.files[0];
+    if (ev.target) ev.target.value = "";
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result || "{}"));
+        const m = parsed && parsed.macro ? parsed.macro : parsed;
+        if (!m || !m.nombre || !Array.isArray(m.pasos)) {
+          return setMacroStatus("Archivo JSON de macro inválido.", true);
+        }
+        chrome.runtime.sendMessage({
+          accion: "GUARDAR_MACRO_DOM",
+          macro: { nombre: m.nombre, pasos: m.pasos, urlInicial: m.urlInicial || "" },
+        }, () => {
+          cargarContextoYMacros();
+          setMacroStatus(`⬆️ Macro "${m.nombre}" importada (${m.pasos.length} pasos).`);
+        });
+      } catch (_err) {
+        setMacroStatus("Error leyendo el archivo JSON de macro.", true);
+      }
+    };
+    reader.readAsText(f);
   });
 
   document.getElementById("btn_eliminar_dom").addEventListener("click", () => {

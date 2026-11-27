@@ -136,7 +136,43 @@ function cargarContextoYMacros() {
   });
 }
 
+async function verificarBannerCarpetaPc() {
+  const banner = document.getElementById("carpeta_pc_perm_banner");
+  if (!banner || typeof AmmerFsStore === "undefined") return;
+  const handle = await AmmerFsStore.obtenerCarpetaHandle();
+  if (!handle) {
+    banner.style.display = "none";
+    return;
+  }
+  const perm = await AmmerFsStore.verificarPermiso(handle, false);
+  if (perm === "granted") {
+    banner.style.display = "none";
+    chrome.storage.local.remove("ammerCarpetaPcPendientePermiso");
+    return;
+  }
+  banner.style.display = "flex";
+  banner.style.justifyContent = "space-between";
+  banner.style.alignItems = "center";
+  banner.style.gap = "6px";
+  banner.innerHTML = `
+    <span>⚠️ Reactivar guardado en carpeta <strong>${esc(handle.name)}</strong></span>
+    <button id="btn_reautorizar_carpeta_pc" type="button" class="btn btn-pri" style="white-space:nowrap;">🔓 Activar</button>
+  `;
+  const btn = document.getElementById("btn_reautorizar_carpeta_pc");
+  if (btn) {
+    btn.addEventListener("click", async () => {
+      const resPerm = await AmmerFsStore.verificarPermiso(handle, true);
+      if (resPerm === "granted") {
+        chrome.storage.local.remove("ammerCarpetaPcPendientePermiso");
+        banner.style.display = "none";
+        setMacroStatus(`✅ Carpeta "${handle.name}" reactivada.`);
+      }
+    });
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  verificarBannerCarpetaPc();
   cargarHistorial();
   cargarContextoYMacros();
 

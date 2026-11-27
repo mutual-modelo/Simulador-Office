@@ -77,13 +77,21 @@
 
   <div class="section">
     <div class="section-title">3. Directorio Local y Nomenclatura</div>
-    <div class="form-group">
-      <label for="carpeta_raiz">Carpeta Base de Descarga (subruta dentro de Descargas de Chrome):</label>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <input type="text" id="carpeta_raiz" value="AMMER_LEGAJOS" placeholder="Ej: AMMER_LEGAJOS o Mutual/AMMER_LEGAJOS" style="flex:1;">
-        <button id="btn_cambiar_descargas_chrome" type="button" class="btn-sec" title="Abrir configuración de Chrome para elegir la carpeta o disco donde descarga tu navegador">📂 Cambiar carpeta en Chrome</button>
+    <div class="form-group" style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:12px;">
+      <label style="margin-bottom:6px;">Carpeta de guardado exclusiva de la Extensión (sin cambiar Descargas de Chrome):</label>
+      <div id="carpeta_pc_estado" style="font-size:0.84rem;color:#0f2744;font-weight:700;margin-bottom:8px;">
+        📥 Usando carpeta Descargas estándar de Chrome (Downloads/...)
       </div>
-      <div class="help-text">Podés usar barras (<code>/</code>) para subcarpetas dentro de Descargas (ej: <span class="badge">MUTUAL/AMMER_LEGAJOS</span>). Para elegir otra unidad o ruta fuera de Descargas, cambiala desde <strong>📂 Cambiar carpeta en Chrome</strong>.</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+        <button id="btn_elegir_carpeta_pc" type="button" class="btn-sec" style="border-color:#0284c7;color:#0369a1;">📂 Elegir carpeta en mi PC</button>
+        <button id="btn_reset_carpeta_pc" type="button" class="btn-sec" style="display:none;color:#b91c1c;border-color:#fecaca;">✖️ Volver a Descargas</button>
+      </div>
+      <div class="help-text">Tus demás descargas normales en Chrome seguirán yendo a Descargas como siempre. Solo los legajos de AMMER se guardarán en la carpeta que elijas acá.</div>
+    </div>
+    <div class="form-group">
+      <label for="carpeta_raiz">Nombre / Subruta de Carpeta Base:</label>
+      <input type="text" id="carpeta_raiz" value="AMMER_LEGAJOS" placeholder="Ej: AMMER_LEGAJOS o Mutual/AMMER_LEGAJOS">
+      <div class="help-text">Si elegiste arriba directamente una carpeta llamada <span class="badge">AMMER_LEGAJOS</span>, se usará directo sin duplicar el nombre.</div>
     </div>
     <div class="form-group">
       <label for="patron_carpetas">Estructura de Subdirectorios:</label>
@@ -129,6 +137,7 @@
   </div>
   <div id="status"></div>
 </div>
+<script src="fs_store.js"></script>
 <script src="options.js"></script>
 </body>
 </html>

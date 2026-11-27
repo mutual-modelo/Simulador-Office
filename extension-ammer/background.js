@@ -327,7 +327,10 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
           }
         } catch (_e) {}
       }
-      sendResponse({ ok: true, macros: locales, online: Boolean(auth && auth.authToken) });
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const activeUrl = (tabs && tabs[0] && tabs[0].url) || "";
+        sendResponse({ ok: true, macros: locales, online: Boolean(auth && auth.authToken), activeUrl });
+      });
     });
     return true;
   }
@@ -457,7 +460,8 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
             return sendResponse({ ok: false, error: chrome.runtime.lastError.message });
           }
           const res = results && results[0] && results[0].result;
-          sendResponse({ ok: true, ...(res || {}) });
+          const tabUrl = (tabs && tabs[0] && tabs[0].url) || "";
+          sendResponse({ ok: true, urlInicial: tabUrl, ...(res || {}) });
         }
       );
     });
@@ -522,17 +526,31 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
           return sendResponse({ ok: false, error: "La macro no tiene pasos." });
         }
         const exp = st.ammerExpedienteActivo || {};
+        const resolverUrlTokens = (raw) => {
+          const mapa = {
+            "{DNI}": encodeURIComponent(String(exp.dni || "")),
+            "{CUIL}": encodeURIComponent(String(exp.cuil || "")),
+            "{NOMBRE}": encodeURIComponent(String(exp.nombre || "")),
+            "{CBU}": encodeURIComponent(String(exp.cbu || "")),
+            "{MONTO}": encodeURIComponent(String(exp.monto || "")),
+            "{ID_EXPEDIENTE}": encodeURIComponent(String(exp.idExpediente || "")),
+          };
+          let out = String(raw || "");
+          for (const [k, v] of Object.entries(mapa)) out = out.replaceAll(k, v);
+          return out;
+        };
         const domPasos = [];
         for (const p of macro.pasos) {
           if (p.tipo === "abrir_split" && p.valor) {
+            const urlResuelta = resolverUrlTokens(p.valor);
             try {
-              await chrome.tabs.create({ url: p.valor, splitWithTabId: tabId, index: tabIdx + 1, active: false });
+              await chrome.tabs.create({ url: urlResuelta, splitWithTabId: tabId, index: tabIdx + 1, active: false });
             } catch (_e) {
-              await chrome.tabs.create({ url: p.valor, index: tabIdx + 1, active: false }).catch(() => {});
+              await chrome.tabs.create({ url: urlResuelta, index: tabIdx + 1, active: false }).catch(() => {});
             }
             domPasos.push({ tipo: "esperar", valor: 600 });
           } else if (p.tipo === "abrir_url" && p.valor) {
-            await chrome.tabs.update(tabId, { url: p.valor }).catch(() => {});
+            await chrome.tabs.update(tabId, { url: resolverUrlTokens(p.valor) }).catch(() => {});
             domPasos.push({ tipo: "esperar", valor: 1500 });
           } else {
             domPasos.push(p);

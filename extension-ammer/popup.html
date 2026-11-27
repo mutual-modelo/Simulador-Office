@@ -54,9 +54,16 @@
       Sin expediente activo. Abrí una ficha en Simulador-Office.
     </div>
 
+    <div id="macro_sugerida_box" class="card" style="display:none;background:#ecfdf5;border-color:#86efac;color:#14532d;"></div>
+
     <div class="card">
       <h3>1. 🌐 Macro Web por DOM (Chrome)</h3>
-      <input type="text" id="inp_macro_nombre" placeholder="Nombre de la macro (antes de grabar o armar)..." style="width:100%;box-sizing:border-box;padding:5px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.74rem;margin-bottom:6px;"/>
+      <input type="text" id="inp_macro_nombre" placeholder="Nombre de la macro (antes de grabar o armar)..." style="width:100%;box-sizing:border-box;padding:5px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.74rem;margin-bottom:5px;"/>
+      <input type="text" id="inp_macro_url" placeholder="URL sugerida (opcional, ej: https://tramites.renaper.gob.ar/...)" style="width:100%;box-sizing:border-box;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.7rem;margin-bottom:5px;"/>
+      <label style="display:flex;align-items:center;gap:6px;font-size:0.72rem;color:#334155;margin-bottom:6px;cursor:pointer;">
+        <input type="checkbox" id="chk_macro_compartida" style="margin:0;"/>
+        <span>🌐 Compartida con todo el equipo (nube)</span>
+      </label>
       <div style="display:flex;gap:5px;margin-bottom:6px;align-items:center;">
         <select id="sel_split_pre_url" style="flex:1;margin:0;padding:4px 6px;font-size:0.71rem;">
           <option value="https://tramites.renaper.gob.ar/mi_ejemplar/">🪪 RENAPER (Mi Ejemplar)</option>
@@ -71,15 +78,20 @@
       <select id="sel_macro_dom"><option value="">-- Sin macros guardadas --</option></select>
       <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;">
         <button id="btn_ejecutar_dom" class="btn btn-green" style="flex:1;">▶️ Ejecutar</button>
-        <button id="btn_exportar_dom" class="btn" title="Exportar macro (.json) para compartir">⬇️ Exportar</button>
-        <button id="btn_importar_dom" class="btn" title="Importar macro (.json) de un compañero">⬆️ Importar</button>
+        <button id="btn_editar_dom" class="btn" title="Editar pasos, nombre o compartir esta macro">✏️ Editar</button>
+        <button id="btn_exportar_dom" class="btn" title="Exportar macro (.json) para compartir">⬇️</button>
+        <button id="btn_importar_dom" class="btn" title="Importar macro (.json) de un compañero">⬆️</button>
         <input type="file" id="inp_importar_dom" accept="application/json,.json" style="display:none;"/>
         <button id="btn_eliminar_dom" class="btn" title="Eliminar macro">🗑️</button>
       </div>
     </div>
 
     <div class="card">
-      <h3>🧩 Constructor de Macro por Pasos</h3>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <h3 style="margin:0;">🧩 Constructor / Editor de Pasos</h3>
+        <button id="btn_cancelar_edicion" class="btn" style="display:none;padding:2px 6px;font-size:0.68rem;">✕ Nueva</button>
+      </div>
+      <div id="builder_edit_badge" style="display:none;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:6px;padding:4px 7px;font-size:0.7rem;font-weight:700;margin-bottom:6px;"></div>
       <select id="sel_builder_tipo" style="margin-bottom:5px;font-size:0.72rem;">
         <option value="abrir_split">🪟 Abrir página en Pestaña Dividida (Split View)</option>
         <option value="abrir_url">🌐 Abrir URL en pestaña</option>
@@ -98,7 +110,7 @@
         <button id="btn_builder_add" class="btn btn-pri" style="flex:1;">➕ Agregar paso</button>
         <button id="btn_builder_clear" class="btn" title="Vaciar lista de pasos">🧹 Limpiar</button>
       </div>
-      <div id="builder_pasos_lista" style="max-height:90px;overflow-y:auto;font-size:0.7rem;color:#334155;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:6px;padding:4px 6px;margin-bottom:6px;">Sin pasos agregados aún.</div>
+      <div id="builder_pasos_lista" style="max-height:135px;overflow-y:auto;font-size:0.7rem;color:#334155;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:6px;padding:4px 6px;margin-bottom:6px;">Sin pasos agregados aún.</div>
       <button id="btn_builder_guardar" class="btn btn-green" style="width:100%;">💾 Guardar Macro Construida (Online + Local)</button>
     </div>
 

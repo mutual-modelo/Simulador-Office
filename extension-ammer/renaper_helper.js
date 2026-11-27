@@ -41,14 +41,36 @@
     return `${m[3]}-${m[2]}-${m[1]}`;
   }
 
-  function autocompletarFormulario(data) {
+  function hayCaptchaActivo() {
+    return Boolean(
+      document.querySelector(
+        'iframe[src*="recaptcha"], iframe[src*="hcaptcha"], iframe[src*="turnstile"], .g-recaptcha, .cf-turnstile, [id*="captcha" i], [class*="captcha" i]'
+      )
+    );
+  }
+
+  function clickConsultarRenaper() {
+    const btns = Array.from(document.querySelectorAll('button, input[type="submit"]'));
+    const btn = btns.find((el) => {
+      if (el.disabled) return false;
+      const txt = String(el.textContent || el.value || '').trim().toLowerCase();
+      return /consultar/.test(txt);
+    }) || document.querySelector('form button[type="submit"], form input[type="submit"]');
+    if (!btn) return false;
+    btn.click();
+    return true;
+  }
+
+  function autocompletarFormulario(data, autoConsultar) {
     if (!data) return false;
     const dni = String(data.dni || '').replace(/\D/g, '');
     const sexoRaw = String(data.sexo || '').toLowerCase();
     const fechaDdMm = String(data.fecha_nacimiento || '').trim();
     const fechaIso = formatIsoDate(fechaDdMm);
 
-    let filled = 0;
+    let filledDni = false;
+    let filledFecha = false;
+    let filledSexo = false;
 
     // 1) DNI
     if (dni) {
@@ -56,7 +78,7 @@
       const dniInp = inputs.find((el) => /\bdni\b|documento|nro.*doc/.test(getFieldHint(el)) && !/tramite|ejemplar|fecha|nac/.test(getFieldHint(el)));
       if (dniInp) {
         setNativeValue(dniInp, dni);
-        filled++;
+        filledDni = Boolean(String(dniInp.value || '').trim());
       }
     }
 
@@ -67,7 +89,7 @@
       if (nacInp) {
         const val = nacInp.type === 'date' && fechaIso ? fechaIso : fechaDdMm;
         setNativeValue(nacInp, val);
-        filled++;
+        filledFecha = Boolean(String(nacInp.value || '').trim());
       }
     }
 
@@ -89,7 +111,7 @@
         });
         if (opt) {
           setNativeValue(sexoSel, opt.value);
-          filled++;
+          filledSexo = Boolean(sexoSel.value);
         }
       } else {
         const radios = Array.from(document.querySelectorAll('input[type="radio"]'));
@@ -102,12 +124,24 @@
         });
         if (matchRadio) {
           matchRadio.click();
-          filled++;
+          filledSexo = Boolean(matchRadio.checked);
         }
       }
     }
 
-    return filled > 0;
+    const todosCompletos = filledDni && filledFecha && filledSexo;
+    if (autoConsultar && todosCompletos && !hayCaptchaActivo()) {
+      const yaResultado = /el ejemplar vigente para el documento/i.test((document.body && document.body.innerText) || '');
+      const firmaEnvio = `${dni}|${sexoRaw}|${fechaDdMm}|${data.ts || ''}`;
+      let yaEnviado = false;
+      try { yaEnviado = sessionStorage.getItem('ammerRenaperAutoSent') === firmaEnvio; } catch (_e) {}
+      if (!yaResultado && !yaEnviado) {
+        try { sessionStorage.setItem('ammerRenaperAutoSent', firmaEnvio); } catch (_e) {}
+        setTimeout(() => clickConsultarRenaper(), 250);
+      }
+    }
+
+    return filledDni || filledFecha || filledSexo;
   }
 
   function renderBarraFlotante(data) {
@@ -116,7 +150,9 @@
     bar.id = 'ammer-renaper-split-bar';
     bar.style.cssText = 'position:fixed;top:10px;right:12px;z-index:2147483647;background:#0f2744;color:#ffffff;border:2px solid #38bdf8;border-radius:12px;padding:8px 12px;box-shadow:0 12px 28px rgba(15,23,42,0.35);font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:94vw;';
 
-    const dniTxt = data && data.dni ? `DNI ${data.dni}` : 'RENAPER';
+    const dniTxt = data && data.query
+      ? String(data.query).slice(0, 32)
+      : (data && data.dni ? `DNI ${data.dni}` : 'RENAPER');
     const nomTxt = data && data.nombre ? String(data.nombre).slice(0, 26) : 'Consulta AMMER';
 
     bar.innerHTML = `
@@ -124,7 +160,7 @@
         <div style="font-weight:800;color:#e0f2fe;">🪪 AMMER · ${nomTxt}</div>
         <div style="font-size:11px;color:#bae6fd;">${dniTxt}${data && data.sexo ? ' · ' + data.sexo : ''}${data && data.fecha_nacimiento ? ' · ' + data.fecha_nacimiento : ''}</div>
       </div>
-      <button type="button" id="ammerBtnReAutocompletar" style="padding:5px 9px;border-radius:7px;border:1px solid #38bdf8;background:#0284c7;color:#ffffff;font-size:11px;font-weight:700;cursor:pointer;">✨ Completar</button>
+      <button type="button" id="ammerBtnReAutocompletar" style="padding:5px 9px;border-radius:7px;border:1px solid #38bdf8;background:#0284c7;color:#ffffff;font-size:11px;font-weight:700;cursor:pointer;">✨ Completar y Consultar</button>
       <button type="button" id="ammerBtnCerrarSplitRenaper" style="padding:5px 10px;border-radius:7px;border:1px solid #fca5a5;background:#dc2626;color:#ffffff;font-size:11px;font-weight:800;cursor:pointer;">✕ Cerrar y volver</button>
     `;
 
@@ -133,9 +169,10 @@
     const btnAuto = document.getElementById('ammerBtnReAutocompletar');
     if (btnAuto) {
       btnAuto.addEventListener('click', () => {
-        const ok = autocompletarFormulario(data);
-        btnAuto.textContent = ok ? '✓ Completado' : '⚠️ Completar manual';
-        setTimeout(() => { btnAuto.textContent = '✨ Completar'; }, 2000);
+        try { sessionStorage.removeItem('ammerRenaperAutoSent'); } catch (_e) {}
+        const ok = autocompletarFormulario(data, true);
+        btnAuto.textContent = ok ? '✓ Consultado' : '⚠️ Completar manual';
+        setTimeout(() => { btnAuto.textContent = '✨ Completar y Consultar'; }, 2000);
       });
     }
 
@@ -148,8 +185,8 @@
   }
 
   function autocompletarDatuar(data) {
-    const dni = String((data && data.dni) || '').replace(/\D/g, '');
-    if (!dni) return false;
+    const query = String((data && (data.query || data.dni || data.nombre)) || '').trim();
+    if (!query) return false;
     const inputs = Array.from(
       document.querySelectorAll('input[type="search"], input[type="text"], input:not([type]), input[type="number"]')
     ).filter((el) => {
@@ -162,7 +199,14 @@
     const target = inputs.find((el) => /dni|cuil|nombre|buscar|person|search/.test(getFieldHint(el))) || inputs[0];
     if (!target) return false;
     target.focus();
-    setNativeValue(target, dni);
+    setNativeValue(target, query);
+    const searchBtn = Array.from(document.querySelectorAll('button, input[type="submit"]')).find((b) =>
+      /buscar|consultar/i.test(String(b.textContent || b.value || ''))
+    );
+    if (searchBtn) {
+      searchBtn.style.outline = '2px solid #0284c7';
+      searchBtn.style.outlineOffset = '2px';
+    }
     return true;
   }
 
@@ -181,16 +225,16 @@
     chrome.storage.local.get('ammerPendingDatuarSplit', (res) => {
       const data = res && res.ammerPendingDatuarSplit;
       if (!data || !data.ts || (Date.now() - Number(data.ts)) > MAX_AGE_MS) return;
-      renderBarraFlotante({ nombre: data.nombre || 'Datuar', dni: data.dni || '' });
+      renderBarraFlotante({ nombre: 'Datuar', query: data.query || data.dni || data.nombre || '' });
       const btnAuto = document.getElementById('ammerBtnReAutocompletar');
       if (btnAuto) {
-        btnAuto.textContent = '✨ Completar DNI';
+        btnAuto.textContent = '✨ Completar dato';
         const clone = btnAuto.cloneNode(true);
         btnAuto.parentNode.replaceChild(clone, btnAuto);
         clone.addEventListener('click', () => {
           const ok = autocompletarDatuar(data);
-          clone.textContent = ok ? '✓ DNI completado' : '⚠️ Completar manual';
-          setTimeout(() => { clone.textContent = '✨ Completar DNI'; }, 2000);
+          clone.textContent = ok ? '✓ Completado' : '⚠️ Pegar con Ctrl+V';
+          setTimeout(() => { clone.textContent = '✨ Completar dato'; }, 2000);
         });
       }
       setTimeout(() => autocompletarDatuar(data), 450);
@@ -202,8 +246,8 @@
       if (!data || !data.ts || (Date.now() - Number(data.ts)) > MAX_AGE_MS) return;
 
       renderBarraFlotante(data);
-      setTimeout(() => autocompletarFormulario(data), 350);
-      setTimeout(() => autocompletarFormulario(data), 1100);
+      setTimeout(() => autocompletarFormulario(data, false), 350);
+      setTimeout(() => autocompletarFormulario(data, true), 1100);
     });
   }
 })();

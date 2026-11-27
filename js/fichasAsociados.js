@@ -354,9 +354,14 @@
     detEl.innerHTML = '<div style="padding:1.5rem;border-radius:14px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;font-size:0.82rem;font-weight:600;">⏳ Cargando ficha del asociado DNI ' + sanitizeHTML(dniClean) + '...</div>';
 
     try {
-      const resp = await fetchConTimeout(`${RENDER_API_URL}/api/asociados/${encodeURIComponent(dniClean)}/ficha`, { method: 'GET' }, 25000);
+      const [resp, respFirmas] = await Promise.all([
+        fetchConTimeout(`${RENDER_API_URL}/api/asociados/${encodeURIComponent(dniClean)}/ficha`, { method: 'GET' }, 25000),
+        fetchConTimeout(`${RENDER_API_URL}/api/firmas/solicitudes?q=${encodeURIComponent(dniClean)}&limit=30`, { method: 'GET' }, 15000).catch(() => null),
+      ]);
       const data = await resp.json().catch(() => ({}));
       if (!resp.ok) throw new Error(data.detail || ('HTTP ' + resp.status));
+      const dataFirmas = respFirmas && respFirmas.ok ? await respFirmas.json().catch(() => ({})) : {};
+      const firmasDni = Array.isArray(dataFirmas.solicitudes || dataFirmas.items) ? (dataFirmas.solicitudes || dataFirmas.items) : [];
 
       if (!data.encontrado) {
         detEl.innerHTML =
@@ -438,6 +443,28 @@
       const domLimpio = _limpiarTextoFicha(asoc.domicilio || asoc.servicio_domicilio, 'No registrado');
       const nombreEsc = String(asoc.apellido_nombres || '').replace(/'/g, '');
 
+      const firmasDniHtml = firmasDni.length > 0
+        ? firmasDni.map(fm => {
+            const fid = String(fm.id || '').trim().replace(/'/g, "\\'");
+            const estF = String(fm.estado || 'PENDIENTE').toUpperCase();
+            const ekF = fm.ekyc_resumen || null;
+            const scF = fm.score_riesgo_consolidado || (ekF && ekF.score_riesgo_consolidado) || null;
+            const scBadge = (scF && scF.confianza_pct != null)
+              ? `<span style="padding:2px 7px;border-radius:999px;font-size:0.7rem;font-weight:700;background:${scF.confianza_pct >= 85 ? '#dcfce7' : (scF.confianza_pct >= 65 ? '#fef3c7' : '#fee2e2')};color:${scF.confianza_pct >= 85 ? '#166534' : (scF.confianza_pct >= 65 ? '#92400e' : '#b91c1c')};">🛡️ ${scF.confianza_pct}/100</span>`
+              : '';
+            const fechaF = fm.firmado_en || fm.created_at ? new Date(fm.firmado_en || fm.created_at).toLocaleDateString('es-AR') : '—';
+            return '<tr style="border-bottom:1px solid #f1f5f9;">' +
+              '<td style="padding:0.55rem 0.75rem;font-weight:700;color:#0f172a;">' + sanitizeHTML(fm.plantilla_nombre || 'Documento AMMER') + '</td>' +
+              '<td style="padding:0.55rem 0.75rem;color:#334155;">' + sanitizeHTML(fm.expediente_id || '—') + '</td>' +
+              '<td style="padding:0.55rem 0.75rem;">' + _badgeEstadoFichaHtml(estF, true) + ' ' + scBadge + '</td>' +
+              '<td style="padding:0.55rem 0.75rem;color:#64748b;">' + sanitizeHTML(fechaF) + '</td>' +
+              '<td style="padding:0.55rem 0.75rem;text-align:right;">' +
+                (fid ? `<button type="button" onclick="(async()=>{if(typeof window.ensureLazyModuleReady==='function'){await window.ensureLazyModuleReady('firmas');}if(typeof window.abrirFichaSolicitudFirma==='function'){window.abrirFichaSolicitudFirma('${fid}');}})()" style="padding:4px 9px;border-radius:7px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-size:0.72rem;font-weight:700;cursor:pointer;">🔍 Abrir Review</button>` : '—') +
+              '</td>' +
+            '</tr>';
+          }).join('')
+        : '<tr><td colspan="5" style="padding:1rem;color:#64748b;text-align:center;font-size:0.78rem;">No hay gestiones de Firmas AMMER vinculadas a este DNI.</td></tr>';
+
       detEl.innerHTML =
         '<div style="padding:1.15rem 1.25rem;border-radius:14px;border:1px solid #bfdbfe;background:linear-gradient(135deg,#ffffff 0%,#eff6ff 100%);margin-bottom:1.1rem;box-shadow:0 2px 6px rgba(15,39,68,0.04);">' +
           '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:0.85rem;">' +
@@ -445,6 +472,7 @@
               '<div style="display:flex;align-items:center;gap:0.55rem;flex-wrap:wrap;">' +
                 '<h4 style="margin:0;font-size:1.1rem;font-weight:800;color:#0f172a;">' + sanitizeHTML(asoc.apellido_nombres || ('Asociado DNI ' + dniClean)) + '</h4>' +
                 _badgeEstadoFichaHtml(asoc.perfil_validacion_estado || 'PENDIENTE') +
+                '<span style="padding:2px 8px;border-radius:999px;font-size:0.7rem;font-weight:800;background:#e0e7ff;color:#1e3a8a;">Legajo Único 360°</span>' +
               '</div>' +
               '<div style="font-size:0.8rem;color:#334155;margin-top:6px;display:flex;flex-wrap:wrap;gap:0.75rem;">' +
                 '<span>DNI: <strong>' + sanitizeHTML(dniClean) + '</strong></span>' +
@@ -465,6 +493,13 @@
         '</div>' +
         '<h5 style="margin:0 0 0.6rem 0;font-size:0.84rem;font-weight:800;color:#0f172a;">📌 Estado Documental por Pilar</h5>' +
         '<div class="padron-pilares-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0.65rem;margin-bottom:1.15rem;">' + pilaresHtml + '</div>' +
+        '<h5 style="margin:0 0 0.6rem 0;font-size:0.84rem;font-weight:800;color:#0f172a;">✍️ Firmas AMMER & Verificaciones eKYC (' + firmasDni.length + ')</h5>' +
+        '<div style="overflow-x:auto;border:1px solid #e2e8f0;border-radius:12px;background:#ffffff;margin-bottom:1.15rem;">' +
+          '<table style="width:100%;border-collapse:collapse;font-size:0.78rem;text-align:left;">' +
+            '<thead style="background:#f8fafc;border-bottom:1px solid #e2e8f0;color:#475569;font-size:11px;text-transform:uppercase;"><tr><th style="padding:0.55rem 0.75rem;">Documento</th><th style="padding:0.55rem 0.75rem;">Expediente</th><th style="padding:0.55rem 0.75rem;">Estado / Score</th><th style="padding:0.55rem 0.75rem;">Fecha</th><th style="padding:0.55rem 0.75rem;text-align:right;">Revisión</th></tr></thead>' +
+            '<tbody>' + firmasDniHtml + '</tbody>' +
+          '</table>' +
+        '</div>' +
         '<h5 style="margin:0 0 0.6rem 0;font-size:0.84rem;font-weight:800;color:#0f172a;">🕒 Historial de Validaciones (' + hist.length + ')</h5>' +
         '<div style="max-height:360px;overflow-y:auto;padding-right:4px;margin-bottom:1.15rem;">' + timelineHtml + '</div>' +
         '<h5 style="margin:0 0 0.6rem 0;font-size:0.84rem;font-weight:800;color:#0f172a;">📄 Solicitudes Registradas (' + sols.length + ')</h5>' +

@@ -294,33 +294,97 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     });
     return true;
   }
+  if (request.accion === "SYNC_AUTH_CONTEXT") {
+    chrome.storage.local.set({
+      ammerAuthContext: {
+        authToken: String(request.authToken || "").trim(),
+        usuario: String(request.usuario || "").trim(),
+        apiBase: String(request.apiBase || "https://ammer-auditor-api.onrender.com").replace(/\/+$/, ""),
+        ts: Date.now(),
+      },
+    }, () => sendResponse({ ok: true }));
+    return true;
+  }
   if (request.accion === "OBTENER_MACROS_DOM") {
-    chrome.storage.local.get({ ammerMacrosDom: [] }, (res) => {
-      sendResponse({ ok: true, macros: res.ammerMacrosDom || [] });
+    chrome.storage.local.get({ ammerMacrosDom: [], ammerAuthContext: null }, async (res) => {
+      let locales = Array.isArray(res.ammerMacrosDom) ? res.ammerMacrosDom : [];
+      const auth = res.ammerAuthContext;
+      if (auth && auth.authToken && auth.apiBase) {
+        try {
+          const rNet = await fetch(`${auth.apiBase}/api/extension/macros`, {
+            method: "GET",
+            headers: { Authorization: `Bearer ${auth.authToken}` },
+          });
+          if (rNet.ok) {
+            const dNet = await rNet.json().catch(() => ({}));
+            if (Array.isArray(dNet.macros)) {
+              const map = new Map();
+              dNet.macros.forEach((m) => { if (m && m.id) map.set(m.id, m); });
+              locales.forEach((m) => { if (m && m.id && !map.has(m.id)) map.set(m.id, m); });
+              locales = Array.from(map.values());
+              chrome.storage.local.set({ ammerMacrosDom: locales.slice(0, 50) });
+            }
+          }
+        } catch (_e) {}
+      }
+      sendResponse({ ok: true, macros: locales, online: Boolean(auth && auth.authToken) });
     });
     return true;
   }
   if (request.accion === "GUARDAR_MACRO_DOM") {
-    chrome.storage.local.get({ ammerMacrosDom: [] }, (res) => {
+    chrome.storage.local.get({ ammerMacrosDom: [], ammerAuthContext: null }, async (res) => {
       const lista = Array.isArray(res.ammerMacrosDom) ? res.ammerMacrosDom : [];
       const macro = request.macro || {};
       const nueva = {
         id: macro.id || `mac_${Date.now()}`,
         nombre: String(macro.nombre || "Macro AMMER").trim(),
+        urlInicial: String(macro.urlInicial || "").trim(),
         pasos: Array.isArray(macro.pasos) ? macro.pasos : [],
+        compartida: Boolean(macro.compartida),
         creadaEn: new Date().toISOString(),
+        online: false,
       };
+      const auth = res.ammerAuthContext;
+      if (auth && auth.authToken && auth.apiBase) {
+        try {
+          const rPost = await fetch(`${auth.apiBase}/api/extension/macros`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${auth.authToken}`,
+            },
+            body: JSON.stringify({
+              id: nueva.id,
+              nombre: nueva.nombre,
+              url_inicial: nueva.urlInicial,
+              pasos: nueva.pasos,
+              compartida: nueva.compartida,
+            }),
+          });
+          const dPost = await rPost.json().catch(() => ({}));
+          if (rPost.ok && dPost.ok) nueva.online = true;
+        } catch (_e) {}
+      }
       const filtrada = lista.filter((m) => m.id !== nueva.id);
       filtrada.unshift(nueva);
-      chrome.storage.local.set({ ammerMacrosDom: filtrada.slice(0, 30) }, () => {
-        sendResponse({ ok: true, macro: nueva });
+      chrome.storage.local.set({ ammerMacrosDom: filtrada.slice(0, 50) }, () => {
+        sendResponse({ ok: true, macro: nueva, online: nueva.online });
       });
     });
     return true;
   }
   if (request.accion === "ELIMINAR_MACRO_DOM") {
-    chrome.storage.local.get({ ammerMacrosDom: [] }, (res) => {
+    chrome.storage.local.get({ ammerMacrosDom: [], ammerAuthContext: null }, async (res) => {
       const filtrada = (res.ammerMacrosDom || []).filter((m) => m.id !== request.id);
+      const auth = res.ammerAuthContext;
+      if (auth && auth.authToken && auth.apiBase && request.id) {
+        try {
+          await fetch(`${auth.apiBase}/api/extension/macros/${encodeURIComponent(request.id)}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${auth.authToken}` },
+          });
+        } catch (_e) {}
+      }
       chrome.storage.local.set({ ammerMacrosDom: filtrada }, () => sendResponse({ ok: true }));
     });
     return true;

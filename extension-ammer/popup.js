@@ -77,7 +77,7 @@ function cargarContextoYMacros() {
       return;
     }
     sel.innerHTML = macros
-      .map((m) => `<option value="${esc(m.id)}">${esc(m.nombre)} (${(m.pasos || []).length} pasos)</option>`)
+      .map((m) => `<option value="${esc(m.id)}">${m.online ? '☁️' : '💻'} ${esc(m.nombre)} (${(m.pasos || []).length} pasos)</option>`)
       .join("");
   });
 }

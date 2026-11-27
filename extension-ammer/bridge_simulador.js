@@ -12,9 +12,34 @@
     } catch (_e) {}
   }
 
+  function sincronizarAuthExtension() {
+    try {
+      const tok = sessionStorage.getItem('ammer_session_token') || localStorage.getItem('ammer_session_token') || localStorage.getItem('AMMER_SESSION_TOKEN') || '';
+      const rawSess = sessionStorage.getItem('session') || localStorage.getItem('session') || '{}';
+      let usr = '';
+      try {
+        const s = JSON.parse(rawSess);
+        usr = (s && (s.usuario || s.username || s.email || s.nombre)) || '';
+      } catch (_e) {}
+      if (tok) {
+        chrome.runtime.sendMessage({
+          accion: 'SYNC_AUTH_CONTEXT',
+          authToken: tok,
+          usuario: usr,
+          apiBase: 'https://ammer-auditor-api.onrender.com',
+        });
+      }
+    } catch (_e) {}
+  }
+
   marcarDisponible();
+  sincronizarAuthExtension();
+  setInterval(sincronizarAuthExtension, 8000);
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', marcarDisponible, { once: true });
+    document.addEventListener('DOMContentLoaded', () => {
+      marcarDisponible();
+      sincronizarAuthExtension();
+    }, { once: true });
   }
 
   window.addEventListener('message', (ev) => {

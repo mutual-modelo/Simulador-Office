@@ -77,7 +77,7 @@ function cargarContextoYMacros() {
       return;
     }
     sel.innerHTML = macros
-      .map((m) => `<option value="${esc(m.id)}">${esc(m.nombre)} (${(m.pasos || []).length} pasos)</option>`)
+      .map((m) => `<option value="${esc(m.id)}">${m.online ? '☁️' : '💻'} ${esc(m.nombre)} (${(m.pasos || []).length} pasos)</option>`)
       .join("");
   });
 }
@@ -211,6 +211,64 @@ document.addEventListener("DOMContentLoaded", () => {
     chrome.runtime.sendMessage({ accion: "ELIMINAR_MACRO_DOM", id }, () => {
       cargarContextoYMacros();
       setMacroStatus("🗑️ Macro eliminada.");
+    });
+  });
+
+  let builderPasos = [];
+  const renderBuilderPasos = () => {
+    const el = document.getElementById("builder_pasos_lista");
+    if (!el) return;
+    if (!builderPasos.length) {
+      el.innerHTML = "Sin pasos agregados aún.";
+      return;
+    }
+    el.innerHTML = builderPasos
+      .map((p, idx) => `<div>${idx + 1}. <strong>${esc(p.tipo)}</strong>${p.selector ? ` · <code>${esc(p.selector)}</code>` : ""}${p.valor ? ` → "${esc(String(p.valor).slice(0, 32))}"` : ""}</div>`)
+      .join("");
+  };
+
+  document.getElementById("btn_abrir_split_pre").addEventListener("click", () => {
+    const url = (document.getElementById("sel_split_pre_url") || {}).value || "https://tramites.renaper.gob.ar/mi_ejemplar/";
+    chrome.runtime.sendMessage({ accion: "ABRIR_URL_SPLIT_DESDE_POPUP", url }, (resp) => {
+      if (!resp || !resp.ok) return setMacroStatus("No se pudo abrir en pestaña dividida.", true);
+      setMacroStatus("🪟 Pestaña auxiliar abierta en Split View.");
+    });
+  });
+
+  document.getElementById("btn_builder_add").addEventListener("click", () => {
+    const tipo = (document.getElementById("sel_builder_tipo") || {}).value || "click";
+    const selector = String((document.getElementById("inp_builder_selector") || {}).value || "").trim();
+    const valor = String((document.getElementById("inp_builder_valor") || {}).value || "").trim();
+    if (["input", "click"].includes(tipo) && !selector) {
+      return setMacroStatus("Ingresá un selector CSS para este paso.", true);
+    }
+    if (["abrir_url", "abrir_split", "input"].includes(tipo) && !valor) {
+      return setMacroStatus("Ingresá un valor o URL para este paso.", true);
+    }
+    builderPasos.push({ tipo, selector, valor });
+    if (document.getElementById("inp_builder_selector")) document.getElementById("inp_builder_selector").value = "";
+    if (document.getElementById("inp_builder_valor")) document.getElementById("inp_builder_valor").value = "";
+    renderBuilderPasos();
+    setMacroStatus(`➕ Paso ${builderPasos.length} agregado (${tipo}).`);
+  });
+
+  document.getElementById("btn_builder_clear").addEventListener("click", () => {
+    builderPasos = [];
+    renderBuilderPasos();
+    setMacroStatus("🧹 Lista de pasos limpia.");
+  });
+
+  document.getElementById("btn_builder_guardar").addEventListener("click", () => {
+    if (!builderPasos.length) return setMacroStatus("Agregá al menos 1 paso primero.", true);
+    const nomInput = String((document.getElementById("inp_macro_nombre") || {}).value || "").trim();
+    const nombre = nomInput || prompt("Nombre de la macro construida:", `Macro ${new Date().toLocaleTimeString("es-AR")}`);
+    if (!nombre) return;
+    chrome.runtime.sendMessage({ accion: "GUARDAR_MACRO_DOM", macro: { nombre, pasos: builderPasos } }, (resp) => {
+      builderPasos = [];
+      renderBuilderPasos();
+      if (document.getElementById("inp_macro_nombre")) document.getElementById("inp_macro_nombre").value = "";
+      cargarContextoYMacros();
+      setMacroStatus(`✅ Macro "${nombre}" guardada (${resp && resp.online ? "☁️ Online" : "💻 Local"}).`);
     });
   });
 

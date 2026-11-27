@@ -56,7 +56,14 @@
 
     <div class="card">
       <h3>1. 🌐 Macro Web por DOM (Chrome)</h3>
-      <input type="text" id="inp_macro_nombre" placeholder="Nombre de la macro (antes de grabar)..." style="width:100%;box-sizing:border-box;padding:5px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.74rem;margin-bottom:6px;"/>
+      <input type="text" id="inp_macro_nombre" placeholder="Nombre de la macro (antes de grabar o armar)..." style="width:100%;box-sizing:border-box;padding:5px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.74rem;margin-bottom:6px;"/>
+      <div style="display:flex;gap:5px;margin-bottom:6px;align-items:center;">
+        <select id="sel_split_pre_url" style="flex:1;margin:0;padding:4px 6px;font-size:0.71rem;">
+          <option value="https://tramites.renaper.gob.ar/mi_ejemplar/">🪪 RENAPER (Mi Ejemplar)</option>
+          <option value="https://drive.google.com/">📁 Google Drive (3en1)</option>
+        </select>
+        <button id="btn_abrir_split_pre" class="btn btn-pri" title="Abrir página auxiliar en pestaña dividida antes de grabar">🪟 Split View</button>
+      </div>
       <div style="display:flex;gap:6px;margin-bottom:6px;">
         <button id="btn_grabar_dom" class="btn btn-red" style="flex:1;">🔴 Grabar pasos</button>
         <button id="btn_detener_dom" class="btn" style="flex:1;display:none;">⏹️ Detener y guardar</button>
@@ -69,6 +76,30 @@
         <input type="file" id="inp_importar_dom" accept="application/json,.json" style="display:none;"/>
         <button id="btn_eliminar_dom" class="btn" title="Eliminar macro">🗑️</button>
       </div>
+    </div>
+
+    <div class="card">
+      <h3>🧩 Constructor de Macro por Pasos</h3>
+      <select id="sel_builder_tipo" style="margin-bottom:5px;font-size:0.72rem;">
+        <option value="abrir_split">🪟 Abrir página en Pestaña Dividida (Split View)</option>
+        <option value="abrir_url">🌐 Abrir URL en pestaña</option>
+        <option value="input">⌨️ Completar campo (selector + texto o {DNI}/{NOMBRE}/{CBU})</option>
+        <option value="click">🖱️ Clic en elemento (selector CSS)</option>
+        <option value="seleccionar_todo">🔲 Seleccionar todo (Ctrl+A)</option>
+        <option value="copiar">📋 Copiar texto / selección</option>
+        <option value="cortar">✂️ Cortar texto / selección</option>
+        <option value="pegar">📥 Pegar contenido en campo</option>
+        <option value="tecla_enter">⏎ Presionar Enter</option>
+        <option value="esperar">⏱️ Esperar (ms)</option>
+      </select>
+      <input type="text" id="inp_builder_selector" placeholder="Selector CSS (ej: #dni, input[name='cbu'])" style="width:100%;box-sizing:border-box;padding:4px 7px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.72rem;margin-bottom:4px;"/>
+      <input type="text" id="inp_builder_valor" placeholder="Valor / URL / ms (variables: {DNI} {CUIL} {NOMBRE} {CBU} {MONTO})" style="width:100%;box-sizing:border-box;padding:4px 7px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.72rem;margin-bottom:5px;"/>
+      <div style="display:flex;gap:5px;margin-bottom:5px;">
+        <button id="btn_builder_add" class="btn btn-pri" style="flex:1;">➕ Agregar paso</button>
+        <button id="btn_builder_clear" class="btn" title="Vaciar lista de pasos">🧹 Limpiar</button>
+      </div>
+      <div id="builder_pasos_lista" style="max-height:90px;overflow-y:auto;font-size:0.7rem;color:#334155;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:6px;padding:4px 6px;margin-bottom:6px;">Sin pasos agregados aún.</div>
+      <button id="btn_builder_guardar" class="btn btn-green" style="width:100%;">💾 Guardar Macro Construida (Online + Local)</button>
     </div>
 
     <div class="card">

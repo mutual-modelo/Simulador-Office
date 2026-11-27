@@ -56,13 +56,17 @@
 
     <div class="card">
       <h3>1. 🌐 Macro Web por DOM (Chrome)</h3>
+      <input type="text" id="inp_macro_nombre" placeholder="Nombre de la macro (antes de grabar)..." style="width:100%;box-sizing:border-box;padding:5px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:0.74rem;margin-bottom:6px;"/>
       <div style="display:flex;gap:6px;margin-bottom:6px;">
         <button id="btn_grabar_dom" class="btn btn-red" style="flex:1;">🔴 Grabar pasos</button>
         <button id="btn_detener_dom" class="btn" style="flex:1;display:none;">⏹️ Detener y guardar</button>
       </div>
       <select id="sel_macro_dom"><option value="">-- Sin macros guardadas --</option></select>
-      <div style="display:flex;gap:6px;">
-        <button id="btn_ejecutar_dom" class="btn btn-green" style="flex:1;">▶️ Ejecutar en pestaña</button>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;">
+        <button id="btn_ejecutar_dom" class="btn btn-green" style="flex:1;">▶️ Ejecutar</button>
+        <button id="btn_exportar_dom" class="btn" title="Exportar macro (.json) para compartir">⬇️ Exportar</button>
+        <button id="btn_importar_dom" class="btn" title="Importar macro (.json) de un compañero">⬆️ Importar</button>
+        <input type="file" id="inp_importar_dom" accept="application/json,.json" style="display:none;"/>
         <button id="btn_eliminar_dom" class="btn" title="Eliminar macro">🗑️</button>
       </div>
     </div>

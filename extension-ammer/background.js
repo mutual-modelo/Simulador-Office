@@ -410,6 +410,8 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     }
     if (String(targetUrl).includes("tramites.renaper.gob.ar")) {
       chrome.storage.local.set({ ammerPendingRenaper: { ...(request.payload || {}), openerTabId, ts: Date.now() } });
+    } else if (request.type === "AMMER_OPEN_URL_SPLIT") {
+      chrome.storage.local.set({ ammerPendingUrlSplit: { ...(request.payload || {}), url: targetUrl, openerTabId, ts: Date.now() } });
     }
     chrome.tabs.create({ url: targetUrl, splitWithTabId: openerTabId, index: (_sender.tab.index || 0) + 1, active: true })
       .then((tab) => sendResponse({ ok: true, tabId: tab.id, splitUsed: true }))

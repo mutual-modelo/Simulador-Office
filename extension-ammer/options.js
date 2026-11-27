@@ -69,70 +69,129 @@ function aplicarFormulario(items) {
   actualizarVistaPrevia();
 }
 
-function actualizarVistaPrevia() {
-  const cfg = leerFormulario();
-  const now = new Date();
-  const hoy = now.toISOString().split("T")[0];
-  const meses = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
-  const mesAnio = `${meses[now.getMonth()]} ${now.getFullYear()}`;
-  const baseLimpia = String(cfg.carpetaRaiz || "AMMER_LEGAJOS")
-    .replace(/\\/g, "/")
-    .split("/")
-    .map((p) => p.replace(/[:*?"<>|]/g, "_").trim())
-    .filter((p) => p && p !== "." && p !== "..")
-    .join("/") || "AMMER_LEGAJOS";
-  const tokens = {
-    "{CARPETA_RAIZ}": baseLimpia,
-    "{MES_ANIO}": mesAnio,
-    "{NOMBRE_COMPLETO}": "RAMIREZ JUAN CARLOS",
-    "{DNI}": "32456789",
-    "{ID_EXPEDIENTE}": "SOL-575776",
-    "{ORGANIZACION}": "FEDEM",
-    "{LINEA}": "PROVINCIAL",
-    "{APELLIDO}": "RAMIREZ",
-    "{FECHA}": hoy,
-    "{TIPO_DOC}": "RECIBO",
-    "{EXT}": "PDF",
-  };
-  let carpeta = cfg.patronCarpetas;
-  let archivo = cfg.patronNombreArchivo;
-  for (const [k, v] of Object.entries(tokens)) {
-    carpeta = carpeta.replaceAll(k, v);
-    archivo = archivo.replaceAll(k, v);
-  }
-  if (cfg.forzarMayusculas) {
-    carpeta = carpeta.toUpperCase();
-    archivo = archivo.toUpperCase();
-  }
-  const el = document.getElementById("ruta_preview");
-  if (el) el.textContent = `Vista previa: Downloads/${carpeta}/${archivo}`.replace(/\/+/g, "/");
-}
+  let carpetaPcHandleActual = null;
 
-function mostrarEstado(msg, esError = false) {
-  const status = document.getElementById("status");
-  if (!status) return;
-  status.className = esError ? "status-error" : "status-success";
-  status.textContent = msg;
-  status.style.display = "block";
-  setTimeout(() => { status.style.display = "none"; }, 3000);
-}
+  async function refrescarEstadoCarpetaPc() {
+    const estEl = document.getElementById("carpeta_pc_estado");
+    const btnReset = document.getElementById("btn_reset_carpeta_pc");
+    if (typeof AmmerFsStore === "undefined") return;
+    carpetaPcHandleActual = await AmmerFsStore.obtenerCarpetaHandle();
+    if (carpetaPcHandleActual) {
+      const perm = await AmmerFsStore.verificarPermiso(carpetaPcHandleActual, false);
+      if (estEl) {
+        estEl.innerHTML = perm === "granted"
+          ? `📂 Carpeta elegida: <strong>${carpetaPcHandleActual.name}</strong> <span style="color:#166534;">(✓ Permiso activo · independiente de Descargas)</span>`
+          : `📂 Carpeta elegida: <strong>${carpetaPcHandleActual.name}</strong> <span style="color:#b45309;">(⏳ Tocá "Elegir carpeta" para reautorizar)</span>`;
+      }
+      if (btnReset) btnReset.style.display = "inline-block";
+    } else {
+      if (estEl) {
+        estEl.textContent = "📥 Usando carpeta Descargas estándar de Chrome (Downloads/...)";
+      }
+      if (btnReset) btnReset.style.display = "none";
+    }
+    actualizarVistaPrevia();
+  }
 
-document.addEventListener("DOMContentLoaded", () => {
-  chrome.storage.sync.get(DEFAULT_CONFIG, aplicarFormulario);
-  ["carpeta_raiz", "patron_carpetas", "patron_nombre_archivo", "forzar_mayusculas"].forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.addEventListener("input", actualizarVistaPrevia);
-      el.addEventListener("change", actualizarVistaPrevia);
+  function actualizarVistaPrevia() {
+    const cfg = leerFormulario();
+    const now = new Date();
+    const hoy = now.toISOString().split("T")[0];
+    const meses = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
+    const mesAnio = `${meses[now.getMonth()]} ${now.getFullYear()}`;
+    const baseLimpia = String(cfg.carpetaRaiz || "AMMER_LEGAJOS")
+      .replace(/\\/g, "/")
+      .split("/")
+      .map((p) => p.replace(/[:*?"<>|]/g, "_").trim())
+      .filter((p) => p && p !== "." && p !== "..")
+      .join("/") || "AMMER_LEGAJOS";
+    const tokens = {
+      "{CARPETA_RAIZ}": baseLimpia,
+      "{MES_ANIO}": mesAnio,
+      "{NOMBRE_COMPLETO}": "RAMIREZ JUAN CARLOS",
+      "{DNI}": "32456789",
+      "{ID_EXPEDIENTE}": "SOL-575776",
+      "{ORGANIZACION}": "FEDEM",
+      "{LINEA}": "PROVINCIAL",
+      "{APELLIDO}": "RAMIREZ",
+      "{FECHA}": hoy,
+      "{TIPO_DOC}": "RECIBO",
+      "{EXT}": "PDF",
+    };
+    let carpeta = cfg.patronCarpetas;
+    let archivo = cfg.patronNombreArchivo;
+    for (const [k, v] of Object.entries(tokens)) {
+      carpeta = carpeta.replaceAll(k, v);
+      archivo = archivo.replaceAll(k, v);
+    }
+    if (cfg.forzarMayusculas) {
+      carpeta = carpeta.toUpperCase();
+      archivo = archivo.toUpperCase();
+    }
+    const rutaRel = `${carpeta}/${archivo}`.replace(/\/+/g, "/").replace(/^\/+/, "");
+    const el = document.getElementById("ruta_preview");
+    if (!el) return;
+    if (carpetaPcHandleActual && typeof AmmerFsStore !== "undefined") {
+      const sub = AmmerFsStore.resolverSubrutaParaCarpeta(rutaRel, carpetaPcHandleActual, baseLimpia);
+      el.textContent = `Vista previa: [Carpeta PC: ${carpetaPcHandleActual.name}]/${sub}`;
+    } else {
+      el.textContent = `Vista previa: Downloads/${rutaRel}`;
+    }
+  }
+
+  function mostrarEstado(msg, esError = false) {
+    const status = document.getElementById("status");
+    if (!status) return;
+    status.className = esError ? "status-error" : "status-success";
+    status.textContent = msg;
+    status.style.display = "block";
+    setTimeout(() => { status.style.display = "none"; }, 3000);
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    chrome.storage.sync.get(DEFAULT_CONFIG, (items) => {
+      aplicarFormulario(items);
+      refrescarEstadoCarpetaPc();
+    });
+    ["carpeta_raiz", "patron_carpetas", "patron_nombre_archivo", "forzar_mayusculas"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener("input", actualizarVistaPrevia);
+        el.addEventListener("change", actualizarVistaPrevia);
+      }
+    });
+    const btnElegir = document.getElementById("btn_elegir_carpeta_pc");
+    if (btnElegir) {
+      btnElegir.addEventListener("click", async () => {
+        if (typeof window.showDirectoryPicker !== "function") {
+          return mostrarEstado("❌ Tu navegador no soporta showDirectoryPicker.", true);
+        }
+        try {
+          const handle = await window.showDirectoryPicker({ mode: "readwrite" });
+          const perm = await AmmerFsStore.verificarPermiso(handle, true);
+          if (perm !== "granted") {
+            return mostrarEstado("⚠️ No otorgaste permiso de escritura sobre la carpeta.", true);
+          }
+          await AmmerFsStore.guardarCarpetaHandle(handle);
+          chrome.storage.local.remove("ammerCarpetaPcPendientePermiso");
+          await refrescarEstadoCarpetaPc();
+          mostrarEstado(`✅ Carpeta "${handle.name}" configurada sin alterar tus descargas normales.`);
+        } catch (err) {
+          if (err && err.name === "AbortError") return;
+          mostrarEstado("❌ Error eligiendo carpeta: " + (err && err.message ? err.message : err), true);
+        }
+      });
+    }
+    const btnReset = document.getElementById("btn_reset_carpeta_pc");
+    if (btnReset) {
+      btnReset.addEventListener("click", async () => {
+        await AmmerFsStore.limpiarCarpetaHandle();
+        chrome.storage.local.remove("ammerCarpetaPcPendientePermiso");
+        await refrescarEstadoCarpetaPc();
+        mostrarEstado("📥 Restablecido a Descargas/AMMER_LEGAJOS por defecto.");
+      });
     }
   });
-  const btnChromeDir = document.getElementById("btn_cambiar_descargas_chrome");
-  if (btnChromeDir) {
-    btnChromeDir.addEventListener("click", () => {
-      chrome.tabs.create({ url: "chrome://settings/downloads" });
-    });
-  }
-});
 
 document.getElementById("btn_guardar").addEventListener("click", () => {
   chrome.storage.sync.set(leerFormulario(), () => {

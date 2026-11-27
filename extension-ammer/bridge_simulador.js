@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const EXT_VERSION = '2.5.3';
+  const EXT_VERSION = '2.5.4';
 
   function marcarDisponible() {
     if (document.documentElement) {

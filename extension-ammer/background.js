@@ -1,3 +1,5 @@
+importScripts("fs_store.js");
+
 const DEFAULT_EXT_CONFIG = {
   docs: {
     recibo: true,

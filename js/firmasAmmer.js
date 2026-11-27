@@ -2093,7 +2093,24 @@
           const labelDescarga = est === 'FIRMADO' ? 'Descargar PDF Firmado' : (est === 'PARCIAL' ? 'Descargar PDF Parcial' : 'Descargar PDF Original');
 
           const ek = r.ekyc_resumen || null;
+          const scBand = r.score_riesgo_consolidado || (ek && ek.score_riesgo_consolidado) || null;
           let badgesHtml = '';
+          if (scBand && scBand.confianza_pct != null) {
+            const cVal = Number(scBand.confianza_pct);
+            const cBg = cVal >= 85 ? '#dcfce7' : (cVal >= 65 ? '#fef3c7' : '#fee2e2');
+            const cCol = cVal >= 85 ? '#166534' : (cVal >= 65 ? '#92400e' : '#b91c1c');
+            const cBd = cVal >= 85 ? '#86efac' : (cVal >= 65 ? '#fde68a' : '#fecaca');
+            badgesHtml += chipBadge(`🛡️ Score ${cVal}/100`, cBg, cCol, cBd);
+          }
+          if (est === 'FIRMADO' && ek && ek.estado_ekyc && ek.estado_ekyc !== 'APROBADO') {
+            badgesHtml += chipBadge('🟡 REVIEW NEEDED', '#fef3c7', '#92400e', '#fde68a');
+          } else if (est === 'FIRMADO') {
+            badgesHtml += chipBadge('🟢 VERIFIED', '#dcfce7', '#166534', '#86efac');
+          } else if (est === 'ANULADO' || est === 'ELIMINADO' || est === 'RECHAZADO') {
+            badgesHtml += chipBadge('🔴 REJECTED', '#fee2e2', '#b91c1c', '#fecaca');
+          } else {
+            badgesHtml += chipBadge('⚪ PENDING', '#f1f5f9', '#475569', '#cbd5e1');
+          }
           if (r.es_paquete) {
             badgesHtml += chipBadge(`📦 Paquete (${escHtml(r.paquete_cantidad || 2)} docs)`, '#eef2ff', '#3730a3', '#c7d2fe');
           }

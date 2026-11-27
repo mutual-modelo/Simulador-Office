@@ -254,6 +254,14 @@ async function ejecutarTareaDescarga({ data, sendResponse }) {
   sendResponse(res.ok ? { ok: true, downloadId: res.downloadId, ruta: rutaDestinoFinal, fuente: res.fuente } : res);
 }
 
+const _splitOpenerByTab = new Map();
+chrome.tabs.onRemoved.addListener((tabId) => {
+  const openerId = _splitOpenerByTab.get(tabId);
+  if (!openerId) return;
+  _splitOpenerByTab.delete(tabId);
+  chrome.tabs.sendMessage(openerId, { action: "RENAPER_TAB_CLOSED", tabId }).catch(() => {});
+});
+
 chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   if (!request) return;
   if (request.accion === "PROCESAR_COPIA_DOCUMENTO") {
@@ -467,32 +475,49 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     });
     return true;
   }
-  if (request.type === "AMMER_OPEN_RENAPER_SPLIT" || request.type === "AMMER_OPEN_URL_SPLIT") {
-    const targetUrl = request.type === "AMMER_OPEN_URL_SPLIT"
-      ? (request.payload && request.payload.url)
+  const isOpenRenaper = request.type === "AMMER_OPEN_RENAPER_SPLIT" || request.action === "OPEN_RENAPER_SPLIT";
+  const isOpenUrlSplit = request.type === "AMMER_OPEN_URL_SPLIT" || request.action === "OPEN_SPLIT_URL";
+  if (isOpenRenaper || isOpenUrlSplit) {
+    const targetUrl = isOpenUrlSplit
+      ? (request.url || (request.payload && request.payload.url))
       : "https://tramites.renaper.gob.ar/mi_ejemplar/";
     const openerTabId = _sender && _sender.tab && _sender.tab.id;
     if (!openerTabId || !targetUrl) {
       sendResponse({ ok: false, error: "Pestaña o URL inválida" });
       return;
     }
+    const payload = request.payload || {};
     if (String(targetUrl).includes("tramites.renaper.gob.ar")) {
-      chrome.storage.local.set({ ammerPendingRenaper: { ...(request.payload || {}), openerTabId, ts: Date.now() } });
-    } else if (request.type === "AMMER_OPEN_URL_SPLIT") {
-      chrome.storage.local.set({ ammerPendingUrlSplit: { ...(request.payload || {}), url: targetUrl, openerTabId, ts: Date.now() } });
+      chrome.storage.local.set({ ammerPendingRenaper: { ...payload, openerTabId, ts: Date.now() } });
+    } else if (isOpenUrlSplit) {
+      chrome.storage.local.set({ ammerPendingUrlSplit: { ...payload, url: targetUrl, openerTabId, ts: Date.now() } });
     }
     chrome.tabs.create({ url: targetUrl, splitWithTabId: openerTabId, index: (_sender.tab.index || 0) + 1, active: true })
-      .then((tab) => sendResponse({ ok: true, tabId: tab.id, splitUsed: true }))
+      .then((tab) => {
+        if (tab && tab.id) _splitOpenerByTab.set(tab.id, openerTabId);
+        sendResponse({ ok: true, tabId: tab.id, splitUsed: true });
+      })
       .catch(() =>
         chrome.tabs.create({ url: targetUrl, index: (_sender.tab.index || 0) + 1, active: true })
-          .then((tab) => sendResponse({ ok: true, tabId: tab.id, splitUsed: false }))
+          .then((tab) => {
+            if (tab && tab.id) _splitOpenerByTab.set(tab.id, openerTabId);
+            sendResponse({ ok: true, tabId: tab.id, splitUsed: false });
+          })
           .catch((e) => sendResponse({ ok: false, error: e.message }))
       );
     return true;
   }
-  if (request.type === "AMMER_CLOSE_RENAPER_SPLIT") {
-    const tId = (request.payload && request.payload.tabId) || (_sender && _sender.tab && _sender.tab.id);
-    if (tId) chrome.tabs.remove(tId).catch(() => {});
+  if (
+    request.type === "AMMER_CLOSE_RENAPER_SPLIT" ||
+    request.action === "CLOSE_RENAPER_SPLIT" ||
+    request.action === "CLOSE_SELF_TAB"
+  ) {
+    const tId = request.tabId || (request.payload && request.payload.tabId) || (_sender && _sender.tab && _sender.tab.id);
+    if (tId) {
+      const openerId = _splitOpenerByTab.get(tId);
+      if (openerId) chrome.tabs.update(openerId, { active: true }).catch(() => {});
+      chrome.tabs.remove(tId).catch(() => {});
+    }
     sendResponse({ ok: true });
     return;
   }

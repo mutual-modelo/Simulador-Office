@@ -4451,6 +4451,8 @@ details.ui-accordion > .ui-accordion-body {
   .audit20-split-pane--sticky {
     position: sticky;
     top: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
   }
 }
 

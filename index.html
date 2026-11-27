@@ -228,7 +228,7 @@
           </button>
 
           <!-- BOTÓN INSTALAR EXTENSIÓN CHROME -->
-          <button class="btn-top-help" id="btnTopInstallExt" type="button" onclick="window.abrirModalInstalarExtensionAmmer()" style="background:#f0fdf4;border-color:#86efac;color:#166534;" title="Descargar e instalar Extensión Chrome AMMER v2.5.1 (Split View, Descargas y Macros)" aria-label="Instalar Extensión v2.5.1">
+          <button class="btn-top-help" id="btnTopInstallExt" type="button" onclick="window.abrirModalInstalarExtensionAmmer()" style="background:#f0fdf4;border-color:#86efac;color:#166534;" title="Descargar e instalar Extensión Chrome AMMER v2.5.2 (RENAPER, Datuar, Drive Split View, Descargas y Macros)" aria-label="Instalar Extensión v2.5.2">
             <span aria-hidden="true">🧩</span>
             <span class="btn-top-help-label">Instalar Extensión</span>
           </button>
@@ -1113,6 +1113,9 @@
                 <button type="button" id="btnIrTabConsolidadoHeader" onclick="cambiarTabAuditoria20('integral')" class="audit20-btn audit20-btn--indigo">
                   <span>🛡️ Resumen Consolidado</span>
                   <span id="badgeResumenHeaderAuditoria20" style="padding:1px 7px;border-radius:9999px;font-size:10px;font-weight:800;background:#ffffff;color:#475569;border:1px solid #cbd5e1;">SIN DATOS</span>
+                </button>
+                <button type="button" id="btnConsultarDatuarHeaderAudit20" onclick="abrirConsultaDatuarAudit20()" class="audit20-btn audit20-btn--indigo" title="Abrir Datuar en Split View autocompletando el DNI del asociado">
+                  <span>🔎 Datuar</span>
                 </button>
                 <button type="button" onclick="limpiarPanelAuditoria()" class="audit20-btn audit20-btn--secondary">
                   <span>↺ Reiniciar Auditoría</span>
@@ -7188,7 +7191,7 @@
 
     const MODULOS_LAZY_AMMER = {
       boletin: { src: 'js/boletinER.js?v=6', check: () => typeof window.cargarEstadoBoletinOficialAuditoria === 'function' },
-      auditoria20: { src: 'js/auditoria20.js?v=9', check: () => typeof window.ejecutarValidacionDniAudit20 === 'function' },
+      auditoria20: { src: 'js/auditoria20.js?v=10', check: () => typeof window.ejecutarValidacionDniAudit20 === 'function' },
       fichas: { src: 'js/fichasAsociados.js?v=7', check: () => typeof window.buscarPadronFichasAsociados === 'function' },
       firmas: { src: 'js/firmasAmmer.js?v=41', check: () => typeof window.initFirmasAmmerView === 'function' },
       whatsappBot: { src: 'js/whatsappBotAdmin.js?v=5', check: () => typeof window.initWhatsappBotPanelAdmin === 'function' },
@@ -11442,7 +11445,7 @@
       window.addEventListener('storage', actualizarVisibilidadCommandBtn);
 
       window.abrirModalInstalarExtensionAmmer = function () {
-        const zipUrl = 'https://mutual-modelo.github.io/Simulador-Office/downloads/ammer-extension-v2.5.1.zip';
+        const zipUrl = 'https://mutual-modelo.github.io/Simulador-Office/downloads/ammer-extension-v2.5.2.zip';
         let modal = document.getElementById('ammerInstallExtModal');
         if (!modal) {
           modal = document.createElement('div');
@@ -11454,11 +11457,11 @@
           modal.innerHTML =
             '<div class="cmd-k-dialog" style="padding:1.1rem 1.25rem;max-width:520px;">' +
               '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">' +
-                '<strong style="font-size:0.98rem;color:#0f2744;">🧩 Instalar Extensión AMMER v2.5.1 (Chrome)</strong>' +
+                '<strong style="font-size:0.98rem;color:#0f2744;">🧩 Instalar Extensión AMMER v2.5.2 (Chrome)</strong>' +
                 '<button type="button" onclick="document.getElementById(\'ammerInstallExtModal\').classList.remove(\'is-open\')" style="border:none;background:transparent;font-size:1rem;cursor:pointer;color:#64748b;">✕</button>' +
               '</div>' +
-              '<p style="font-size:0.8rem;color:#334155;margin:0 0 0.8rem 0;">Descargá la última versión (<strong>v2.5.1</strong>) para habilitar Split View en RENAPER y Drive 3en1, gestor documental y macros sincronizadas:</p>' +
-              '<a href="' + zipUrl + '" target="_blank" rel="noopener" download style="display:inline-flex;align-items:center;gap:0.45rem;padding:0.55rem 0.95rem;border-radius:9px;background:#166534;color:#ffffff;font-size:0.82rem;font-weight:700;text-decoration:none;margin-bottom:0.9rem;">⬇️ Descargar Extensión v2.5.1 (.zip)</a>' +
+              '<p style="font-size:0.8rem;color:#334155;margin:0 0 0.8rem 0;">Descargá la última versión (<strong>v2.5.2</strong>) para habilitar Split View en RENAPER, Datuar y Drive 3en1, gestor documental y macros sincronizadas:</p>' +
+              '<a href="' + zipUrl + '" target="_blank" rel="noopener" download style="display:inline-flex;align-items:center;gap:0.45rem;padding:0.55rem 0.95rem;border-radius:9px;background:#166534;color:#ffffff;font-size:0.82rem;font-weight:700;text-decoration:none;margin-bottom:0.9rem;">⬇️ Descargar Extensión v2.5.2 (.zip)</a>' +
               '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0.75rem 0.9rem;font-size:0.76rem;color:#334155;line-height:1.45;">' +
                 '<div style="font-weight:800;color:#0f172a;margin-bottom:0.35rem;">Mini guía de instalación rápida:</div>' +
                 '<ol style="margin:0;padding-left:1.15rem;">' +

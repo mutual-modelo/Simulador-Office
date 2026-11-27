@@ -2468,7 +2468,7 @@
 
   function cambiarTabFichaSolicitudModal(tabKey) {
     fichaModalState.tab = tabKey || 'pdf';
-    ['pdf', 'ekyc', 'evidencia', 'eventos'].forEach((k) => {
+    ['pdf', 'review', 'ekyc', 'evidencia', 'eventos'].forEach((k) => {
       const btn = document.getElementById('btnFichaModalTab_' + k);
       const pnl = document.getElementById('pnlFichaModalTab_' + k);
       const act = k === fichaModalState.tab;
@@ -2484,6 +2484,65 @@
       }
     }
   }
+
+  let _reviewImgZoom = 1;
+  let _reviewImgRot = 0;
+
+  window.seleccionarEvidenciaReviewMode = function seleccionarEvidenciaReviewMode(srcData, titulo) {
+    const img = document.getElementById('reviewSplitImg');
+    const lbl = document.getElementById('reviewSplitImgTitle');
+    if (img) {
+      img.src = srcData || '';
+      _reviewImgZoom = 1;
+      _reviewImgRot = 0;
+      img.style.transform = 'scale(1) rotate(0deg)';
+    }
+    if (lbl) lbl.textContent = titulo || 'Evidencia visual';
+  };
+
+  window.ajustarEvidenciaReviewMode = function ajustarEvidenciaReviewMode(dz, drot, reset) {
+    const img = document.getElementById('reviewSplitImg');
+    if (!img) return;
+    if (reset) {
+      _reviewImgZoom = 1;
+      _reviewImgRot = 0;
+    } else {
+      _reviewImgZoom = Math.max(0.75, Math.min(3.0, Number((_reviewImgZoom + (dz || 0)).toFixed(2))));
+      _reviewImgRot = (_reviewImgRot + (drot || 0)) % 360;
+    }
+    img.style.transform = `scale(${_reviewImgZoom}) rotate(${_reviewImgRot}deg)`;
+  };
+
+  window.enviarDecisionRevisionManualFirma = async function enviarDecisionRevisionManualFirma(solId, decision) {
+    const txtEl = document.getElementById('txtReviewNotaObligatoria');
+    const nota = String((txtEl && txtEl.value) || '').trim();
+    if (nota.length < 5) {
+      notify('Debés ingresar una nota de auditoría obligatoria (mínimo 5 caracteres) para registrar la decisión.', 'warning');
+      if (txtEl) txtEl.focus();
+      return;
+    }
+    if (decision === 'RECHAZAR' && !confirm('¿Confirmás RECHAZAR y anular esta solicitud con la nota ingresada?')) {
+      return;
+    }
+    try {
+      const usr = (typeof getSession === 'function' && getSession()) || {};
+      const res = await apiFetchJson(`/api/firmas/solicitudes/${encodeURIComponent(solId)}/revision-manual`, {
+        method: 'POST',
+        body: JSON.stringify({
+          decision,
+          nota,
+          analistaUsuario: usr.usuario || usr.username || '',
+          analistaNombre: usr.nombre || usr.usuario || 'Analista',
+        }),
+      });
+      notify(`Decisión "${decision}" registrada en el Audit Trail.`, 'success');
+      await abrirFichaSolicitudFirma(solId);
+      if (typeof cargarBandejaFirmas === 'function') cargarBandejaFirmas();
+      return res;
+    } catch (e) {
+      notify('Error al registrar revisión manual: ' + (e.message || e), 'error');
+    }
+  };
 
   async function abrirFichaSolicitudFirma(solId) {
     const ov = ensureModalFichaSolicitudShell();
@@ -2721,6 +2780,7 @@
         <!-- PESTAÑAS INTERNAS DE LA FICHA -->
         <div class="firmas-ficha-tabs">
           <button type="button" id="btnFichaModalTab_pdf" class="firmas-btn firmas-btn--sm firmas-btn-navy" onclick="window.cambiarTabFichaSolicitudModal('pdf')">📑 Previsualización PDF</button>
+          <button type="button" id="btnFichaModalTab_review" class="firmas-btn firmas-btn--sm" onclick="window.cambiarTabFichaSolicitudModal('review')">🔍 Review Mode (Dividido)</button>
           <button type="button" id="btnFichaModalTab_ekyc" class="firmas-btn firmas-btn--sm" onclick="window.cambiarTabFichaSolicitudModal('ekyc')">🪪 Identidad, Fotos y Cruces</button>
           <button type="button" id="btnFichaModalTab_evidencia" class="firmas-btn firmas-btn--sm" onclick="window.cambiarTabFichaSolicitudModal('evidencia')">🔐 Evidencia Técnica y Legal</button>
           <button type="button" id="btnFichaModalTab_eventos" class="firmas-btn firmas-btn--sm" onclick="window.cambiarTabFichaSolicitudModal('eventos')">📜 Historial (${evs.length})</button>
@@ -3000,6 +3060,81 @@
           <!-- TAB 4: HISTORIAL -->
           <div id="pnlFichaModalTab_eventos" style="display:none;">
             ${evHtml}
+          </div>
+
+          <!-- TAB 5: REVIEW MODE DIVIDIDO (EVIDENCIA + DATOS/DECISIÓN CON NOTA OBLIGATORIA) -->
+          <div id="pnlFichaModalTab_review" style="display:none;">
+            ${(() => {
+              const revMan = r.revision_manual || null;
+              const cfRev = (ek && ek.cotejo_firma) || r.cotejo_firma || {};
+              const scRev = r.score_riesgo_consolidado || (ek && ek.score_riesgo_consolidado) || null;
+              const evImgs = [
+                { k: 'dni_f', lbl: '🪪 DNI Frente', b64: imgs.dni_frente_b64, mime: 'image/jpeg' },
+                { k: 'dni_d', lbl: '🪪 DNI Dorso', b64: imgs.dni_dorso_b64, mime: 'image/jpeg' },
+                { k: 'selfie', lbl: '🤳 Selfie', b64: imgs.selfie_b64, mime: 'image/jpeg' },
+                { k: 'firma_dni', lbl: '✒️ Firma DNI', b64: cfRev.recorte_firma_dni_b64, mime: 'image/png' },
+                { k: 'firma_trazo', lbl: '✍️ Trazo Firma', b64: imgs.firma_png_b64, mime: 'image/png' },
+              ].filter((it) => Boolean(it.b64));
+              const firstImg = evImgs[0] || null;
+              const toSrc = (it) => !it ? '' : (String(it.b64).startsWith('data:') ? it.b64 : `data:${it.mime};base64,${it.b64}`);
+              return `
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:1rem;align-items:start;">
+                  <!-- IZQUIERDA: EVIDENCIA VISUAL CON ZOOM -->
+                  <div class="firmas-section-box" style="margin-bottom:0;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.6rem;">
+                      <strong id="reviewSplitImgTitle" style="font-size:0.82rem;color:#0f2744;">${firstImg ? escHtml(firstImg.lbl) : 'Sin imágenes adjuntas'}</strong>
+                      <div style="display:flex;gap:0.25rem;flex-wrap:wrap;">
+                        <button type="button" class="firmas-btn firmas-btn--xs" onclick="window.ajustarEvidenciaReviewMode(-0.25, 0, false)">🔍-</button>
+                        <button type="button" class="firmas-btn firmas-btn--xs" onclick="window.ajustarEvidenciaReviewMode(0.25, 0, false)">🔍+</button>
+                        <button type="button" class="firmas-btn firmas-btn--xs" onclick="window.ajustarEvidenciaReviewMode(0, 90, false)">↻ 90°</button>
+                        <button type="button" class="firmas-btn firmas-btn--xs" onclick="window.ajustarEvidenciaReviewMode(0, 0, true)">Reset</button>
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-bottom:0.6rem;">
+                      ${evImgs.map((it) => `<button type="button" class="firmas-btn firmas-btn--xs firmas-btn-soft-blue" onclick="window.seleccionarEvidenciaReviewMode('${escHtml(toSrc(it))}', '${escHtml(it.lbl)}')">${escHtml(it.lbl)}</button>`).join('')}
+                    </div>
+                    <div style="height:340px;background:#0f172a;border-radius:10px;overflow:auto;display:flex;align-items:center;justify-content:center;padding:0.5rem;">
+                      ${firstImg
+                        ? `<img id="reviewSplitImg" src="${escHtml(toSrc(firstImg))}" alt="Evidencia" style="max-width:100%;max-height:100%;object-fit:contain;transition:transform 0.18s ease;transform-origin:center center;"/>`
+                        : '<span style="color:#94a3b8;font-size:0.78rem;">No hay capturas de DNI/Selfie/Firma en esta solicitud.</span>'}
+                    </div>
+                  </div>
+
+                  <!-- DERECHA: DATOS OCR + SCORE + DECISIÓN HÍBRIDA CON NOTA OBLIGATORIA -->
+                  <div style="display:flex;flex-direction:column;gap:0.75rem;">
+                    <div class="firmas-section-box" style="margin-bottom:0;font-size:0.77rem;">
+                      <div style="font-weight:800;color:#0f2744;margin-bottom:0.45rem;">📋 Datos Declarados vs. Extraídos (OCR / PDF417)</div>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.35rem 0.65rem;">
+                        <div><strong>Titular:</strong> ${escHtml(r.nombre_solicitante || '-')}</div>
+                        <div><strong>DNI Esperado:</strong> ${escHtml(r.dni_solicitante || '-')}</div>
+                        <div><strong>Nombre DNI:</strong> ${escHtml(dniEx.nombre || '-')}</div>
+                        <div><strong>DNI Leído:</strong> ${escHtml(dniEx.dni || '-')}</div>
+                        <div><strong>Ejemplar / Trámite:</strong> ${escHtml((dniEx.ejemplar || '-') + ' / ' + (dniEx.nro_tramite || '-'))}</div>
+                        <div><strong>Vencimiento DNI:</strong> ${escHtml(dniEx.fecha_vencimiento || '-')}</div>
+                      </div>
+                      ${scRev && scRev.confianza_pct != null ? `<div style="margin-top:0.5rem;font-weight:800;color:${scRev.confianza_pct >= 85 ? '#166534' : (scRev.confianza_pct >= 65 ? '#92400e' : '#b91c1c')};">🛡️ Score Confianza AMMER: ${scRev.confianza_pct}/100 (Riesgo ${escHtml(scRev.nivel_riesgo || '')})</div>` : ''}
+                    </div>
+
+                    ${revMan ? `
+                      <div style="padding:0.65rem 0.85rem;border-radius:10px;background:#f0fdf4;border:1px solid #86efac;font-size:0.76rem;color:#166534;">
+                        <strong>Última revisión manual (${escHtml(revMan.decision || '-')})</strong> · Por <strong>${escHtml(revMan.analista_nombre || '-')}</strong> (${escHtml(revMan.revisado_en ? formatearFechaHoraAr(revMan.revisado_en) : '-')})<br/>
+                        <em>Nota: "${escHtml(revMan.nota || '')}"</em>
+                      </div>
+                    ` : ''}
+
+                    <div class="firmas-section-box" style="margin-bottom:0;background:#fffbeb;border-color:#fde68a;">
+                      <label for="txtReviewNotaObligatoria" style="display:block;font-size:0.78rem;font-weight:800;color:#92400e;margin-bottom:0.35rem;">✍️ Nota de Auditoría Obligatoria (Audit Trail) *</label>
+                      <textarea id="txtReviewNotaObligatoria" rows="3" placeholder="Explicá el motivo de aprobación, pedido de reenvío o rechazo (mínimo 5 caracteres)..." style="width:100%;box-sizing:border-box;padding:0.5rem 0.65rem;border:1px solid #fcd34d;border-radius:8px;font-size:0.77rem;font-family:inherit;resize:vertical;background:#ffffff;"></textarea>
+                      <div style="display:flex;gap:0.45rem;flex-wrap:wrap;margin-top:0.6rem;">
+                        <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-emerald" onclick="window.enviarDecisionRevisionManualFirma('${escHtml(r.id)}', 'APROBAR')">✅ Aprobar</button>
+                        <button type="button" class="firmas-btn firmas-btn--sm firmas-btn-soft-blue" onclick="window.enviarDecisionRevisionManualFirma('${escHtml(r.id)}', 'REENVIAR')">🔄 Solicitar Reenvío</button>
+                        <button type="button" class="firmas-btn firmas-btn--sm" style="border-color:#fecaca;background:#fef2f2;color:#b91c1c;" onclick="window.enviarDecisionRevisionManualFirma('${escHtml(r.id)}', 'RECHAZAR')">⛔ Rechazar</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `;
+            })()}
           </div>
         </div>
       </div>

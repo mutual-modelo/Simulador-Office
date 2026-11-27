@@ -56,6 +56,55 @@ function cargarHistorial() {
   });
 }
 
+let macrosCache = [];
+let editingMacroId = null;
+let editingStepIdx = null;
+
+function urlCoincideConTab(urlMacro, activeUrl) {
+  const m = String(urlMacro || "").trim();
+  const a = String(activeUrl || "").trim();
+  if (!m || !a) return false;
+  try {
+    const um = new URL(m);
+    const ua = new URL(a);
+    if (um.hostname !== ua.hostname) return false;
+    const p = um.pathname.replace(/\/+$/, "");
+    if (!p || p === "/") return true;
+    return ua.pathname.startsWith(p);
+  } catch (_e) {
+    return a.toLowerCase().includes(m.toLowerCase());
+  }
+}
+
+function renderMacroSugerida(macros, activeUrl) {
+  const box = document.getElementById("macro_sugerida_box");
+  if (!box) return;
+  const sugeridas = (macros || []).filter((m) => urlCoincideConTab(m.urlInicial, activeUrl));
+  if (!sugeridas.length) {
+    box.style.display = "none";
+    box.innerHTML = "";
+    return;
+  }
+  const top = sugeridas[0];
+  box.style.display = "block";
+  box.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+      <div><strong>⚡ Sugerida para esta página:</strong><br><span>${esc(top.nombre)} (${(top.pasos || []).length} pasos)</span></div>
+      <button id="btn_run_sugerida" class="btn btn-green" data-macro-id="${esc(top.id)}">▶️ Ejecutar</button>
+    </div>
+  `;
+  const btn = document.getElementById("btn_run_sugerida");
+  if (btn) {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-macro-id");
+      chrome.runtime.sendMessage({ accion: "EJECUTAR_MACRO_DOM", id }, (resp) => {
+        if (!resp || !resp.ok) return setMacroStatus(resp && resp.error ? resp.error : "Error ejecutando macro.", true);
+        setMacroStatus(`▶️ Sugerida ejecutada: ${resp.ejecutados}/${resp.total} pasos.`);
+      });
+    });
+  }
+}
+
 function cargarContextoYMacros() {
   chrome.runtime.sendMessage({ accion: "OBTENER_EXPEDIENTE_ACTIVO" }, (resp) => {
     const box = document.getElementById("exp_activo_box");
@@ -70,14 +119,19 @@ function cargarContextoYMacros() {
 
   chrome.runtime.sendMessage({ accion: "OBTENER_MACROS_DOM" }, (resp) => {
     const sel = document.getElementById("sel_macro_dom");
-    if (!sel) return;
     const macros = (resp && resp.macros) || [];
+    macrosCache = macros;
+    renderMacroSugerida(macros, resp && resp.activeUrl);
+    if (!sel) return;
     if (!macros.length) {
       sel.innerHTML = '<option value="">-- Sin macros guardadas --</option>';
       return;
     }
     sel.innerHTML = macros
-      .map((m) => `<option value="${esc(m.id)}">${m.online ? '☁️' : '💻'} ${esc(m.nombre)} (${(m.pasos || []).length} pasos)</option>`)
+      .map((m) => {
+        const ico = m.compartida ? "🌐" : (m.online ? "☁️" : "💻");
+        return `<option value="${esc(m.id)}">${ico} ${esc(m.nombre)} (${(m.pasos || []).length} pasos)</option>`;
+      })
       .join("");
   });
 }
@@ -117,7 +171,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("btn_grabar_dom").addEventListener("click", () => {
     const nomPre = String((document.getElementById("inp_macro_nombre") || {}).value || "").trim();
-    chrome.storage.local.set({ ammerPendingMacroName: nomPre }, () => {
+    const compartidaPre = Boolean((document.getElementById("chk_macro_compartida") || {}).checked);
+    chrome.storage.local.set({ ammerPendingMacroName: nomPre, ammerPendingMacroShared: compartidaPre }, () => {
       chrome.runtime.sendMessage({ accion: "INICIAR_GRABACION_DOM" }, (resp) => {
         if (!resp || !resp.ok) return setMacroStatus(resp && resp.error ? resp.error : "No se pudo grabar.", true);
         document.getElementById("btn_grabar_dom").style.display = "none";
@@ -133,13 +188,17 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("btn_detener_dom").style.display = "none";
       const pasos = (resp && resp.pasos) || [];
       if (!pasos.length) return setMacroStatus("No se registraron pasos.", true);
-      chrome.storage.local.get({ ammerPendingMacroName: "" }, (st) => {
+      chrome.storage.local.get({ ammerPendingMacroName: "", ammerPendingMacroShared: false }, (st) => {
         const nomGuardado = String(st.ammerPendingMacroName || "").trim();
         const nombre = nomGuardado || prompt("Nombre de la macro:", `Macro ${new Date().toLocaleTimeString("es-AR")}`);
         if (!nombre) return;
-        chrome.storage.local.remove("ammerPendingMacroName");
+        const urlInput = String((document.getElementById("inp_macro_url") || {}).value || "").trim();
+        const urlInicial = urlInput || (resp && resp.urlInicial) || "";
+        const compartida = Boolean((document.getElementById("chk_macro_compartida") || {}).checked || st.ammerPendingMacroShared);
+        chrome.storage.local.remove(["ammerPendingMacroName", "ammerPendingMacroShared"]);
         if (document.getElementById("inp_macro_nombre")) document.getElementById("inp_macro_nombre").value = "";
-        chrome.runtime.sendMessage({ accion: "GUARDAR_MACRO_DOM", macro: { nombre, pasos } }, () => {
+        if (document.getElementById("inp_macro_url")) document.getElementById("inp_macro_url").value = "";
+        chrome.runtime.sendMessage({ accion: "GUARDAR_MACRO_DOM", macro: { nombre, urlInicial, compartida, pasos } }, () => {
           cargarContextoYMacros();
           setMacroStatus(`✅ Macro "${nombre}" guardada (${pasos.length} pasos).`);
         });
@@ -159,19 +218,17 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn_exportar_dom").addEventListener("click", () => {
     const id = document.getElementById("sel_macro_dom").value;
     if (!id) return setMacroStatus("Seleccioná una macro para exportar.", true);
-    chrome.runtime.sendMessage({ accion: "OBTENER_MACROS_DOM" }, (resp) => {
-      const m = ((resp && resp.macros) || []).find((x) => x.id === id);
-      if (!m) return setMacroStatus("No se encontró la macro seleccionada.", true);
-      const payload = JSON.stringify({ formato: "AMMER_MACRO_V1", exportadoEn: new Date().toISOString(), macro: m }, null, 2);
-      const blob = new Blob([payload], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `macro_${String(m.nombre || "ammer").replace(/[^a-zA-Z0-9_-]+/g, "_")}.json`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1500);
-      setMacroStatus(`⬇️ Macro "${m.nombre}" exportada (.json).`);
-    });
+    const m = macrosCache.find((x) => x.id === id);
+    if (!m) return setMacroStatus("No se encontró la macro seleccionada.", true);
+    const payload = JSON.stringify({ formato: "AMMER_MACRO_V1", exportadoEn: new Date().toISOString(), macro: m }, null, 2);
+    const blob = new Blob([payload], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `macro_${String(m.nombre || "ammer").replace(/[^a-zA-Z0-9_-]+/g, "_")}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    setMacroStatus(`⬇️ Macro "${m.nombre}" exportada (.json).`);
   });
 
   document.getElementById("btn_importar_dom").addEventListener("click", () => {
@@ -193,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         chrome.runtime.sendMessage({
           accion: "GUARDAR_MACRO_DOM",
-          macro: { nombre: m.nombre, pasos: m.pasos, urlInicial: m.urlInicial || "" },
+          macro: { nombre: m.nombre, pasos: m.pasos, urlInicial: m.urlInicial || "", compartida: Boolean(m.compartida) },
         }, () => {
           cargarContextoYMacros();
           setMacroStatus(`⬆️ Macro "${m.nombre}" importada (${m.pasos.length} pasos).`);
@@ -209,12 +266,43 @@ document.addEventListener("DOMContentLoaded", () => {
     const id = document.getElementById("sel_macro_dom").value;
     if (!id) return;
     chrome.runtime.sendMessage({ accion: "ELIMINAR_MACRO_DOM", id }, () => {
+      if (editingMacroId === id) limpiarEstadoEditor();
       cargarContextoYMacros();
       setMacroStatus("🗑️ Macro eliminada.");
     });
   });
 
   let builderPasos = [];
+  const actualizarEstadoEdicionUI = () => {
+    const badge = document.getElementById("builder_edit_badge");
+    const btnCancel = document.getElementById("btn_cancelar_edicion");
+    const btnAdd = document.getElementById("btn_builder_add");
+    const btnGuardar = document.getElementById("btn_builder_guardar");
+    if (badge) {
+      badge.style.display = editingMacroId ? "block" : "none";
+      if (editingMacroId) {
+        const nom = (document.getElementById("inp_macro_nombre") || {}).value || editingMacroId;
+        badge.textContent = `✏️ Editando macro: ${nom}`;
+      }
+    }
+    if (btnCancel) btnCancel.style.display = editingMacroId ? "inline-block" : "none";
+    if (btnAdd) btnAdd.textContent = editingStepIdx !== null ? `💾 Actualizar paso #${editingStepIdx + 1}` : "➕ Agregar paso";
+    if (btnGuardar) btnGuardar.textContent = editingMacroId ? "💾 Guardar Cambios en Macro" : "💾 Guardar Macro Construida (Online + Local)";
+  };
+
+  function limpiarEstadoEditor() {
+    editingMacroId = null;
+    editingStepIdx = null;
+    builderPasos = [];
+    if (document.getElementById("inp_macro_nombre")) document.getElementById("inp_macro_nombre").value = "";
+    if (document.getElementById("inp_macro_url")) document.getElementById("inp_macro_url").value = "";
+    if (document.getElementById("chk_macro_compartida")) document.getElementById("chk_macro_compartida").checked = false;
+    if (document.getElementById("inp_builder_selector")) document.getElementById("inp_builder_selector").value = "";
+    if (document.getElementById("inp_builder_valor")) document.getElementById("inp_builder_valor").value = "";
+    actualizarEstadoEdicionUI();
+    renderBuilderPasos();
+  }
+
   const renderBuilderPasos = () => {
     const el = document.getElementById("builder_pasos_lista");
     if (!el) return;
@@ -223,9 +311,67 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     el.innerHTML = builderPasos
-      .map((p, idx) => `<div>${idx + 1}. <strong>${esc(p.tipo)}</strong>${p.selector ? ` · <code>${esc(p.selector)}</code>` : ""}${p.valor ? ` → "${esc(String(p.valor).slice(0, 32))}"` : ""}</div>`)
+      .map((p, idx) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:4px;padding:2px 0;border-bottom:1px solid #e2e8f0;${editingStepIdx === idx ? "background:#fef9c3;" : ""}">
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${idx + 1}. <strong>${esc(p.tipo)}</strong>${p.selector ? ` · <code>${esc(p.selector)}</code>` : ""}${p.valor ? ` → "${esc(String(p.valor).slice(0, 24))}"` : ""}</span>
+          <span style="display:flex;gap:2px;">
+            <button type="button" class="btn" data-step-up="${idx}" style="padding:1px 4px;font-size:0.65rem;" title="Subir">⬆️</button>
+            <button type="button" class="btn" data-step-down="${idx}" style="padding:1px 4px;font-size:0.65rem;" title="Bajar">⬇️</button>
+            <button type="button" class="btn" data-step-edit="${idx}" style="padding:1px 4px;font-size:0.65rem;" title="Editar paso">✏️</button>
+            <button type="button" class="btn" data-step-del="${idx}" style="padding:1px 4px;font-size:0.65rem;color:#dc2626;" title="Quitar">✕</button>
+          </span>
+        </div>
+      `)
       .join("");
+
+    el.querySelectorAll("[data-step-up]").forEach((b) => b.addEventListener("click", () => {
+      const i = Number(b.getAttribute("data-step-up"));
+      if (i > 0) { [builderPasos[i - 1], builderPasos[i]] = [builderPasos[i], builderPasos[i - 1]]; editingStepIdx = null; actualizarEstadoEdicionUI(); renderBuilderPasos(); }
+    }));
+    el.querySelectorAll("[data-step-down]").forEach((b) => b.addEventListener("click", () => {
+      const i = Number(b.getAttribute("data-step-down"));
+      if (i < builderPasos.length - 1) { [builderPasos[i], builderPasos[i + 1]] = [builderPasos[i + 1], builderPasos[i]]; editingStepIdx = null; actualizarEstadoEdicionUI(); renderBuilderPasos(); }
+    }));
+    el.querySelectorAll("[data-step-edit]").forEach((b) => b.addEventListener("click", () => {
+      const i = Number(b.getAttribute("data-step-edit"));
+      const p = builderPasos[i];
+      if (!p) return;
+      editingStepIdx = i;
+      if (document.getElementById("sel_builder_tipo")) document.getElementById("sel_builder_tipo").value = p.tipo || "click";
+      if (document.getElementById("inp_builder_selector")) document.getElementById("inp_builder_selector").value = p.selector || "";
+      if (document.getElementById("inp_builder_valor")) document.getElementById("inp_builder_valor").value = p.valor || "";
+      actualizarEstadoEdicionUI();
+      renderBuilderPasos();
+    }));
+    el.querySelectorAll("[data-step-del]").forEach((b) => b.addEventListener("click", () => {
+      const i = Number(b.getAttribute("data-step-del"));
+      builderPasos.splice(i, 1);
+      editingStepIdx = null;
+      actualizarEstadoEdicionUI();
+      renderBuilderPasos();
+    }));
   };
+
+  document.getElementById("btn_editar_dom").addEventListener("click", () => {
+    const id = document.getElementById("sel_macro_dom").value;
+    if (!id) return setMacroStatus("Seleccioná una macro para editar.", true);
+    const m = macrosCache.find((x) => x.id === id);
+    if (!m) return setMacroStatus("No se encontró la macro seleccionada.", true);
+    editingMacroId = m.id;
+    editingStepIdx = null;
+    builderPasos = (m.pasos || []).map((p) => ({ ...p }));
+    if (document.getElementById("inp_macro_nombre")) document.getElementById("inp_macro_nombre").value = m.nombre || "";
+    if (document.getElementById("inp_macro_url")) document.getElementById("inp_macro_url").value = m.urlInicial || "";
+    if (document.getElementById("chk_macro_compartida")) document.getElementById("chk_macro_compartida").checked = Boolean(m.compartida);
+    actualizarEstadoEdicionUI();
+    renderBuilderPasos();
+    setMacroStatus(`✏️ Macro "${m.nombre}" cargada en el editor (${builderPasos.length} pasos).`);
+  });
+
+  document.getElementById("btn_cancelar_edicion").addEventListener("click", () => {
+    limpiarEstadoEditor();
+    setMacroStatus("Modo creación de nueva macro.");
+  });
 
   document.getElementById("btn_abrir_split_pre").addEventListener("click", () => {
     const url = (document.getElementById("sel_split_pre_url") || {}).value || "https://tramites.renaper.gob.ar/mi_ejemplar/";
@@ -245,15 +391,25 @@ document.addEventListener("DOMContentLoaded", () => {
     if (["abrir_url", "abrir_split", "input"].includes(tipo) && !valor) {
       return setMacroStatus("Ingresá un valor o URL para este paso.", true);
     }
-    builderPasos.push({ tipo, selector, valor });
+    const pasoNuevo = { tipo, selector, valor };
+    if (editingStepIdx !== null && builderPasos[editingStepIdx]) {
+      builderPasos[editingStepIdx] = pasoNuevo;
+      setMacroStatus(`💾 Paso ${editingStepIdx + 1} actualizado (${tipo}).`);
+      editingStepIdx = null;
+    } else {
+      builderPasos.push(pasoNuevo);
+      setMacroStatus(`➕ Paso ${builderPasos.length} agregado (${tipo}).`);
+    }
     if (document.getElementById("inp_builder_selector")) document.getElementById("inp_builder_selector").value = "";
     if (document.getElementById("inp_builder_valor")) document.getElementById("inp_builder_valor").value = "";
+    actualizarEstadoEdicionUI();
     renderBuilderPasos();
-    setMacroStatus(`➕ Paso ${builderPasos.length} agregado (${tipo}).`);
   });
 
   document.getElementById("btn_builder_clear").addEventListener("click", () => {
     builderPasos = [];
+    editingStepIdx = null;
+    actualizarEstadoEdicionUI();
     renderBuilderPasos();
     setMacroStatus("🧹 Lista de pasos limpia.");
   });
@@ -263,10 +419,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const nomInput = String((document.getElementById("inp_macro_nombre") || {}).value || "").trim();
     const nombre = nomInput || prompt("Nombre de la macro construida:", `Macro ${new Date().toLocaleTimeString("es-AR")}`);
     if (!nombre) return;
-    chrome.runtime.sendMessage({ accion: "GUARDAR_MACRO_DOM", macro: { nombre, pasos: builderPasos } }, (resp) => {
-      builderPasos = [];
-      renderBuilderPasos();
-      if (document.getElementById("inp_macro_nombre")) document.getElementById("inp_macro_nombre").value = "";
+    const urlInicial = String((document.getElementById("inp_macro_url") || {}).value || "").trim();
+    const compartida = Boolean((document.getElementById("chk_macro_compartida") || {}).checked);
+    const payload = { id: editingMacroId || undefined, nombre, urlInicial, compartida, pasos: builderPasos };
+    chrome.runtime.sendMessage({ accion: "GUARDAR_MACRO_DOM", macro: payload }, (resp) => {
+      limpiarEstadoEditor();
       cargarContextoYMacros();
       setMacroStatus(`✅ Macro "${nombre}" guardada (${resp && resp.online ? "☁️ Online" : "💻 Local"}).`);
     });

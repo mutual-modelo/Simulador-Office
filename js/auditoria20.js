@@ -481,43 +481,43 @@
     const ext = dniData.datos_extraidos || {};
     const det = dniData.validacion_determinista || {};
 
-    let dniClean = String(det.dni_extraido || ext.dni || '').replace(/\D/g, '').trim();
-    if (!dniClean) {
+    let sugerido = String(det.dni_extraido || ext.dni || ext.cuil || '').trim();
+    if (!sugerido) {
       const cands = [
         (document.getElementById('inputDniEsperadoAudit20') || {}).value,
         st.dniSolicitante,
         (document.getElementById('inputDomDniAudit20') || {}).value,
         (document.getElementById('inputCajaJperDniAudit20') || {}).value,
         (document.getElementById('inputBoletinDniConsulta') || {}).value,
-        st.recibo && st.recibo.dni
+        st.recibo && st.recibo.cuil,
+        st.recibo && st.recibo.dni,
+        st.nombreSolicitante,
+        st.recibo && st.recibo.titular
       ];
       for (const c of cands) {
-        const digits = String(c || '').replace(/\D/g, '').trim();
-        if (digits.length === 11) { dniClean = digits.slice(2, 10); break; }
-        if (digits.length >= 7) { dniClean = digits; break; }
+        const val = String(c || '').trim();
+        if (val) { sugerido = val; break; }
       }
     }
 
-    if (!dniClean || dniClean.length < 7) {
-      const ingresado = typeof global.prompt === 'function'
-        ? global.prompt('Ingresá el DNI del asociado para consultar en Datuar:', '')
-        : '';
-      if (!ingresado) return;
-      dniClean = String(ingresado).replace(/\D/g, '').trim();
-      if (dniClean.length === 11) dniClean = dniClean.slice(2, 10);
-      if (dniClean.length < 7) {
-        if (typeof showToast === 'function') showToast('Ingresá un DNI válido (al menos 7 dígitos).');
-        return;
-      }
+    const ingresado = typeof global.prompt === 'function'
+      ? global.prompt('Ingresá el dato a buscar en Datuar (DNI, CUIL o Apellido y Nombre):', sugerido)
+      : sugerido;
+    if (ingresado === null) return;
+    const consulta = String(ingresado || '').trim();
+    if (!consulta) {
+      if (typeof showToast === 'function') showToast('Ingresá un DNI, CUIL o Apellido y Nombre para buscar en Datuar.');
+      return;
     }
 
+    const soloDigitos = consulta.replace(/\D/g, '');
     const nombre = [ext.apellido, ext.nombres].filter(Boolean).join(', ')
       || st.nombreSolicitante
       || (st.recibo && st.recibo.titular)
-      || 'Asociado';
+      || consulta;
 
     if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-      navigator.clipboard.writeText(dniClean).catch(() => {});
+      navigator.clipboard.writeText(consulta).catch(() => {});
     }
 
     const tieneExt = Boolean(
@@ -531,13 +531,13 @@
         {
           type: 'AMMER_OPEN_DATUAR_SPLIT',
           url: 'https://datuar.com/',
-          payload: { dni: dniClean, nombre, origen: 'auditoria20' },
+          payload: { query: consulta, dni: soloDigitos, nombre, origen: 'auditoria20' },
           requestId: String(Date.now())
         },
         global.location.origin
       );
       if (typeof showToast === 'function') {
-        showToast('🔎 Datuar abierto en Split View con DNI ' + dniClean + '. Completá la verificación y tocá Buscar.');
+        showToast('🔎 Datuar abierto en Split View con "' + consulta + '" (copiado y autocompletado).');
       }
     } else {
       const w = Math.min(720, Math.round((screen.availWidth || 1280) * 0.52));
@@ -545,7 +545,7 @@
       const left = Math.max(0, (screen.availWidth || 1280) - w);
       global.open('https://datuar.com/', 'ammerDatuarWin', `width=${w},height=${h},left=${left},top=30,resizable=yes,scrollbars=yes`);
       if (typeof showToast === 'function') {
-        showToast('🔎 DNI ' + dniClean + ' copiado al portapapeles. Pegalo en Datuar (o instalá la extensión AMMER para autocompletarlo).');
+        showToast('🔎 "' + consulta + '" copiado al portapapeles. Pegalo en Datuar para buscar.');
       }
     }
   }

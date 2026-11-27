@@ -11,8 +11,8 @@ const DEFAULT_EXT_CONFIG = {
   modoDescarga: "automatico_silencioso",
   notifWindows: true,
   forzarMayusculas: true,
-  carpetaRaiz: "AMMER_Legajos",
-  patronCarpetas: "{CARPETA_RAIZ}/{DNI}",
+  carpetaRaiz: "AMMER_LEGAJOS",
+  patronCarpetas: "{CARPETA_RAIZ}/{MES_ANIO}/{ID_EXPEDIENTE} {NOMBRE_COMPLETO}",
   patronNombreArchivo: "{ID_EXPEDIENTE} {TIPO_DOC}.{EXT}",
 };
 
@@ -29,6 +29,15 @@ function sanitizarSegmentoRuta(valor, fallback = "SIN_DATO") {
     .replace(/\.\.+/g, "_")
     .trim();
   return limpio || fallback;
+}
+
+function sanitizarRutaRelativa(valor, fallback = "AMMER_LEGAJOS") {
+  const partes = String(valor || "")
+    .replace(/\\/g, "/")
+    .split("/")
+    .map((p) => sanitizarSegmentoRuta(p, ""))
+    .filter((p) => p && p !== "." && p !== "..");
+  return partes.length ? partes.join("/") : fallback;
 }
 
 function normalizarUrlDrive(rawUrl) {
@@ -72,7 +81,7 @@ function construirRutaDestino(data, config) {
   const meses = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
   const mesAnio = `${meses[now.getMonth()]} ${now.getFullYear()}`;
   const tokens = {
-    "{CARPETA_RAIZ}": sanitizarSegmentoRuta(config.carpetaRaiz, "AMMER_Legajos"),
+    "{CARPETA_RAIZ}": sanitizarRutaRelativa(config.carpetaRaiz, "AMMER_LEGAJOS"),
     "{MES_ANIO}": mesAnio,
     "{NOMBRE_COMPLETO}": sanitizarSegmentoRuta(data.nombreCompleto || data.apellido, "SOCIO"),
     "{DNI}": sanitizarSegmentoRuta(data.dni, "SIN_DNI"),
@@ -84,7 +93,7 @@ function construirRutaDestino(data, config) {
     "{TIPO_DOC}": sanitizarSegmentoRuta(data.tipoDoc, "DOC"),
     "{EXT}": sanitizarSegmentoRuta(data.extension, "PDF"),
   };
-  let carpetaRelativa = config.patronCarpetas || "{CARPETA_RAIZ}/{MES_ANIO}/{NOMBRE_COMPLETO} {ID_EXPEDIENTE}";
+  let carpetaRelativa = config.patronCarpetas || "{CARPETA_RAIZ}/{MES_ANIO}/{ID_EXPEDIENTE} {NOMBRE_COMPLETO}";
   let nombreArchivo = config.patronNombreArchivo || "{ID_EXPEDIENTE} {TIPO_DOC}.{EXT}";
   for (const [clave, valor] of Object.entries(tokens)) {
     carpetaRelativa = carpetaRelativa.replaceAll(clave, valor);

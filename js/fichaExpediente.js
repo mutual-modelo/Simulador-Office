@@ -567,10 +567,43 @@
           }
 
           html += '<div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">Nota Mutual: <em>"' + sanitizeHTML(prop.detalle || 'Propuesta crediticia lista') + '"</em></div>' +
-            '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">' +
+            '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">' +
+              '<button type="button" class="btn-copy" style="font-size:0.7rem;padding:4px 8px;border-color:#86efac;background:#f0fdf4;color:#166534;font-weight:700;" onclick="window.responderPropuestaComercializador(\'' + s.id + '\', \'ACEPTAR\')">✅ Aceptar Propuesta</button>' +
+              '<button type="button" class="btn-copy" style="font-size:0.7rem;padding:4px 8px;border-color:#93c5fd;background:#eff6ff;color:#1d4ed8;font-weight:700;" onclick="var bx=document.getElementById(\'boxContrapropuestaComercial\');if(bx){bx.style.display=bx.style.display===\'none\'?\'block\':\'none\';}">💬 Contrapropuesta</button>' +
+              '<button type="button" class="btn-copy" style="font-size:0.7rem;padding:4px 8px;border-color:#fecaca;background:#fef2f2;color:#b91c1c;font-weight:700;" onclick="window.responderPropuestaComercializador(\'' + s.id + '\', \'RECHAZAR\')">⛔ Rechazar</button>' +
               '<button type="button" class="btn-copy" style="font-size:0.7rem;padding:4px 8px;" onclick="copiarPropuestaWhatsApp(\'' + s.id + '\')">📲 Copiar Propuesta para WhatsApp</button>' +
               (tieneAccesoBotWhatsapp() ? ('<button type="button" class="btn-copy" style="font-size:0.7rem;padding:4px 8px;border-color:#15803d;color:#15803d;background:#f0fdf4;font-weight:700;" onclick="enviarPropuestaWhatsAppPorBot(\'' + s.id + '\')">🤖 Enviar por Bot</button>') : '') +
-            '</div>';
+            '</div>' +
+            '<form id="boxContrapropuestaComercial" onsubmit="window.enviarContrapropuestaComercializador(event, \'' + s.id + '\')" style="display:none;margin-top:8px;padding:8px;border-radius:8px;border:1px solid #bfdbfe;background:#eff6ff;">' +
+              '<div style="font-size:0.72rem;font-weight:800;color:#1e3a8a;margin-bottom:6px;">💬 Enviar Contrapropuesta a la Mutual</div>' +
+              '<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px;">' +
+                '<div><label class="form-label" style="font-size:.64rem;">Línea</label>' +
+                  '<select id="cpComLinea" class="input-text" style="font-size:.7rem;">' +
+                    '<option value="fedem" ' + ((prop.linea || 'fedem') === 'fedem' ? 'selected' : '') + '>FEDEM Provincial</option>' +
+                    '<option value="muni" ' + (prop.linea === 'muni' ? 'selected' : '') + '>Municipales QUAD</option>' +
+                    '<option value="sidecreer" ' + (prop.linea === 'sidecreer' ? 'selected' : '') + '>Tarjeta Sidecreer</option>' +
+                  '</select>' +
+                '</div>' +
+                '<div><label class="form-label" style="font-size:.64rem;">Simular por</label>' +
+                  '<select id="cpComModo" class="input-text" style="font-size:.7rem;">' +
+                    '<option value="neto" ' + (prop.modoSimulacion !== 'cuota' ? 'selected' : '') + '>💵 Monto Neto</option>' +
+                    '<option value="cuota" ' + (prop.modoSimulacion === 'cuota' ? 'selected' : '') + '>📅 Monto de Cuota</option>' +
+                  '</select>' +
+                '</div>' +
+                '<div><label class="form-label" style="font-size:.64rem;">Importe ($)</label>' +
+                  '<input type="number" id="cpComMonto" class="input-text" style="font-size:.7rem;" min="1" step="any" required value="' + (prop.modoSimulacion === 'cuota' ? (prop.cuotaEstimada || prop.monto || 0) : (prop.monto || 0)) + '"/>' +
+                '</div>' +
+                '<div><label class="form-label" style="font-size:.64rem;">Cuotas</label>' +
+                  '<select id="cpComPlazo" class="input-text" style="font-size:.7rem;">' +
+                    [6, 12, 18, 24, 36, 48].map(p => '<option value="' + p + '" ' + (Number(prop.cuotas || 12) === p ? 'selected' : '') + '>' + p + ' cuotas</option>').join('') +
+                  '</select>' +
+                '</div>' +
+              '</div>' +
+              '<div style="margin-bottom:6px;"><label class="form-label" style="font-size:.64rem;">Motivo / Comentario para el Analista</label>' +
+                '<input type="text" id="cpComDetalle" class="input-text" style="font-size:.7rem;" placeholder="Ej: El socio solicita cuota máxima de $..." required/>' +
+              '</div>' +
+              '<div style="text-align:right;"><button type="submit" class="btn-primary-action" style="width:auto;font-size:0.69rem;padding:4px 10px;">📤 Enviar Contrapropuesta</button></div>' +
+            '</form>';
         } else {
           html += '<p style="color:var(--text-muted);font-size:0.72rem;padding:0.75rem 0;">La mutual está auditando el legajo. Aún no se ha emitido una contraoferta formal.</p>';
         }
@@ -1526,6 +1559,137 @@
       actualizarContadorBoveda(s.id);
       verFichaCompleta(id);
     }
+
+    window.responderPropuestaComercializador = function responderPropuestaComercializador(id, decision) {
+      const all = getStoredSolicitudes();
+      const s = all.find(x => String(x.id) === String(id));
+      if (!s || !s.propuestaMutual || !s.propuestaMutual.activa) return;
+      const session = getSession();
+      const dec = String(decision || '').toUpperCase();
+      let motivo = '';
+      if (dec === 'RECHAZAR') {
+        const r = prompt('Ingresá el motivo del rechazo de la propuesta (opcional):', '');
+        if (r === null) return;
+        motivo = sanitizeHTML(String(r).trim());
+      } else if (dec === 'ACEPTAR') {
+        if (!confirm('¿Confirmás que el asociado ACEPTA la propuesta oficial vigente?')) return;
+      } else {
+        return;
+      }
+
+      const nuevoEstadoProp = dec === 'ACEPTAR' ? 'Aceptada por el Socio' : 'Rechazada';
+      const now = obtenerFechaHora24hs();
+      s.propuestaMutual.estadoPropuesta = nuevoEstadoProp;
+      s.propuestaMutual.respondidaPor = session?.nombre || 'Comercializador';
+      s.propuestaMutual.fechaRespuesta = now;
+      if (motivo) s.propuestaMutual.motivoRechazo = motivo;
+
+      if (!Array.isArray(s.historialPropuestas)) s.historialPropuestas = [];
+      const idxH = s.historialPropuestas.findIndex(v => v.version === s.propuestaMutual.version);
+      if (idxH >= 0) {
+        s.historialPropuestas[idxH] = Object.assign({}, s.historialPropuestas[idxH], {
+          estadoPropuesta: nuevoEstadoProp,
+          respondidaPor: s.propuestaMutual.respondidaPor,
+          fechaRespuesta: now,
+          motivoRechazo: motivo || s.historialPropuestas[idxH].motivoRechazo || ''
+        });
+      }
+
+      if (!s.observaciones) s.observaciones = [];
+      s.observaciones.push({
+        autor: session?.nombre || 'Comercializador',
+        rol: session?.rol || 'Comercializador',
+        fecha: now,
+        texto: (dec === 'ACEPTAR'
+          ? '✅ Propuesta v' + (s.propuestaMutual.version || 1) + ' ACEPTADA por el comercializador/socio.'
+          : '⛔ Propuesta v' + (s.propuestaMutual.version || 1) + ' RECHAZADA por el comercializador/socio.') + (motivo ? (' Motivo: ' + motivo) : '')
+      });
+
+      saveStoredSolicitudes(all);
+      callApi({ action: 'guardarPropuestaMutual', id: s.id, propuesta: s.propuestaMutual, historial: s.historialPropuestas }).catch(console.warn);
+
+      showToast(dec === 'ACEPTAR' ? '✅ Propuesta aceptada y notificada a la Mutual.' : '⛔ Propuesta marcada como rechazada.');
+      renderModuloComercializador();
+      renderModuloMutualPropias();
+      renderModuloMutual();
+      actualizarCentroNotificaciones();
+      actualizarContadorBoveda(s.id);
+      verFichaCompleta(id);
+    };
+
+    window.enviarContrapropuestaComercializador = function enviarContrapropuestaComercializador(e, id) {
+      e.preventDefault();
+      const all = getStoredSolicitudes();
+      const s = all.find(x => String(x.id) === String(id));
+      if (!s) return;
+      const session = getSession();
+
+      const linea = _normalizarLineaKeyOferta(document.getElementById('cpComLinea')?.value || 'fedem');
+      const modoSim = document.getElementById('cpComModo')?.value === 'cuota' ? 'cuota' : 'neto';
+      const inputValor = parseFloat(document.getElementById('cpComMonto')?.value);
+      const plazo = parseInt(document.getElementById('cpComPlazo')?.value, 10) || 12;
+      const detalle = sanitizeHTML(document.getElementById('cpComDetalle')?.value?.trim() || '');
+      if (!Number.isFinite(inputValor) || inputValor <= 0) {
+        showToast('⚠️ Ingresá un importe válido para la contrapropuesta.');
+        return;
+      }
+      const sim = calculateSimulation(linea, plazo, modoSim, inputValor);
+      if (!sim) {
+        showToast('⚠️ El plazo de ' + plazo + ' cuotas no está habilitado para la línea seleccionada.');
+        return;
+      }
+
+      const monto = Number((sim.neto || 0).toFixed(2));
+      const cuota = Number((sim.cuota || 0).toFixed(2));
+      const totalAPagar = Number((sim.totalAyuda || (cuota * plazo)).toFixed(2));
+      const capitalComputable = Number((sim.capital || 0).toFixed(2));
+      const tasaCosto = obtenerTasaCostoTexto(linea, plazo);
+      if (!Array.isArray(s.historialPropuestas)) s.historialPropuestas = [];
+      const nextVersion = (s.historialPropuestas.length > 0 ? Math.max(...s.historialPropuestas.map(v => v.version || 1)) : 0) + 1;
+      const now = obtenerFechaHora24hs();
+
+      const nuevaProp = {
+        version: nextVersion,
+        activa: true,
+        modoSimulacion: modoSim,
+        linea: linea,
+        lineaNombre: FINANCIAL_DATA[linea].name,
+        monto: monto,
+        cuotas: plazo,
+        cuotaEstimada: cuota,
+        totalAPagar: totalAPagar,
+        capitalComputable: capitalComputable,
+        tasaCosto: tasaCosto,
+        estadoPropuesta: 'Contrapropuesta del Comercializador',
+        detalle: detalle,
+        esRefinanciacion: false,
+        refinanciacion: null,
+        fecha: now,
+        analista: (session?.nombre || 'Comercializador') + ' (Comercializador)',
+        diferenciaTexto: 'Contrapropuesta enviada por comercializador'
+      };
+
+      s.propuestaMutual = nuevaProp;
+      s.historialPropuestas.push(nuevaProp);
+      if (!s.observaciones) s.observaciones = [];
+      s.observaciones.push({
+        autor: session?.nombre || 'Comercializador',
+        rol: session?.rol || 'Comercializador',
+        fecha: now,
+        texto: '💬 Contrapropuesta (v' + nextVersion + ') enviada: ' + formatMoney(monto) + ' en ' + plazo + ' cuotas de ' + formatMoney(cuota) + (detalle ? (' · Nota: ' + detalle) : '')
+      });
+
+      saveStoredSolicitudes(all);
+      callApi({ action: 'guardarPropuestaMutual', id: s.id, propuesta: s.propuestaMutual, historial: s.historialPropuestas }).catch(console.warn);
+
+      showToast('💬 Contrapropuesta v' + nextVersion + ' enviada a la Mutual.');
+      renderModuloComercializador();
+      renderModuloMutualPropias();
+      renderModuloMutual();
+      actualizarCentroNotificaciones();
+      actualizarContadorBoveda(s.id);
+      verFichaCompleta(id);
+    };
 
     function _armarTextoPropuestaWhatsApp(s, p) {
       let texto = `¡Hola ${s.solicitante.nombre}! 👋 Desde Mutual Modelo te informamos que hemos analizado tu legajo crediticio:

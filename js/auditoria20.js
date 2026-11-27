@@ -264,6 +264,9 @@
     if (!file) return null;
     global._auditoria20Files.dni = file;
     _renderFilePillAudit20('dniArchivoSeleccionadoPill', file, opts.desdeFusion ? 'Frente + Dorso PDF A4' : '');
+    if (typeof window.renderPreviewDocumentoSplitIA === 'function') {
+      window.renderPreviewDocumentoSplitIA('dniPreviewSplitBox', file);
+    }
     const inp = document.getElementById('fileInputDniAudit20');
     if (inp && typeof DataTransfer === 'function') {
       try {
@@ -285,6 +288,9 @@
     if (!file) return null;
     global._auditoria20Files.domicilio = file;
     _renderFilePillAudit20('domArchivoSeleccionadoPill', file, '');
+    if (typeof window.renderPreviewDocumentoSplitIA === 'function') {
+      window.renderPreviewDocumentoSplitIA('domPreviewSplitBox', file);
+    }
     const inp = document.getElementById('fileInputDomAudit20');
     if (inp && typeof DataTransfer === 'function') {
       try {
@@ -306,6 +312,10 @@
     global._auditoria20Files = { dni: null, domicilio: null };
     _renderFilePillAudit20('dniArchivoSeleccionadoPill', null);
     _renderFilePillAudit20('domArchivoSeleccionadoPill', null);
+    if (typeof window.renderPreviewDocumentoSplitIA === 'function') {
+      window.renderPreviewDocumentoSplitIA('dniPreviewSplitBox', null);
+      window.renderPreviewDocumentoSplitIA('domPreviewSplitBox', null);
+    }
     global._auditoria20Estado = {
       tabActiva: global._auditoria20Estado ? global._auditoria20Estado.tabActiva : 'recibo',
       dniSolicitante: '',
@@ -664,7 +674,12 @@
           '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Domicilio Detectado</div><div style="font-weight:700;color:#0f172a;">' + sanitizeHTML([ext.domicilio_completo, ext.localidad].filter(Boolean).join(', ') || '—') + '</div></div>' +
           '<div style="padding:0.65rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;"><div style="color:#64748b;font-size:11px;">Titularidad del Comprobante</div><div style="font-weight:700;color:#0f172a;">' + sanitizeHTML(titularStatus) + '</div></div>' +
         '</div>' +
-        (evIa.observacionesIA ? ('<div style="margin-top:0.65rem;padding:0.6rem 0.8rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;font-size:0.73rem;color:#475569;"><strong>Observaciones:</strong> ' + sanitizeHTML(evIa.observacionesIA) + '</div>') : '') +
+        (evIa.observacionesIA
+          ? ('<details class="ui-accordion" style="margin-top:0.65rem;">' +
+               '<summary>📝 Detalles técnicos e IA del comprobante</summary>' +
+               '<div class="ui-accordion-body" style="font-size:0.74rem;color:#475569;">' + sanitizeHTML(evIa.observacionesIA) + '</div>' +
+             '</details>')
+          : '') +
         _renderBloqueForenseAudit20(data.forense);
     } catch (err) {
       if (out) out.innerHTML = '<div style="padding:0.85rem;border-radius:10px;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;font-size:0.78rem;">⚠️ Error validando domicilio: ' + sanitizeHTML(err.message || String(err)) + '</div>';

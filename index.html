@@ -228,7 +228,7 @@
           </button>
 
           <!-- BOTÓN INSTALAR EXTENSIÓN CHROME -->
-          <button class="btn-top-help" id="btnTopInstallExt" type="button" onclick="window.abrirModalInstalarExtensionAmmer()" style="background:#f0fdf4;border-color:#86efac;color:#166534;" title="Descargar e instalar Extensión Chrome AMMER RENAPER Split View" aria-label="Instalar Extensión">
+          <button class="btn-top-help" id="btnTopInstallExt" type="button" onclick="window.abrirModalInstalarExtensionAmmer()" style="background:#f0fdf4;border-color:#86efac;color:#166534;" title="Descargar e instalar Extensión Chrome AMMER v2.5.1 (Split View, Descargas y Macros)" aria-label="Instalar Extensión v2.5.1">
             <span aria-hidden="true">🧩</span>
             <span class="btn-top-help-label">Instalar Extensión</span>
           </button>
@@ -1150,67 +1150,88 @@
 
             <!-- PANEL 1: RECIBO DE HABERES -->
             <div id="audit20PanelRecibo" class="audit20-panel" style="display:block;">
-              <div id="aiDropzoneDirecta"
-                   class="ai-dropzone-box"
-                   role="button"
-                   tabindex="0"
-                   aria-label="Subir o arrastrar Recibo de Sueldo en PDF o Imagen"
-                   onclick="document.getElementById('fileInputAuditoriaIA').click()"
-                   onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('fileInputAuditoriaIA').click();}"
-                   ondragover="manejarDragOverAuditoria(event)"
-                   ondragleave="manejarDragLeaveAuditoria(event)"
-                   ondrop="manejarDropReciboAuditoria(event)">
-                <input type="file" id="fileInputAuditoriaIA" multiple accept="application/pdf,image/*" style="display:none;" onchange="manejarSeleccionReciboAuditoria(this.files)"/>
-                <input type="file" id="fileInputAuditoriaAgregar" multiple accept="application/pdf,image/*" style="display:none;" onchange="agregarRecibosAuditoria(this.files)"/>
-                <div style="font-weight:800;font-size:.94rem;color:var(--color-primary);">
-                  📁 Subir o arrastrar Recibo(s) de Sueldo (PDF o Imagen)
-                </div>
-                <div id="listaArchivosAuditoriaPills" style="margin-top:.55rem;min-height:0;"></div>
-              </div>
-              <div id="auditMultiRecibosActions" style="display:none;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-top:0.65rem;padding:0.6rem 0.85rem;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;">
-                <span style="font-size:0.75rem;color:#334155;font-weight:600;">
-                  💡 ¿La persona trabaja en otro establecimiento o escuela? Podés sumar más recibos para consolidar haberes y retenciones.
-                </span>
-                <div style="display:flex;gap:0.45rem;flex-wrap:wrap;">
-                  <button type="button" onclick="document.getElementById('fileInputAuditoriaAgregar').click()" class="audit20-btn audit20-btn--indigo">
-                    <span>➕ Agregar otro recibo</span>
-                  </button>
-                  <button type="button" onclick="ejecutarAuditoriaDocumentalIA()" class="audit20-btn audit20-btn--navy">
-                    <span>⚡ Re-analizar todos</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Estado del análisis -->
-              <div id="loader-auditoria-ia" class="hidden" role="status" aria-live="polite" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:.75rem 1rem;margin-top:.85rem;margin-bottom:.5rem;display:none;align-items:center;justify-content:center;gap:.65rem;">
-                <div class="api-spinner" style="width:18px;height:18px;margin:0;border-top-color:var(--color-brand-blue);"></div>
-                <span style="color:var(--color-primary);font-size:.8rem;font-weight:700;">Analizando recibo oficial de Entre Ríos...</span>
-              </div>
-              <div id="aiAuditLoadingBar" style="display:none;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:1rem;margin-top:.85rem;margin-bottom:.75rem;text-align:center;">
-                <div class="api-spinner" style="margin:0 auto .5rem;border-top-color:var(--color-brand-blue);"></div>
-                <strong style="color:var(--color-primary);font-size:.85rem;" id="aiAuditStageText">Analizando recibo oficial de Entre Ríos...</strong>
-              </div>
-
-              <!-- Banner Rojo Visible de Error Estricto (Prohibido renderizar $ 0,00 si hay falla) -->
-              <div id="bannerErrorAuditoriaIA" class="hidden" role="alert" aria-live="assertive" style="background:#fef2f2;border:2px solid #fca5a5;color:#7f1d1d;border-radius:12px;padding:1rem 1.15rem;margin-top:.85rem;margin-bottom:.75rem;">
-                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;">
-                  <div style="display:flex;align-items:flex-start;gap:.65rem;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;">
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <line x1="12" y1="8" x2="12" y2="12"></line>
-                      <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                    </svg>
-                    <div>
-                      <div style="font-weight:800;font-size:.86rem;color:#991b1b;margin-bottom:3px;">No se pudo procesar el comprobante</div>
-                      <div id="bannerErrorAuditoriaTexto" style="font-size:.78rem;line-height:1.45;color:#7f1d1d;"></div>
-                    </div>
+              <div class="audit20-card">
+                <div class="audit20-card-head">
+                  <div>
+                    <h3 class="audit20-card-title">🧾 Auditoría de Recibo(s) de Haberes</h3>
                   </div>
-                  <button type="button" onclick="ocultarBannerErrorAuditoria()" style="background:transparent;border:none;color:#991b1b;font-size:1.15rem;font-weight:800;cursor:pointer;line-height:1;" title="Cerrar aviso">&times;</button>
+                </div>
+
+                <div class="audit20-split-grid">
+                  <div class="audit20-split-pane audit20-split-pane--sticky">
+                    <div id="aiDropzoneDirecta"
+                         class="ai-dropzone-box"
+                         role="button"
+                         tabindex="0"
+                         aria-label="Subir o arrastrar Recibo de Sueldo en PDF o Imagen"
+                         onclick="document.getElementById('fileInputAuditoriaIA').click()"
+                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('fileInputAuditoriaIA').click();}"
+                         ondragover="manejarDragOverAuditoria(event)"
+                         ondragleave="manejarDragLeaveAuditoria(event)"
+                         ondrop="manejarDropReciboAuditoria(event)">
+                      <input type="file" id="fileInputAuditoriaIA" multiple accept="application/pdf,image/*" style="display:none;" onchange="manejarSeleccionReciboAuditoria(this.files)"/>
+                      <input type="file" id="fileInputAuditoriaAgregar" multiple accept="application/pdf,image/*" style="display:none;" onchange="agregarRecibosAuditoria(this.files)"/>
+                      <div style="font-weight:800;font-size:.94rem;color:var(--color-primary);">
+                        📁 Subir o arrastrar Recibo(s) de Sueldo (PDF o Imagen)
+                      </div>
+                      <div id="listaArchivosAuditoriaPills" style="margin-top:.55rem;min-height:0;"></div>
+                    </div>
+                    <div id="auditMultiRecibosActions" style="display:none;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-top:0.65rem;padding:0.6rem 0.85rem;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;">
+                      <span style="font-size:0.75rem;color:#334155;font-weight:600;">
+                        💡 ¿La persona trabaja en otro establecimiento o escuela? Podés sumar más recibos para consolidar haberes y retenciones.
+                      </span>
+                      <div style="display:flex;gap:0.45rem;flex-wrap:wrap;">
+                        <button type="button" onclick="document.getElementById('fileInputAuditoriaAgregar').click()" class="audit20-btn audit20-btn--indigo">
+                          <span>➕ Agregar otro recibo</span>
+                        </button>
+                        <button type="button" onclick="ejecutarAuditoriaDocumentalIA()" class="audit20-btn audit20-btn--navy">
+                          <span>⚡ Re-analizar todos</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div id="reciboPreviewSplitBox" class="audit20-preview-box" style="display:none;"></div>
+                  </div>
+
+                  <div class="audit20-split-pane">
+                    <!-- Estado del análisis -->
+                    <div id="loader-auditoria-ia" class="hidden" role="status" aria-live="polite" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:.75rem 1rem;margin-bottom:.5rem;display:none;align-items:center;justify-content:center;gap:.65rem;">
+                      <div class="api-spinner" style="width:18px;height:18px;margin:0;border-top-color:var(--color-brand-blue);"></div>
+                      <span style="color:var(--color-primary);font-size:.8rem;font-weight:700;">Analizando recibo oficial de Entre Ríos...</span>
+                    </div>
+                    <div id="aiAuditLoadingBar" style="display:none;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:1rem;margin-bottom:.75rem;text-align:center;">
+                      <div class="api-spinner" style="margin:0 auto .5rem;border-top-color:var(--color-brand-blue);"></div>
+                      <strong style="color:var(--color-primary);font-size:.85rem;" id="aiAuditStageText">Analizando recibo oficial de Entre Ríos...</strong>
+                    </div>
+
+                    <!-- Banner Rojo Visible de Error Estricto (Prohibido renderizar $ 0,00 si hay falla) -->
+                    <div id="bannerErrorAuditoriaIA" class="hidden" role="alert" aria-live="assertive" style="background:#fef2f2;border:2px solid #fca5a5;color:#7f1d1d;border-radius:12px;padding:1rem 1.15rem;margin-bottom:.75rem;">
+                      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;">
+                        <div style="display:flex;align-items:flex-start;gap:.65rem;">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                          </svg>
+                          <div>
+                            <div style="font-weight:800;font-size:.86rem;color:#991b1b;margin-bottom:3px;">No se pudo procesar el comprobante</div>
+                            <div id="bannerErrorAuditoriaTexto" style="font-size:.78rem;line-height:1.45;color:#7f1d1d;"></div>
+                          </div>
+                        </div>
+                        <button type="button" onclick="ocultarBannerErrorAuditoria()" style="background:transparent;border:none;color:#991b1b;font-size:1.15rem;font-weight:800;cursor:pointer;line-height:1;" title="Cerrar aviso">&times;</button>
+                      </div>
+                    </div>
+
+                    <div id="reciboSplitEmptyHint" class="audit20-empty-split">
+                      <div style="font-size:1.25rem;margin-bottom:0.35rem;">🧾</div>
+                      <strong>Vista 50/50 de Auditoría</strong><br/>
+                      Subí o arrastrá uno o más recibos a la izquierda para previsualizar el documento junto al cálculo de márgenes y dictamen.
+                    </div>
+
+                    <!-- Pantalla de Resultados en 3 Bloques (Oculto hasta procesar exitosamente) -->
+                    <div id="aiAuditResultadosContainer" style="display:none;"></div>
+                  </div>
                 </div>
               </div>
-
-              <!-- Pantalla de Resultados en 3 Bloques (Oculto hasta procesar exitosamente) -->
-              <div id="aiAuditResultadosContainer" style="display:none;"></div>
             </div>
 
             <!-- PANEL 2: VALIDADOR DE DNI -->
@@ -1223,7 +1244,7 @@
                 </div>
 
                 <div class="audit20-split-grid">
-                  <div class="audit20-split-pane">
+                  <div class="audit20-split-pane audit20-split-pane--sticky">
                     <div class="audit20-form-grid">
                       <div class="audit20-field">
                         <label for="inputDniEsperadoAudit20" class="audit20-label">DNI esperado del asociado (opcional)</label>
@@ -1266,10 +1287,16 @@
                         <span>🔬 Verificar Metadatos</span>
                       </button>
                     </div>
+                    <div id="dniPreviewSplitBox" class="audit20-preview-box" style="display:none;"></div>
                   </div>
 
                   <div class="audit20-split-pane">
                     <div id="audit20ManualEjemplarStatus" style="display:none;margin-bottom:0.75rem;"></div>
+                    <div id="dniSplitEmptyHint" class="audit20-empty-split">
+                      <div style="font-size:1.25rem;margin-bottom:0.35rem;">🪪</div>
+                      <strong>Dictamen y Lectura MRZ / PDF417</strong><br/>
+                      Subí el DNI a la izquierda para previsualizar frente y dorso mientras auditamos titular, vencimiento, ejemplar y checksums.
+                    </div>
                     <div id="resultadoDniAudit20" style="display:none;"></div>
                   </div>
                 </div>
@@ -1286,7 +1313,7 @@
                 </div>
 
                 <div class="audit20-split-grid">
-                  <div class="audit20-split-pane">
+                  <div class="audit20-split-pane audit20-split-pane--sticky">
                     <div class="audit20-form-grid">
                       <div class="audit20-field">
                         <label for="inputDomNombreAudit20" class="audit20-label">Apellido y Nombre del solicitante</label>
@@ -1328,9 +1355,15 @@
                         <span>🔬 Verificar Metadatos</span>
                       </button>
                     </div>
+                    <div id="domPreviewSplitBox" class="audit20-preview-box" style="display:none;"></div>
                   </div>
 
                   <div class="audit20-split-pane">
+                    <div id="domSplitEmptyHint" class="audit20-empty-split">
+                      <div style="font-size:1.25rem;margin-bottom:0.35rem;">🏠</div>
+                      <strong>Dictamen de Domicilio y Vigencia (&le; 60 días)</strong><br/>
+                      Subí una boleta o constancia policial a la izquierda para previsualizar el comprobante junto a los datos extraídos.
+                    </div>
                     <div id="resultadoDomicilioAudit20" style="display:none;"></div>
                   </div>
                 </div>
@@ -7155,7 +7188,7 @@
 
     const MODULOS_LAZY_AMMER = {
       boletin: { src: 'js/boletinER.js?v=6', check: () => typeof window.cargarEstadoBoletinOficialAuditoria === 'function' },
-      auditoria20: { src: 'js/auditoria20.js?v=8', check: () => typeof window.ejecutarValidacionDniAudit20 === 'function' },
+      auditoria20: { src: 'js/auditoria20.js?v=9', check: () => typeof window.ejecutarValidacionDniAudit20 === 'function' },
       fichas: { src: 'js/fichasAsociados.js?v=7', check: () => typeof window.buscarPadronFichasAsociados === 'function' },
       firmas: { src: 'js/firmasAmmer.js?v=41', check: () => typeof window.initFirmasAmmerView === 'function' },
       whatsappBot: { src: 'js/whatsappBotAdmin.js?v=5', check: () => typeof window.initWhatsappBotPanelAdmin === 'function' },
@@ -10552,7 +10585,7 @@
   <script src="js/crmComercializador.js?v=3"></script>
   <script src="js/fichaExpediente.js?v=8"></script>
   <script src="js/crmTableros.js?v=1"></script>
-  <script src="js/auditoriaRecibos.js?v=2"></script>
+  <script src="js/auditoriaRecibos.js?v=3"></script>
   <script>
     /* ========================================================================
        11. MODALES (INERT, ARIA-MODAL, FOCO & SCROLL LOCK) Y NOTIFICACIONES TOAST
@@ -11409,7 +11442,7 @@
       window.addEventListener('storage', actualizarVisibilidadCommandBtn);
 
       window.abrirModalInstalarExtensionAmmer = function () {
-        const zipUrl = 'https://mutual-modelo.github.io/Simulador-Office/downloads/ammer-extension-v2.5.0.zip';
+        const zipUrl = 'https://mutual-modelo.github.io/Simulador-Office/downloads/ammer-extension-v2.5.1.zip';
         let modal = document.getElementById('ammerInstallExtModal');
         if (!modal) {
           modal = document.createElement('div');
@@ -11421,11 +11454,11 @@
           modal.innerHTML =
             '<div class="cmd-k-dialog" style="padding:1.1rem 1.25rem;max-width:520px;">' +
               '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">' +
-                '<strong style="font-size:0.98rem;color:#0f2744;">🧩 Instalar Extensión AMMER (Chrome)</strong>' +
+                '<strong style="font-size:0.98rem;color:#0f2744;">🧩 Instalar Extensión AMMER v2.5.1 (Chrome)</strong>' +
                 '<button type="button" onclick="document.getElementById(\'ammerInstallExtModal\').classList.remove(\'is-open\')" style="border:none;background:transparent;font-size:1rem;cursor:pointer;color:#64748b;">✕</button>' +
               '</div>' +
-              '<p style="font-size:0.8rem;color:#334155;margin:0 0 0.8rem 0;">Descargá la última versión de la extensión para habilitar la vista dividida con RENAPER:</p>' +
-              '<a href="' + zipUrl + '" target="_blank" rel="noopener" download style="display:inline-flex;align-items:center;gap:0.45rem;padding:0.55rem 0.95rem;border-radius:9px;background:#166534;color:#ffffff;font-size:0.82rem;font-weight:700;text-decoration:none;margin-bottom:0.9rem;">⬇️ Descargar Extensión (.zip)</a>' +
+              '<p style="font-size:0.8rem;color:#334155;margin:0 0 0.8rem 0;">Descargá la última versión (<strong>v2.5.1</strong>) para habilitar Split View en RENAPER y Drive 3en1, gestor documental y macros sincronizadas:</p>' +
+              '<a href="' + zipUrl + '" target="_blank" rel="noopener" download style="display:inline-flex;align-items:center;gap:0.45rem;padding:0.55rem 0.95rem;border-radius:9px;background:#166534;color:#ffffff;font-size:0.82rem;font-weight:700;text-decoration:none;margin-bottom:0.9rem;">⬇️ Descargar Extensión v2.5.1 (.zip)</a>' +
               '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0.75rem 0.9rem;font-size:0.76rem;color:#334155;line-height:1.45;">' +
                 '<div style="font-weight:800;color:#0f172a;margin-bottom:0.35rem;">Mini guía de instalación rápida:</div>' +
                 '<ol style="margin:0;padding-left:1.15rem;">' +

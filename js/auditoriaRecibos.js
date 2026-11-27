@@ -3233,12 +3233,133 @@
       return guardarDictamenEnBitacoraExpediente(s.id);
     }
 
+    const _auditSplitPreviewState = {};
+
+    function _base64ABlobUrlAudit(base64, mimeType) {
+      const bin = atob(String(base64 || ''));
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return URL.createObjectURL(new Blob([bytes], { type: mimeType || 'application/octet-stream' }));
+    }
+
+    function _revocarUrlsPreviewSplit(containerId) {
+      const st = _auditSplitPreviewState[containerId];
+      if (st && Array.isArray(st.urls)) {
+        st.urls.forEach(u => { try { URL.revokeObjectURL(u); } catch (_) {} });
+      }
+    }
+
+    function renderPreviewDocumentoSplitIA(containerId, itemsOrFile, activeIdx = 0) {
+      const box = document.getElementById(containerId);
+      if (!box) return;
+      _revocarUrlsPreviewSplit(containerId);
+
+      const rawList = !itemsOrFile ? [] : (Array.isArray(itemsOrFile) ? itemsOrFile : [itemsOrFile]);
+      const items = rawList.filter(Boolean);
+      if (!items.length) {
+        delete _auditSplitPreviewState[containerId];
+        box.style.display = 'none';
+        box.innerHTML = '';
+        return;
+      }
+
+      const urls = [];
+      const entries = items.map(it => {
+        if (typeof Blob !== 'undefined' && it instanceof Blob) {
+          const url = URL.createObjectURL(it);
+          urls.push(url);
+          const nombre = it.name || 'documento';
+          const mime = String(it.type || (nombre.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg')).toLowerCase();
+          return { nombre, url, esPdf: mime.includes('pdf') || nombre.toLowerCase().endsWith('.pdf') };
+        }
+        const nombre = it.nombre || it.fileName || 'documento';
+        const mime = String(it.mimeType || 'application/pdf').toLowerCase();
+        const url = it.base64 ? _base64ABlobUrlAudit(it.base64, mime) : (it.url || '');
+        if (url && url.startsWith('blob:')) urls.push(url);
+        return { nombre, url, esPdf: mime.includes('pdf') || nombre.toLowerCase().endsWith('.pdf') };
+      }).filter(e => e.url);
+
+      if (!entries.length) {
+        delete _auditSplitPreviewState[containerId];
+        box.style.display = 'none';
+        box.innerHTML = '';
+        return;
+      }
+
+      const idx = Math.max(0, Math.min(activeIdx, entries.length - 1));
+      const cur = entries[idx];
+      _auditSplitPreviewState[containerId] = { urls, entries, idx, items: rawList, rot: 0, zoom: 1 };
+
+      const tabsHtml = entries.length > 1
+        ? '<div class="audit20-preview-tabs">' + entries.map((e, i) =>
+            '<button type="button" class="audit20-preview-tab' + (i === idx ? ' is-active' : '') + '" data-prev-idx="' + i + '">#' + (i + 1) + ' ' + sanitizeHTML(e.nombre.slice(0, 22)) + '</button>'
+          ).join('') + '</div>'
+        : '';
+
+      const toolsHtml = cur.esPdf
+        ? '<a href="' + sanitizeHTML(cur.url) + '" target="_blank" rel="noopener" class="audit20-preview-tool-btn" style="text-decoration:none;">↗ Abrir</a>'
+        : '<button type="button" class="audit20-preview-tool-btn" data-prev-rot="-90" title="Rotar izquierda">↺</button>' +
+          '<button type="button" class="audit20-preview-tool-btn" data-prev-rot="90" title="Rotar derecha">↻</button>' +
+          '<button type="button" class="audit20-preview-tool-btn" data-prev-zoom="-0.2" title="Alejar">−</button>' +
+          '<button type="button" class="audit20-preview-tool-btn" data-prev-zoom="0.2" title="Acercar">+</button>' +
+          '<a href="' + sanitizeHTML(cur.url) + '" target="_blank" rel="noopener" class="audit20-preview-tool-btn" style="text-decoration:none;">↗</a>';
+
+      const stageHtml = cur.esPdf
+        ? '<iframe src="' + sanitizeHTML(cur.url) + '" title="Vista previa de ' + sanitizeHTML(cur.nombre) + '"></iframe>'
+        : '<img src="' + sanitizeHTML(cur.url) + '" alt="Vista previa de ' + sanitizeHTML(cur.nombre) + '" />';
+
+      box.innerHTML =
+        '<div class="audit20-preview-hdr">' +
+          '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%;">👁️ ' + sanitizeHTML(cur.nombre) + '</span>' +
+          '<span class="audit20-preview-tools">' + toolsHtml + '</span>' +
+        '</div>' +
+        tabsHtml +
+        '<div class="audit20-preview-stage">' + stageHtml + '</div>';
+      box.style.display = 'block';
+
+      box.querySelectorAll('[data-prev-idx]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const nextIdx = Number(btn.getAttribute('data-prev-idx')) || 0;
+          const curSt = _auditSplitPreviewState[containerId];
+          if (curSt) renderPreviewDocumentoSplitIA(containerId, curSt.items, nextIdx);
+        });
+      });
+
+      const aplicarTransform = () => {
+        const img = box.querySelector('.audit20-preview-stage img');
+        const curSt = _auditSplitPreviewState[containerId];
+        if (img && curSt) {
+          img.style.transform = 'rotate(' + curSt.rot + 'deg) scale(' + curSt.zoom.toFixed(2) + ')';
+        }
+      };
+
+      box.querySelectorAll('[data-prev-rot]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const curSt = _auditSplitPreviewState[containerId];
+          if (!curSt) return;
+          curSt.rot = (curSt.rot + Number(btn.getAttribute('data-prev-rot'))) % 360;
+          aplicarTransform();
+        });
+      });
+
+      box.querySelectorAll('[data-prev-zoom]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const curSt = _auditSplitPreviewState[containerId];
+          if (!curSt) return;
+          curSt.zoom = Math.max(0.6, Math.min(2.6, curSt.zoom + Number(btn.getAttribute('data-prev-zoom'))));
+          aplicarTransform();
+        });
+      });
+    }
+    if (typeof window !== 'undefined') window.renderPreviewDocumentoSplitIA = renderPreviewDocumentoSplitIA;
+
     function renderListaArchivosAuditoriaPills() {
       const container = document.getElementById('listaArchivosAuditoriaPills');
       const actionsBar = document.getElementById('auditMultiRecibosActions');
       if (actionsBar) {
         actionsBar.style.display = archivosAuditoriaCola.length > 0 ? 'flex' : 'none';
       }
+      renderPreviewDocumentoSplitIA('reciboPreviewSplitBox', archivosAuditoriaCola);
       if (!container) return;
       if (archivosAuditoriaCola.length === 0) {
         container.innerHTML = '';

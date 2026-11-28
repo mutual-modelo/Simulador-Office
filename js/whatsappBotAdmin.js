@@ -725,25 +725,35 @@
   }
 
   function cambiarTabWhatsappBotAdmin(tabKey, manual = true) {
-    const next = tabKey === 'lineas' ? 'lineas' : 'mensajeria';
+    const next = tabKey === 'lineas' ? 'lineas' : (tabKey === 'agente' ? 'agente' : 'mensajeria');
     if (manual) userPickedTab = true;
     activeTab = next;
 
     const btnMsg = document.getElementById('btnWaTabMensajeria');
+    const btnAg = document.getElementById('btnWaTabAgente');
     const btnLin = document.getElementById('btnWaTabLineas');
     const panelMsg = document.getElementById('waTabPanelMensajeria');
+    const panelAg = document.getElementById('waTabPanelAgente');
     const panelLin = document.getElementById('waTabPanelLineas');
 
     if (btnMsg) {
       btnMsg.classList.toggle('active', next === 'mensajeria');
       btnMsg.setAttribute('aria-selected', next === 'mensajeria' ? 'true' : 'false');
     }
+    if (btnAg) {
+      btnAg.classList.toggle('active', next === 'agente');
+      btnAg.setAttribute('aria-selected', next === 'agente' ? 'true' : 'false');
+    }
     if (btnLin) {
       btnLin.classList.toggle('active', next === 'lineas');
       btnLin.setAttribute('aria-selected', next === 'lineas' ? 'true' : 'false');
     }
     if (panelMsg) panelMsg.classList.toggle('active', next === 'mensajeria');
+    if (panelAg) panelAg.classList.toggle('active', next === 'agente');
     if (panelLin) panelLin.classList.toggle('active', next === 'lineas');
+    if (next === 'agente' && global.WaAgentUI && typeof global.WaAgentUI.cargarPanelAgenteWa === 'function') {
+      global.WaAgentUI.cargarPanelAgenteWa();
+    }
   }
 
   function abrirConfigApiOficialMetaWa() {

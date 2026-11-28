@@ -7448,8 +7448,8 @@
       fichas: { src: 'js/fichasAsociados.js?v=7', check: () => typeof window.buscarPadronFichasAsociados === 'function' },
       firmas: { src: 'js/firmasAmmer.js?v=42', check: () => typeof window.initFirmasAmmerView === 'function' },
       whatsappBot: {
-        src: 'js/whatsappBotAdmin.js?v=9',
-        extraSrcs: ['js/whatsappBotArm360.js?v=1', 'js/whatsappBotAgent.js?v=1', 'js/whatsappBotPipeline.js?v=1', 'js/whatsappBotMetrics.js?v=1'],
+        src: 'js/whatsappBotAdmin.js?v=10',
+        extraSrcs: ['js/whatsappBotArm360.js?v=2', 'js/whatsappBotAgent.js?v=2', 'js/whatsappBotPipeline.js?v=2', 'js/whatsappBotMetrics.js?v=2'],
         check: () => typeof window.initWhatsappBotPanelAdmin === 'function' && typeof window.WaArm360 === 'object' && typeof window.WaAgentUI === 'object' && typeof window.WaPipelineUI === 'object' && typeof window.WaMetricsUI === 'object'
       },
       mutualPay: { src: 'js/mutualPayBackoffice.js?v=6', check: () => typeof window.initMutualPayBackoffice === 'function' }

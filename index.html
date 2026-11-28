@@ -2276,7 +2276,7 @@
 
           <!-- TAB 1: MENSAJERÍA COMPLETA ESTILO WHATSAPP -->
           <div id="waTabPanelMensajeria" class="wa-hub-tab-panel active">
-            <div class="wa-chat-workspace">
+            <div id="waChatWorkspace" class="wa-chat-workspace with-360">
               <!-- PANEL IZQUIERDO: LÍNEA EMISORA, BUSCADOR DE ASOCIADOS Y CHATS RECIENTES -->
               <aside class="wa-chat-sidebar">
                 <div class="wa-sidebar-section">
@@ -2311,13 +2311,31 @@
                 </div>
 
                 <div class="wa-sidebar-section" style="padding:0.55rem 0.9rem;background:#f1f5f9;">
-                  <div class="wa-sidebar-label" style="margin-bottom:0;">
+                  <div class="wa-sidebar-label" style="margin-bottom:0.45rem;">
                     <span>Conversaciones</span>
                     <div style="display:flex;gap:8px;align-items:center;">
                       <button type="button" onclick="window.cargarConversacionesServidorWa(false)" title="Traer conversaciones desde el servidor" style="border:none;background:transparent;color:#0284c7;font-size:0.68rem;font-weight:800;cursor:pointer;">🔄 Sync</button>
                       <button type="button" onclick="window.limpiarHistorialChatsWhatsappAdmin()" style="border:none;background:transparent;color:#64748b;font-size:0.68rem;font-weight:700;cursor:pointer;">Limpiar</button>
                     </div>
                   </div>
+                  <div id="waArmFilterChips" class="wa-arm-filter-bar" role="group" aria-label="Filtros rápidos de conversaciones">
+                    <button type="button" class="wa-arm-filter-chip active" data-wa-filter="" onclick="window.setWaArmFilter('', this)">Todos</button>
+                    <button type="button" class="wa-arm-filter-chip" data-wa-filter="hoy" onclick="window.setWaArmFilter('hoy', this)">📅 Hoy</button>
+                    <button type="button" class="wa-arm-filter-chip" data-wa-filter="needs_human" onclick="window.setWaArmFilter('needs_human', this)">🙋 Asesor</button>
+                    <button type="button" class="wa-arm-filter-chip" data-wa-filter="bot_activo" onclick="window.setWaArmFilter('bot_activo', this)">🤖 Bot</button>
+                    <button type="button" class="wa-arm-filter-chip" data-wa-filter="24h_expiring" onclick="window.setWaArmFilter('24h_expiring', this)">⏳ 24h</button>
+                  </div>
+                  <select id="selWaArmStageFilter" class="wa-arm-stage-select" aria-label="Filtrar por etapa del pipeline" onchange="window.setWaArmStageFilter(this.value)">
+                    <option value="">Todas las etapas</option>
+                    <option value="nuevo_lead">Nuevo Lead</option>
+                    <option value="calificando">Calificando (Bot)</option>
+                    <option value="docs_pendientes">Docs Pendientes</option>
+                    <option value="simulacion">En Simulación</option>
+                    <option value="esperando_firma">Esperando Firma</option>
+                    <option value="derivado_asesor">Derivado a Asesor</option>
+                    <option value="cerrado">Cerrado / Aprobado</option>
+                    <option value="descartado">Descartado</option>
+                  </select>
                 </div>
                 <div id="waComposerRecentList" class="wa-recent-list">
                   <div style="padding:1.1rem 0.75rem;text-align:center;color:#64748b;font-size:0.77rem;">
@@ -2341,12 +2359,22 @@
                     </div>
                   </div>
                   <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                    <span id="waChatBotStateBadge" class="badge-status badge-info" style="display:none;font-size:0.68rem;">🤖 Bot Activo</span>
+                    <button type="button" id="btnWaToggleBotPause" class="wa-chat-header-btn" onclick="window.togglePausaBotWa()" style="display:none;" title="Pausar o reanudar el agente IA en esta conversación">
+                      <span>⏸️ Pausar Bot</span>
+                    </button>
+                    <button type="button" id="btnWaResolveHandoff" class="wa-chat-header-btn" onclick="window.resolverHandoffWa()" style="display:none;border-color:#fde68a;background:#fffbeb;color:#92400e;" title="Marcar derivación como atendida">
+                      <span>✅ Tomar / Resolver</span>
+                    </button>
                     <button type="button" id="btnWaLoadOlder" class="wa-chat-header-btn" onclick="window.cargarMensajesAnterioresWa()" style="display:none;color:#0369a1;border-color:#bae6fd;background:#f0f9ff;" title="Solicitar y cargar mensajes más antiguos del historial">
                       <span>⬆️ Historial previo</span>
                     </button>
                     <button type="button" id="btnWaChatSync" class="wa-chat-header-btn" onclick="window.cargarMensajesChatWhatsappAdmin(false)" title="Sincronizar mensajes recientes y respuestas de encuestas">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
                       <span>Sincronizar</span>
+                    </button>
+                    <button type="button" id="btnWaToggle360" class="wa-chat-header-btn" onclick="window.togglePanel360Wa()" style="color:#0f2744;border-color:#cbd5e1;" title="Mostrar u ocultar Panel 360° del asociado">
+                      <span>📋 360°</span>
                     </button>
                     <button type="button" class="wa-chat-header-btn" onclick="window.cambiarTabWhatsappBotAdmin('lineas')" style="color:#0f2744;">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -2529,6 +2557,25 @@
                   </div>
                 </div>
               </div>
+
+              <!-- PANEL DERECHO 360°: RESUMEN ACW, SMART FIELDS, FICHA, DOCUMENTOS Y ACTIVIDADES -->
+              <aside id="waContext360Panel" class="wa-context-360" aria-label="Panel 360° del asociado">
+                <div class="wa-360-header">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                    <span style="font-size:0.74rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;color:#0f2744;">Ficha 360°</span>
+                    <button type="button" onclick="window.togglePanel360Wa(false)" class="wa-360-close-btn" title="Ocultar Panel 360°" aria-label="Ocultar Panel 360°">✕</button>
+                  </div>
+                </div>
+                <div id="waContext360Body" class="wa-360-body">
+                  <div class="wa-360-empty">
+                    <div style="font-size:1.3rem;margin-bottom:6px;">🧭</div>
+                    <div style="font-size:0.8rem;font-weight:800;color:#0f2744;">Contexto 360° del Asociado</div>
+                    <div style="font-size:0.73rem;color:#64748b;margin-top:4px;line-height:1.45;">
+                      Seleccioná un chat para ver etapa del pipeline, resumen ACW, Smart Fields, ficha del Padrón, documentos para Auditoría IA y actividades.
+                    </div>
+                  </div>
+                </div>
+              </aside>
             </div>
           </div>
 
@@ -7194,27 +7241,33 @@
       auditoria20: { src: 'js/auditoria20.js?v=10', check: () => typeof window.ejecutarValidacionDniAudit20 === 'function' },
       fichas: { src: 'js/fichasAsociados.js?v=7', check: () => typeof window.buscarPadronFichasAsociados === 'function' },
       firmas: { src: 'js/firmasAmmer.js?v=42', check: () => typeof window.initFirmasAmmerView === 'function' },
-      whatsappBot: { src: 'js/whatsappBotAdmin.js?v=5', check: () => typeof window.initWhatsappBotPanelAdmin === 'function' },
+      whatsappBot: { src: 'js/whatsappBotAdmin.js?v=6', extraSrc: 'js/whatsappBotArm360.js?v=1', check: () => typeof window.initWhatsappBotPanelAdmin === 'function' && typeof window.WaArm360 === 'object' },
       mutualPay: { src: 'js/mutualPayBackoffice.js?v=6', check: () => typeof window.initMutualPayBackoffice === 'function' }
     };
     const _modulosLazyPromesas = {};
+
+    function _cargarScriptLazy(src) {
+      return new Promise((resolve, reject) => {
+        const sc = document.createElement('script');
+        sc.src = src;
+        sc.async = true;
+        sc.onload = () => resolve();
+        sc.onerror = () => reject(new Error('No se pudo cargar ' + src));
+        document.body.appendChild(sc);
+      });
+    }
 
     function cargarModuloOnDemand(moduloKey) {
       const cfg = MODULOS_LAZY_AMMER[moduloKey];
       if (!cfg) return Promise.resolve();
       if (cfg.check()) return Promise.resolve();
       if (_modulosLazyPromesas[moduloKey]) return _modulosLazyPromesas[moduloKey];
-      _modulosLazyPromesas[moduloKey] = new Promise((resolve, reject) => {
-        const sc = document.createElement('script');
-        sc.src = cfg.src;
-        sc.async = true;
-        sc.onload = () => resolve();
-        sc.onerror = () => {
+      _modulosLazyPromesas[moduloKey] = _cargarScriptLazy(cfg.src)
+        .then(() => (cfg.extraSrc ? _cargarScriptLazy(cfg.extraSrc) : undefined))
+        .catch((err) => {
           delete _modulosLazyPromesas[moduloKey];
-          reject(new Error('No se pudo cargar ' + cfg.src));
-        };
-        document.body.appendChild(sc);
-      });
+          throw err;
+        });
       return _modulosLazyPromesas[moduloKey];
     }
 

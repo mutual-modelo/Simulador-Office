@@ -426,6 +426,9 @@
       organismo: String(contact?.organismo || existing.organismo || '').trim(),
       lastText: lastPreview !== undefined ? String(lastPreview).slice(0, 90) : (existing.lastText || ''),
       window24h: contact?.window24h || existing.window24h || null,
+      pipelineStage: contact?.pipelineStage || existing.pipelineStage || 'nuevo_lead',
+      botPaused: contact?.botPaused !== undefined ? Boolean(contact.botPaused) : Boolean(existing.botPaused),
+      needsHuman: contact?.needsHuman !== undefined ? Boolean(contact.needsHuman) : Boolean(existing.needsHuman),
       updatedAt: contact?.updatedAt || new Date().toISOString()
     };
     current.unshift(updated);
@@ -536,6 +539,20 @@
       es.addEventListener('message', _manejarEventoSseWhatsapp);
       es.addEventListener('status', _manejarEventoSseWhatsapp);
       es.addEventListener('wa_event', _manejarEventoSseWhatsapp);
+      es.addEventListener('conversation_updated', (ev) => {
+        try {
+          const data = JSON.parse(ev.data || '{}');
+          if (global.WaArm360?.handleSseEvent) global.WaArm360.handleSseEvent('conversation_updated', data);
+        } catch (_) {}
+        _manejarEventoSseWhatsapp();
+      });
+      es.addEventListener('handoff_alert', (ev) => {
+        try {
+          const data = JSON.parse(ev.data || '{}');
+          if (global.WaArm360?.handleSseEvent) global.WaArm360.handleSseEvent('handoff_alert', data);
+        } catch (_) {}
+        _manejarEventoSseWhatsapp();
+      });
       es.onerror = () => {
         waSseConnected = false;
         try { es.close(); } catch (_) {}
@@ -1347,6 +1364,10 @@
     _actualizarPillVentana24h(activeContact.window24h);
     _renderWaChatThread();
     _iniciarChatAutoPoll();
+    if (global.WaArm360 && typeof global.WaArm360.cargarContexto360Wa === 'function') {
+      const selLine = document.getElementById('selWaBotTestSession');
+      global.WaArm360.cargarContexto360Wa(selLine?.value || '', phone);
+    }
     if (shouldSync) {
       cargarMensajesChatWhatsappAdmin(true);
     }
@@ -1362,19 +1383,45 @@
     try {
       const qs = new URLSearchParams({ limit: '50' });
       if (sid) qs.set('sessionId', sid);
+      const armParams = global.WaArm360 && typeof global.WaArm360.buildFilterQueryParams === 'function'
+        ? global.WaArm360.buildFilterQueryParams()
+        : {};
+      const hasArmFilter = Object.keys(armParams).length > 0;
+      Object.entries(armParams).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') qs.set(k, String(v));
+      });
       const resp = await fetchFn(`${apiBase}/api/admin/whatsapp/conversaciones?${qs.toString()}`, { method: 'GET' }, 12000);
       const data = resp && resp.ok ? await resp.json().catch(() => null) : null;
       const list = Array.isArray(data?.conversaciones) ? data.conversaciones : [];
-      for (let i = list.length - 1; i >= 0; i--) {
-        const c = list[i];
-        if (!c?.phone) continue;
-        _upsertRecentChat({
-          phone: c.phone,
+      if (hasArmFilter) {
+        const filteredMapped = list.filter((c) => c?.phone).map((c) => ({
+          phone: _normalizarTelefonoWa(c.phone),
           name: c.name || `+${c.phone}`,
           dni: c.dni || '',
           window24h: c.window24h || null,
+          pipelineStage: c.pipelineStage || 'nuevo_lead',
+          botPaused: Boolean(c.botPaused),
+          needsHuman: Boolean(c.needsHuman),
+          lastText: String(c.lastMessageText || '').slice(0, 90),
           updatedAt: c.lastMessageAt
-        }, c.lastMessageText || '');
+        }));
+        _saveRecentChats(filteredMapped);
+        _renderRecentChatsList();
+      } else {
+        for (let i = list.length - 1; i >= 0; i--) {
+          const c = list[i];
+          if (!c?.phone) continue;
+          _upsertRecentChat({
+            phone: c.phone,
+            name: c.name || `+${c.phone}`,
+            dni: c.dni || '',
+            window24h: c.window24h || null,
+            pipelineStage: c.pipelineStage || 'nuevo_lead',
+            botPaused: Boolean(c.botPaused),
+            needsHuman: Boolean(c.needsHuman),
+            updatedAt: c.lastMessageAt
+          }, c.lastMessageText || '');
+        }
       }
       if (!silencioso) {
         _toast(`🔄 ${list.length} conversaciones sincronizadas desde el servidor.`, 'info');
@@ -1417,8 +1464,14 @@
         '</div>';
       return;
     }
+    const stageMetaMap = (global.WaArm360 && global.WaArm360.STAGE_META) || {};
     box.innerHTML = list.map((c, idx) => {
       const isActive = activeContact && _normalizarTelefonoWa(activeContact.phone) === _normalizarTelefonoWa(c.phone);
+      const stInfo = c.pipelineStage ? (stageMetaMap[c.pipelineStage] || { label: c.pipelineStage, cls: '' }) : null;
+      const badgesHtml =
+        (c.needsHuman ? '<span class="wa-stage-pill danger">🙋 Asesor</span>' : '') +
+        (c.botPaused && !c.needsHuman ? '<span class="wa-stage-pill warn">⏸️ Pausado</span>' : '') +
+        (stInfo ? `<span class="wa-stage-pill ${stInfo.cls || ''}">${_esc(stInfo.label)}</span>` : '');
       return (
         `<button type="button" class="wa-recent-item${isActive ? ' active' : ''}" data-wa-recent-idx="${idx}">` +
           `<span class="wa-avatar">${_esc(_initials(c.name, c.phone))}</span>` +
@@ -1428,6 +1481,7 @@
               `<span style="font-size:0.65rem;color:#64748b;flex-shrink:0;">${_esc(_formatHora(c.updatedAt))}</span>` +
             `</div>` +
             `<div style="font-size:0.71rem;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${_esc(c.lastText || ('+' + c.phone))}</div>` +
+            (badgesHtml ? `<div class="wa-recent-badges">${badgesHtml}</div>` : '') +
           `</span>` +
         `</button>`
       );
@@ -1610,6 +1664,12 @@
               (isOut && m.sessionAlias ? `<span>via ${_esc(m.sessionAlias)}</span>` : '') +
               `<span>${_esc(_formatHora(m.timestamp))}</span>` +
               _renderStatusTicks(m) +
+              (isOut && m.id
+                ? `<span class="wa-msg-feedback-row">` +
+                    `<button type="button" class="wa-msg-fb-btn${m.aiFeedback === 'up' ? ' active' : ''}" title="Buena respuesta" onclick="window.enviarFeedbackMensajeWa('${_esc(m.id)}', '${m.aiFeedback === 'up' ? '' : 'up'}')">👍</button>` +
+                    `<button type="button" class="wa-msg-fb-btn${m.aiFeedback === 'down' ? ' active' : ''}" title="Corregir respuesta" onclick="window.enviarFeedbackMensajeWa('${_esc(m.id)}', '${m.aiFeedback === 'down' ? '' : 'down'}')">👎</button>` +
+                  `</span>`
+                : '') +
             `</div>` +
           `</div>` +
         `</div>`

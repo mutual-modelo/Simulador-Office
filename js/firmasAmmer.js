@@ -400,16 +400,64 @@
     return [];
   }
 
+  function _parseJsonObjFirmas(v) {
+    if (!v) return {};
+    if (typeof v === 'object') return v;
+    if (typeof v === 'string') {
+      try { const p = JSON.parse(v); return (p && typeof p === 'object') ? p : {}; } catch (_e) { return {}; }
+    }
+    return {};
+  }
+
+  function _pickFirstStrFirmas() {
+    for (let i = 0; i < arguments.length; i++) {
+      const v = arguments[i];
+      if (v === null || v === undefined) continue;
+      const s = String(v).trim();
+      if (s && s !== 'undefined' && s !== 'null' && s !== 'SIN_ESPECIFICAR') return s;
+    }
+    return '';
+  }
+
+  function _pickFirstNumFirmas() {
+    for (let i = 0; i < arguments.length; i++) {
+      const v = arguments[i];
+      if (v === null || v === undefined || v === '') continue;
+      const n = Number(v);
+      if (Number.isFinite(n) && n > 0) return v;
+      if (typeof v === 'string' && /[\d]/.test(v)) return v;
+    }
+    return undefined;
+  }
+
   function construirContextoDesdeExpediente(expObj) {
     const e = expObj || {};
     const sol = e.solicitante || {};
-    const dc = e.datosContacto || {};
-    const dl = e.datosLaborales || {};
-    const prest = e.prestamo || {};
+    const dc = Object.assign({}, _parseJsonObjFirmas(e.Datos_Contacto_JSON), _parseJsonObjFirmas(e.datosContacto));
+    const dl = Object.assign({}, _parseJsonObjFirmas(e.Datos_Laborales_JSON), _parseJsonObjFirmas(e.datosLaborales));
+    const db = _parseJsonObjFirmas(e.datosBancarios);
+    const prop = _parseJsonObjFirmas(e.propuestaOficial || e.ofertaMutual || e.Propuesta_Oficial_JSON);
+    const prest = _parseJsonObjFirmas(e.prestamo);
+    const dniClean = String(sol.dni || e.dni || e.DNI || e.DNI_Asociado || '').replace(/\D/g, '');
+    const cacheMap = state._fichaAsociadoCacheByDni || {};
+    const fa = (dniClean && cacheMap[dniClean]) ? cacheMap[dniClean] : {};
+
     const expId = String(e.id_definitivo || e.ID_Definitivo_Expediente || e.Nro_Definitivo || e.id_provisorio || e.id || '');
 
     const chkVinc = document.getElementById('chkFirmaMostrarVerValidacion');
     const mostrarValidacionExp = Boolean(e && (e.id || expId)) && (chkVinc ? Boolean(chkVinc.checked) : true);
+
+    const cuotasVal = _pickFirstNumFirmas(prop.cuotas, prest.cuotas, e.cuotas_pactadas, e.Cantidad_Cuotas, e.cuotas);
+    const montoVal = _pickFirstNumFirmas(prop.monto, prop.montoNeto, prest.monto, e.monto_solicitado, e.Monto_Solicitado_Neto, e.monto);
+    const cuotaVal = _pickFirstNumFirmas(prop.valorCuota, prop.cuotaEstimada, prop.cuota, prest.valorCuota, prest.cuotaEstimada, prest.valor_cuota, e.valorCuota, e.cuotaEstimada, e.Monto_Cuota, e.Cuota_Estimada);
+    let totalVal = _pickFirstNumFirmas(prop.totalDevolver, prop.totalADevolver, prest.totalDevolver, prest.totalADevolver, prest.total_devolver, e.totalDevolver, e.totalADevolver, e.Total_A_Devolver);
+    if (totalVal === undefined && cuotaVal !== undefined && cuotasVal !== undefined) {
+      const cNum = Number(String(cuotaVal).replace(/[^\d.-]/g, ''));
+      const qNum = Number(cuotasVal);
+      if (Number.isFinite(cNum) && cNum > 0 && Number.isFinite(qNum) && qNum > 0) {
+        totalVal = Number((cNum * qNum).toFixed(2));
+      }
+    }
 
     const ctx = {
       expediente: { id: expId },
@@ -418,47 +466,47 @@
       expediente_definitivo: (e.id_definitivo || e.ID_Definitivo_Expediente || e.Nro_Definitivo) ? String(e.id_definitivo || e.ID_Definitivo_Expediente || e.Nro_Definitivo) : null,
       mostrar_validacion_expediente: mostrarValidacionExp,
       solicitante: {
-        nombre: sol.nombre || e.Apellido_Nombre || e.nombre || '',
-        dni: String(sol.dni || e.dni || e.DNI || '').replace(/\D/g, ''),
-        cuil: sol.cuil || dc.cuil || e.cuil || '',
-        domicilio: sol.domicilio || dc.domicilio || e.domicilio || e.Domicilio || '',
-        domicilio_historico: sol.domicilio_historico || e.domicilio_historico || '',
-        localidad: sol.localidad || dc.localidad || e.localidad || '',
-        telefono: sol.telefono || sol.celular || dc.celular || e.telefono || e.celular || '',
-        email: sol.email || sol.Email || sol.correo || dc.email || e.email || e.Email || e.correo || '',
-        cbu: sol.cbu || e.cbu || '',
-        alias: sol.alias || e.alias || '',
-        banco: sol.banco || e.banco || '',
-        tipoCuenta: sol.tipoCuenta || e.tipoCuenta || '',
-        nroCuenta: sol.nroCuenta || e.nroCuenta || '',
-        tarjetaSidecreerNumero: sol.tarjetaSidecreerNumero || dc.tarjetaSidecreerNumero || e.tarjetaSidecreerNumero || '',
-        tarjetaSidecreerVencimiento: sol.tarjetaSidecreerVencimiento || dc.tarjetaSidecreerVencimiento || e.tarjetaSidecreerVencimiento || '',
-        tarjetaSidecreerCvv: sol.tarjetaSidecreerCvv || dc.tarjetaSidecreerCvv || e.tarjetaSidecreerCvv || '',
-        parejaNombre: sol.parejaNombre || e.parejaNombre || '',
-        parejaDni: sol.parejaDni || e.parejaDni || '',
-        parejaEmail: sol.parejaEmail || e.parejaEmail || '',
-        parejaTelefono: sol.parejaTelefono || e.parejaTelefono || '',
-        organismo: sol.organismo || dl.organismo || e.organismo || e.reparticion || '',
-        dependencia: sol.dependencia || dl.dependencia || e.dependencia || '',
-        condicion: sol.condicion || dl.condicion || e.condicion || '',
-        cargo: sol.cargo || dl.cargo || e.cargo || '',
-        legajo: sol.legajo || dl.legajo || e.legajo || '',
-        categoriaMunicipal: sol.categoriaMunicipal || dl.categoriaMunicipal || e.categoriaMunicipal || e.Categoria_Municipal || '',
-        situacionRevista: sol.situacionRevista || dl.situacionRevista || e.situacionRevista || '',
-        fechaIngresoLaboral: sol.fechaIngresoLaboral || sol.Fecha_Ingreso_Laboral || dl.fechaIngresoLaboral || dl.Fecha_Ingreso_Laboral || e.fechaIngresoLaboral || e.Fecha_Ingreso_Laboral || '',
-        antiguedad: sol.antiguedad || dl.antiguedad || e.antiguedad || '',
-        estadoCivil: sol.estadoCivil || dc.estadoCivil || e.estadoCivil || '',
-        sexo: sol.sexo || dc.sexo || e.sexo || '',
-        fechaNacimiento: sol.fechaNacimiento || sol.fecha_nacimiento || dc.fechaNacimiento || dc.fechaNac || e.fechaNacimiento || e.fecha_nacimiento || '',
+        nombre: _pickFirstStrFirmas(sol.nombre, e.Apellido_Nombre, e.apellidoNombre, e.nombre, fa.nombre),
+        dni: dniClean || String(fa.dni || '').replace(/\D/g, ''),
+        cuil: _pickFirstStrFirmas(sol.cuil, dc.cuil, dl.cuil, e.cuil, e.CUIL, fa.cuil),
+        domicilio: _pickFirstStrFirmas(sol.domicilio, dc.domicilio, e.domicilio, e.Domicilio, e.domicilio_historico, fa.domicilio),
+        domicilio_historico: _pickFirstStrFirmas(sol.domicilio_historico, e.domicilio_historico, e.Domicilio_Historico_Solicitud, sol.domicilio, dc.domicilio, fa.domicilio),
+        localidad: _pickFirstStrFirmas(sol.localidad, dc.localidad, e.localidad, e.Localidad, fa.localidad),
+        telefono: _pickFirstStrFirmas(sol.telefono, sol.celular, dc.celular, dc.telefono, e.telefono, e.celular, e.Celular, fa.telefono, fa.celular),
+        email: _pickFirstStrFirmas(sol.email, sol.Email, sol.correo, dc.email, e.email, e.Email, e.correo, fa.email),
+        cbu: _pickFirstStrFirmas(sol.cbu, dc.cbu, db.cbu, e.cbu, e.CBU, fa.cbu),
+        alias: _pickFirstStrFirmas(sol.alias, dc.alias, db.alias, e.alias, e.Alias_CBU, fa.alias),
+        banco: _pickFirstStrFirmas(sol.banco, dc.banco, db.banco, e.banco, e.Banco, fa.banco),
+        tipoCuenta: _pickFirstStrFirmas(sol.tipoCuenta, dc.tipoCuenta, db.tipoCuenta, e.tipoCuenta, e.Tipo_Cuenta, fa.tipoCuenta),
+        nroCuenta: _pickFirstStrFirmas(sol.nroCuenta, dc.nroCuenta, db.nroCuenta, e.nroCuenta, e.Nro_Cuenta, fa.nroCuenta),
+        tarjetaSidecreerNumero: _pickFirstStrFirmas(sol.tarjetaSidecreerNumero, dc.tarjetaSidecreerNumero, db.tarjetaSidecreerNumero, e.tarjetaSidecreerNumero, e.Tarjeta_Sidecreer_Numero, fa.tarjetaSidecreerNumero),
+        tarjetaSidecreerVencimiento: _pickFirstStrFirmas(sol.tarjetaSidecreerVencimiento, dc.tarjetaSidecreerVencimiento, db.tarjetaSidecreerVencimiento, e.tarjetaSidecreerVencimiento, e.Tarjeta_Sidecreer_Vencimiento, fa.tarjetaSidecreerVencimiento),
+        tarjetaSidecreerCvv: _pickFirstStrFirmas(sol.tarjetaSidecreerCvv, dc.tarjetaSidecreerCvv, db.tarjetaSidecreerCvv, e.tarjetaSidecreerCvv, e.Tarjeta_Sidecreer_CVV, fa.tarjetaSidecreerCvv),
+        parejaNombre: _pickFirstStrFirmas(sol.parejaNombre, dc.parejaNombre, e.parejaNombre, e.Pareja_Nombre, fa.parejaNombre),
+        parejaDni: _pickFirstStrFirmas(sol.parejaDni, dc.parejaDni, e.parejaDni, e.Pareja_DNI, fa.parejaDni),
+        parejaEmail: _pickFirstStrFirmas(sol.parejaEmail, dc.parejaEmail, e.parejaEmail, e.Pareja_Email, fa.parejaEmail),
+        parejaTelefono: _pickFirstStrFirmas(sol.parejaTelefono, dc.parejaTelefono, e.parejaTelefono, e.Pareja_Telefono, fa.parejaTelefono),
+        organismo: _pickFirstStrFirmas(sol.organismo, dl.organismo, e.organismo, e.reparticion, e.Organismo, fa.organismo),
+        dependencia: _pickFirstStrFirmas(sol.dependencia, dl.dependencia, e.dependencia, e.Dependencia, fa.dependencia),
+        condicion: _pickFirstStrFirmas(sol.condicion, dl.condicion, e.condicion, e.Condicion, fa.condicion),
+        cargo: _pickFirstStrFirmas(sol.cargo, dl.cargo, e.cargo, e.Cargo, fa.cargo),
+        legajo: _pickFirstStrFirmas(sol.legajo, dl.legajo, e.legajo, e.Legajo_Municipal, e.Legajo, fa.legajo),
+        categoriaMunicipal: _pickFirstStrFirmas(sol.categoriaMunicipal, dl.categoriaMunicipal, dl.Categoria_Municipal, e.categoriaMunicipal, e.Categoria_Municipal, fa.categoriaMunicipal),
+        situacionRevista: _pickFirstStrFirmas(sol.situacionRevista, dl.situacionRevista, e.situacionRevista, e.Situacion_Revista, fa.situacionRevista),
+        fechaIngresoLaboral: _pickFirstStrFirmas(sol.fechaIngresoLaboral, sol.Fecha_Ingreso_Laboral, dl.fechaIngresoLaboral, dl.Fecha_Ingreso_Laboral, e.fechaIngresoLaboral, e.Fecha_Ingreso_Laboral, fa.fechaIngresoLaboral),
+        antiguedad: _pickFirstStrFirmas(sol.antiguedad, dl.antiguedad, e.antiguedad, e.Antiguedad, fa.antiguedad),
+        estadoCivil: _pickFirstStrFirmas(sol.estadoCivil, dc.estadoCivil, e.estadoCivil, e.Estado_Civil, fa.estadoCivil),
+        sexo: _pickFirstStrFirmas(sol.sexo, dc.sexo, e.sexo, e.Sexo, fa.sexo),
+        fechaNacimiento: _pickFirstStrFirmas(sol.fechaNacimiento, sol.fechaNac, sol.fecha_nacimiento, dc.fechaNacimiento, dc.fechaNac, e.fechaNacimiento, e.fechaNac, e.fecha_nacimiento, e.Fecha_Nacimiento, fa.fechaNacimiento),
       },
       prestamo: {
-        lineaNombre: prest.lineaNombre || e.lineaNombre || e.linea || '',
-        monto: prest.monto != null ? prest.monto : e.monto,
-        cuotas: prest.cuotas != null ? prest.cuotas : e.cuotas,
-        valorCuota: prest.valorCuota != null ? prest.valorCuota : e.valorCuota,
-        totalDevolver: prest.totalDevolver != null ? prest.totalDevolver : e.totalDevolver,
-        tna: prest.tna || e.tna || '',
-        tipoTasa: prest.tipoTasa || e.tipoTasa || 'TASA FIJA',
+        lineaNombre: _pickFirstStrFirmas(prop.lineaNombre, prest.lineaNombre, e.lineaNombre, e.Linea_Ayuda, e.linea_ayuda, e.linea),
+        monto: montoVal,
+        cuotas: cuotasVal,
+        valorCuota: cuotaVal,
+        totalDevolver: totalVal,
+        tna: _pickFirstStrFirmas(prop.tna, prest.tna, prest.tnaRef, e.tna, e.TNA),
+        tipoTasa: _pickFirstStrFirmas(prop.tipoTasa, prest.tipoTasa, e.tipoTasa) || 'TASA FIJA',
       },
       manuales: {},
     };
@@ -784,6 +832,160 @@
     renderSugerenciasExpediente_(matches, state.filtroExpedienteGenerar, debeMostrar);
   }
 
+  async function enriquecerExpedienteDesdeFichaAsociado_(exp) {
+    if (!exp) return;
+    const sol = exp.solicitante || {};
+    const dni = String(sol.dni || exp.dni || exp.DNI || exp.DNI_Asociado || '').replace(/\D/g, '').trim();
+    if (!dni || dni.length < 7) return;
+    state._fichaAsociadoCacheByDni = state._fichaAsociadoCacheByDni || {};
+    state._fichaAsociadoPromises = state._fichaAsociadoPromises || {};
+    if (state._fichaAsociadoCacheByDni[dni]) return;
+    if (state._fichaAsociadoPromises[dni]) {
+      await state._fichaAsociadoPromises[dni];
+      return;
+    }
+
+    const p = (async () => {
+      const combinado = { dni };
+      const mergeObj = (src) => {
+        if (!src || typeof src !== 'object') return;
+        const mapPair = (targetKey, keys) => {
+          if (combinado[targetKey]) return;
+          for (const k of keys) {
+            const val = src[k];
+            if (val !== null && val !== undefined) {
+              const s = String(val).trim();
+              if (s && s !== 'undefined' && s !== 'null' && s !== 'SIN_ESPECIFICAR') {
+                combinado[targetKey] = s;
+                return;
+              }
+            }
+          }
+        };
+        mapPair('nombre', ['apellido_nombres', 'nombreCompleto', 'Apellido_Nombre', 'nombre']);
+        if (!combinado.nombre && src.apellido && src.nombres) combinado.nombre = `${src.apellido} ${src.nombres}`.trim();
+        mapPair('cuil', ['cuil', 'CUIL']);
+        mapPair('domicilio', ['domicilio', 'domicilio_dni', 'domicilio_completo', 'servicio_domicilio', 'Domicilio']);
+        mapPair('localidad', ['localidad', 'Localidad']);
+        mapPair('telefono', ['telefono', 'celular', 'Celular', 'Telefono']);
+        mapPair('email', ['email', 'Email', 'correo']);
+        mapPair('banco', ['banco', 'Banco']);
+        mapPair('tipoCuenta', ['tipoCuenta', 'Tipo_Cuenta']);
+        mapPair('nroCuenta', ['nroCuenta', 'Nro_Cuenta']);
+        mapPair('cbu', ['cbu', 'CBU']);
+        mapPair('alias', ['alias', 'Alias_CBU']);
+        mapPair('tarjetaSidecreerNumero', ['tarjetaSidecreerNumero', 'Tarjeta_Sidecreer_Numero']);
+        mapPair('tarjetaSidecreerVencimiento', ['tarjetaSidecreerVencimiento', 'Tarjeta_Sidecreer_Vencimiento']);
+        mapPair('tarjetaSidecreerCvv', ['tarjetaSidecreerCvv', 'Tarjeta_Sidecreer_CVV']);
+        mapPair('parejaNombre', ['parejaNombre', 'Pareja_Nombre']);
+        mapPair('parejaDni', ['parejaDni', 'Pareja_DNI']);
+        mapPair('parejaEmail', ['parejaEmail', 'Pareja_Email']);
+        mapPair('parejaTelefono', ['parejaTelefono', 'Pareja_Telefono']);
+        mapPair('organismo', ['organismo', 'Organismo']);
+        mapPair('dependencia', ['dependencia', 'Dependencia']);
+        mapPair('condicion', ['condicion', 'Condicion']);
+        mapPair('cargo', ['cargo', 'Cargo']);
+        mapPair('legajo', ['legajo', 'Legajo_Municipal', 'Legajo']);
+        mapPair('categoriaMunicipal', ['categoriaMunicipal', 'Categoria_Municipal']);
+        mapPair('situacionRevista', ['situacionRevista', 'Situacion_Revista']);
+        mapPair('fechaIngresoLaboral', ['fechaIngresoLaboral', 'Fecha_Ingreso_Laboral', 'fechaIngreso', 'fecha_ingreso']);
+        mapPair('antiguedad', ['antiguedad', 'Antiguedad']);
+        mapPair('estadoCivil', ['estadoCivil', 'Estado_Civil']);
+        mapPair('sexo', ['sexo', 'Sexo']);
+        mapPair('fechaNacimiento', ['fechaNacimiento', 'fechaNac', 'fecha_nacimiento', 'Fecha_Nacimiento']);
+      };
+
+      const tareas = [];
+      if (typeof global.callApi === 'function') {
+        tareas.push(
+          global.callApi({ action: 'buscarAsociadoPorDNI', dni })
+            .then((res) => {
+              const asoc = res && res.ok && res.data && (res.data.asociado || (res.data.encontrado ? res.data : null));
+              if (asoc) mergeObj(asoc);
+            })
+            .catch(() => {})
+        );
+      }
+      if (typeof global.fetchConTimeout === 'function') {
+        tareas.push(
+          global.fetchConTimeout(`${getApiBase()}/api/asociados/${encodeURIComponent(dni)}/ficha`, { method: 'GET' }, 10000)
+            .then((r) => (r && r.ok ? r.json() : null))
+            .then((data) => {
+              if (!data || !data.encontrado) return;
+              if (data.asociado) mergeObj(data.asociado);
+              const vig = data.vigentes_por_tipo || {};
+              ['RECIBO', 'DNI', 'SERVICIO'].forEach((k) => {
+                const ext = vig[k] && vig[k].datos_extraidos_json;
+                if (ext) mergeObj(ext);
+              });
+            })
+            .catch(() => {})
+        );
+      }
+
+      await Promise.all(tareas);
+      state._fichaAsociadoCacheByDni[dni] = combinado;
+      delete state._fichaAsociadoPromises[dni];
+
+      // Si el mismo expediente sigue seleccionado, rellenar campos que hayan quedado vacíos sin pisar ediciones manuales
+      const expActual = getExpedienteSeleccionadoEnGenerador();
+      const dniActual = expActual
+        ? String((expActual.solicitante && expActual.solicitante.dni) || expActual.dni || expActual.DNI || expActual.DNI_Asociado || '').replace(/\D/g, '').trim()
+        : '';
+      if (dniActual !== dni) return;
+
+      const ctxNuevo = construirContextoDesdeExpediente(expActual);
+      document.querySelectorAll('[data-firma-origen-valor]').forEach((inp) => {
+        if (inp.dataset && inp.dataset.userEdited === '1') return;
+        if (String(inp.value || '').trim() !== '') return;
+        const org = inp.getAttribute('data-firma-origen-valor');
+        const valNuevo = resolverPreviewLocal({ origen_campo: org }, ctxNuevo);
+        if (valNuevo) inp.value = valNuevo;
+      });
+
+      const inpWa = document.getElementById('inpFirmaTelefonoWa');
+      if (inpWa && !String(inpWa.value || '').trim() && ctxNuevo.solicitante.telefono) {
+        inpWa.value = ctxNuevo.solicitante.telefono;
+      }
+      const inpEm = document.getElementById('inpFirmaEmailPin');
+      if (inpEm && !String(inpEm.value || '').trim() && ctxNuevo.solicitante.email) {
+        inpEm.value = ctxNuevo.solicitante.email;
+      }
+      if (state.firmantesGenerar[0]) {
+        let cambioFirmante = false;
+        if (!state.firmantesGenerar[0].nombre && ctxNuevo.solicitante.nombre) { state.firmantesGenerar[0].nombre = ctxNuevo.solicitante.nombre; cambioFirmante = true; }
+        if (!state.firmantesGenerar[0].dni && ctxNuevo.solicitante.dni) { state.firmantesGenerar[0].dni = ctxNuevo.solicitante.dni; cambioFirmante = true; }
+        if (!state.firmantesGenerar[0].telefono && ctxNuevo.solicitante.telefono) { state.firmantesGenerar[0].telefono = ctxNuevo.solicitante.telefono; cambioFirmante = true; }
+        if (cambioFirmante) renderFirmantesGenerar(ctxNuevo);
+      }
+    })();
+
+    state._fichaAsociadoPromises[dni] = p;
+    await p;
+  }
+
+  function aplicarCambioExpedienteGenerador_() {
+    const exp = getExpedienteSeleccionadoEnGenerador();
+    const nuevoId = exp ? String(exp.id || '') : '';
+    if (nuevoId !== state._ultimoExpIdFirmas) {
+      state._ultimoExpIdFirmas = nuevoId;
+      state._valoresTempCamposGenerar = null;
+      if (state.firmantesGenerar && state.firmantesGenerar[0]) {
+        state.firmantesGenerar[0].nombre = '';
+        state.firmantesGenerar[0].dni = '';
+        state.firmantesGenerar[0].telefono = '';
+      }
+      const inpWa = document.getElementById('inpFirmaTelefonoWa');
+      if (inpWa) inpWa.value = '';
+      const inpEm = document.getElementById('inpFirmaEmailPin');
+      if (inpEm) inpEm.value = '';
+    }
+    renderCamposCompletarFormulario();
+    if (exp) {
+      enriquecerExpedienteDesdeFichaAsociado_(exp);
+    }
+  }
+
   function seleccionarExpedienteDesdeBusquedaFirma(expId) {
     const sel = document.getElementById('selFirmaExpediente');
     if (!sel) return;
@@ -807,7 +1009,7 @@
       const btnClr = document.getElementById('btnLimpiarBuscarExpFirma');
       if (btnClr) btnClr.style.display = 'inline-flex';
     }
-    renderCamposCompletarFormulario();
+    aplicarCambioExpedienteGenerador_();
   }
 
   function limpiarBusquedaExpedienteFirma() {
@@ -840,7 +1042,7 @@
   function onExpedienteGenerarSeleccionado() {
     const box = document.getElementById('listaSugerenciasExpFirma');
     if (box) box.style.display = 'none';
-    renderCamposCompletarFormulario();
+    aplicarCambioExpedienteGenerador_();
   }
 
   function editarPlantillaSeleccionadaEnGenerador() {
@@ -1266,6 +1468,8 @@
 
     const inpWa = document.getElementById('inpFirmaTelefonoWa');
     if (inpWa && ctx.solicitante.telefono) inpWa.value = ctx.solicitante.telefono;
+    const inpEmail = document.getElementById('inpFirmaEmailPin');
+    if (inpEmail && ctx.solicitante.email) inpEmail.value = ctx.solicitante.email;
 
     const modoBar = document.getElementById('firmaCamposModoBar');
     const lblModoResumen = document.getElementById('lblResumenModoCamposFirma');
@@ -6113,7 +6317,7 @@
       const sel = document.getElementById('selFirmaExpediente');
       if (sel) {
         sel.value = String(expId);
-        renderCamposCompletarFormulario();
+        aplicarCambioExpedienteGenerador_();
       }
     }
   }

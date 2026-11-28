@@ -7193,7 +7193,7 @@
       boletin: { src: 'js/boletinER.js?v=6', check: () => typeof window.cargarEstadoBoletinOficialAuditoria === 'function' },
       auditoria20: { src: 'js/auditoria20.js?v=10', check: () => typeof window.ejecutarValidacionDniAudit20 === 'function' },
       fichas: { src: 'js/fichasAsociados.js?v=7', check: () => typeof window.buscarPadronFichasAsociados === 'function' },
-      firmas: { src: 'js/firmasAmmer.js?v=41', check: () => typeof window.initFirmasAmmerView === 'function' },
+      firmas: { src: 'js/firmasAmmer.js?v=42', check: () => typeof window.initFirmasAmmerView === 'function' },
       whatsappBot: { src: 'js/whatsappBotAdmin.js?v=5', check: () => typeof window.initWhatsappBotPanelAdmin === 'function' },
       mutualPay: { src: 'js/mutualPayBackoffice.js?v=6', check: () => typeof window.initMutualPayBackoffice === 'function' }
     };
@@ -10141,11 +10141,23 @@
           fechaNacimiento: contacto.fechaNacimiento || contacto.fechaNac || s.fechaNacimiento || '',
           sexo: contacto.sexo || s.sexo || '',
           estadoCivil: contacto.estadoCivil || s.estadoCivil || '',
-          email: contacto.email || s.email || '',
-          celular: contacto.celular || contacto.telefono || s.telefono || '',
+          email: contacto.email || s.email || s.Email || '',
+          celular: contacto.celular || contacto.telefono || s.telefono || s.Celular || '',
           domicilio: domHistNorm,
           domicilio_historico: domHistNorm,
           localidad: String(contacto.localidad || s.localidad || ''),
+          banco: String(contacto.banco || s.banco || s.Banco || ''),
+          tipoCuenta: String(contacto.tipoCuenta || s.tipoCuenta || s.Tipo_Cuenta || ''),
+          nroCuenta: String(contacto.nroCuenta || s.nroCuenta || s.Nro_Cuenta || ''),
+          cbu: String(contacto.cbu || s.cbu || s.CBU || ''),
+          alias: String(contacto.alias || s.alias || s.Alias_CBU || ''),
+          tarjetaSidecreerNumero: String(contacto.tarjetaSidecreerNumero || s.tarjetaSidecreerNumero || s.Tarjeta_Sidecreer_Numero || ''),
+          tarjetaSidecreerVencimiento: String(contacto.tarjetaSidecreerVencimiento || s.tarjetaSidecreerVencimiento || s.Tarjeta_Sidecreer_Vencimiento || ''),
+          tarjetaSidecreerCvv: String(contacto.tarjetaSidecreerCvv || s.tarjetaSidecreerCvv || s.Tarjeta_Sidecreer_CVV || ''),
+          parejaNombre: String(contacto.parejaNombre || s.parejaNombre || s.Pareja_Nombre || ''),
+          parejaDni: String(contacto.parejaDni || s.parejaDni || s.Pareja_DNI || ''),
+          parejaEmail: String(contacto.parejaEmail || s.parejaEmail || s.Pareja_Email || ''),
+          parejaTelefono: String(contacto.parejaTelefono || s.parejaTelefono || s.Pareja_Telefono || ''),
           condicion: laborales.condicion || 'Activo',
           organismo: laborales.organismo || s.organismo || 'Provincial',
           dependencia: laborales.dependencia || s.dependencia || '',
@@ -10160,14 +10172,35 @@
         if ((!s.solicitante.nombre || s.solicitante.nombre === 'Socio') && nombreRealNorm) {
           s.solicitante.nombre = nombreRealNorm;
         }
+        if (!s.solicitante.dni && (s.DNI_Asociado || s.dni)) s.solicitante.dni = String(s.DNI_Asociado || s.dni || '');
         if (!s.solicitante.cuil && (contacto.cuil || laborales.cuil || s.cuil)) s.solicitante.cuil = contacto.cuil || laborales.cuil || s.cuil;
         if (!s.solicitante.domicilio && domHistNorm) s.solicitante.domicilio = domHistNorm;
         if (!s.solicitante.domicilio_historico && domHistNorm) s.solicitante.domicilio_historico = domHistNorm;
         if (!s.solicitante.localidad && (contacto.localidad || s.localidad)) s.solicitante.localidad = contacto.localidad || s.localidad;
+        if (!s.solicitante.email && (contacto.email || s.email || s.Email)) s.solicitante.email = contacto.email || s.email || s.Email;
+        if (!s.solicitante.celular && (contacto.celular || contacto.telefono || s.solicitante.telefono || s.telefono || s.Celular)) {
+          s.solicitante.celular = contacto.celular || contacto.telefono || s.solicitante.telefono || s.telefono || s.Celular;
+        }
         if (!s.solicitante.fechaNac && (s.solicitante.fechaNacimiento || contacto.fechaNac || contacto.fechaNacimiento)) s.solicitante.fechaNac = s.solicitante.fechaNacimiento || contacto.fechaNac || contacto.fechaNacimiento;
         if (!s.solicitante.fechaNacimiento && s.solicitante.fechaNac) s.solicitante.fechaNacimiento = s.solicitante.fechaNac;
         if (!s.solicitante.sexo && (contacto.sexo || s.sexo)) s.solicitante.sexo = contacto.sexo || s.sexo;
         if (!s.solicitante.estadoCivil && (contacto.estadoCivil || s.estadoCivil)) s.solicitante.estadoCivil = contacto.estadoCivil || s.estadoCivil;
+        if (!s.solicitante.banco && (contacto.banco || s.banco || s.Banco)) s.solicitante.banco = contacto.banco || s.banco || s.Banco;
+        if (!s.solicitante.tipoCuenta && (contacto.tipoCuenta || s.tipoCuenta || s.Tipo_Cuenta)) s.solicitante.tipoCuenta = contacto.tipoCuenta || s.tipoCuenta || s.Tipo_Cuenta;
+        if (!s.solicitante.nroCuenta && (contacto.nroCuenta || s.nroCuenta || s.Nro_Cuenta)) s.solicitante.nroCuenta = contacto.nroCuenta || s.nroCuenta || s.Nro_Cuenta;
+        if (!s.solicitante.cbu && (contacto.cbu || s.cbu || s.CBU)) s.solicitante.cbu = contacto.cbu || s.cbu || s.CBU;
+        if (!s.solicitante.alias && (contacto.alias || s.alias || s.Alias_CBU)) s.solicitante.alias = contacto.alias || s.alias || s.Alias_CBU;
+        if (!s.solicitante.tarjetaSidecreerNumero && (contacto.tarjetaSidecreerNumero || s.tarjetaSidecreerNumero || s.Tarjeta_Sidecreer_Numero)) s.solicitante.tarjetaSidecreerNumero = contacto.tarjetaSidecreerNumero || s.tarjetaSidecreerNumero || s.Tarjeta_Sidecreer_Numero;
+        if (!s.solicitante.tarjetaSidecreerVencimiento && (contacto.tarjetaSidecreerVencimiento || s.tarjetaSidecreerVencimiento || s.Tarjeta_Sidecreer_Vencimiento)) s.solicitante.tarjetaSidecreerVencimiento = contacto.tarjetaSidecreerVencimiento || s.tarjetaSidecreerVencimiento || s.Tarjeta_Sidecreer_Vencimiento;
+        if (!s.solicitante.tarjetaSidecreerCvv && (contacto.tarjetaSidecreerCvv || s.tarjetaSidecreerCvv || s.Tarjeta_Sidecreer_CVV)) s.solicitante.tarjetaSidecreerCvv = contacto.tarjetaSidecreerCvv || s.tarjetaSidecreerCvv || s.Tarjeta_Sidecreer_CVV;
+        if (!s.solicitante.parejaNombre && (contacto.parejaNombre || s.parejaNombre || s.Pareja_Nombre)) s.solicitante.parejaNombre = contacto.parejaNombre || s.parejaNombre || s.Pareja_Nombre;
+        if (!s.solicitante.parejaDni && (contacto.parejaDni || s.parejaDni || s.Pareja_DNI)) s.solicitante.parejaDni = contacto.parejaDni || s.parejaDni || s.Pareja_DNI;
+        if (!s.solicitante.parejaEmail && (contacto.parejaEmail || s.parejaEmail || s.Pareja_Email)) s.solicitante.parejaEmail = contacto.parejaEmail || s.parejaEmail || s.Pareja_Email;
+        if (!s.solicitante.parejaTelefono && (contacto.parejaTelefono || s.parejaTelefono || s.Pareja_Telefono)) s.solicitante.parejaTelefono = contacto.parejaTelefono || s.parejaTelefono || s.Pareja_Telefono;
+        if (!s.solicitante.legajo && (laborales.legajo || s.Legajo_Municipal || s.legajoMunicipal || s.legajo)) s.solicitante.legajo = String(laborales.legajo || s.Legajo_Municipal || s.legajoMunicipal || s.legajo);
+        if (!s.solicitante.organismo && (laborales.organismo || s.organismo)) s.solicitante.organismo = laborales.organismo || s.organismo;
+        if (!s.solicitante.dependencia && (laborales.dependencia || s.dependencia)) s.solicitante.dependencia = laborales.dependencia || s.dependencia;
+        if (!s.solicitante.condicion && (laborales.condicion || s.condicion)) s.solicitante.condicion = laborales.condicion || s.condicion;
         if (!s.solicitante.cargo && (laborales.cargo || s.cargo)) s.solicitante.cargo = laborales.cargo || s.cargo;
         if (!s.solicitante.categoriaMunicipal && (laborales.categoriaMunicipal || laborales.Categoria_Municipal || s.categoriaMunicipal || s.Categoria_Municipal)) {
           s.solicitante.categoriaMunicipal = String(laborales.categoriaMunicipal || laborales.Categoria_Municipal || s.categoriaMunicipal || s.Categoria_Municipal);
@@ -10215,15 +10248,17 @@
                            lineaLowNorm.includes('sidecreer') ? 'sidecreer' : 'fedem');
       const montoNorm = parsearNumeroTolerante(prevPrest.monto || s.Monto_Solicitado_Neto || s.montoSolicitado || s.montoSolicitadoNeto || s.montoNeto || s.Monto || s.monto || 0, 0);
       const cuotasNorm = parseInt(prevPrest.cuotas || s.Cantidad_Cuotas || s.cantidadCuotas || s.cuotas || s.Plazo || 12, 10) || 12;
-      const cuotaNorm = parsearNumeroTolerante(prevPrest.cuotaEstimada || s.Monto_Cuota || s.montoCuota || s.valorCuota || s.Cuota_Estimada || s.cuotaEstimada || 0, 0);
-      const totalNorm = parsearNumeroTolerante(prevPrest.totalADevolver || s.Total_A_Devolver || s.totalADevolver || s.totalDevolver || (cuotaNorm * cuotasNorm), 0);
+      const cuotaNorm = parsearNumeroTolerante(prevPrest.cuotaEstimada || prevPrest.valorCuota || s.Monto_Cuota || s.montoCuota || s.valorCuota || s.Cuota_Estimada || s.cuotaEstimada || 0, 0);
+      const totalNorm = parsearNumeroTolerante(prevPrest.totalADevolver || prevPrest.totalDevolver || s.Total_A_Devolver || s.totalADevolver || s.totalDevolver || (cuotaNorm * cuotasNorm), 0);
       s.prestamo = {
         linea: lineaKeyNorm,
         lineaNombre: lineaNomNorm,
         monto: montoNorm,
         cuotas: cuotasNorm,
         cuotaEstimada: cuotaNorm,
-        totalADevolver: totalNorm
+        totalADevolver: totalNorm,
+        tna: prevPrest.tna || prevPrest.tnaRef || s.tna || s.TNA || '',
+        tipoTasa: prevPrest.tipoTasa || s.tipoTasa || 'TASA FIJA'
       };
 
       const adjuntosNorm = normalizarListaArchivos(s);

@@ -2269,6 +2269,9 @@
               <button type="button" id="btnWaTabAgente" class="wa-hub-tab-btn" role="tab" aria-selected="false" onclick="window.cambiarTabWhatsappBotAdmin('agente')">
                 <span>🤖 Agente &amp; Simulador</span>
               </button>
+              <button type="button" id="btnWaTabMetricas" class="wa-hub-tab-btn" role="tab" aria-selected="false" onclick="window.cambiarTabWhatsappBotAdmin('metricas')">
+                <span>📈 Métricas</span>
+              </button>
               <button type="button" id="btnWaTabLineas" class="wa-hub-tab-btn" role="tab" aria-selected="false" onclick="window.cambiarTabWhatsappBotAdmin('lineas')">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                 <span>Líneas (QR y API Oficial)</span>
@@ -2819,6 +2822,23 @@
                 </div>
               </div>
             </details>
+          </div>
+
+          <!-- TAB 5: MÉTRICAS OPERATIVAS Y CONVERSIÓN -->
+          <div id="waTabPanelMetricas" class="wa-hub-tab-panel">
+            <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:14px;padding:0.85rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+              <div>
+                <div style="font-size:0.88rem;font-weight:800;color:#0f2744;">📈 Métricas Operativas y Conversión WhatsApp ARM</div>
+                <div style="font-size:0.72rem;color:#64748b;">Seguimiento de sesiones 24h, leads únicos, tasa de resolución autónoma y embudo por asesor/canal.</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                <input type="date" id="inpWaMetDesde" class="wa-360-input tabular-nums" style="width:140px;" aria-label="Desde fecha"/>
+                <input type="date" id="inpWaMetHasta" class="wa-360-input tabular-nums" style="width:140px;" aria-label="Hasta fecha"/>
+                <button type="button" class="wa-360-btn primary" onclick="window.cargarPanelMetricasWa()">🔄 Actualizar</button>
+              </div>
+            </div>
+            <div id="waMetricsKpisGrid" class="wa-agent-kpi-grid"></div>
+            <div id="waMetricsBodyGrid" class="wa-metrics-body-grid"></div>
           </div>
         </div>
       </section>
@@ -7428,9 +7448,9 @@
       fichas: { src: 'js/fichasAsociados.js?v=7', check: () => typeof window.buscarPadronFichasAsociados === 'function' },
       firmas: { src: 'js/firmasAmmer.js?v=42', check: () => typeof window.initFirmasAmmerView === 'function' },
       whatsappBot: {
-        src: 'js/whatsappBotAdmin.js?v=8',
-        extraSrcs: ['js/whatsappBotArm360.js?v=1', 'js/whatsappBotAgent.js?v=1', 'js/whatsappBotPipeline.js?v=1'],
-        check: () => typeof window.initWhatsappBotPanelAdmin === 'function' && typeof window.WaArm360 === 'object' && typeof window.WaAgentUI === 'object' && typeof window.WaPipelineUI === 'object'
+        src: 'js/whatsappBotAdmin.js?v=9',
+        extraSrcs: ['js/whatsappBotArm360.js?v=1', 'js/whatsappBotAgent.js?v=1', 'js/whatsappBotPipeline.js?v=1', 'js/whatsappBotMetrics.js?v=1'],
+        check: () => typeof window.initWhatsappBotPanelAdmin === 'function' && typeof window.WaArm360 === 'object' && typeof window.WaAgentUI === 'object' && typeof window.WaPipelineUI === 'object' && typeof window.WaMetricsUI === 'object'
       },
       mutualPay: { src: 'js/mutualPayBackoffice.js?v=6', check: () => typeof window.initMutualPayBackoffice === 'function' }
     };

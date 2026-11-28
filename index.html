@@ -2263,6 +2263,9 @@
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                 <span>Mensajería Directa</span>
               </button>
+              <button type="button" id="btnWaTabPipeline" class="wa-hub-tab-btn" role="tab" aria-selected="false" onclick="window.cambiarTabWhatsappBotAdmin('pipeline')">
+                <span>📊 Pipeline &amp; Ops</span>
+              </button>
               <button type="button" id="btnWaTabAgente" class="wa-hub-tab-btn" role="tab" aria-selected="false" onclick="window.cambiarTabWhatsappBotAdmin('agente')">
                 <span>🤖 Agente &amp; Simulador</span>
               </button>
@@ -2693,6 +2696,127 @@
                   </select>
                 </div>
                 <div id="waAgentConfigFormBody"></div>
+              </div>
+            </details>
+          </div>
+
+          <!-- TAB 4: PIPELINE KANBAN, ROUND-ROBIN, AUTOMATIZACIONES Y CAMPAÑAS CSV -->
+          <div id="waTabPanelPipeline" class="wa-hub-tab-panel">
+            <!-- BARRA SUPERIOR KANBAN -->
+            <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:14px;padding:0.85rem 1rem;display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                  <span style="font-size:0.88rem;font-weight:800;color:#0f2744;">📊 Pipeline Kanban de Leads WhatsApp</span>
+                  <span id="waPipelineTotalBadge" class="badge-status badge-info tabular-nums">0 leads</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                  <input type="text" id="inpWaPipelineSearch" class="wa-360-input" style="width:210px;" placeholder="Filtrar nombre, tel o DNI..." onkeydown="if(event.key==='Enter')window.cargarPanelPipelineWa()"/>
+                  <button type="button" class="wa-360-btn primary" onclick="window.cargarPanelPipelineWa()">🔄 Actualizar</button>
+                </div>
+              </div>
+              <div style="font-size:0.72rem;color:#64748b;">Arrastrá tarjetas entre las 8 etapas (incluyendo <strong>Esperando Firma</strong>) o hacé clic en una tarjeta para abrir el chat en Mensajería Directa.</div>
+              <div id="waPipelineBoard" class="wa-kanban-board"></div>
+            </div>
+
+            <!-- ACORDEÓN 1: EQUIPOS, HORARIOS LABORALES Y ROUND-ROBIN -->
+            <details class="ui-accordion" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:14px;">
+              <summary style="padding:0.85rem 1rem;font-weight:800;color:#0f2744;">⚖️ Equipos, Horarios Laborales y Reparto Round-Robin</summary>
+              <div class="ui-accordion-body" style="padding:0.85rem 1rem;border-top:1px solid #e2e8f0;display:flex;flex-direction:column;gap:10px;">
+                <div class="wa-agent-cfg-grid">
+                  <div>
+                    <label class="wa-360-label" for="inpWaAdvId">Usuario / ID Asesor</label>
+                    <input type="text" id="inpWaAdvId" class="wa-360-input" placeholder="ej: asesor_ana"/>
+                  </div>
+                  <div>
+                    <label class="wa-360-label" for="inpWaAdvName">Nombre Visible</label>
+                    <input type="text" id="inpWaAdvName" class="wa-360-input" placeholder="ej: Ana Gómez"/>
+                  </div>
+                  <div>
+                    <label class="wa-360-label" for="selWaAdvTeam">Equipo</label>
+                    <select id="selWaAdvTeam" class="wa-360-select">
+                      <option value="originacion">Originación / Préstamos</option>
+                      <option value="cobranzas">Cobranzas</option>
+                      <option value="soporte">Soporte</option>
+                    </select>
+                  </div>
+                  <div style="display:flex;gap:6px;">
+                    <div style="flex:1;">
+                      <label class="wa-360-label" for="inpWaAdvFrom">Desde (AR)</label>
+                      <input type="time" id="inpWaAdvFrom" class="wa-360-input tabular-nums" value="08:00"/>
+                    </div>
+                    <div style="flex:1;">
+                      <label class="wa-360-label" for="inpWaAdvTo">Hasta (AR)</label>
+                      <input type="time" id="inpWaAdvTo" class="wa-360-input tabular-nums" value="17:00"/>
+                    </div>
+                  </div>
+                </div>
+                <div style="display:flex;justify-content:flex-end;">
+                  <button type="button" class="wa-360-btn primary" onclick="window.agregarAsesorHorarioWa()">+ Agregar Asesor al Round-Robin</button>
+                </div>
+                <div id="waAdvisorsListBox" style="display:flex;flex-direction:column;gap:6px;"></div>
+              </div>
+            </details>
+
+            <!-- ACORDEÓN 2: AUTOMATIZACIONES -->
+            <details class="ui-accordion" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:14px;">
+              <summary style="padding:0.85rem 1rem;font-weight:800;color:#0f2744;">⚡ Automatizaciones (Ventana 24h, Docs Pendientes &amp; Handoff)</summary>
+              <div class="ui-accordion-body" style="padding:0.85rem 1rem;border-top:1px solid #e2e8f0;display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+                  <span style="font-size:0.73rem;color:#475569;">Activá o pausá reglas determinísticas. Todas respetan horario laboral Argentina (UTC-3).</span>
+                  <button type="button" class="wa-360-btn primary" onclick="window.ejecutarBarridoAutomatizacionesWa()">▶️ Ejecutar Barrido Ahora</button>
+                </div>
+                <div id="waAutomationsListBox" style="display:flex;flex-direction:column;gap:6px;"></div>
+              </div>
+            </details>
+
+            <!-- ACORDEÓN 3: CAMPAÑAS MASIVAS CSV (OUTBOUND) -->
+            <details class="ui-accordion" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:14px;">
+              <summary style="padding:0.85rem 1rem;font-weight:800;color:#0f2744;">📣 Campañas Masivas CSV (Plantillas Meta + Deduplicación Tel/DNI)</summary>
+              <div class="ui-accordion-body" style="padding:0.85rem 1rem;border-top:1px solid #e2e8f0;display:flex;flex-direction:column;gap:10px;">
+                <div class="wa-agent-cfg-grid">
+                  <div>
+                    <label class="wa-360-label" for="inpWaCampanaTemplate">Nombre Plantilla Meta Aprobada</label>
+                    <input type="text" id="inpWaCampanaTemplate" class="wa-360-input" placeholder="ej: reactivacion_oferta_ammer"/>
+                  </div>
+                  <div>
+                    <label class="wa-360-label" for="selWaCampanaRole">AI Worker para Respuestas</label>
+                    <select id="selWaCampanaRole" class="wa-360-select">
+                      <option value="reactivacion">🔄 Reactivación de Leads</option>
+                      <option value="inbound_prestamos">💰 Inbound Préstamos</option>
+                      <option value="docs_pendientes">📎 Seguimiento Docs</option>
+                      <option value="cobranzas">🏦 Cobranzas</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="wa-360-label" for="inpWaCampanaColTel">Columna Teléfono</label>
+                    <input type="text" id="inpWaCampanaColTel" class="wa-360-input" value="telefono"/>
+                  </div>
+                  <div>
+                    <label class="wa-360-label" for="inpWaCampanaColDni">Columna DNI (deduplicar)</label>
+                    <input type="text" id="inpWaCampanaColDni" class="wa-360-input" value="dni"/>
+                  </div>
+                  <div>
+                    <label class="wa-360-label" for="inpWaCampanaColNombre">Columna Nombre</label>
+                    <input type="text" id="inpWaCampanaColNombre" class="wa-360-input" value="nombre"/>
+                  </div>
+                  <div>
+                    <label class="wa-360-label" for="inpWaCampanaParams">Variables {{1}},{{2}} (separadas por coma)</label>
+                    <input type="text" id="inpWaCampanaParams" class="wa-360-input" placeholder="ej: nombre, oferta"/>
+                  </div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                    <label class="wa-360-label" for="txtWaCampanaCsv" style="margin:0;">Pegá el CSV (coma o punto y coma) o subí archivo</label>
+                    <input type="file" accept=".csv,.txt" style="font-size:0.72rem;" onchange="window.cargarArchivoCsvCampanaWa(this)"/>
+                  </div>
+                  <textarea id="txtWaCampanaCsv" class="wa-360-input" rows="4" placeholder="nombre;telefono;dni;oferta&#10;Juan Perez;3435112233;32111222;$500.000"></textarea>
+                </div>
+                <div id="waCampanaPreviewBox"></div>
+                <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
+                  <button type="button" class="wa-360-btn" onclick="window.previsualizarCampanaCsvWa()">🔎 Previsualizar &amp; Deduplicar</button>
+                  <button type="button" class="wa-360-btn" onclick="window.enviarCampanaCsvWa(true)">🧪 Simular Envío (Dry-Run)</button>
+                  <button type="button" class="wa-360-btn success" onclick="window.enviarCampanaCsvWa(false)">📣 Lanzar Campaña Meta</button>
+                </div>
               </div>
             </details>
           </div>
@@ -7304,9 +7428,9 @@
       fichas: { src: 'js/fichasAsociados.js?v=7', check: () => typeof window.buscarPadronFichasAsociados === 'function' },
       firmas: { src: 'js/firmasAmmer.js?v=42', check: () => typeof window.initFirmasAmmerView === 'function' },
       whatsappBot: {
-        src: 'js/whatsappBotAdmin.js?v=7',
-        extraSrcs: ['js/whatsappBotArm360.js?v=1', 'js/whatsappBotAgent.js?v=1'],
-        check: () => typeof window.initWhatsappBotPanelAdmin === 'function' && typeof window.WaArm360 === 'object' && typeof window.WaAgentUI === 'object'
+        src: 'js/whatsappBotAdmin.js?v=8',
+        extraSrcs: ['js/whatsappBotArm360.js?v=1', 'js/whatsappBotAgent.js?v=1', 'js/whatsappBotPipeline.js?v=1'],
+        check: () => typeof window.initWhatsappBotPanelAdmin === 'function' && typeof window.WaArm360 === 'object' && typeof window.WaAgentUI === 'object' && typeof window.WaPipelineUI === 'object'
       },
       mutualPay: { src: 'js/mutualPayBackoffice.js?v=6', check: () => typeof window.initMutualPayBackoffice === 'function' }
     };

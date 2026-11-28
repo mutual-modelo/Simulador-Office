@@ -725,34 +725,38 @@
   }
 
   function cambiarTabWhatsappBotAdmin(tabKey, manual = true) {
-    const next = tabKey === 'lineas' ? 'lineas' : (tabKey === 'agente' ? 'agente' : 'mensajeria');
+    const next = ['mensajeria', 'pipeline', 'agente', 'lineas'].includes(tabKey) ? tabKey : 'mensajeria';
     if (manual) userPickedTab = true;
     activeTab = next;
 
     const btnMsg = document.getElementById('btnWaTabMensajeria');
+    const btnPipe = document.getElementById('btnWaTabPipeline');
     const btnAg = document.getElementById('btnWaTabAgente');
     const btnLin = document.getElementById('btnWaTabLineas');
     const panelMsg = document.getElementById('waTabPanelMensajeria');
+    const panelPipe = document.getElementById('waTabPanelPipeline');
     const panelAg = document.getElementById('waTabPanelAgente');
     const panelLin = document.getElementById('waTabPanelLineas');
 
-    if (btnMsg) {
-      btnMsg.classList.toggle('active', next === 'mensajeria');
-      btnMsg.setAttribute('aria-selected', next === 'mensajeria' ? 'true' : 'false');
-    }
-    if (btnAg) {
-      btnAg.classList.toggle('active', next === 'agente');
-      btnAg.setAttribute('aria-selected', next === 'agente' ? 'true' : 'false');
-    }
-    if (btnLin) {
-      btnLin.classList.toggle('active', next === 'lineas');
-      btnLin.setAttribute('aria-selected', next === 'lineas' ? 'true' : 'false');
-    }
-    if (panelMsg) panelMsg.classList.toggle('active', next === 'mensajeria');
-    if (panelAg) panelAg.classList.toggle('active', next === 'agente');
-    if (panelLin) panelLin.classList.toggle('active', next === 'lineas');
+    [
+      [btnMsg, panelMsg, 'mensajeria'],
+      [btnPipe, panelPipe, 'pipeline'],
+      [btnAg, panelAg, 'agente'],
+      [btnLin, panelLin, 'lineas']
+    ].forEach(([btn, panel, key]) => {
+      const isAct = next === key;
+      if (btn) {
+        btn.classList.toggle('active', isAct);
+        btn.setAttribute('aria-selected', isAct ? 'true' : 'false');
+      }
+      if (panel) panel.classList.toggle('active', isAct);
+    });
+
     if (next === 'agente' && global.WaAgentUI && typeof global.WaAgentUI.cargarPanelAgenteWa === 'function') {
       global.WaAgentUI.cargarPanelAgenteWa();
+    }
+    if (next === 'pipeline' && global.WaPipelineUI && typeof global.WaPipelineUI.cargarPanelPipelineWa === 'function') {
+      global.WaPipelineUI.cargarPanelPipelineWa();
     }
   }
 

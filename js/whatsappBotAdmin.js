@@ -725,23 +725,26 @@
   }
 
   function cambiarTabWhatsappBotAdmin(tabKey, manual = true) {
-    const next = ['mensajeria', 'pipeline', 'agente', 'lineas'].includes(tabKey) ? tabKey : 'mensajeria';
+    const next = ['mensajeria', 'pipeline', 'agente', 'metricas', 'lineas'].includes(tabKey) ? tabKey : 'mensajeria';
     if (manual) userPickedTab = true;
     activeTab = next;
 
     const btnMsg = document.getElementById('btnWaTabMensajeria');
     const btnPipe = document.getElementById('btnWaTabPipeline');
     const btnAg = document.getElementById('btnWaTabAgente');
+    const btnMet = document.getElementById('btnWaTabMetricas');
     const btnLin = document.getElementById('btnWaTabLineas');
     const panelMsg = document.getElementById('waTabPanelMensajeria');
     const panelPipe = document.getElementById('waTabPanelPipeline');
     const panelAg = document.getElementById('waTabPanelAgente');
+    const panelMet = document.getElementById('waTabPanelMetricas');
     const panelLin = document.getElementById('waTabPanelLineas');
 
     [
       [btnMsg, panelMsg, 'mensajeria'],
       [btnPipe, panelPipe, 'pipeline'],
       [btnAg, panelAg, 'agente'],
+      [btnMet, panelMet, 'metricas'],
       [btnLin, panelLin, 'lineas']
     ].forEach(([btn, panel, key]) => {
       const isAct = next === key;
@@ -757,6 +760,9 @@
     }
     if (next === 'pipeline' && global.WaPipelineUI && typeof global.WaPipelineUI.cargarPanelPipelineWa === 'function') {
       global.WaPipelineUI.cargarPanelPipelineWa();
+    }
+    if (next === 'metricas' && global.WaMetricsUI && typeof global.WaMetricsUI.cargarPanelMetricasWa === 'function') {
+      global.WaMetricsUI.cargarPanelMetricasWa();
     }
   }
 

@@ -2148,6 +2148,13 @@ body {
 .wa-kanban-card:hover{border-color:#0f2744;transform:translateY(-1px)}
 .wa-kanban-empty{padding:1rem 0.5rem;text-align:center;font-size:0.71rem;color:#94a3b8;border:1px dashed #cbd5e1;border-radius:8px}
 
+/* Fase W4: Métricas y Pulido Responsive Split View */
+.wa-hub-tabs{max-width:100%;overflow-x:auto;scrollbar-width:thin}
+.wa-metrics-body-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:960px){
+  .wa-metrics-body-grid{grid-template-columns:1fr}
+}
+
 /* ========================================================================
    BARRA DE HERRAMIENTAS Y FILTROS REDISEÑADA (2 NIVELES JERÁRQUICOS)
    ======================================================================== */

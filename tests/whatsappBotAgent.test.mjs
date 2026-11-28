@@ -44,3 +44,25 @@ test('WaAgentUI exporta los 4 roles de AI Worker y funciones de Simulador/Config
     assert.equal(typeof ui[fn], 'function', `Falta función ${fn}`);
   }
 });
+
+test('WaAgentUI resuelve RENDER_API_URL correctamente (regresión sin API_BASE)', async () => {
+  const prevUrl = globalThis.RENDER_API_URL;
+  const prevFetch = globalThis.fetchConTimeout;
+  const calledUrls = [];
+  globalThis.RENDER_API_URL = 'https://ammer-auditor-api.onrender.com/';
+  globalThis.fetchConTimeout = async (url) => {
+    calledUrls.push(url);
+    return {
+      ok: true,
+      json: async () => ({ ok: true, configs: [], availableTools: [], totalTokensHoy: 0, limiteDiario: 500000, usoPct: 0, bloqueosGuardas: 0, conversacionesActivas: 0 }),
+    };
+  };
+  try {
+    await globalThis.WaAgentUI.cargarPanelAgenteWa();
+    assert.ok(calledUrls.includes('https://ammer-auditor-api.onrender.com/api/admin/whatsapp/agente/config'));
+    assert.ok(calledUrls.includes('https://ammer-auditor-api.onrender.com/api/admin/whatsapp/agente/presupuesto'));
+  } finally {
+    globalThis.RENDER_API_URL = prevUrl;
+    globalThis.fetchConTimeout = prevFetch;
+  }
+});

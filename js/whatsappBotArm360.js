@@ -38,6 +38,14 @@
   }
 
   function _getApiBase() {
+    if (typeof global.RENDER_API_URL === 'string' && global.RENDER_API_URL.startsWith('http')) {
+      return global.RENDER_API_URL.replace(/\/+$/, '');
+    }
+    try {
+      if (typeof RENDER_API_URL === 'string' && RENDER_API_URL.startsWith('http')) {
+        return RENDER_API_URL.replace(/\/+$/, '');
+      }
+    } catch (_) {}
     if (typeof global.API_BASE !== 'undefined' && global.API_BASE) return String(global.API_BASE).replace(/\/+$/, '');
     try { if (typeof API_BASE !== 'undefined' && API_BASE) return String(API_BASE).replace(/\/+$/, ''); } catch (_) {}
     return '';
